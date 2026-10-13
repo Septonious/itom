@@ -38,11 +38,20 @@ jobs:
           for name in "${names[@]}"; do
             assets+=("$RUNNER_TEMP/itom-rev1/$name")
           done
-          gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" --draft --prerelease \
-            --title "ITOM 0.9.2-Rev1 transport rework candidate" \
-            --notes-file builds/0.9.2-Rev1/RELEASE_NOTES.md
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
+          # Draft tags are not available through releases/tags/<tag>.
+          # Resolve by ID, and resume a verified draft without replacing assets.
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+          release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]=="v0.9.2-Rev1"]; assert len(rows)<=1; print(rows[0]["id"] if rows else "")' "$RUNNER_TEMP/releases.json")
+          if [[ -z "$release_id" ]]; then
+            gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --draft --prerelease \
+              --title "ITOM 0.9.2-Rev1 transport rework candidate" \
+              --notes-file builds/0.9.2-Rev1/RELEASE_NOTES.md
+            gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+            release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]=="v0.9.2-Rev1"]; assert len(rows)==1; print(rows[0]["id"])' "$RUNNER_TEMP/releases.json")
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$RUNNER_TEMP/release.json"
           python tools/publish_itom_rev1.py --verify-release-json "$RUNNER_TEMP/release.json" \
             --repository "$GITHUB_REPOSITORY" --output "$RUNNER_TEMP/remote-digest-check"
-          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false -F prerelease=true -f make_latest=false > "$RUNNER_TEMP/published-release.json"
