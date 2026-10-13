@@ -1,0 +1,383 @@
+{
+  "revision": "transport-rework3-rev1",
+  "core_runtime_sha256": "63c2bf56818f35078206dc5f6f51ec2961908c59359629204d306bd9cc6dda9c",
+  "source_fingerprint": "bd7c0715e880cff275852be1970c8f721bb22ed58aa114fcebe88ff06787fd68",
+  "delivery_date": "2026-10-14",
+  "status": "full local build bundle for GitHub; field unqualified",
+  "real_provider_tested": false,
+  "android_device_tested": false,
+  "field_qualified": false,
+  "strict_final_lab_qualification": "NOT_RUN",
+  "user_signing_choice": "Build locally on the machine holding the Rev10 key",
+  "known_pre_final_lab": {
+    "seconds": 30,
+    "accounts": 10,
+    "upload_mbps": 103.049,
+    "download_mbps": 78.731,
+    "loaded_rtt_max_ms": 449,
+    "target_passed": false
+  },
+  "native_module_sha256": {
+    "native/dns.go": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912",
+    "native/mobile.go": "5cefab3b64a2c10b5c1a580241907e46b488ff3b76583e0852d2df98382f5939",
+    "native/tools.go": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f",
+    "native/version.go": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee"
+  },
+  "targeted_checks": [
+    {
+      "log": "01-account-limits.jsonl",
+      "sha256": "fbdb6552d466fe93b747055b54080617910cd0e9844195489955d3bc36b95b30",
+      "test_events": {
+        "pass": 31
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "02c-envelope-verification.jsonl",
+      "sha256": "ae9698a5a61d7007f071679c4d4fa43052b4f66c4b39d50a7c8bd0091821e7b1",
+      "test_events": {
+        "pass": 197
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "03b-runtime-envelope.jsonl",
+      "sha256": "018ddbb9d0bba67b064381e5b26b494f8ba566cda20c691edf3d4cde8ec7ad1f",
+      "test_events": {
+        "pass": 78
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "03d-envelope-race.jsonl",
+      "sha256": "e5b72375309598d5f0a2f2a69926c83909f9a2ebb2e79333b3aad2622d590a79",
+      "test_events": {
+        "pass": 3
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "04-folder-migration.jsonl",
+      "sha256": "f454edcc1807160bb6b4cdf0ecd091707abf036c1d6be438f616a5124cc03505",
+      "test_events": {
+        "pass": 64
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "05b-session-owner-credit.jsonl",
+      "sha256": "faa1864f7360a2b1f37e97b3962a6a9cfb2b5f2b6773e76c273b811e2cef3c59",
+      "test_events": {
+        "pass": 70,
+        "skip": 4
+      },
+      "failed": [],
+      "skipped": [
+        "TestConsecutiveConstrainedLoadsAndIdleDATARecovery",
+        "TestLoadedApplicationSupervisorNonOwnerRejoin",
+        "TestLoadedApplicationSupervisorOwnerSurvival",
+        "TestUnstableEightTCPStreamsProgressAfterOutages"
+      ]
+    },
+    {
+      "log": "06-socket-admission.jsonl",
+      "sha256": "bdbc79561c9f96600f193bef56dcb08d9d9a7ccc11be9cdaa66a58c57fd8a8f5",
+      "test_events": {
+        "pass": 56,
+        "skip": 1
+      },
+      "failed": [],
+      "skipped": [
+        "TestUnstableSequentialAccountOutagesKeepApplicationSockets"
+      ]
+    },
+    {
+      "log": "06b-resource-config.jsonl",
+      "sha256": "a1d0bb22c92da9650ea6c8a74373ae52c0031e50831c3483c0b98332b64abfc3",
+      "test_events": {
+        "pass": 20
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "08d-regression-proof.jsonl",
+      "sha256": "e3e963202ed65613f43584fdac2762e89c5275180e18579551e255ed1bbbdd1d",
+      "test_events": {
+        "pass": 53
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "09b-fixed-rtt.jsonl",
+      "sha256": "ee91834fbe4133d050e7b599b702716d9d7a042688256f125e411b0028e813e5",
+      "test_events": {
+        "pass": 27
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "11c-service-regressions.jsonl",
+      "sha256": "1484c851b4a30120856a9a9967e4833a8e4f6d1f689297b3fc6e1721ab0a9330",
+      "test_events": {
+        "pass": 55,
+        "skip": 3
+      },
+      "failed": [],
+      "skipped": [
+        "TestTransport20ApplicationAcceptance",
+        "TestTransport130ApplicationMeasurement",
+        "TestTransport50ApplicationAcceptance"
+      ]
+    },
+    {
+      "log": "12b-ordered-admission.jsonl",
+      "sha256": "4bed6eac60a9eeedf10836627cc226c6a9f9286b917ecf9b33034c1e7ab55904",
+      "test_events": {
+        "pass": 8
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "13-qualification-path.jsonl",
+      "sha256": "668b59188a1e975795dd4bb31ed6248bdcbf24f2d40becfc8d5c442071c21603",
+      "test_events": {
+        "pass": 8
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "16-native-full.jsonl",
+      "sha256": "482b16c40e8bf312f6c171407c42b2a1a0720c8c236501722283116e963c3469",
+      "test_events": {
+        "pass": 3
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "17-fixed-objective-regressions.jsonl",
+      "sha256": "7d54649af4b21fbb91e5f67d48dc1ba552ffe34acda1b573f0f86748210f2a71",
+      "test_events": {
+        "pass": 27
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "18-data-service-race.jsonl",
+      "sha256": "0da10fd92065d7189c72d8a99c4e3c88663eb957434cba7ffe0a9616044f13ab",
+      "test_events": {
+        "pass": 10
+      },
+      "failed": [],
+      "skipped": []
+    },
+    {
+      "log": "21-public-services-race.jsonl",
+      "sha256": "ab597653312078c634d81b1aa285052cac8207f464448950e9f16140e61f187d",
+      "test_events": {
+        "pass": 12
+      },
+      "failed": [],
+      "skipped": []
+    }
+  ],
+  "manifest_files": 685,
+  "git_implementation_commit": "aa7693c",
+  "source_archive_sha256": "9c437c8430a2cc996991b2db31026c7669bcef24fd61800a37d9a66bf86dc872",
+  "final_core_build": {
+    "source_revision": "transport-rework3-rev1",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": false,
+    "stage": "complete",
+    "started_utc": "2026-10-13T21:34:48Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "core_runtime_sha256": "63c2bf56818f35078206dc5f6f51ec2961908c59359629204d306bd9cc6dda9c",
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+    "unstable_survival_tests": "enabled (mandatory; SKIP fails the Go gate)",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 758,
+      "failed": 0,
+      "skipped": 13,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestConsecutiveConstrainedLoadsAndIdleDATARecovery"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtest200MbpsApplicationPhases"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestFragmentedMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestHeterogeneousIdleAndParallelStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestParallelColdStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport130ApplicationMeasurement"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport20ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport50ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransportReworkQualification"
+        }
+      ]
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "final_evidence_sha256": {
+    "01-account-limits.jsonl": "fbdb6552d466fe93b747055b54080617910cd0e9844195489955d3bc36b95b30",
+    "02c-envelope-verification.jsonl": "ae9698a5a61d7007f071679c4d4fa43052b4f66c4b39d50a7c8bd0091821e7b1",
+    "03b-runtime-envelope.jsonl": "018ddbb9d0bba67b064381e5b26b494f8ba566cda20c691edf3d4cde8ec7ad1f",
+    "03d-envelope-race.jsonl": "e5b72375309598d5f0a2f2a69926c83909f9a2ebb2e79333b3aad2622d590a79",
+    "04-folder-migration.jsonl": "f454edcc1807160bb6b4cdf0ecd091707abf036c1d6be438f616a5124cc03505",
+    "05b-session-owner-credit.jsonl": "faa1864f7360a2b1f37e97b3962a6a9cfb2b5f2b6773e76c273b811e2cef3c59",
+    "06-socket-admission.jsonl": "bdbc79561c9f96600f193bef56dcb08d9d9a7ccc11be9cdaa66a58c57fd8a8f5",
+    "06b-resource-config.jsonl": "a1d0bb22c92da9650ea6c8a74373ae52c0031e50831c3483c0b98332b64abfc3",
+    "08d-regression-proof.jsonl": "e3e963202ed65613f43584fdac2762e89c5275180e18579551e255ed1bbbdd1d",
+    "09b-fixed-rtt.jsonl": "ee91834fbe4133d050e7b599b702716d9d7a042688256f125e411b0028e813e5",
+    "10-single-diagnostic.jsonl": "ea254957b64c7a37568e5ea2c69151a84ee0e8811c34e9b75f97068182921fa4",
+    "10b-single-snapshots.jsonl": "38d6a09c28f0c12af4dba8c460bc4a835486d904008fcb924dfa4b735b92a6d3",
+    "11c-service-regressions.jsonl": "1484c851b4a30120856a9a9967e4833a8e4f6d1f689297b3fc6e1721ab0a9330",
+    "12b-ordered-admission.jsonl": "4bed6eac60a9eeedf10836627cc226c6a9f9286b917ecf9b33034c1e7ab55904",
+    "13-qualification-path.jsonl": "668b59188a1e975795dd4bb31ed6248bdcbf24f2d40becfc8d5c442071c21603",
+    "16-native-full.jsonl": "482b16c40e8bf312f6c171407c42b2a1a0720c8c236501722283116e963c3469",
+    "17-fixed-objective-regressions.jsonl": "7d54649af4b21fbb91e5f67d48dc1ba552ffe34acda1b573f0f86748210f2a71",
+    "18-data-service-race.jsonl": "0da10fd92065d7189c72d8a99c4e3c88663eb957434cba7ffe0a9616044f13ab",
+    "20-android-build.log": "29bb6206b149968c54eb29bfd0e42c88a0e064bc44b392c799df216bc9ea1278",
+    "21-public-services-race.jsonl": "ab597653312078c634d81b1aa285052cac8207f464448950e9f16140e61f187d",
+    "22-final-server-build.log": "be401b9888f79254f75236ecf34fbdefa020c86bcd3aac5eb7f5ceeba82e7975",
+    "23-qualification-evidence-unit.log": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5",
+    "23-source-check.log": "a19dc5c5e4b27aef99e2b6cf696ee0f6840cbeb036fc32b28c7965180362e842",
+    "24-packaged-source-check.log": "aa4ecb01eba6e652cc9d8ee7efd78d0c860f43fa783aa32be2a97b5148237e7b",
+    "android-domain-test-summary.json": "9594910ef31bbd2e85221e2b67aa42f1b15e5314831805ad9e4a84eb4c58b188",
+    "android-lint-summary.json": "b449a9431fc64efa325aaf079cbade3faa1d0e32d240da0db39a1a25922b2d5e",
+    "android-validation-build-report.json": "e0b06a939a4dc85e1fa76cb8830e04b9ae8e0934b3e16b126beb49b39dbdab86",
+    "core-report.json": "2e4c86bd4da422137039502104b7f9c4c575bec1d8a738bc3071a1f480ab7beb",
+    "final-core-build.log": "ae2ca420bacae11938e4f8c55cc73cf3e286bf50ec7d268ceceff895dcdaaaf4",
+    "final-core-test-events.jsonl": "f004ccd45a9a87c1d78c67c147a803210291df0c400754d8e630728a3953deb1"
+  },
+  "git_documentation_commit": "a1a1806",
+  "apk_included": true,
+  "apk_signer": {
+    "local_apk_signer_sha256": "c9c766e99b9b691044bd7fd2a5613ceb15fb3266f87aee225a84f56f160a8e45",
+    "supplied_rev10_signer_sha256": "46e3e8f2f3098fa9e5bc9231a7403e2b0ba0ee72c34e1565ff16d5484ce4dee3",
+    "matches_rev10": false,
+    "application_id": "org.itom.client.dev.rev7",
+    "version_code": 9201,
+    "version_name": "0.9.2-Rev1-debug",
+    "apk_signature_scheme_v2_verified": true,
+    "in_place_rev10_update": "requires original installed-app signing key; do not uninstall or clear data",
+    "private_signing_key_included": false
+  },
+  "publish_evidence_sha256": {
+    "01-account-limits.jsonl": "fbdb6552d466fe93b747055b54080617910cd0e9844195489955d3bc36b95b30",
+    "02c-envelope-verification.jsonl": "ae9698a5a61d7007f071679c4d4fa43052b4f66c4b39d50a7c8bd0091821e7b1",
+    "03b-runtime-envelope.jsonl": "018ddbb9d0bba67b064381e5b26b494f8ba566cda20c691edf3d4cde8ec7ad1f",
+    "03d-envelope-race.jsonl": "e5b72375309598d5f0a2f2a69926c83909f9a2ebb2e79333b3aad2622d590a79",
+    "04-folder-migration.jsonl": "f454edcc1807160bb6b4cdf0ecd091707abf036c1d6be438f616a5124cc03505",
+    "05b-session-owner-credit.jsonl": "faa1864f7360a2b1f37e97b3962a6a9cfb2b5f2b6773e76c273b811e2cef3c59",
+    "06-socket-admission.jsonl": "bdbc79561c9f96600f193bef56dcb08d9d9a7ccc11be9cdaa66a58c57fd8a8f5",
+    "06b-resource-config.jsonl": "a1d0bb22c92da9650ea6c8a74373ae52c0031e50831c3483c0b98332b64abfc3",
+    "08d-regression-proof.jsonl": "e3e963202ed65613f43584fdac2762e89c5275180e18579551e255ed1bbbdd1d",
+    "09b-fixed-rtt.jsonl": "ee91834fbe4133d050e7b599b702716d9d7a042688256f125e411b0028e813e5",
+    "10-single-diagnostic.jsonl": "ea254957b64c7a37568e5ea2c69151a84ee0e8811c34e9b75f97068182921fa4",
+    "10b-single-snapshots.jsonl": "38d6a09c28f0c12af4dba8c460bc4a835486d904008fcb924dfa4b735b92a6d3",
+    "11c-service-regressions.jsonl": "1484c851b4a30120856a9a9967e4833a8e4f6d1f689297b3fc6e1721ab0a9330",
+    "12b-ordered-admission.jsonl": "4bed6eac60a9eeedf10836627cc226c6a9f9286b917ecf9b33034c1e7ab55904",
+    "13-qualification-path.jsonl": "668b59188a1e975795dd4bb31ed6248bdcbf24f2d40becfc8d5c442071c21603",
+    "16-native-full.jsonl": "482b16c40e8bf312f6c171407c42b2a1a0720c8c236501722283116e963c3469",
+    "17-fixed-objective-regressions.jsonl": "7d54649af4b21fbb91e5f67d48dc1ba552ffe34acda1b573f0f86748210f2a71",
+    "18-data-service-race.jsonl": "0da10fd92065d7189c72d8a99c4e3c88663eb957434cba7ffe0a9616044f13ab",
+    "20-android-build.log": "29bb6206b149968c54eb29bfd0e42c88a0e064bc44b392c799df216bc9ea1278",
+    "21-public-services-race.jsonl": "ab597653312078c634d81b1aa285052cac8207f464448950e9f16140e61f187d",
+    "22-final-server-build.log": "be401b9888f79254f75236ecf34fbdefa020c86bcd3aac5eb7f5ceeba82e7975",
+    "23-qualification-evidence-unit.log": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5",
+    "23-source-check.log": "a19dc5c5e4b27aef99e2b6cf696ee0f6840cbeb036fc32b28c7965180362e842",
+    "24-packaged-source-check.log": "aa4ecb01eba6e652cc9d8ee7efd78d0c860f43fa783aa32be2a97b5148237e7b",
+    "25-publish-android-build.log": "88cf6f221d5330ea9d0bf8699084da1a39b104ebb4a3890724696e9c9a64ca9e",
+    "android-domain-test-summary.json": "9594910ef31bbd2e85221e2b67aa42f1b15e5314831805ad9e4a84eb4c58b188",
+    "android-lint-summary.json": "b449a9431fc64efa325aaf079cbade3faa1d0e32d240da0db39a1a25922b2d5e",
+    "android-publish-build-report.json": "1bdd2948cc9c07cc741db0cdd4807120167d734c7c071655932ebee360f7fab5",
+    "android-validation-build-report.json": "e0b06a939a4dc85e1fa76cb8830e04b9ae8e0934b3e16b126beb49b39dbdab86",
+    "core-report.json": "2e4c86bd4da422137039502104b7f9c4c575bec1d8a738bc3071a1f480ab7beb",
+    "final-core-build.log": "ae2ca420bacae11938e4f8c55cc73cf3e286bf50ec7d268ceceff895dcdaaaf4",
+    "final-core-test-events.jsonl": "f004ccd45a9a87c1d78c67c147a803210291df0c400754d8e630728a3953deb1"
+  }
+}

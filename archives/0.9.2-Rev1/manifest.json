@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "release_tag": "v0.9.2-Rev1",
+  "revision": "transport-rework3-rev1",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev1-full.zip",
+    "size": 42984054,
+    "sha256": "fc9bce061a2c587a9d7499446f1c81eb87ce41e3a10ca25bd1915400349ae3a2"
+  },
+  "parts": [
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-000.bin",
+      "size": 8388608,
+      "sha256": "efc32c009d751cb48058e7a2f764675853b900d01148fcf353fc9ead8b50db49",
+      "git_blob_sha1": "34ae34c8015b6ced9f5d0e4c8652094d9af9c7fd"
+    },
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-001.bin",
+      "size": 8388608,
+      "sha256": "5f610158cded8f9a6e8835cac4fd41e87018c97b7a465c3ba04d48a7ab75615f",
+      "git_blob_sha1": "e98c1a2facbf8269b4c69ccb3548a1b1f7bf5cfd"
+    },
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-002.bin",
+      "size": 8388608,
+      "sha256": "99140544321e2b422fe873334460746ccb7ebe5a05e217a9a381e9bc380b8d85",
+      "git_blob_sha1": "95ab70a695a1313ade040196f73eb3f0426290c1"
+    },
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-003.bin",
+      "size": 8388608,
+      "sha256": "32a88dbf729342ab4a291c5b2c535c69396d22d8a7bad6188ba419c1201cc65d",
+      "git_blob_sha1": "c6a9a65120af6154a47ee36f136328c94253c151"
+    },
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-004.bin",
+      "size": 8388608,
+      "sha256": "3066aae918a081597967ea625240ba81f4c7083e905980c18a0aa6064084c403",
+      "git_blob_sha1": "36cc121ac05f81f8952d3b260c30bd072da71f91"
+    },
+    {
+      "path": "archives/0.9.2-Rev1/parts/part-005.bin",
+      "size": 1041014,
+      "sha256": "d1aae208c9c0d81a4b3a56d9d694d382313bb746e10d8c36dbc4ad7b05e717df",
+      "git_blob_sha1": "a65f5d0b91877bb9206cb5f22211a533eb4a8da9"
+    }
+  ],
+  "assets": [
+    {
+      "name": "APK_SIGNER.json",
+      "size": 529,
+      "sha256": "6468ac7662134a55225717978fa66ecdc20ac87f7e1977d623da92b973260f8f"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-debug.apk",
+      "size": 69850662,
+      "sha256": "6790e964c34bc4d0e7c977a1118bc61fc3b11aec3a49e744f9477ffccf64335d"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-full.zip",
+      "size": 42984054,
+      "sha256": "fc9bce061a2c587a9d7499446f1c81eb87ce41e3a10ca25bd1915400349ae3a2"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-full.zip.sha256",
+      "size": 91,
+      "sha256": "2babeaba37f1bd8e16b665209e6425ed468a3133c7aa9acda2626a0efa0d4c2e"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-linux-amd64",
+      "size": 12778371,
+      "sha256": "3546bf52168cbfcd96fc3d5399a15e848893c43bdbc4cb973b143cb1d2dc2e23"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-linux-arm64",
+      "size": 11736267,
+      "sha256": "807307532dd91222c0b3f14d0e645df043f3c93a9272791eae3edb6e9c063760"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev1-sources.zip",
+      "size": 1960298,
+      "sha256": "9c437c8430a2cc996991b2db31026c7669bcef24fd61800a37d9a66bf86dc872"
+    },
+    {
+      "name": "ITOM_0.9.2-Rev1_TRANSPORT_REWORK_PLAN.md",
+      "size": 74234,
+      "sha256": "0f9bc456453521a29b032a0d3dec52553c874d37ecd0343183656d49080a2244"
+    },
+    {
+      "name": "ITOM_0.9.2-Rev1_VERIFICATION.md",
+      "size": 10779,
+      "sha256": "7d79b9d9ee9459377110912fb19f518402b94fcca8bae5450dca8d585bd4426b"
+    },
+    {
+      "name": "README.md",
+      "size": 1826,
+      "sha256": "3b2cb4f7397e104e86fdebeb62e7be7ff032f0ef427892cc98b91a07dd54529e"
+    },
+    {
+      "name": "REV1_BUILD_AND_UPGRADE.md",
+      "size": 5629,
+      "sha256": "5230eb3f3789447fca9bcdf48b1992617bd64e53972cd7b54f8102349cb101a8"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 913,
+      "sha256": "51c5ca138e988e8b12a84ceeb4c1b9d50dcb70ba989e7387882270e0e280052b"
+    },
+    {
+      "name": "verification.json",
+      "size": 16371,
+      "sha256": "a2f2f7bbe9ba1f3ccfef463e05e36b41647fb3abb7d14028689cab37f460b248"
+    }
+  ],
+  "classification": "implementation candidate; field performance unqualified",
+  "apk_install": "User chose a full local reinstall; local debug signer differs from Rev10."
+}
