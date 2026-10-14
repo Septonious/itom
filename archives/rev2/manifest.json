@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "release_tag": "v0.9.2-Rev2",
+  "revision": "transport-rework3-rev2",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev2-full.zip",
+    "size": 43140502,
+    "sha256": "319f8edc841d7c53d8cb03d03198278bfc5d17ace4c878f1123cdb38536bf45a"
+  },
+  "parts": [
+    {
+      "path": "archives/rev2/parts/part-000.bin",
+      "size": 8388608,
+      "sha256": "363a700debe797b851843ad75d7f9c4647bfda88c650f5f47d169d017ef9e49a",
+      "git_blob_sha1": "a22dd0c5b8ffb19ae341c4ac1155bff56805d2dc"
+    },
+    {
+      "path": "archives/rev2/parts/part-001.bin",
+      "size": 8388608,
+      "sha256": "855d9257cbcfd9ea177019c8ae34cb0a2fa79c72884021be46671bb2ac4789e8",
+      "git_blob_sha1": "63ab88c04f833a250e48278c42efdc1fe69168c4"
+    },
+    {
+      "path": "archives/rev2/parts/part-002.bin",
+      "size": 8388608,
+      "sha256": "063fbfce4346c45daef9f073609f61e5e23d8480e243bb0d612b9c73f8165360",
+      "git_blob_sha1": "9a8c632c1353f04981e7e5cc9811cf28318357b4"
+    },
+    {
+      "path": "archives/rev2/parts/part-003.bin",
+      "size": 8388608,
+      "sha256": "7df2b9522ddc9047408ad443a1adde7fd4bc651715061d9318ef8605243ea38b",
+      "git_blob_sha1": "bd046afa7a4a0670745059aff738be133436bcc8"
+    },
+    {
+      "path": "archives/rev2/parts/part-004.bin",
+      "size": 8388608,
+      "sha256": "317d0a9ec28d0bd40fcc7c3949fc335d326ae63940b2187090d253fe9383c62e",
+      "git_blob_sha1": "bb982039d272198ec0ca58c0d320273ce7d507db"
+    },
+    {
+      "path": "archives/rev2/parts/part-005.bin",
+      "size": 1197462,
+      "sha256": "06c4195047a5607e21d30102e8d32aec0878b72cdd921ab2c40b5ce53b3761ef",
+      "git_blob_sha1": "bff0b8e5d80f03bcb6cc8f896cc2f6bc7a2c67f9"
+    }
+  ],
+  "assets": [
+    {
+      "name": "APK_SIGNER.json",
+      "size": 397,
+      "sha256": "586ab5304e964dc10a8936d08801f09fb06a83cb43a4a8e84d34a1064f85a1b4"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-debug.apk",
+      "size": 69899814,
+      "sha256": "3bd842fd017c1dd2913f3cf1b9e810cc25cab041d4fced9043e3bb6e84ea1976"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-full.zip",
+      "size": 43140502,
+      "sha256": "319f8edc841d7c53d8cb03d03198278bfc5d17ace4c878f1123cdb38536bf45a"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-full.zip.sha256",
+      "size": 91,
+      "sha256": "662987207e5a89e1f5def6448bce12d009ae33accbd7ab506dd283280170dfc7"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-linux-amd64",
+      "size": 12800609,
+      "sha256": "332fc4350542759521566990a8f4d2518367b02d0336a3082ebe40ab769b3b1e"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-linux-arm64",
+      "size": 11742889,
+      "sha256": "d57f5d3856344910e71ac45443507e6538c02f31ee0fc159adac9998db441f14"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-sources.zip",
+      "size": 2083291,
+      "sha256": "531f15f5657df8dbd9d457be2691c884845fadc441d2b24f51674124e014ea85"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-test-evidence.zip",
+      "size": 474355,
+      "sha256": "952d6544527e25e7fb82702b46c167a8c4b1ff756a4d38b6a7b7770e1dcedb98"
+    },
+    {
+      "name": "README.md",
+      "size": 5032,
+      "sha256": "543742bdc01596f8d2ba44993655e22174878b770d5a5698d0243beb2c7a2647"
+    },
+    {
+      "name": "REV2_BUILD_AND_INSTALL.md",
+      "size": 1890,
+      "sha256": "adb68aff2ed9da7fdb52044fbba211fc001bba1e7079898d5e3455295d33fc17"
+    },
+    {
+      "name": "REV2_FIELD_FINDINGS_AND_RESULTS.md",
+      "size": 7579,
+      "sha256": "c0acc3acce6cea281e0c6ebb31580616f2993c893602865d762e8ea1252f328c"
+    },
+    {
+      "name": "REV2_TRANSPORT_REWORK.md",
+      "size": 12046,
+      "sha256": "f2f1ea3d1843dfb7758c5606e650b512ad0faa5a9172432d880d944ec96695ad"
+    },
+    {
+      "name": "REV2_VERIFICATION.md",
+      "size": 6292,
+      "sha256": "01b94472009bd7e665788ec14fcb06b708db47b58c16785515e3a28656d7fd04"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 1087,
+      "sha256": "1c98bda7bf0fabad32b7d674be473b7bb89cf4c8fcf33e63078ded3b19010f2a"
+    },
+    {
+      "name": "verification.json",
+      "size": 10687,
+      "sha256": "ad31f132c1c41583c3759df6ae4a883d5042261a4c09f5b4b9e8f9dda5e18570"
+    }
+  ]
+}

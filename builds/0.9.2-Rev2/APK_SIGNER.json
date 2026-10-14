@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "application_id": "org.itom.client.dev.rev7",
+  "version_code": 9202,
+  "version_name": "0.9.2-Rev2-debug",
+  "certificate_sha256": "c9c766e99b9b691044bd7fd2a5613ceb15fb3266f87aee225a84f56f160a8e45",
+  "scheme_v2_verified": true,
+  "local_debug_signer": true,
+  "matches_published_rev1_signer": true,
+  "user_authorized_local_reinstall": true,
+  "private_key_included": false
+}

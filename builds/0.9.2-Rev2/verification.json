@@ -1,0 +1,315 @@
+{
+  "schema": 1,
+  "release": "0.9.2-Rev2",
+  "revision": "transport-rework3-rev2",
+  "runtime_commit": "4f9c0cb",
+  "documentation_commit": "9c81dcc",
+  "delivery_date": "2026-10-14",
+  "correctness_and_builds_passed": true,
+  "strict_laboratory_qualification_passed": false,
+  "field_qualified": false,
+  "real_provider_tested": false,
+  "android_device_tested": false,
+  "core_runtime_sha256": "94c85c536178126c2887d7fb2bfe951fb2f3ed1353c71a5da6f2b22f25d50290",
+  "qualification_source_fingerprint": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+  "qualification_source_unchanged": true,
+  "strict_cases": [
+    {
+      "name": "single-1",
+      "passed": true,
+      "source_unchanged": true,
+      "log_sha256": "c84a501b22fcbeafeab67bce02134f0f5e8a1481b4c2a26fb08a1d7dd59cc938"
+    },
+    {
+      "name": "single-2",
+      "passed": true,
+      "source_unchanged": true,
+      "log_sha256": "635610f8183b9af15e168f932d302028e575f953d2b71cd3cf11eb1ae500ab55"
+    },
+    {
+      "name": "single-3",
+      "passed": false,
+      "source_unchanged": true,
+      "log_sha256": "1619c71b30534123871adf24e40bcb861dec762603f17c17e8c508f8ee3001c4"
+    },
+    {
+      "name": "multi-1",
+      "passed": false,
+      "source_unchanged": true,
+      "log_sha256": "777d4e381657038ffe7f0e3bba4c5a8515a2d403dee4e6ad45d59433bb23620a"
+    },
+    {
+      "name": "multi-2",
+      "passed": false,
+      "source_unchanged": true,
+      "log_sha256": "3d4b4fe4dfe48a92bbc3b1c0e39ffbf62dfb328d89da7cbace456a419a06f677"
+    },
+    {
+      "name": "multi-3",
+      "passed": false,
+      "source_unchanged": true,
+      "log_sha256": "a2edd077ba91131238a915e00271b013345ad73812382a8915e99b8c3a8d9f9f"
+    }
+  ],
+  "core": {
+    "source_revision": "transport-rework3-rev2",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": false,
+    "stage": "complete",
+    "started_utc": "2026-10-14T07:41:51Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "core_runtime_sha256": "94c85c536178126c2887d7fb2bfe951fb2f3ed1353c71a5da6f2b22f25d50290",
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+    "unstable_survival_tests": "enabled (mandatory; SKIP fails the Go gate)",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 788,
+      "failed": 0,
+      "skipped": 13,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestConsecutiveConstrainedLoadsAndIdleDATARecovery"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtest200MbpsApplicationPhases"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestFragmentedMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestHeterogeneousIdleAndParallelStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestParallelColdStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport130ApplicationMeasurement"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport20ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport50ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransportReworkQualification"
+        }
+      ]
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "android": {
+    "itom": "0.9.2",
+    "source_revision": "transport-rework3-rev2",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-14T07:47:59Z",
+    "jdk_source": "local JDK 17",
+    "android_sdk": "existing SDK 37",
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "ffdc837ef5efb56e3675a78d2b0a6808eef78df42095a33143c245abb63504bf",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "Picked up JAVA_TOOL_OPTIONS: -Duser.home=/workspace/toolchains/android-rework/android-user -Dhttp.proxyHost=proxy -Dhttp.proxyPort=8080 -Dhttps.proxyHost=proxy -Dhttps.proxyPort=8080 -Djavax.net.ssl.trustStore=/workspace/toolchains/android-rework/session-proxy-cacerts\nopenjdk version \"17.0.16\" 2025-07-15\nOpenJDK Runtime Environment Temurin-17.0.16+8 (build 17.0.16+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.16+8 (build 17.0.16+8, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 71,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter",
+          "locations": [
+            {
+              "file": "/workspace/work/itom-rev2/itom/android/app/src/main/java/org/itom/client/Theme.kt",
+              "line": "111",
+              "column": "63"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client.dev.rev7",
+      "version_code": 9202,
+      "version_name": "0.9.2-Rev2-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "ada101443e4263f95ac8a03cfc72af1406b5fa618accbfaf45c659bdc91fd152",
+      "lib/armeabi-v7a/libgojni.so": "94533f5c91f9c45575c70bcb80a6f0cab2dbe76a5929f03466813a32b55f1973"
+    },
+    "status": "passed",
+    "apk": "ITOM-0.9.2-Rev2-debug.apk",
+    "sha256": "3bd842fd017c1dd2913f3cf1b9e810cc25cab041d4fced9043e3bb6e84ea1976",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "final_race": {
+    "pass": 60
+  },
+  "known_metadata_note": "Qualification runner summary retains tail_seconds=10; the actual core gate logged/evaluated a 30-second tail for these 60-second runs.",
+  "known_performance_limits": [
+    "SINGLE repeat 3 upload tail 99.021 Mbps fails strict 100 floor.",
+    "All three 24-stream MULTI repetitions stopped early on loaded probe timeout.",
+    "Full field-wrapper tail stress failed; regular stratum excludes >500ms wrapper samples explicitly.",
+    "No matched Android/provider Rev2 validation or field account-count comparison."
+  ],
+  "signer": {
+    "schema": 1,
+    "application_id": "org.itom.client.dev.rev7",
+    "version_code": 9202,
+    "version_name": "0.9.2-Rev2-debug",
+    "certificate_sha256": "c9c766e99b9b691044bd7fd2a5613ceb15fb3266f87aee225a84f56f160a8e45",
+    "scheme_v2_verified": true,
+    "local_debug_signer": true,
+    "matches_published_rev1_signer": true,
+    "user_authorized_local_reinstall": true,
+    "private_key_included": false
+  },
+  "artifacts": [
+    {
+      "name": "APK_SIGNER.json",
+      "size": 397,
+      "sha256": "586ab5304e964dc10a8936d08801f09fb06a83cb43a4a8e84d34a1064f85a1b4"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-debug.apk",
+      "size": 69899814,
+      "sha256": "3bd842fd017c1dd2913f3cf1b9e810cc25cab041d4fced9043e3bb6e84ea1976"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-linux-amd64",
+      "size": 12800609,
+      "sha256": "332fc4350542759521566990a8f4d2518367b02d0336a3082ebe40ab769b3b1e"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-linux-arm64",
+      "size": 11742889,
+      "sha256": "d57f5d3856344910e71ac45443507e6538c02f31ee0fc159adac9998db441f14"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-sources.zip",
+      "size": 2083291,
+      "sha256": "531f15f5657df8dbd9d457be2691c884845fadc441d2b24f51674124e014ea85"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev2-test-evidence.zip",
+      "size": 474355,
+      "sha256": "952d6544527e25e7fb82702b46c167a8c4b1ff756a4d38b6a7b7770e1dcedb98"
+    },
+    {
+      "name": "README.md",
+      "size": 5032,
+      "sha256": "543742bdc01596f8d2ba44993655e22174878b770d5a5698d0243beb2c7a2647"
+    },
+    {
+      "name": "REV2_BUILD_AND_INSTALL.md",
+      "size": 1890,
+      "sha256": "adb68aff2ed9da7fdb52044fbba211fc001bba1e7079898d5e3455295d33fc17"
+    },
+    {
+      "name": "REV2_FIELD_FINDINGS_AND_RESULTS.md",
+      "size": 7579,
+      "sha256": "c0acc3acce6cea281e0c6ebb31580616f2993c893602865d762e8ea1252f328c"
+    },
+    {
+      "name": "REV2_TRANSPORT_REWORK.md",
+      "size": 12046,
+      "sha256": "f2f1ea3d1843dfb7758c5606e650b512ad0faa5a9172432d880d944ec96695ad"
+    },
+    {
+      "name": "REV2_VERIFICATION.md",
+      "size": 6292,
+      "sha256": "01b94472009bd7e665788ec14fcb06b708db47b58c16785515e3a28656d7fd04"
+    }
+  ]
+}
