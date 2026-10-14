@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "publication": "0.9.2-Rev3-testing",
+  "source_only": true,
+  "runtime_revision": "transport-rework3-rev3",
+  "source_commit": "100fc1def82482e5c56f3ba12cb3833bb6b3a40c",
+  "core_runtime_sha256": "49016a6a2912acdc3a2418ff0649a85b9271243502157f16f999d900314bd726",
+  "correctness": "passed",
+  "full_100_100_lab_qualification": "failed",
+  "android_provider_field_qualification": "not_run",
+  "files": [
+    {
+      "path": "archives/rev3-testing/ITOM-0.9.2-Rev3-testing-sources.zip",
+      "size": 2148130,
+      "sha256": "ab86fbaf1d0429f98c826de045699e21fc02c3e30fd2821a58b0b2e6dff3a23c"
+    },
+    {
+      "path": "archives/rev3-testing/README.md",
+      "size": 1276,
+      "sha256": "57ca21ab0103a11d3dec687361269e55c66aee0be5e296e67d78db1a9a43fcd2"
+    },
+    {
+      "path": "archives/rev3-testing/REV2_TO_REV3.patch",
+      "size": 477585,
+      "sha256": "a5703f70ac1c30366ed9a685013d59d7e885ab60d174abd3e11d64156fafaa22"
+    },
+    {
+      "path": "archives/rev3-testing/source/README.md",
+      "size": 5001,
+      "sha256": "7487836bcb60df714bc2b8b0123d40cd5945047e445d4788899d1583f8358f21"
+    },
+    {
+      "path": "archives/rev3-testing/source/android/app/build.gradle.kts",
+      "size": 2487,
+      "sha256": "46c03ba615333bffbe62eac6c6246bc794e6f298ae1ab336fc48ad12a5274f16"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/cmd/itom/main.go",
+      "size": 5359,
+      "sha256": "8d760c6ee291210f49c69a64680a54f528b8e6cea75249d82a8d904ce94ff6c1"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/datapath/engine.go",
+      "size": 25053,
+      "sha256": "65b1375f5a83b16256d60ac1d8cda79486ee00b3fcafc180e89d57df9e5285f2"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/datapath/pump.go",
+      "size": 37454,
+      "sha256": "14408022f1f3cb14fe48a8bc80fbda60f589c45c3d91e401a9843bfe6a3ece56"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/datapath/rev3_fair_test.go",
+      "size": 5773,
+      "sha256": "2a4d97391d57c76ea06e8b2a30a39e27f507d722a741bafc2306c970cd94fd31"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/datapath/rev3_repair_test.go",
+      "size": 1861,
+      "sha256": "f916cab90badbb50756dbdc87be15e4bd6e35424333f3d151a463ff676a3e862"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/datapath/scheduler_snapshot.go",
+      "size": 2333,
+      "sha256": "1d7034d380b9ef7b9ae716be1589d4ed8af02e9703207ce4a3a2f2b73cc3fa3b"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/flow/tx.go",
+      "size": 13682,
+      "sha256": "8399bffa179dae9aadd794532b7e59c7e40123c562ad8f1d39118e3605a78a05"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/manager/trace.go",
+      "size": 2629,
+      "sha256": "8753bb6596a717b0d47c6728d33350eacfcb3c6f9e3aecec83f5caef86936fc4"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/bulk_admission.go",
+      "size": 503,
+      "sha256": "51fc02c2245ef41b71688232c4a5d82cfcf29b7ce449cca062ab3144b3ec2b99"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/control.go",
+      "size": 21445,
+      "sha256": "75eec70bc6f9d3fb596330ee7bedd88c4c037973c22cdc5c249ee8482f07003c"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/data_envelope.go",
+      "size": 2526,
+      "sha256": "c597bb28701b576c9ae07fd8054fb96f6bfdeb152415745df077086e32f9e267"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/delivery_control.go",
+      "size": 31514,
+      "sha256": "d4cc31afa86ac684868ebf60cc2b47793139ffc2f39cfdd42558ba076e8375d7"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/diagnostics.go",
+      "size": 36197,
+      "sha256": "24dd376a3351c35fd2ee5086fd38b396c108aa3480f83c0584cca09ff761e75c"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/feedback_routing.go",
+      "size": 2587,
+      "sha256": "4b20e94a389076337c44259d8b0ca7a47e6d4b7ede88728ddf59a47930634266"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/lane.go",
+      "size": 121204,
+      "sha256": "1bce571a087807b23d4e9583eabed3d51a5b97298ab63f0e4c9dcbd95c5bade4"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/repair_delivery_age_test.go",
+      "size": 2351,
+      "sha256": "6da8727ac1f1111b93da16131d55f249ac244c91da4a9028066e5b260e312d56"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/rev3_delay_isolation_test.go",
+      "size": 2109,
+      "sha256": "d3c990b88634ae491712ffbed4eff7fbaccb6d08cb42867a3fb4f8d899de858e"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/rev3_feedback_test.go",
+      "size": 2398,
+      "sha256": "41b42064afbd143b1852dd711527a2fc77ca06fa4e8b62d206d9aedc7dd58ab0"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/rev3_multiplex_test.go",
+      "size": 3588,
+      "sha256": "04d51fa3de48aa41c703bd9f670e4feb4f48db7cb90a2ded28961205d088961c"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/stripe.go",
+      "size": 35368,
+      "sha256": "835937bbca3c03d885bdd3e0c2d0d745990dc06ed12035147039ace3ab5a0c6b"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/supervised_load_test.go",
+      "size": 22706,
+      "sha256": "5e0f42e74ae0322a6f98ff87b33555ce07f22e3dac36fae28f4f7a353fc3a32c"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/trace.go",
+      "size": 11019,
+      "sha256": "b9d4e7ed421d43dfdd2dbf7df85ab183f94e13eff3b599c576dd5190e12a5476"
+    },
+    {
+      "path": "archives/rev3-testing/source/core/tunnel/version.go",
+      "size": 146,
+      "sha256": "bf9fa318414173ddec6920a5c22b563427ebaccc8c347fd1de4fdf00d02b45d6"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/REV3_BUILD_AND_INSTALL.md",
+      "size": 2200,
+      "sha256": "b50dba9e8d05b47811c70888f82694bd1a4678d4509b86b69efb573019aefdc2"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/REV3_FIELD_FINDINGS_AND_RESULTS.md",
+      "size": 6440,
+      "sha256": "aea00757d1e9994227f819889161f82a824a0fbd26c604f22686d76c8dbc9a60"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/REV3_TRANSPORT_REWORK.md",
+      "size": 6102,
+      "sha256": "d8ee460b66e3883efe1400310c4cfd7a6394cbb836a63fe75bfc15a2330d7c07"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/REV3_VERIFICATION.md",
+      "size": 1938,
+      "sha256": "02186a5fc51a3154e087487fd1ab9dff49f24a1a996c0bd11a1aab0d373928d1"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/RUN_MATRIX.py",
+      "size": 2363,
+      "sha256": "94cac264598c4a28b3ec078a19418b641dca19ea96870bbde0e479f0d2a66130"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/evidence/account_matrix.json",
+      "size": 81054,
+      "sha256": "e35c95796f86c1fffb8d6146af1ad322bf0b3ca3bef1642c49ffaf5800c93e72"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/evidence/field_rev2.json",
+      "size": 29480,
+      "sha256": "bcc1a329163577ed70c626974dbf1f6787172947faf5390c7aa4c961c220e1b1"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/evidence/field_rev2_full.json",
+      "size": 243030,
+      "sha256": "f06c649cc88847f62600a8720465815375dec10f98763e6f6f8353861c795db3"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/evidence/qualification_summary.json",
+      "size": 4415,
+      "sha256": "5c64b9fdeb5c29db12e8540ffabc035d77ea9abf5603d063c9e16f7084fff11e"
+    },
+    {
+      "path": "archives/rev3-testing/source/docs/rev3/verification.json",
+      "size": 11394,
+      "sha256": "e5c06d2693cf444f986a737720b36c993ae6853c8b9914f515a6cefee37bf846"
+    },
+    {
+      "path": "archives/rev3-testing/source/source-info.json",
+      "size": 391,
+      "sha256": "8f8589f0a36b5855ff228a6716013b3eed19b5daf3be849d3f62654ebe9ab25f"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/analyze_rev3_multiplex.py",
+      "size": 2600,
+      "sha256": "bd9450dbff3f463c70540cfeae46c73e202f29863779ffb76ea5669e748a6499"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/archive_main.py",
+      "size": 7854,
+      "sha256": "2fd93f7a1d1fb422b75cd38eead6c6c17570553dbee446e4cd8abae0c73b34a6"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/build.py",
+      "size": 33906,
+      "sha256": "61e0c425e0303d59ccba1ffbfa94a3fdb986d5e52ad91c0e8e58f5e1ede9893c"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/build_core.py",
+      "size": 26799,
+      "sha256": "ad7c7869cf2d276bbfe337f263dfc3f9874260b7b49a5ebf25b1583ec945ffe7"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/check_sources.py",
+      "size": 8384,
+      "sha256": "4baa574362fd89614dc1d76ffb9cfdc9772c5c4078bf845d602031a0b1d6824c"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/test_launcher.py",
+      "size": 36237,
+      "sha256": "6fca34e9c17dc19d1409da1d4b74246f48f0213dd130bcc68aa5cc37b6cb69cf"
+    },
+    {
+      "path": "archives/rev3-testing/source/tools/transport_qualification.py",
+      "size": 5526,
+      "sha256": "5cd3a13383fd97b7724dd7eb3734b12ced889c093d967fdc2b793baad5e84766"
+    }
+  ]
+}
