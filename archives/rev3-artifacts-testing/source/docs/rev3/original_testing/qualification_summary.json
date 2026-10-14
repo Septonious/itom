@@ -1,0 +1,171 @@
+{
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "all_cases_passed": false,
+  "criteria": {
+    "useful_upload_mbps_min": 100,
+    "useful_download_mbps_min": 100,
+    "all_loaded_rtt_ns_strictly_below": 1000000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30
+  },
+  "cases": [
+    {
+      "case": "single-1",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "159.340",
+        "download_mbps": "97.059",
+        "rtt_samples": "60",
+        "p50_ms": "295",
+        "p95_ms": "413",
+        "max_ms": "448",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "144.494",
+        "download_mbps": "101.502"
+      },
+      "source_unchanged": true,
+      "log_sha256": "ea26664528f16fc5d5ccd06e81b6f39864fdb8b6ec09df392384cbf25d5b6eda"
+    },
+    {
+      "case": "single-2",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "140.784",
+        "download_mbps": "99.724",
+        "rtt_samples": "60",
+        "p50_ms": "313",
+        "p95_ms": "414",
+        "max_ms": "492",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "123.487",
+        "download_mbps": "109.567"
+      },
+      "source_unchanged": true,
+      "log_sha256": "acf23e58de90165d8069cfa528454e89c6757b635806078ac7882c6f6f5426a0"
+    },
+    {
+      "case": "single-3",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "143.135",
+        "download_mbps": "93.616",
+        "rtt_samples": "60",
+        "p50_ms": "291",
+        "p95_ms": "402",
+        "max_ms": "510",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "150.051",
+        "download_mbps": "97.518"
+      },
+      "source_unchanged": true,
+      "log_sha256": "a3f604b4fef28825496242301a6f8ec6611c1219d9d38160cacd7b8fff1618ed"
+    },
+    {
+      "case": "multi-1",
+      "passed": true,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "109.332",
+        "download_mbps": "103.612",
+        "rtt_samples": "60",
+        "p50_ms": "277",
+        "p95_ms": "353",
+        "max_ms": "479",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "107.680",
+        "download_mbps": "105.312"
+      },
+      "source_unchanged": true,
+      "log_sha256": "8a0cbfb89fcc42c4ed428d0befb423b255686afc3254401bbd310a3cfbba775a"
+    },
+    {
+      "case": "multi-2",
+      "passed": true,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "110.756",
+        "download_mbps": "109.214",
+        "rtt_samples": "60",
+        "p50_ms": "286",
+        "p95_ms": "395",
+        "max_ms": "441",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "107.794",
+        "download_mbps": "111.560"
+      },
+      "source_unchanged": true,
+      "log_sha256": "9b58abf030288c4569925021010d024864d5cfe3727764a95ec6421c0c0d0282"
+    },
+    {
+      "case": "multi-3",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "97.347",
+        "download_mbps": "106.863",
+        "rtt_samples": "60",
+        "p50_ms": "294",
+        "p95_ms": "416",
+        "max_ms": "448",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "98.182",
+        "download_mbps": "107.907"
+      },
+      "source_unchanged": true,
+      "log_sha256": "7ab8a547ba1ec6cea0a94a216482b65510cf97f413225ee5bd5f909589951b6b"
+    }
+  ]
+}

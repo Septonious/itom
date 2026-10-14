@@ -1,0 +1,58 @@
+name: Publish verified ITOM 0.9.2-Rev3 artifacts
+on:
+  push:
+    branches: [itom-0.9.2-rev3-artifacts-testing]
+    paths:
+      - archives/rev3-artifacts-testing/manifest.json
+      - tools/publish_itom_rev3_testing.py
+      - .github/workflows/itom-rev3-testing-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: itom-0.9.2-Rev3-testing-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out artifact parts
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Reassemble and verify every artifact
+        run: python tools/publish_itom_rev3_testing.py --output "$RUNNER_TEMP/itom-rev3"
+      - name: Upload draft, verify remote digests, then publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=v0.9.2-Rev3-testing
+          mapfile -t names < <(python -c 'import json; print("\n".join(x["name"] for x in json.load(open("archives/rev3-artifacts-testing/manifest.json"))["assets"]))')
+          assets=()
+          for name in "${names[@]}"; do
+            assets+=("$RUNNER_TEMP/itom-rev3/$name")
+          done
+          # Draft tags are not available through releases/tags/<tag>.
+          # Resolve by ID, and resume a verified draft without replacing assets.
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+          release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]=="v0.9.2-Rev3-testing"]; assert len(rows)<=1; print(rows[0]["id"] if rows else "")' "$RUNNER_TEMP/releases.json")
+          if [[ -z "$release_id" ]]; then
+            gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --draft --prerelease \
+              --title "ITOM 0.9.2-Rev3 testing checkpoint" \
+              --notes-file builds/0.9.2-Rev3-testing/RELEASE_NOTES.md
+            gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+            release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]=="v0.9.2-Rev3-testing"]; assert len(rows)==1; print(rows[0]["id"])' "$RUNNER_TEMP/releases.json")
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$RUNNER_TEMP/release.json"
+          python tools/publish_itom_rev3_testing.py --verify-release-json "$RUNNER_TEMP/release.json" \
+            --repository "$GITHUB_REPOSITORY" --output "$RUNNER_TEMP/remote-digest-check"
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false -F prerelease=true -f make_latest=false > "$RUNNER_TEMP/published-release.json"
+
