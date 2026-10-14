@@ -1,7 +1,7 @@
 name: Publish verified ITOM 0.9.2-Rev2 artifacts
 on:
   push:
-    branches: [main]
+    branches: [itom-0.9.2-rev2]
     paths:
       - archives/rev2/manifest.json
       - tools/publish_itom_rev2.py
@@ -55,3 +55,4 @@ jobs:
             --repository "$GITHUB_REPOSITORY" --output "$RUNNER_TEMP/remote-digest-check"
           gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
             -F draft=false -F prerelease=true -f make_latest=false > "$RUNNER_TEMP/published-release.json"
+
