@@ -26,8 +26,8 @@ import (
 	"itom.local/core/wire"
 )
 
-func TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+func TestNativeAdminIMAPAuthorityAndHeartbeatSurviveClientAndServerRestart(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 85*time.Second)
 	defer cancel()
 	cfg, e := servercfg.New("admin-imap-test")
 	if e != nil {
@@ -63,8 +63,9 @@ func TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect(t *testing.T) {
 	if e = servercfg.Update(db, func(c *servercfg.Config) error { *c = cfg; return nil }); e != nil {
 		t.Fatal(e)
 	}
-	management := adminserver.New(ctx, state)
-	defer management.Close()
+	serverCtx, serverCancel := context.WithCancel(ctx)
+	management := adminserver.New(serverCtx, state)
+	defer func() { management.Close() }()
 	management.Launch = func(id string) error {
 		g, e := servercfg.GuardStatus(db)
 		if e != nil {
@@ -84,7 +85,7 @@ func TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect(t *testing.T) {
 	}
 	serverDone := make(chan error, 1)
 	go func() {
-		serverDone <- tunnel.ServeManagedIntegrationFixture(ctx, cfg, filepath.Join(state, "tunnel-server"), dial, nil, management.Dial)
+		serverDone <- tunnel.ServeManagedIntegrationFixture(serverCtx, cfg, filepath.Join(state, "tunnel-server"), dial, nil, management.Dial)
 	}()
 	defer func() {
 		cancel()
@@ -175,6 +176,48 @@ func TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect(t *testing.T) {
 	if g.ID != id || g.State != "observing" {
 		t.Fatal("reconnection replaced or prematurely committed trial", g.ID, g.State)
 	}
+	// Keep the native client and its logical pool running while the actual
+	// server supervisor and management service are replaced, as systemd restart
+	// does after a disruptive admin mutation. Reuse the durable journals/guard.
+	beforeRestart := g.LastBeatMS
+	launcher := management.Launch
+	serverCancel()
+	select {
+	case <-serverDone:
+	case <-time.After(5 * time.Second):
+		t.Fatal("server did not stop for restart")
+	}
+	management.Close()
+	restarted, e := servercfg.Load(db)
+	if e != nil {
+		t.Fatal(e)
+	}
+	serverCtx, serverCancel = context.WithCancel(ctx)
+	defer func() { serverCancel() }()
+	management = adminserver.New(serverCtx, state)
+	management.Launch = launcher
+	serverDone = make(chan error, 1)
+	go func() {
+		serverDone <- tunnel.ServeManagedIntegrationFixture(serverCtx, restarted, filepath.Join(state, "tunnel-server"), dial, nil, management.Dial)
+	}()
+	deadline := time.Now().Add(45 * time.Second)
+	for {
+		g, e = servercfg.GuardStatus(db)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if g.LastBeatMS > beforeRestart {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("native admin did not recover after real server restart within rollback lease")
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	if g.LastBeatMS-beforeRestart >= 60000 {
+		t.Fatal("server restart recovery exceeded rollback lease")
+	}
+	t.Logf("admin_server_restart_recovery_ms=%d", g.LastBeatMS-beforeRestart)
 	current, e := servercfg.Load(db)
 	if e != nil || current.Notice.Text != "&cAdmin &aIMAP test" {
 		t.Fatal("IMAP admin command was not applied", e)

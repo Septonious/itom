@@ -18,12 +18,16 @@ itom message --uid CLIENT_UID --text "&cHello &aWorld"
 itom message --uid CLIENT_UID --clear
 ```
 
-All nine internal gates passed on source `{q['qualification_source_sha256']}`:
+The Android UI has darker surfaces, brighter text, stronger boundaries and vivid accents. **Settings → Server admin** appears for an enabled server-side client named `admin`, authenticated by its key. It provides the reversible server-manager controls, clients/accounts/invitations, live traffic/logs/trace, diagnostics export and message previews over encrypted IMAP. Ordinary applications using the admin VPN cannot sign management commands.
+
+Each mutation first arms an independent durable watchdog. **60 seconds without verified two-way recovery reverts it; 60 continuous healthy seconds commits it.** Keep ITOM connected and wait for the trial before another mutation or a server-executable replacement. Stopping/disabling the current admin connection can intentionally trigger recovery. Permanent purges, uninstall and journal migrations stay CLI-only. See `docs/rev5/ADMIN.md` in the source for setup and the full control mapping. Internal logic, real TLS/IMAP transport and race tests passed; an actual systemd host and physical phone remain field-validation requirements.
+
+All ten internal gates passed on source `{q['qualification_source_sha256']}`:
 
 - {q['core']['passed_test_events']} core test events; IMAP-fork tests and vet passed.
 - Four complete 32-case field-suite repetitions, including one with 12 ms added durable-commit delay and real fsync. Cases include retained quota, thirty-second blackout, HTTP phases, repeated connection ramps, canceled downloads, chat under load and per-client notice delivery.
-- Accounting and recovery race checks passed.
-- {q['android_domain_tests']['tests']} Android domain tests and {q['android_callback_adapter_tests']['tests']} app tests passed; lint has no errors; native bridge checks and both Android ABIs passed.
+- Accounting/admin, recovery and native IMAP-admin reconnect race checks passed.
+- {q['android_domain_tests']['tests']} Android domain tests and {q['android_callback_adapter_tests']['tests']} app tests passed; lint has {q['android_lint']['errors']} errors and {q['android_lint']['warnings']} warnings; native bridge checks and both Android ABIs passed.
 - Three SINGLE and three 24-stream MULTI runs passed independently, with fifteen accounts and physical UID history. Both directions must reach at least 90 Mbit/s over the full interval, final thirty seconds and final ten seconds. Every loaded RTT is below 1,100 ms; all thirty probes overlap useful traffic, with no misses or timeouts.
 
 | Run | Lowest verified useful Mbit/s | Maximum loaded RTT ms | Duplex probes |

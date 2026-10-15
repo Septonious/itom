@@ -59,3 +59,9 @@ itom message --uid CLIENT_UID --clear
 ```
 
 The Android home card supports Minecraft-style `&0`–`&f` colors, `&l` bold, `&o` italic, `&n` underline, `&m` strikethrough and `&r` reset. Use `&&` for a literal ampersand. Each color code resets prior styles. Messages allow up to 2,048 UTF-8 bytes including codes. Configurations using individual messages require Rev5 or later (schema 5).
+
+## Android server administration
+
+The darker Android interface includes **Settings → Server admin** for an enabled server-side client named `admin`, verified using that client's key. It provides accounts, clients, invitations, formatted messages, live traffic/logs/trace, diagnostics export, resource settings and reversible service controls over encrypted IMAP.
+
+Every mutation arms an independent watchdog first. Sixty seconds without verified two-way recovery causes rollback; sixty continuous healthy seconds commits the change. Keep the VPN connected during the trial. Permanent purges, uninstall and journal migration stay CLI-only. See [admin controls and automatic recovery](docs/rev5/ADMIN.md) for setup, the complete control mapping and validation limits.
