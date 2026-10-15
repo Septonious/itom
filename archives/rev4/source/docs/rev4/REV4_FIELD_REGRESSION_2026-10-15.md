@@ -56,6 +56,11 @@ and seeds physical UID history by default, while keeping the existing useful
 speed and loaded RTT requirements. An old test that asserted four-UID cursor
 increments now asserts immediate delivery of the live tail instead.
 
+The application reader-restart case combines that history with 1.8-second
+current-message visibility delays and concurrent bulk/message traffic.
+Historical setup still uses actual TLS/IMAP APPEND and verified deletion;
+modeled command/replica delay begins with the current application session.
+
 ## Mobile app crash status
 
 Connectivity callbacks execute outside runSession's exception handler. Platform
