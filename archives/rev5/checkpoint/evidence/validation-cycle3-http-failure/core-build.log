@@ -1,0 +1,11 @@
+ITOM source revision: transport-rework3-rev5
+Go toolchain: 1.27.1
+Preparing Go toolchain from the verified cache or archive.
+$ go version
+$ go mod tidy
+$ go mod verify
+all modules verified
+$ go list -mod=readonly -m -json all
+$ go list -mod=readonly ./...
+Mandatory IMAP outage tests: ITOM_UNSTABLE_SURVIVAL=1
+$ go test -mod=readonly -json -count=1 -timeout=900s -p=1 ./...

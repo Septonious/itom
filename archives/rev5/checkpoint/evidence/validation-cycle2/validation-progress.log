@@ -1,0 +1,5 @@
+RUN candidate-python
+RESULT candidate-python PASS
+RUN candidate-speed
+RESULT candidate-speed FAIL
+Candidate gate failed: candidate-speed

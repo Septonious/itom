@@ -1,0 +1,3 @@
+RUN field suite 1
+RESULT field suite 1 FAIL
+RUN field suite 2

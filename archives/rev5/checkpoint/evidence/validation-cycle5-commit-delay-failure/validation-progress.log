@@ -1,0 +1,7 @@
+RUN candidate-python
+RESULT candidate-python PASS
+RUN candidate-field-repeated
+RESULT candidate-field-repeated PASS
+RUN candidate-field-commit-delay
+RESULT candidate-field-commit-delay FAIL
+Candidate gate failed: candidate-field-commit-delay

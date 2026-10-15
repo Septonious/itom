@@ -1,0 +1,7 @@
+RUN field suite 1
+RESULT field suite 1 PASS
+RUN field suite 2
+RESULT field suite 2 PASS
+RUN field suite 3
+RESULT field suite 3 PASS
+EVIDENCE /workspace/work/rev5/field-repeated/20261015T111958-68216/results.json

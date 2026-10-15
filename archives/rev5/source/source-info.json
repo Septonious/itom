@@ -1,0 +1,11 @@
+{
+  "version": "0.9.2",
+  "release": "Rev5",
+  "revision": "transport-rework3-rev5",
+  "archive_name": "ITOM-0.9.2-Rev5-sources.zip",
+  "baseline": "0.9.2-Rev4-field-repair-testing.1",
+  "qualification": "paired client/server field regression repair; full internal gates required; field-provider performance remains separate",
+  "android_version_name": "0.9.2-Rev5",
+  "android_version_code": 9205,
+  "android_application_id": "org.itom.client.dev.rev7"
+}

@@ -1,0 +1,5 @@
+ok  	itom.local/core/servercfg	1.472s
+ok  	itom.local/core/adminapi	1.053s
+ok  	itom.local/core/adminserver	1.188s
+ok  	itom.local/core/manager	1.059s
+ok  	itom.local/core/cmd/itom	1.017s

@@ -1,0 +1,3 @@
+RUN field suite 1
+RESULT field suite 1 FAIL
+EVIDENCE /workspace/work/rev5/field-commit-delay/20261015T113014-68499/results.json

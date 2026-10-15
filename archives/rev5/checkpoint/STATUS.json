@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "classification": "UNSTABLE_DEVELOPMENT_CHECKPOINT",
+  "release_ready": false,
+  "all_internal_gates_passed": false,
+  "created_utc": "2026-10-15T20:08:48.463799+00:00",
+  "branch": "itom-0.9.2-rev5",
+  "source_sha256": "789231e333909900ae2b3f422d39b969123fccfec49e177b3c348fcd3db7cf9f",
+  "active_validation": false,
+  "latest_focused_ramp_cases": 6,
+  "latest_focused_ramp_passed": 6,
+  "latest_focused_ramp_max_chat_rtt_us": 770812,
+  "field_cases_required": 32,
+  "full_final_qualification": "NOT_COMPLETE",
+  "android_domain_tests_last_passed": 81,
+  "android_app_tests_last_passed": 7,
+  "android_lint_errors": 0,
+  "android_lint_warnings": 0,
+  "real_systemd_host_tested": false,
+  "final_required_gates": 10,
+  "implemented": [
+    "transport repairs and field-derived tests",
+    "global and per-client messages",
+    "Minecraft-style message formatting",
+    "dark high-contrast Android UI",
+    "server-authorized IMAP admin RPC with private-key challenge",
+    "independent durable 60-second rollback watchdog and full admin UI"
+  ],
+  "pending": [
+    "fresh full ten-gate qualification of combined transport/UI/admin source",
+    "final release documentation, APK/Linux builds, Actions publication"
+  ],
+  "constraints": {
+    "speed_min_mbps": 90,
+    "loaded_rtt_strictly_below_ms": 1100,
+    "duplex_probes_per_case": 30,
+    "failed_runs_may_not_be_waived": true,
+    "irreversible_operations_cli_only": true
+  },
+  "mobile_fatal_cause_confirmed": false,
+  "live_provider_tested": false,
+  "private_captures_included": false,
+  "signing_keys_included": false,
+  "stale_build_outputs_included": false,
+  "latest_failed_pipeline": "cycle7: ramp chat exceeded 1100ms before the two latest fixes",
+  "historical_results_are_not_qualification_for_current_source": true
+}

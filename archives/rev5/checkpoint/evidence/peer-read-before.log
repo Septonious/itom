@@ -1,0 +1,5 @@
+--- FAIL: TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover (0.00s)
+    rev5_peer_read_policy_test.go:44: fast APPEND hides 12s paced peer BODY: target=344064
+FAIL
+FAIL	itom.local/core/tunnel	0.004s
+FAIL

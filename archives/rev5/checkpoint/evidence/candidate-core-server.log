@@ -1,0 +1,14 @@
+ITOM source revision: transport-rework3-rev5
+test_launcher: passed
+test_core_tools: passed
+test_rework_gate: passed
+Offline source checks passed: 18 Python files, 11 XML files, source-set boundaries.
+71 Kotlin test cases are present but NOT executed by this check.
+Android compilation, lint, and device tests are NOT performed by this command.
+Go compilation and Go tests are NOT performed; use target core for the local Go gate.
+Go: version
+Go: mod tidy
+Go: mod verify
+Go: list -mod=readonly -m -json all
+Go: list -mod=readonly ./...
+Go: test -mod=readonly -json -count=1 -timeout=900s -p=1 ./...

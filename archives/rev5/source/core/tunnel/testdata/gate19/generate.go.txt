@@ -1,0 +1,39 @@
+package tunnel
+import (
+ "encoding/json"
+ "os"
+ "path/filepath"
+ "testing"
+ "itom.local/core/journal"
+ "itom.local/core/mailbox"
+ "itom.local/core/pool"
+ "itom.local/core/servercfg"
+ "itom.local/core/wire"
+)
+// Executed against exact gate19 source ZIP; no gate19 runtime files modified.
+func TestGenerateGate19UpgradeFixtures(t *testing.T){
+ dir:=os.Getenv("ITOM_FIXTURE_OUTPUT");if dir=="" {t.Skip("fixture generator")}
+ a:=servercfg.Account{ID:"a01",Mail:mailbox.Config{Host:"mail.example"}}
+ u:=servercfg.User{ID:"12345678",Up:"itom-u-up",Down:"itom-u-down"}
+ for _,name:=range []string{"empty","dirty"} {
+  s,e:=ledger(dir,name,a,u,false);if e!=nil {t.Fatal(e)}
+  if name=="dirty" {
+   if e=s.EnableAfterInventory(a.ID,u.ID,s.Run());e!=nil {t.Fatal(e)}
+   scope:=journal.Scope{Account:a.ID,User:u.ID,Session:wire.ID{1}}
+   g,e:=s.Issue(scope,pool.Amount{Bytes:1<<20,Messages:8});if e!=nil {t.Fatal(e)}
+   for i:=0;i<4;i++ {
+    body:=[]byte("gate19-upgrade-fixture");at,e:=s.Prepare(g.Ref,u.Down,wire.ID{byte(i+1)},1024,body);if e!=nil {t.Fatal(e)}
+    if i>0 {if _,e=s.Start(at.Ref);e!=nil {t.Fatal(e)}}
+    if i==2 {if e=s.Complete(at.Ref,journal.Uncertain);e!=nil {t.Fatal(e)}}
+    if i==3 {if e=s.Observe(at.Ref,s.Run(),journal.Observation{Account:a.ID,Folder:u.Down,Location:journal.Location{UIDValidity:44,UID:55},Decoded:body});e!=nil {t.Fatal(e)}}
+   }
+   r,e:=s.IssueRemote(scope,pool.Amount{Bytes:1<<20,Messages:8});if e!=nil {t.Fatal(e)}
+   offer,e:=s.RemoteOffer(r.Ref);if e!=nil {t.Fatal(e)}
+   if _,e=s.ApplyRemote(u.ID,s.Run(),wire.StorageRelease{Key:offer.Key,Final:wire.Quota{Bytes:2048,Messages:1}});e!=nil {t.Fatal(e)}
+  }
+  attempts,_:=s.ScanAttempts(0,256);grants,_:=s.ScanGrants(0,256);held,_:=s.Held(a.ID,u.ID)
+  raw,e:=json.MarshalIndent(map[string]any{"Store":s.StoreID(),"Run":s.Run(),"Attempts":attempts,"Grants":grants,"Held":held},"","  ");if e!=nil {t.Fatal(e)}
+  if e=os.WriteFile(filepath.Join(dir,name+".json"),raw,0600);e!=nil {t.Fatal(e)}
+  if e=s.Close();e!=nil {t.Fatal(e)}
+ }
+}

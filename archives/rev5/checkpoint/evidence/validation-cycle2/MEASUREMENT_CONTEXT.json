@@ -1,0 +1,14 @@
+{
+  "source_sha256": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+  "single_1_measurement_utc": [
+    "2026-10-15T10:25:07.122735722Z",
+    "2026-10-15T10:26:07.131084944Z"
+  ],
+  "competing_field_correlation_utc": [
+    "2026-10-15T10:25:56.856570Z",
+    "2026-10-15T10:26:04.704135Z"
+  ],
+  "cpu_quota_cores": 2,
+  "classification": "FAILED_RUN_RETAINED_NOT_QUALIFICATION",
+  "next_action": "Run all six fresh measurements without concurrent analysis or packaging"
+}

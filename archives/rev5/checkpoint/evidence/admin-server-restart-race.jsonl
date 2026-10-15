@@ -1,0 +1,11 @@
+{"Time":"2026-10-15T20:06:51.012192912Z","Action":"start","Package":"itom.local/mobile"}
+{"Time":"2026-10-15T20:06:51.023252741Z","Action":"run","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect"}
+{"Time":"2026-10-15T20:06:51.023313294Z","Action":"output","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Output":"=== RUN   TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect\n","OutputType":"frame"}
+{"Time":"2026-10-15T20:07:09.484413819Z","Action":"output","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Output":"2026/10/15 20:07:09 failed to read command: in command: read tcp4 127.0.0.1:46247-\u003e127.0.0.1:58362: read: connection reset by peer\n"}
+{"Time":"2026-10-15T20:07:09.6731299Z","Action":"output","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Output":"2026/10/15 20:07:09 failed to read command: in command: read tcp4 127.0.0.1:46247-\u003e127.0.0.1:58418: read: connection reset by peer\n"}
+{"Time":"2026-10-15T20:07:18.804090593Z","Action":"output","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Output":"    admin_integration_test.go:220: admin_server_restart_recovery_ms=10069\n"}
+{"Time":"2026-10-15T20:07:18.806483214Z","Action":"output","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Output":"--- PASS: TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect (27.78s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T20:07:18.80650227Z","Action":"pass","Package":"itom.local/mobile","Test":"TestNativeAdminIMAPAuthorityAndHeartbeatSurviveReconnect","Elapsed":27.78}
+{"Time":"2026-10-15T20:07:18.806527036Z","Action":"output","Package":"itom.local/mobile","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-15T20:07:19.812731095Z","Action":"output","Package":"itom.local/mobile","Output":"ok  \titom.local/mobile\t28.800s\n"}
+{"Time":"2026-10-15T20:07:19.81278203Z","Action":"pass","Package":"itom.local/mobile","Elapsed":28.801}

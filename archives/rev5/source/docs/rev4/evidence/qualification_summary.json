@@ -1,0 +1,231 @@
+{
+  "all_lab_cases_passed": true,
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "criteria": {
+    "nominal_upload_mbps": 100,
+    "nominal_download_mbps": 100,
+    "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+    "tolerance_percent": 10,
+    "useful_upload_mbps_min": 90,
+    "useful_download_mbps_min": 90,
+    "all_loaded_rtt_ns_strictly_below": 1100000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30
+  },
+  "source_sha256": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+  "cases": [
+    {
+      "name": "single-1",
+      "ok": true,
+      "log_sha256": "dafe313a0b6b0205b08b1e39b9e39a7bcf3b5fed6d5604959f448c011c0ac010",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "147.666",
+        "download_mbps": "97.810",
+        "rtt_samples": "30",
+        "p50_ms": "319",
+        "p95_ms": "434",
+        "max_ms": "466",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "137.564",
+        "download_mbps": "99.580"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "97.810295",
+        "max_rtt_ns": "466251483",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    },
+    {
+      "name": "single-2",
+      "ok": true,
+      "log_sha256": "360256a87ead41d2311fdd6013333372c6924fa99c0e910453454ad235ebf36a",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "154.285",
+        "download_mbps": "90.116",
+        "rtt_samples": "30",
+        "p50_ms": "322",
+        "p95_ms": "454",
+        "max_ms": "513",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "154.560",
+        "download_mbps": "90.064"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "90.063940",
+        "max_rtt_ns": "513191104",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    },
+    {
+      "name": "single-3",
+      "ok": true,
+      "log_sha256": "a6e174b012ba75146344a97dfdf49bfd1d899bfe2b30e37d827ca455f63dccad",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "139.701",
+        "download_mbps": "100.152",
+        "rtt_samples": "30",
+        "p50_ms": "307",
+        "p95_ms": "399",
+        "max_ms": "412",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "155.757",
+        "download_mbps": "91.969"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "91.968853",
+        "max_rtt_ns": "412329131",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    },
+    {
+      "name": "multi-1",
+      "ok": true,
+      "log_sha256": "a7b2b4a3b95883d57a10e20425905b7435bcc48288f02f48ad6f674fa945a6eb",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "104.858",
+        "download_mbps": "98.169",
+        "rtt_samples": "30",
+        "p50_ms": "298",
+        "p95_ms": "431",
+        "max_ms": "436",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "104.552",
+        "download_mbps": "97.124"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "97.124352",
+        "max_rtt_ns": "436170772",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    },
+    {
+      "name": "multi-2",
+      "ok": true,
+      "log_sha256": "739001f3b3315c855ad8fb70074e1f99c3aff1e5e8461f2288833cb07a7dee77",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "109.939",
+        "download_mbps": "96.023",
+        "rtt_samples": "30",
+        "p50_ms": "322",
+        "p95_ms": "463",
+        "max_ms": "493",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "111.761",
+        "download_mbps": "97.255"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "96.023347",
+        "max_rtt_ns": "493409613",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    },
+    {
+      "name": "multi-3",
+      "ok": true,
+      "log_sha256": "5c91894be458bff8c696b08329cd1261c549556bf5da06e45af32ee3a32f9d7b",
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "110.467",
+        "download_mbps": "96.736",
+        "rtt_samples": "30",
+        "p50_ms": "335",
+        "p95_ms": "432",
+        "max_ms": "462",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "109.515",
+        "download_mbps": "95.884"
+      },
+      "supervised_acceptance": {
+        "round": "1",
+        "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+        "minimum_verified_mbps": "95.883537",
+        "max_rtt_ns": "462582987",
+        "accepted": "true",
+        "field_qualified": "false"
+      }
+    }
+  ],
+  "scenario": {
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10
+  }
+}

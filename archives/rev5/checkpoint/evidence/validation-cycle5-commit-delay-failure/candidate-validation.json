@@ -1,0 +1,30 @@
+{
+  "source_sha256": "89a89d12b014790c9f8aa7f33f8c50ef9e9aeda1f30d703470699b5648cd17fe",
+  "classification": "REV5_CANDIDATE",
+  "mobile_field_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK",
+  "complete": false,
+  "steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.343,
+      "log": "candidate-python.log"
+    },
+    {
+      "name": "candidate-field-repeated",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 615.733,
+      "log": "candidate-field-repeated.log"
+    },
+    {
+      "name": "candidate-field-commit-delay",
+      "exit_code": 1,
+      "passed": false,
+      "elapsed_seconds": 239.474,
+      "log": "candidate-field-commit-delay.log"
+    }
+  ],
+  "stopped_reason": "Candidate gate failed: candidate-field-commit-delay"
+}

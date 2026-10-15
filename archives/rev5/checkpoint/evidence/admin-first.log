@@ -1,0 +1,4 @@
+ok  	itom.local/core/servercfg	0.069s
+?   	itom.local/core/adminapi	[no test files]
+ok  	itom.local/core/adminserver	0.044s
+ok  	itom.local/core/cmd/itom	0.008s

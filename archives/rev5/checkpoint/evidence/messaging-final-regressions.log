@@ -1,0 +1,4 @@
+ok  	itom.local/core/servercfg	0.008s
+ok  	itom.local/core/manager	0.006s
+ok  	itom.local/core/cmd/itom	0.013s [no tests to run]
+ok  	itom.local/core/tunnel	11.176s

@@ -1,39 +1,22 @@
-# ITOM Rev4 field repair — unstable testing
+# ITOM
 
-Candidate source is in `archives/rev4/source`; review [draft PR #1](https://github.com/Septonious/itom/pull/1).
+ITOM transports TCP application streams through authenticated IMAP mailboxes. This branch contains **Rev5, internally qualified and packaged for field validation**.
 
-The deleted-UID DATA stall, SEARCH-index lag, sparse-revisit starvation and
-needless dense-page SEARCH turns have regression tests and repairs. Android
-callback exceptions are contained through session cleanup.
+- [Download APK and Linux binaries](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev5)
+- [Release notes and installation](builds/0.9.2-Rev5/RELEASE_NOTES.md)
+- [Rev5 source](archives/rev5/source)
+- [Field analysis and repair design](archives/rev5/source/docs/rev5/REV5_ANALYSIS_2026-10-15.md)
+- [Final qualification evidence](archives/rev5/source/docs/rev5/evidence/rev5_validation.json)
+- [Android server admin setup and rollback behavior](archives/rev5/source/docs/rev5/ADMIN.md)
 
-All final internal gates passed on qualification source
-`ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8`:
-834 core test events / 19 packages; 3×14 application cases; 14 cases with 12 ms
-server commit delay; race checks; native and Android checks; 71 domain and four
-callback tests; and all six fresh SINGLE/MULTI speed/RTT cases. Lint: zero
-errors, one existing warning. See the [qualification report](archives/rev4/source/docs/rev4/evidence/field_repair_validation.json).
+Rev5 repairs retained-mail quota starvation, bounds paced BODY reads and unread downstream queues, uses authenticated peer-delivery feedback to size envelopes, and restores DATA writers during recovery. It preserves durable charges and cleanup proof requirements. A per-sweep proof cache removes repeated decoding without weakening those checks.
 
-The reported whole-app mobile startup crash has no fatal record in the supplied
-captures. Its cause remains unconfirmed; no physical phone or real provider
-was tested. This branch stays unstable; the field crash is not confirmed resolved.
+The Android app has a darker, higher-contrast theme with vivid accents. Server messages support global text, per-client overrides and Minecraft-style formatting; every global update clears individual overrides. Settings exposes the IMAP server-admin console for an enabled server-side client named `admin`, authenticated with its private key. Reversible mutations have an independent durable watchdog: 60 seconds without recovery rolls back; 60 continuous healthy seconds commits. Irreversible operations remain CLI-only.
 
-The repaired APK, Linux x86-64/ARM64 binaries, source ZIP and checksums are packaged
-for [field repair testing 1](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev4-field-repair-testing.1).
-GitHub Actions assembles the exact qualified bits from
-`archives/rev4-field-repair-testing`, verifies every asset and its qualification
-evidence, and publishes an explicitly **UNSTABLE** prerelease. See
-[install notes](builds/rev4-field-repair-testing/TESTING_NOTES.md).
+All ten internal gates passed on the exact packaged source: Android and native builds/tests, lint, full core/IMAP tests, four 32-case field suites, accounting/recovery/admin race checks, and all six SINGLE/MULTI performance runs. Each speed run independently met the 90 Mbit/s useful-throughput floor in both directions across all three windows, every loaded RTT below 1,100 ms, and 30/30 overlapping duplex probes without misses or timeouts. The final evidence records exact results and source identity.
 
-Existing manifests and bundles under `archives/rev4` outside its `source`
-directory still describe the earlier published Rev4. Use the new testing package
-for this repair. App/server version strings remain Rev4; distinct filenames,
-checksums and `STATUS.json` identify the repaired build.
-All required internal checks must pass before a release; speed/RTT tolerance
-remains 10%.
+This is a **prerelease**, pending physical-phone, live-provider and actual systemd-host validation. The user confirmed that a router reset fixed the earlier Wi-Fi bottleneck. The exact regular Speedtest-app error and earlier whole-app mobile crash remain unconfirmed without matching diagnostics; laboratory passes do not establish that those field symptoms are resolved.
 
-See the [field investigation](archives/rev4/source/docs/rev4/REV4_FIELD_REGRESSION_2026-10-15.md).
+Update both app and server, preserving profiles and state. GitHub Actions reassembles hashed release parts, verifies source identity and all gate evidence, then verifies every uploaded asset size and SHA-256 before publication. Private captures, credentials, caches and signing keys are excluded.
 
-The [new Wi-Fi/mobile comparison](archives/rev4/source/docs/rev4/REV4_WIFI_MOBILE_COMPARISON_2026-10-15.md)
-documents paced Wi-Fi BODY transfers and account `a05` staying at zero grants.
-It adds no production changes; matching server quota evidence is needed before
-choosing a repair for the inactive account.
+Historical Rev2/Rev3/Rev4 archives and the earlier unstable Rev5 recovery checkpoint remain available with their original evidence.

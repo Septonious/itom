@@ -1,0 +1,15 @@
+{
+  "source_sha256": "457c6d89f1f6f1fba0b4c7eeadc30d7ec9bd649a2bad4114f42180bf77dff810",
+  "classification": "REV5_CANDIDATE",
+  "mobile_field_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK",
+  "complete": false,
+  "steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.347,
+      "log": "candidate-python.log"
+    }
+  ]
+}

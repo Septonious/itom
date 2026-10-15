@@ -1,0 +1,5 @@
+--- FAIL: TestRev5Historical180SlotsBootstrapWithoutForgivingDebt (0.00s)
+    rev5_retained_headroom_test.go:35: field a05 stranded with 12 unused ordinals: ready=false fast=0 bulk=0
+FAIL
+FAIL	itom.local/core/tunnel	0.006s
+FAIL

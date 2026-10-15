@@ -1,0 +1,5 @@
+--- FAIL: TestRev5SplitBulkDoesNotDisplacePrimedShortReader (0.00s)
+    rev5_split_affinity_test.go:31: independent bulk BODY stole primed short return path [a01 a02 a03]
+FAIL
+FAIL	itom.local/core/tunnel	0.004s
+FAIL

@@ -1,0 +1,7 @@
+test_launcher: passed
+test_core_tools: passed
+test_rework_gate: passed
+Offline source checks passed: 18 Python files, 11 XML files, source-set boundaries.
+71 Kotlin test cases are present but NOT executed by this check.
+Android compilation, lint, and device tests are NOT performed by this command.
+Go compilation and Go tests are NOT performed; use target core for the local Go gate.

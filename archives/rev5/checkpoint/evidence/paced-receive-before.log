@@ -1,0 +1,5 @@
+--- FAIL: TestRev5PacedBodiesYieldWithoutRestartingHealthyReceiver (30.02s)
+    rev5_paced_receive_test.go:93: paced continuous BODY receive failed: page=0 callbacks=3 elapsed=30.000775496s err=context deadline exceeded
+FAIL
+FAIL	itom.local/core/tunnel	30.028s
+FAIL

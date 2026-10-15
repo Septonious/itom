@@ -1,0 +1,22 @@
+{
+  "source_sha256": "f1643916d1b7fd483110767f5824aa40223693df36ebced7e34c9fd0bc7199d4",
+  "classification": "REV5_CANDIDATE",
+  "mobile_field_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK",
+  "complete": false,
+  "steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.46,
+      "log": "candidate-python.log"
+    },
+    {
+      "name": "candidate-android",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 97.994,
+      "log": "candidate-android.log"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{"Time":"2026-10-15T20:06:32.361885237Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-15T20:06:32.365296392Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn"}
+{"Time":"2026-10-15T20:06:32.365358948Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn","Output":"=== RUN   TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn\n","OutputType":"frame"}
+{"Time":"2026-10-15T20:06:32.366441015Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn","Output":"--- PASS: TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T20:06:32.366484566Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn","Elapsed":0}
+{"Time":"2026-10-15T20:06:32.366508431Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestServerNoticeBroadcastAcrossSessions"}
+{"Time":"2026-10-15T20:06:32.366514702Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestServerNoticeBroadcastAcrossSessions","Output":"=== RUN   TestServerNoticeBroadcastAcrossSessions\n","OutputType":"frame"}
