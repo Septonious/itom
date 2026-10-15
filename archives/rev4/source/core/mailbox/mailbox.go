@@ -1565,17 +1565,20 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 			if err != nil {
 				return err
 			}
+			ids = tailSearchCandidates(ids, cur.After+1, through, int(limit))
 			set, count, last = imap.UIDSetNum(ids...), len(ids), through
 			for _, gap := range gaps {
 				set.AddNum(imap.UID(gap.uid))
 				count++
 			}
-		} else if !fetched {
+		}
+		if !fetched {
 			if span, ok := c.sparseTailRequest(folder, cur.Validity, time.Now()); ok {
 				ids, through, err := c.searchTailUIDs(span.first, span.last, int(limit))
 				if err != nil {
 					return err
 				}
+				ids = tailSearchCandidates(ids, span.first, through, int(limit))
 				for _, id := range ids {
 					set.AddNum(id)
 					count++

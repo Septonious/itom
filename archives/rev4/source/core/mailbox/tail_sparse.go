@@ -43,3 +43,21 @@ func (c *Client) searchTailUIDs(first, last uint32, limit int) ([]imap.UID, uint
 	}
 	return ids, through, nil
 }
+
+// Fill only unused candidate slots with exact probes near the allocation tail.
+// Some replicas expose BODY before their SEARCH index catches up. The total
+// candidate count stays bounded even for a billion historical UID holes.
+func tailSearchCandidates(ids []imap.UID, first, through uint32, limit int) []imap.UID {
+	seen := make(map[imap.UID]bool, len(ids))
+	for _, id := range ids {
+		seen[id] = true
+	}
+	for uid := uint64(through); len(ids) < limit && uid >= uint64(first); uid-- {
+		id := imap.UID(uid)
+		if !seen[id] {
+			ids = append(ids, id)
+			seen[id] = true
+		}
+	}
+	return ids
+}

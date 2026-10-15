@@ -46,6 +46,13 @@ without extending the original discovery lifetime or reusing another
 UIDVALIDITY. SEARCH response size, expanded UID count, BODY batch size and
 discovery metadata remain bounded.
 
+Two further public-API reproductions failed during review of this candidate:
+SEARCH-index lag hid an already exact-fetchable BODY, and sustained forward
+backlog suppressed sparse revisits. Unused candidate slots now contain bounded
+exact probes near the allocated tail; due sparse revisits get their own bounded
+share beside forward traffic. Neither lookup depends on SEARCH absence as a
+physical-deletion proof. The new tests fail before these changes and pass after.
+
 ## Why the former tests missed it
 
 The retained-state application fixture reserved server journal capacity but
