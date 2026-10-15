@@ -1,0 +1,1 @@
+27-case field repeat 1: TestRev4LongBlackoutPreservesInflightTCPAndMessages timed out seven in-flight 2MiB TCP transfers. Candidate remains unqualified; remaining repetitions interrupted to repair advisory BODY admission across carrier loss.

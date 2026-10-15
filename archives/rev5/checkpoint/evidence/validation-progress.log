@@ -1,0 +1,5 @@
+RUN candidate-python
+RESULT candidate-python PASS
+RUN candidate-android
+RESULT candidate-android PASS
+RUN candidate-field-repeated

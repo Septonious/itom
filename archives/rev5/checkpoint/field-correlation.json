@@ -1,0 +1,211 @@
+{
+  "server_unique_events": 140594,
+  "client_mobile2_unique_events": 124101,
+  "server_interval_utc": [
+    "2026-10-15T09:02:15.176259041Z",
+    "2026-10-15T09:31:27.630028218Z"
+  ],
+  "directions": {
+    "download": {
+      "matched_packets": 7801,
+      "bulk_at_least_32KiB": {
+        "n": 102,
+        "median": 0.466972,
+        "p95": 0.942376,
+        "max": 1.226698
+      },
+      "small_packets": {
+        "n": 7699,
+        "median": 0.186112,
+        "p95": 0.325345,
+        "max": 2.345512
+      },
+      "a05_matches": 22
+    },
+    "upload": {
+      "matched_packets": 7773,
+      "bulk_at_least_32KiB": {
+        "n": 771,
+        "median": 0.269713,
+        "p95": 0.590209,
+        "max": 0.91117
+      },
+      "small_packets": {
+        "n": 7002,
+        "median": 0.144963,
+        "p95": 0.452072,
+        "max": 1.432652
+      },
+      "a05_matches": 29
+    }
+  },
+  "server_lifecycle": [
+    {
+      "time": "2026-10-15T09:02:28.196649498Z",
+      "account": "a16",
+      "name": "event=descriptor_gap_repair"
+    },
+    {
+      "time": "2026-10-15T09:02:28.660958871Z",
+      "account": "a16",
+      "name": "event=descriptor_gap_repair"
+    },
+    {
+      "time": "2026-10-15T09:02:30.036793958Z",
+      "account": "a16",
+      "name": "event=descriptor_gap_repair"
+    },
+    {
+      "time": "2026-10-15T09:03:24.66096796Z",
+      "account": "a10",
+      "name": "event=descriptor_gap_repair"
+    },
+    {
+      "time": "2026-10-15T09:04:26.004870972Z",
+      "account": "a14",
+      "name": "event=data_reader_repair code=CANCELED"
+    },
+    {
+      "time": "2026-10-15T09:04:26.12481528Z",
+      "account": "a18",
+      "name": "event=imap_error operation=fetch_page duration_ms=17 code=CANCELED reason=canceled"
+    },
+    {
+      "time": "2026-10-15T09:04:26.131772835Z",
+      "account": "a12",
+      "name": "event=data_reader_repair code=CANCELED"
+    },
+    {
+      "time": "2026-10-15T09:04:26.131968323Z",
+      "account": "a12",
+      "name": "event=imap_error operation=fetch_page duration_ms=20 code=CANCELED reason=canceled"
+    }
+  ],
+  "a05_health": [
+    {
+      "time_utc": "2026-10-15T09:02:28.624006859Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:02:44.624123357Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:02:59.625333748Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:03:15.623815089Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:03:31.622700151Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:03:46.623524781Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:04:02.623320863Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    },
+    {
+      "time_utc": "2026-10-15T09:04:17.623531476Z",
+      "DataMessages": 180,
+      "DataBytes": 6571914,
+      "IssuedGrants": 0,
+      "AvailableGrants": 0,
+      "Stage": "grants",
+      "DataAttempts": 0,
+      "DataAppendCount": 0,
+      "DataFetchMessages": 0,
+      "Reconnects": 5,
+      "LastError": "TRANSPORT_TIMEOUT"
+    }
+  ],
+  "a05_profile": [
+    "event=journal_profile kind=control existing=true bytes=2097152 messages=128 run=27",
+    "event=journal_profile kind=data existing=true bytes=12582912 messages=192 run=27"
+  ],
+  "post_router_reset": {
+    "client_build": "0.9.2-Rev4-debug",
+    "events": 113291,
+    "interval_utc": [
+      "2026-10-15T12:15:22.400465742Z",
+      "2026-10-15T12:17:22.622740175Z"
+    ],
+    "router_issue_confirmed_by_user": true,
+    "matching_server_capture": false,
+    "tcp_open_network_errors": 19,
+    "imap_ok": 20149,
+    "data_append_ok": 919,
+    "successful_download_bytes_stream405": 71703349,
+    "successful_upload_bytes_stream431": 51139998,
+    "regular_speedtest_app_error_root_cause": "UNCONFIRMED; TARGET_NETWORK_FAILURES_RECORDED; NO_MATCHING_SERVER_TRACE",
+    "fatal_mobile_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "source_sha256": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+  "classification": "REV5_CANDIDATE",
+  "mobile_field_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK",
+  "complete": false,
+  "steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.345,
+      "log": "candidate-python.log"
+    },
+    {
+      "name": "candidate-speed",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 546.317,
+      "log": "candidate-speed.log"
+    }
+  ]
+}

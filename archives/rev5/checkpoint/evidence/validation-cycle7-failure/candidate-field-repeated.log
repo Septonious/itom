@@ -1,0 +1,5 @@
+RUN field suite 1
+RESULT field suite 1 PASS
+RUN field suite 2
+RESULT field suite 2 FAIL
+RUN field suite 3

@@ -1,0 +1,5 @@
+RUN candidate-python
+RESULT candidate-python PASS
+RUN candidate-speed
+RESULT candidate-speed PASS
+RUN candidate-core-server

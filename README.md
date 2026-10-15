@@ -1,39 +1,20 @@
-# ITOM Rev4 field repair — unstable testing
+# ITOM
 
-Candidate source is in `archives/rev4/source`; review [draft PR #1](https://github.com/Septonious/itom/pull/1).
+ITOM transports TCP application streams through authenticated IMAP mailboxes. This branch contains an **unstable Rev5 development checkpoint**, saved at the user's request during session network problems. Full current-source qualification is incomplete; this checkpoint is not a release.
 
-The deleted-UID DATA stall, SEARCH-index lag, sparse-revisit starvation and
-needless dense-page SEARCH turns have regression tests and repairs. Android
-callback exceptions are contained through session cleanup.
+The source, tests, intermediate results, validation/packaging drivers and detailed resume notes are preserved below. No Rev5 APK or binary is published by this checkpoint.
 
-All final internal gates passed on qualification source
-`ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8`:
-834 core test events / 19 packages; 3×14 application cases; 14 cases with 12 ms
-server commit delay; race checks; native and Android checks; 71 domain and four
-callback tests; and all six fresh SINGLE/MULTI speed/RTT cases. Lint: zero
-errors, one existing warning. See the [qualification report](archives/rev4/source/docs/rev4/evidence/field_repair_validation.json).
+- [Rev5 source](archives/rev5/source)
+- [Field analysis, causes and repair design](archives/rev5/source/docs/rev5/REV5_ANALYSIS_2026-10-15.md)
+- [Current status and resume instructions](archives/rev5/checkpoint)
+- [Checkpoint status](archives/rev5/checkpoint/STATUS.json)
 
-The reported whole-app mobile startup crash has no fatal record in the supplied
-captures. Its cause remains unconfirmed; no physical phone or real provider
-was tested. This branch stays unstable; the field crash is not confirmed resolved.
+Rev5 fixes the 180/192-message retained-debt grant deadlock, bounds continuously paced BODY reads and unread per-carrier queues, and sizes downstream envelopes using authenticated peer-delivery evidence. Scheduling waits expire across outages without releasing physical debt, and authenticated account recovery restores DATA writers without retaining cold exponential sleeps. It also distinguishes a retryable provider mailbox-state setup rejection from a stored-UID proof failure. Existing durable charges and cleanup proof rules remain intact. Server-manager messages support global text, per-client overrides and Minecraft-style colors; every global update clears the individual overrides.
 
-The repaired APK, Linux x86-64/ARM64 binaries, source ZIP and checksums are packaged
-for [field repair testing 1](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev4-field-repair-testing.1).
-GitHub Actions assembles the exact qualified bits from
-`archives/rev4-field-repair-testing`, verifies every asset and its qualification
-evidence, and publishes an explicitly **UNSTABLE** prerelease. See
-[install notes](builds/rev4-field-repair-testing/TESTING_NOTES.md).
+The six latest focused ramp cases passed after the chat-classification and split-reader-affinity repairs. All required gates must still pass on the final source before publication. Darker Android UI polish and the authenticated admin console with durable 60-second connection-loss rollback remain pending. Irreversible purge and uninstall will remain CLI-only.
 
-Existing manifests and bundles under `archives/rev4` outside its `source`
-directory still describe the earlier published Rev4. Use the new testing package
-for this repair. App/server version strings remain Rev4; distinct filenames,
-checksums and `STATUS.json` identify the repaired build.
-All required internal checks must pass before a release; speed/RTT tolerance
-remains 10%.
+The user confirmed and reset the router that caused the earlier Wi-Fi bottleneck. The subsequent capture still records target connection failures; it does not establish the cause of the regular Speedtest-app error or contain the fatal stack for the previously reported whole-app mobile crash.
 
-See the [field investigation](archives/rev4/source/docs/rev4/REV4_FIELD_REGRESSION_2026-10-15.md).
+The prepared GitHub Actions workflow skips release assembly and publication until a packaged release manifest exists. For a future qualified package it reassembles the exact APK/binaries from hashed archive parts, verifies all assets and gate evidence, verifies uploaded asset sizes and SHA-256 digests, then publishes the prerelease. Compilation and qualification run in the development workspace. The private signing key, user captures, caches and stale build outputs are excluded.
 
-The [new Wi-Fi/mobile comparison](archives/rev4/source/docs/rev4/REV4_WIFI_MOBILE_COMPARISON_2026-10-15.md)
-documents paced Wi-Fi BODY transfers and account `a05` staying at zero grants.
-It adds no production changes; matching server quota evidence is needed before
-choosing a repair for the inactive account.
+Historical Rev2/Rev3/Rev4 archives remain available for comparison. Their individual field status and build identities are recorded beside each archive.

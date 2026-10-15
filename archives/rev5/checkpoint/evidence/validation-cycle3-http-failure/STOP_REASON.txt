@@ -1,0 +1,1 @@
+Full core suite failed TestRev4HTTPPhasesKeepMessagesUsable (HTTP GET body timeouts). Interrupted remaining candidate gates to diagnose and repair, not qualify. Six isolated nominal speed cases passed before this correctness failure.

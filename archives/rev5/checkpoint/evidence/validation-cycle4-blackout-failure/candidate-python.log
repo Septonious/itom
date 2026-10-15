@@ -1,0 +1,29 @@
+..........................................ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+.....Downloading tool.zip
+.ITOM: Android build FAILED at stage android_setup; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+......ITOM: Android build FAILED at stage gradle_compile_and_test; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+.ITOM: Android build FAILED at stage gradle_compile_and_test; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+...........................ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+ITOM: Android build FAILED at stage post_gradle_domain_and_lint_gate; Gradle BUILD SUCCESSFUL by itself does not verify an APK. See dist/build-report.json and dist/build.log
+.Exported: /tmp/tmpsd98a_1o/dist/ITOM-0.9.2-Rev5-debug.apk
+Exported: /tmp/tmpsd98a_1o/dist/ITOM-0.9.2-Rev5-debug.apk.sha256
+Exported: /tmp/tmpsd98a_1o/dist/build-report.json
+Exported: /tmp/tmpsd98a_1o/dist/ITOM-0.9.2-Rev5-linux-amd64
+Exported: /tmp/tmpsd98a_1o/dist/ITOM-0.9.2-Rev5-linux-arm64
+Exported: /tmp/tmpsd98a_1o/dist/SHA256SUMS
+Exported: /tmp/tmpsd98a_1o/dist/core-report.json
+....RUN gate
+RESULT gate FAIL
+....
+----------------------------------------------------------------------
+Ran 91 tests in 0.165s
+
+OK

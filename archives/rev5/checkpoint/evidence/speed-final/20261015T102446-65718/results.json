@@ -1,0 +1,186 @@
+{
+  "schema": 1,
+  "release": {
+    "version": "0.9.2",
+    "release": "Rev5",
+    "revision": "transport-rework3-rev5",
+    "archive_name": "ITOM-0.9.2-Rev5-sources.zip",
+    "baseline": "0.9.2-Rev4-field-repair-testing.1",
+    "qualification": "paired client/server field regression repair; full internal gates required; field-provider performance remains separate",
+    "android_version_name": "0.9.2-Rev5",
+    "android_version_code": 9205,
+    "android_application_id": "org.itom.client.dev.rev7"
+  },
+  "source_sha256": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+  "go": "go version go1.27.1 linux/amd64",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "cpu_count": 3,
+  "gomaxprocs": "2",
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "android_device": "NOT_RUN",
+  "real_provider": "NOT_RUN",
+  "criteria": {
+    "nominal_upload_mbps": 100,
+    "nominal_download_mbps": 100,
+    "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+    "tolerance_percent": 10,
+    "useful_upload_mbps_min": 90,
+    "useful_download_mbps_min": 90,
+    "all_loaded_rtt_ns_strictly_below": 1100000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30
+  },
+  "scenario": {
+    "go": "/workspace/toolchains/go/bin/go",
+    "results": "/workspace/work/rev5/speed-final",
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10,
+    "uid_history": 64
+  },
+  "cases": [
+    {
+      "name": "single-1",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 88.502,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "single-1.jsonl",
+      "log_sha256": "3fe648b79983a2bbdc69faddd81713845d34870d61e99d84489e9594aeb21ce8",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    },
+    {
+      "name": "single-2",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 84.471,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "single-2.jsonl",
+      "log_sha256": "26235ad00cf618103942e8a646754ac07de53f96accc9ff9d48656b19bb2178d",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "single-3",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 84.176,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "single-3.jsonl",
+      "log_sha256": "e44f14c209c91c38b37eb022096bd8bfaac9259b52b357cf8ddfed40d873caac",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "multi-1",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 96.947,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "multi-1.jsonl",
+      "log_sha256": "34c28000b81454654508dadc548492db81b956f7a10db3249c43b4b5fcf51e2b",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "multi-2",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 97.062,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "multi-2.jsonl",
+      "log_sha256": "720400b1a16deb1fff24d5580ad66630caad5d3d8770fe6762db1147ae4d6c65",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "multi-3",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 97.874,
+      "source_before": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "source_after": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+      "log": "multi-3.jsonl",
+      "log_sha256": "b79ede9798985119d5453f0a4eb916ceb9dc6cec505b7af9e3ec42f623d584af",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    }
+  ],
+  "all_lab_cases_passed": false
+}

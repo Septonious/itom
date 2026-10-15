@@ -1,0 +1,23 @@
+{
+  "source_sha256": "bd189f02120db74a23ecfba202137ef50520b34d7af1532fba5bef0db93d488f",
+  "classification": "REV5_CANDIDATE",
+  "mobile_field_crash_root_cause": "UNCONFIRMED_NO_FATAL_STACK",
+  "complete": false,
+  "steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.339,
+      "log": "candidate-python.log"
+    },
+    {
+      "name": "candidate-speed",
+      "exit_code": 1,
+      "passed": false,
+      "elapsed_seconds": 549.394,
+      "log": "candidate-speed.log"
+    }
+  ],
+  "stopped_reason": "Candidate gate failed: candidate-speed"
+}

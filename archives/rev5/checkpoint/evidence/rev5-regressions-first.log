@@ -1,0 +1,22 @@
+{"ImportPath":"itom.local/core/tunnel [itom.local/core/tunnel.test]","Action":"build-output","Output":"# itom.local/core/tunnel [itom.local/core/tunnel.test]\n"}
+{"ImportPath":"itom.local/core/tunnel [itom.local/core/tunnel.test]","Action":"build-output","Output":"tunnel/rev5_paced_receive_test.go:61:25: cannot convert float64(size * 8) / 300000 * float64(time.Second) (constant 6.99051e+09 of type float64) to type \"time\".Duration\n"}
+{"ImportPath":"itom.local/core/tunnel [itom.local/core/tunnel.test]","Action":"build-fail"}
+{"Time":"2026-10-15T09:52:02.796539412Z","Action":"start","Package":"itom.local/core/mailbox"}
+{"Time":"2026-10-15T09:52:02.796753521Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-15T09:52:02.796769501Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\titom.local/core/tunnel [build failed]\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:02.796785421Z","Action":"fail","Package":"itom.local/core/tunnel","Elapsed":0,"FailedBuild":"itom.local/core/tunnel [itom.local/core/tunnel.test]"}
+{"Time":"2026-10-15T09:52:02.799579881Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate"}
+{"Time":"2026-10-15T09:52:02.799671412Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate","Output":"=== RUN   TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:02.799681942Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient"}
+{"Time":"2026-10-15T09:52:02.799685959Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient","Output":"=== RUN   TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:02.960546386Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient","Output":"--- PASS: TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient (0.16s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:02.960597021Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/transient","Elapsed":0.16}
+{"Time":"2026-10-15T09:52:02.960608863Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent"}
+{"Time":"2026-10-15T09:52:02.960612018Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent","Output":"=== RUN   TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:03.121223991Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent","Output":"--- PASS: TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent (0.16s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:03.121273404Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate/persistent","Elapsed":0.16}
+{"Time":"2026-10-15T09:52:03.121283833Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate","Output":"--- PASS: TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate (0.32s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:03.121290215Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev5MailboxStateSetupUsesFreshBoundedRetryWithoutCreate","Elapsed":0.32}
+{"Time":"2026-10-15T09:52:03.121295395Z","Action":"output","Package":"itom.local/core/mailbox","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-15T09:52:03.122050843Z","Action":"output","Package":"itom.local/core/mailbox","Output":"ok  \titom.local/core/mailbox\t0.325s\n"}
+{"Time":"2026-10-15T09:52:03.122085989Z","Action":"pass","Package":"itom.local/core/mailbox","Elapsed":0.326}

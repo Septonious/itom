@@ -1,0 +1,5 @@
+--- FAIL: TestRev5LongLivedChatDoesNotAccumulatePermanentBulkClassification (0.00s)
+    rev5_chat_class_test.go:32: serial chat became bulk despite only 10 KiB/s 15
+FAIL
+FAIL	itom.local/core/datapath	0.003s
+FAIL
