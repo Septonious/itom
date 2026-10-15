@@ -23,10 +23,31 @@ fingerprint = source_fingerprint()
 report = {'source_sha256': fingerprint, 'classification': 'REV5_CANDIDATE',
           'mobile_field_crash_root_cause': 'UNCONFIRMED_NO_FATAL_STACK', 'complete': False, 'steps': []}
 
+if os.environ.get('ITOM_VALIDATION_RESUME') == '1':
+    previous = json.loads((WORK/'candidate-validation.json').read_text())
+    assert previous['source_sha256'] == fingerprint and not previous['complete']
+    passed_prefix=[]
+    for old in previous['steps']:
+        if not old['passed'] or old['exit_code'] != 0:
+            break
+        passed_prefix.append(old)
+    report['steps']=passed_prefix
+    report['preserved_interruption_evidence']='validation-cycle11-stale-lock'
+resume_index=0
+
 def save():
     (WORK / 'candidate-validation.json').write_text(json.dumps(report, indent=2)+'\n')
 
 def step(name, command, cwd=ROOT, selected_env=env):
+    global resume_index
+    if resume_index < len(report['steps']):
+        old=report['steps'][resume_index]
+        assert old['name']==name and old['passed'] and old['exit_code']==0
+        assert source_fingerprint()==fingerprint
+        resume_index+=1
+        print('RETAIN SAME-SOURCE PASS',name,flush=True)
+        return
+    resume_index+=1
     if source_fingerprint() != fingerprint:
         raise RuntimeError('Candidate changed before '+name)
     print('RUN', name, flush=True)
@@ -52,10 +73,10 @@ try:
     android_env['PATH'] = str(jdk/'bin')+':'+android_env['PATH']
     android_env['JAVA_TOOL_OPTIONS'] = android_env.get('JAVA_TOOL_OPTIONS','')+' '+(CACHE/'java-options.txt').read_text()
     step('candidate-android', ['python','tools/build.py','android','--cache',str(CACHE),'--expect-revision','transport-rework3-rev5','--accept-android-licenses'], selected_env=android_env)
+    step('candidate-core-server', ['python','tools/build.py','server','--cache',str(CACHE),'--expect-revision','transport-rework3-rev5'])
     # Exercise field-derived applications before expensive builds.
     step('candidate-field-repeated', ['python','tools/field_qualification.py','--go',GO,'--repeats','3','--results',str(WORK/'field-repeated')])
     step('candidate-field-commit-delay', ['python','tools/field_qualification.py','--go',GO,'--repeats','1','--commit-delay-ms','12','--results',str(WORK/'field-commit-delay')])
-    step('candidate-core-server', ['python','tools/build.py','server','--cache',str(CACHE),'--expect-revision','transport-rework3-rev5'])
     step('candidate-race-accounting', [GO,'test','-race','-json','-count=1','-timeout=180s','./flow','./wallet','./journal','./datapath','./mailbox','./servercfg','./manager','./adminapi','./adminserver'], ROOT/'core')
     step('candidate-race-recovery', [GO,'test','-race','-json','-count=1','-timeout=180s','./tunnel','-run','^TestRev5(Historical180Slots|PhysicalReceipts|PeerRead|KnownPeer|PacedAccount|ProviderState|AccountDATARecovery|SplitBulk)|^TestRev4FieldSparseUIDHistory|^TestAndroidNetworkKinds|^TestRev4(OldEnvelope|LogicalOwner|OpenUses|DelayedStream|HealthyProgress|RepairMeasures)|^TestServerNotice|^TestStreamDispatchCannotBypassCarrierActivation$'], ROOT/'core')
     step('candidate-native-vet', [GO,'vet','./...'], ROOT/'native')

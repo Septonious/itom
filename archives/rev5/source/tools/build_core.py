@@ -25,7 +25,7 @@ GO_SHA256 = {
     ("darwin", "arm64"): "ee215d57e0ec269c60cc9ceca68e6bda321ba9ee5afe24f4b0988703c2d87d12",
 }
 PINS = {"github.com/emersion/go-imap/v2": "v2.0.0-beta.8", "github.com/emersion/go-message": "v0.18.2", "github.com/emersion/go-sasl": "v0.0.0-20241020182733-b788ff22d5a6", "golang.org/x/term": "v0.46.0", "go.etcd.io/bbolt": "v1.4.3", "github.com/flynn/noise": "v1.1.0", "golang.org/x/crypto": "v0.57.0", "golang.org/x/sys": "v0.48.0"}
-EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "flow", "pool", "session", "recovery", "integration", "journal", "wallet", "datapath", "socks", "mailbox", "mailcontrol", "servercfg", "manager", "probe", "netroute", "tunnel", "cmd/itom")}
+EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "flow", "pool", "session", "recovery", "integration", "journal", "wallet", "datapath", "socks", "mailbox", "mailcontrol", "servercfg", "manager", "adminapi", "adminserver", "probe", "netroute", "tunnel", "cmd/itom")}
 
 
 def host_pair():

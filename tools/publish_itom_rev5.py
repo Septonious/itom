@@ -63,7 +63,7 @@ def verify_gates(manifest, output):
     required_steps={'candidate-python','candidate-android','candidate-field-repeated','candidate-field-commit-delay','candidate-core-server','candidate-race-accounting','candidate-race-recovery','candidate-native-vet','candidate-admin-native-race','candidate-speed'}
     require(len(steps) == 10 and {x['name'] for x in steps} == required_steps and all(x['passed'] and x['exit_code'] == 0 for x in steps), 'Incomplete pipeline')
     admin=evidence['admin_features']
-    require(admin['server_authoritative_role'] and admin['additional_private_key_challenge'] and admin['durable_independent_watchdog'] and admin['loss_timeout_seconds']==60 and admin['healthy_trial_seconds']==60 and admin['irreversible_operations_cli_only'] and admin['native_imap_reconnect_race_test'], 'Admin safety gates incomplete')
+    require(admin['server_authoritative_role'] and admin['additional_private_key_challenge'] and admin['durable_independent_watchdog'] and admin['loss_timeout_seconds']==60 and admin['healthy_trial_seconds']==60 and admin['irreversible_operations_cli_only'] and admin['native_imap_reconnect_race_test'] and admin['actual_server_supervisor_restart_tested'] and admin['server_restart_recovery_ms']<60000, 'Admin safety gates incomplete')
     criteria = evidence['speed_criteria']
     require(criteria['tolerance_percent'] == 10 and criteria['useful_upload_mbps_min'] == 90 and
             criteria['useful_download_mbps_min'] == 90 and
