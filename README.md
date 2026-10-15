@@ -1,4 +1,4 @@
-# ITOM Rev4 field repair — unstable draft
+# ITOM Rev4 field repair — unstable testing
 
 Candidate source is in `archives/rev4/source`; review [draft PR #1](https://github.com/Septonious/itom/pull/1).
 
@@ -15,10 +15,19 @@ errors, one existing warning. See the [qualification report](archives/rev4/sourc
 
 The reported whole-app mobile startup crash has no fatal record in the supplied
 captures. Its cause remains unconfirmed; no physical phone or real provider
-was tested. This branch stays unstable and no replacement release is published.
+was tested. This branch stays unstable; the field crash is not confirmed resolved.
 
-Existing archive manifests, build bundles and APKs describe the previously
-published Rev4, not this candidate. No new APK or binary is published here.
+The repaired APK, Linux x86-64/ARM64 binaries, source ZIP and checksums are packaged
+for [field repair testing 1](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev4-field-repair-testing.1).
+GitHub Actions assembles the exact qualified bits from
+`archives/rev4-field-repair-testing`, verifies every asset and its qualification
+evidence, and publishes an explicitly **UNSTABLE** prerelease. See
+[install notes](builds/rev4-field-repair-testing/TESTING_NOTES.md).
+
+Existing manifests and bundles under `archives/rev4` outside its `source`
+directory still describe the earlier published Rev4. Use the new testing package
+for this repair. App/server version strings remain Rev4; distinct filenames,
+checksums and `STATUS.json` identify the repaired build.
 All required internal checks must pass before a release; speed/RTT tolerance
 remains 10%.
 
