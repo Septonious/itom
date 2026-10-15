@@ -460,7 +460,7 @@ class LauncherTests(unittest.TestCase):
         for value in broken:
             with self.assertRaises(RuntimeError): check_sources.validate_build_gates(value)
 
-    def run_simulated_gradle(self, exit_code, junit_xml, lint_xml):
+    def run_simulated_gradle(self, exit_code, junit_xml, lint_xml, app_xml='<testsuite tests="4" failures="0" errors="0" skipped="0"/>'):
         """Exercise the real launcher orchestration without Java, Gradle, SDK, or network."""
         info = build.read_source_info()
         (self.root / "source-info.json").write_text(json.dumps(info), encoding="utf-8")
@@ -474,6 +474,9 @@ class LauncherTests(unittest.TestCase):
                 junit = root / "android/domain/build/test-results/test/TEST-domain.xml"
                 junit.parent.mkdir(parents=True, exist_ok=True); junit.unlink(missing_ok=True)
                 if junit_xml is not None: junit.write_text(junit_xml, encoding="utf-8")
+                app = root / "android/app/build/test-results/testDebugUnitTest/TEST-adapter.xml"
+                app.parent.mkdir(parents=True, exist_ok=True); app.unlink(missing_ok=True)
+                if app_xml is not None: app.write_text(app_xml, encoding="utf-8")
                 lint = root / "android/app/build/reports/lint-results.xml"
                 lint.parent.mkdir(parents=True, exist_ok=True)
                 if lint_xml is not None: lint.write_text(lint_xml, encoding="utf-8")
@@ -509,7 +512,7 @@ class LauncherTests(unittest.TestCase):
             except RuntimeError as error: failure = str(error)
             command = process.call_args.args[0]
             self.assertIn("--continue", command)
-            for task in (":domain:test", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"):
+            for task in (":domain:test", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"):
                 self.assertIn(task, command)
         self.assertFalse((root / "cache/build.lock").exists())
         return result, failure, output.getvalue()
@@ -582,6 +585,14 @@ class LauncherTests(unittest.TestCase):
         report = json.loads((self.root / "dist/build-report.json").read_text(encoding="utf-8"))
         self.assertEqual("passed", report["status"])
         self.assertEqual(build.digest(artifacts[0]), report["sha256"])
+
+    def test_adapter_callback_tests_cannot_be_missing_failed_or_skipped(self):
+        for app in (None, '<testsuite tests="0"/>', '<testsuite tests="4" failures="1"/>', '<testsuite tests="4" skipped="1"/>'):
+            with self.subTest(app=app):
+                result, error, _ = self.run_simulated_gradle(0, '<testsuite tests="71"/>', '<issues/>', app)
+                self.assertIsNone(result)
+                self.assertIn("Android adapter tests", error)
+                self.assertEqual([], list((self.root / "dist").glob("*.apk")))
 
     def test_report_write_failure_releases_lock_and_preserves_original_error(self):
         original_write = Path.write_text

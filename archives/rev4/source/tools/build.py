@@ -137,10 +137,10 @@ def verify_apk_native_revision(apk: Path, info: dict):
     return native
 
 
-def test_report_summary(root: Path = ROOT) -> dict:
-    """Read available domain JUnit XML; reports can belong to up-to-date Gradle tasks."""
+def test_report_summary(root: Path = ROOT, relative: str = "android/domain/build/test-results/test") -> dict:
+    """Read available JUnit XML; reports can belong to up-to-date Gradle tasks."""
     result = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0, "failed_cases": [], "report_errors": []}
-    reports = sorted((root / "android/domain/build/test-results/test").glob("TEST-*.xml"))
+    reports = sorted((root / relative).glob("TEST-*.xml"))
     result["available"] = bool(reports)
     for report in reports:
         try:
@@ -223,11 +223,11 @@ def save_lint_diagnostics(root: Path, dist: Path, log: Path) -> dict:
     return summary
 
 
-def verify_gate_reports(tests: dict, lint: dict):
+def verify_gate_reports(tests: dict, lint: dict, label: str = "Domain"):
     """A zero Gradle exit code alone must not turn missing or failed checks into a release."""
     if (not tests["available"] or tests["report_errors"] or tests["tests"] <= 0
             or tests["failures"] or tests["errors"] or tests["failed_cases"] or tests["skipped"]):
-        fail("Domain tests are missing, incomplete, failed, or skipped. See dist/test-summary.json")
+        fail(label + " tests are missing, incomplete, failed, or skipped. See dist/test-summary.json")
     if not lint["available"] or lint["report_errors"] or lint["errors"]:
         fail("Lint report is missing, invalid, or contains errors. See dist/lint-summary.json")
 
@@ -547,7 +547,7 @@ def main(argv=None) -> int:
         command = [str(gradle), "--no-daemon", "--console=plain", "--continue"]
         if args.stacktrace:
             command.append("--stacktrace")
-        command += [":domain:test", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"]
+        command += [":domain:test", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"]
         metadata["stage"] = "gradle_compile_and_test"
         reset_lint_reports(ROOT, dist)
         domain_failed_this_run = False
@@ -563,8 +563,10 @@ def main(argv=None) -> int:
                     print(line, end="", flush=True); stream.write(line); stream.flush()
                 result = process.wait()
         summary = test_report_summary(ROOT)
+        app_summary = test_report_summary(ROOT, "android/app/build/test-results/testDebugUnitTest")
         summary["task_failed_this_run"] = domain_failed_this_run
         metadata["domain_tests"] = summary
+        metadata["app_unit_tests"] = app_summary
         (dist / "test-summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         metadata["lint"] = save_lint_diagnostics(ROOT, dist, log)
         if result:
@@ -575,6 +577,7 @@ def main(argv=None) -> int:
         # failing post-build stage in build-report.json for Windows users.
         metadata["stage"] = "post_gradle_domain_and_lint_gate"
         verify_gate_reports(summary, metadata["lint"])
+        verify_gate_reports(app_summary, metadata["lint"], "Android adapter")
         source = ROOT / "android/app/build/outputs/apk/debug/app-debug.apk"
         metadata["stage"] = "post_gradle_apk_identity"
         metadata["apk_identity"] = verify_apk_identity(source, sdk, info)

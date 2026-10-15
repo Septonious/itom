@@ -13,6 +13,7 @@ from transport_qualification import source_fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = (
+    'TestRev4FieldSparseUIDHistoryCannotStarveNewDATA',
     'TestRev4HTTPPhasesKeepMessagesUsable',
     'TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream',
     'TestRev4RetainedStateMixedTrafficAndNextTransfer',

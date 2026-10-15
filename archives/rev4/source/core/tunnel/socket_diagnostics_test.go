@@ -51,3 +51,44 @@ func TestApplicationClosureTraceKeepsStreamAndRedactsSocketText(t *testing.T) {
 		t.Fatal("invalid event accepted or valid outcome missing", found)
 	}
 }
+
+func TestAndroidNetworkKindsAreRecordedWithoutArbitraryCallbackText(t *testing.T) {
+	tracer, err := newTrace(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &Client{tracer: tracer}
+	want := map[string]bool{}
+	for _, prefix := range []string{"selected_", "initial_", "auto_stop_"} {
+		for _, kind := range []string{"wifi", "mobile", "other", "none"} {
+			name := prefix + kind
+			want[name] = true
+			client.RecordNetworkEvent(name, 123)
+		}
+	}
+	client.RecordNetworkEvent("selected_secret-password", 123)
+	tracer.Close()
+	raw, err := os.ReadFile(tracer.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(raw, []byte("secret-password")) {
+		t.Fatal("unbounded callback text leaked")
+	}
+	for _, line := range bytes.Split(bytes.TrimSpace(raw), []byte("\n")) {
+		var event traceEvent
+		if err = json.Unmarshal(line, &event); err != nil {
+			t.Fatal(err)
+		}
+		if event.Event != "underlying_network" {
+			continue
+		}
+		if !want[event.Name] {
+			t.Fatal("unexpected or duplicate network event", event.Name)
+		}
+		delete(want, event.Name)
+	}
+	if len(want) != 0 {
+		t.Fatal("Android's network-kind event names were discarded", want)
+	}
+}

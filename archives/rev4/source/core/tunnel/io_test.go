@@ -547,22 +547,9 @@ func TestReaderOwnAllocationProofPassesAllocatedHoles(t *testing.T) {
 		t.Fatal(err)
 	}
 	m.readerCheck = time.Now()
-	holes, afterHoles, err := m.Page(ctx, "itom-down", cur)
-	if err != nil || len(holes) != 0 || afterHoles.After != 4 {
-		t.Fatal("reader stuck before allocated holes", afterHoles, len(holes), err)
-	}
-	holes, afterHoles, err = m.Page(ctx, "itom-down", afterHoles)
-	if err != nil || len(holes) != 0 || afterHoles.After != 8 {
-		t.Fatal("second allocated range stalled", afterHoles, len(holes), err)
-	}
-	for afterHoles.After < 32 {
-		_, next, err := m.Page(ctx, "itom-down", afterHoles)
-		if err != nil || next.After <= afterHoles.After {
-			t.Fatal("allocated hole stalled", next, err)
-		}
-		afterHoles = next
-	}
-	nextRows, next, err := m.Page(ctx, "itom-down", afterHoles)
+	// A valid allocation snapshot permits sparse discovery immediately; the
+	// reader must deliver the live tail without enumerating deleted UID pages.
+	nextRows, next, err := m.Page(ctx, "itom-down", cur)
 	if err != nil || len(nextRows) != 1 || nextRows[0].UID != 33 || next.After != 33 {
 		t.Fatal("live tail after holes skipped", next, len(nextRows), err)
 	}

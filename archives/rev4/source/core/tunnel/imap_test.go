@@ -64,6 +64,9 @@ func tlsMailPairWithNetwork(t *testing.T, ctx context.Context, folders []string,
 		if network != nil && network.visibility.delay > 0 {
 			session = &visibilitySession{Session: session, visibility: &network.visibility, account: account}
 		}
+		if network != nil && network.historySetup.Load() {
+			return session, nil, nil
+		}
 		if os.Getenv("ITOM_FIELD_PROVIDER_MODEL") == "1" {
 			var replay *fieldLatencyReplay
 			if network != nil {

@@ -791,6 +791,9 @@ func rankOpenLanes(ready []*lane, now time.Time) int {
 func (c *Client) RecordNetworkEvent(kind string, handle int64) {
 	switch kind {
 	case "available", "lost", "capabilities", "link_properties", "selected", "initial", "session_stop":
+	case "selected_wifi", "selected_mobile", "selected_other", "selected_none",
+		"initial_wifi", "initial_mobile", "initial_other", "initial_none",
+		"auto_stop_wifi", "auto_stop_mobile", "auto_stop_other", "auto_stop_none":
 	default:
 		return
 	}

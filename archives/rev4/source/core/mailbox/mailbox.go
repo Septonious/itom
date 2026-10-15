@@ -1528,11 +1528,14 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		gaps := c.tailGapRequests(folder, cur.Validity, int(limit), time.Now())
 		set, count, last = tailFetchSet(cur, limit, gaps)
 		fetched := false
+		knownValidity, uidNext, _, known := c.SelectionAllocationProof(folder)
+		if known && knownValidity == cur.Validity {
+			allocatedThrough = uidNext - 1
+		}
 		if cur.Validity == 0 || verify || c.selectedFolder != folder {
 			var selected *imap.SelectData
 			var err error
-			knownValidity, _, _, known := c.SelectionAllocationProof(folder)
-			if cur.Validity != 0 && known && knownValidity == cur.Validity && c.selectedFolder == folder && count > 0 {
+			if cur.Validity != 0 && known && knownValidity == cur.Validity && c.selectedFolder == folder && count > 0 && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= 16) {
 				rows, selected, err = c.selectTailFetch(folder, cur, set, count, emit)
 				fetched = err == nil && selected.UIDValidity == cur.Validity
 			} else {
@@ -1551,7 +1554,40 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 			}
 			allocatedThrough = uint32(selected.UIDNext) - 1
 		}
+		// Real mailboxes keep UIDNEXT after EXPUNGE. Iterating four UID numbers
+		// per audit strands new DATA behind historical holes for minutes. Locate
+		// a bounded number of present UIDs, retaining compressed visibility gaps.
+		sparseForward := !fetched && allocatedThrough > cur.After && allocatedThrough-cur.After > 16
+		var sparseRequest *tailRange
+		var sparseThrough uint32
+		if sparseForward {
+			ids, through, err := c.searchTailUIDs(cur.After+1, allocatedThrough, int(limit))
+			if err != nil {
+				return err
+			}
+			set, count, last = imap.UIDSetNum(ids...), len(ids), through
+			for _, gap := range gaps {
+				set.AddNum(imap.UID(gap.uid))
+				count++
+			}
+		} else if !fetched {
+			if span, ok := c.sparseTailRequest(folder, cur.Validity, time.Now()); ok {
+				ids, through, err := c.searchTailUIDs(span.first, span.last, int(limit))
+				if err != nil {
+					return err
+				}
+				for _, id := range ids {
+					set.AddNum(id)
+					count++
+				}
+				sparseRequest, sparseThrough = &span, through
+			}
+		}
 		if count == 0 {
+			if sparseForward {
+				next.After = last
+				c.trackSparseTail(folder, cur.Validity, cur.After+1, next.After, nil, time.Now())
+			}
 			return nil
 		}
 		if !fetched {
@@ -1583,7 +1619,14 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 			next.After = newest
 		}
 		c.finishTailGapRequests(folder, cur.Validity, gaps, rows, time.Now())
-		c.trackTailGaps(folder, cur, next, rows, time.Now())
+		if sparseForward {
+			c.trackSparseTail(folder, cur.Validity, cur.After+1, next.After, rows, time.Now())
+		} else {
+			c.trackTailGaps(folder, cur, next, rows, time.Now())
+		}
+		if sparseRequest != nil {
+			c.finishSparseTail(folder, cur.Validity, sparseRequest, sparseThrough, rows, time.Now())
+		}
 		return nil
 	})
 	if e != nil {
