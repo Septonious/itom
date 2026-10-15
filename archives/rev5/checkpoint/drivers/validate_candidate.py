@@ -56,9 +56,10 @@ try:
     step('candidate-field-repeated', ['python','tools/field_qualification.py','--go',GO,'--repeats','3','--results',str(WORK/'field-repeated')])
     step('candidate-field-commit-delay', ['python','tools/field_qualification.py','--go',GO,'--repeats','1','--commit-delay-ms','12','--results',str(WORK/'field-commit-delay')])
     step('candidate-core-server', ['python','tools/build.py','server','--cache',str(CACHE),'--expect-revision','transport-rework3-rev5'])
-    step('candidate-race-accounting', [GO,'test','-race','-json','-count=1','-timeout=180s','./flow','./wallet','./journal','./datapath','./mailbox','./servercfg','./manager'], ROOT/'core')
+    step('candidate-race-accounting', [GO,'test','-race','-json','-count=1','-timeout=180s','./flow','./wallet','./journal','./datapath','./mailbox','./servercfg','./manager','./adminapi','./adminserver'], ROOT/'core')
     step('candidate-race-recovery', [GO,'test','-race','-json','-count=1','-timeout=180s','./tunnel','-run','^TestRev5(Historical180Slots|PhysicalReceipts|PeerRead|KnownPeer|PacedAccount|ProviderState|AccountDATARecovery|SplitBulk)|^TestRev4FieldSparseUIDHistory|^TestAndroidNetworkKinds|^TestRev4(OldEnvelope|LogicalOwner|OpenUses|DelayedStream|HealthyProgress|RepairMeasures)|^TestServerNotice|^TestStreamDispatchCannotBypassCarrierActivation$'], ROOT/'core')
     step('candidate-native-vet', [GO,'vet','./...'], ROOT/'native')
+    step('candidate-admin-native-race', [GO,'test','-race','-tags=itomtest','-json','-count=1','-timeout=100s','./...','-run','^TestNativeAdmin'], ROOT/'native')
     # Isolate the complete final performance matrix from analysis and packaging.
     step('candidate-speed', ['python','tools/transport_qualification.py','--go',GO,'--accounts','15','--streams','both','--repeats','3','--uid-history','64','--results',str(WORK/'speed-final')])
     report['complete'] = True

@@ -18,16 +18,33 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.itom.domain.*
 
-@Composable fun SettingsScreen(navigate: (Page) -> Unit) {
-    PageColumn {
-        NavigationRow(Glyph.NETWORK, "VPN networks", "Choose Wi-Fi, mobile, or both") { navigate(Page.NETWORKS) }
-        NavigationRow(Glyph.NETWORK, "SOCKS5", "Port and authentication") { navigate(Page.SOCKS) }
-        NavigationRow(Glyph.BELL, "Notifications", "Android permission and notification settings") { navigate(Page.NOTIFICATION) }
-        NavigationRow(Glyph.CHART, "Diagnostics", "Account metrics and full diagnostics export") { navigate(Page.DIAGNOSTICS) }
+@Composable fun SettingsScreen(backend: SessionBackend, session: SessionSnapshot, onMessage: (String) -> Unit, navigate: (Page) -> Unit) {
+    val raw by backend.admin.collectAsStateWithLifecycle()
+    val admin = remember(raw) { AdminCodec.view(raw) }
+    var selected by remember { mutableIntStateOf(0) }
+    LaunchedEffect(admin.authorized) { if (!admin.authorized) selected = 0 }
+    Column(Modifier.fillMaxSize()) {
+        if (admin.authorized) PrimaryTabRow(selectedTabIndex = selected, containerColor = androidx.compose.ui.graphics.Color.Transparent) {
+            Tab(selected = selected == 0, onClick = { selected = 0 }, text = { Text("App settings") })
+            Tab(selected = selected == 1, onClick = { selected = 1 }, text = { Text("Server admin") })
+        }
+        if (selected == 1 && admin.authorized) AdminScreen(backend, session, onMessage)
+        else PageColumn {
+            InfoCard(Modifier.fillMaxWidth(), accent = Blue) {
+                Text("Your connection, your preferences", style = MaterialTheme.typography.titleMedium)
+                SmallNote("Configure networks, local access and diagnostics.")
+            }
+            NavigationRow(Glyph.NETWORK, "VPN networks", "Choose Wi-Fi, mobile, or both") { navigate(Page.NETWORKS) }
+            NavigationRow(Glyph.NETWORK, "SOCKS5", "Port and authentication") { navigate(Page.SOCKS) }
+            NavigationRow(Glyph.BELL, "Notifications", "Android permission and notification settings") { navigate(Page.NOTIFICATION) }
+            NavigationRow(Glyph.CHART, "Diagnostics", "Account metrics and full diagnostics export") { navigate(Page.DIAGNOSTICS) }
+            if (!admin.authorized) SmallNote("Server administration appears here when the connected server grants this client admin access.")
+        }
     }
 }
 

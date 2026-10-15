@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"itom.local/core/servercfg"
 	"os"
 	"os/exec"
 	"runtime"
@@ -26,6 +27,11 @@ func (u *UI) uninstall() (bool, error) {
 func Uninstall(out io.Writer) error {
 	if runtime.GOOS != "linux" || os.Geteuid() != 0 {
 		return errors.New("uninstallation requires Linux, sudo and systemd")
+	}
+	if g, e := servercfg.GuardStatus("/var/lib/itom/server.db"); e == nil && g.Active() {
+		return servercfg.ErrGuardPending
+	} else if e != nil && !os.IsNotExist(e) {
+		return e
 	}
 	run := func(args ...string) error {
 		cmd := exec.Command("systemctl", args...)

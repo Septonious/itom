@@ -132,7 +132,7 @@ class ProfileEditorViewModel : ViewModel() {
         if (draft == null || session == null) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.error?.let { code ->
-                    SmallNote(errorText(code), Red)
+                    SmallNote(errorText(code), color = Red)
                     GradientButton("Retry", { editor.open(graph.vault, profileId, reload = true) })
                 }
             }
@@ -200,10 +200,10 @@ class ProfileEditorViewModel : ViewModel() {
                         }
                     }
                 }
-                if (draft.accounts.isEmpty()) item(key = "empty") { SmallNote("Add at least one IMAP account.", Yellow) }
+                if (draft.accounts.isEmpty()) item(key = "empty") { SmallNote("Add at least one IMAP account.", color = Yellow) }
             }
             state.error?.let { code ->
-                SmallNote(errorText(code), Red)
+                SmallNote(errorText(code), color = Red)
                 if (code == "PROFILE_EDIT_CONFLICT") TextButton(onClick = { reload = true }) { Text("Reload latest data") }
             }
             Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

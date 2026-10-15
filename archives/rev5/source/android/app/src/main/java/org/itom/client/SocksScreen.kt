@@ -89,6 +89,6 @@ class SocksEditor : ViewModel() {
             SmallNote("Changes apply on the next connection. Credentials are stored in the encrypted app vault.")
             GradientButton("Save", { editor.save(graph.vault) }, enabled = !editor.busy, modifier = Modifier.fillMaxWidth())
         }
-        editor.error?.let { SmallNote(errorText(it), Red) }
+        editor.error?.let { SmallNote(errorText(it), color = Red) }
     }
 }

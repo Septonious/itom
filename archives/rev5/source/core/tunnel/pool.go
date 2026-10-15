@@ -9,6 +9,7 @@ import (
 	"itom.local/core/servercfg"
 	"itom.local/core/socks"
 	"itom.local/core/wire"
+	"net"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -478,16 +479,23 @@ func (c *Client) Open(ctx context.Context, target wire.Connect) (socks.Stream, n
 // serverOptions keeps fixture injection on the production supervisor path.
 // No alternate lane lifecycle is maintained by tests.
 type serverOptions struct {
-	readNotice    func() (servercfg.Config, error)
-	dial          Dial
-	allowPrivate  bool
-	diagnostics   bool
-	onLane        func(*lane)
-	onCarrierExit func(*lane, error)
+	managementDial func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)
+	readNotice     func() (servercfg.Config, error)
+	dial           Dial
+	allowPrivate   bool
+	diagnostics    bool
+	onLane         func(*lane)
+	onCarrierExit  func(*lane, error)
 }
 
 func Serve(ctx context.Context, cfg servercfg.Config, dir string, log func(string)) error {
 	return serveWithOptions(ctx, cfg, dir, log, serverOptions{dial: mailbox.Dial, diagnostics: cfg.DiagnosticsMode != "off", readNotice: noticeSource(dir)})
+}
+
+// ServeManaged supplies an authenticated-user management dialer. It cannot
+// change the policy or destination of any ordinary TCP connection.
+func ServeManaged(ctx context.Context, cfg servercfg.Config, dir string, log func(string), dial func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+	return serveWithOptions(ctx, cfg, dir, log, serverOptions{dial: mailbox.Dial, diagnostics: cfg.DiagnosticsMode != "off", readNotice: noticeSource(dir), managementDial: dial})
 }
 func serveWithOptions(ctx context.Context, cfg servercfg.Config, dir string, log func(string), options serverOptions) error {
 	if cfg.DiagnosticsMode == "off" {
@@ -684,6 +692,11 @@ func serveWithOptions(ctx context.Context, cfg servercfg.Config, dir string, log
 								}
 								if e == nil {
 									l.allowPrivate = options.allowPrivate
+									if options.managementDial != nil {
+										l.internalDial = func(ctx context.Context, target wire.Connect) (*net.TCPConn, bool, error) {
+											return options.managementDial(ctx, u, target)
+										}
+									}
 									if options.onLane != nil {
 										options.onLane(l)
 									}

@@ -1,0 +1,4 @@
+RUN normal
+RESULT normal True
+RUN commit-delay
+RESULT commit-delay True

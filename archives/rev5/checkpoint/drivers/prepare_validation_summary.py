@@ -13,7 +13,7 @@ from transport_qualification import source_fingerprint
 pipeline = json.loads((WORK/'candidate-validation.json').read_text())
 required_steps = {'candidate-python','candidate-core-server','candidate-field-repeated','candidate-field-commit-delay',
                   'candidate-race-accounting','candidate-race-recovery','candidate-native-vet',
-                  'candidate-android','candidate-speed'}
+                  'candidate-android','candidate-speed','candidate-admin-native-race'}
 assert pipeline['complete'] and {s['name'] for s in pipeline['steps']} == required_steps
 assert all(s['passed'] and s['exit_code'] == 0 for s in pipeline['steps'])
 assert pipeline['source_sha256'] == source_fingerprint()
@@ -33,7 +33,7 @@ assert core['tests']['failed'] == core['tests']['skipped'] == 0
 for summary in (android['domain_tests'],android['app_unit_tests']):
     assert summary['tests'] > 0 and summary['available'] and not summary['report_errors']
     assert summary['failures'] == summary['errors'] == summary['skipped'] == 0
-assert android['app_unit_tests']['tests'] == 6
+assert android['app_unit_tests']['tests'] == 7
 
 def race_summary(name):
     passed=[];failed=[];skipped=[]
@@ -46,7 +46,7 @@ def race_summary(name):
     assert passed and not failed and not skipped
     return {'passed_test_events':len(passed),'failed':0,'skipped':0}
 
-races={name:race_summary(name) for name in ('candidate-race-accounting','candidate-race-recovery')}
+races={name:race_summary(name) for name in ('candidate-race-accounting','candidate-race-recovery','candidate-admin-native-race')}
 
 field = []
 for folder,repeats,delay in [('field-repeated',3,0),('field-commit-delay',1,12)]:
@@ -96,6 +96,7 @@ report = {
     'speed_criteria':speed['criteria'],'speed_scenario':{k:v for k,v in speed['scenario'].items() if k not in ('go','results')},
     'speed_cases':cases,'real_provider_tested':False,'physical_android_device_tested':False,
     'mobile_crash_resolved':False,
+    'admin_features':{'server_authoritative_role':True,'additional_private_key_challenge':True,'durable_independent_watchdog':True,'loss_timeout_seconds':60,'healthy_trial_seconds':60,'irreversible_operations_cli_only':True,'native_imap_reconnect_race_test':True,'real_systemd_host_tested':False},
     'first_candidate_failures_preserved':True,
     'qualification_isolation':'No concurrent log analysis, compression or other builds during final speed matrix; host CPU quota two cores.',
     'new_release_published':False,'replacement_assets_published':False,

@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 w=Path('/workspace/work/rev5');q=json.loads((w/'source/itom/docs/rev5/evidence/rev5_validation.json').read_text())
-assert q['all_internal_gates_passed'] and len(q['pipeline_steps'])==9
+assert q['all_internal_gates_passed'] and len(q['pipeline_steps'])==10
 rows=[]
 for c in q['speed_cases']:
  a=c['supervised_acceptance'];r=c['supervised_result']
@@ -21,7 +21,7 @@ itom message --uid CLIENT_UID --clear
 All nine internal gates passed on source `{q['qualification_source_sha256']}`:
 
 - {q['core']['passed_test_events']} core test events; IMAP-fork tests and vet passed.
-- Four complete 31-case field-suite repetitions, including one with 12 ms added durable-commit delay and real fsync. Cases include retained quota, thirty-second blackout, HTTP phases, repeated connection ramps, canceled downloads, chat under load and per-client notice delivery.
+- Four complete 32-case field-suite repetitions, including one with 12 ms added durable-commit delay and real fsync. Cases include retained quota, thirty-second blackout, HTTP phases, repeated connection ramps, canceled downloads, chat under load and per-client notice delivery.
 - Accounting and recovery race checks passed.
 - {q['android_domain_tests']['tests']} Android domain tests and {q['android_callback_adapter_tests']['tests']} app tests passed; lint has no errors; native bridge checks and both Android ABIs passed.
 - Three SINGLE and three 24-stream MULTI runs passed independently, with fifteen accounts and physical UID history. Both directions must reach at least 90 Mbit/s over the full interval, final thirty seconds and final ten seconds. Every loaded RTT is below 1,100 ms; all thirty probes overlap useful traffic, with no misses or timeouts.

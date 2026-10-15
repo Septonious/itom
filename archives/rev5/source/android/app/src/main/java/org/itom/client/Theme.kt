@@ -28,24 +28,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.itom.domain.*
 
-val Blue = Color(0xFF45AFFF)
-val ActionBlue = Color(0xFF1266B5)
-val Green = Color(0xFF48E5AE)
-val Yellow = Color(0xFFF5C65B)
-val Red = Color(0xFFFF6C86)
-val Ink = Color(0xFFECF4FC)
-val Muted = Color(0xFF93ABBD)
-val Panel = Color(0xFF0D2030)
-val Background = Color(0xFF050F18)
-val Outline = Color(0xFF294457)
+val Blue = Color(0xFF25C9FF)
+val ActionBlue = Color(0xFF25C9FF)
+val Green = Color(0xFF37E5B0)
+val Yellow = Color(0xFFFFCF67)
+val Red = Color(0xFFFF6685)
+val Ink = Color(0xFFF3F7FF)
+val Muted = Color(0xFFB0BED2)
+val Panel = Color(0xFF101827)
+val Background = Color(0xFF060A12)
+val OnAccent = Color(0xFF04121F)
+val Violet = Color(0xFFB893FF)
+val Outline = Color(0xFF5A708E)
 
 @Composable fun ItomSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier, enabled = enabled,
         colors = SwitchDefaults.colors(
             checkedThumbColor = Color(0xFF05291D), checkedTrackColor = Green, checkedBorderColor = Green,
-            uncheckedThumbColor = Color(0xFFDDD3FA), uncheckedTrackColor = Color(0xFF49325F), uncheckedBorderColor = Color(0xFF9D7CC8),
+            uncheckedThumbColor = Muted, uncheckedTrackColor = Color(0xFF182337), uncheckedBorderColor = Outline,
             disabledCheckedThumbColor = Color(0xFF91C2AC), disabledCheckedTrackColor = Color(0xFF244C3D),
-            disabledUncheckedThumbColor = Color(0xFF9789AB), disabledUncheckedTrackColor = Color(0xFF32283F)))
+            disabledUncheckedThumbColor = Muted.copy(alpha = .4f), disabledUncheckedTrackColor = Color(0xFF101827)))
 }
 
 fun phaseColor(p: Phase) = when (p) { Phase.OFF -> Color(0xFF8193A4); Phase.CONNECTING -> Yellow; Phase.CONNECTED -> Green; Phase.ERROR -> Red }
@@ -58,14 +60,14 @@ fun appModeName(mode: AppMode) = when (mode) { AppMode.ALL -> "All applications 
 @Composable fun ItomTheme(content: @Composable () -> Unit) {
     // Keep Android's font scale; the removed in-app multiplier is no longer applied.
     MaterialTheme(
-        colorScheme = darkColorScheme(primary = Blue, onPrimary = Ink, secondary = Green, onSecondary = Ink,
+        colorScheme = darkColorScheme(primary = Blue, onPrimary = OnAccent, secondary = Green, onSecondary = OnAccent, tertiary = Violet, onTertiary = OnAccent,
             background = Background, surface = Panel, onBackground = Ink, onSurface = Ink,
-            surfaceVariant = Color(0xFF152B3C), onSurfaceVariant = Muted, outline = Outline,
-            outlineVariant = Outline.copy(alpha = .6f), error = Red, onError = Ink,
-            primaryContainer = Color(0xFF123D60), onPrimaryContainer = Ink,
-            secondaryContainer = Color(0xFF174967), onSecondaryContainer = Ink,
-            tertiaryContainer = Color(0xFF174967), onTertiaryContainer = Ink,
-            inverseSurface = Color(0xFF183348), inverseOnSurface = Ink, inversePrimary = Blue),
+            surfaceVariant = Color(0xFF182337), onSurfaceVariant = Muted, outline = Outline,
+            outlineVariant = Outline.copy(alpha = .6f), error = Red, onError = OnAccent,
+            primaryContainer = Color(0xFF10324C), onPrimaryContainer = Ink,
+            secondaryContainer = Color(0xFF153D35), onSecondaryContainer = Ink,
+            tertiaryContainer = Color(0xFF153D35), onTertiaryContainer = Ink,
+            inverseSurface = Color(0xFF1B293E), inverseOnSurface = Ink, inversePrimary = Blue),
         shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(18.dp), large = RoundedCornerShape(24.dp)),
         typography = Typography(
             headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Medium),
@@ -86,9 +88,9 @@ fun appModeName(mode: AppMode) = when (mode) { AppMode.ALL -> "All applications 
 
 @Composable fun ItomBackdrop(content: @Composable BoxScope.() -> Unit) {
     Box(Modifier.fillMaxSize().background(Background).drawBehind {
-        drawRect(Brush.verticalGradient(listOf(Color(0xFF0D1C2A), Background)))
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF0B1320), Background)))
         val radius = size.maxDimension.coerceAtLeast(1f) * .7f
-        drawCircle(Brush.radialGradient(listOf(Blue.copy(alpha = .065f), Color.Transparent), Offset(size.width, 0f), radius), radius, Offset(size.width, 0f))
+        drawCircle(Brush.radialGradient(listOf(Blue.copy(alpha = .045f), Color.Transparent), Offset(size.width, 0f), radius), radius, Offset(size.width, 0f))
     }, content = content)
 }
 
@@ -102,13 +104,13 @@ fun appModeName(mode: AppMode) = when (mode) { AppMode.ALL -> "All applications 
 ) {
     val shape = RoundedCornerShape(22.dp)
     Column(modifier.clip(shape)
-        .background(Brush.linearGradient(listOf(accent?.copy(alpha = .12f) ?: Color(0xFF132A3B), Color(0xFF0B1B29))))
-        .border(1.dp, Brush.linearGradient(listOf(accent?.copy(alpha = .48f) ?: Color(0xFF375166), Outline.copy(alpha = .55f))), shape)
+        .background(Brush.linearGradient(listOf(accent?.copy(alpha = .12f) ?: Color(0xFF131E30), Color(0xFF0D1421))))
+        .border(1.dp, Brush.linearGradient(listOf(accent?.copy(alpha = .48f) ?: Color(0xFF3B4D67), Outline.copy(alpha = .55f))), shape)
         .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
         .padding(contentPadding), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
 }
 
-@Composable fun SmallNote(text: String, color: Color = Muted, modifier: Modifier = Modifier) {
+@Composable fun SmallNote(text: String, modifier: Modifier = Modifier, color: Color = Muted) {
     Text(text, modifier = modifier, color = color, style = MaterialTheme.typography.bodySmall)
 }
 

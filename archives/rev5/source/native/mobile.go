@@ -42,6 +42,7 @@ type config struct {
 	Diagnostics bool
 }
 type Client struct {
+	admin    adminClientState
 	ctx      context.Context
 	cancel   context.CancelFunc
 	host     Host
@@ -164,6 +165,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 			c.cancel()
 		}
 	}()
+	c.startAdmin(cfg.Profile.User.Key, cfg.Profile.User.ID)
 	return c, nil
 }
 

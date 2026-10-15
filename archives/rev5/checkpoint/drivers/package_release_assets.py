@@ -44,7 +44,7 @@ core = read(SOURCE / 'dist/core-report.json')
 identity = source_fingerprint()
 assert qualification['all_internal_gates_passed'] is True
 assert identity == qualification['qualification_source_sha256'] == pipeline['source_sha256']
-assert len(pipeline['steps']) == 9
+assert len(pipeline['steps']) == 10
 assert pipeline['complete'] and all(s['passed'] and s['exit_code'] == 0 for s in pipeline['steps'])
 assert runtime_hash(SOURCE/'core') == qualification['first_party_core_runtime_sha256'] == core['core_runtime_sha256']
 assert qualification['stable_release_ready'] is False

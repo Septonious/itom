@@ -211,7 +211,7 @@ private suspend fun decodeQr(context: Context, uri: Uri): String = withContext(D
                 finally { reading = false }
             }
         }) { Text("Validate and format") }
-        lintError?.let { SmallNote(it, Red) }
+        lintError?.let { SmallNote(it, color = Red) }
         if (reading) LinearProgressIndicator(Modifier.fillMaxWidth())
         parsed?.let { invitation ->
             val profile = invitation.profile

@@ -25,13 +25,14 @@ status = dict(
     latest_focused_ramp_cases=6, latest_focused_ramp_passed=6,
     latest_focused_ramp_max_chat_rtt_us=770812,
     field_cases_required=32, full_final_qualification='NOT_COMPLETE',
+    android_domain_tests_last_passed=81, android_app_tests_last_passed=7, android_lint_errors=0, android_lint_warnings=0,
+    real_systemd_host_tested=False, final_required_gates=10,
     implemented=['transport repairs and field-derived tests',
-                 'global and per-client messages', 'Minecraft-style message formatting'],
-    pending=['fresh full transport qualification after the latest repairs',
-             'darker, higher-contrast Android UI polish',
-             'server-authorized admin tab and IMAP management RPC',
-             'durable 60-second connection-loss rollback for reversible admin actions',
-             'final full qualification, APK and Linux builds, Actions release'],
+                 'global and per-client messages', 'Minecraft-style message formatting',
+                 'dark high-contrast Android UI', 'server-authorized IMAP admin RPC with private-key challenge',
+                 'independent durable 60-second rollback watchdog and full admin UI'],
+    pending=['fresh full ten-gate qualification of combined transport/UI/admin source',
+             'final release documentation, APK/Linux builds, Actions publication'],
     constraints=dict(speed_min_mbps=90, loaded_rtt_strictly_below_ms=1100,
                      duplex_probes_per_case=30, failed_runs_may_not_be_waived=True,
                      irreversible_operations_cli_only=True),
@@ -43,25 +44,8 @@ status = dict(
 )
 (work/'STATUS.json').write_text(json.dumps(status, indent=2)+'\n')
 handoff = work/'CURRENT_HANDOFF.md'
-prefix = f'''# Network-recovery checkpoint — {now}
-
-This block supersedes all older active-state and "not committed" statements below.
-User explicitly requested immediate GitHub commit/push of all intermediary changes because of network problems.
-Current source fingerprint: `{identity}`. **UNSTABLE; not a release; all internal gates have NOT passed.**
-No validator is active. The six latest ramp cases in `ramp-after-split.jsonl` all passed (max chat RTT 770812us).
-The full cycle7 run failed before the latest chat-window and split-affinity repairs; its evidence remains historical.
-Fresh qualification is required. Required field cases:32. Android's last build passed77 domain/6 app tests but predates the latest transport repairs; do not release it.
-Messages and colors are implemented. UI polish and authenticated admin RPC/60-second rollback remain unimplemented.
-User confirmed irreversible operations must remain CLI-only. Complete transport first, then UI/admin, then all final gates.
-All release limits remain90Mbps useful rates, every loaded RTT<1100ms,30/30 duplex probes with zero misses/timeouts in all6 SINGLE/MULTI runs.
-Checkpoint is in `archives/rev5/checkpoint`, source in `archives/rev5/source`; repository root workflow skips publication when no release manifest exists.
-Resume drivers are under checkpoint/drivers; they currently assume `/workspace/work/rev5` and the prior build-cache/toolchain paths. Restore editable source there and use `CURRENT_HANDOFF.md` for details.
-Raw uploaded captures, private signing keys, toolchains, build caches and stale binaries/APK are deliberately excluded. Uploaded file references remain in the handoff for authorized re-download.
-Update hardcoded31-case release-note text to32 (or the final test count) before final packaging. Do not treat archived aggregate JSON as current qualification.
-
-'''
-if not handoff.read_text().startswith('# Network-recovery checkpoint'):
-    handoff.write_text(prefix+handoff.read_text())
+# Preserve the manually maintained newest resume state without inserting stale
+# scope statements from earlier development checkpoints.
 
 excluded = {'.git','.gradle','.kotlin','__pycache__','build','dist','libs','reports','.idea'}
 def ignore(directory, names):

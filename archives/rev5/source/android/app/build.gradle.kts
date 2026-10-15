@@ -7,7 +7,7 @@ android {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
         versionCode = 9205; versionName = "0.9.2-Rev5"
-        buildConfigField("String", "UI_BASELINE", "\"ui-rev10-header-notices\"")
+        buildConfigField("String", "UI_BASELINE", "\"ui-rev11-dark-admin\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
     buildTypes {

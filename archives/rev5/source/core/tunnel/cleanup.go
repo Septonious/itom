@@ -278,6 +278,8 @@ func (l *lane) cleanup(kind cleanupKind, eligible map[journal.AttemptRef]bool, r
 
 func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef]bool, remote map[journal.AttemptRef]remoteCleanup, known map[uint64]mailbox.Message, scan bool, localStore *journal.Store, recoveryCursor mailbox.Cursor) (r cleanupResult) {
 	r.kind = kind
+	proofs := cleanupProofs{}
+	defer proofs.clear()
 	if kind == cleanupRemote {
 		rows := make([]mailbox.Message, 0, len(remote))
 		for _, m := range remote {
@@ -292,10 +294,10 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 		}
 		r.remoteRecoveryCursor = next
 		rows = append(rows, recovered...)
-		r.remote, r.err = reclaimBounded(l.ctx, l.mail, l.data, rows, func(a journal.Attempt) bool {
+		r.remote, r.err = reclaimWithProofs(l.ctx, l.mail, l.data, rows, func(a journal.Attempt) bool {
 			_, ok := remote[a.Ref]
 			return ok
-		}, runtimeCleanupAttempts)
+		}, runtimeCleanupAttempts, proofs)
 		if r.err != nil {
 			return
 		}
@@ -366,8 +368,8 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 		retain := func(rows []mailbox.Message) []mailbox.Message {
 			kept := rows[:0]
 			for _, row := range rows {
-				body, err := mailbox.Decode(row.MIME)
-				if err == nil && live[sha256.Sum256(body)] {
+				proof := proofs.decode(row.MIME)
+				if proof.err == nil && live[proof.digest] {
 					kept = append(kept, row)
 				}
 			}
@@ -382,9 +384,9 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 		// proof below remain mandatory, and the 32-attempt bound is unchanged.
 		cachedDigests := map[[32]byte]bool{}
 		for _, row := range l.outCache {
-			body, err := mailbox.Decode(row.MIME)
-			if err == nil {
-				cachedDigests[sha256.Sum256(body)] = true
+			proof := proofs.decode(row.MIME)
+			if proof.err == nil {
+				cachedDigests[proof.digest] = true
 			}
 		}
 		cachedEligible := map[journal.AttemptRef]bool{}
@@ -426,8 +428,10 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 					}
 					l.outCache = merged
 					for _, row := range rows {
-						body, _ := mailbox.Decode(row.MIME)
-						cachedDigests[sha256.Sum256(body)] = true
+						proof := proofs.decode(row.MIME)
+						if proof.err == nil {
+							cachedDigests[proof.digest] = true
+						}
 					}
 					for _, a := range attempts {
 						if eligible[a.Ref] && cachedDigests[a.Digest] {
@@ -465,12 +469,12 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 				break
 			}
 		}
-		gone, err := reclaimBounded(l.ctx, l.mail, localStore, l.outCache, func(a journal.Attempt) bool {
+		gone, err := reclaimWithProofs(l.ctx, l.mail, localStore, l.outCache, func(a journal.Attempt) bool {
 			if drainCached {
 				return cachedEligible[a.Ref]
 			}
 			return eligible[a.Ref] || a.Ordinal == 0 && a.Ref.Grant.Scope.Session != currentSession
-		}, runtimeCleanupAttempts)
+		}, runtimeCleanupAttempts, proofs)
 		if err != nil {
 			r.err = err
 			return
@@ -482,8 +486,8 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 		}
 		retained := l.outCache[:0]
 		for _, msg := range l.outCache {
-			body, err := mailbox.Decode(msg.MIME)
-			if err != nil || !hashes[sha256.Sum256(body)] {
+			proof := proofs.decode(msg.MIME)
+			if proof.err != nil || !hashes[proof.digest] {
 				retained = append(retained, msg)
 			}
 		}

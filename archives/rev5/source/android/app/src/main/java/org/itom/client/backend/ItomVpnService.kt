@@ -210,6 +210,7 @@ class ItomVpnService : VpnService() {
             native = Mobile.new_(config.json, directory.absolutePath, host)
             val core = requireNotNull(native)
             traceClient.set(core)
+            backend.adminClient = core
             val initialNetwork = selectedNetwork()
             networkEvent("initial_${kindOf(initialNetwork?.let { capabilities[it] })?.name?.lowercase() ?: "none"}", initialNetwork)
             currentCoroutineContext().ensureActive()
@@ -240,6 +241,7 @@ class ItomVpnService : VpnService() {
             while (currentCoroutineContext().isActive && backend.snapshot.value.generation == g) {
                 val now = SystemClock.elapsedRealtime()
                 val snapshot = core.snapshot()
+                backend.adminState.value = core.adminSnapshot()
                 val stats = JSONObject(snapshot)
                 demand(stats.optString("Error").isEmpty(), "TRANSPORT_FAILED")
                 val active = stats.getInt("ActiveLines")
@@ -285,6 +287,7 @@ class ItomVpnService : VpnService() {
                 }
                 runCatching { networkEvent("session_stop", null) }
                 traceClient.set(null)
+                if (backend.snapshot.value.generation == g) { backend.adminClient = null; backend.adminState.value = "{}" }
                 try { native?.close() } catch (_: Exception) { failure = failure ?: "NATIVE_CLOSE_FAILED" }
                 if (backend.snapshot.value.generation == g) {
                     if (failure == null || stoppedByNetworkPolicy.get()) backend.machine.stop(g) else backend.machine.fail(g, failure!!)

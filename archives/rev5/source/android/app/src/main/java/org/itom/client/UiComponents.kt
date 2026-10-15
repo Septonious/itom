@@ -105,10 +105,10 @@ enum class Glyph { HOME, SERVERS, ROUTES, SETTINGS, APPS, BELL, CHART, BACK, NEX
 @Composable fun GradientButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, glyph: Glyph? = null) {
     val shape = RoundedCornerShape(16.dp)
     Button(onClick, modifier.heightIn(min = 48.dp).clip(shape).background(Brush.linearGradient(
-        if (enabled) listOf(ActionBlue, Color(0xFF145A9C)) else listOf(Panel, Panel))),
-        enabled = enabled, shape = shape, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Ink, disabledContainerColor = Color.Transparent, disabledContentColor = Muted),
+        if (enabled) listOf(ActionBlue, Color(0xFF4A98FF)) else listOf(Panel, Panel))),
+        enabled = enabled, shape = shape, colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = OnAccent, disabledContainerColor = Color.Transparent, disabledContentColor = Muted),
         border = BorderStroke(1.dp, if (enabled) Blue.copy(alpha = .55f) else Outline), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
-        if (glyph != null) { AppIcon(glyph, Modifier.size(18.dp), if (enabled) Ink else Muted); Spacer(Modifier.width(8.dp)) }
+        if (glyph != null) { AppIcon(glyph, Modifier.size(18.dp), if (enabled) OnAccent else Muted); Spacer(Modifier.width(8.dp)) }
         Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -164,14 +164,14 @@ enum class Glyph { HOME, SERVERS, ROUTES, SETTINGS, APPS, BELL, CHART, BACK, NEX
 @Composable fun ItomBottomBar(page: Page, navigate: (Page) -> Unit) {
     Row(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
         .padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(26.dp))
-        .background(Brush.verticalGradient(listOf(Color(0xFF0F2231), Color(0xFF081521))))
+        .background(Brush.verticalGradient(listOf(Color(0xFF111B2B), Color(0xFF0A111C))))
         .border(1.dp, Outline.copy(alpha = .8f), RoundedCornerShape(26.dp)).padding(5.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         listOf(Page.HOME to Glyph.HOME, Page.PROFILES to Glyph.SERVERS, Page.RULES to Glyph.ROUTES, Page.SETTINGS to Glyph.SETTINGS).forEach { (tab, glyph) ->
             val selected = page.root == tab.root
             val color by animateColorAsState(if (selected) Blue else Muted, label = "navigationColor")
             Column(Modifier.weight(1f).clip(RoundedCornerShape(21.dp))
-                .background(Brush.linearGradient(if (selected) listOf(Color(0xFF16416B), Color(0xFF102D49)) else listOf(Color.Transparent, Color.Transparent)))
-                .border(1.dp, if (selected) Blue.copy(alpha = .2f) else Color.Transparent, RoundedCornerShape(21.dp))
+                .background(Brush.linearGradient(if (selected) listOf(Color(0xFF123A52), Color(0xFF102537)) else listOf(Color.Transparent, Color.Transparent)))
+                .border(1.dp, if (selected) Blue.copy(alpha = .45f) else Color.Transparent, RoundedCornerShape(21.dp))
                 .selectable(selected, role = Role.Tab, onClick = { navigate(tab) }).padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Box(contentAlignment = Alignment.Center) {

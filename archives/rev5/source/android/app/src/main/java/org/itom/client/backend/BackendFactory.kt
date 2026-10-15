@@ -11,6 +11,13 @@ fun createBackend(context: Context, vault: VaultStore): SessionBackend = NativeB
 
 class NativeBackend(private val context: Context, val vault: VaultStore) : SessionBackend {
     val machine = SessionMachine()
+    val adminState = kotlinx.coroutines.flow.MutableStateFlow("{}")
+    override val admin: kotlinx.coroutines.flow.StateFlow<String> = adminState
+    @Volatile var adminClient: org.itom.nativecore.mobile.Client? = null
+    override suspend fun adminCall(request: String): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val client = adminClient ?: throw DomainError("ADMIN_CONNECTION_FAILED")
+        try { client.adminCall(request) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { throw DomainError("ADMIN_CONNECTION_FAILED") }
+    }
     override val snapshot = machine.state
     val diagnosticState = kotlinx.coroutines.flow.MutableStateFlow("{}")
     override val diagnostics: kotlinx.coroutines.flow.StateFlow<String> = diagnosticState
@@ -20,6 +27,7 @@ class NativeBackend(private val context: Context, val vault: VaultStore) : Sessi
             machine.reject(profile.profileId, revision, profile.totalLines, "VPN_PERMISSION_REQUIRED"); return
         }
         diagnosticState.value = "{}"
+        adminState.value = "{}"
         val generation = machine.begin(profile.profileId, revision, profile.accounts.count { it.enabled } * 2)
         try {
             context.startForegroundService(Intent(context, ItomVpnService::class.java)

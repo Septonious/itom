@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"itom.local/core/adminserver"
 	"itom.local/core/manager"
 	"itom.local/core/probe"
 	"itom.local/core/servercfg"
@@ -38,6 +39,7 @@ func run(args []string) error {
 	to := flags.String("to", "", "offline DATA journal profile: data8, data12 or data16")
 	mode := flags.String("mode", "", "server diagnostics: on or off; restart service to apply")
 	uid := flags.String("uid", "", "client UID for traffic or message (default: all clients)")
+	transaction := flags.String("transaction", "", "private admin rollback transaction")
 	watch := flags.Bool("watch", false, "refresh traffic every second until Ctrl+C")
 	message := flags.String("text", "", "current server message (maximum 2048 UTF-8 bytes)")
 	clearMessage := flags.Bool("clear", false, "clear the current server message")
@@ -48,6 +50,8 @@ func run(args []string) error {
 		return errors.New("unexpected arguments")
 	}
 	switch command {
+	case "admin-guard":
+		return adminserver.RunGuard(*state, *transaction)
 	case "message":
 		changed := *clearMessage
 		flags.Visit(func(f *flag.Flag) {
@@ -136,7 +140,12 @@ func run(args []string) error {
 			log.Printf("event=server_start revision=%s protocol=4 accounts=%d users=%d", revision, len(cfg.Accounts), len(cfg.Users))
 			logger = func(s string) { log.Print(s) }
 		}
-		e = tunnel.Serve(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger)
+		if e = adminserver.RecoverGuard(*state); e != nil {
+			return errors.New("ADMIN_GUARD_RECOVERY_FAILED")
+		}
+		admin := adminserver.New(ctx, *state)
+		defer admin.Close()
+		e = tunnel.ServeManaged(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial)
 		if errors.Is(e, context.Canceled) {
 			return nil
 		}

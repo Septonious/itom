@@ -104,3 +104,8 @@ func writeTraceBundle(dir, path string) (err error) {
 	}
 	return z.Close()
 }
+
+// ExportDiagnostics writes the same bounded trace bundle used by the CLI.
+func ExportDiagnostics(state, path string) error {
+	return writeTraceBundle(filepath.Join(state, "tunnel-server"), path)
+}

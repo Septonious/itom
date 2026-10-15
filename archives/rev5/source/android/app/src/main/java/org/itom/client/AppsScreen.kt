@@ -99,14 +99,14 @@ import org.itom.domain.*
             }
             if (!loading && error == null && missing.isNotEmpty()) item(key = "missing") {
                 InfoCard(Modifier.fillMaxWidth(), accent = Red, contentPadding = 12.dp) {
-                    SmallNote("Selected applications no longer installed: ${missing.size}", Red)
+                    SmallNote("Selected applications no longer installed: ${missing.size}", color = Red)
                     TextButton(enabled = !busy, onClick = { selected = (selectedSet - missing).toList() }) { Text("Remove missing applications") }
                 }
             }
             if (loading) item(key = "loading") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             if (error != null) item(key = "error") {
                 InfoCard(Modifier.fillMaxWidth(), accent = Red) {
-                    SmallNote(error!!, Red)
+                    SmallNote(error!!, color = Red)
                     TextButton(onClick = { refresh++ }) { Text("Retry") }
                 }
             }

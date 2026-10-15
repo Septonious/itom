@@ -150,6 +150,9 @@ func (u *UI) status() error {
 		return e
 	}
 	fmt.Fprintf(u.Out, "Provider: %s; configured accounts: %d; clients: %d/2\n", c.Provider, len(c.Accounts), len(c.Users))
+	if g, e := servercfg.GuardStatus(u.db()); e == nil && g.Active() {
+		fmt.Fprintf(u.Out, "Pending app-admin change %s (%s); connection rollback protection is active.\n", g.ID, g.State)
+	}
 	for _, x := range c.Users {
 		fmt.Fprintf(u.Out, "UID %s | %s | enabled=%t\n", x.ID, x.Name, x.Enabled)
 	}
@@ -416,6 +419,26 @@ WantedBy=multi-user.target
 // Install copies the manually supplied running binary atomically, preserving
 // /var/lib/itom. An active service is restarted, with binary rollback on failure.
 func Install() error {
+	if g, e := servercfg.GuardStatus("/var/lib/itom/server.db"); e == nil && g.Active() {
+		return servercfg.ErrGuardPending
+	} else if e != nil && !os.IsNotExist(e) {
+		return e
+	}
+	return installCurrent()
+}
+
+// InstallGuarded is restricted to the already armed independent admin helper.
+func InstallGuarded(state, id string) error {
+	g, e := servercfg.GuardStatus(filepath.Join(state, "server.db"))
+	if e != nil {
+		return e
+	}
+	if g.ID != id || !g.Active() {
+		return servercfg.ErrGuardConflict
+	}
+	return installCurrent()
+}
+func installCurrent() error {
 	if runtime.GOOS != "linux" || os.Geteuid() != 0 {
 		return errors.New("installation requires Linux, sudo and systemd")
 	}

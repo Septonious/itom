@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itom.local/core/adminapi"
 	"itom.local/core/session"
 	"itom.local/core/wire"
 	"net"
 	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -43,6 +45,7 @@ type Resolver interface {
 	LookupNetIP(context.Context, string, string) ([]netip.Addr, error)
 }
 type ExitConfig struct {
+	InternalDial                   func(context.Context, wire.Connect) (*net.TCPConn, bool, error)
 	Generation                     uint64
 	MaxSockets, MaxDials, Metadata int
 	AllowPrivate                   bool
@@ -146,6 +149,27 @@ func (x *TCPExit) Dial(job session.DialJob) DialResult {
 		return result
 	}
 	result.diagnostic.SlotMS = time.Since(started).Milliseconds()
+	// Only the explicitly reserved target can enter this server-supplied hook.
+	// Ordinary exits retain the same resolver and private-address policy.
+	if strings.EqualFold(job.Target.Host, adminapi.Host) {
+		result.reason = wire.ReasonPolicy
+		result.diagnostic.Stage = "management"
+		result.diagnostic.Reason = "denied"
+		if job.Target.Port != adminapi.Port || x.cfg.InternalDial == nil {
+			return result
+		}
+		conn, handled, err := x.cfg.InternalDial(ctx, job.Target)
+		if err != nil || !handled || conn == nil || ctx.Err() != nil {
+			if conn != nil {
+				conn.Close()
+			}
+			return result
+		}
+		result.conn = conn
+		result.reason = wire.ReasonNone
+		result.diagnostic.Reason = "ready"
+		return result
+	}
 	result.diagnostic.Stage = "dns"
 	started = time.Now()
 	var ips []netip.Addr

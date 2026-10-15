@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"errors"
 	"itom.local/core/journal"
 	"itom.local/core/mailbox"
@@ -113,6 +112,12 @@ func reclaim(ctx context.Context, m mailbox.Transport, s *journal.Store, rows []
 // limit=0 and remains exhaustive. Runtime cleanup uses one physical batch so a
 // single maintenance pass cannot monopolize a public IMAP mailbox for seconds.
 func reclaimBounded(ctx context.Context, m mailbox.Transport, s *journal.Store, rows []mailbox.Message, eligible func(journal.Attempt) bool, limit int) ([]journal.Attempt, error) {
+	proofs := cleanupProofs{}
+	defer proofs.clear()
+	return reclaimWithProofs(ctx, m, s, rows, eligible, limit, proofs)
+}
+
+func reclaimWithProofs(ctx context.Context, m mailbox.Transport, s *journal.Store, rows []mailbox.Message, eligible func(journal.Attempt) bool, limit int, proofs cleanupProofs) ([]journal.Attempt, error) {
 	attempts, e := allAttempts(s)
 	if e != nil {
 		return nil, e
@@ -136,11 +141,11 @@ func reclaimBounded(ctx context.Context, m mailbox.Transport, s *journal.Store, 
 		// Parse the physical MIME once for both the bounded journal charge
 		// and authenticated-body candidate lookup. This avoids a redundant
 		// base64 decode on BINARY/provider-rewritten recovery scans.
-		b, _, decodeErr := mailbox.DecodeDataProof(r.MIME)
-		if decodeErr != nil {
+		proof := proofs.decode(r.MIME)
+		if proof.err != nil {
 			continue
 		}
-		key := messageKey{folder: r.Folder, digest: sha256.Sum256(b)}
+		key := messageKey{folder: r.Folder, digest: proof.digest}
 		byKey[key] = append(byKey[key], r)
 		byLocation[pinnedLocator{r.Folder, journal.Location{UIDValidity: r.Validity, UID: r.UID}}] = r
 	}
@@ -260,9 +265,9 @@ func reclaimBounded(ctx context.Context, m mailbox.Transport, s *journal.Store, 
 		}
 		loc := a.Location
 		if r, ok := byLocation[pinnedLocator{a.Folder, loc}]; ok && r.Folder == a.Folder && !used[pinnedLocator{a.Folder, loc}] {
-			b, decodeErr := mailbox.Decode(r.MIME)
-			if decodeErr == nil && sha256.Sum256(b) == a.Digest {
-				observations = append(observations, journal.ObservedAttempt{Ref: a.Ref, Observation: journal.Observation{Account: a.Ref.Grant.Scope.Account, Folder: r.Folder, EncodedBytes: canonicalMessageSize(r.MIME), Location: loc, Decoded: b}})
+			proof := proofs.decode(r.MIME)
+			if proof.err == nil && proof.digest == a.Digest {
+				observations = append(observations, journal.ObservedAttempt{Ref: a.Ref, Observation: journal.Observation{Account: a.Ref.Grant.Scope.Account, Folder: r.Folder, EncodedBytes: proof.encoded, Location: loc, Decoded: proof.body}})
 				used[pinnedLocator{a.Folder, loc}] = true
 				candidates = append(candidates, a)
 				messages = append(messages, r)
@@ -342,12 +347,12 @@ func reclaimBounded(ctx context.Context, m mailbox.Transport, s *journal.Store, 
 		if !found {
 			continue
 		}
-		b, decodeErr := mailbox.Decode(r.MIME)
-		if decodeErr != nil {
-			return nil, decodeErr
+		proof := proofs.decode(r.MIME)
+		if proof.err != nil {
+			return nil, proof.err
 		}
 		loc := journal.Location{UIDValidity: r.Validity, UID: r.UID}
-		observations = append(observations, journal.ObservedAttempt{Ref: a.Ref, Observation: journal.Observation{Account: a.Ref.Grant.Scope.Account, Folder: r.Folder, EncodedBytes: canonicalMessageSize(r.MIME), Location: loc, Decoded: b}})
+		observations = append(observations, journal.ObservedAttempt{Ref: a.Ref, Observation: journal.Observation{Account: a.Ref.Grant.Scope.Account, Folder: r.Folder, EncodedBytes: proof.encoded, Location: loc, Decoded: proof.body}})
 		candidates = append(candidates, a)
 		messages = append(messages, r)
 	}

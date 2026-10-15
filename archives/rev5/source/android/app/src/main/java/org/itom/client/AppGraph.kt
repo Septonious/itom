@@ -19,6 +19,8 @@ import org.itom.domain.*
 interface SessionBackend {
     val snapshot: StateFlow<SessionSnapshot>
     val diagnostics: StateFlow<String>
+    val admin: StateFlow<String>
+    suspend fun adminCall(request: String): String
     fun start(profile: ServerProfile, revision: Long)
     fun stop()
 }

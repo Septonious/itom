@@ -165,7 +165,7 @@ fun errorText(code: String) = when (code) {
                             })
                         }
                         Page.DASHBOARD, Page.DIAGNOSTICS -> DiagnosticsScreen(config, session, session.transport, { enabled -> perform { graph.vault.diagnostics(enabled); restartIfActive(); message(if (enabled) "Logs and tracing enabled." else "Logs and tracing disabled.") } }, ::message)
-                        Page.SETTINGS -> SettingsScreen { page = it }
+                        Page.SETTINGS -> SettingsScreen(graph.backend, session, ::message) { page = it }
                         Page.NETWORKS -> NetworkScreen(config, busy) { policy -> perform { graph.vault.networks(policy); message("Network selection saved.") } }
                         Page.SOCKS -> SocksScreen(graph, onSaved = { restartIfActive(); page = Page.SETTINGS; message("SOCKS5 settings saved.") })
                         Page.NOTIFICATION -> NotificationScreen()

@@ -259,6 +259,13 @@ func Update(path string, fn func(*Config) error) error {
 		return e
 	}
 	e = db.Update(func(tx *bolt.Tx) error {
+		guard, err := readGuard(tx, "")
+		if err != nil {
+			return err
+		}
+		if guard.Active() {
+			return ErrGuardPending
+		}
 		b, e := tx.CreateBucketIfNotExists([]byte("config"))
 		if e != nil {
 			return e

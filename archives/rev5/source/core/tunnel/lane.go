@@ -21,6 +21,7 @@ import (
 	"itom.local/core/session"
 	"itom.local/core/wallet"
 	"itom.local/core/wire"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -157,6 +158,7 @@ type lane struct {
 	quiescing                                           atomic.Bool
 	side                                                bool
 	allowPrivate                                        bool
+	internalDial                                        func(context.Context, wire.Connect) (*net.TCPConn, bool, error)
 	account                                             servercfg.Account
 	user                                                servercfg.User
 	logicalSession                                      wire.ID
@@ -2385,7 +2387,7 @@ func (l *lane) startPump() error {
 		return e
 	}
 	if l.side {
-		l.exit, e = datapath.NewTCPExit(l.logicalContext(), datapath.ExitConfig{Generation: 1, MaxSockets: runtimeOwnerStreams, MaxDials: 16, Metadata: 65536, AllowPrivate: l.allowPrivate})
+		l.exit, e = datapath.NewTCPExit(l.logicalContext(), datapath.ExitConfig{Generation: 1, MaxSockets: runtimeOwnerStreams, MaxDials: 16, Metadata: 65536, AllowPrivate: l.allowPrivate, InternalDial: l.internalDial})
 		if e != nil {
 			return e
 		}

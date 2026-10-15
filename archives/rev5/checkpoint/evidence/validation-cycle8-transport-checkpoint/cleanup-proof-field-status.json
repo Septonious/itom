@@ -1,0 +1,18 @@
+{
+  "source_sha256": "ee07d901827298981fdab58d6fb161d8582cf81c05d844e54ccb55b43a5bcce0",
+  "complete": true,
+  "steps": [
+    {
+      "name": "normal",
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 252.592
+    },
+    {
+      "name": "commit-delay",
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 257.489
+    }
+  ]
+}
