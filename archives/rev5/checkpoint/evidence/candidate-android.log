@@ -3,7 +3,7 @@ test_launcher: passed
 test_core_tools: passed
 test_rework_gate: passed
 Offline source checks passed: 18 Python files, 11 XML files, source-set boundaries.
-77 Kotlin test cases are present but NOT executed by this check.
+81 Kotlin test cases are present but NOT executed by this check.
 Android compilation, lint, and device tests are NOT performed by this command.
 Go compilation and Go tests are NOT performed; use target core for the local Go gate.
 Native: /workspace/work/rev3/build-cache/go-1.27.1-linux-amd64/go/bin/go mod download
@@ -13,85 +13,78 @@ Native: /workspace/work/rev3/build-cache/mobile-v0.0.0-20260908204917-8b95e45f8d
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build
 Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
-> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:generateDebugBuildConfig UP-TO-DATE
 > Task :app:generateDebugResValues UP-TO-DATE
 > Task :app:generateDebugResources UP-TO-DATE
 > Task :app:packageDebugResources UP-TO-DATE
-> Task :domain:compileKotlin UP-TO-DATE
-> Task :domain:compileJava NO-SOURCE
 > Task :domain:processResources NO-SOURCE
+> Task :domain:processTestResources NO-SOURCE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
 > Task :domain:classes UP-TO-DATE
 > Task :domain:jar
-> Task :app:processDebugNavigationResources
-> Task :app:parseDebugLocalResources
-> Task :domain:processTestResources NO-SOURCE
-> Task :app:generateDebugRFile
-> Task :app:javaPreCompileDebug
-> Task :app:checkDebugAarMetadata
-> Task :app:mapDebugSourceSetPaths
-> Task :app:compileDebugNavigationResources
-> Task :app:mergeDebugResources
-> Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
-> Task :app:processDebugResources
-> Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:javaPreCompileDebugUnitTest
-> Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:generateDebugAndroidTestResValues
-> Task :app:extractProguardFiles
-> Task :app:preReleaseBuild UP-TO-DATE
-> Task :app:generateReleaseBuildConfig
-> Task :app:generateReleaseResValues
-> Task :app:generateReleaseResources
-> Task :app:packageReleaseResources
-> Task :app:processReleaseNavigationResources
-> Task :app:parseReleaseLocalResources
-> Task :app:generateReleaseRFile
 > Task :domain:compileTestKotlin
 > Task :domain:compileTestJava NO-SOURCE
 > Task :domain:testClasses UP-TO-DATE
-> Task :app:compileDebugKotlin
 
 > Task :domain:test
 
-> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugAssets UP-TO-DATE
-> Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
-> Task :app:desugarDebugFileDependencies
-> Task :app:checkDebugDuplicateClasses
-> Task :app:compileReleaseKotlin
-> Task :app:mergeExtDexDebug
 > Task :app:mergeLibDexDebug
-> Task :app:mergeDebugJniLibFolders
 > Task :app:mergeDebugNativeLibs
 > Task :app:stripDebugDebugSymbols
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
-
 > Task :app:compileReleaseKotlin
-w: file:///workspace/work/rev5/source/itom/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt:113:21 'val allNetworks: Array<(out) Network!>' is deprecated. Deprecated in Java.
-
 > Task :app:compileDebugKotlin
-w: file:///workspace/work/rev5/source/itom/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt:113:21 'val allNetworks: Array<(out) Network!>' is deprecated. Deprecated in Java.
-
-> Task :app:compileDebugJavaWithJavac
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
 > Task :app:bundleDebugClassesToRuntimeJar
-> Task :app:processDebugJavaRes
 > Task :app:bundleDebugClassesToCompileJar
 > Task :app:generateDebugLintReportModel
 > Task :app:generateDebugAndroidTestLintModel
 > Task :app:generateDebugUnitTestLintModel
 > Task :app:compileDebugUnitTestKotlin
 > Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :app:processDebugUnitTestJavaRes
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
 
 > Task :app:testDebugUnitTest
 
@@ -100,30 +93,25 @@ w: file:///workspace/work/rev5/source/itom/android/app/src/main/java/org/itom/cl
 > Task :app:mergeDebugGlobalSynthetics
 > Task :app:mergeDebugJavaResource
 > Task :app:mergeProjectDexDebug
-> Task :app:lintAnalyzeDebugUnitTest
 > Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
+> Task :app:lintAnalyzeDebugUnitTest
 > Task :app:lintAnalyzeDebug
-
 > Task :app:lintReportDebug
-Wrote HTML report to file:///workspace/work/rev5/source/itom/android/app/build/reports/lint-results-debug.html
-
 > Task :app:lintDebug
 
 > Task :app:copyDebugLintReports
 Copying lint text report to /workspace/work/rev5/source/itom/android/app/build/reports/lint-results.txt
 Copying lint XML report to /workspace/work/rev5/source/itom/android/app/build/reports/lint-results.xml
 
-BUILD SUCCESSFUL in 2m 15s
-68 actionable tasks: 63 executed, 5 up-to-date
+BUILD SUCCESSFUL in 1m 32s
+68 actionable tasks: 27 executed, 41 up-to-date
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html
 
-Lint: 0 errors, 1 warnings.
-LINT WARNING [ModifierParameter]: Modifier parameter should be the first optional parameter
-  /workspace/work/rev5/source/itom/android/app/src/main/java/org/itom/client/Theme.kt:111:63
+Lint: 0 errors, 0 warnings.
 Full lint report: /workspace/work/rev5/source/itom/dist/lint-results.xml
 Full lint report: /workspace/work/rev5/source/itom/dist/lint-results.txt
 
 APK: /workspace/work/rev5/source/itom/dist/ITOM-0.9.2-Rev5-debug.apk
-SHA-256: eb45d55a4fc23afd235777588dfb634147a78255920b056c0298807a1e20dfbb
+SHA-256: 90779876744e9c2e68aeea5209462c0ccdb00fa56dbb87c11627bbeaa5df34f1

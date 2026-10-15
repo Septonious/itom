@@ -1,0 +1,1 @@
+Stopped before completion to repair online account-check parity: LIST alone did not verify SELECT/UIDVALIDITY. No failed gate was waived; final source must undergo every gate afresh.

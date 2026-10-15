@@ -596,12 +596,14 @@ func (s *Server) startCheck(user servercfg.User, c servercfg.Config, id string) 
 	go func() {
 		for _, a := range accounts {
 			ctx, cancel := context.WithTimeout(s.ctx, 45*time.Second)
-			client, e := mailbox.DialAdmin(ctx, a.Mail)
-			result := "TLS / LOGIN / folders OK"
-			if e == nil {
-				_, e = client.Folders(ctx)
-				_ = client.Close()
+			var folders []string
+			for _, user := range c.Users {
+				if user.Enabled {
+					folders = append(folders, user.Up, user.Down)
+				}
 			}
+			e := mailbox.CheckExistingFolders(ctx, a.Mail, folders)
+			result := "TLS / LOGIN / mailbox selection OK"
 			cancel()
 			if e != nil {
 				result = "Check failed"

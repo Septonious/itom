@@ -3,9 +3,9 @@
   "classification": "UNSTABLE_DEVELOPMENT_CHECKPOINT",
   "release_ready": false,
   "all_internal_gates_passed": false,
-  "created_utc": "2026-10-15T19:51:34.307426+00:00",
+  "created_utc": "2026-10-15T20:00:01.988191+00:00",
   "branch": "itom-0.9.2-rev5",
-  "source_sha256": "4284d9fd701ba28cb8347cfb84cd9f6ff8663b859769e8dc0bf02977f40c740f",
+  "source_sha256": "f1643916d1b7fd483110767f5824aa40223693df36ebced7e34c9fd0bc7199d4",
   "active_validation": false,
   "latest_focused_ramp_cases": 6,
   "latest_focused_ramp_passed": 6,
@@ -42,6 +42,6 @@
   "private_captures_included": false,
   "signing_keys_included": false,
   "stale_build_outputs_included": false,
-  "latest_failed_pipeline": "SINGLE speed shortfalls before cleanup proof reuse; all six transport checkpoint runs now pass; combined final qualification pending",
+  "latest_failed_pipeline": "cycle7: ramp chat exceeded 1100ms before the two latest fixes",
   "historical_results_are_not_qualification_for_current_source": true
 }

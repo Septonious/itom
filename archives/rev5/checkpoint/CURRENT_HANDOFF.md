@@ -1,3 +1,7 @@
+# Latest qualification correction — 2026-10-15 UTC
+
+Cycle9 PID80692 was intentionally STOPPED (no waiver) after Python+finalAndroidPASS and partialfirstfieldrepetition: review found onlineaccountcheck LISTonly didn'ttestSELECT/UIDVALIDITY. Preservedvalidation-cycle9-account-check-parity. Implemented mailbox.CheckExistingFolders: fresh45sboundedSELECT checks,knownSERVERBUGonefreshretry,NO CREATE. Adminaccountjob verifiesUp/Downforenabledusers and reportsmailboxselection ratherthanmereLIST. Addedtransient/persistentrealTLSread-onlytestvariants+missingfolderCREATE0 regression. core/mailbox/admin/servercfg/manager race suite runningorpassed inadmin-online-check-final.log. MUSTstartNEWfull10gatecycleafterthis sourcechange. Prior4284FP+907798APK initialpassedAndroidnowSTALEforlastcorechange; finalAndroid rebuildrequired. Latestpushedcheckpoint9ca35a4 includesallUI/adminbeforethis smallselectionfix. Sourcecurrentisfullyimplemented; noUI/adminpendingfeatures. SourcefrozenonceNEWcycle10starts, alldocsMarkdowneditsokay.
+
 # Rev5 combined UI/admin implementation — latest state 2026-10-15 UTC
 
 SUPERSEDES ALL OLDER STATUS BELOW. User says continue until release ready. No subagents. Source and all scripts persist after environment restart. Git branch itom-0.9.2-rev5 currently checkpoint057ebe2; new checkpoint is being prepared now. No release manifest or assets published.
