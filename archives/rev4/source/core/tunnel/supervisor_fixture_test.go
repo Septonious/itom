@@ -88,15 +88,26 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
 	}
 	cfg.Transport = servercfg.Transport{Layout: os.Getenv("ITOM_LOAD_LAYOUT"), DataShards: loadEnvInt(t, "ITOM_LOAD_DATA_SHARDS", 1, 1, 4), AccountSessions: loadEnvInt(t, "ITOM_LOAD_ACCOUNT_SESSIONS", 10, 2, 128), EndpointConnections: loadEnvInt(t, "ITOM_LOAD_ENDPOINT_CONNECTIONS", 128, 2, 4096), LoginParallelism: loadEnvInt(t, "ITOM_LOAD_LOGIN_PARALLELISM", 4, 1, 32)}
 	providers := map[string]func(context.Context) (*mailbox.Client, error){}
+	history := loadEnvInt(t, "ITOM_LOAD_UID_HISTORY", 0, 0, 8192)
+	// Historical allocation is outside the observed application's network turn.
+	// Seed through real IMAP commands, with command latency enabled only once
+	// both endpoints start. Seed sockets are closed before that transition.
+	f.network.historySetup.Store(history > 0)
 	for i := 0; i < accounts; i++ {
 		id := fmt.Sprintf("a%02d", i+1)
 		c, s := tlsMailPairWithNetwork(t, ctx, []string{u.Up, u.Down}, f.network, id)
 		seed := c.(*laneMail)
+		if history > 0 {
+			for _, base := range []string{u.Up, u.Down} {
+				seedPhysicalUIDHistory(t, ctx, seed.Client, base+"-data-00", history)
+			}
+		}
 		providers[id] = seed.dial
 		cfg.Accounts = append(cfg.Accounts, servercfg.Account{ID: id, Mail: mailbox.Config{Host: "mail.example", Port: 993, TLS: "tls", Username: id, Password: "test-only"}})
 		c.(*laneMail).Close()
 		s.(*laneMail).Close()
 	}
+	f.network.historySetup.Store(false)
 	dial := func(ctx context.Context, c mailbox.Config, folders []string) (*mailbox.Client, error) {
 		i := 0
 		fmt.Sscanf(c.Username, "a%02d", &i)

@@ -1,0 +1,56 @@
+name: Assemble and publish ITOM Rev4 field repair UNSTABLE testing
+on:
+  push:
+    branches: [itom-0.9.2-rev4-field-repair]
+    paths:
+      - archives/rev4-field-repair-testing/**
+      - tools/publish_itom_rev4_field_testing.py
+      - .github/workflows/itom-rev4-field-testing.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: itom-rev4-field-repair-testing1
+  cancel-in-progress: false
+
+jobs:
+  assemble-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out qualified source and hashed artifact parts
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Reassemble and verify APK, binaries and all internal gate evidence
+        run: python tools/publish_itom_rev4_field_testing.py --output "$RUNNER_TEMP/itom-field-testing"
+      - name: Upload draft, verify remote digests, publish UNSTABLE prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=v0.9.2-Rev4-field-repair-testing.1
+          mapfile -t names < <(python -c 'import json; print("\n".join(x["name"] for x in json.load(open("archives/rev4-field-repair-testing/manifest.json"))["assets"]))')
+          assets=()
+          for name in "${names[@]}"; do
+            assets+=("$RUNNER_TEMP/itom-field-testing/$name")
+          done
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+          release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]==sys.argv[2]]; assert len(rows)<=1; print(rows[0]["id"] if rows else "")' "$RUNNER_TEMP/releases.json" "$tag")
+          if [[ -z "$release_id" ]]; then
+            gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --draft --prerelease \
+              --title "ITOM Rev4 field repair testing 1 — UNSTABLE" \
+              --notes-file builds/rev4-field-repair-testing/TESTING_NOTES.md
+            gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+            release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]==sys.argv[2]]; assert len(rows)==1; print(rows[0]["id"])' "$RUNNER_TEMP/releases.json" "$tag")
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$RUNNER_TEMP/release.json"
+          python tools/publish_itom_rev4_field_testing.py --verify-release-json "$RUNNER_TEMP/release.json" \
+            --repository "$GITHUB_REPOSITORY" --expected-commit "$GITHUB_SHA" \
+            --output "$RUNNER_TEMP/remote-digest-check"
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false -F prerelease=true -f make_latest=false > "$RUNNER_TEMP/published-release.json"

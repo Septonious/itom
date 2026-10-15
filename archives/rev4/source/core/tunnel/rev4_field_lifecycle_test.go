@@ -137,6 +137,9 @@ func rev4FieldFixture(t *testing.T, retained bool) *productionSupervisorFixture 
 	var setup func(string, string, servercfg.Config, servercfg.User)
 	if retained {
 		setup = rev4RetainedState(t)
+		// Keep real provider allocation history as well as retained quota. The
+		// previous fixture left UIDNEXT=1 and missed the field DATA-reader stall.
+		t.Setenv("ITOM_LOAD_UID_HISTORY", "64")
 	}
 	f := newProductionSupervisorFixtureState(t, 4, setup)
 	f.network.setMbps(40)

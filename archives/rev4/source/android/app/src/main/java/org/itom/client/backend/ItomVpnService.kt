@@ -50,10 +50,16 @@ class ItomVpnService : VpnService() {
         }
         val command = intent ?: return START_NOT_STICKY
         generation = requested
-        val notification = notification()
-        if (Build.VERSION.SDK_INT >= 34) startForeground(72, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        else startForeground(72, notification)
         running?.cancel()
+        try {
+            val notification = notification()
+            if (Build.VERSION.SDK_INT >= 34) startForeground(72, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            else startForeground(72, notification)
+        } catch (_: RuntimeException) {
+            backend.machine.fail(requested, "VPN_SERVICE_START_FAILED")
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
         val profile = command.getStringExtra("profile") ?: return START_NOT_STICKY
         val revision = command.getLongExtra("revision", -1)
         running = scope.launch { lifecycle.withLock { runSession(requested, profile, revision) } }
@@ -75,6 +81,11 @@ class ItomVpnService : VpnService() {
         var defaultNetworkCallback: ConnectivityManager.NetworkCallback? = null
         var policyWatcher: Job? = null
         val stoppedByNetworkPolicy = AtomicBoolean(false)
+        val sessionJob = currentCoroutineContext().job
+        val callbacks = SessionCallbacks(
+            active = { backend.snapshot.value.generation == g },
+            onFailure = { sessionJob.cancel() },
+        )
         var diagnosticsEnabled = false
         val traceClient = AtomicReference<Client?>(null)
         fun networkEvent(kind: String, network: Network?) {
@@ -124,7 +135,7 @@ class ItomVpnService : VpnService() {
                 val kind = choice?.kind
                 if (!backend.vault.state.value.settings.networks.allows(kind)) {
                     if (stoppedByNetworkPolicy.compareAndSet(false, true)) {
-                        networkEvent("auto_stop_${kind?.name?.lowercase()}", chosen)
+                        networkEvent("auto_stop_${kind?.name?.lowercase() ?: "none"}", chosen)
                         requestStop(g)
                     }
                     return null
@@ -136,10 +147,10 @@ class ItomVpnService : VpnService() {
                 return chosen
             }
             val callback = object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) { networkEvent("available", network) }
-                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) { networkEvent("capabilities", network); capabilities[network] = caps; remember(network); selectedNetwork() }
-                override fun onLinkPropertiesChanged(network: Network, properties: LinkProperties) { networkEvent("link_properties", network); links[network] = properties; remember(network); selectedNetwork() }
-                override fun onLost(network: Network) { networkEvent("lost", network); underlying.remove(network); capabilities.remove(network); links.remove(network); selectedNetwork() }
+                override fun onAvailable(network: Network) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { networkEvent("available", network) } }
+                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { networkEvent("capabilities", network); capabilities[network] = caps; remember(network); selectedNetwork(); Unit } }
+                override fun onLinkPropertiesChanged(network: Network, properties: LinkProperties) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { networkEvent("link_properties", network); links[network] = properties; remember(network); selectedNetwork(); Unit } }
+                override fun onLost(network: Network) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { networkEvent("lost", network); underlying.remove(network); capabilities.remove(network); links.remove(network); selectedNetwork(); Unit } }
             }
             val request = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -148,21 +159,21 @@ class ItomVpnService : VpnService() {
             manager.registerNetworkCallback(request, callback)
             networkCallback = callback
             val defaults = object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) { defaultUnderlying.set(network) }
+                override fun onAvailable(network: Network) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { defaultUnderlying.set(network) } }
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
-                    if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                    callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                         capabilities[network] = caps
                         defaultUnderlying.set(network)
                         remember(network)
                         selectedNetwork()
-                    }
+                    }; Unit }
                 }
-                override fun onLost(network: Network) { defaultUnderlying.compareAndSet(network, null); selectedNetwork() }
+                override fun onLost(network: Network) { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { defaultUnderlying.compareAndSet(network, null); selectedNetwork(); Unit } }
             }
             manager.registerDefaultNetworkCallback(defaults)
             defaultNetworkCallback = defaults
             policyWatcher = CoroutineScope(currentCoroutineContext()).launch {
-                backend.vault.state.map { it.settings.networks }.distinctUntilChanged().collect { selectedNetwork() }
+                backend.vault.state.map { it.settings.networks }.distinctUntilChanged().collect { callbacks.call("UNDERLYING_NETWORK_FAILED", Unit) { selectedNetwork(); Unit } }
             }
             fun underlyingDNS(): List<String> {
                 return selectedNetwork()?.let { underlying[it] } ?: emptyList()
@@ -173,7 +184,7 @@ class ItomVpnService : VpnService() {
             if (!diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = "{}"
             val router = Router(config.settings.routing)
             val host = object : Host {
-                override fun dns(): String = org.json.JSONArray(underlyingDNS()).toString()
+                override fun dns(): String = callbacks.call("UNDERLYING_NETWORK_FAILED", "[]") { org.json.JSONArray(underlyingDNS()).toString() }
                 override fun lookup(host: String): String {
                     return try {
                         val network = selectedNetwork() ?: return "[]"
@@ -264,15 +275,17 @@ class ItomVpnService : VpnService() {
         catch (e: Exception) { failure = e.message?.takeIf { it in setOf("SOCKS_PORT_IN_USE", "UNDERLYING_DNS_MISSING") } ?: "TRANSPORT_FAILED" }
         finally {
             withContext(NonCancellable) {
+                callbacks.close()
+                failure = failure ?: callbacks.failure
                 policyWatcher?.cancelAndJoin()
                 defaultNetworkCallback?.let { callback -> runCatching { connectivity?.unregisterNetworkCallback(callback) } }
                 networkCallback?.let { callback -> runCatching { connectivity?.unregisterNetworkCallback(callback) } }
                 if (diagnosticsEnabled && backend.snapshot.value.generation == g) {
                     native?.let { client -> backend.diagnosticState.value = runCatching { client.diagnostics() }.getOrDefault(backend.diagnosticState.value) }
                 }
-                networkEvent("session_stop", null)
+                runCatching { networkEvent("session_stop", null) }
                 traceClient.set(null)
-                native?.close()
+                try { native?.close() } catch (_: Exception) { failure = failure ?: "NATIVE_CLOSE_FAILED" }
                 if (backend.snapshot.value.generation == g) {
                     if (failure == null || stoppedByNetworkPolicy.get()) backend.machine.stop(g) else backend.machine.fail(g, failure!!)
                     withContext(Dispatchers.Main) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }

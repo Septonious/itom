@@ -30,6 +30,8 @@ android {
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 dependencies {
+    testImplementation(kotlin("test-junit"))
+    testImplementation("junit:junit:4.13.2")
     implementation(files("libs/itom.aar"))
     implementation(project(":domain"))
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))

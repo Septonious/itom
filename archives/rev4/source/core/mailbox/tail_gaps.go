@@ -1,6 +1,9 @@
 package mailbox
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 // Discovery only: these bounds do not authorize quota refunds or DATA retries.
 // Long visibility outages still require protocol reconciliation/reconnection.
@@ -13,9 +16,94 @@ type tailGap struct {
 	until time.Time
 }
 type tailGapState struct {
-	validity uint32
-	next     time.Time
-	queue    []tailGap
+	validity  uint32
+	next      time.Time
+	queue     []tailGap
+	ranges    []tailRange
+	rangeNext time.Time
+}
+
+// Sparse historical UID spans cannot be represented by one entry per deleted
+// UID. These intervals are discovery hints with the same finite lifetime as
+// exact gaps; SEARCH absence never authorizes deletion or a quota refund.
+type tailRange struct {
+	first, last uint32
+	until       time.Time
+}
+
+func missingTailRanges(first, last uint32, rows []Message, until time.Time) []tailRange {
+	if first == 0 || last < first {
+		return nil
+	}
+	ids := make([]uint32, 0, len(rows))
+	for _, row := range rows {
+		if row.UID >= first && row.UID <= last {
+			ids = append(ids, row.UID)
+		}
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	var out []tailRange
+	start := uint64(first)
+	for _, id := range ids {
+		if uint64(id) < start {
+			continue
+		}
+		if uint64(id) > start {
+			out = append(out, tailRange{uint32(start), id - 1, until})
+		}
+		start = uint64(id) + 1
+	}
+	if start <= uint64(last) {
+		out = append(out, tailRange{uint32(start), last, until})
+	}
+	return out
+}
+
+func (c *Client) sparseTailRequest(folder string, validity uint32, now time.Time) (tailRange, bool) {
+	c.tailGapMu.Lock()
+	defer c.tailGapMu.Unlock()
+	s := c.tailGapState(folder, validity)
+	live := s.ranges[:0]
+	for _, span := range s.ranges {
+		if now.Before(span.until) {
+			live = append(live, span)
+		}
+	}
+	s.ranges = live
+	if now.Before(s.rangeNext) || len(live) == 0 {
+		return tailRange{}, false
+	}
+	return live[0], true
+}
+
+func (c *Client) finishSparseTail(folder string, validity uint32, requested *tailRange, through uint32, rows []Message, now time.Time) {
+	c.tailGapMu.Lock()
+	defer c.tailGapMu.Unlock()
+	s := c.tailGapState(folder, validity)
+	if requested != nil {
+		// Rotate the searched prefix behind the unsearched suffix. A permanently
+		// missing BODY or old expunged span cannot starve the next visible UID.
+		span := *requested
+		s.ranges = s.ranges[1:]
+		if through < span.last {
+			s.ranges = append([]tailRange{{through + 1, span.last, span.until}}, s.ranges...)
+		}
+		s.ranges = append(s.ranges, missingTailRanges(span.first, through, rows, span.until)...)
+		s.rangeNext = now.Add(tailGapPoll)
+	}
+	if len(s.ranges) > tailGapLimit {
+		s.ranges = append([]tailRange(nil), s.ranges[len(s.ranges)-tailGapLimit:]...)
+	}
+}
+
+func (c *Client) trackSparseTail(folder string, validity, first, last uint32, rows []Message, now time.Time) {
+	c.tailGapMu.Lock()
+	defer c.tailGapMu.Unlock()
+	s := c.tailGapState(folder, validity)
+	s.ranges = append(s.ranges, missingTailRanges(first, last, rows, now.Add(tailGapLifetime))...)
+	if len(s.ranges) > tailGapLimit {
+		s.ranges = append([]tailRange(nil), s.ranges[len(s.ranges)-tailGapLimit:]...)
+	}
 }
 
 // TrackTailGaps covers the reader’s own allocation snapshot. Call only after
@@ -124,11 +212,12 @@ func (c *Client) TailDiscovery(folder string) TailDiscovery {
 	if s := c.tailGaps[folder]; s != nil {
 		snapshot.state = *s
 		snapshot.state.queue = append([]tailGap(nil), s.queue...)
+		snapshot.state.ranges = append([]tailRange(nil), s.ranges...)
 	}
 	return snapshot
 }
 func (c *Client) RestoreTailDiscovery(snapshot TailDiscovery) error {
-	if !c.folders[snapshot.folder] || len(snapshot.state.queue) > tailGapLimit {
+	if !c.folders[snapshot.folder] || len(snapshot.state.queue) > tailGapLimit || len(snapshot.state.ranges) > tailGapLimit {
 		return ErrScope
 	}
 	c.tailGapMu.Lock()
@@ -138,6 +227,7 @@ func (c *Client) RestoreTailDiscovery(snapshot TailDiscovery) error {
 	}
 	s := snapshot.state
 	s.queue = append([]tailGap(nil), s.queue...)
+	s.ranges = append([]tailRange(nil), s.ranges...)
 	c.tailGaps[snapshot.folder] = &s
 	return nil
 }

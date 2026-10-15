@@ -9,6 +9,9 @@ import (
 
 func TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream(t *testing.T) {
 	t.Setenv("ITOM_LOAD_VISIBILITY_DELAY_MS", "1800")
+	// Combine installed UID history with current replica lag and role failure.
+	// Historical allocation/deletion completes before the measured session.
+	t.Setenv("ITOM_LOAD_UID_HISTORY", "64")
 	f := rev4FieldFixture(t, false)
 	chat := rev4Open(t, f)
 	if err := rev4Exchange(chat, 1, 4096, 3*time.Second); err != nil {

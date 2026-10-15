@@ -33,8 +33,9 @@ def main():
     p.add_argument('--command-delay-ms',type=int,default=80);p.add_argument('--provider-mbps',type=float,default=600)
     p.add_argument('--layout',choices=('auto','mixed','split'),default='auto');p.add_argument('--shards',type=int,choices=(1,2,4),default=1)
     p.add_argument('--visibility-delay-ms',type=int,default=0);p.add_argument('--provider-sessions',type=int,default=10)
+    p.add_argument('--uid-history',type=int,default=64,help='actual APPEND/EXPUNGE allocations per DATA mailbox before startup')
     a=p.parse_args()
-    if not 2<=a.accounts<=128 or not 60<=a.seconds<=7200 or a.seconds%2!=0 or not 1<=a.repeats<=10 or not 1<=a.warmup<=30 or not 0<=a.command_delay_ms<=5000 or not 0<a.provider_mbps<=10000 or not 0<=a.visibility_delay_ms<=5000 or not 2<=a.provider_sessions<=128:p.error('invalid scenario bounds')
+    if not 2<=a.accounts<=128 or not 60<=a.seconds<=7200 or a.seconds%2!=0 or not 1<=a.repeats<=10 or not 1<=a.warmup<=30 or not 0<=a.command_delay_ms<=5000 or not 0<a.provider_mbps<=10000 or not 0<=a.visibility_delay_ms<=5000 or not 2<=a.provider_sessions<=128 or not 0<=a.uid_history<=8192:p.error('invalid scenario bounds')
     if os.environ.get('GOFLAGS','').find('-race')>=0:p.error('performance measurements must use a non-race binary')
     env=os.environ.copy();env.update(GOTOOLCHAIN='local',GOWORK='off',GOMAXPROCS=env.get('GOMAXPROCS','2'),GOFLAGS='-mod=readonly')
     version=subprocess.run([a.go,'version'],env=env,capture_output=True,text=True)
@@ -47,11 +48,12 @@ def main():
         for repeat in range(1,a.repeats+1):
             name=f'{mode}-{repeat}';before=source_fingerprint();log=out/(name+'.jsonl')
             case_env=env.copy();case_env.update(ITOM_REWORK_QUALIFICATION='1',ITOM_LOAD_ACCOUNTS=str(a.accounts),ITOM_LOAD_STREAMS='1' if mode=='single' else '24',ITOM_LOAD_SECONDS=str(a.seconds),ITOM_LOAD_PROBE_CADENCE_MS='2000',ITOM_LOAD_PROBE_DEADLINE_MS='1100',ITOM_LOAD_WARMUP_SECONDS=str(a.warmup),ITOM_LOAD_COMMAND_DELAY_MS=str(a.command_delay_ms),ITOM_LOAD_PROVIDER_MBPS=str(a.provider_mbps),ITOM_LOAD_PROVIDER_CONNECTION_LIMIT=str(a.provider_sessions),ITOM_LOAD_ACCOUNT_SESSIONS=str(a.provider_sessions),ITOM_LOAD_ENDPOINT_CONNECTIONS=str(max(128,a.accounts*5)),ITOM_LOAD_VISIBILITY_DELAY_MS=str(a.visibility_delay_ms),ITOM_LOAD_LAYOUT=a.layout,ITOM_LOAD_DATA_SHARDS=str(a.shards),ITOM_LOAD_REPEATS='1',ITOM_LOAD_DIAGNOSTICS='0',ITOM_LOAD_TRACE='0',ITOM_LOAD_SNAPSHOTS='0')
+            case_env['ITOM_LOAD_UID_HISTORY']=str(a.uid_history)
             command=[a.go,'test','-mod=readonly','-json','-count=1','-timeout='+str(a.seconds+600)+'s','./tunnel','-run','^'+REQUIRED+'$']
             start=time.monotonic();print('RUN',name,flush=True)
             with log.open('w') as stream:result=subprocess.run(command,cwd=ROOT/'core',env=case_env,stdout=stream,stderr=subprocess.STDOUT)
             after=source_fingerprint();summary=summarize_events(log,(REQUIRED,));ok=qualification_ok(result.returncode,summary,before,after)
-            case=dict(name=name,streams_per_direction=1 if mode=='single' else 24,fresh_endpoint_state=True,seconds=a.seconds,exit_code=result.returncode,elapsed_seconds=round(time.monotonic()-start,3),source_before=before,source_after=after,log=log.name,log_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),summary=summary,ok=ok)
+            case=dict(name=name,streams_per_direction=1 if mode=='single' else 24,fresh_endpoint_state=True,physical_uid_history=a.uid_history,seconds=a.seconds,exit_code=result.returncode,elapsed_seconds=round(time.monotonic()-start,3),source_before=before,source_after=after,log=log.name,log_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),summary=summary,ok=ok)
             report['cases'].append(case);report['all_lab_cases_passed']=all(c['ok']for c in report['cases']);(out/'results.json').write_text(json.dumps(report,indent=2)+'\n');print('RESULT',name,'PASS'if ok else'FAIL',flush=True)
     print('EVIDENCE',out/'results.json',flush=True)
     return 0 if report['all_lab_cases_passed'] else 1

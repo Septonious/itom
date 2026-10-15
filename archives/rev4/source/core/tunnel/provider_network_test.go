@@ -18,6 +18,7 @@ import (
 // instance may be shared by all account listeners to model a provider-wide
 // symmetric access link.
 type providerTestNetwork struct {
+	historySetup  atomic.Bool
 	fieldLatency  *fieldLatencyReplay
 	now           func() time.Time
 	debugWriter   io.Writer // optional test-only plaintext instrumentation; never emitted
