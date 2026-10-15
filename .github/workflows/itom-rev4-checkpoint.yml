@@ -1,0 +1,26 @@
+name: Assemble ITOM Rev4 unstable checkpoint
+on:
+  push:
+    branches: [itom-0.9.2-rev4-checkpoint]
+    paths:
+      - archives/rev4-checkpoint/**
+      - tools/assemble_rev4_checkpoint.py
+      - .github/workflows/itom-rev4-checkpoint.yml
+permissions:
+  contents: read
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Assemble and verify checkpoint
+        run: python tools/assemble_rev4_checkpoint.py "$RUNNER_TEMP/itom-checkpoint"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ITOM-0.9.2-Rev4-UNSTABLE-checkpoint
+          path: ${{ runner.temp }}/itom-checkpoint/*
+          if-no-files-found: error
+          retention-days: 30

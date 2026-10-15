@@ -1,0 +1,41 @@
+{
+  "classification": "UNSTABLE_CHECKPOINT",
+  "release_ready": false,
+  "archive": {
+    "name": "ITOM-0.9.2-Rev4-UNSTABLE-checkpoint.zip",
+    "size": 43038938,
+    "sha256": "c4b37156d8d77e518f724e9cfc370e0ceab6e127398bd0179afe8ae4192bda68"
+  },
+  "parts": [
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part001",
+      "size": 8388608,
+      "sha256": "b7aae0a9bb9c1cf8323ef6302d008c0ffe62392f5cf025f02e5d877a021e16a4"
+    },
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part002",
+      "size": 8388608,
+      "sha256": "7395b6bed664ad15fc1b0149ecd4296a4c6dc3cec17ecb01d62a2aad912bd1bd"
+    },
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part003",
+      "size": 8388608,
+      "sha256": "da391d44b3f7d5d06f57238b99e179498315562cd9f0aa5b4a18a9f90ade696b"
+    },
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part004",
+      "size": 8388608,
+      "sha256": "f40b14d91f881b753a3a3306c1374a69bfdc14679b51ff377faca75782ab97f3"
+    },
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part005",
+      "size": 8388608,
+      "sha256": "eda6a973a1addc1e765c4dd1ffa4c0792231fc8da26da0dd144546259259ca1c"
+    },
+    {
+      "path": "archives/rev4-checkpoint/parts/checkpoint.zip.part006",
+      "size": 1095898,
+      "sha256": "b66ef3ef5a32e72c33373cf48f634919650628d1921bcf6ed60df9f26023ed26"
+    }
+  ]
+}
