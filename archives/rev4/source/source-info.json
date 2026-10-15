@@ -1,0 +1,11 @@
+{
+  "version": "0.9.2",
+  "release": "Rev4",
+  "revision": "transport-rework3-rev4",
+  "archive_name": "ITOM-0.9.2-Rev4-sources.zip",
+  "baseline": "0.9.2-Rev3",
+  "qualification": "transport recovery rework; field-failure regression suite required; real-provider qualification remains separate",
+  "android_version_name": "0.9.2-Rev4",
+  "android_version_code": 9204,
+  "android_application_id": "org.itom.client.dev.rev7"
+}
