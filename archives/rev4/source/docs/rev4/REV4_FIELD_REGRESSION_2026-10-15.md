@@ -53,10 +53,10 @@ exact probes near the allocated tail; due sparse revisits get their own bounded
 share beside forward traffic. Neither lookup depends on SEARCH absence as a
 physical-deletion proof. The new tests fail before these changes and pass after.
 
-The first complete speed matrix failed one SINGLE run's final ten-second
+The first complete speed matrix for this repair candidate failed one SINGLE run's final ten-second
 download floor: 87.923 Mbps against 90 Mbps, despite a 93.660 Mbps full-run
 average and 561 ms maximum loaded RTT. That failure is retained, not discarded
-in favor of the other five passing runs. The reader unnecessarily searched
+in favor of the other five passing runs. The initial sparse-discovery repair unnecessarily searched
 every dense page when its allocation snapshot was over sixteen UIDs ahead.
 A real TLS/IMAP command-count regression shows three extra SEARCH turns over
 five live pages in the prior committed reader. Hot pages now use direct FETCH;
@@ -65,6 +65,23 @@ physically expunges messages through a separate connection after the reader's
 snapshot and verifies prompt delivery of the surviving tail. Cold discovery,
 replica revisits, UIDVALIDITY checks and accounting rules remain enforced.
 The full speed matrix must pass again on that changed source.
+
+## Final internal qualification
+
+All required internal gates passed on qualification source
+`ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8`.
+The aggregate report is [field_repair_validation.json](evidence/field_repair_validation.json).
+It records 834 core test events across 19 packages with no failures/skips,
+three repetitions of 14 application cases, 14 more cases with 12 ms server
+commit delay, accounting/mailbox and recovery race checks, native/Android
+build checks, 71 domain tests and four Android callback tests. Lint has zero
+errors and one pre-existing warning. Both Linux targets and Android ABIs build.
+
+All six fresh SINGLE/MULTI speed cases passed without changing their limits,
+including complete probe cadence, sustained tails and post-load application
+usability. These are laboratory results. The reported mobile process crash
+still has no fatal stack and no physical device was attached. The candidate
+remains unstable and no replacement release or testing assets are published.
 
 ## Why the former tests missed it
 

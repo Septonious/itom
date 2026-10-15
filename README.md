@@ -1,16 +1,25 @@
-# ITOM Rev4 field repair — unstable work in progress
+# ITOM Rev4 field repair — unstable draft
 
-This branch investigates the 2026-10-15 Rev4 transport regression and whole-app
-mobile startup crash. Candidate source is in `archives/rev4/source`.
+Candidate source is in `archives/rev4/source`; review [draft PR #1](https://github.com/Septonious/itom/pull/1).
 
-The sparse UID history DATA stall is reproduced and repaired. Application,
-transport, native and Android validation is in progress. The phone crash has
-no fatal stack yet, and its cause remains unconfirmed. No replacement release
-is published from this branch.
+The deleted-UID DATA stall, SEARCH-index lag, sparse-revisit starvation and
+needless dense-page SEARCH turns have regression tests and repairs. Android
+callback exceptions are contained through session cleanup.
+
+All final internal gates passed on qualification source
+`ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8`:
+834 core test events / 19 packages; 3×14 application cases; 14 cases with 12 ms
+server commit delay; race checks; native and Android checks; 71 domain and four
+callback tests; and all six fresh SINGLE/MULTI speed/RTT cases. Lint: zero
+errors, one existing warning. See the [qualification report](archives/rev4/source/docs/rev4/evidence/field_repair_validation.json).
+
+The reported whole-app mobile startup crash has no fatal record in the supplied
+captures. Its cause remains unconfirmed; no physical phone or real provider
+was tested. This branch stays unstable and no replacement release is published.
 
 Existing archive manifests, build bundles and APKs describe the previously
-published Rev4, not this unfinished candidate. Do not use them as evidence that
-this branch is qualified. All required internal checks must pass before a new
-release; the speed/RTT tolerance is 10%.
+published Rev4, not this candidate. No new APK or binary is published here.
+All required internal checks must pass before a release; speed/RTT tolerance
+remains 10%.
 
-See `archives/rev4/source/docs/rev4/REV4_FIELD_REGRESSION_2026-10-15.md`.
+See the [field investigation](archives/rev4/source/docs/rev4/REV4_FIELD_REGRESSION_2026-10-15.md).
