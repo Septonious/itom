@@ -1,0 +1,1 @@
+Development evidence only. Final combined-source qualification is still pending. The before-fix failure is retained; it must never be counted as a passing release run. Raw captures and signing material are excluded.

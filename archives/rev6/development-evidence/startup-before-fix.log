@@ -1,0 +1,6 @@
+=== RUN   TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable
+    rev6_startup_test.go:30: context deadline exceeded
+--- FAIL: TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable (10.01s)
+FAIL
+FAIL	itom.local/core/tunnel	10.014s
+FAIL
