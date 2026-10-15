@@ -152,7 +152,16 @@ func TestSparseTailIntervalsStayBoundedAndRetainOriginalExpiry(t *testing.T) {
 	}
 }
 
-func sparseHistoryReplica(t *testing.T, hideSearch, hideBody bool) (context.Context, *Client, *atomic.Bool, []byte) {
+type sparseReplicaFixture struct {
+	ctx      context.Context
+	reader   *Client
+	hidden   *atomic.Bool
+	raw      []byte
+	searches *atomic.Int32
+	dial     func() *Client
+}
+
+func sparseHistoryReplica(t *testing.T, history int, hideSearch, hideBody bool) sparseReplicaFixture {
 	t.Helper()
 	hidden := new(atomic.Bool)
 	searches := new(atomic.Int32)
@@ -170,13 +179,13 @@ func sparseHistoryReplica(t *testing.T, hideSearch, hideBody bool) (context.Cont
 		t.Fatal(err)
 	}
 	raw, _ := Encode([]byte("historical allocation"))
-	for i := 0; i < 64; i++ {
+	for i := 0; i < history; i++ {
 		if err = c.Append(ctx, "sparse", raw); err != nil {
 			t.Fatal(err)
 		}
 	}
 	cur := Cursor{}
-	for i := 0; i < 4; i++ {
+	for i := 0; i < history; i += 16 {
 		rows, next, err := c.Page(ctx, "sparse", cur)
 		if err != nil {
 			t.Fatal(err)
@@ -187,13 +196,21 @@ func sparseHistoryReplica(t *testing.T, hideSearch, hideBody bool) (context.Cont
 		cur = next
 	}
 	want, _ := Encode(bytes.Repeat([]byte{0xa5}, 32768))
-	return ctx, c, hidden, want
+	return sparseReplicaFixture{ctx, c, hidden, want, searches, func() *Client {
+		fresh, err := dial(ctx, cfg, []string{"sparse"}, tc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { fresh.Close() })
+		return fresh
+	}}
 }
 
 // A replica's UID SEARCH index may lag while an exact UID BODY fetch already
 // works. SEARCH absence alone must not strand the newest allocated DATA.
 func TestSparseTailSearchLagCannotHideFetchableBODY(t *testing.T) {
-	ctx, c, hidden, want := sparseHistoryReplica(t, true, false)
+	f := sparseHistoryReplica(t, 64, true, false)
+	ctx, c, hidden, want := f.ctx, f.reader, f.hidden, f.raw
 	for i := 0; i < 2; i++ {
 		if err := c.Append(ctx, "sparse", want); err != nil {
 			t.Fatal(err)
@@ -215,7 +232,8 @@ func TestSparseTailSearchLagCannotHideFetchableBODY(t *testing.T) {
 
 // A continuous forward backlog cannot suppress old sparse visibility revisits.
 func TestSparseTailRevisitsCannotStarveBehindForwardBacklog(t *testing.T) {
-	ctx, c, hidden, want := sparseHistoryReplica(t, false, true)
+	f := sparseHistoryReplica(t, 64, false, true)
+	ctx, c, hidden, want := f.ctx, f.reader, f.hidden, f.raw
 	for i := 0; i < 50; i++ {
 		if err := c.Append(ctx, "sparse", want); err != nil {
 			t.Fatal(err)
@@ -284,5 +302,71 @@ func TestSparseTailRejectsForeignAndOversizedSearchBeforeBODYDelivery(t *testing
 				t.Fatalf("hostile SEARCH advanced/emitted: rows=%d cur=%+v callback=%t fetches=%d ready=%t err=%v", len(rows), cur, called, fetches, c.Ready(), err)
 			}
 		})
+	}
+}
+
+// After historical holes are crossed, a dense live backlog must use one FETCH
+// turn per page. SEARCH on every page halves the reader's available service.
+func TestSparseTailDenseBacklogDoesNotAddSearchRoundTrips(t *testing.T) {
+	f := sparseHistoryReplica(t, 0, false, false)
+	for i := 0; i < 32; i++ {
+		if err := f.reader.Append(f.ctx, "sparse", f.raw); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rows, cur, err := f.reader.PageTailLimit(f.ctx, "sparse", Cursor{}, true, 4)
+	if err != nil || len(rows) != 4 || cur.After != 4 {
+		t.Fatal("initial sparse catchup", len(rows), cur, err)
+	}
+	beforeSearch := f.searches.Load()
+	beforeSelect, beforeFetch, _ := f.reader.ReadCommandCounts()
+	for i := 0; i < 5; i++ {
+		rows, cur, err = f.reader.PageTailLimit(f.ctx, "sparse", cur, false, 4)
+		if err != nil || len(rows) != 4 {
+			t.Fatal("dense BODY page", len(rows), cur, err)
+		}
+	}
+	afterSelect, afterFetch, _ := f.reader.ReadCommandCounts()
+	if afterSelect != beforeSelect || afterFetch-beforeFetch != 5 || f.searches.Load() != beforeSearch {
+		t.Fatalf("hot dense DATA added %d SEARCH turns to %d FETCHes and %d SELECTs", f.searches.Load()-beforeSearch, afterFetch-beforeFetch, afterSelect-beforeSelect)
+	}
+}
+
+// Concurrent cleanup can turn a dense live backlog into holes after SELECT.
+// An empty direct probe must still reach its surviving BODY promptly.
+func TestSparseTailEmptyProbeSkipsConcurrentExpungeHoles(t *testing.T) {
+	f := sparseHistoryReplica(t, 64, false, false)
+	for i := 0; i < 32; i++ {
+		if err := f.reader.Append(f.ctx, "sparse", f.raw); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, cur, err := f.reader.PageTailLimit(f.ctx, "sparse", Cursor{}, true, 4)
+	if err != nil || cur.After != 68 {
+		t.Fatal(cur, err)
+	}
+	writer := f.dial()
+	pos := Cursor{}
+	for i := 0; i < 2; i++ {
+		rows, next, err := writer.Page(f.ctx, "sparse", pos)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var remove []Message
+		for _, row := range rows {
+			if row.UID != 96 {
+				remove = append(remove, row)
+			}
+		}
+		if err = writer.DeleteMany(f.ctx, remove); err != nil {
+			t.Fatal(err)
+		}
+		pos = next
+	}
+	beforeSelect, beforeFetch, _ := f.reader.ReadCommandCounts()
+	rows, next, err := f.reader.PageTailLimit(f.ctx, "sparse", cur, false, 4)
+	afterSelect, afterFetch, _ := f.reader.ReadCommandCounts()
+	if err != nil || len(rows) != 1 || rows[0].UID != 96 || next.After != 96 || !bytes.Equal(rows[0].MIME, f.raw) || afterSelect != beforeSelect || afterFetch-beforeFetch > 2 {
+		t.Fatalf("concurrent expunge stranded BODY: rows=%d cursor=%+v SELECTs=%d FETCHes=%d err=%v", len(rows), next, afterSelect-beforeSelect, afterFetch-beforeFetch, err)
 	}
 }

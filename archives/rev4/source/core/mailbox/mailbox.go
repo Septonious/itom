@@ -1528,15 +1528,21 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		gaps := c.tailGapRequests(folder, cur.Validity, int(limit), time.Now())
 		set, count, last = tailFetchSet(cur, limit, gaps)
 		fetched := false
+		discoverSparse := cur.Validity == 0 || c.selectedFolder != folder
 		knownValidity, uidNext, _, known := c.SelectionAllocationProof(folder)
 		if known && knownValidity == cur.Validity {
 			allocatedThrough = uidNext - 1
 		}
+		emitted := false
+		var onRow func(Message) error
+		if emit != nil {
+			onRow = func(m Message) error { m.Folder, m.Validity = folder, cur.Validity; emitted = true; return emit(m) }
+		}
 		if cur.Validity == 0 || verify || c.selectedFolder != folder {
 			var selected *imap.SelectData
 			var err error
-			if cur.Validity != 0 && known && knownValidity == cur.Validity && c.selectedFolder == folder && count > 0 && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= 16) {
-				rows, selected, err = c.selectTailFetch(folder, cur, set, count, emit)
+			if cur.Validity != 0 && known && knownValidity == cur.Validity && c.selectedFolder == folder && count > 0 {
+				rows, selected, err = c.selectTailFetch(folder, cur, set, count, onRow)
 				fetched = err == nil && selected.UIDValidity == cur.Validity
 			} else {
 				selected, err = c.selectFolder(folder)
@@ -1548,6 +1554,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 				// Speculative old-incarnation rows were parsed but never emitted.
 				// Restart discovery using the tagged-successful new UIDVALIDITY.
 				cur = Cursor{Validity: selected.UIDValidity}
+				discoverSparse = true
 				next = cur
 				gaps = c.tailGapRequests(folder, cur.Validity, int(limit), time.Now())
 				set, count, last = tailFetchSet(cur, limit, gaps)
@@ -1557,10 +1564,11 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Real mailboxes keep UIDNEXT after EXPUNGE. Iterating four UID numbers
 		// per audit strands new DATA behind historical holes for minutes. Locate
 		// a bounded number of present UIDs, retaining compressed visibility gaps.
-		sparseForward := !fetched && allocatedThrough > cur.After && allocatedThrough-cur.After > 16
+		sparseForward := !fetched && discoverSparse && allocatedThrough > cur.After && allocatedThrough-cur.After > 16
 		var sparseRequest *tailRange
 		var sparseThrough uint32
-		if sparseForward {
+		var rangeCandidates []imap.UID
+		locateForward := func() error {
 			ids, through, err := c.searchTailUIDs(cur.After+1, allocatedThrough, int(limit))
 			if err != nil {
 				return err
@@ -1571,6 +1579,16 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 				set.AddNum(imap.UID(gap.uid))
 				count++
 			}
+			for _, id := range rangeCandidates {
+				set.AddNum(id)
+				count++
+			}
+			return nil
+		}
+		if sparseForward {
+			if err := locateForward(); err != nil {
+				return err
+			}
 		}
 		if !fetched {
 			if span, ok := c.sparseTailRequest(folder, cur.Validity, time.Now()); ok {
@@ -1579,6 +1597,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 					return err
 				}
 				ids = tailSearchCandidates(ids, span.first, through, int(limit))
+				rangeCandidates = ids
 				for _, id := range ids {
 					set.AddNum(id)
 					count++
@@ -1594,15 +1613,25 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 			return nil
 		}
 		if !fetched {
-			var onRow func(Message) error
-			if emit != nil {
-				onRow = func(m Message) error { m.Folder, m.Validity = folder, cur.Validity; return emit(m) }
+			var err error
+			rows, err = c.fetchSetStreaming(set, count, true, onRow)
+			if err != nil {
+				return err
+			}
+		}
+		// Live dense pages need one FETCH turn. If concurrent cleanup leaves an
+		// empty probe, switch to sparse discovery instead of enumerating holes.
+		// Provisional rows are never emitted twice by the fallback operation.
+		if !sparseForward && len(rows) == 0 && !emitted && allocatedThrough > cur.After && allocatedThrough-cur.After > 16 {
+			if err := locateForward(); err != nil {
+				return err
 			}
 			var err error
 			rows, err = c.fetchSetStreaming(set, count, true, onRow)
 			if err != nil {
 				return err
 			}
+			sparseForward = true
 		}
 		var newest uint32
 		for _, m := range rows {

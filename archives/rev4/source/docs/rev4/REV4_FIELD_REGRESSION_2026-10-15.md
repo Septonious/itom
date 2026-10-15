@@ -53,6 +53,19 @@ exact probes near the allocated tail; due sparse revisits get their own bounded
 share beside forward traffic. Neither lookup depends on SEARCH absence as a
 physical-deletion proof. The new tests fail before these changes and pass after.
 
+The first complete speed matrix failed one SINGLE run's final ten-second
+download floor: 87.923 Mbps against 90 Mbps, despite a 93.660 Mbps full-run
+average and 561 ms maximum loaded RTT. That failure is retained, not discarded
+in favor of the other five passing runs. The reader unnecessarily searched
+every dense page when its allocation snapshot was over sixteen UIDs ahead.
+A real TLS/IMAP command-count regression shows three extra SEARCH turns over
+five live pages in the prior committed reader. Hot pages now use direct FETCH;
+an empty probe falls back to bounded sparse lookup immediately. Another test
+physically expunges messages through a separate connection after the reader's
+snapshot and verifies prompt delivery of the surviving tail. Cold discovery,
+replica revisits, UIDVALIDITY checks and accounting rules remain enforced.
+The full speed matrix must pass again on that changed source.
+
 ## Why the former tests missed it
 
 The retained-state application fixture reserved server journal capacity but
