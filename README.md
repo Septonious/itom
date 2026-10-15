@@ -1,20 +1,22 @@
 # ITOM
 
-ITOM transports TCP application streams through authenticated IMAP mailboxes. This branch contains an **unstable Rev5 development checkpoint**, saved at the user's request during session network problems. Full current-source qualification is incomplete; this checkpoint is not a release.
+ITOM transports TCP application streams through authenticated IMAP mailboxes. This branch contains **Rev5, internally qualified and packaged for field validation**.
 
-The source, tests, intermediate results, validation/packaging drivers and detailed resume notes are preserved below. No Rev5 APK or binary is published by this checkpoint.
-
+- [Download APK and Linux binaries](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev5)
+- [Release notes and installation](builds/0.9.2-Rev5/RELEASE_NOTES.md)
 - [Rev5 source](archives/rev5/source)
-- [Field analysis, causes and repair design](archives/rev5/source/docs/rev5/REV5_ANALYSIS_2026-10-15.md)
-- [Current status and resume instructions](archives/rev5/checkpoint)
-- [Checkpoint status](archives/rev5/checkpoint/STATUS.json)
+- [Field analysis and repair design](archives/rev5/source/docs/rev5/REV5_ANALYSIS_2026-10-15.md)
+- [Final qualification evidence](archives/rev5/source/docs/rev5/evidence/rev5_validation.json)
+- [Android server admin setup and rollback behavior](archives/rev5/source/docs/rev5/ADMIN.md)
 
-Rev5 fixes the 180/192-message retained-debt grant deadlock, bounds continuously paced BODY reads and unread per-carrier queues, and sizes downstream envelopes using authenticated peer-delivery evidence. Scheduling waits expire across outages without releasing physical debt, and authenticated account recovery restores DATA writers without retaining cold exponential sleeps. It also distinguishes a retryable provider mailbox-state setup rejection from a stored-UID proof failure. Existing durable charges and cleanup proof rules remain intact. Server-manager messages support global text, per-client overrides and Minecraft-style colors; every global update clears the individual overrides.
+Rev5 repairs retained-mail quota starvation, bounds paced BODY reads and unread downstream queues, uses authenticated peer-delivery feedback to size envelopes, and restores DATA writers during recovery. It preserves durable charges and cleanup proof requirements. A per-sweep proof cache removes repeated decoding without weakening those checks.
 
-The transport checkpoint passed all six SINGLE/MULTI speed cases and both 32-case field suites. Darker Android UI and the authenticated IMAP admin console with a durable 60-second connection-loss rollback are now implemented. The initial Android build passed 81 domain tests, 7 app tests and lint with zero errors or warnings; targeted admin and actual TLS/IMAP reconnect tests passed. Fresh full qualification of the combined final source is pending. Irreversible purge, uninstall and journal migration remain CLI-only.
+The Android app has a darker, higher-contrast theme with vivid accents. Server messages support global text, per-client overrides and Minecraft-style formatting; every global update clears individual overrides. Settings exposes the IMAP server-admin console for an enabled server-side client named `admin`, authenticated with its private key. Reversible mutations have an independent durable watchdog: 60 seconds without recovery rolls back; 60 continuous healthy seconds commits. Irreversible operations remain CLI-only.
 
-The user confirmed and reset the router that caused the earlier Wi-Fi bottleneck. The subsequent capture still records target connection failures; it does not establish the cause of the regular Speedtest-app error or contain the fatal stack for the previously reported whole-app mobile crash.
+All ten internal gates passed on the exact packaged source: Android and native builds/tests, lint, full core/IMAP tests, four 32-case field suites, accounting/recovery/admin race checks, and all six SINGLE/MULTI performance runs. Each speed run independently met the 90 Mbit/s useful-throughput floor in both directions across all three windows, every loaded RTT below 1,100 ms, and 30/30 overlapping duplex probes without misses or timeouts. The final evidence records exact results and source identity.
 
-The prepared GitHub Actions workflow skips release assembly and publication until a packaged release manifest exists. For a future qualified package it reassembles the exact APK/binaries from hashed archive parts, verifies all assets and gate evidence, verifies uploaded asset sizes and SHA-256 digests, then publishes the prerelease. Compilation and qualification run in the development workspace. The private signing key, user captures, caches and stale build outputs are excluded.
+This is a **prerelease**, pending physical-phone, live-provider and actual systemd-host validation. The user confirmed that a router reset fixed the earlier Wi-Fi bottleneck. The exact regular Speedtest-app error and earlier whole-app mobile crash remain unconfirmed without matching diagnostics; laboratory passes do not establish that those field symptoms are resolved.
 
-Historical Rev2/Rev3/Rev4 archives remain available for comparison. Their individual field status and build identities are recorded beside each archive.
+Update both app and server, preserving profiles and state. GitHub Actions reassembles hashed release parts, verifies source identity and all gate evidence, then verifies every uploaded asset size and SHA-256 before publication. Private captures, credentials, caches and signing keys are excluded.
+
+Historical Rev2/Rev3/Rev4 archives and the earlier unstable Rev5 recovery checkpoint remain available with their original evidence.
