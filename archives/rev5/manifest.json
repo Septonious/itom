@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "classification": "REV5_LAB_QUALIFIED_PRERELEASE",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": true,
+  "release_tag": "v0.9.2-Rev5",
+  "qualification_source_sha256": "e2c7e85f63007b301ab020ed6fa9b39676db49e0d23f75259384c1b149b28fc0",
+  "qualified_source_commit": "376c630db6055be4ad4f79c75439fb9a985ac2a3",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev5-full.zip",
+    "size": 45519109,
+    "sha256": "1c03f365cacf72d1bdebaf79934e35b18d8c93513c506409ae89cb917cadee69"
+  },
+  "parts": [
+    {
+      "path": "archives/rev5/parts/full.zip.part001",
+      "size": 8388608,
+      "sha256": "90140f28ee83e2d76c7b30bdd820871f98e700fe046e43d0a3b504381c59ffc1"
+    },
+    {
+      "path": "archives/rev5/parts/full.zip.part002",
+      "size": 8388608,
+      "sha256": "ca60cf32d089fa6230fa8c557ff2466cb51727fbfdb737b51cb5286b18fc1c93"
+    },
+    {
+      "path": "archives/rev5/parts/full.zip.part003",
+      "size": 8388608,
+      "sha256": "06e4ac9fe0fc99f9c295e77fc65e86d208df891e58ff24292eba59c546ff614f"
+    },
+    {
+      "path": "archives/rev5/parts/full.zip.part004",
+      "size": 8388608,
+      "sha256": "fd9199c1799bbccb8a7fe8a24265096b4ff597ea3c1140a43836cda0ef282ae9"
+    },
+    {
+      "path": "archives/rev5/parts/full.zip.part005",
+      "size": 8388608,
+      "sha256": "525aa872277c01dc75a8c5cea018fc5895b24918659a2ca08accf89623afcf53"
+    },
+    {
+      "path": "archives/rev5/parts/full.zip.part006",
+      "size": 3576069,
+      "sha256": "43142324d1a13a26ba5268fed7e24ce7ce7f8a8c882517d8e7026fb6cba03966"
+    }
+  ],
+  "assets": [
+    {
+      "name": "FIELD_CORRELATION.json",
+      "size": 5709,
+      "sha256": "1166dc11a831f0557e7cd489c136ab18f735fce049a6b2ead43fe8219aa4f774"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-debug.apk",
+      "size": 92802269,
+      "sha256": "367a81b372523d13f8f903b7c090c8ec55344a05f0b93ad2a964925eaf3afb69"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-full.zip",
+      "size": 45519109,
+      "sha256": "1c03f365cacf72d1bdebaf79934e35b18d8c93513c506409ae89cb917cadee69"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-full.zip.sha256",
+      "size": 91,
+      "sha256": "14446f665e79c3e0d62767045b45e7fd19c9b8f628682a8ffeb9c6fda3530467"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-linux-amd64.bin",
+      "size": 14366565,
+      "sha256": "dcdda2070874c5ed52778260e6abeb8939b7ce3c562bf5ed329730a767044900"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-linux-arm64.bin",
+      "size": 13273885,
+      "sha256": "72c2c82f272e40b25ed06789c1889434d48fd312089129038d0a1039593b2354"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev5-sources.zip",
+      "size": 2296135,
+      "sha256": "82ae34857c89a51235c10f4a460f4cf5332a2459ca7e04c6d7c5e412217c74e8"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "size": 4976,
+      "sha256": "f73214135078f07be59d1ad52301533301d49a80e6f843d07106b24daa025d82"
+    },
+    {
+      "name": "REV5_ANALYSIS.md",
+      "size": 33167,
+      "sha256": "e585b04b6c14b1fa0e5d482846481b9ba96c80e0e50b9ce5075e30c3e2ef1448"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 874,
+      "sha256": "0e781d67c28c4647a62f689e3c97e1366bac628a300199031c3a4fe64af1debb"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 955,
+      "sha256": "268c30dc485d5fca6c730493039643ef74a7590db3c713c59386dc62d7de9910"
+    },
+    {
+      "name": "STATUS.json",
+      "size": 1469,
+      "sha256": "512510a06562927a3804d871f95c403cbb6e9105931bed5049026fc189da90c1"
+    },
+    {
+      "name": "VALIDATION.json",
+      "size": 15298,
+      "sha256": "4eba1ea766475bcdf6947e4065d68cd7371756325b679d2b344f9f14714c7039"
+    }
+  ]
+}
