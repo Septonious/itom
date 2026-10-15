@@ -32,3 +32,8 @@ All required internal checks must pass before a release; speed/RTT tolerance
 remains 10%.
 
 See the [field investigation](archives/rev4/source/docs/rev4/REV4_FIELD_REGRESSION_2026-10-15.md).
+
+The [new Wi-Fi/mobile comparison](archives/rev4/source/docs/rev4/REV4_WIFI_MOBILE_COMPARISON_2026-10-15.md)
+documents paced Wi-Fi BODY transfers and account `a05` staying at zero grants.
+It adds no production changes; matching server quota evidence is needed before
+choosing a repair for the inactive account.
