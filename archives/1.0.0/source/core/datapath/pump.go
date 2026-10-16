@@ -1229,7 +1229,15 @@ func (p *Pump) progress() error {
 	pending := p.engine.ReadyFair(p.lastDataStream)
 	blockedStreams := make(map[uint64]bool)
 	for _, id := range pending {
-		stream := p.engine.pending[id].stream
+		entry := p.engine.pending[id]
+		if entry.repairWake {
+			// The old scheduling wake can depend on the ACK blocked by this
+			// missing range. Release it once when deferred peer authority
+			// becomes eligible; the adapter still checks every physical gate.
+			delete(p.retryWake, id)
+			entry.repairWake = false
+		}
+		stream := entry.stream
 		if blockedStreams[stream] {
 			continue
 		}

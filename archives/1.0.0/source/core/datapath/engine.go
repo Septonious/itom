@@ -68,11 +68,18 @@ type stream struct {
 	nackID                             uint64
 	finStarted                         time.Duration
 }
+type deferredRepair struct {
+	id      uint64
+	missing wire.ByteRange
+}
+
 type pending struct {
 	stream         uint64
 	watch          *recovery.Watch
 	repair         *recovery.Repair
 	requested      bool
+	deferred       *deferredRepair // bounded authenticated intent; never dispatch before writer/grace ends
+	repairWake     bool            // one scheduler wake when deferred authorization becomes eligible
 	rangeWanted    wire.ByteRange
 	repairAttempt  uint64
 	writingAttempt uint64
@@ -327,6 +334,9 @@ func (e *Engine) Complete(g, attempt uint64, outcome flow.Outcome) error {
 	delete(e.writerItems, attempt)
 	if p := e.pending[item]; p != nil {
 		if p.writingAttempt == attempt {
+			if outcome == flow.NotCommitted && p.repairAttempt != attempt {
+				p.deferred = nil
+			}
 			p.writingAttempt = 0
 			p.repairAfter = e.now
 			grace := e.cfg.DeliveryGrace
@@ -558,7 +568,7 @@ func (e *Engine) Receive(g uint64, f wire.Frame) ([]wire.Frame, error) {
 		}
 	case wire.Missing:
 		for id, p := range e.pending {
-			if p.stream != f.Stream || p.watch == nil || p.writingAttempt != 0 || e.now < p.repairAfter || e.tx.IsQueued(id) {
+			if p.stream != f.Stream || p.watch == nil || e.tx.IsQueued(id) {
 				continue
 			}
 			frame, payloadBytes, x := e.tx.FrameInfo(id)
@@ -569,6 +579,15 @@ func (e *Engine) Receive(g uint64, f wire.Frame) ([]wire.Frame, error) {
 			for _, r := range m.Ranges {
 				start := max(r.Start, frame.Offset)
 				stop := min(r.End, end)
+				if start < stop && (p.writingAttempt != 0 || e.now < p.repairAfter) {
+					// STATUS/NACK can overtake APPEND and its BODY visibility.
+					// Preserve one authenticated request without publishing any
+					// duplicate or consuming another physical repair attempt.
+					if m.ID != 0 && (p.deferred == nil || m.ID > p.deferred.id) {
+						p.deferred = &deferredRepair{m.ID, wire.ByteRange{Start: start, End: stop}}
+					}
+					break
+				}
 				if start < stop && p.repair.Nack(m.ID) {
 					p.requested = true
 					p.rangeWanted = wire.ByteRange{Start: start, End: stop}
@@ -652,6 +671,29 @@ func (e *Engine) HalfClosed(g, id uint64) bool { return e.check(g) == nil && e.r
 // Poll probes lost DATA/receipt/window and repeats unacknowledged FIN. It never
 // creates a DATA retry without an authenticated NACK. Runtime isolation resets
 // only expired streams; the carrier watchdog owns loss of peer liveness.
+// Retained peer intent becomes schedulable only after original physical
+// ownership and the existing BODY-visibility grace have both ended. Receipts
+// may have trimmed or removed it in the meantime; never widen the peer range.
+func (e *Engine) activateDeferredRepairs() {
+	for id, p := range e.pending {
+		if p.deferred == nil || p.requested || p.writingAttempt != 0 || e.now < p.repairAfter || e.tx.IsQueued(id) {
+			continue
+		}
+		deferred := p.deferred
+		p.deferred = nil
+		frame, n, err := e.tx.FrameInfo(id)
+		if err != nil {
+			continue
+		}
+		start, stop := max(deferred.missing.Start, frame.Offset), min(deferred.missing.End, frame.Offset+n)
+		if start < stop && p.repair.Nack(deferred.id) {
+			p.requested = true
+			p.rangeWanted = wire.ByteRange{Start: start, End: stop}
+			p.repairWake = true
+		}
+	}
+}
+
 func (e *Engine) Poll(g uint64, now time.Duration) ([]wire.Frame, error) {
 	if err := e.check(g); err != nil {
 		return nil, err
@@ -659,6 +701,7 @@ func (e *Engine) Poll(g uint64, now time.Duration) ([]wire.Frame, error) {
 	if err := e.clock(now); err != nil {
 		return nil, err
 	}
+	e.activateDeferredRepairs()
 	expired := map[uint64]bool{}
 	for _, p := range e.pending {
 		if p.watch == nil {
