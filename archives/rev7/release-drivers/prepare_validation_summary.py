@@ -64,6 +64,7 @@ for folder,repeats,delay in [('field-repeated',3,0),('field-commit-delay',1,12)]
     for run in d['runs']:
         assert run['passed'] and run['source_before'] == run['source_after'] == identity
         assert not run['summary']['failed'] and not run['summary']['skipped'] and not run['summary']['missing_required']
+        assert hashlib.sha256((path.parent/run['log']).read_bytes()).hexdigest()==run['log_sha256']
     field.append({'repetitions':repeats,'cases_per_repetition':48,'server_commit_delay_ms':delay,
                   'all_passed':True,'required_cases':d['tests_required'],
                   'log_sha256':[r['log_sha256'] for r in d['runs']]})
@@ -72,14 +73,34 @@ def speed_summary(folder):
     speed_path,speed = latest_report(folder)
     assert speed['all_lab_cases_passed'] and len(speed['cases']) == 6
     assert speed['scenario']['uid_history'] == 64 and speed['scenario']['accounts'] == 15
+    assert speed['scenario']['stability_only'] is True
+    assert speed['criteria']['qualification_mode'] == 'stability' and speed['criteria']['throughput_floor_enforced'] is False
+    assert speed['criteria']['useful_upload_mbps_min'] is speed['criteria']['useful_download_mbps_min'] is None
+    assert speed['criteria']['positive_duplex_every_second_required'] is True
     cases = []
     for case in speed['cases']:
         assert case['ok'] and case['exit_code'] == 0 and case['source_before'] == case['source_after'] == identity
         assert not case['summary']['failed'] and not case['summary']['missing_required']
+        assert hashlib.sha256((speed_path.parent/case['log']).read_bytes()).hexdigest()==case['log_sha256']
         selected = {}
+        post_stress=[]
+        fresh_verified=False
+        stability_verified=False
+        identity_verified=False
         for line in (speed_path.parent/case['log']).read_text().splitlines():
             if not line.startswith('{'): continue
             text = json.loads(line).get('Output','')
+            if 'supervised_post_stress ' in text:
+                fields=dict(re.findall(r'([a-z_]+)=([^\s]+)',text))
+                assert fields['same_socket']=='true' and int(fields['rtt_ms'])<1000
+                post_stress.append(int(fields['index']))
+            if 'supervised_post_stress_fresh ' in text:
+                fresh_verified='bytes=262144 integrity_verified=true original_socket_rechecked=true' in text
+            if 'supervised_stability ' in text:
+                stability_verified='windows=60 positive_duplex_every_window=true throughput_floor_enforced=false' in text
+            if 'supervised_identity ' in text:
+                fields=dict(re.findall(r'([a-z_]+)=([^\s]+)',text))
+                identity_verified=fields['preserved']=='true' and int(fields['application_sockets'])==int(fields['target_tcp_dials'])==2*case['streams_per_direction']+1
             for marker in ('supervised_result ','supervised_tail ','supervised_tail10 ','supervised_acceptance '):
                 if marker in text:
                     allowed = {'upload_mbps','download_mbps','max_ms','rtt_samples','timeouts','missed','overlap',
@@ -87,18 +108,23 @@ def speed_summary(folder):
                     values = {k:v for k,v in re.findall(r'([a-z_]+)=([^\s]+)',text) if k in allowed}
                     selected[marker.strip()] = values
         assert selected['supervised_acceptance']['accepted'] == 'true'
+        assert post_stress == [1,2,3,4,5,6] and fresh_verified and stability_verified and identity_verified
+        assert float(selected['supervised_acceptance']['minimum_verified_mbps'])>0
+        assert 0<int(selected['supervised_acceptance']['max_rtt_ns'])<1100000000
+        assert selected['supervised_result']['timeouts']==selected['supervised_result']['missed']=='0'
+        assert selected['supervised_result']['rtt_samples']==selected['supervised_result']['overlap']=='30'
         cases.append({'name':case['name'],'streams_per_direction':case['streams_per_direction'],
-                      'physical_uid_history':64,'passed':True,'log_sha256':case['log_sha256'],**selected})
+                      'physical_uid_history':64,'passed':True,'positive_duplex_every_second':True,'post_load_original_socket_exchanges':6,'post_load_fresh_verified_bytes':262144,'original_socket_rechecked_after_fresh_transfer':True,'carrier_epochs_preserved':True,'log_sha256':case['log_sha256'],**selected})
     
     return speed,cases
 
 speed,cases = speed_summary('speed-final')
 retained,retained_cases = speed_summary('speed-retained')
-assert retained['scenario']['retained_state'] is True
+assert retained['scenario']['retained_state'] is True and speed['scenario']['retained_state'] is False
 
 report = {
     'schema':1,'classification':'REV7_LAB_QUALIFIED_PRERELEASE','all_internal_gates_passed':True,
-    'prerelease_eligible':True,'stable_release_ready':False,'field_limitations':['Whole-app mobile fatal stack unavailable; cause unconfirmed.','No physical phone or live Rambler qualification.','Initial failed Speedtest and remote EOF trigger are outside paired trace retention.'],
+    'prerelease_eligible':True,'stable_release_ready':False,'internally_stability_qualified':True,'throughput_floor_waived_by_user':True,'field_limitations':['Whole-app mobile fatal stack unavailable; cause unconfirmed.','No physical phone or live Rambler qualification.','Initial failed Speedtest and remote EOF trigger are outside paired trace retention.'],
     'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
     'qualification_source_sha256':identity,'first_party_core_runtime_sha256':core['core_runtime_sha256'],
     'go':core['go_version_output'],'core':core['tests'],'imap_fork_tests':core['imap_fork_tests'],

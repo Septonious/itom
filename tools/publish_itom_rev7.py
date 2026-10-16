@@ -40,6 +40,8 @@ def verify_gates(manifest, output):
     require(status['release_tag'] == manifest['release_tag'], 'Wrong testing tag')
     require(status['all_internal_gates_passed'] is True and evidence['all_internal_gates_passed'] is True,
             'Every internal gate must pass')
+    require(status['internally_stability_qualified'] is True and status['throughput_floor_waived_by_user'] is True,
+            'Stability qualification and the user throughput waiver must be explicit')
     require(status['mobile_crash_resolved'] is False and evidence['stable_release_ready'] is False,
             'Unconfirmed field crash must remain disclosed')
     require(status['qualification_source_sha256'] == evidence['qualification_source_sha256'] ==
@@ -65,9 +67,13 @@ def verify_gates(manifest, output):
     admin=evidence['admin_features']
     require(admin['server_authoritative_role'] and admin['additional_private_key_challenge'] and admin['durable_independent_watchdog'] and admin['loss_timeout_seconds']==60 and admin['healthy_trial_seconds']==60 and admin['irreversible_operations_cli_only'] and admin['native_imap_reconnect_race_test'] and admin['actual_server_supervisor_restart_tested'] and admin['server_restart_recovery_ms']<60000, 'Admin safety gates incomplete')
     criteria = evidence['speed_criteria']
-    require(criteria['tolerance_percent'] == 10 and criteria['useful_upload_mbps_min'] == 90 and
-            criteria['useful_download_mbps_min'] == 90 and
-            criteria['all_loaded_rtt_ns_strictly_below'] == 1100000000, 'Changed acceptance limits')
+    require(criteria['qualification_mode'] == 'stability' and criteria['throughput_floor_enforced'] is False and
+            criteria['useful_upload_mbps_min'] is criteria['useful_download_mbps_min'] is None and
+            criteria['positive_duplex_every_second_required'] is True and
+            criteria['tolerance_percent'] == 10 and
+            criteria['all_loaded_rtt_ns_strictly_below'] == 1100000000 and
+            evidence['internally_stability_qualified'] is True and evidence['throughput_floor_waived_by_user'] is True,
+            'Only the declared throughput floor waiver is allowed')
     require(evidence['retained_speed_scenario']['retained_state'] is True, 'Missing retained-state matrix')
     for group in ('speed_cases','retained_speed_cases'):
         cases = evidence[group]
@@ -77,9 +83,35 @@ def verify_gates(manifest, output):
             accepted = case['supervised_acceptance']
             probes = case['supervised_result']
             require(case['passed'] and accepted['accepted'] == 'true' and
-                    float(accepted['minimum_verified_mbps']) >= 90 and int(accepted['max_rtt_ns']) < 1100000000
+                    float(accepted['minimum_verified_mbps']) > 0 and 0 < int(accepted['max_rtt_ns']) < 1100000000
                     and probes['timeouts'] == probes['missed'] == '0' and probes['rtt_samples'] == probes['overlap'] == '30',
-                    'Speed/RTT gate failed: ' + case['name'])
+                    'Stability/RTT gate failed: ' + case['name'])
+            require(case['positive_duplex_every_second'] and case['post_load_original_socket_exchanges']==6 and
+                    case['post_load_fresh_verified_bytes']==262144 and case['original_socket_rechecked_after_fresh_transfer'] and
+                    case['carrier_epochs_preserved'], 'Post-load stability evidence incomplete: '+case['name'])
+    require((output/'HANDOFF.md').stat().st_size > 5000, 'Full project handoff missing')
+    with zipfile.ZipFile(output/'TEST_EVIDENCE.zip') as logs:
+        require(logs.testzip() is None, 'Test evidence ZIP corruption')
+        names = logs.namelist()
+        require(len(names) == len(set(names)), 'Duplicate test evidence entries')
+        index = json.loads(logs.read('MANIFEST.json'))
+        require(set(names) == set(index) | {'MANIFEST.json'}, 'Incomplete test evidence manifest')
+        for name, expected in index.items():
+            path = PurePosixPath(name)
+            require(not path.is_absolute() and '..' not in path.parts, 'Unsafe test evidence path')
+            raw = logs.read(name)
+            require(len(raw) == expected['size'] and hashlib.sha256(raw).hexdigest() == expected['sha256'],
+                    'Test evidence manifest mismatch: '+name)
+        for folder, count in (('field-repeated',3),('field-commit-delay',1),('speed-final',6),('speed-retained',6)):
+            report = json.loads(logs.read(folder+'/results.json'))
+            require(report['source_sha256'] == manifest['qualification_source_sha256'], 'Evidence log source mismatch')
+            runs = report.get('cases',report.get('runs',[]))
+            require(len(runs) == count, 'Incomplete evidence log matrix')
+            for run in runs:
+                raw = logs.read(folder+'/'+basename(run['log']))
+                require(hashlib.sha256(raw).hexdigest() == run['log_sha256'], 'Qualification log digest mismatch')
+                require(run.get('ok',run.get('passed')) is True and run['exit_code'] == 0,
+                        'Failed qualification log included')
     apks = list(output.glob('*.apk'))
     require(len(apks) == 1 and digest(apks[0]) == status['apk_sha256'], 'APK identity mismatch')
     with zipfile.ZipFile(apks[0]) as apk:

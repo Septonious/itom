@@ -91,7 +91,7 @@ assert 'transport-rework3-rev7' in subprocess.check_output(
 qualified_commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
 status = dict(schema=1, classification='REV7_LAB_QUALIFIED_PRERELEASE',
               stable_release_ready=False, prerelease_assets_authorized=True,
-              all_internal_gates_passed=True, mobile_crash_resolved=False,
+              all_internal_gates_passed=True, internally_stability_qualified=True, throughput_floor_waived_by_user=True, mobile_crash_resolved=False,
               mobile_crash_cause='UNCONFIRMED_NO_FATAL_STACK',
               real_provider_tested=False, physical_android_device_tested=False,
               created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -107,6 +107,7 @@ status = dict(schema=1, classification='REV7_LAB_QUALIFIED_PRERELEASE',
 (STAGE/'STATUS.json').write_text(json.dumps(status,indent=2)+'\n')
 shutil.copy2(SOURCE/'docs/rev7/evidence/rev7_validation.json', STAGE/'VALIDATION.json')
 shutil.copy2(SOURCE/'docs/rev7/REV7_ANALYSIS_2026-10-16.md', STAGE/'REV7_ANALYSIS.md')
+shutil.copy2(SOURCE/'HANDOFF.md', STAGE/'HANDOFF.md')
 notes = (REPO/'builds/0.9.2-Rev7/RELEASE_NOTES.md').read_text()
 shutil.copy2(WORK/'field-correlation.json', STAGE/'FIELD_CORRELATION.json')
 (STAGE/'SIGNER.txt').write_text(signer.stdout)
@@ -121,6 +122,32 @@ with zipfile.ZipFile(source_zip) as z:
     for name, expected in json.loads(z.read('SOURCE_MANIFEST.json')).items():
         assert hashlib.sha256(z.read(name)).hexdigest() == expected
 assert source_fingerprint() == identity
+
+# Include exact synthetic test evidence, without build logs that may contain
+# environment or signing configuration. Raw user captures are never inputs.
+evidence_files={
+    'pipeline.json':WORK/'candidate-validation.json',
+    'core/events.jsonl':SOURCE/'dist/core-test-events.jsonl',
+    'core/stderr.log':SOURCE/'dist/core-test-stderr.log',
+}
+for name in ('candidate-python','candidate-race-accounting','candidate-race-recovery','candidate-admin-native-race','candidate-native-vet'):
+    evidence_files['gates/'+name+'.log']=WORK/(name+'.log')
+for folder in ('field-repeated','field-commit-delay','speed-final','speed-retained'):
+    matches=[p for p in sorted((WORK/folder).glob('*/results.json')) if read(p).get('source_sha256')==identity]
+    assert matches, folder
+    report_path=matches[-1]
+    report_data=read(report_path)
+    evidence_files[folder+'/results.json']=report_path
+    runs=report_data.get('cases',report_data.get('runs',[]))
+    for run in runs:
+        log=report_path.parent/run['log']
+        assert digest(log)==run['log_sha256']
+        evidence_files[folder+'/'+log.name]=log
+evidence_manifest={name:entry(path) for name,path in evidence_files.items()}
+with zipfile.ZipFile(STAGE/'TEST_EVIDENCE.zip','x',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
+    for name,path in sorted(evidence_files.items()):
+        archive.write(path,name)
+    archive.writestr('MANIFEST.json',json.dumps(evidence_manifest,indent=2)+'\n')
 
 (STAGE/'SHA256SUMS').write_text(''.join(digest(p)+'  '+p.name+'\n' for p in sorted(STAGE.iterdir())))
 full = STAGE/(PREFIX+'-full.zip')
