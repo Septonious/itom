@@ -57,7 +57,7 @@ def validate_release_identity(root: Path):
     info = read_source_info(root)
     name, code = android_identity(info)
     app = (root / "android/app/build.gradle.kts").read_text(encoding="utf-8")
-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7"):
+    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8"):
         check('applicationIdSuffix = ".dev.rev7"' in app,
               "Rev10 test APK package differs from its separate-install identity")
     check(re.search(r'versionName\s*=\s*"' + re.escape(name) + r'"', app) is not None,
