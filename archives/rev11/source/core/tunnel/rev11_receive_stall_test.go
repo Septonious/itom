@@ -41,6 +41,13 @@ func TestRev11MultiRampThroughBriefProviderPause(t *testing.T) {
 	}
 	for range streams {
 		if err := <-errs; err != nil {
+			snapshot := f.client.Snapshot()
+			for _, line := range snapshot.Lines {
+				t.Logf("failure_state account=%s ready=%t reason=%s reader_repairs=%d scheduler=%+v", line.Account, line.Ready, line.ReadinessReason, line.ReaderRepairs, line.Scheduler)
+			}
+			for _, l := range lanes {
+				t.Logf("failure_sockets account=%s sockets=%+v", l.account.ID, physicalMail(l.mail).SocketSnapshots())
+			}
 			t.Fatal("MULTI transfer", err)
 		}
 	}
