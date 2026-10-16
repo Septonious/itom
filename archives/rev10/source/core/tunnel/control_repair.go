@@ -49,7 +49,7 @@ func (m *laneMail) repairControl(ctx context.Context) error {
 	// must allow the last replacement to reach that bounded admission queue.
 	call, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	fresh, err := m.dial(repairAdmission(controlAdmission(call)))
+	fresh, err := dialControlReplacement(repairAdmission(controlAdmission(call)), m.dial)
 	if err != nil {
 		return err
 	}
@@ -62,4 +62,31 @@ func (m *laneMail) repairControl(ctx context.Context) error {
 	m.controlGeneration.Store(fresh)
 	m.writerMu.Unlock()
 	return nil
+}
+
+// A physical outage can outlast the first replacement LOGIN. Preserve the
+// encrypted carrier and its streams within the existing 15-second repair
+// budget; retry only failures that precede any application APPEND. The account
+// gate still enforces its shared cooldown and bounded LOGIN admission.
+func dialControlReplacement(ctx context.Context, dial func(context.Context) (*mailbox.Client, error)) (*mailbox.Client, error) {
+	delay := 100 * time.Millisecond
+	for {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		fresh, err := dial(ctx)
+		if err == nil {
+			return fresh, nil
+		}
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if !repairableControlFailure(err) && !transientIMAPDialReason(mailbox.FailureReason(err)) && !errors.Is(err, errLocalConnectionLimit) && !connectionLimitFallback(err) {
+			return nil, err
+		}
+		if err := dataRepairPause(ctx, delay); err != nil {
+			return nil, err
+		}
+		delay = min(time.Second, 2*delay)
+	}
 }

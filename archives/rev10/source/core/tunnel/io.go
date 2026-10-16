@@ -1050,6 +1050,7 @@ func (m *laneMail) startDataRepairLocked() bool {
 func (m *laneMail) repairDataWriters() {
 	defer m.repairWG.Done()
 	delay := time.Second
+	attempted := false
 	for {
 		m.writerMu.Lock()
 		ctx := m.dataCtx
@@ -1067,12 +1068,6 @@ func (m *laneMail) repairDataWriters() {
 		}
 		m.writerMu.Unlock()
 
-		if dataRepairPause(ctx, m.dialGate.repairDelay(delay)) != nil {
-			m.writerMu.Lock()
-			m.repairing = false
-			m.writerMu.Unlock()
-			return
-		}
 		// At least one DATA writer is required to make existing application
 		// streams schedulable. Restore that minimum service with repair priority;
 		// extra parallel writers remain optional and keep ordinary admission.
@@ -1089,6 +1084,18 @@ func (m *laneMail) repairDataWriters() {
 		if !haveWriter {
 			dialCtx = repairAdmission(ctx)
 		}
+		// Do not add an unconditional one-second blackout when every DATA
+		// writer was lost. The first minimum-service dial is immediate; failed
+		// retries and optional extra capacity retain their existing backoff.
+		if haveWriter || attempted {
+			if dataRepairPause(ctx, m.dialGate.repairDelay(delay)) != nil {
+				m.writerMu.Lock()
+				m.repairing = false
+				m.writerMu.Unlock()
+				return
+			}
+		}
+		attempted = true
 		fresh, err := m.dial(dialCtx)
 		if err != nil {
 			delay = nextDataRepairDelay(delay)

@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -30,7 +33,15 @@ import java.util.UUID
 private data class AdminField(val key: String, val label: String, val initial: String = "", val secret: Boolean = false, val multiline: Boolean = false, val required: Boolean = true, val choices: List<Pair<String, String>> = emptyList())
 private data class AdminForm(val title: String, val fields: List<AdminField>, val messagePreview: String? = null, val submit: (Map<String, String>) -> Unit)
 private data class AdminChange(val title: String, val detail: String, val request: JsonObject)
-private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIENTS("Clients"), ACCOUNTS("Accounts"), MESSAGES("Messages"), DIAGNOSTICS("Diagnostics"), SERVICE("Service") }
+private enum class AdminSection(val label: String, val description: String, val glyph: Glyph) {
+    OVERVIEW("Overview", "Server status and live traffic", Glyph.HOME),
+    CLIENTS("Clients", "Access and invitations", Glyph.APPS),
+    ACCOUNTS("Mail accounts", "Credentials and connectivity", Glyph.MAIL),
+    MESSAGES("Messages", "Global and client notices", Glyph.BELL),
+    TRANSPORT("Transport", "Mailbox layout and resource limits", Glyph.NETWORK),
+    DIAGNOSTICS("Diagnostics", "Logs, tracing and export", Glyph.CHART),
+    SERVICE("Service", "Start, restart and recovery", Glyph.SETTINGS)
+}
 
 @Composable fun AdminScreen(backend: SessionBackend, session: SessionSnapshot, onMessage: (String) -> Unit) {
     val raw by backend.admin.collectAsStateWithLifecycle()
@@ -38,7 +49,8 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
     val status = view.status
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var section by remember { mutableStateOf(AdminSection.OVERVIEW) }
+    var section by rememberSaveable { mutableStateOf(AdminSection.OVERVIEW) }
+    var sectionsOpen by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var form by remember { mutableStateOf<AdminForm?>(null) }
     var confirmation by remember { mutableStateOf<AdminChange?>(null) }
@@ -143,8 +155,20 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
         }
     }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AdminSection.entries.forEach { item -> FilterChip(selected = section == item, onClick = { section = item; output = ""; live = false }, label = { Text(item.label) }) }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconBadge(section.glyph)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(section.label, style = MaterialTheme.typography.titleLarge)
+                SmallNote(section.description)
+            }
+            Box {
+                OutlinedButton(onClick = { sectionsOpen = true }) { Text("Sections") }
+                DropdownMenu(expanded = sectionsOpen, onDismissRequest = { sectionsOpen = false }) {
+                    AdminSection.entries.forEach { item ->
+                        DropdownMenuItem(text = { Text(item.label, color = if (item == section) Blue else Ink) }, leadingIcon = { AppIcon(item.glyph, Modifier.size(20.dp), if (item == section) Blue else Muted) }, onClick = { sectionsOpen = false; section = item; output = ""; live = false })
+                    }
+                }
+            }
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (trial) item {
@@ -159,8 +183,12 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                     item { InfoCard(Modifier.fillMaxWidth(), accent = Green) { StatusLabel("ADMIN · ${status.current_uid}", Green); Text(status.provider, style = MaterialTheme.typography.headlineSmall); SmallNote("Service ${status.service} · ${status.accounts.size} accounts · ${status.users.size}/2 clients"); SmallNote(if (status.watchdog_available) "Automatic rollback protection is available." else "Changes require the installed Linux service and an independent rollback watchdog.") } }
                     item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) { AdminStat("Accounts", status.accounts.size.toString(), Modifier.weight(1f)); AdminStat("Clients", status.users.size.toString(), Modifier.weight(1f)) } }
                     status.traffic?.let { traffic -> item { AdminTraffic(traffic, status.users) } }
-                    item { NavigationRow(Glyph.MAIL, "Server messages", "Global notice and individual client messages") { section = AdminSection.MESSAGES } }
-                    item { NavigationRow(Glyph.CHART, "Server diagnostics", "Live logs, packet trace and full export") { section = AdminSection.DIAGNOSTICS } }
+                    item { AdminHeading("Access & communication", "Manage who connects and what clients see.") }
+                    item { AdminCategoryRow(AdminSection.CLIENTS, AdminSection.ACCOUNTS) { section = it } }
+                    item { NavigationRow(Glyph.BELL, "Server messages", "Global notice and individual client messages") { section = AdminSection.MESSAGES } }
+                    item { AdminHeading("System", "Observe the server and manage its configuration.") }
+                    item { AdminCategoryRow(AdminSection.TRANSPORT, AdminSection.DIAGNOSTICS) { section = it } }
+                    item { NavigationRow(Glyph.SETTINGS, "Service control", "Service state and protected recovery actions") { section = AdminSection.SERVICE } }
                     item { TextButton(onClick = { call(request("status")) }, enabled = !busy) { Text("Refresh server status") } }
                 }
                 AdminSection.CLIENTS -> {
@@ -218,6 +246,7 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                     item { SmallNote("Colors: &0–&f · &l bold · &o italic · &n underline · &m strike · &r reset · && literal &") }
                 }
                 AdminSection.DIAGNOSTICS -> {
+                    item { AdminHeading("Observe & troubleshoot", "Inspect live activity or save a complete server capture.") }
                     item { InfoCard(Modifier.fillMaxWidth()) { Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Server tracing", style = MaterialTheme.typography.titleMedium); SmallNote("Record transport events. Changes restart the server.") }; ItomSwitch(status.diagnostics == "on", { enabled -> change("Change server tracing", "diagnostics") { put("diagnostics", if (enabled) "on" else "off") } }, enabled = canChange) } } }
                     item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { FilterChip(outputKind == "logs", { outputKind = "logs"; call(request("logs")) { output = it.text } }, label = { Text("Logs") }); FilterChip(outputKind == "trace", { outputKind = "trace"; call(request("trace")) { output = it.text } }, label = { Text("Packet trace") }); FilterChip(live, { live = !live }, label = { Text("Live") }) } }
                     if (output.isNotEmpty()) item { AdminOutput(output) }
@@ -225,11 +254,18 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                     item { GradientButton("Export full server diagnostics", {
                         call(request("diagnostics_export")) { result -> exportID = result.id; exportTotal = result.total; exportGeneration = session.generation; export.launch("ITOM_server_diagnostics.zip") }
                     }, Modifier.fillMaxWidth(), enabled = !busy, glyph = Glyph.DOWN) }
-                    if (exportProgress > 0f) item { LinearProgressIndicator(progress = { exportProgress }, modifier = Modifier.fillMaxWidth()) }
+                    if (busy && exportID.isNotEmpty()) item {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                SmallNote("Saving server diagnostics")
+                                SmallNote("${(exportProgress.coerceIn(0f, 1f) * 100).toInt()}%", color = Blue)
+                            }
+                            LinearProgressIndicator(progress = { exportProgress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                        }
+                    }
                 }
-                AdminSection.SERVICE -> {
-                    item { AdminHeading("Service control", "Disruptive changes restart the service. A stopped service automatically returns if this admin client cannot reconnect within 60 seconds.") }
-                    item { InfoCard(Modifier.fillMaxWidth()) { Text("itom.service", style = MaterialTheme.typography.titleMedium); StatusLabel(status.service.uppercase(), Green); Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) { listOf("Start" to "service_start", "Restart" to "service_restart", "Stop" to "service_stop").forEach { (label, operation) -> TextButton(onClick = { change("$label service", operation) }, enabled = canChange) { Text(label, color = if (label == "Stop" && canChange) Red else Blue) } } } } }
+                AdminSection.TRANSPORT -> {
+                    item { AdminHeading("Connection resources", "Changes restart the server with automatic rollback protection. Export a new invitation when changing client settings.") }
                     item { InfoCard(Modifier.fillMaxWidth()) { Text("Transport resources", style = MaterialTheme.typography.titleMedium); val t = status.transport; SmallNote("${t.layout} · ${t.data_shards} DATA shards · ${t.account_sessions} account sessions · ${t.endpoint_connections} endpoint sockets"); OutlinedButton(onClick = {
                         form = AdminForm("Transport resources", listOf(AdminField("layout", "Mailbox layout", t.layout, choices = listOf("auto" to "Automatic", "mixed" to "Mixed", "split" to "Split")), AdminField("data_shards", "DATA shards", t.data_shards.toString(), choices = listOf("1" to "1", "2" to "2", "4" to "4")), AdminField("account_sessions", "Sessions per account: 2–128", t.account_sessions.toString()), AdminField("endpoint_connections", "Endpoint sockets: 2–4096", t.endpoint_connections.toString()), AdminField("login_parallelism", "Parallel logins: 1–32", t.login_parallelism.toString()))) { fields ->
                             val numbers = fields.filterKeys { it != "layout" }.mapValues { it.value.toIntOrNull() }
@@ -237,11 +273,20 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                             else change("Update transport resources", "transport") { put("transport", buildJsonObject { put("layout", fields.getValue("layout")); numbers.forEach { (key, value) -> put(key, requireNotNull(value)) } }) }
                         }
                     }, enabled = canChange) { Text("Edit resources") } } }
+                    item { InfoCard(Modifier.fillMaxWidth(), accent = Blue) {
+                        Text("IMAP routing", style = MaterialTheme.typography.titleMedium)
+                        SmallNote("Configure a server IP pin per mailbox or for all accounts from Mail accounts. The mailbox hostname remains the verified TLS identity.")
+                        TextButton(onClick = { section = AdminSection.ACCOUNTS }) { Text("Manage mail accounts") }
+                    } }
+                }
+                AdminSection.SERVICE -> {
+                    item { AdminHeading("Service control", "Disruptive changes restart the service. A stopped service automatically returns if this admin client cannot reconnect within 60 seconds.") }
+                    item { InfoCard(Modifier.fillMaxWidth()) { Text("itom.service", style = MaterialTheme.typography.titleMedium); StatusLabel(status.service.uppercase(), Green); Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) { listOf("Start" to "service_start", "Restart" to "service_restart", "Stop" to "service_stop").forEach { (label, operation) -> TextButton(onClick = { change("$label service", operation) }, enabled = canChange) { Text(label, color = if (label == "Stop" && canChange) Red else Blue) } } } } }
                     item { OutlinedButton(onClick = { change("Reinstall current service", "service_install", "Reinstalls the already installed binary and service unit. The previous unit and configuration are retained during the rollback trial.") }, enabled = canChange, modifier = Modifier.fillMaxWidth()) { Text("Reinstall current service") } }
                     item { SmallNote("Permanent mailbox purges, uninstall and journal migrations stay in the CLI. Initial setup and supplying a newer server binary also require local server access.") }
                 }
             }
-            if (busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            if (busy && exportID.isEmpty()) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         }
     }
     form?.let { dialog ->
@@ -249,6 +294,18 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
         else AdminFormDialog(dialog, dismiss = { form = null }, submit = { values -> form = null; dialog.submit(values) })
     }
     confirmation?.let { change -> AlertDialog(onDismissRequest = { confirmation = null }, title = { Text(change.title) }, text = { Text(change.detail) }, confirmButton = { TextButton(onClick = { confirmation = null; call(change.request) { onMessage("Change accepted. Keep ITOM connected while it verifies recovery.") } }, enabled = canChange) { Text("Apply with rollback") } }, dismissButton = { TextButton(onClick = { confirmation = null }) { Text("Cancel") } }) }
+}
+
+@Composable private fun AdminCategoryRow(first: AdminSection, second: AdminSection, onSelect: (AdminSection) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        listOf(first, second).forEach { item ->
+            InfoCard(Modifier.weight(1f), accent = Blue, onClick = { onSelect(item) }) {
+                AppIcon(item.glyph, Modifier.size(24.dp), Blue)
+                Text(item.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                SmallNote(item.description)
+            }
+        }
+    }
 }
 
 @Composable private fun AdminHeading(title: String, subtitle: String) { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { Text(title, style = MaterialTheme.typography.headlineSmall); SmallNote(subtitle) } }
