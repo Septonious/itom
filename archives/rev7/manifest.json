@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "classification": "REV7_TARGETED_VALIDATION_PRERELEASE",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": true,
+  "release_tag": "v0.9.2-Rev7",
+  "qualification_source_sha256": "7fd83e66a363bcccec4fd92b8a1f43396a736cbec5e41da0c9304457032c7cac",
+  "qualified_source_commit": "0e4fd722776bf476f2b298c58dca3b95f5efd0f2",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev7-full.zip",
+    "size": 45869639,
+    "sha256": "3e1e67c689f575ac9e9d8dfe815cdb7372df58fbc20db5c7e2e7de82d3818481"
+  },
+  "parts": [
+    {
+      "path": "archives/rev7/parts/full.zip.part001",
+      "size": 8388608,
+      "sha256": "f1dbccc948741b9127a2279fbad3c0e2df6f9b60687fca7252ad497fc027a95e"
+    },
+    {
+      "path": "archives/rev7/parts/full.zip.part002",
+      "size": 8388608,
+      "sha256": "18c9bcc594f7b1a0e0c66d1adb74c995dd7345b47d775cf8fd9180b41854ca7f"
+    },
+    {
+      "path": "archives/rev7/parts/full.zip.part003",
+      "size": 8388608,
+      "sha256": "385f32fa236153fd939948b58c71b30f85ef384044e9b4db7799ca3382fcde30"
+    },
+    {
+      "path": "archives/rev7/parts/full.zip.part004",
+      "size": 8388608,
+      "sha256": "ab160893da31ed5302117f0ea4448c1c86a008166f3baae1efbccd2ec8b659b6"
+    },
+    {
+      "path": "archives/rev7/parts/full.zip.part005",
+      "size": 8388608,
+      "sha256": "6c9a1774dc07f6bc43883c813b9838115bbc7ec01a5d7245978c749edfc8635f"
+    },
+    {
+      "path": "archives/rev7/parts/full.zip.part006",
+      "size": 3926599,
+      "sha256": "824f1f2ed55322b9c58467f4671d8bb9ff288c94e2be918d08a69e09a5a8afce"
+    }
+  ],
+  "assets": [
+    {
+      "name": "FIELD_CORRELATION.json",
+      "size": 2161,
+      "sha256": "b16ad9ad03c0e376083e02c3b0a0303e497d9741afde663a561417578f2956f5"
+    },
+    {
+      "name": "HANDOFF.md",
+      "size": 13074,
+      "sha256": "81b5f315ce0ad46697614d2f1ae06fbf4a6062df3a35e34ba28e9763bc03df3d"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-debug.apk",
+      "size": 94728853,
+      "sha256": "e5f42fca331f9f9b1961d851b7490cb9f3312bb0d7bf300b14abf409b6c7ad38"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-full.zip",
+      "size": 45869639,
+      "sha256": "3e1e67c689f575ac9e9d8dfe815cdb7372df58fbc20db5c7e2e7de82d3818481"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-full.zip.sha256",
+      "size": 91,
+      "sha256": "de99558ea5732b11b7bb484568a2f45070582a24c4a0cb660a836e49d4078eff"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-linux-amd64.bin",
+      "size": 14447752,
+      "sha256": "1a28837077fa989776a3d91a4e7097c7051b57212e0dde6ec2c20dbe40740d96"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-linux-arm64.bin",
+      "size": 13295552,
+      "sha256": "a15828857b982ca3f0f6ea9d6419da6399f0ef89f6f450614948634d15ec97c1"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev7-sources.zip",
+      "size": 2356037,
+      "sha256": "9264d9b42b85655e85f01bef0cb26c6b147699fed2de01b167c29ac4bb099bef"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "size": 1218,
+      "sha256": "0ec56a1b2eae50fb3889689928ab99d9d7256d078d26614253858c5041e4b0a7"
+    },
+    {
+      "name": "REV7_ANALYSIS.md",
+      "size": 17528,
+      "sha256": "d049ef6d4b7e9ba0416cbf85decfafdb179f1311224df62946a475a88c932bd7"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 1035,
+      "sha256": "83b5865990ad5ed4f0cc153a8ee65743d6c8867a273f4f54e96f52b84f73e16d"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 955,
+      "sha256": "268c30dc485d5fca6c730493039643ef74a7590db3c713c59386dc62d7de9910"
+    },
+    {
+      "name": "STATUS.json",
+      "size": 1658,
+      "sha256": "b86ee7cd0fcc63c721f8866310bb330ed7c705dff874d2d898732a4579730330"
+    },
+    {
+      "name": "TEST_EVIDENCE.zip",
+      "size": 141320,
+      "sha256": "c257043084b1a3717597aa00333aa38e15be19e90f059de73e3d3fb91fdcd1a0"
+    },
+    {
+      "name": "VALIDATION.json",
+      "size": 7252,
+      "sha256": "b60ce83188897b76dc42fa21a7429bba09612d086ed58b195242cc9dbd908bab"
+    }
+  ]
+}
