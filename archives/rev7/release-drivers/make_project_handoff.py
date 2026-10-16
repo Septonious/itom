@@ -6,7 +6,7 @@ WORK = Path('/workspace/work/rev7')
 ROOT = WORK/'source/itom'
 q = json.loads((ROOT/'docs/rev7/evidence/rev7_validation.json').read_text())
 assert q['all_internal_gates_passed'] and q['internally_stability_qualified']
-assert q['throughput_floor_waived_by_user'] and len(q['pipeline_steps']) == 11
+assert q['throughput_floor_waived_by_user'] and len(q['pipeline_steps']) == 9
 rows = []
 for state, key in [('Fresh', 'speed_cases'), ('Retained', 'retained_speed_cases')]:
     for case in q[key]:
@@ -55,7 +55,7 @@ The earlier Wi-Fi download ceiling was corrected by the user as an ISP router is
 ## Repairs carried by Rev7
 
 1. Physical control EOF/reset/timeout and recoverable IMAP failures repair the control socket rather than destroying every logical stream. Publication and shutdown are synchronized. Original uncertain APPEND debt remains charged; retries use new cipher counters and independent physical charges. Definitive credential/certificate errors and poisoned accounting stay fail-closed.
-2. Both account and global admission reserve capacity for required control roles. Control/receive repairs can pass queued optional LOGINs, including mixed layouts constrained by provider socket caps.
+2. Both account and global admission reserve capacity for required control roles. Control/receive repairs, the sole DATA receiver and the first usable DATA writer can pass queued optional LOGINs, including mixed layouts constrained by provider socket caps. An additional repetition exposed starvation of minimum DATA service; the corrected recovery check passed three focused repetitions before the final complete build. Extra parallel DATA writers remain optional.
 3. Missing handshake replies recover through bounded repeats of the exact authenticated hello and a short-lived server reply cache. Altered, expired or excessive replay cannot reset a session.
 4. Repeated actual missing IDLE notifications temporarily shorten active audit delay. Quiet accounts retain bounded ordinary pacing. Carrier traces report actual stream count.
 5. Retained physical debt is preserved while remaining message ordinals are shared fairly between directions. Recovery leases contain complete physical bulk BODY units, leave upload refill capacity, and schedule earlier bounded cleanup when remaining capacity is small. Real proof remains required to reclaim anything.
@@ -75,13 +75,13 @@ The earlier Wi-Fi download ceiling was corrected by the user as an ISP router is
 
 ## Completed validation
 
-All eleven pipeline stages passed on the source fingerprint above:
+All nine final pipeline stages passed on the source fingerprint above:
 
 - {q['core']['passed_test_events']} core test events, zero failures and zero skips; mandatory provider-outage scenarios enabled; bundled IMAP-fork tests and vet passed. Linux AMD64 and ARM64 were built.
-- Three normal repetitions of the complete 48-case field-derived suite, then the same 48 cases with real fsync plus 12 ms added server commit delay. Tests cover original chat sockets during repeated transfers, simultaneous physical control/receive failures, slow optional LOGINs, capped mixed layouts, missing handshake replies, stored APPENDs whose completion is lost, retained debt through 188/192 slots, missed IDLE notifications and 110 seconds of idle before a subsequent exchange.
+- The complete 48-case field-derived suite within the mandatory core run, with real fsync. At the user’s request, separate repeated field suites and the added commit-delay experiment were removed from final qualification. Tests cover original chat sockets during repeated transfers, simultaneous physical control/receive failures, slow optional LOGINs, capped mixed layouts, missing handshake replies, stored APPENDs whose completion is lost, retained debt through 188/192 slots, missed IDLE notifications and 110 seconds of idle before a subsequent exchange.
 - Accounting/datapath, recovery and native admin race gates passed; native vet passed. The native administrative restart scenario recovered after {q['admin_features']['server_restart_recovery_ms']} ms, within the independent sixty-second rollback interval.
 - {q['android_domain_tests']['tests']} Android domain tests and {q['android_callback_adapter_tests']['tests']} app tests passed; lint {q['android_lint']['errors']} errors and {q['android_lint']['warnings']} warnings; both supported native ABIs built and were verified inside the APK.
-- Twelve independent real-local-TLS/IMAP supervisor load runs: three SINGLE and three MULTI on fresh state, repeated with 6 MiB and 130 old message slots retained per account. Each uses fifteen accounts, 64 actual prior UID allocations per DATA mailbox, a ten-second warmup and sixty-second measurement. MULTI has 24 streams per direction.
+- Four independent real-local-TLS/IMAP supervisor load runs: one SINGLE and one MULTI on fresh state, repeated with 6 MiB and 130 old message slots retained per account. Each uses fifteen accounts, 64 actual prior UID allocations per DATA mailbox, a ten-second warmup and sixty-second measurement. MULTI has 24 streams per direction.
 
 Every measured second made useful progress in both directions. Every loaded RTT stayed below 1,100 ms; all thirty scheduled probes overlapped duplex traffic with no miss or timeout. Original TCP identities, logical sessions and healthy carrier epochs survived. After load, every run passed six original-socket exchanges separated by idle gaps, a fresh verified 256 KiB round trip, and another exchange on the original socket, without restarting client or server.
 
@@ -89,7 +89,7 @@ Every measured second made useful progress in both directions. Every loaded RTT 
 | --- | ---: | ---: | ---: | ---: | ---: |
 {chr(10).join(rows)}
 
-These are local laboratory rates and synthetic fault scenarios, not a guarantee of speed on a live IMAP provider. Earlier exploratory failures remain failures and do not count toward the final qualification. Only final same-source passing runs are included above.
+These are local laboratory rates and synthetic fault scenarios, not a guarantee of speed on a live IMAP provider. Earlier exploratory failures remain failures and do not count toward the final qualification. The interrupted expanded matrix is not counted as a pass. Its minimum-DATA recovery timeout was repaired and the failing scenario was rerun; only final same-source passing runs are included above.
 
 ## Build and reproduce
 
@@ -101,15 +101,14 @@ From an extracted project root:
 python tools/build.py server --cache work/build-cache --expect-revision transport-rework3-rev7
 python tools/build.py android --cache work/build-cache --expect-revision transport-rework3-rev7 --accept-android-licenses
 python -m unittest discover -s tools -p 'test_*.py'
-python tools/field_qualification.py --go /path/to/go --repeats 3 --results work/field
-python tools/field_qualification.py --go /path/to/go --repeats 1 --commit-delay-ms 12 --results work/field-delay
-python tools/transport_qualification.py --go /path/to/go --accounts 15 --streams both --repeats 3 --uid-history 64 --stability-only --results work/fresh
-python tools/transport_qualification.py --go /path/to/go --accounts 15 --streams both --repeats 3 --uid-history 64 --retained-state --stability-only --results work/retained
+python tools/field_qualification.py --go /path/to/go --repeats 1 --results work/field
+python tools/transport_qualification.py --go /path/to/go --accounts 15 --streams both --repeats 1 --uid-history 64 --stability-only --results work/fresh
+python tools/transport_qualification.py --go /path/to/go --accounts 15 --streams both --repeats 1 --uid-history 64 --retained-state --stability-only --results work/retained
 ```
 
 The source ZIP is also executable with Python, validates its manifest, extracts a fresh tree and accepts the same server/Android build targets. `tools/transport_qualification.py` rejects skipped or incomplete required cases, changed source and race-instrumented speed measurements. Without `--stability-only`, the separate historical 90 Mbit/s policy applies. The core build explicitly enables the Rev7 stability policy and mandatory outage scenarios.
 
-Run race checks separately from timed load measurements. The release-driver snapshot at `archives/rev7/release-drivers/validate_candidate.py` records the exact package selections and all eleven final commands. Its workspace/cache paths are this release environment's paths; adapt them to a new workspace before use. Run stages serially. This qualification host had a two-core CPU quota; concurrent compression, builds or trace analysis can invalidate timing comparisons. Do not reduce per-scenario recovery or probe deadlines to make a run fit the package timeout.
+Run race checks separately from timed load measurements. The release-driver snapshot at `archives/rev7/release-drivers/validate_candidate.py` records the exact package selections and all nine final commands. Its workspace/cache paths are this release environment's paths; adapt them to a new workspace before use. Run stages serially. This qualification host had a two-core CPU quota; concurrent compression, builds or trace analysis can invalidate timing comparisons. Do not reduce per-scenario recovery or probe deadlines to make a run fit the package timeout.
 
 ## Install and operate
 

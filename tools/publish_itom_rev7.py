@@ -56,14 +56,16 @@ def verify_gates(manifest, output):
         require(tests['tests'] > 0 and tests['failures'] == tests['errors'] == tests['skipped'] == 0,
                 'Android gate failed: ' + group)
     require(evidence['android_lint']['errors'] == 0, 'Lint errors')
-    fields = evidence['field_repetitions']
-    require(len(fields) == 2 and [x['repetitions'] for x in fields] == [3, 1] and
-            all(x['all_passed'] and x['cases_per_repetition'] == 48 for x in fields), 'Field suite failed')
+    field = evidence['field_suite']
+    require(field['source']=='mandatory complete core gate' and field['repetitions']==1 and
+            field['all_passed'] and field['cases_passed']==48 and len(field['required_cases'])==48,
+            'Complete mandatory field suite missing')
+    require(evidence['reduced_testing_by_user_request'] is True, 'Reduced repetition scope must be explicit')
     require(bool(evidence['race_checks']) and all(x['passed_test_events'] > 0 and
             x['failed'] == x['skipped'] == 0 for x in evidence['race_checks'].values()), 'Race gate failed')
     steps = evidence['pipeline_steps']
-    required_steps={'candidate-python','candidate-android','candidate-field-repeated','candidate-field-commit-delay','candidate-core-server','candidate-race-accounting','candidate-race-recovery','candidate-native-vet','candidate-admin-native-race','candidate-speed','candidate-speed-retained'}
-    require(len(steps) == 11 and {x['name'] for x in steps} == required_steps and all(x['passed'] and x['exit_code'] == 0 for x in steps), 'Incomplete pipeline')
+    required_steps={'candidate-python','candidate-android','candidate-core-server','candidate-race-accounting','candidate-race-recovery','candidate-native-vet','candidate-admin-native-race','candidate-speed','candidate-speed-retained'}
+    require(len(steps) == 9 and {x['name'] for x in steps} == required_steps and all(x['passed'] and x['exit_code'] == 0 for x in steps), 'Incomplete pipeline')
     admin=evidence['admin_features']
     require(admin['server_authoritative_role'] and admin['additional_private_key_challenge'] and admin['durable_independent_watchdog'] and admin['loss_timeout_seconds']==60 and admin['healthy_trial_seconds']==60 and admin['irreversible_operations_cli_only'] and admin['native_imap_reconnect_race_test'] and admin['actual_server_supervisor_restart_tested'] and admin['server_restart_recovery_ms']<60000, 'Admin safety gates incomplete')
     criteria = evidence['speed_criteria']
@@ -77,8 +79,8 @@ def verify_gates(manifest, output):
     require(evidence['retained_speed_scenario']['retained_state'] is True, 'Missing retained-state matrix')
     for group in ('speed_cases','retained_speed_cases'):
         cases = evidence[group]
-        require({x['name'] for x in cases} == {f'{mode}-{i}' for mode in ('single','multi') for i in range(1,4)}
-                and len(cases) == 6, 'Missing fresh qualification cases')
+        require({x['name'] for x in cases} == {f'{mode}-{i}' for mode in ('single','multi') for i in range(1,2)}
+                and len(cases) == 2, 'Missing fresh qualification cases')
         for case in cases:
             accepted = case['supervised_acceptance']
             probes = case['supervised_result']
@@ -102,7 +104,14 @@ def verify_gates(manifest, output):
             raw = logs.read(name)
             require(len(raw) == expected['size'] and hashlib.sha256(raw).hexdigest() == expected['sha256'],
                     'Test evidence manifest mismatch: '+name)
-        for folder, count in (('field-repeated',3),('field-commit-delay',1),('speed-final',6),('speed-retained',6)):
+        raw_core=logs.read('core/events.jsonl')
+        require(hashlib.sha256(raw_core).hexdigest()==field['core_events_sha256'], 'Core field evidence digest mismatch')
+        events=[json.loads(line) for line in raw_core.decode().splitlines() if line.startswith('{')]
+        require(not any(e.get('Action') in ('fail','skip') for e in events), 'Failed/skipped core evidence')
+        passed=[e['Test'] for e in events if e.get('Action')=='pass' and e.get('Test')]
+        require(len(passed)==core['passed_test_events'] and set(field['required_cases'])<=set(passed),
+                'Incomplete mandatory core or field evidence')
+        for folder, count in (('speed-final',2),('speed-retained',2)):
             report = json.loads(logs.read(folder+'/results.json'))
             require(report['source_sha256'] == manifest['qualification_source_sha256'], 'Evidence log source mismatch')
             runs = report.get('cases',report.get('runs',[]))

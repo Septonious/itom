@@ -3,7 +3,7 @@ import json,shutil,sys
 w=Path('/workspace/work/rev7');s=w/'source/itom';r=Path('/workspace/work/rev5/publication')
 sys.path.insert(0,str(s/'tools'));from transport_qualification import source_fingerprint
 q=json.loads((s/'docs/rev7/evidence/rev7_validation.json').read_text())
-assert q['all_internal_gates_passed'] and len(q['pipeline_steps'])==11 and len(q['retained_speed_cases'])==6
+assert q['all_internal_gates_passed'] and len(q['pipeline_steps'])==9 and len(q['retained_speed_cases'])==2
 assert source_fingerprint()==q['qualification_source_sha256']
 excluded={'.git','.gradle','.kotlin','__pycache__','build','dist','libs','reports','.idea'}
 def ignore(d,names):return[n for n in names if n in excluded or n=='local.properties' or n.endswith(('.pyc','.pyo','.test','.jks','.keystore'))]
@@ -19,7 +19,7 @@ Rev7 is internally qualified and packaged for field validation. It repairs physi
 - [Paired-capture analysis](archives/rev7/source/docs/rev7/REV7_ANALYSIS_2026-10-16.md)
 - [Exact qualification evidence](archives/rev7/source/docs/rev7/evidence/rev7_validation.json)
 
-All eleven internal gates passed: complete core/IMAP/vet, Android/native tests and lint, four 48-case field-derived repetitions, race checks, and twelve SINGLE/MULTI runs across both fresh and retained quota state. The user waived the 90 Mbit/s floor. Every load run still requires useful duplex progress on every measured second, all loaded RTTs below 1,100 ms, all thirty probes overlapping duplex traffic, zero misses/timeouts, original connections and carrier epochs preserved, and both old and new application transfers working after load. Recorded throughput is included in the evidence without a throughput qualification claim.
+All nine final internal gates passed: complete core/IMAP/vet, Android/native tests and lint, the full 48-case field-derived suite within the core gate, focused race checks, and four SINGLE/MULTI load runs across fresh and retained quota state. Extra suite repetitions were removed at the user’s request. The user waived the 90 Mbit/s floor. Every load run still requires useful duplex progress on every measured second, all loaded RTTs below 1,100 ms, all thirty probes overlapping duplex traffic, zero misses/timeouts, original connections and carrier epochs preserved, and both old and new application transfers working after load. Recorded throughput is included in the evidence without a throughput qualification claim.
 
 Update app and server together and preserve profiles/state. The explicit CLI accounts reset remains available when starting over. Existing formatted server messages, dark UI and guarded IMAP admin controls remain. Irreversible operations remain CLI-only.
 

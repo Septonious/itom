@@ -44,11 +44,11 @@ core = read(SOURCE / 'dist/core-report.json')
 identity = source_fingerprint()
 assert qualification['all_internal_gates_passed'] is True
 assert identity == qualification['qualification_source_sha256'] == pipeline['source_sha256']
-assert len(pipeline['steps']) == 11
+assert len(pipeline['steps']) == 9
 assert pipeline['complete'] and all(s['passed'] and s['exit_code'] == 0 for s in pipeline['steps'])
 assert runtime_hash(SOURCE/'core') == qualification['first_party_core_runtime_sha256'] == core['core_runtime_sha256']
 assert qualification['stable_release_ready'] is False
-assert len(qualification['speed_cases']) == len(qualification['retained_speed_cases']) == 6
+assert len(qualification['speed_cases']) == len(qualification['retained_speed_cases']) == 2
 assert all(c['passed'] for c in qualification['speed_cases'] + qualification['retained_speed_cases'])
 assert core['status'] == android['status'] == 'passed'
 assert core['tests']['failed'] == core['tests']['skipped'] == 0
@@ -130,9 +130,10 @@ evidence_files={
     'core/events.jsonl':SOURCE/'dist/core-test-events.jsonl',
     'core/stderr.log':SOURCE/'dist/core-test-stderr.log',
 }
+evidence_files['recovery/minimum-service-targeted.log']=WORK/'repair-minimum-service-fixed.log'
 for name in ('candidate-python','candidate-race-accounting','candidate-race-recovery','candidate-admin-native-race','candidate-native-vet'):
     evidence_files['gates/'+name+'.log']=WORK/(name+'.log')
-for folder in ('field-repeated','field-commit-delay','speed-final','speed-retained'):
+for folder in ('speed-final','speed-retained'):
     matches=[p for p in sorted((WORK/folder).glob('*/results.json')) if read(p).get('source_sha256')==identity]
     assert matches, folder
     report_path=matches[-1]

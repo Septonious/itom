@@ -53,16 +53,15 @@ try:
     android_env['JAVA_TOOL_OPTIONS'] = android_env.get('JAVA_TOOL_OPTIONS','')+' '+(CACHE/'java-options.txt').read_text()
     step('candidate-android', ['python','tools/build.py','android','--cache',str(CACHE),'--expect-revision','transport-rework3-rev7','--accept-android-licenses'], selected_env=android_env)
     step('candidate-core-server', ['python','tools/build.py','server','--cache',str(CACHE),'--expect-revision','transport-rework3-rev7'])
-    # Repeat field-derived applications and add filesystem commit pressure.
-    step('candidate-field-repeated', ['python','tools/field_qualification.py','--go',GO,'--repeats','3','--results',str(WORK/'field-repeated')])
-    step('candidate-field-commit-delay', ['python','tools/field_qualification.py','--go',GO,'--repeats','1','--commit-delay-ms','12','--results',str(WORK/'field-commit-delay')])
+    # All field-derived cases execute once in the mandatory complete core gate.
+    # User requested no redundant field repetitions or expanded speed matrix.
     step('candidate-race-accounting', [GO,'test','-race','-json','-count=1','-timeout=180s','./flow','./wallet','./journal','./datapath','./mailbox','./servercfg','./manager','./adminapi','./adminserver'], ROOT/'core')
     step('candidate-race-recovery', [GO,'test','-race','-json','-count=1','-timeout=300s','./tunnel','-run','^TestRev7|^TestRev6|^TestRev5(Historical180Slots|PhysicalReceipts|PeerRead|KnownPeer|PacedAccount|ProviderState|AccountDATARecovery|SplitBulk)|^TestRev4FieldSparseUIDHistory|^TestAndroidNetworkKinds|^TestRev4(OldEnvelope|LogicalOwner|OpenUses|DelayedStream|HealthyProgress|RepairMeasures)|^TestServerNotice|^TestStreamDispatchCannotBypassCarrierActivation$'], ROOT/'core')
     step('candidate-native-vet', [GO,'vet','./...'], ROOT/'native')
     step('candidate-admin-native-race', [GO,'test','-race','-tags=itomtest','-json','-count=1','-timeout=100s','./...','-run','^TestNativeAdmin'], ROOT/'native')
-    # Isolate the complete final performance matrix from analysis and packaging.
-    step('candidate-speed', ['python','tools/transport_qualification.py','--go',GO,'--accounts','15','--streams','both','--repeats','3','--uid-history','64','--stability-only','--results',str(WORK/'speed-final')])
-    step('candidate-speed-retained', ['python','tools/transport_qualification.py','--go',GO,'--accounts','15','--streams','both','--repeats','3','--uid-history','64','--retained-state','--stability-only','--results',str(WORK/'speed-retained')])
+    # One SINGLE/MULTI pair per state, isolated from analysis and packaging.
+    step('candidate-speed', ['python','tools/transport_qualification.py','--go',GO,'--accounts','15','--streams','both','--repeats','1','--uid-history','64','--stability-only','--results',str(WORK/'speed-final')])
+    step('candidate-speed-retained', ['python','tools/transport_qualification.py','--go',GO,'--accounts','15','--streams','both','--repeats','1','--uid-history','64','--retained-state','--stability-only','--results',str(WORK/'speed-retained')])
     report['complete'] = True
     save()
     print('ALL REV7 INTERNAL GATES COMPLETE; real-provider/phone qualification remains separate', flush=True)

@@ -193,7 +193,11 @@ func (m *laneMail) pageData(ctx context.Context, folder string, cursor mailbox.C
 			m.retainDataDiscovery(reader, folder)
 			reader.Close()
 		}
-		fresh, err := m.dial(ctx)
+		// Restoring the sole DATA receiver is required for existing application
+		// streams, including short DATA. It must share repair priority with the
+		// control receiver rather than queue behind optional writer/cleaner
+		// LOGINs after a correlated socket failure.
+		fresh, err := m.dial(repairAdmission(ctx))
 		if err != nil {
 			return cursor, err
 		}

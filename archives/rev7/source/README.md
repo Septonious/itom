@@ -38,7 +38,7 @@ python ITOM-0.9.2-Rev7-sources.zip android --expect-revision transport-rework3-r
 The normal Go build executes the new field-failure application cases and mandatory provider-outage cases. Repeat the application suite serially with Go 1.27.1:
 
 ```bash
-python tools/field_qualification.py --go /path/to/go --results work/field-results --repeats 3
+python tools/field_qualification.py --go /path/to/go --results work/field-results --repeats 1
 python tools/field_qualification.py --go /path/to/go --results work/commit-delay-results --repeats 1 --commit-delay-ms 12
 ```
 
@@ -47,8 +47,8 @@ The second command retains real fsync and adds a declared server commit delay th
 Rev7 stability qualification requires every fresh and retained-state SINGLE/MULTI run to pass:
 
 ```bash
-python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 3 --stability-only
-python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 3 --retained-state --stability-only
+python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 1 --stability-only
+python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 1 --retained-state --stability-only
 ```
 
 Laboratory tests do not certify the real phone/provider path. The user explicitly waived the 90 Mbps throughput floor for Rev7. Speeds remain recorded, but no speed threshold qualifies this release. Every one-second measured window must carry useful bytes in both directions, every loaded RTT must be <1,100 ms (the existing 10% tolerance), and all thirty loaded probes must overlap duplex traffic with no timeout or missed probe. Original TCP sockets, logical sessions and healthy carrier epochs must survive the load. Six same-socket exchanges after idle gaps, a fresh 256 KiB verified application transfer and another original-socket exchange must succeed after load. Each run must pass; averages across failed runs cannot qualify. Real-device SINGLE/MULTI and post-reconnect application checks remain independent. Omitting `--stability-only` runs the separate historical 90 Mbps performance policy.

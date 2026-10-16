@@ -1073,7 +1073,23 @@ func (m *laneMail) repairDataWriters() {
 			m.writerMu.Unlock()
 			return
 		}
-		fresh, err := m.dial(ctx)
+		// At least one DATA writer is required to make existing application
+		// streams schedulable. Restore that minimum service with repair priority;
+		// extra parallel writers remain optional and keep ordinary admission.
+		dialCtx := ctx
+		m.writerMu.Lock()
+		haveWriter := false
+		for i, writer := range m.writers {
+			if writer != nil && i < len(m.writerDead) && !m.writerDead[i] && writer.Ready() {
+				haveWriter = true
+				break
+			}
+		}
+		m.writerMu.Unlock()
+		if !haveWriter {
+			dialCtx = repairAdmission(ctx)
+		}
+		fresh, err := m.dial(dialCtx)
 		if err != nil {
 			delay = nextDataRepairDelay(delay)
 			continue

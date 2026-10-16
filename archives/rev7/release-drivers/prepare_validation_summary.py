@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT/'tools'))
 from transport_qualification import source_fingerprint
 
 pipeline = json.loads((WORK/'candidate-validation.json').read_text())
-required_steps = {'candidate-python','candidate-core-server','candidate-field-repeated','candidate-field-commit-delay',
+required_steps = {'candidate-python','candidate-core-server',
                   'candidate-race-accounting','candidate-race-recovery','candidate-native-vet',
                   'candidate-android','candidate-speed','candidate-speed-retained','candidate-admin-native-race'}
 assert pipeline['complete'] and {s['name'] for s in pipeline['steps']} == required_steps
@@ -56,22 +56,24 @@ for line in (WORK/'candidate-admin-native-race.log').read_text().splitlines():
 assert len(restart_metrics)==1 and restart_metrics[0]<60000
 
 
-field = []
-for folder,repeats,delay in [('field-repeated',3,0),('field-commit-delay',1,12)]:
-    path,d = latest_report(folder)
-    assert d['all_cases_passed'] and len(d['runs']) == repeats
-    assert d['server_added_commit_delay_ms'] == delay and len(d['tests_required']) == 48
-    for run in d['runs']:
-        assert run['passed'] and run['source_before'] == run['source_after'] == identity
-        assert not run['summary']['failed'] and not run['summary']['skipped'] and not run['summary']['missing_required']
-        assert hashlib.sha256((path.parent/run['log']).read_bytes()).hexdigest()==run['log_sha256']
-    field.append({'repetitions':repeats,'cases_per_repetition':48,'server_commit_delay_ms':delay,
-                  'all_passed':True,'required_cases':d['tests_required'],
-                  'log_sha256':[r['log_sha256'] for r in d['runs']]})
+# The user requested fewer tests. The full core gate already executes every
+# field-derived case; count that single mandatory pass without extra repeats.
+from field_qualification import REQUIRED
+core_events=ROOT/'dist/core-test-events.jsonl'
+field_passed=set()
+for line in core_events.read_text().splitlines():
+    if not line.startswith('{'): continue
+    event=json.loads(line)
+    if event.get('Action')=='pass' and event.get('Test') in REQUIRED:
+        field_passed.add(event['Test'])
+assert field_passed==set(REQUIRED) and len(REQUIRED)==48
+field={'source':'mandatory complete core gate','repetitions':1,'required_cases':list(REQUIRED),
+       'cases_passed':48,'all_passed':True,'extra_repetitions_requested':False,
+       'core_events_sha256':hashlib.sha256(core_events.read_bytes()).hexdigest()}
 
 def speed_summary(folder):
     speed_path,speed = latest_report(folder)
-    assert speed['all_lab_cases_passed'] and len(speed['cases']) == 6
+    assert speed['all_lab_cases_passed'] and len(speed['cases']) == 2
     assert speed['scenario']['uid_history'] == 64 and speed['scenario']['accounts'] == 15
     assert speed['scenario']['stability_only'] is True
     assert speed['criteria']['qualification_mode'] == 'stability' and speed['criteria']['throughput_floor_enforced'] is False
@@ -128,7 +130,7 @@ report = {
     'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
     'qualification_source_sha256':identity,'first_party_core_runtime_sha256':core['core_runtime_sha256'],
     'go':core['go_version_output'],'core':core['tests'],'imap_fork_tests':core['imap_fork_tests'],
-    'vet':core['vet'],'built_targets':core['built_targets'],'field_repetitions':field,
+    'vet':core['vet'],'built_targets':core['built_targets'],'field_suite':field,
     'race_checks':races,
     'android_domain_tests':{k:android['domain_tests'][k] for k in ('tests','failures','errors','skipped')},
     'android_callback_adapter_tests':{k:android['app_unit_tests'][k] for k in ('tests','failures','errors','skipped')},
@@ -139,8 +141,10 @@ report = {
     'mobile_crash_resolved':False,
     'admin_features':{'server_authoritative_role':True,'additional_private_key_challenge':True,'durable_independent_watchdog':True,'loss_timeout_seconds':60,'healthy_trial_seconds':60,'irreversible_operations_cli_only':True,'native_imap_reconnect_race_test':True,'real_systemd_host_tested':False,'actual_server_supervisor_restart_tested':True,'server_restart_recovery_ms':restart_metrics[0]},
     'first_candidate_failures_preserved':True,
+    'reduced_testing_by_user_request':True,
+    'supplementary_repetition_failure':{'test':'TestRev7ControlAndReceiveRepairBypassQueuedOptionalLogins','cause':'Minimum DATA receive/writer service was queued as optional during correlated failure.','resolution':'Sole DATA receiver and first usable DATA writer now use critical repair priority; extra writers remain optional.','targeted_fixed_repetitions':3,'final_complete_core_pass_required':True},
     'qualification_isolation':'No concurrent log analysis, compression or other builds during final speed matrix; host CPU quota two cores.',
-    'new_release_published':False,'replacement_assets_published':False,
+    'new_release_published_at_qualification_time':False,'replacement_assets_published_at_qualification_time':False,
     'pipeline_steps':[{k:s[k] for k in ('name','exit_code','passed','elapsed_seconds')} for s in pipeline['steps']],
 }
 target=ROOT/'docs/rev7/evidence/rev7_validation.json'
