@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 9207; versionName = "0.9.2-Rev7"
+        versionCode = 9208; versionName = "0.9.2-Rev8"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev12-startup\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
