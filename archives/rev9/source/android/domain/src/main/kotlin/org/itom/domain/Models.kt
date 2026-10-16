@@ -9,6 +9,7 @@ data class MailAccount(
     val tls: String = "imaps", @SerialName("verify_certificate") val verifyCertificate: Boolean = true,
     @SerialName("credential_ref") val credentialRef: String, val enabled: Boolean = true,
     @SerialName("provider_id") val providerId: String,
+    @SerialName("dial_ip") val dialIP: String = "",
 )
 @Serializable
 data class TransportResources(

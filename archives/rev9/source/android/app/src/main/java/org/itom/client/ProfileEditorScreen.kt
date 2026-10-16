@@ -191,6 +191,8 @@ class ProfileEditorViewModel : ViewModel() {
                             }
                             ProfileField("Account name", account.name, 320, !state.saving) { value -> change { it.copy(name = value) } }
                             ProfileField("IMAP server", account.host, 253, !state.saving, KeyboardType.Uri) { value -> change { it.copy(host = value) } }
+                            ProfileField("Pinned IMAP IP (optional)", account.dialIP, 45, !state.saving, KeyboardType.Uri) { value -> change { it.copy(dialIP = value) } }
+                            SmallNote("Blank uses DNS. The IMAP server name is still verified by TLS.")
                             ProfileField("Port", account.port, 5, !state.saving, KeyboardType.Number) { value -> change { it.copy(port = value) } }
                             ProfileField("Email", account.username, 512, !state.saving, KeyboardType.Email) { value -> change { it.copy(username = value) } }
                             SecretProfileField("Password", account.password, 4096, !state.saving) { value -> change { it.copy(password = value) } }

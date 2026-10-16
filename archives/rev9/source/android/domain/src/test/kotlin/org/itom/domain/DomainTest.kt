@@ -30,6 +30,22 @@ class DomainTest {
             keys = v.keys + (other.encryptionKeyRef to PairSecret("22222222222222222222222222222222", invitation().pskBase64))).also(Validation::vault)
     }
 
+    @Test fun rev9PinningRoundTripsAndRejectsHostnames() {
+        val p = profile()
+        val pinned = p.copy(accounts = p.accounts.map { it.copy(dialIP = "81.19.77.171") })
+        Validation.profile(pinned)
+        assertEquals(pinned, Codec.json.decodeFromString<ServerProfile>(Codec.exportPublic(pinned)))
+        for (value in listOf("imap.example.org", "127.0.0.1:993", "[::1]", "fe80::1%wlan0", "0.0.0.0", "::", "239.0.0.1", "ff02::1")) {
+            error("IMAP_DIAL_IP_INVALID") { Validation.profile(p.copy(accounts = p.accounts.map { it.copy(dialIP = value) })) }
+        }
+        val v = twoProfileVault()
+        val startTLS = v.copy(profiles = v.profiles.map { profile -> profile.copy(accounts = profile.accounts.map { it.copy(tls = "starttls", dialIP = "81.19.77.171") }) })
+        val session = ProfileEditing.open(startTLS, "local")
+        val next = ProfileEditing.apply(startTLS, "local", session.revision, session.initial.copy(accounts = session.initial.accounts.map { it.copy(dialIP = "") }))
+        assertEquals("", next.profiles.first().accounts.first().dialIP)
+        assertEquals("starttls", next.profiles.first().accounts.first().tls)
+    }
+
     @Test fun domainMatchesSelfAndDescendantsOnly() {
         val router = Router(policy(block = listOf("google.com")))
         listOf("google.com", "maps.google.com", "a.maps.google.com", "MAPS.GOOGLE.COM.").forEach { assertEquals(RouteAction.BLOCK, router.decide(host = it).action) }

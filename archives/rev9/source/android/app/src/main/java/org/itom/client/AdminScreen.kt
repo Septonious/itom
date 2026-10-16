@@ -185,6 +185,11 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
                             TextButton(onClick = { call(request("check") { put("account_id", account.id) }) { checkID = it.id } }, enabled = !busy && checkID.isEmpty()) { Text("Check") }
                             TextButton(onClick = { textForm("Change account password", "Application password", secret = true) { value -> change("Change account password", "account_password") { put("account_id", account.id); put("password", value) } } }, enabled = canChange) { Text("Password") }
+                            TextButton(onClick = { form = AdminForm("Server IMAP IP pin", listOf(AdminField("ip", "IPv4/IPv6; blank uses DNS", account.dial_ip, required = false))) { fields ->
+                                val ip = fields.getValue("ip").trim()
+                                if (!Validation.validDialIP(ip)) onMessage("Enter a literal IPv4 or IPv6 address, or leave blank for DNS.")
+                                else change("Change server IMAP IP pin", "account_pin") { put("account_id", account.id); put("dial_ip", ip) }
+                            } }, enabled = canChange) { Text("IP pin") }
                             TextButton(onClick = { change("Remove account", "account_remove") { put("account_id", account.id) } }, enabled = canChange) { Text("Remove", color = if (canChange) Red else Muted) }
                         }
                     } }

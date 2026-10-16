@@ -235,7 +235,7 @@ func (s *Server) Execute(ctx context.Context, user servercfg.User, q adminapi.Re
 			v.Users = append(v.Users, adminapi.User{ID: u.ID, Name: u.Name, Enabled: u.Enabled, Message: c.ClientNotices[u.ID]})
 		}
 		for _, a := range c.Accounts {
-			v.Accounts = append(v.Accounts, adminapi.Account{ID: a.ID, Host: a.Mail.Host, Port: a.Mail.Port, TLS: a.Mail.TLS, Username: a.Mail.Username})
+			v.Accounts = append(v.Accounts, adminapi.Account{ID: a.ID, Host: a.Mail.Host, DialIP: a.Mail.DialIP, Port: a.Mail.Port, TLS: a.Mail.TLS, Username: a.Mail.Username})
 		}
 		if traffic, e := tunnel.ReadTraffic(filepath.Join(s.State, "tunnel-server", tunnel.TrafficFile)); e == nil {
 			v.Traffic, _ = json.Marshal(traffic)
@@ -406,7 +406,7 @@ func validID(id string) bool {
 }
 func mutation(op string) bool {
 	switch op {
-	case "global_message", "client_message", "client_add", "client_rename", "client_enabled", "client_remove", "account_add", "account_password", "account_remove", "diagnostics", "transport", "service_start", "service_stop", "service_restart", "service_install":
+	case "global_message", "client_message", "client_add", "client_rename", "client_enabled", "client_remove", "account_add", "account_password", "account_pin", "account_remove", "diagnostics", "transport", "service_start", "service_stop", "service_restart", "service_install":
 		return true
 	}
 	return false
@@ -453,10 +453,12 @@ func apply(c *servercfg.Config, q adminapi.Request) error {
 		if q.Mail == nil {
 			return servercfg.ErrConfig
 		}
-		_, e := c.AddAccount(mailbox.Config{Host: q.Mail.Host, Port: q.Mail.Port, TLS: q.Mail.TLS, Username: q.Mail.Username, Password: q.Mail.Password})
+		_, e := c.AddAccount(mailbox.Config{Host: q.Mail.Host, DialIP: q.Mail.DialIP, Port: q.Mail.Port, TLS: q.Mail.TLS, Username: q.Mail.Username, Password: q.Mail.Password})
 		return e
 	case "account_remove":
 		return c.RemoveAccount(q.AccountID)
+	case "account_pin":
+		return c.SetAccountDialIP(q.AccountID, q.DialIP)
 	case "account_password":
 		for i := range c.Accounts {
 			if c.Accounts[i].ID == q.AccountID {

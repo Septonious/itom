@@ -101,3 +101,26 @@ func (c *Config) ResetAccounts() error {
 	*c = n
 	return nil
 }
+
+// SetAccountDialIP changes routing only; durable account identities are retained.
+// Empty id applies to all accounts; empty ip restores DNS. Validate before mutation.
+func (c *Config) SetAccountDialIP(id, ip string) error {
+	if err := mailbox.ValidateDialIP(ip); err != nil {
+		return err
+	}
+	found := false
+	for _, a := range c.Accounts {
+		if id == "" || a.ID == id {
+			found = true
+		}
+	}
+	if !found {
+		return ErrConfig
+	}
+	for i := range c.Accounts {
+		if id == "" || c.Accounts[i].ID == id {
+			c.Accounts[i].Mail.DialIP = ip
+		}
+	}
+	return nil
+}

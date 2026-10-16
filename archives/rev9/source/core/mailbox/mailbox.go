@@ -16,6 +16,7 @@ import (
 	"io"
 	"net"
 	"net/mail"
+	"net/netip"
 	"sort"
 	"strings"
 	"sync"
@@ -54,7 +55,9 @@ func ScopeDetail(err error) string {
 }
 
 type Config struct {
-	Host     string `json:"host"`
+	Host string `json:"host"`
+	// DialIP pins only the TCP endpoint. Host remains the TLS identity. Empty uses DNS.
+	DialIP   string `json:"dial_ip,omitempty"`
 	Port     int    `json:"port"`
 	TLS      string `json:"tls"`
 	Username string `json:"username"`
@@ -64,7 +67,21 @@ type Config struct {
 	DisableBinaryAppend bool `json:"disable_binary_append,omitempty"`
 }
 
+func ValidateDialIP(value string) error {
+	if value == "" {
+		return nil
+	}
+	ip, err := netip.ParseAddr(value)
+	if err != nil || ip.Zone() != "" || ip.IsUnspecified() || ip.IsMulticast() || ip.Unmap().String() == "255.255.255.255" {
+		return scopeFailure("IMAP_DIAL_IP_INVALID")
+	}
+	return nil
+}
+
 func (c Config) Validate() error {
+	if err := ValidateDialIP(c.DialIP); err != nil {
+		return err
+	}
 	if c.Host == "" || strings.ContainsAny(c.Host, "\r\n /\\") || c.Port < 1 || c.Port > 65535 || (c.TLS != "tls" && c.TLS != "starttls") || len(c.Username) == 0 || len(c.Username) > 320 || len(c.Password) == 0 || len(c.Password) > 4096 || strings.ContainsAny(c.Username+c.Password, "\r\n\x00") {
 		return ErrScope
 	}
@@ -267,7 +284,11 @@ func dialNetwork(ctx context.Context, cfg Config, folders []string, testTLS *tls
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	n, e := network.DialContext(ctx, "tcp", net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port)))
+	dialHost := cfg.Host
+	if cfg.DialIP != "" {
+		dialHost = cfg.DialIP
+	}
+	n, e := network.DialContext(ctx, "tcp", net.JoinHostPort(dialHost, fmt.Sprint(cfg.Port)))
 	if e != nil {
 		return nil, connectionFailed("IMAP_CONNECT_FAILED", "tcp", e)
 	}

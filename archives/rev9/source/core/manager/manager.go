@@ -188,13 +188,37 @@ func (u *UI) accounts() error {
 	}
 	for _, a := range c.Accounts {
 		fmt.Fprintf(u.Out, "%s | %s:%d %s\n", a.Mail.Username, a.Mail.Host, a.Mail.Port, a.Mail.TLS)
+		if a.Mail.DialIP != "" {
+			fmt.Fprintf(u.Out, "  TCP pinned to %s; TLS name %s\n", a.Mail.DialIP, a.Mail.Host)
+		}
 	}
-	choice, e := u.ask("1 add, 2 change password, 3 remove account from ITOM, 4 delete all folders and messages in this account, 5 purge ALL mail accounts, 6 reset accounts database, 0 back")
+	choice, e := u.ask("1 add, 2 change password, 3 remove account from ITOM, 4 delete all folders and messages in this account, 5 purge ALL mail accounts, 6 reset accounts database, 7 IMAP IP pinning, 0 back")
 	if e != nil || choice == "0" {
 		return e
 	}
 	if e = u.stopped(); e != nil {
 		return e
+	}
+	if choice == "7" {
+		scope, err := u.ask("1 one account, 2 all accounts, 0 back")
+		if err != nil || scope == "0" {
+			return err
+		}
+		id := ""
+		if scope == "1" {
+			target, err := u.selectAccount(c)
+			if err != nil || target.ID == "" {
+				return err
+			}
+			id = target.ID
+		} else if scope != "2" {
+			return errors.New("unknown pinning scope")
+		}
+		ip, err := u.ask("Pinned IMAP IPv4/IPv6 (Enter = DNS; hostname stays the TLS identity)")
+		if err != nil {
+			return err
+		}
+		return servercfg.Update(u.db(), func(c *servercfg.Config) error { return c.SetAccountDialIP(id, ip) })
 	}
 	if choice == "6" {
 		return u.resetAccounts(c)

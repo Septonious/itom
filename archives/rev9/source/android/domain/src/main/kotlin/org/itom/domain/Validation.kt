@@ -3,6 +3,14 @@ package org.itom.domain
 import java.util.Base64
 
 object Validation {
+    fun validDialIP(value: String): Boolean {
+        if (value.isEmpty()) return true
+        var bytes = Addresses.ip(value) ?: return false
+        if (bytes.size == 16 && bytes.take(10).all { it == 0.toByte() } && bytes[10] == (-1).toByte() && bytes[11] == (-1).toByte()) bytes = bytes.copyOfRange(12, 16)
+        if (bytes.all { it == 0.toByte() }) return false
+        return if (bytes.size == 4) (bytes[0].toInt() and 255) !in 224..239 && !bytes.all { it == (-1).toByte() }
+        else (bytes[0].toInt() and 255) != 255
+    }
     fun profile(p: ServerProfile) {
         demand(p.schemaVersion == 2, "PROFILE_VERSION")
         demand(p.profileId.matches(Regex("[A-Za-z0-9_-]{1,64}")), "PROFILE_ID")
@@ -30,6 +38,7 @@ object Validation {
                 Addresses.ip(it.host) != null || Addresses.domain(it.host).isNotEmpty()
             } catch (_: DomainError) { false }
             demand(validHost, "IMAP_HOST")
+            demand(validDialIP(it.dialIP), "IMAP_DIAL_IP_INVALID")
             demand(it.credentialRef.matches(Regex("keystore:[A-Za-z0-9_-]{1,96}")), "CREDENTIAL_REF")
         }
     }

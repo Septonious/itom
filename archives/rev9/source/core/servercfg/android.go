@@ -44,7 +44,11 @@ func (c Config) androidInvitation(uid string) ([]byte, error) {
 		if a.Mail.TLS == "starttls" {
 			mode = "starttls"
 		}
-		accounts = append(accounts, map[string]any{"id": a.ID, "name": a.Mail.Username, "host": a.Mail.Host, "port": a.Mail.Port, "tls": mode, "verify_certificate": true, "credential_ref": ref, "enabled": true, "provider_id": provider})
+		account := map[string]any{"id": a.ID, "name": a.Mail.Username, "host": a.Mail.Host, "port": a.Mail.Port, "tls": mode, "verify_certificate": true, "credential_ref": ref, "enabled": true, "provider_id": provider}
+		if a.Mail.DialIP != "" {
+			account["dial_ip"] = a.Mail.DialIP
+		}
+		accounts = append(accounts, account)
 		credentials[ref] = map[string]string{"username": a.Mail.Username, "password": a.Mail.Password}
 	}
 	key, e := hex.DecodeString(u.Key)

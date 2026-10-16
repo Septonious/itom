@@ -83,7 +83,7 @@ class VaultStore(private val context: Context) {
         p.accounts.filter { it.enabled }.forEach { account ->
             val secret = v.credentials.getValue(account.credentialRef)
             accounts.put(org.json.JSONObject().put("id", account.id).put("imap", org.json.JSONObject()
-                .put("host", account.host).put("port", account.port).put("tls", if (account.tls == "imaps") "tls" else "starttls")
+                .put("host", account.host).put("dial_ip", account.dialIP).put("port", account.port).put("tls", if (account.tls == "imaps") "tls" else "starttls")
                 .put("username", secret.username).put("password", secret.password)))
         }
         val server = org.json.JSONArray(); p.serverId.chunked(2).forEach { server.put(it.toInt(16)) }

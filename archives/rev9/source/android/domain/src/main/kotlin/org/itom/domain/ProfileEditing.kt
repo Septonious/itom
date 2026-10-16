@@ -6,7 +6,7 @@ import java.util.UUID
 /** In-memory editor values only: never serialize drafts into saved instance state or logs. */
 data class MailAccountDraft(
     val localRef: String, val id: String, val name: String, val host: String, val port: String,
-    val enabled: Boolean, val username: String, val password: String,
+    val enabled: Boolean, val username: String, val password: String, val dialIP: String = "",
 ) { override fun toString() = "MailAccountDraft(<redacted>)" }
 
 data class ProfileDraft(
@@ -27,7 +27,7 @@ object ProfileEditing {
             key?.pairId.orEmpty(), key?.pskBase64.orEmpty(), p.accounts.map { account ->
                 val credential = vault.credentials[account.credentialRef]
                 MailAccountDraft(account.credentialRef, account.id, account.name, account.host, account.port.toString(),
-                    account.enabled, credential?.username.orEmpty(), credential?.password.orEmpty())
+                    account.enabled, credential?.username.orEmpty(), credential?.password.orEmpty(), account.dialIP)
             })
         return ProfileEditSession(profileId, vault.revision, draft)
     }
@@ -35,7 +35,7 @@ object ProfileEditing {
     fun newAccount(existing: List<MailAccountDraft>): MailAccountDraft {
         val token = UUID.randomUUID().toString().replace("-", "")
         return MailAccountDraft("keystore:mail_$token", "mail_${token.take(12)}", "Account ${existing.size + 1}",
-            existing.firstOrNull()?.host.orEmpty(), existing.firstOrNull()?.port ?: "993", true, "", "")
+            existing.firstOrNull()?.host.orEmpty(), existing.firstOrNull()?.port ?: "993", true, "", "", existing.firstOrNull()?.dialIP.orEmpty())
     }
 
     /** Produces one complete replacement. VaultStore validates/encrypts/commits it under its mutex. */
@@ -47,7 +47,8 @@ object ProfileEditing {
             val port = a.port.trim().toIntOrNull() ?: throw DomainError("IMAP_PORT")
             demand(port in 1..65535, "IMAP_PORT")
             MailAccount(a.id.trim(), a.name.trim(), a.host.trim(), port, credentialRef = a.localRef,
-                enabled = a.enabled, providerId = provider)
+                enabled = a.enabled, providerId = provider, dialIP = a.dialIP.trim(),
+                tls = old.accounts.find { it.id == a.id }?.tls ?: "imaps")
         }
         val profile = old.copy(name = draft.name.trim(), serverId = draft.serverId.trim().lowercase(Locale.ROOT),
             userId = draft.userId.trim(), providerId = provider, mailboxNamespace = draft.mailboxNamespace.trim(), accounts = accounts)

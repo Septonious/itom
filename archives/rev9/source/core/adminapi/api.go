@@ -35,6 +35,7 @@ type Request struct {
 	Enabled     *bool      `json:"enabled,omitempty"`
 	Mail        *Mail      `json:"mail,omitempty"`
 	Password    string     `json:"password,omitempty"`
+	DialIP      string     `json:"dial_ip,omitempty"`
 	Diagnostics string     `json:"diagnostics,omitempty"`
 	Transport   *Resources `json:"transport,omitempty"`
 	Challenge   string     `json:"challenge,omitempty"`
@@ -42,6 +43,7 @@ type Request struct {
 }
 type Mail struct {
 	Host     string `json:"host"`
+	DialIP   string `json:"dial_ip,omitempty"`
 	Port     int    `json:"port"`
 	TLS      string `json:"tls"`
 	Username string `json:"username"`
@@ -82,6 +84,7 @@ type User struct {
 type Account struct {
 	ID       string `json:"id"`
 	Host     string `json:"host"`
+	DialIP   string `json:"dial_ip,omitempty"`
 	Port     int    `json:"port"`
 	TLS      string `json:"tls"`
 	Username string `json:"username"`
