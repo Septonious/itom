@@ -1,0 +1,424 @@
+{
+  "boundary_families": [
+    {
+      "file": "flow/status_test.go",
+      "function": "TestStatusDiscoversFirstLastOnlyAndMultipleHoles",
+      "run_calls": 1
+    },
+    {
+      "file": "integration/transport_test.go",
+      "function": "TestEncryptedDeliveryWithFaults",
+      "run_calls": 1
+    },
+    {
+      "file": "mailbox/mime_allocation_test.go",
+      "function": "TestMIMEOptimizedMatchesCanonicalWire",
+      "run_calls": 1
+    },
+    {
+      "file": "session/control_test.go",
+      "function": "TestGateRecoversEachLostActivationMessage",
+      "run_calls": 1
+    },
+    {
+      "file": "tunnel/cleanup_service_test.go",
+      "function": "TestCleanupCapacityTracksFiveAndTenAvailableAccounts",
+      "run_calls": 1
+    },
+    {
+      "file": "tunnel/io_test.go",
+      "function": "TestReaderAllocationProofBounds",
+      "run_calls": 1
+    },
+    {
+      "file": "tunnel/io_test.go",
+      "function": "TestReaderSelectionProofFreshnessAndValidityBoundaries",
+      "run_calls": 1
+    },
+    {
+      "file": "tunnel/performance_acceptance_test.go",
+      "function": "TestProductionPerformanceTierBoundaries",
+      "run_calls": 1
+    },
+    {
+      "file": "tunnel/performance_acceptance_test.go",
+      "function": "TestLoadedSmokePerformanceGateBounds",
+      "run_calls": 1
+    },
+    {
+      "file": "wire/control_test.go",
+      "function": "TestControlGoldenVectors",
+      "run_calls": 1
+    },
+    {
+      "file": "wire/grants_test.go",
+      "function": "TestGrantControlGoldenVectors",
+      "run_calls": 1
+    }
+  ],
+  "groups": [
+    {
+      "file": "datapath/engine_test.go",
+      "scenario": "TestScenarioEngine",
+      "checks": [
+        "TestLostWindowRecoveryAndGenerationStop",
+        "TestPartialSocketErrorCountIsRetained"
+      ]
+    },
+    {
+      "file": "datapath/pump_test.go",
+      "scenario": "TestScenarioPump",
+      "checks": [
+        "TestPumpGrantUsageBypassesBulkControlBacklog",
+        "TestPumpGrantUsageQueueRemainsBounded",
+        "TestPumpBulkQueueCanFeedEveryPhysicalWorker",
+        "TestPumpSerializedCollectorKeepsFastBurstFairnessGlobal"
+      ]
+    },
+    {
+      "file": "flow/flow_test.go",
+      "scenario": "TestScenarioFlow",
+      "checks": [
+        "TestReceiptBeforeAppendCompletion",
+        "TestFailedAppendCanReturnToQueue",
+        "TestUnknownAppendRetainsDebt",
+        "TestCleanupEvidenceSurvivesFailedRepair",
+        "TestResetDoesNotForgivePhysicalExposure",
+        "TestReceiptCannotCrossUnstartedDataOrPartialRecord",
+        "TestRepairLimitDoesNotDiscardData",
+        "TestSenderWaitsForBothAbsoluteWindows",
+        "TestOutOfOrderReceiptAndPartialWriteDuplicate",
+        "TestHolesConsumeConnectionCredit",
+        "TestFinWaitsForDeliveryAndResetReplenishesOnce"
+      ]
+    },
+    {
+      "file": "flow/status_test.go",
+      "scenario": "TestScenarioStatus",
+      "checks": [
+        "TestStatusDiscoversFirstLastOnlyAndMultipleHoles",
+        "TestMissingBoundsAndReorderedStatus",
+        "TestAttemptedEndExcludesQueuedAndSurvivesReceipt",
+        "TestCreditSnapshotsAdvanceIndependentlyAndAtomically"
+      ]
+    },
+    {
+      "file": "integration/control_test.go",
+      "scenario": "TestScenarioControl",
+      "checks": [
+        "TestNoiseActivationAndOpenWithLostAckAndLostOpenOK",
+        "TestControlValidationAfterAuthentication"
+      ]
+    },
+    {
+      "file": "mailbox/inbox_test.go",
+      "scenario": "TestScenarioInbox",
+      "checks": [
+        "TestInboxBackpressureAndOwnershipTokens",
+        "TestInboxIOFailureAndCancellationPreserveCursor"
+      ]
+    },
+    {
+      "file": "pool/governor_test.go",
+      "scenario": "TestScenarioGovernor",
+      "checks": [
+        "TestTwoUsersShareAllTenAccounts",
+        "TestCloseReleasesUnusedButKeepsUnknownPhysicalBytes",
+        "TestWrongScopeAndCrossedCounters",
+        "TestProviderConsistencyAndConfigCopy"
+      ]
+    },
+    {
+      "file": "recovery/recovery_test.go",
+      "scenario": "TestScenarioRecovery",
+      "checks": [
+        "TestLastOnlyFrameGetsStatusProbeAndBoundedDeadline",
+        "TestThirdAttemptWaitsForDeadlineAndDuplicateNackIsHarmless"
+      ]
+    },
+    {
+      "file": "secure/secure_test.go",
+      "scenario": "TestScenarioSecure",
+      "checks": [
+        "TestBidirectionalNoiseAndReordering",
+        "TestOuterTamperCannotPoisonReplay",
+        "TestWrongUserAndWrongPSK",
+        "TestFreshSessionRejectsOldPacket",
+        "TestRecordSizeAndHeadroom",
+        "TestReplayWindowWrapAndAge"
+      ]
+    },
+    {
+      "file": "session/bootstrap_test.go",
+      "scenario": "TestScenarioBootstrap",
+      "checks": [
+        "TestBootstrapWaitsForDurableWalletAndRecoversLostAck",
+        "TestBootstrapDeadlineAndAckForgery"
+      ]
+    },
+    {
+      "file": "session/control_test.go",
+      "scenario": "TestScenarioControl",
+      "checks": [
+        "TestGateRecoversEachLostActivationMessage",
+        "TestGateOpenProvesLostAckAndDataCannotBypassBarrier",
+        "TestGateBoundedRepliesDeadlineAndLateGeneration",
+        "TestGateNoAckOfAckAndRejectsWrongRole",
+        "TestOpenBookSingleDialReplayAndTargetConflict",
+        "TestOpenBookDeadlineCancelsAndClosesLateSuccess",
+        "TestOpenBookCapacityDoesNotForgetAdmittedIDs",
+        "TestOpenRequestRetryDeadlineAndNoLateResurrection",
+        "TestOpenRequestDuplicateResultsAndStop"
+      ]
+    },
+    {
+      "file": "session/registry_test.go",
+      "scenario": "TestScenarioRegistry",
+      "checks": [
+        "TestReorderedOpenAndCompactedTombstones",
+        "TestTombstoneSpaceReservedBeforeOpen",
+        "TestStopRejectsLateWorkersAndNewGeneration"
+      ]
+    },
+    {
+      "file": "tunnel/bulk_pacing_test.go",
+      "scenario": "TestScenarioBulkPacing",
+      "checks": [
+        "TestBulkDownloadPacingDoesNotBankIdleBursts",
+        "TestBulkDownloadPacingCancellationDoesNotHoldActor",
+        "TestDownloadFeedbackFollowsSlowThenRecoveredReader"
+      ]
+    },
+    {
+      "file": "tunnel/carrier_observer_test.go",
+      "scenario": "TestScenarioCarrierObserver",
+      "checks": [
+        "TestCarrierExitMonitorDoesNotExemptReplacement",
+        "TestCarrierExitMonitorCountsEveryUnexpectedExit",
+        "TestCarrierExitMonitorIgnoresFixtureTeardown"
+      ]
+    },
+    {
+      "file": "tunnel/cleanup_service_test.go",
+      "scenario": "TestScenarioCleanupService",
+      "checks": [
+        "TestCleanupServiceKeepsCarrierAndFIFOProgress",
+        "TestCleanupServiceDetachesCanceledWaiter",
+        "TestCleanupCapacityTracksFiveAndTenAvailableAccounts",
+        "TestCleanupKeepsGrantReadyFastSpareDuringLeaseRollover",
+        "TestCleanupServiceHandsReleasedCapacityToOldestWaiter",
+        "TestCleanupServiceHandoffSkipsCanceledQueueHead"
+      ]
+    },
+    {
+      "file": "tunnel/concurrency_test.go",
+      "scenario": "TestScenarioConcurrency",
+      "checks": [
+        "TestReceiptBeforeAppendCompletion",
+        "TestLatePresenceResultPreservesNewReceipts",
+        "TestNoFallbackForTLSOrCancellation",
+        "TestUrgentBurstNeverDemotesToNormalQueue"
+      ]
+    },
+    {
+      "file": "tunnel/control_test.go",
+      "scenario": "TestScenarioControl",
+      "checks": [
+        "TestControlEnvelopeBounds",
+        "TestInitialRuntimeWindowIsLatencyCritical",
+        "TestDiagnosticErrorsDoNotExposeProviderText",
+        "TestMailReceiptUsesBoundedOldestWindow"
+      ]
+    },
+    {
+      "file": "tunnel/flow_control_test.go",
+      "scenario": "TestScenarioFlowControl",
+      "checks": [
+        "TestFlowCreditCoalescesBeforeBackpressuredWriter",
+        "TestCleanupStatusCoalescingKeepsScopeAndMonotonicProof",
+        "TestFastSelectionAvoidsDescriptorControlDebt",
+        "TestFastGrantSelectionUsesLeastQueuedUsableCarrier",
+        "TestCleanupPreservesHealthyFastCarriersAndDrainsBlockedOne",
+        "TestFastGrantSelectionAvoidsInFlightDescriptorWriter",
+        "TestFastTargetPrefersPeerReaderWithoutPendingBulk"
+      ]
+    },
+    {
+      "file": "tunnel/io_test.go",
+      "scenario": "TestScenarioIo",
+      "checks": [
+        "TestReaderWakeInterruptsIdleBackoff",
+        "TestLatencyControlWakesReader",
+        "TestReaderPollDelayDemandAndIdleBackoff",
+        "TestAccountRuntimeRoundRobinTake",
+        "TestLaneMailReserveDataWriterSkipsBusyConnection",
+        "TestLaneMailCleanupClientPrefersIsolatedCleaner",
+        "TestLaneMailReaderConnectionLimitStillEnablesBaseDataFallback",
+        "TestReaderSelectionProofFreshnessAndValidityBoundaries",
+        "TestReaderAllocationProofBounds"
+      ]
+    },
+    {
+      "file": "tunnel/lane_test.go",
+      "scenario": "TestScenarioLane",
+      "checks": [
+        "TestPreauthAppendDoesNotConsumeRuntimeControlJournal",
+        "TestCumulativeRemoteGrantLeaseRequeuesUntilFinalOrdinal",
+        "TestBulkLeaseRequeuesPartialByteRemainderForExactSpend",
+        "TestCumulativeRemoteDescriptorBindsExactOrdinal",
+        "TestFastRemoteLeaseSurvivesProbeBurstAndStopsOnBytes",
+        "TestCumulativeGrantCleanupRequiresClosedCompleteStatus",
+        "TestRuntimeFlowWindowKeepsInteractiveHeadroom",
+        "TestPerf3BulkTargetFitsPhysicalGrant",
+        "TestLegacyAndCurrentPreauthBodiesAreRecoveryGarbage",
+        "TestAutomaticJanitorDeletesOnlyPreauthGarbage"
+      ]
+    },
+    {
+      "file": "tunnel/maintenance_qos_test.go",
+      "scenario": "TestScenarioMaintenanceQos",
+      "checks": [
+        "TestFastPhysicalExcludesCleanupIO",
+        "TestOwnerCleanupPressureThresholds",
+        "TestStripeRecognizesActiveOwner",
+        "TestStripeDetectsUnownedReadyCleanupCarrier",
+        "TestRemoteCleanupRunsWhenEveryReadyCarrierOwnsStream",
+        "TestCleanupReservationBlocksNewFastPhysical"
+      ]
+    },
+    {
+      "file": "tunnel/measurement_regression_test.go",
+      "scenario": "TestScenarioMeasurementRegression",
+      "checks": [
+        "TestProductionPatternRejectsCrossSessionUserDirectionStream",
+        "TestProductionReadRejectsEarlyEOFAndCountsOnlyVerifiedBytes",
+        "TestProductionWriteHandlesPartialWrites",
+        "TestProductionNearestRankIncludesTail"
+      ]
+    },
+    {
+      "file": "tunnel/mobile_acceptance_test.go",
+      "scenario": "TestScenarioMobileAcceptance",
+      "checks": [
+        "TestMobileAcceptanceBoundaries",
+        "TestMobileRateCannotBorrowFasterWindowOrDirection",
+        "TestMobileLossAcceptanceIsScopedAndBounded",
+        "TestTemporaryZeroLossRTTIsStrictlyBelowOneSecond"
+      ]
+    },
+    {
+      "file": "tunnel/mobile_network_regression_test.go",
+      "scenario": "TestScenarioMobileNetworkRegression",
+      "checks": [
+        "TestMobileScopeUsesBothSocketEndpoints",
+        "TestMobileByteClockDoesNotChargeLateWakePerTLSRecord"
+      ]
+    },
+    {
+      "file": "tunnel/owner_test.go",
+      "scenario": "TestScenarioOwner",
+      "checks": [
+        "TestLogicalOwnerSurvivesCarrierEpochWithoutNewBudget",
+        "TestStreamControlRoutesToDetachedOwner",
+        "TestOwnerWatchdogUsesAuthenticatedProgress",
+        "TestLogicalControlCapabilityRejectsField2Peer",
+        "TestReplacementNeedsFreshEchoBeforeStreamAdmission",
+        "TestLogicalControlAvoidsCongestedPreferredCarrier"
+      ]
+    },
+    {
+      "file": "tunnel/performance_acceptance_test.go",
+      "scenario": "TestScenarioPerformanceAcceptance",
+      "checks": [
+        "TestLoadedSmokePerformanceGateBounds",
+        "TestPerformanceToleranceBoundaries",
+        "TestProductionPerformanceTierBoundaries",
+        "TestProductionPerformanceRequiresBothDirectionsAndTail"
+      ]
+    },
+    {
+      "file": "tunnel/provider_network_test.go",
+      "scenario": "TestScenarioProviderNetwork",
+      "checks": [
+        "TestParseProviderProfileVariableCaps",
+        "TestProviderRateLaneActuallyPacesBytes"
+      ]
+    },
+    {
+      "file": "tunnel/reliability_test.go",
+      "scenario": "TestScenarioReliability",
+      "checks": [
+        "TestStripeDetachDoesNotCascadeCancelOtherOwner",
+        "TestStripeRemoteGrantSelectionSkipsGrantStarvedCarrier",
+        "TestOpenHealthRejectsStaleReadyLane",
+        "TestQuotaCleanupControlDoesNotConsumeUrgentQueue",
+        "TestDiagnosticsDisabledHasNoTraceOrEventHistory",
+        "TestMaintenanceTransportFailuresAreDeferredButAccountingFailuresStayFatal",
+        "TestOpenLaneScorePrefersFreshLowRTTOwner",
+        "TestCompactFrameTraceSamplesRoutineTraffic"
+      ]
+    },
+    {
+      "file": "tunnel/stripe_test.go",
+      "scenario": "TestScenarioStripe",
+      "checks": [
+        "TestStripeUsesLogicalSessionWideStreamIDs",
+        "TestStripePhysicalSlotsSpreadAcrossCarriers",
+        "TestStripePrefersNonOwnerCarrierForDATA",
+        "TestStripedDATAIsDeliveredToOwnerPump",
+        "TestRetiredStripedDATADropsButUnknownStreamFails",
+        "TestStripeHubBoundsLiveGenerationsAndPrunesDetached",
+        "TestStripeFirstActiveStreamWakesEveryReader",
+        "TestStripeLateCarrierWakesWhenStreamAlreadyActive",
+        "TestStripeSelectionDoesNotConsumePhysicalSlot",
+        "TestStripePhysicalCapacityTracksLiveWriters",
+        "TestStripeStreamSpaceUsesFullMetadataBudget",
+        "TestStripeRejectsStaleCarrierEpoch",
+        "TestFastSelectionSkipsFullPhysicalCarrierBeforeTakingGrant"
+      ]
+    },
+    {
+      "file": "wire/control_test.go",
+      "scenario": "TestScenarioControl",
+      "checks": [
+        "TestControlGoldenVectors",
+        "TestControlRejectsMalformedFields",
+        "TestControlRejectsTruncationTrailingAndIgnoredOffset",
+        "TestControlDecodeOwnsPayload"
+      ]
+    },
+    {
+      "file": "wire/data_batch_test.go",
+      "scenario": "TestScenarioDataBatch",
+      "checks": [
+        "TestDataBatchRoundTrip",
+        "TestDataBatchRejectsMixedContextAndTrailingBytes",
+        "TestDataBatchBodyLimitExceedsSingleRecord",
+        "TestPhysicalMultiRecordBatchExceedsLegacyGateButFitsS1Gate"
+      ]
+    },
+    {
+      "file": "wire/grants_test.go",
+      "scenario": "TestScenarioGrants",
+      "checks": [
+        "TestGrantControlGoldenVectors",
+        "TestGrantControlRejectsInvalidAmountsAndMetadata",
+        "TestPhysicalBindingOwnershipAndBounds"
+      ]
+    },
+    {
+      "file": "wire/wire_test.go",
+      "scenario": "TestScenarioWire",
+      "checks": [
+        "TestIndependentWireVector",
+        "TestEnvelopeBoundsBeforeBodyRead",
+        "TestFrameRejectsInvalidShapes"
+      ]
+    }
+  ],
+  "original_functions": 160,
+  "scenario_functions": 33,
+  "reduction": 127,
+  "assertions_deleted": 0,
+  "fuzz_targets_deleted": 0
+}
