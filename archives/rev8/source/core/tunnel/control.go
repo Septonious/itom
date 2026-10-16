@@ -232,8 +232,16 @@ func (l *lane) readyControl(batchSize int) (queuedControl, int) {
 
 func (l *lane) collectControlBatch(first queuedControl, delay time.Duration) ([]queuedControl, bool) {
 	batch := []queuedControl{first}
+	deadline := time.Now().Add(delay)
 	timer := time.NewTimer(delay)
 	defer timer.Stop()
+	shorten := func() {
+		next := time.Now().Add(time.Millisecond)
+		if next.Before(deadline) {
+			deadline = next
+			timer.Reset(max(time.Duration(0), time.Until(deadline)))
+		}
+	}
 	// Coalescing may keep len(batch) constant under a continuously ready stream.
 	// Bound dequeue work as well as output records so publication cannot starve.
 	for consumed := 1; len(batch) < controlBatch && consumed < 4*controlBatch; consumed++ {
@@ -245,7 +253,7 @@ func (l *lane) collectControlBatch(first queuedControl, delay time.Duration) ([]
 		if f, source := l.readyControl(len(batch)); source != 0 {
 			batch = l.appendControlBatch(batch, f, source)
 			if latencyControl(f.Frame) {
-				timer.Reset(min(delay, time.Millisecond))
+				shorten()
 			}
 			continue
 		}
@@ -257,7 +265,7 @@ func (l *lane) collectControlBatch(first queuedControl, delay time.Duration) ([]
 		case f := <-l.urgentQueue:
 			batch = l.appendControlBatch(batch, f, 1)
 			if latencyControl(f.Frame) {
-				timer.Reset(min(delay, time.Millisecond))
+				shorten()
 			}
 		case f := <-l.receiptQueue:
 			batch = l.appendControlBatch(batch, f, 2)

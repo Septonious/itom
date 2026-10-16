@@ -17,7 +17,7 @@ import (
 	"runtime"
 )
 
-const revision = "transport-rework3-rev7"
+const revision = "transport-rework3-rev8"
 
 func run(args []string) error {
 	command := "menu"

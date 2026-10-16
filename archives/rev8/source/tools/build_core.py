@@ -84,9 +84,10 @@ def enable_required_survival_tests(env: dict) -> None:
     # The performance test sets its own scoped scenario. Applying load knobs
     # globally would also delay unrelated real-IMAP correctness fixtures.
     env.update(ITOM_CORE_QUALIFICATION="1", ITOM_REWORK_QUALIFICATION="0")
-    # Rev7 release policy: the user waived the speed floor, while all byte
-    # integrity, liveness, RTT, recovery and post-load checks remain mandatory.
-    env["ITOM_STABILITY_QUALIFICATION"] = "1"
+    # Rev8 restores a strict 100 Mbps floor with no speed tolerance.
+    # Byte integrity, liveness, recovery and post-load checks remain mandatory.
+    env["ITOM_STABILITY_QUALIFICATION"] = "0"
+    env["ITOM_LOAD_MIN_MBPS"] = "100"
 
 
 def summarize_events(path: Path, expected: set[str]):

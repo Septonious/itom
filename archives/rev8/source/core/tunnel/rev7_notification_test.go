@@ -49,7 +49,7 @@ func TestRev7NotificationFallbackNeedsActualRowsAndExpires(t *testing.T) {
 		p.waited(false, false)
 		p.fetched(1, now)
 	}
-	if got := p.delay(1, 500*time.Millisecond, now); got != 150*time.Millisecond {
+	if got := p.delay(1, 500*time.Millisecond, now); got != 50*time.Millisecond {
 		t.Fatal("repeated actual notification misses ignored", got)
 	}
 	if got := p.delay(0, 2*time.Second, now); got != 2*time.Second {

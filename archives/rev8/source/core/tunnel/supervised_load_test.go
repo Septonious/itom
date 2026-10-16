@@ -279,6 +279,16 @@ func testSupervisedProductionLoad(t *testing.T) {
 		maxRTTDuration := productionPercentile(rtts, 1)
 		maxRTT := maxRTTDuration.Milliseconds()
 		t.Logf("supervised_result round=%d measured_ms=%d upload_mbps=%.3f download_mbps=%.3f rtt_samples=%d p50_ms=%d p95_ms=%d max_ms=%d timeouts=%d missed=%d overlap=%d failure=%v", round+1, result.Elapsed.Milliseconds(), up, down, len(rtts), productionPercentile(rtts, .5).Milliseconds(), productionPercentile(rtts, .95).Milliseconds(), maxRTT, timeouts, missed, overlap, measureErr)
+		// Adjacent RTT variation is reported separately from the latency ceiling.
+		// This is a laboratory metric, not the Speedtest app's private estimator.
+		changes := productionRTTVariation(result.Samples, 0)
+		if len(changes) > 0 {
+			var total time.Duration
+			for _, delta := range changes {
+				total += delta
+			}
+			t.Logf("supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=%d mean_ms=%.3f p95_ms=%.3f max_ms=%.3f target_ms=100 field_qualified=false", len(changes), float64(total)/float64(len(changes))/float64(time.Millisecond), float64(productionPercentile(changes, .95))/float64(time.Millisecond), float64(productionPercentile(changes, 1))/float64(time.Millisecond))
+		}
 		// Snapshot actual shared delivery state only after the timed interval.
 		f.client.mu.Lock()
 		clientGroup := f.client.stripe
@@ -359,8 +369,12 @@ func testSupervisedProductionLoad(t *testing.T) {
 			}
 		}
 		if os.Getenv("ITOM_REWORK_QUALIFICATION") == "1" {
-			tier = TransportRevision + "-100/100-lt1000ms-10pct-tolerance"
-			accepted = qualifiedMbps >= speedtestAcceptedMbps && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+			minimumMbps := loadEnvFloat(t, "ITOM_LOAD_MIN_MBPS", 100)
+			if !strictSpeedGate(minimumMbps, minimumMbps) {
+				t.Fatal("invalid strict speed floor", minimumMbps)
+			}
+			tier = TransportRevision + "-strict-throughput-no-speed-tolerance"
+			accepted = strictSpeedGate(qualifiedMbps, minimumMbps) && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
 				tier = TransportRevision + "-stability-throughput-floor-waived"
 				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
@@ -374,7 +388,6 @@ func testSupervisedProductionLoad(t *testing.T) {
 				accepted = false
 				t.Error(err)
 			}
-			minimumMbps := speedtestAcceptedMbps
 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
 				minimumMbps = 0
 			}

@@ -27,7 +27,7 @@ func (p *notificationAuditPolicy) waited(notified, kicked bool) {
 }
 func (p *notificationAuditPolicy) delay(active int64, base time.Duration, now time.Time) time.Duration {
 	if active > 0 && now.Before(p.fastUntil) {
-		return min(base, 150*time.Millisecond)
+		return min(base, 50*time.Millisecond)
 	}
 	return base
 }

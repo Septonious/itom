@@ -978,6 +978,12 @@ func (g *stripeGroup) deliverySnapshotLocked() latencyGovernorSnapshot {
 
 func (d *deliveryController) fastAgeBudget() time.Duration {
 	baseline := d.fastPathBaseline()
+	if baseline > 0 {
+		// Once isolated application traffic calibrates the path, allow at most
+		// 100ms of extra queue. Scaling this allowance with mobile RTT hid
+		// hundreds of milliseconds of load-induced delay from bulk admission.
+		return baseline + 100*time.Millisecond
+	}
 	if baseline == 0 {
 		// Until isolated short exchanges provide a full-path sample, low-flight
 		// bulk/control calibration bounds both legs of a request/reply exchange.

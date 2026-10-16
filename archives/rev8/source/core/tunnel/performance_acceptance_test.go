@@ -7,6 +7,24 @@ import (
 	"time"
 )
 
+func strictSpeedGate(rate, minimum float64) bool {
+	return minimum > 0 && !math.IsNaN(minimum) && !math.IsInf(minimum, 0) && !math.IsNaN(rate) && !math.IsInf(rate, 0) && rate >= minimum
+}
+
+func TestRev8StrictSpeedFloorHasNoTolerance(t *testing.T) {
+	for _, tc := range []struct {
+		rate float64
+		want bool
+	}{
+		{90, false}, {99.999, false}, {math.Nextafter(100, 0), false},
+		{100, true}, {100.001, true}, {math.NaN(), false}, {math.Inf(1), false},
+	} {
+		if strictSpeedGate(tc.rate, 100) != tc.want {
+			t.Fatal(tc)
+		}
+	}
+}
+
 // Qualification uses the minimum verified rate across duplex directions and
 // the sustained tail. Compare actual durations: 600 ms is inclusive, whereas
 // 700/800 ms are strict; truncating to integer milliseconds changes the rule.

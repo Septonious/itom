@@ -90,7 +90,7 @@ func writeTraceBundle(dir, path string) (err error) {
 	if e != nil {
 		return e
 	}
-	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "transport-rework3-rev7", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
+	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "transport-rework3-rev8", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
 		return e
 	}
 	for _, s := range sources {
