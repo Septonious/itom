@@ -1,0 +1,79 @@
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:41749->127.0.0.1:53448: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45337->127.0.0.1:41488: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45337->127.0.0.1:41508: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:33039->127.0.0.1:46790: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34487->127.0.0.1:58902: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:39469->127.0.0.1:43006: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:36295->127.0.0.1:60756: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45159->127.0.0.1:39198: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34437->127.0.0.1:48344: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34249->127.0.0.1:41508: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:41749->127.0.0.1:53440: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:33039->127.0.0.1:46802: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45725->127.0.0.1:42068: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45725->127.0.0.1:42060: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:39469->127.0.0.1:42998: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:36295->127.0.0.1:60770: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34487->127.0.0.1:58886: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34249->127.0.0.1:41506: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:34437->127.0.0.1:48346: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: write tcp 127.0.0.1:38353->127.0.0.1:59460: write: connection reset by peer
+2026/10/16 05:15:37 failed to read command: write tcp 127.0.0.1:38353->127.0.0.1:59468: write: connection reset by peer
+2026/10/16 05:15:37 failed to read command: write tcp 127.0.0.1:43869->127.0.0.1:54780: write: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:43869->127.0.0.1:54794: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:45159->127.0.0.1:39184: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: in command: read tcp 127.0.0.1:33603->127.0.0.1:47446: read: connection reset by peer
+2026/10/16 05:15:37 failed to read command: write tcp 127.0.0.1:44547->127.0.0.1:45740: write: broken pipe
+--- FAIL: TestRev7CorrelatedControlEOFBetweenTransfersKeepsEveryCarrier (2.51s)
+    rev7_control_lifecycle_test.go:18: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rev7_control_lifecycle_test.go:42: socket EOF destroyed carrier account=a01 server=false epoch=1
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a06 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a01 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a02 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a03 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a08 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a04 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a05 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a05 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a02 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a04 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a07 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a08 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a01 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a09 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a10 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a10 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a11 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a11 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a03 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a12 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a12 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a13 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a13 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a14 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a14 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a15 carrier_epoch=1 exit: control_append: append_control: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a09 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a07 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a15 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:212: supervisor_unexpected_exit unexpected account=a06 carrier_epoch=1 exit: control_append: IMAP_APPEND_NOT_STARTED
+    supervisor_fixture_test.go:215: unexpected carrier exits during fixture lifetime: 30
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a05 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a02 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a06 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a04 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a13 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a03 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a10 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a12 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a11 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a08 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a07 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a14 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a15 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a09 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a01 session=0fc3d19d9276d7311bca0bb84ae3f135 generation=6495944025122284325 epoch=1
+    supervisor_fixture_test.go:248: supervisor_summary accounts=15 dial_attempts=150 dial_denied=0 target_tcp_dials=2 provider={Active:0 DownAccounts:0 Accepted:180 Dropped:0 UplinkBytes:18501577 DownlinkBytes:24195791 Mbps:0}
+FAIL
+FAIL	itom.local/core/tunnel	2.522s
+FAIL

@@ -1,0 +1,5 @@
+--- FAIL: TestRev7RetainedDebtAllowsConsecutiveBulkBodiesWithoutGrantRoundTrips (0.00s)
+    rev7_retained_lease_test.go:65: usable capacity stranded: bulk=1 body=1 quota={Bytes:524288 Messages:16}: WALLET_EXHAUSTED
+FAIL
+FAIL	itom.local/core/tunnel	0.006s
+FAIL
