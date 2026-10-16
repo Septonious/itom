@@ -46,7 +46,7 @@ def read_source_info(root: Path = ROOT) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
     if info.get("release") == "RC1":
-        if (info["version"] != "1.0.0" or info["revision"] != "itom-1.0.0-rc1"
+        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-rc1"
                 or info["archive_name"] != "ITOM-1.0.0-RC1-sources.zip"
                 or info.get("android_version_name") != "1.0.0-rc1"
                 or info.get("android_version_code") != 10000

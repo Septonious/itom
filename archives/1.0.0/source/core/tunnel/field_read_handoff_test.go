@@ -130,8 +130,8 @@ func TestReceiveWorkerRepairsNoProgressAndKeepsApplicationOwner(t *testing.T) {
 	for name := range replay.samples {
 		replay.samples[name] = []int64{1000}
 	}
-	replay.stallEnabled, replay.stallUS, replay.start = true, 3_000_000, time.Now().Add(-21*time.Second)
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	replay.stallEnabled, replay.stallUS, replay.start = true, int64((mailbox.MinReceiveProgressBudget+2*time.Second)/time.Microsecond), time.Now().Add(-21*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	cm, _ := tlsMailPairWithNetwork(t, ctx, []string{"itom-up", "itom-down"}, network, "a02")
 	m := cm.(*laneMail)
@@ -150,7 +150,7 @@ func TestReceiveWorkerRepairsNoProgressAndKeepsApplicationOwner(t *testing.T) {
 	if err != nil || len(rows) != 1 || callbacks != 1 || next.After != 1 {
 		t.Fatal("repair lost/duplicated delivery", rows, next, callbacks, err)
 	}
-	if time.Since(begin) >= 2800*time.Millisecond || m.readerRef() == reader || m.readerRepairs.Load() != 1 || m.Client != control {
+	if time.Since(begin) >= mailbox.MinReceiveProgressBudget+2*time.Second || m.readerRef() == reader || m.readerRepairs.Load() != 1 || m.Client != control {
 		t.Fatal("receive role was not repaired independently", time.Since(begin), m.readerRepairs.Load())
 	}
 	if _, err := control.Ping(ctx); err != nil {

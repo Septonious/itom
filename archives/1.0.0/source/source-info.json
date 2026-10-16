@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "release": "RC1",
-  "revision": "itom-1.0.0-rc1",
+  "revision": "itom-1-0-0-rc1",
   "archive_name": "ITOM-1.0.0-RC1-sources.zip",
   "baseline": "0.9.2-Rev10 plus checkpointed Rev11 recovery work",
   "qualification": "1.0.0 stabilization candidate; no stable/live-provider certification until final gates pass",

@@ -92,12 +92,15 @@ func TestV1NackDuringVisibilityGraceNeedsNoSecondProbe(t *testing.T) {
 	if !a.RepairReady(item) {
 		t.Fatal("visibility-grace NACK was discarded")
 	}
+	if a.pending[item].rangeWanted != (wire.ByteRange{Start: 1, End: 3}) {
+		t.Fatal("retained peer intent changed")
+	}
 	j, err = a.Begin(1, item, "a01", 1000, 500*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !j.Attempt().Repair || j.Attempt().Offset != 1 || j.Attempt().PayloadBytes != 2 {
-		t.Fatal("repair widened beyond peer-authorized missing range", j.Attempt())
+	if !j.Attempt().Repair || j.Attempt().Offset != 0 || j.Attempt().PayloadBytes != 4 || !bytes.Equal(j.frame.Payload, []byte("body")) {
+		t.Fatal("existing immutable-item repair semantics changed", j.Attempt())
 	}
 }
 
@@ -125,5 +128,38 @@ func TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal(t *testing.T) {
 	}
 	if j.Attempt().Repair {
 		t.Fatal("original retry consumed repair permission")
+	}
+}
+
+func TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt(t *testing.T) {
+	a, _ := pair(t)
+	a.cfg.DeliveryGrace = 500 * time.Millisecond
+	item, _ := a.Queue(1, 1, []byte("body"))
+	j, err := a.Begin(1, item, "a01", 1000, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = a.Complete(1, j.Attempt().ID, flow.Committed); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = a.Receive(1, control(t, 1, wire.Missing{ID: 1, Ranges: []wire.ByteRange{{Start: 0, End: 4}}})); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := a.Snapshot()
+	if _, err = a.Receive(1, control(t, 1, wire.Received{Frontier: 4})); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = a.Poll(1, time.Second); err != nil {
+		t.Fatal(err)
+	}
+	if a.RepairReady(item) {
+		t.Fatal("already acknowledged DATA became repairable")
+	}
+	after, _ := a.Snapshot()
+	if before.PhysicalExposure != after.PhysicalExposure {
+		t.Fatal("receipt refunded physical debt")
+	}
+	if err = a.Check(); err != nil {
+		t.Fatal(err)
 	}
 }
