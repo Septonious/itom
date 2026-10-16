@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 *.pyo
+
+# Generated Android build caches and gomobile output.
+.kotlin/
+archives/rev8/source/android/app/libs/

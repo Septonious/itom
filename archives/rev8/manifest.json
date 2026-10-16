@@ -1,0 +1,124 @@
+{
+  "schema": 2,
+  "classification": "REV8_UNSTABLE_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "release_tag": "v0.9.2-Rev8",
+  "qualification_source_sha256": "0e3f3283f1d9ebc2e4f62388226a3d08bc32ef8c20f79590e21c89c871fc8565",
+  "qualified_source_commit": "ee96386019576ab1a76ea8ee4e9ccd8b6d30f41b",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev8-full.zip",
+    "size": 45736135,
+    "sha256": "116bcf393db4394cadc3e005d4422d7849c6c8dcc5d9d191ef9a615b7bcf9c50"
+  },
+  "parts": [
+    {
+      "path": "archives/rev8/parts/full.zip.part001",
+      "size": 8388608,
+      "sha256": "48ab71e3ad41642a11fd7ecba1f07a3176e4bb654fe6971682f5e62c229e2f43"
+    },
+    {
+      "path": "archives/rev8/parts/full.zip.part002",
+      "size": 8388608,
+      "sha256": "7ff0657aaa6f173706f569f23c57710af6fdb90c424dca53c2bfa885e1c6c608"
+    },
+    {
+      "path": "archives/rev8/parts/full.zip.part003",
+      "size": 8388608,
+      "sha256": "f1df1cc7d7a5b7017802eae82d75765f293f002638d85240739e6db4bb0b6259"
+    },
+    {
+      "path": "archives/rev8/parts/full.zip.part004",
+      "size": 8388608,
+      "sha256": "77fedadb7531ee6a3531c7066d14cef46ac0bb84c7b34ac37492b0515adbfebc"
+    },
+    {
+      "path": "archives/rev8/parts/full.zip.part005",
+      "size": 8388608,
+      "sha256": "be74cf3b722b1e3cfc60fde635ac8295b5bd0181cc5f39aa8e67aadd2c2ef839"
+    },
+    {
+      "path": "archives/rev8/parts/full.zip.part006",
+      "size": 3793095,
+      "sha256": "411d216fadb23f72af2ca7d785a3c232626f9424f38cefaca501f1e93332a77c"
+    }
+  ],
+  "assets": [
+    {
+      "name": "FIELD_CORRELATION.json",
+      "size": 1223,
+      "sha256": "81bffefe42118f7fb438bd8b44a50caac1d303553bccf923c0e57fb6c91413d8"
+    },
+    {
+      "name": "HANDOFF.md",
+      "size": 9855,
+      "sha256": "9e0f0a7193241c7f104597e8e5d71a7f4bef3bcf0c9f6a6d299de5bd02d1d2ff"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-debug.apk",
+      "size": 72013350,
+      "sha256": "9a5250c28e54a20d0462ce400d95b58b2acaea7a9ae570304d86c0dfd11a8e39"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-full.zip",
+      "size": 45736135,
+      "sha256": "116bcf393db4394cadc3e005d4422d7849c6c8dcc5d9d191ef9a615b7bcf9c50"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-full.zip.sha256",
+      "size": 91,
+      "sha256": "fecdb2a1851bb3de5886e5a033c67d00b0ec352b555dbf37ffbf57b8e2b0533b"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-linux-amd64.bin",
+      "size": 14448193,
+      "sha256": "20e763ec7c1a516c7bfa35368b9195a9ef32999f01af4d8c2bb6e1ad3edce590"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-linux-arm64.bin",
+      "size": 13296873,
+      "sha256": "45d843dd443a4463c5cb94dd9bb7625b25adc13f88a42ad3202fc638d1cc6b57"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev8-sources.zip",
+      "size": 2365201,
+      "sha256": "f3815c8239c5e736b6091c2db7900ca330056517fa86ccdded95edfe68163bc0"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "size": 1959,
+      "sha256": "6bc18e75c643505ad3350723dac391721c63ab91f580f853d3d9481626dcf0b2"
+    },
+    {
+      "name": "REV8_ANALYSIS.md",
+      "size": 4816,
+      "sha256": "a914d75ba2b6e39552a84654a2a9a617fc75a711baa3c69aca90f8ff63916de7"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 1035,
+      "sha256": "f95f3fcc0ee22eab9657c4aa7e691ab1b0000a841bfe5789c920c9394b26f35d"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 955,
+      "sha256": "268c30dc485d5fca6c730493039643ef74a7590db3c713c59386dc62d7de9910"
+    },
+    {
+      "name": "STATUS.json",
+      "size": 1379,
+      "sha256": "563adc4c21fa55b3174c5da877d08c0f10ebc850f85abf013d4bdb7c8c666bf4"
+    },
+    {
+      "name": "TEST_EVIDENCE.zip",
+      "size": 32934,
+      "sha256": "33f6d57251a4a88222f8a0e43a63b7d914fa91ce62ab95ae31d11ceb9b8f37e8"
+    },
+    {
+      "name": "VALIDATION.json",
+      "size": 8094,
+      "sha256": "6ecaa9ccdc316e3ec91a5e72bee0ada4c072844557088b707b5587fab343a4d9"
+    }
+  ]
+}

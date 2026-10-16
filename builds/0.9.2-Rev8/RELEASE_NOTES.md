@@ -1,0 +1,9 @@
+# ITOM 0.9.2 Rev8 — unstable testing build
+
+**The strict 100+ Mbps and 100 ms jitter objectives were NOT met. This is an unstable testing build, not a stable release.** Published at the user's request for immediate APK/binaries and full handoff after targeted checks. The full internal suite was not rerun.
+
+Changes: cap additional short-path queue allowance at 100 ms once calibrated; shorten the temporary audit after proven missing IMAP IDLE notifications to 50 ms; prevent urgent traffic from extending an existing control flush deadline; retain bounded quota-rollover trace sampling. Fix Rev8 CLI/capture identification and executable source ZIP artifact export.
+
+Targeted correctness/race checks, normal correlated-socket recovery, missing-notification integration, native host checks and Android build checks passed. A supplementary race-instrumented initial bulk transfer timed out and remains disclosed. The final strict retained-state MULTI check used 15 accounts, 24 streams per direction and unchanged provider/deadline limits: 72.072 Mbps upload / 53.579 Mbps download before a loaded probe timed out at 58.1 seconds. Chronological adjacent RTT variation: mean 187.468 ms, p95 390.786 ms, maximum 412.226 ms. No carrier restart was required, but application liveness still failed that run. A preceding same-transport run completed all probes, retained original sockets and passed post-load exchanges; it also failed the speed floor. These are laboratory observations, not phone/provider guarantees.
+
+Install the APK and the appropriate server architecture together. Preserve configuration and durable state. The APK updates the Rev7 application with the same signer. Read HANDOFF.md, STATUS.json and VALIDATION.json; all passing and failing targeted evidence is included. No raw user captures or private signing/provider credentials are published. GitHub Actions reassembles and verifies the exact built artifacts and every uploaded size/hash.

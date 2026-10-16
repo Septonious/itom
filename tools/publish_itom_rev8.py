@@ -57,7 +57,7 @@ def verify_gates(manifest, output):
             load['criteria']['speed_tolerance_percent']==0 and load['criteria']['throughput_floor_enforced'] is True,
             'Strict speed criterion was weakened')
     require(evidence['strict_performance_passed']==load['all_lab_cases_passed'], 'Performance failure concealed')
-    # Capture-revision metadata was corrected after the timed run. Verify the
+    # Capture-revision text and source ZIP output naming were corrected after the timed run. Verify the
     # exact old/new hash pair and patch; never equate different source hashes.
     if load['source_sha256'] != manifest['qualification_source_sha256']:
         delta=evidence['post_measurement_revision_correction']
@@ -120,7 +120,7 @@ def verify_gates(manifest, output):
                     identity.update(str(path).encode()+b'\0'+source.read('itom/'+str(path))+b'\0')
         identity.update(source.read('itom/source-info.json'))
         require(identity.hexdigest() == manifest['qualification_source_sha256'],
-                'Source archive differs from the fully qualified candidate')
+                'Source archive differs from the packaged candidate')
         measured = hashlib.sha256()
         for folder in ('core','native','android','tools'):
             candidates = [PurePosixPath(name).relative_to('itom') for name in names
