@@ -1,0 +1,11 @@
+{
+  "version": "0.9.2",
+  "release": "Rev10",
+  "revision": "transport-rework3-rev10",
+  "archive_name": "ITOM-0.9.2-Rev10-sources.zip",
+  "baseline": "0.9.2-Rev9",
+  "qualification": "Rev10 targeted recovery and admin UI candidate; targeted checks only; no stable or live-provider certification",
+  "android_version_name": "0.9.2-Rev10",
+  "android_version_code": 9210,
+  "android_application_id": "org.itom.client.dev.rev7"
+}
