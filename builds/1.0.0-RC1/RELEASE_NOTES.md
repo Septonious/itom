@@ -1,0 +1,11 @@
+# ITOM 1.0.0 RC1 — transport stabilization candidate
+
+Authenticated missing-range requests are now retained while their original DATA write is completing or its BODY visibility grace is active. When those existing gates end, repair can proceed without another periodic peer probe. A stale scheduling wake is released once; all physical admission, retry, immutable-item, crypto, accounting and cleanup checks remain in force. Definite unpublished originals stay ordinary queued originals, and receipts do not refund physical debt.
+
+Includes bounded receive-stall recovery: a temporary 2400 ms response pause no longer closes otherwise live receive sockets at 1500 ms, while a genuine blackhole still triggers bounded repair. Failed DATA receive first-close causes remain visible after replacement. Existing admin categories, single export indicator, verified-TLS IP pinning and persistent connections are preserved.
+
+The focused early-NACK regressions, selected final race checks and normal recovery checks passed. A ten-account/twelve-stream finite ramp verifies twelve MiB in each direction through the injected pause, preserving twenty original receive sockets and the original application connection. A fresh transfer and quiet-period follow-up also pass. This is an integrity/recovery regression, not a sustained speed benchmark. Android tests/lint, native host tests, vet and 45 source/build launcher checks passed.
+
+**Release candidate, not stable 1.0.0.** The complete final internal suite and live provider/physical phone follow-up are outstanding. An exploratory older capped mixed-socket race test exceeded its fixed transfer deadline; its normal rerun passed and both results remain included. Sustained strict 100 Mbps duplex and jitter have not been requalified. The supplied 101/77.9 Mbps result is Rev10 field evidence, not a new candidate measurement.
+
+Update both endpoints and preserve existing configuration, account identities, profiles and durable state. APK version code 10000 retains the existing app ID and signer. APK, Linux AMD64/ARM64 binaries, executable sources, handoff, analysis and hashed evidence are included. GitHub Actions verifies and publishes these exact locally built assets; it does not claim an Actions compilation or provider performance run. See VALIDATION.json and HANDOFF.md for exact scope.
