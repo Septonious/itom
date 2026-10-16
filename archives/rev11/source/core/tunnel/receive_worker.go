@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const receiveProgressTimeout = 1500 * time.Millisecond
+const receiveProgressTimeout = mailbox.MinReceiveProgressBudget
 
 func (m *laneMail) ReaderHandoffs() uint64 { return 0 }
 func (m *laneMail) ReaderRepairs() uint64  { return m.readerRepairs.Load() }
@@ -211,8 +211,9 @@ func (m *laneMail) receiveWait(ctx context.Context, f string, maxWait time.Durat
 	return true, notified, kicked, err
 }
 
-// Only an unloaded authenticated NOOP calibrates this bound. DATA/FETCH
-// congestion cannot raise it. The adapter still enforces its 30s absolute cap.
+// Only an unloaded authenticated NOOP can extend the fixed transport-recovery
+// floor. DATA/FETCH congestion cannot raise it without bound. The adapter still
+// enforces its independent 30s absolute command cap.
 func (m *laneMail) Ping(ctx context.Context) (time.Duration, error) {
 	rtt, err := m.controlClient().Ping(ctx)
 	if err == nil {
@@ -221,5 +222,5 @@ func (m *laneMail) Ping(ctx context.Context) (time.Duration, error) {
 	return rtt, err
 }
 func (m *laneMail) receiveProgressBudget() time.Duration {
-	return min(10*time.Second, max(receiveProgressTimeout, time.Second+6*time.Duration(m.providerRTT.Load())))
+	return min(mailbox.MaxReceiveProgressBudget, max(receiveProgressTimeout, time.Second+6*time.Duration(m.providerRTT.Load())))
 }

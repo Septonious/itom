@@ -275,11 +275,12 @@ type providerTestConn struct {
 	originalLocal     string
 	originalPeer      string
 	net.Conn
-	network *providerTestNetwork
-	account string
-	id      uint64
-	closed  atomic.Bool
-	done    chan struct{}
+	network         *providerTestNetwork
+	account         string
+	id              uint64
+	writeStallUntil atomic.Int64 // test-only live-socket response stall
+	closed          atomic.Bool
+	done            chan struct{}
 }
 
 func (c *providerTestConn) Read(p []byte) (int, error) {
@@ -320,6 +321,15 @@ func (c *providerTestConn) Write(p []byte) (int, error) {
 }
 
 func (c *providerTestConn) writeWire(p []byte) (int, error) {
+	if delay := time.Until(time.Unix(0, c.writeStallUntil.Load())); delay > 0 {
+		timer := time.NewTimer(delay)
+		defer timer.Stop()
+		select {
+		case <-timer.C:
+		case <-c.done:
+			return 0, net.ErrClosed
+		}
+	}
 	if len(p) > 0 && c.network != nil {
 		if !c.network.downlink.waitUntil(len(p), c.done) {
 			return 0, net.ErrClosed

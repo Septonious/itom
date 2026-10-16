@@ -44,7 +44,7 @@ func TestMobilePropagationDoesNotMasqueradeAsReceiveBacklog(t *testing.T) {
 	}
 	m := &laneMail{}
 	m.providerRTT.Store(int64(300 * time.Millisecond))
-	if m.receiveProgressBudget() < 2*time.Second || m.receiveProgressBudget() > 3*time.Second {
+	if m.receiveProgressBudget() != 8*time.Second {
 		t.Fatal("mobile silence bound", m.receiveProgressBudget())
 	}
 	m.providerRTT.Store(int64(time.Hour))

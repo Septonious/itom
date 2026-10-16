@@ -190,8 +190,7 @@ func (m *laneMail) pageData(ctx context.Context, folder string, cursor mailbox.C
 	reader := m.dataReaderRef()
 	if reader == nil || !reader.Ready() {
 		if reader != nil {
-			m.retainDataDiscovery(reader, folder)
-			reader.Close()
+			m.retireDataReader(reader, folder)
 		}
 		// Restoring the sole DATA receiver is required for existing application
 		// streams, including short DATA. It must share repair priority with the
@@ -272,17 +271,26 @@ func (m *laneMail) pageData(ctx context.Context, folder string, cursor mailbox.C
 		}
 	}
 	if err != nil {
-		m.retainDataDiscovery(reader, folder)
-		reader.Close()
-		m.topologyMu.Lock()
-		if m.dataReader == reader {
-			m.dataReader = nil
-		}
-		m.topologyMu.Unlock()
+		m.retireDataReader(reader, folder)
 	} else if verify {
 		m.dataChecks[folder] = time.Now()
 	}
 	return next, err
+}
+
+// Retain one failed generation so the first DATA receive EOF/no-progress
+// cause remains visible after recovery, just like control and mixed receive.
+// Caller owns dataCommandMu; no cursor or physical quota proof is created.
+func (m *laneMail) retireDataReader(reader *mailbox.Client, folder string) {
+	m.retainDataDiscovery(reader, folder)
+	_ = reader.Close()
+	snapshot := reader.SocketSnapshot("data_receive_previous")
+	m.previousDataReader.Store(&snapshot)
+	m.topologyMu.Lock()
+	if m.dataReader == reader {
+		m.dataReader = nil
+	}
+	m.topologyMu.Unlock()
 }
 
 // Discovery is bounded by the existing per-folder UID-gap limit and owned
@@ -316,13 +324,7 @@ func (m *laneMail) waitData(ctx context.Context, folder string, budget time.Dura
 		})
 	})
 	if err != nil {
-		m.retainDataDiscovery(reader, folder)
-		reader.Close()
-		m.topologyMu.Lock()
-		if m.dataReader == reader {
-			m.dataReader = nil
-		}
-		m.topologyMu.Unlock()
+		m.retireDataReader(reader, folder)
 	}
 	return true, notified, err
 }

@@ -661,12 +661,13 @@ type laneMail struct {
 	topologyCaps  uint64
 	writerTarget  int
 
-	readerStateMu   sync.Mutex
-	readerCommandMu sync.Mutex
-	readerPages     receivePagePolicy
-	readerRepairs   atomic.Uint64
-	providerRTT     atomic.Int64
-	previousReader  atomic.Pointer[mailbox.SocketSnapshot]
+	readerStateMu      sync.Mutex
+	readerCommandMu    sync.Mutex
+	readerPages        receivePagePolicy
+	readerRepairs      atomic.Uint64
+	providerRTT        atomic.Int64
+	previousReader     atomic.Pointer[mailbox.SocketSnapshot]
+	previousDataReader atomic.Pointer[mailbox.SocketSnapshot]
 	*mailbox.Client
 	controlGeneration       atomic.Pointer[mailbox.Client]
 	controlRepairMu         sync.Mutex

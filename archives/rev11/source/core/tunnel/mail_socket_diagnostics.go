@@ -12,6 +12,9 @@ func (m *laneMail) SocketSnapshots() []mailbox.SocketSnapshot {
 	if reader := m.dataReaderRef(); reader != nil {
 		out = append(out, reader.SocketSnapshot("data_receive"))
 	}
+	if previous := m.previousDataReader.Load(); previous != nil {
+		out = append(out, *previous)
+	}
 	if reader := m.readerRef(); reader != nil && reader != m.controlClient() {
 		out = append(out, reader.SocketSnapshot("receive"))
 	}
