@@ -1,0 +1,124 @@
+{
+  "schema": 2,
+  "classification": "REV9_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "release_tag": "v0.9.2-Rev9",
+  "qualification_source_sha256": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+  "qualified_source_commit": "3257fd7fc0ec77a31128d3070e5dac39aeb27222",
+  "archive": {
+    "name": "ITOM-0.9.2-Rev9-full.zip",
+    "size": 46128637,
+    "sha256": "6fabfd0acc0ea2ba95314406cc39c68bda8f6b96cd13b8c91e0827f48e01f3e2"
+  },
+  "parts": [
+    {
+      "path": "archives/rev9/parts/full.zip.part001",
+      "size": 8388608,
+      "sha256": "34bfffe676b4dad72038a8eabffb4f73e49849961135af20ad64c4a79f615e40"
+    },
+    {
+      "path": "archives/rev9/parts/full.zip.part002",
+      "size": 8388608,
+      "sha256": "6ff279b98eeb031ce8cd9e82efdbd28d3db0d9422301d50a01f775c4f2ac885d"
+    },
+    {
+      "path": "archives/rev9/parts/full.zip.part003",
+      "size": 8388608,
+      "sha256": "55e614ad56e2455efaa0eb19aaf144c28cc6d10794467f944ee11b2093d6f52e"
+    },
+    {
+      "path": "archives/rev9/parts/full.zip.part004",
+      "size": 8388608,
+      "sha256": "ea799250773d87a23910ad57d661581e35e9d4f946a2f4aff0a80217f8374060"
+    },
+    {
+      "path": "archives/rev9/parts/full.zip.part005",
+      "size": 8388608,
+      "sha256": "33c28c981c6a21178eeb3abdbe8864b7282c17c8bc60fb37b064965f1a1006cc"
+    },
+    {
+      "path": "archives/rev9/parts/full.zip.part006",
+      "size": 4185597,
+      "sha256": "5e5b042af90e0234c0aa43309441f3cd6a4324e7baccaee4f1199d3d14ca185b"
+    }
+  ],
+  "assets": [
+    {
+      "name": "HANDOFF.md",
+      "size": 10307,
+      "sha256": "f317d1471a7a5cfd93db7e6ccecbc66d8308bcbb5c8da3de4dce38f81fce0692"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-debug.apk",
+      "size": 72078886,
+      "sha256": "2fff6adc8c286578b3870a602ad3b57a4434b143569a41532c05b2777fb7a696"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-full.zip",
+      "size": 46128637,
+      "sha256": "6fabfd0acc0ea2ba95314406cc39c68bda8f6b96cd13b8c91e0827f48e01f3e2"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-full.zip.sha256",
+      "size": 91,
+      "sha256": "320b4e47b6496b108ec3e314296ffd2ffb39c1d60ec16c4abb7b244732c796a8"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-linux-amd64.bin",
+      "size": 14462612,
+      "sha256": "f2bf7ecd1fa8fa0f136f76ba7805e844e786e31b17e29b81379edc1f77158f16"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-linux-arm64.bin",
+      "size": 13299188,
+      "sha256": "40ee05eafde8ea06999312f82bbb693bb6c1a268657317b44a59109a52aa9321"
+    },
+    {
+      "name": "ITOM-0.9.2-Rev9-sources.zip",
+      "size": 2408635,
+      "sha256": "3ce2a611f2c1e182fd97033330c344b62717bfbc46a8d88402b45844af40dd32"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "size": 2379,
+      "sha256": "c7cd18a2ad5776a5c18adfe2b68cc296ba6b54ed5f988d73a5383a600c96737c"
+    },
+    {
+      "name": "REV9_ANALYSIS.md",
+      "size": 6440,
+      "sha256": "37810446589176b3c853539ef63fd0f30694e6bd6904eea6f4b49a37920b6bcb"
+    },
+    {
+      "name": "ROUTE_ANALYSIS.json",
+      "size": 969,
+      "sha256": "34d4f329613224f86f1e67f3e623b8b723ae44429620efdf0b7a278f61bc474e"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 1032,
+      "sha256": "f3cdeafefd7cfdfd55a8d2e438728a59d360a44301fec1e4214ff53c36380478"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 955,
+      "sha256": "268c30dc485d5fca6c730493039643ef74a7590db3c713c59386dc62d7de9910"
+    },
+    {
+      "name": "STATUS.json",
+      "size": 1379,
+      "sha256": "f8e79d6be5e5d7af3cc6852eee65c579b265b1c781e8922f496f272d8955aa4f"
+    },
+    {
+      "name": "TEST_EVIDENCE.zip",
+      "size": 348226,
+      "sha256": "6dd7b6d752254c4dc579e1b82c75fc07a2d7ff76d63320728db58ee1f023dad5"
+    },
+    {
+      "name": "VALIDATION.json",
+      "size": 10928,
+      "sha256": "73cfccdae5750693585f7ade1762a853e295f0779b62d73758cbb936acfeddf1"
+    }
+  ]
+}

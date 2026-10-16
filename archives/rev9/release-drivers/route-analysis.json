@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "source": "User-provided Finnish-server route analysis; not independently repeated here",
+  "tcp_connections_per_ip": 100,
+  "imap_ips": [
+    "81.19.77.168",
+    "81.19.77.169",
+    "81.19.77.170",
+    "81.19.77.171"
+  ],
+  "reported_typical_tcp_setup_ms": "16\u201318",
+  "reported_slow_setups_across_two_series": 3,
+  "reported_total_setups_across_two_series": 440,
+  "limitations": [
+    "TCP establishment is not authenticated IMAP command time or useful ITOM throughput.",
+    "No evidence justifies excluding one of the four provider addresses.",
+    "Provider-side and phone-side routes may differ.",
+    "Rare SYN retransmission is a hypothesis, not proven by these timing summaries."
+  ],
+  "decisions": [
+    "Optional explicit per-account/all-account numeric IP pinning, default DNS.",
+    "Maintain TLS hostname/SNI validation and persistent authenticated sockets.",
+    "Keep strict performance tests and retain failed evidence."
+  ]
+}
