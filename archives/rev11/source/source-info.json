@@ -1,0 +1,11 @@
+{
+  "version": "0.9.2",
+  "release": "Rev11",
+  "revision": "transport-rework3-rev11",
+  "archive_name": "ITOM-0.9.2-Rev11-sources.zip",
+  "baseline": "0.9.2-Rev10",
+  "qualification": "Rev11 targeted receive-stall and recovery candidate; consult exact validation; no complete stable qualification",
+  "android_version_name": "0.9.2-Rev11",
+  "android_version_code": 9211,
+  "android_application_id": "org.itom.client.dev.rev7"
+}

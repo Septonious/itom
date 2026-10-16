@@ -1,0 +1,150 @@
+{
+  "revision": "transport-s1-perf5-field24",
+  "archive": "ITOM_TRANSPORT_FIELD45_SOURCE.zip",
+  "date": "2026-10-07",
+  "host": "Linux amd64",
+  "release_kind": "local-testing candidate",
+  "standard_checks": {
+    "python_tests": 70,
+    "go_test_events": {
+      "pass": 477,
+      "skip": 4
+    },
+    "go_packages": {
+      "itom.local/core/cmd/itom": "pass",
+      "itom.local/core/datapath": "pass",
+      "itom.local/core/flow": "pass",
+      "itom.local/core/integration": "pass",
+      "itom.local/core/journal": "pass",
+      "itom.local/core/mailbox": "pass",
+      "itom.local/core/mailcontrol": "pass",
+      "itom.local/core/manager": "pass",
+      "itom.local/core/netroute": "pass",
+      "itom.local/core/pool": "pass",
+      "itom.local/core/probe": "pass",
+      "itom.local/core/recovery": "pass",
+      "itom.local/core/secure": "pass",
+      "itom.local/core/servercfg": "pass",
+      "itom.local/core/session": "pass",
+      "itom.local/core/socks": "pass",
+      "itom.local/core/tunnel": "pass",
+      "itom.local/core/wallet": "pass",
+      "itom.local/core/wire": "pass"
+    },
+    "kotlin_suites": [
+      {
+        "suite": "org.itom.domain.DiagnosticsTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "org.itom.domain.DomainTest",
+        "tests": 48,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "org.itom.domain.VaultMigrationTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "android_lint": {
+      "Warning": 1
+    },
+    "native_race": "passed",
+    "focused_controller_race": "passed",
+    "go_vet": "passed",
+    "go_mod_verify": "passed"
+  },
+  "build_smoke": {
+    "directional_mbps": 38.532,
+    "aggregate_mbps": 77.063,
+    "max_application_rtt_ms": 362,
+    "floor_mbps": 27,
+    "hard_rtt_ms": 1000,
+    "accepted": true
+  },
+  "native_build": {
+    "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+    "ndk": "28.2.13676358",
+    "aar_sha256": "9a29faf35609692267cb046cad5a8747e2c7b4c869c55b200288c2da402178a5",
+    "targets": [
+      "android/arm64",
+      "android/arm"
+    ],
+    "api": 29
+  },
+  "debug_apk": {
+    "bytes": 68785706,
+    "sha256": "67a74e94add9b8dca7eeb2f8f3920902fe03f3beb13e285eb5d9019a01627252"
+  },
+  "servers": {
+    "builds": [
+      {
+        "arch": "amd64",
+        "sha256": "780af88ec18e8dcc9691bcd404ad9ede3daff179bdb9ac334509520d3f640973",
+        "bytes": 12222884
+      },
+      {
+        "arch": "arm64",
+        "sha256": "4aebb783959ad17ebd5827281d31610de13871be0752c45a6063d11e2bb6c354",
+        "bytes": 11201741
+      }
+    ],
+    "version": "ITOM transport-s1-perf5-field24 linux amd64\n"
+  },
+  "mobile_model": {
+    "shared_access_mbps": 20,
+    "propagation_rtt_ms": 250,
+    "phase_seconds": 30,
+    "useful_rate_min_mbps": 5,
+    "max_application_rtt_ms": 1500,
+    "allowance_percent": 0,
+    "phases": [
+      {
+        "phase": "download",
+        "measured_ms": 31597,
+        "upload_mbps": 0.0,
+        "download_mbps": 10.47,
+        "tail_upload_mbps": 0.0,
+        "tail_download_mbps": 16.592,
+        "max_rtt_ms": 2875,
+        "request_failure": "<nil>"
+      },
+      {
+        "phase": "upload",
+        "measured_ms": 33664,
+        "upload_mbps": 12.545,
+        "download_mbps": 0.0,
+        "tail_upload_mbps": 13.161,
+        "tail_download_mbps": 0.0,
+        "max_rtt_ms": 2008,
+        "request_failure": "<nil>"
+      },
+      {
+        "phase": "duplex",
+        "measured_ms": 45039,
+        "upload_mbps": 11.414,
+        "download_mbps": 8.399,
+        "tail_upload_mbps": 13.919,
+        "tail_download_mbps": 8.554,
+        "max_rtt_ms": 2225,
+        "request_failure": "<nil>"
+      }
+    ],
+    "cold_https_ms": [
+      2515,
+      1708,
+      2117
+    ],
+    "qualified": false,
+    "scope": "Reliable local IMAP relay, not kernel TCP, radio, real provider, Android device or Windows qualification."
+  },
+  "full_production_qualified": false
+}

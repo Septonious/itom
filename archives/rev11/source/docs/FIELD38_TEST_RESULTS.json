@@ -1,0 +1,123 @@
+{
+  "revision": "transport-s1-perf5-field17",
+  "code_gate_passed": true,
+  "windows_runtime_tested": false,
+  "apk_built": false,
+  "field_performance_qualified": false,
+  "test_package_timeout_s": 300,
+  "core_tests": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 437,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_optional": [
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestFieldHTTPSColdStartAndDuplex130"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationProductionHarness"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+      }
+    ]
+  },
+  "race_tests": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 437,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_optional": [
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestFieldHTTPSColdStartAndDuplex130"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationProductionHarness"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+      }
+    ]
+  },
+  "elapsed": {
+    "test": {
+      "tunnel_elapsed_s": 121.572,
+      "mobile_baseline_elapsed_s": 5.06
+    },
+    "race": {
+      "tunnel_elapsed_s": 146.654,
+      "mobile_baseline_elapsed_s": 5.06
+    }
+  },
+  "windows_failure_analysis": {
+    "source_revision": "transport-s1-perf5-field16",
+    "source_sha256": "03bb36ac48286d973392bbcda76bdffbb3374d2307de6fed143ebbcfbf4d0f02",
+    "platform": "windows/amd64",
+    "package": "itom.local/core/tunnel",
+    "package_elapsed_s": 120.339,
+    "test_elapsed_before_package_abort_s": 3.597434,
+    "unfinished_test": "TestMobileBaselineNoopScopeAndCancellation",
+    "completed_tunnel_test_actions": {
+      "pass": 130,
+      "skip": 2
+    },
+    "reason": "entire package test binary hit 120s wall-clock limit; no completed test assertion failure before abort",
+    "normal_timeout_new_s": 300,
+    "race_timeout_s": 300,
+    "performance_assertions_unchanged": true
+  }
+}
