@@ -1,6 +1,6 @@
-# ITOM 0.9.2 Rev8 — development candidate
+# ITOM 0.9.2 Rev10 — targeted testing build
 
-This source tree branches from published Rev7. Current changes and build/validation instructions: [Rev8 candidate notes](docs/rev8/README.md). It is not yet compiled or field-qualified; the following material documents the Rev7 baseline.
+Rev10 strengthens recovery after simultaneous IMAP socket loss and reorganizes the Android server-admin interface. See [the full handoff](HANDOFF.md), [field analysis](docs/rev10/INVESTIGATION.md), and release validation for exact results and limitations. Complete stable, strict 100 Mbps, jitter and live-device qualification are not claimed. Earlier revisions below document their own historical baselines.
 
 # ITOM 0.9.2-Rev7
 
