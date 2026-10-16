@@ -1,3 +1,7 @@
+# ITOM 0.9.2 Rev8 — development candidate
+
+This source tree branches from published Rev7. Current changes and build/validation instructions: [Rev8 candidate notes](docs/rev8/README.md). It is not yet compiled or field-qualified; the following material documents the Rev7 baseline.
+
 # ITOM 0.9.2-Rev7
 
 Rev7 repairs physical control sockets without restarting encrypted carriers, prioritizes critical socket repair, retries missing authenticated handshake replies, bounds missed-IDLE audit delay, and reworks retained-state duplex admission and ordered multiplexed batching. See [the paired-capture investigation](docs/rev7/REV7_ANALYSIS_2026-10-16.md) and [exact qualification evidence](docs/rev7/evidence/rev7_validation.json). Final release validation was explicitly reduced to targeted checks at the user’s request; see [the complete handoff](HANDOFF.md) for exact scope and remaining validation.
