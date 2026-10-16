@@ -1,0 +1,11 @@
+{
+  "version": "0.9.2",
+  "release": "Rev9",
+  "revision": "transport-rework3-rev9",
+  "archive_name": "ITOM-0.9.2-Rev9-sources.zip",
+  "baseline": "0.9.2-Rev8",
+  "qualification": "Rev9 development: optional verified-TLS IP pinning; targeted transport verification pending",
+  "android_version_name": "0.9.2-Rev9",
+  "android_version_code": 9209,
+  "android_application_id": "org.itom.client.dev.rev7"
+}

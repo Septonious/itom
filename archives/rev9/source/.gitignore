@@ -1,0 +1,9 @@
+.gradle/
+**/build/
+dist/
+local.properties
+*.jks
+*.keystore
+__pycache__/
+*.pyc
+.idea/
