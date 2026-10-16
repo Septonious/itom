@@ -1,4 +1,6 @@
-# ITOM 0.9.2-Rev6
+# ITOM 0.9.2-Rev7
+
+Rev7 repairs physical control sockets without restarting encrypted carriers, prioritizes critical socket repair, retries missing authenticated handshake replies, bounds missed-IDLE audit delay, and reworks retained-state duplex admission and ordered multiplexed batching. See [the paired-capture investigation](docs/rev7/REV7_ANALYSIS_2026-10-16.md) and [exact qualification evidence](docs/rev7/evidence/rev7_validation.json). All internal gates are required before packaging.
 
 Rev6 bounds optional startup sockets, keeps idle IMAP sockets alive without blocking active commands, adds a CLI-only full accounts reset, exposes safe LOGIN response categories and removes the settings introduction banner. See [startup and idle analysis](docs/rev6/REV6_ANALYSIS_2026-10-16.md).
 
@@ -6,7 +8,7 @@ Rev5 addresses the paired Wi-Fi/mobile field failures: recovery uses remaining o
 
 Healthy TCP streams can advance a bounded charged frame beside delayed published flight. Short recovery uses authenticated NACKs with separate pacing, and the wallet accepts reordered unseen offers while retaining bounded retirement protection.
 
-Use matching Rev6 endpoints. Preserve server configuration, quota journals and wallet state. The Android package remains `org.itom.client.dev.rev7`, version code 9206. The build reuses the Rev3 testing signing certificate so profiles and wallet history can remain installed. Check the published `SIGNER.txt` before updating another APK.
+Use matching Rev7 endpoints. Preserve server configuration, quota journals and wallet state. The Android package remains `org.itom.client.dev.rev7`, version code 9207. The build reuses the Rev3 testing signing certificate so profiles and wallet history can remain installed. Check the published `SIGNER.txt` before updating another APK.
 
 See [the Rev5 investigation and qualification](docs/rev5/REV5_ANALYSIS_2026-10-15.md), [the earlier field investigation](docs/rev4/REV4_FIELD_ANALYSIS.md), [the test design](docs/rev4/REV4_TEST_DESIGN.md) and [installation instructions](docs/rev4/REV4_BUILD_AND_INSTALL.md). Historical Rev2/Rev3 reports describe their own sources and builds.
 
@@ -29,8 +31,8 @@ Configured account-count ceilings remain removed. Active provider sockets, login
 Python 3.10+ is required. The executable source ZIP verifies its manifest and extracts a fresh tree before the pinned build:
 
 ```bash
-python ITOM-0.9.2-Rev6-sources.zip server --expect-revision transport-rework3-rev6
-python ITOM-0.9.2-Rev6-sources.zip android --expect-revision transport-rework3-rev6 --accept-android-licenses
+python ITOM-0.9.2-Rev7-sources.zip server --expect-revision transport-rework3-rev7
+python ITOM-0.9.2-Rev7-sources.zip android --expect-revision transport-rework3-rev7 --accept-android-licenses
 ```
 
 The normal Go build executes the new field-failure application cases and mandatory provider-outage cases. Repeat the application suite serially with Go 1.27.1:

@@ -411,7 +411,9 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                     # Rev5 adds calibrated paced-body (38s) and application
                     # scenarios to a package already taking about 550s. This
                     # package envelope does not change any per-case deadline.
-                    args = ["test", "-mod=readonly", "-json", "-count=1", "-timeout=900s", "-p=1"]
+                    # Rev7 adds correlated-role, handshake and missing-IDLE
+                    # regressions to the serial package; allow their total time.
+                    args = ["test", "-mod=readonly", "-json", "-count=1", "-timeout=1200s", "-p=1"]
                     if instrumented:
                         args.append("-race")
                     args.append("./...")

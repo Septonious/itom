@@ -13,6 +13,12 @@ from transport_qualification import source_fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = (
+    'TestRev7RetainedSmallBodiesKeepBothDirectionalOrdinalHeadrooms',
+    'TestRev7OrderedAdmissionCancelledBeforePhysicalWorkReleasesFlight',
+    'TestRev7FullJournalWaitsForRealCapacityWithoutSelfWake',
+    'TestRev7FifteenAccountsCanPrepareAllThirteenBulkServices',
+    'TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull',
+    'TestRev7ReducedBulkLeaseCannotImpersonateFastGrant',
     'TestRev7RetainedDownloadCannotTakeUploadRefillShare',
     'TestRev7ControlAndReceiveRepairBypassQueuedOptionalLogins',
     'TestRev7RetainedDebtAllowsConsecutiveBulkBodiesWithoutGrantRoundTrips',

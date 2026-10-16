@@ -13,7 +13,7 @@ type preparationWaiter struct {
 }
 
 // Share preparation across logical owners, rather than letting every owner's
-// eight workers independently flood the same physical writers with tiny mail.
+// workers independently flood the same physical writers with tiny mail.
 // This limits work before sealing, grant Prepare/Spend or uncertain publication.
 // Fast DATA's independent worker bypasses it; physical/account grants still
 // determine whether a prepared batch can actually APPEND.

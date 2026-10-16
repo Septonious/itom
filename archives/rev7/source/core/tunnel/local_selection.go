@@ -51,6 +51,7 @@ func (g *stripeGroup) takeLocalGrantPreferred(ctx context.Context, avoid, prefer
 	fallback := false
 	for {
 		peerWait := time.Duration(0)
+		probeBlocked := false
 		capacityWake := g.capacityNotice.watch()
 		if err := ctx.Err(); err != nil {
 			return nil, journal.Grant{}, err
@@ -95,6 +96,7 @@ func (g *stripeGroup) takeLocalGrantPreferred(ctx context.Context, avoid, prefer
 					}
 					if !fast {
 						if full, wait := l.peerReadWindowWait(); full {
+							probeBlocked = probeBlocked || wait == 0
 							if wait > 0 && (peerWait == 0 || wait < peerWait) {
 								peerWait = wait
 							}
@@ -126,7 +128,10 @@ func (g *stripeGroup) takeLocalGrantPreferred(ctx context.Context, avoid, prefer
 					g.mu.Unlock()
 					grant, err := l.tryLocalGrant(bytes, fast)
 					if err != nil {
-						l.endPhysicalWrite()
+						// A failed probe returns only its close/join guard, not a
+						// physical slot or journal quota. Broadcasting here made
+						// a full ledger wake its own waiters in a tight retry loop.
+						l.releasePhysicalWriter(false)
 					}
 					g.mu.Lock()
 					if err == nil && (g.lanes[keys[idx]] != l || !l.streamCarrierReady() || l.ctx.Err() != nil || ctx.Err() != nil) {
@@ -169,6 +174,12 @@ func (g *stripeGroup) takeLocalGrantPreferred(ctx context.Context, avoid, prefer
 		}
 		var peerTimer *time.Timer
 		var peerDeadline <-chan time.Time
+		if probeBlocked && peerWait == 0 {
+			// A concurrent cold-path admission probe may disappear without
+			// freeing real capacity. Bound that advisory recheck; real slot,
+			// receipt and quota transitions still wake immediately.
+			peerWait = 100 * time.Millisecond
+		}
 		if peerWait > 0 {
 			peerTimer = time.NewTimer(peerWait)
 			peerDeadline = peerTimer.C

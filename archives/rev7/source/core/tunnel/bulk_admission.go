@@ -10,5 +10,5 @@ func (l *lane) bulkAdmissionLimit() uint64 {
 	defer l.stripe.mu.Unlock()
 	// Only actual admitted flight needs a queued successor pipeline. An unused
 	// 16 MiB learned ceiling must not force every actor event to scan it.
-	return min(uint64(runtimeLogicalBytes-runtimeInteractiveReserve), min(l.stripe.delivery.window, l.stripe.delivery.bulk)+8*datapath.BulkBatchTargetBytes)
+	return min(uint64(runtimeLogicalBytes-runtimeInteractiveReserve), min(l.stripe.delivery.window, l.stripe.delivery.bulk)+datapath.MaxBulkWriters*datapath.BulkBatchTargetBytes)
 }

@@ -1362,6 +1362,102 @@ func TestBatchResidenceIncludesExistingQueueAge(t *testing.T) {
 	}
 }
 
+func TestPumpAgedBulkHandoffCoalescesFollowingReadBurst(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	p := &Pump{ctx: ctx, fastReserve: true,
+		dataFast: make(chan *Job, dataFastQueueRecords),
+		dataBulk: make(chan *Job, dataBulkQueueRecords)}
+	job := func(id uint64) *Job {
+		return &Job{generation: 1, attempt: flow.Attempt{ID: id, PayloadBytes: 32 << 10},
+			frame: wire.Frame{Type: wire.Data, Stream: 1, Logical: id}, ctx: ctx,
+			claimed: new(atomic.Bool), bulk: true, queuedAt: time.Now().Add(-time.Second)}
+	}
+	p.dataBulk <- job(1)
+	// The following socket read becomes schedulable just after an old handoff
+	// reaches the collector. Its queue age must not force one BODY per record.
+	producer := make(chan struct{})
+	go func() {
+		defer close(producer)
+		time.Sleep(5 * time.Millisecond)
+		for id := uint64(2); id <= 11; id++ {
+			p.dataBulk <- job(id)
+		}
+	}()
+	batch, ok := p.collectDataBatch()
+	<-producer
+	if !ok || len(batch) != 11 {
+		t.Fatalf("aged bulk handoff fragmented the next read burst: got %d records, want 11", len(batch))
+	}
+}
+
+type orderedAdmissionTestLink struct {
+	*eventLink
+	admitted     chan uint64
+	physical     chan uint64
+	releaseFirst chan struct{}
+}
+
+func (l *orderedAdmissionTestLink) AdmitBatch(jobs []*Job) func() []Completion {
+	id := jobs[0].Attempt().ID
+	l.admitted <- id
+	return func() []Completion {
+		l.physical <- id
+		if id == 1 {
+			<-l.releaseFirst
+		}
+		results := make([]Completion, len(jobs))
+		for i, job := range jobs {
+			results[i] = job.RejectBeforeCommit(context.Canceled)
+		}
+		return results
+	}
+}
+func (l *orderedAdmissionTestLink) WriteBatch(jobs []*Job) []Completion {
+	// Deliberately reverse worker arrival after FIFO collection. Ordered
+	// admission must happen before this parallel physical stage is scheduled.
+	if jobs[0].Attempt().ID == 1 {
+		time.Sleep(10 * time.Millisecond)
+	}
+	return l.AdmitBatch(jobs)()
+}
+
+func TestPumpOrdersBatchAdmissionWhilePhysicalWritesRemainParallel(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	l := &orderedAdmissionTestLink{eventLink: &eventLink{}, admitted: make(chan uint64, 2),
+		physical: make(chan uint64, 2), releaseFirst: make(chan struct{})}
+	p := &Pump{ctx: ctx, link: l, fastReserve: true, events: make(chan pumpEvent, 2),
+		dataFast: make(chan *Job, dataFastQueueRecords), dataBulk: make(chan *Job, dataBulkQueueRecords)}
+	for id := uint64(1); id <= 22; id++ {
+		p.dataBulk <- &Job{ctx: ctx, claimed: new(atomic.Bool), bulk: true,
+			attempt: flow.Attempt{ID: id, Stream: (id-1)%11 + 1, Offset: (id - 1) / 11 * wire.MaxData, PayloadBytes: wire.MaxData},
+			frame:   wire.Frame{Type: wire.Data, Stream: (id-1)%11 + 1}}
+	}
+	var workers sync.WaitGroup
+	defer func() { close(l.releaseFirst); cancel(); workers.Wait() }()
+	for i := 0; i < 2; i++ {
+		workers.Add(1)
+		go func() { defer workers.Done(); p.writeDataLoop(l, true) }()
+	}
+	for _, want := range []uint64{1, 12} {
+		select {
+		case got := <-l.admitted:
+			if got != want {
+				t.Fatalf("multiplexed prefixes admitted out of collection order: got first job %d, want %d", got, want)
+			}
+		case <-ctx.Done():
+			t.Fatal("batch admission stalled")
+		}
+	}
+	for i := 0; i < 2; i++ {
+		select {
+		case <-l.physical:
+		case <-ctx.Done():
+			t.Fatal("one blocked physical write serialized its sibling")
+		}
+	}
+}
+
 type parkedRetryLink struct {
 	*eventLink
 	wake   <-chan struct{}

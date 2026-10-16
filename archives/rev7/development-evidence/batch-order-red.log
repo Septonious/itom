@@ -1,0 +1,5 @@
+--- FAIL: TestPumpOrdersBatchAdmissionWhilePhysicalWritesRemainParallel (0.01s)
+    pump_test.go:1445: multiplexed prefixes admitted out of collection order: got first job 12, want 1
+FAIL
+FAIL	itom.local/core/datapath	0.014s
+FAIL

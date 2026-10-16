@@ -102,7 +102,7 @@ func TestRev3WarmWindowDoesNotAllocateIdleSpeculativeBacklog(t *testing.T) {
 	g.delivery.window = deliveryMaxWindow
 	g.delivery.bulk = 2 << 20
 	l := &lane{stripe: g}
-	if got := l.bulkAdmissionLimit(); got > 2<<20+8*datapath.BulkBatchTargetBytes {
+	if got := l.bulkAdmissionLimit(); got > 2<<20+datapath.MaxBulkWriters*datapath.BulkBatchTargetBytes || got > runtimeLogicalBytes-runtimeInteractiveReserve {
 		t.Fatal("unused learned flight window created stale speculative actor work", got)
 	}
 	if g.delivery.bulk != 2<<20 || g.delivery.window != deliveryMaxWindow {

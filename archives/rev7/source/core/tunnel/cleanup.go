@@ -57,7 +57,14 @@ func (l *lane) ownerCleanupPressure(kind cleanupKind) bool {
 		h, _, err := l.data.HeldByOrigin(l.account.ID, l.user.ID)
 		// Incoming lease reservations are not local cleanup pressure. Reclaim
 		// actual outgoing debt before the duplex share runs out of batches.
-		return err == nil && (h.Bytes >= 1<<20 || h.Messages >= 8)
+		if err != nil {
+			return false
+		}
+		threshold := uint64(1 << 20)
+		if h.Bytes > 0 {
+			threshold = l.localCleanupThreshold()
+		}
+		return h.Bytes >= threshold || h.Messages >= 8
 	case cleanupLocalControl:
 		if l.control == nil {
 			return false
@@ -68,6 +75,35 @@ func (l *lane) ownerCleanupPressure(kind cleanupKind) bool {
 	default:
 		return false
 	}
+}
+
+// Schedule proof work before a debt-reduced outbound window fills. Normal
+// profiles keep their established threshold; no timeout/pressure is a refund.
+func (l *lane) localCleanupThreshold() uint64 {
+	const threshold = uint64(1 << 20)
+	if !l.side || l.stripe == nil || l.cipher == nil {
+		return threshold
+	}
+	u, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
+	if err != nil {
+		return threshold
+	}
+	if u.HistoricalLocal.Bytes == 0 && u.HistoricalRemote.Bytes == 0 && u.HistoricalLocal.Messages == 0 && u.HistoricalRemote.Messages == 0 {
+		return threshold
+	}
+	profile, err := l.data.Limit(l.account.ID, l.user.ID)
+	if err != nil {
+		return threshold
+	}
+	share, _, err := recoveredDirectionalShares(profile, u)
+	if err != nil {
+		return threshold
+	}
+	window := share.Bytes - u.HistoricalLocal.Bytes
+	if window <= localFastReserveBytes {
+		return 64 << 10
+	}
+	return min(threshold, max(uint64(64<<10), (window-localFastReserveBytes)/4))
 }
 
 // pressuredLocalCleanup returns the local maintenance class that must be

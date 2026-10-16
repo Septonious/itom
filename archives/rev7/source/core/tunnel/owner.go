@@ -33,9 +33,12 @@ func (l *lane) beginPhysicalWrite() bool {
 }
 
 func (l *lane) endPhysicalWrite() {
+	l.releasePhysicalWriter(true)
+}
+func (l *lane) releasePhysicalWriter(wake bool) {
 	l.physicalActive.Add(-1)
 	l.physicalWriters.Done()
-	if l.stripe != nil {
+	if wake && l.stripe != nil {
 		l.stripe.signal()
 	}
 }

@@ -1,0 +1,5 @@
+--- FAIL: TestRev7RetainedSmallBodiesKeepBothDirectionalOrdinalHeadrooms (0.00s)
+    rev7_retained_lease_test.go:214: small BODY 15 stranded free duplex capacity: JOURNAL_LIMIT
+FAIL
+FAIL	itom.local/core/tunnel	0.007s
+FAIL

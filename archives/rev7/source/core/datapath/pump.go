@@ -45,6 +45,14 @@ type BatchLink interface {
 	WriteBatch([]*Job) []Completion
 }
 
+// OrderedBatchLink makes a nonblocking logical admission decision in collection
+// order, returning physical work that MUST be invoked once, even after cancel.
+// Admission cannot perform durable or network IO or wait for capacity. The work
+// owns cleanup of its logical reservation and remains parallel with other work.
+type OrderedBatchLink interface {
+	AdmitBatch([]*Job) func() []Completion
+}
+
 // ParallelBatchLink opts into a small number of concurrent physical batch
 // writers. The Pump keeps accounting serialized in its actor; only the slow
 // physical APPEND operation runs concurrently. Implementations must preserve
@@ -74,7 +82,9 @@ const (
 	// short DATA gets both scheduler priority and a reserved storage permit.
 	InteractiveDataThreshold = 8 << 10
 	// MaxBulkWriters bounds scheduler work, not physical IMAP permissions.
-	MaxBulkWriters = 8
+	// Fifteen accounts can expose thirteen bulk services after quiet reserves;
+	// the preparation gate still enforces the actual live physical capacity.
+	MaxBulkWriters = 16
 	// 336 KiB deliberately crosses to eleven full 32 KiB DATA records while
 	// the conservative MIME-bound regression still leaves several KiB below
 	// the 512 KiB physical permit. Twelve full records do not fit after the
@@ -183,7 +193,8 @@ type Pump struct {
 	tinyStreak         int
 	dataFastWake       chan struct{}
 	dataBulk           chan *Job
-	// batchMu serializes only queue aggregation, never physical I/O. Without a
+	// batchMu serializes queue aggregation and nonblocking flight admission,
+	// never durable or physical I/O. Without a
 	// single collector, every parallel APPEND worker can steal one 32 KiB DATA
 	// record and independently wait for its coalescing timer. That defeats the
 	// 336 KiB physical target exactly when parallelism is highest. A worker holds
@@ -587,6 +598,23 @@ func batchResidence(first *Job, cap time.Duration) time.Duration {
 func (p *Pump) collectDataBatch() ([]*Job, bool) {
 	p.batchMu.Lock()
 	defer p.batchMu.Unlock()
+	return p.collectDataBatchLocked()
+}
+
+func (p *Pump) collectAdmittedBatch() ([]*Job, func() []Completion, bool) {
+	p.batchMu.Lock()
+	defer p.batchMu.Unlock()
+	batch, ok := p.collectDataBatchLocked()
+	if !ok {
+		return nil, nil, false
+	}
+	if admission, ok := p.link.(OrderedBatchLink); ok {
+		return batch, admission.AdmitBatch(batch), true
+	}
+	return batch, nil, true
+}
+
+func (p *Pump) collectDataBatchLocked() ([]*Job, bool) {
 
 	// Fast/bulk fairness belongs to the serialized collector, not to an
 	// individual physical writer. Writers rotate while APPENDs are in flight; a
@@ -612,7 +640,16 @@ func (p *Pump) collectDataBatch() ([]*Job, bool) {
 	}
 	batch := []*Job{first}
 	payload := first.Attempt().PayloadBytes
-	timer := time.NewTimer(batchResidence(first, delay))
+	residence := batchResidence(first, delay)
+	if !fastBatch && p.fastReserve {
+		// An old handoff may have waited for a writer or receive credit, while
+		// its next socket read is only now schedulable. Expiring collection on
+		// that old age turns a sustained stream into tiny physical messages.
+		// Bulk gets one bounded collection turn; the independent fast collector
+		// still bypasses this lock and uses its absolute queue-age deadline.
+		residence = delay
+	}
+	timer := time.NewTimer(residence)
 	defer stopTimer(timer)
 	// Socket reads may themselves coalesce for up to 5 ms. Bulk therefore gets
 	// enough wall time to collect eleven 32 KiB records, but the actor signals
@@ -790,14 +827,14 @@ func (p *Pump) writeDataLoop(batchLink BatchLink, batching bool) {
 			continue
 		}
 
-		batch, ok := p.collectDataBatch()
+		batch, work, ok := p.collectAdmittedBatch()
 		if !ok {
 			return
 		}
 		// Queue collection is serialized, but the expensive durable bookkeeping
 		// and IMAP APPEND below remain fully parallel across all writer workers.
 		var release func()
-		if admission, ok := p.link.(BulkPreparationLink); ok && !fastDataJob(batch[0]) {
+		if admission, ok := p.link.(BulkPreparationLink); work == nil && ok && !fastDataJob(batch[0]) {
 			var err error
 			release, err = admission.AcquireBulkPreparation(p.ctx)
 			if err != nil {
@@ -810,7 +847,12 @@ func (p *Pump) writeDataLoop(batchLink BatchLink, batching bool) {
 				return
 			}
 		}
-		results := batchLink.WriteBatch(batch)
+		var results []Completion
+		if work != nil {
+			results = work()
+		} else {
+			results = batchLink.WriteBatch(batch)
+		}
 		if release != nil {
 			release()
 		}

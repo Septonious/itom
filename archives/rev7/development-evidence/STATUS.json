@@ -1,10 +1,7 @@
 {
-  "release": "Rev7",
   "classification": "UNQUALIFIED_DEVELOPMENT_CHECKPOINT",
   "all_internal_gates_passed": false,
-  "assets_published": false,
-  "retained_single_upload_below_required_floor": true,
-  "generated_utc": "2026-10-16T05:42:02.792646+00:00",
-  "phase": "Whole-BODY recovery lease allocation and equal retained duplex shares; new sustained checks pending",
-  "field_cases_required": 43
+  "release_packaging_allowed": false,
+  "new_release_published": false,
+  "notes": "Whole candidate qualification is still pending; exploratory failures remain failures. Latest directional ordinal fix has passed focused race tests."
 }

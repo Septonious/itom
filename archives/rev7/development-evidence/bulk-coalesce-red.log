@@ -1,0 +1,5 @@
+--- FAIL: TestPumpAgedBulkHandoffCoalescesFollowingReadBurst (0.01s)
+    pump_test.go:1390: aged bulk handoff fragmented the next read burst: got 1 records, want 11
+FAIL
+FAIL	itom.local/core/datapath	0.009s
+FAIL
