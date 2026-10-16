@@ -292,7 +292,7 @@ def build_binaries(command, work: Path, dist: Path, env: dict, release: str | No
             files.append((name, sha))
             if release:
                 named = (f"ITOM-0.9.1-Rev10-{system}-{arch}" if release == "Rev10"
-                         else f"ITOM-0.9.2-{release}-{system}-{arch}" if release in ("Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7")
+                         else f"ITOM-0.9.2-{release}-{system}-{arch}" if release in ("Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8")
                          else f"ITOM_{release}_{system}_{arch}")
                 shutil.copy2(destination, dist / named)
                 files.append((named, sha))
