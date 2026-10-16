@@ -1,0 +1,68 @@
+name: Assemble and publish ITOM Rev6 qualified prerelease
+on:
+  push:
+    branches: [itom-0.9.2-rev6]
+    paths:
+      - archives/rev6/**
+      - tools/publish_itom_rev6.py
+      - .github/workflows/itom-rev6.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: itom-rev6
+  cancel-in-progress: false
+
+jobs:
+  assemble-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out qualified source and hashed artifact parts
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Detect a packaged release
+        id: packaged
+        shell: bash
+        run: |
+          if [[ -f archives/rev6/manifest.json ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo 'Development checkpoint only; release assembly and publication skipped.'
+          fi
+      - name: Reassemble and verify APK, binaries and all internal gate evidence
+        if: steps.packaged.outputs.ready == 'true'
+        run: python tools/publish_itom_rev6.py --output "$RUNNER_TEMP/itom-rev6"
+      - name: Upload draft, verify remote digests, publish qualified prerelease
+        if: steps.packaged.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=v0.9.2-Rev6
+          mapfile -t names < <(python -c 'import json; print("\n".join(x["name"] for x in json.load(open("archives/rev6/manifest.json"))["assets"]))')
+          assets=()
+          for name in "${names[@]}"; do
+            assets+=("$RUNNER_TEMP/itom-rev6/$name")
+          done
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+          release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]==sys.argv[2]]; assert len(rows)<=1; print(rows[0]["id"] if rows else "")' "$RUNNER_TEMP/releases.json" "$tag")
+          if [[ -z "$release_id" ]]; then
+            gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --draft --prerelease \
+              --title "ITOM 0.9.2 Rev6 — field validation prerelease" \
+              --notes-file builds/0.9.2-Rev6/RELEASE_NOTES.md
+            gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+            release_id=$(python -c 'import json,sys; rows=[r for page in json.load(open(sys.argv[1])) for r in page if r["tag_name"]==sys.argv[2]]; assert len(rows)==1; print(rows[0]["id"])' "$RUNNER_TEMP/releases.json" "$tag")
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$RUNNER_TEMP/release.json"
+          python tools/publish_itom_rev6.py --verify-release-json "$RUNNER_TEMP/release.json" \
+            --repository "$GITHUB_REPOSITORY" --expected-commit "$GITHUB_SHA" \
+            --output "$RUNNER_TEMP/remote-digest-check"
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false -F prerelease=true -f make_latest=false > "$RUNNER_TEMP/published-release.json"

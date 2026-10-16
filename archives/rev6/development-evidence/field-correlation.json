@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "capture_build": "0.9.2-Rev5-debug",
+  "capture_sha256": "095926a64a833726fbce717ea2ee348bc950344fb42b1d5c7616a5cff9dfb4ba",
+  "new_run_events": 821,
+  "new_run_first_utc": "2026-10-15T21:34:30.327791391Z",
+  "new_run_last_utc": "2026-10-15T21:35:06.313943929Z",
+  "old_run_events": 113291,
+  "old_run_is_historical": true,
+  "login_failures": {
+    "a11": [
+      {
+        "time_utc": "2026-10-15T21:34:30.796974985Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=468"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:05.19598268Z",
+        "failure": "event=imap_connect_failed stage=login reason=socket_closed code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=33259"
+      }
+    ],
+    "a09": [
+      {
+        "time_utc": "2026-10-15T21:34:32.790926599Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=2462"
+      },
+      {
+        "time_utc": "2026-10-15T21:34:52.449001643Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=18426"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:01.324345702Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=6283"
+      }
+    ],
+    "a16": [
+      {
+        "time_utc": "2026-10-15T21:34:33.00905363Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=2680"
+      },
+      {
+        "time_utc": "2026-10-15T21:34:52.572228049Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=18080"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:00.951754348Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=6253"
+      }
+    ],
+    "a05": [
+      {
+        "time_utc": "2026-10-15T21:34:40.8597392Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=10531"
+      },
+      {
+        "time_utc": "2026-10-15T21:34:56.151329298Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=14274"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:05.112726482Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=6396"
+      }
+    ],
+    "a13": [
+      {
+        "time_utc": "2026-10-15T21:35:00.8132344Z",
+        "failure": "event=imap_connect_failed stage=login reason=socket_closed code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=30484"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:05.807767419Z",
+        "failure": "event=imap_connect_failed stage=login reason=rejected code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=3949"
+      }
+    ],
+    "a17": [
+      {
+        "time_utc": "2026-10-15T21:35:03.010897056Z",
+        "failure": "event=imap_connect_failed stage=login reason=socket_closed code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=32682"
+      },
+      {
+        "time_utc": "2026-10-15T21:35:06.31292169Z",
+        "failure": "event=imap_connect_failed stage=login reason=socket_closed code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=2102"
+      }
+    ],
+    "a07": [
+      {
+        "time_utc": "2026-10-15T21:35:06.312843617Z",
+        "failure": "event=imap_connect_failed stage=login reason=socket_closed code=IMAP_AUTH_OR_GREETING_FAILED duration_ms=1566"
+      }
+    ]
+  },
+  "cause_of_login_rejections": "UNCONFIRMED_PROVIDER_OR_CREDENTIALS",
+  "startup_blocker": "optional topology/activation LOGIN waits delayed authenticated activation",
+  "raw_capture_published": false,
+  "live_provider_retested": false,
+  "idle_capture": {
+    "sha256": "a2a1329383028a2a6ea6043e941ca6af3a9873e57c2b2e982adada95c3c53d0c",
+    "new_events": 12334,
+    "first_utc": "2026-10-15T21:49:37.834878163Z",
+    "last_utc": "2026-10-15T21:51:27.236959840Z",
+    "ready_accounts": 9,
+    "ready_accounts_timed_out": 6,
+    "initial_login_rejections_later_succeeded": [
+      "a05",
+      "a16",
+      "a17",
+      "a18"
+    ],
+    "idle_data_socket_expiry_suspected": true,
+    "provider_policy_confirmed": false,
+    "matching_server_capture_available": false
+  }
+}

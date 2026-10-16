@@ -1,0 +1,6 @@
+ok  	itom.local/core/servercfg	1.020s
+ok  	itom.local/core/manager	1.033s
+ok  	itom.local/core/adminapi	1.011s [no tests to run]
+ok  	itom.local/core/adminserver	1.013s [no tests to run]
+ok  	itom.local/core/mailbox	1.396s
+ok  	itom.local/core/tunnel	15.115s

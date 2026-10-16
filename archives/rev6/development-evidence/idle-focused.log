@@ -1,0 +1,22 @@
+=== RUN   TestRev6IdleAccountsKeepSocketsAndNextTCPBurstUsable
+    rev6_startup_test.go:118: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rev6_startup_test.go:141: idle_seconds=110 accounts=15 provider_idle_expiry_seconds=45 same_carrier_epochs=true
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a06 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a04 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a08 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a03 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a07 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a13 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a12 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a05 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a11 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a10 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a14 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a01 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a15 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a09 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:221: supervisor_timeline event=carrier_authenticated account=a02 session=f388d6d9d3a9dbf6c4771b0c6cead085 generation=17100319948961843903 epoch=1
+    supervisor_fixture_test.go:248: supervisor_summary accounts=15 dial_attempts=150 dial_denied=0 target_tcp_dials=1 provider={Active:0 DownAccounts:0 Accepted:180 Dropped:0 UplinkBytes:7518904 DownlinkBytes:12847764 Mbps:0}
+--- PASS: TestRev6IdleAccountsKeepSocketsAndNextTCPBurstUsable (111.33s)
+PASS
+ok  	itom.local/core/tunnel	111.333s

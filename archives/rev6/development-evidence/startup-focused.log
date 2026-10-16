@@ -1,0 +1,14 @@
+=== RUN   TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable
+--- PASS: TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable (4.01s)
+=== RUN   TestRev6OptionalLoginBudgetNeverSwallowsParentCancellation
+--- PASS: TestRev6OptionalLoginBudgetNeverSwallowsParentCancellation (2.00s)
+=== RUN   TestRev6HealthyAccountsActivateWhileOtherLoginsFailAndExtrasStall
+    rev6_startup_test.go:92: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rev6_startup_test.go:108: healthy_startup_ms=6930 rejected=9 optional_stalled=6
+    supervisor_fixture_test.go:220: supervisor_timeline event=carrier_authenticated account=a06 session=bdbee58dd27c4fd79790a19303ba2897 generation=7460949283043783793 epoch=1
+    supervisor_fixture_test.go:220: supervisor_timeline event=carrier_authenticated account=a02 session=bdbee58dd27c4fd79790a19303ba2897 generation=7460949283043783793 epoch=1
+    supervisor_fixture_test.go:220: supervisor_timeline event=carrier_authenticated account=a04 session=bdbee58dd27c4fd79790a19303ba2897 generation=7460949283043783793 epoch=1
+    supervisor_fixture_test.go:247: supervisor_summary accounts=6 dial_attempts=27 dial_denied=0 target_tcp_dials=1 provider={Active:0 DownAccounts:0 Accepted:39 Dropped:0 UplinkBytes:151378 DownlinkBytes:274879 Mbps:0}
+--- PASS: TestRev6HealthyAccountsActivateWhileOtherLoginsFailAndExtrasStall (6.93s)
+PASS
+ok  	itom.local/core/tunnel	12.952s
