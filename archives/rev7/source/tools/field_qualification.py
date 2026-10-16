@@ -13,6 +13,7 @@ from transport_qualification import source_fingerprint
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = (
+    'TestRev7RetainedDownloadCannotTakeUploadRefillShare',
     'TestRev7ControlAndReceiveRepairBypassQueuedOptionalLogins',
     'TestRev7RetainedDebtAllowsConsecutiveBulkBodiesWithoutGrantRoundTrips',
     'TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream',

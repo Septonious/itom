@@ -38,6 +38,10 @@ type Store struct {
 	ready            map[string]bool
 	poisoned, closed bool
 	existing         bool
+	originGrants     map[uint64]originGrantView
+	originSnapshotID int
+	originSnapshot   map[string]originAmounts
+	originSessions   map[originSession]originAmounts
 	// Fault hooks are package-private; tests simulate failure before commit
 	// and a lost commit acknowledgement. Production cannot disable fsync.
 	beforeCommit, afterCommit func() error
@@ -350,6 +354,7 @@ func (s *Store) Close() error {
 		return nil
 	}
 	s.closed = true
+	s.originGrants, s.originSnapshot, s.originSessions = nil, nil, nil
 	return s.db.Close()
 }
 
@@ -459,33 +464,6 @@ func (s *Store) StoreID() wire.ID { return s.id }
 // HeldByOrigin separates admission scheduling shares without changing durable
 // balances. Closed, unknown and prior-run grants retain their actual held debt.
 func (s *Store) HeldByOrigin(account, user string) (local, remote pool.Amount, err error) {
-	err = s.read(func(tx *bolt.Tx) error {
-		if _, _, e := s.owner(account, user); e != nil {
-			return e
-		}
-		count := 0
-		return tx.Bucket(grantBucket).ForEach(func(k, v []byte) error {
-			count++
-			if count > s.config.MaxGrants {
-				return ErrCorrupt
-			}
-			var g Grant
-			if e := decode(v, &g); e != nil {
-				return e
-			}
-			if g.Ref.Scope.Account != account || g.Ref.Scope.User != user {
-				return nil
-			}
-			if g.Remote {
-				remote = add(remote, held(g))
-			} else {
-				local = add(local, held(g))
-			}
-			return nil
-		})
-	})
-	if err != nil {
-		return pool.Amount{}, pool.Amount{}, err
-	}
-	return
+	v, err := s.UsageByOrigin(account, user, wire.ID{})
+	return v.Local, v.Remote, err
 }

@@ -640,13 +640,24 @@ func (l *lane) tryLocalGrant(bytes uint64, fast bool) (journal.Grant, error) {
 		reserveBytes, reserveMessages := uint64(localFastReserveBytes), uint64(0)
 		originBlocked := false
 		if l.side && l.stripe != nil {
-			local, _, err := l.data.HeldByOrigin(l.account.ID, l.user.ID)
+			current := wire.ID{}
+			if l.cipher != nil {
+				current = l.cipher.Context().Session
+			}
+			usage, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, current)
+			if l.cipher == nil {
+				usage.HistoricalLocal, usage.HistoricalRemote = pool.Amount{}, pool.Amount{}
+			}
 			if err != nil {
 				l.localGrantMu.Unlock()
 				return journal.Grant{}, err
 			}
-			localShare, _ := duplexDataShares(profile.Bytes)
-			originBlocked = local.Bytes+bytes > localShare-localFastReserveBytes || local.Messages+1 > profile.Messages/4-1
+			localShare, _, err := recoveredDirectionalShares(profile, usage)
+			if err != nil {
+				l.localGrantMu.Unlock()
+				return journal.Grant{}, err
+			}
+			originBlocked = localShare.Bytes < localFastReserveBytes || localShare.Messages < 1 || usage.Local.Bytes+bytes > localShare.Bytes-localFastReserveBytes || usage.Local.Messages+1 > localShare.Messages-1
 			reserveMessages = 1
 		}
 		if originBlocked || held.Bytes+bytes > profile.Bytes-reserveBytes || held.Messages+1 > profile.Messages-reserveMessages {

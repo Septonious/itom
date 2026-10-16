@@ -19,42 +19,21 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	if l.cipher == nil || !l.side {
 		return pool.Amount{}, journal.ErrLimit
 	}
-	retained := false
-	historicalMessages := uint64(0)
-	// Compute the reserve from historical exposure, not the shrinking free
-	// balance after each new grant. Otherwise repeated refills can consume the
-	// same local cushion. Pagination also finds retained debt after old zero-
-	// charge entries; every physical and historical charge remains unchanged.
-	for after := uint64(0); ; {
-		grants, err := l.data.ScanGrants(after, 256)
-		if err != nil {
-			return pool.Amount{}, err
-		}
-		for _, g := range grants {
-			if g.Ref.Scope.Account != l.account.ID || g.Ref.Scope.User != l.user.ID || g.Ref.Scope.Session == l.cipher.Context().Session {
-				continue
-			}
-			charge := g.Limit
-			if g.Closed {
-				charge = g.Used
-			}
-			if charge.Messages < g.Released.Messages || charge.Bytes < g.Released.Bytes {
-				return pool.Amount{}, journal.ErrCorrupt
-			}
-			messages := charge.Messages - g.Released.Messages
-			if historicalMessages > profile.Messages || messages > profile.Messages-historicalMessages {
-				return pool.Amount{}, journal.ErrLimit
-			}
-			historicalMessages += messages
-			if g.Remote && (charge.Bytes > g.Released.Bytes || messages > 0) {
-				retained = true
-			}
-		}
-		if len(grants) < 256 {
-			break
-		}
-		after = grants[len(grants)-1].Ref.ID
+	usage, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
+	if err != nil {
+		return pool.Amount{}, err
 	}
+	historical := pool.Amount{Bytes: usage.HistoricalLocal.Bytes + usage.HistoricalRemote.Bytes, Messages: usage.HistoricalLocal.Messages + usage.HistoricalRemote.Messages}
+	retained := usage.HistoricalRemote.Bytes > 0 || usage.HistoricalRemote.Messages > 0
+	historicalMessages := historical.Messages
+	_, remoteShare, err := recoveredDirectionalShares(profile, usage)
+	if err != nil {
+		return pool.Amount{}, err
+	}
+	if usage.Remote.Bytes > remoteShare.Bytes || usage.Remote.Messages > remoteShare.Messages {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
 	reserveBytes := uint64(localFastReserveBytes + dataBatchMIMEHardCap)
 	if historicalMessages > profile.Messages {
 		return pool.Amount{}, journal.ErrLimit
@@ -69,11 +48,11 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		return pool.Amount{}, journal.ErrLimit
 	}
 	if fast {
-		available := profile.Messages - held.Messages - reserveMessages
+		available := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
 		// Leave at least one bulk ordinal. When the standard fast grant cannot
 		// fit alongside bulk, share the genuinely free message slots between
 		// the two classes instead of requiring 32 unused slots to connect.
-		if available < 2 {
+		if available < 2 || remoteFree.Bytes < fastLeaseBytes {
 			return pool.Amount{}, journal.ErrLimit
 		}
 		// Match the normal quota proportions instead of giving the half-MiB
@@ -89,13 +68,17 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	// it. A fixed one-BODY recovery lease made every copy wait for another
 	// fence/GC/offer round trip, despite MiBs of genuinely unused capacity.
 	remaining := uint64(max(1, remoteBulkLeases-bulkActive))
-	availableBytes := profile.Bytes - held.Bytes - reserveBytes
-	availableMessages := profile.Messages - held.Messages - reserveMessages
+	availableBytes := min(profile.Bytes-held.Bytes-reserveBytes, remoteFree.Bytes)
+	availableMessages := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
 	remaining = min(remaining, availableMessages, availableBytes/dataBatchMIMEHardCap)
 	if remaining == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}
-	limit := pool.Amount{Bytes: min(uint64(dataLeaseBytes), availableBytes/remaining), Messages: min(uint64(dataLeaseMessages), availableMessages/remaining)}
+	byteLimit := min(uint64(dataLeaseBytes), availableBytes/remaining)
+	// Whole maximum-BODY units avoid trapping nearly a full copy of unused
+	// permission in each small recovery lease. The next lease can use it.
+	byteLimit -= byteLimit % dataBatchMIMEHardCap
+	limit := pool.Amount{Bytes: byteLimit, Messages: min(uint64(dataLeaseMessages), availableMessages/remaining)}
 	if limit.Bytes < dataBatchMIMEHardCap || limit.Messages == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}

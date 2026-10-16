@@ -56,7 +56,7 @@ def verify_gates(manifest, output):
     require(evidence['android_lint']['errors'] == 0, 'Lint errors')
     fields = evidence['field_repetitions']
     require(len(fields) == 2 and [x['repetitions'] for x in fields] == [3, 1] and
-            all(x['all_passed'] and x['cases_per_repetition'] == 42 for x in fields), 'Field suite failed')
+            all(x['all_passed'] and x['cases_per_repetition'] == 43 for x in fields), 'Field suite failed')
     require(bool(evidence['race_checks']) and all(x['passed_test_events'] > 0 and
             x['failed'] == x['skipped'] == 0 for x in evidence['race_checks'].values()), 'Race gate failed')
     steps = evidence['pipeline_steps']
@@ -68,16 +68,18 @@ def verify_gates(manifest, output):
     require(criteria['tolerance_percent'] == 10 and criteria['useful_upload_mbps_min'] == 90 and
             criteria['useful_download_mbps_min'] == 90 and
             criteria['all_loaded_rtt_ns_strictly_below'] == 1100000000, 'Changed acceptance limits')
-    cases = evidence['speed_cases']
-    require({x['name'] for x in cases} == {f'{mode}-{i}' for mode in ('single','multi') for i in range(1,4)}
-            and len(cases) == 6, 'Missing fresh qualification cases')
-    for case in cases:
-        accepted = case['supervised_acceptance']
-        probes = case['supervised_result']
-        require(case['passed'] and accepted['accepted'] == 'true' and
-                float(accepted['minimum_verified_mbps']) >= 90 and int(accepted['max_rtt_ns']) < 1100000000
-                and probes['timeouts'] == probes['missed'] == '0' and probes['rtt_samples'] == probes['overlap'] == '30',
-                'Speed/RTT gate failed: ' + case['name'])
+    require(evidence['retained_speed_scenario']['retained_state'] is True, 'Missing retained-state matrix')
+    for group in ('speed_cases','retained_speed_cases'):
+        cases = evidence[group]
+        require({x['name'] for x in cases} == {f'{mode}-{i}' for mode in ('single','multi') for i in range(1,4)}
+                and len(cases) == 6, 'Missing fresh qualification cases')
+        for case in cases:
+            accepted = case['supervised_acceptance']
+            probes = case['supervised_result']
+            require(case['passed'] and accepted['accepted'] == 'true' and
+                    float(accepted['minimum_verified_mbps']) >= 90 and int(accepted['max_rtt_ns']) < 1100000000
+                    and probes['timeouts'] == probes['missed'] == '0' and probes['rtt_samples'] == probes['overlap'] == '30',
+                    'Speed/RTT gate failed: ' + case['name'])
     apks = list(output.glob('*.apk'))
     require(len(apks) == 1 and digest(apks[0]) == status['apk_sha256'], 'APK identity mismatch')
     with zipfile.ZipFile(apks[0]) as apk:
