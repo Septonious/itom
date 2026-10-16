@@ -189,6 +189,7 @@ type lane struct {
 	started                                             time.Time
 	ready                                               atomic.Bool
 	deferredAdmissionTrace                              admissionTraceSampler
+	grantRolloverTrace                                 admissionTraceSampler
 	// Monotonic evidence that this physical carrier completed bootstrap.
 	everReady atomic.Bool
 	// Actor-owned startup evidence, retained while grants are leased by workers.
@@ -2273,7 +2274,22 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		} else {
 			usage, physicalBody, spendErr = l.wallet.Spend(key, folder, body, canonicalDataSize)
 		}
-		l.traceBatchStage("data_batch_spend", spendStarted, errorCode(spendErr), map[string]any{"records": len(jobs), "decoded_bytes": len(physicalBody)})
+		// Spending failure on a full cumulative lease is an expected, atomic
+		// rollover event under MULTI load, not evidence of corrupt accounting.
+		// Sample it instead of writing potentially thousands of JSON events and
+		// displacing the application-failure window from the bounded trace ring.
+		if errors.Is(spendErr, wallet.ErrExhausted) {
+			if l.diag != nil && l.diag.tracer != nil {
+				if emit, total, delta := l.grantRolloverTrace.observe(time.Now()); emit {
+					l.traceBatchStage("grant_rollover", spendStarted, "WALLET_EXHAUSTED", map[string]any{
+						"records": len(jobs), "physical_batch_bytes": len(body),
+						"rollover_total": total, "rollover_since_last": delta, "fast": fastBatch,
+					})
+				}
+			}
+		} else {
+			l.traceBatchStage("data_batch_spend", spendStarted, errorCode(spendErr), map[string]any{"records": len(jobs), "decoded_bytes": len(physicalBody)})
+		}
 		if !errors.Is(spendErr, wallet.ErrExhausted) {
 			if spendErr != nil {
 				lease.release()
