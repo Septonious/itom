@@ -1,6 +1,7 @@
 package org.itom.domain
 
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import org.junit.Test
 import java.util.Base64

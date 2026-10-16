@@ -195,7 +195,7 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                     } }
                     item { GradientButton("Add mail account", {
                         val first = status.accounts.firstOrNull()
-                        form = AdminForm("Add mail account", listOf(AdminField("host", "IMAP hostname", first?.host ?: ""), AdminField("port", "Port", (first?.port ?: 993).toString()), AdminField("tls", "Connection security", first?.tls ?: "tls", choices = listOf("tls" to "TLS", "starttls" to "STARTTLS")), AdminField("username", "Username"), AdminField("password", "Application password", secret = true))) { fields ->
+                        form = AdminForm("Add mail account", listOf(AdminField("host", "IMAP hostname", first?.host ?: ""), AdminField("dial_ip", "Pinned IMAP IP (optional)", first?.dial_ip ?: "", required = false), AdminField("port", "Port", (first?.port ?: 993).toString()), AdminField("tls", "Connection security", first?.tls ?: "tls", choices = listOf("tls" to "TLS", "starttls" to "STARTTLS")), AdminField("username", "Username"), AdminField("password", "Application password", secret = true))) { fields ->
                             val port = fields.getValue("port").toIntOrNull()
                             if (port == null || port !in 1..65535 || fields["tls"] !in setOf("tls", "starttls")) onMessage("Enter a valid port and select tls or starttls.")
                             else change("Add mail account", "account_add") { put("mail", buildJsonObject { fields.forEach { (key, value) -> if (key == "port") put(key, port) else put(key, value) } }) }
