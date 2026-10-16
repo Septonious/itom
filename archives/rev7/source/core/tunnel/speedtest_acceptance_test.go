@@ -10,6 +10,53 @@ import (
 const speedtestAcceptedMbps = 90.0
 const speedtestAcceptedMaxRTT = 1100 * time.Millisecond
 
+// Stability qualification deliberately has no throughput floor. It still needs
+// the complete byte clock and useful progress in both directions on every tick:
+// a fast burst must never conceal a later stalled connection.
+func stabilityWindowQualification(windows []productionBandwidthWindow, elapsed time.Duration, users int) error {
+	if err := speedtestWindowQualification(windows, elapsed, users, 0); err != nil {
+		return err
+	}
+	for _, w := range windows {
+		if w.Upload == 0 || w.Download == 0 {
+			return fmt.Errorf("stalled stability window user=%d index=%d upload=%d download=%d", w.User, w.Index, w.Upload, w.Download)
+		}
+	}
+	return nil
+}
+
+func TestRev7StabilityQualificationWaivesOnlyThroughput(t *testing.T) {
+	windows := make([]productionBandwidthWindow, 30)
+	for i := range windows {
+		windows[i] = productionBandwidthWindow{User: 0, Index: i + 1, Duration: time.Second, Upload: 125000, Download: 62500}
+	}
+	if err := stabilityWindowQualification(windows, 30*time.Second, 1); err != nil {
+		t.Fatal("slow but active duplex transfer rejected", err)
+	}
+	if err := speedtestWindowQualification(windows, 30*time.Second, 1, speedtestAcceptedMbps); err == nil {
+		t.Fatal("stability waiver changed the separate performance policy")
+	}
+	for _, direction := range []string{"upload", "download"} {
+		t.Run(direction, func(t *testing.T) {
+			stalled := append([]productionBandwidthWindow(nil), windows...)
+			if direction == "upload" {
+				stalled[10].Upload = 0
+			} else {
+				stalled[10].Download = 0
+			}
+			if err := stabilityWindowQualification(stalled, 30*time.Second, 1); err == nil {
+				t.Fatal("one stalled direction passed stability qualification")
+			}
+		})
+	}
+	if err := stabilityWindowQualification(windows[1:], 30*time.Second, 1); err == nil {
+		t.Fatal("missing byte-clock tick passed stability qualification")
+	}
+	if err := stabilityWindowQualification(append(windows, windows[0]), 30*time.Second, 1); err == nil {
+		t.Fatal("duplicate byte-clock tick passed stability qualification")
+	}
+}
+
 // A burst must not conceal a dead download at the end.
 // impressive initial burst must not conceal a dead download at the end, even
 // when the 30s average exceeds a threshold. No zero-traffic probe is ignored.

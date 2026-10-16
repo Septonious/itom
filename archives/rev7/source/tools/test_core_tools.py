@@ -162,6 +162,7 @@ class CoreGateTests(unittest.TestCase):
                 self.assertEqual("1", env["ITOM_UNSTABLE_SURVIVAL"])
                 self.assertEqual("4", env["GOMAXPROCS"])
                 self.assertEqual("1", env["ITOM_CORE_QUALIFICATION"])
+                self.assertEqual("1", env["ITOM_STABILITY_QUALIFICATION"])
                 self.assertFalse(any(key.startswith("ITOM_LOAD_") for key in env))
 
     def test_mandatory_survival_tests_cannot_be_skipped(self):

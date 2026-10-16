@@ -4,7 +4,7 @@ Rev7 repairs physical control sockets without restarting encrypted carriers, pri
 
 Rev6 bounds optional startup sockets, keeps idle IMAP sockets alive without blocking active commands, adds a CLI-only full accounts reset, exposes safe LOGIN response categories and removes the settings introduction banner. See [startup and idle analysis](docs/rev6/REV6_ANALYSIS_2026-10-16.md).
 
-Rev5 addresses the paired Wi-Fi/mobile field failures: recovery uses remaining ordinal capacity without dropping historical debt; paced DATA reads yield before long multi-BODY commands time out; downstream batch growth depends on authenticated BODY receipts rather than APPEND speed; provider mailbox-state setup errors reconnect with a bounded fresh retry. The mandatory application, recovery and 10% speed/RTT gates remain required. Real-provider speed is separate from laboratory qualification.
+Rev5 addresses the paired Wi-Fi/mobile field failures: recovery uses remaining ordinal capacity without dropping historical debt; paced DATA reads yield before long multi-BODY commands time out; downstream batch growth depends on authenticated BODY receipts rather than APPEND speed; provider mailbox-state setup errors reconnect with a bounded fresh retry. The mandatory application, recovery and RTT gates remain required; Rev7 explicitly waives the throughput floor at the user’s request. Real-provider speed is separate from laboratory qualification.
 
 Healthy TCP streams can advance a bounded charged frame beside delayed published flight. Short recovery uses authenticated NACKs with separate pacing, and the wallet accepts reordered unseen offers while retaining bounded retirement protection.
 
@@ -44,13 +44,14 @@ python tools/field_qualification.py --go /path/to/go --results work/commit-delay
 
 The second command retains real fsync and adds a declared server commit delay through the test-only build tag. Every required case must execute, preserve source identity and pass. Missing/skipped cases and failures remain failures. Raw user diagnostic captures and private signing keys are excluded from all source and release archives.
 
-Release qualification also requires every fresh SINGLE/MULTI run to pass:
+Rev7 stability qualification requires every fresh and retained-state SINGLE/MULTI run to pass:
 
 ```bash
-python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 3
+python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 3 --stability-only
+python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 3 --retained-state --stability-only
 ```
 
-Laboratory tests do not certify the real phone/provider path. The release gate applies a 10% tolerance to the 100/100 Mbps and <1,000 ms loaded RTT objectives: both directions and the sustained tail must reach 90 Mbps, every loaded RTT must be <1,100 ms, and there must be no timed-out/missed probes. Each run must pass; averages across failed runs cannot qualify. Real-device SINGLE/MULTI and post-reconnect application checks remain independent.
+Laboratory tests do not certify the real phone/provider path. The user explicitly waived the 90 Mbps throughput floor for Rev7. Speeds remain recorded, but no speed threshold qualifies this release. Every one-second measured window must carry useful bytes in both directions, every loaded RTT must be <1,100 ms (the existing 10% tolerance), and all thirty loaded probes must overlap duplex traffic with no timeout or missed probe. Original TCP sockets, logical sessions and healthy carrier epochs must survive the load. Six same-socket exchanges after idle gaps, a fresh 256 KiB verified application transfer and another original-socket exchange must succeed after load. Each run must pass; averages across failed runs cannot qualify. Real-device SINGLE/MULTI and post-reconnect application checks remain independent. Omitting `--stability-only` runs the separate historical 90 Mbps performance policy.
 
 ## Server messages
 

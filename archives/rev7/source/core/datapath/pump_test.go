@@ -1398,10 +1398,10 @@ type orderedAdmissionTestLink struct {
 	releaseFirst chan struct{}
 }
 
-func (l *orderedAdmissionTestLink) AdmitBatch(jobs []*Job) func() []Completion {
+func (l *orderedAdmissionTestLink) AdmitBatch(jobs []*Job) BatchAdmission {
 	id := jobs[0].Attempt().ID
 	l.admitted <- id
-	return func() []Completion {
+	return BatchAdmission{Jobs: jobs, Write: func() []Completion {
 		l.physical <- id
 		if id == 1 {
 			<-l.releaseFirst
@@ -1411,7 +1411,7 @@ func (l *orderedAdmissionTestLink) AdmitBatch(jobs []*Job) func() []Completion {
 			results[i] = job.RejectBeforeCommit(context.Canceled)
 		}
 		return results
-	}
+	}}
 }
 func (l *orderedAdmissionTestLink) WriteBatch(jobs []*Job) []Completion {
 	// Deliberately reverse worker arrival after FIFO collection. Ordered
@@ -1419,7 +1419,7 @@ func (l *orderedAdmissionTestLink) WriteBatch(jobs []*Job) []Completion {
 	if jobs[0].Attempt().ID == 1 {
 		time.Sleep(10 * time.Millisecond)
 	}
-	return l.AdmitBatch(jobs)()
+	return l.AdmitBatch(jobs).Write()
 }
 
 func TestPumpOrdersBatchAdmissionWhilePhysicalWritesRemainParallel(t *testing.T) {
@@ -1455,6 +1455,124 @@ func TestPumpOrdersBatchAdmissionWhilePhysicalWritesRemainParallel(t *testing.T)
 		case <-ctx.Done():
 			t.Fatal("one blocked physical write serialized its sibling")
 		}
+	}
+}
+
+func TestPumpReadyRetryPrecedesQueuedFutureOffsets(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	p := &Pump{ctx: ctx, fastReserve: true, dataFast: make(chan *Job, 1),
+		dataBulk: make(chan *Job, 16), dataBulkRetry: make(chan *Job, 16)}
+	job := func(id uint64) *Job {
+		return &Job{ctx: ctx, bulk: true, claimed: new(atomic.Bool),
+			attempt: flow.Attempt{ID: id, Stream: 1, Offset: (id - 1) * wire.MaxData, PayloadBytes: wire.MaxData},
+			frame:   wire.Frame{Type: wire.Data, Stream: 1}}
+	}
+	p.dataBulkRetry <- job(1)
+	for id := uint64(2); id <= 11; id++ {
+		p.dataBulk <- job(id)
+	}
+	batch, ok := p.collectDataBatch()
+	if !ok || len(batch) != 11 || batch[0].Attempt().Offset != 0 {
+		t.Fatalf("deferred predecessor lost priority over future offsets: records=%d first=%d", len(batch), batch[0].Attempt().Offset)
+	}
+}
+
+func TestPumpWaitingPrefixHoldsYoungerOffsetsButNotSiblingStream(t *testing.T) {
+	cfg := DefaultConfig(1, []string{"a01"})
+	e, err := New(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Stop()
+	for _, id := range []uint64{1, 3} {
+		if _, err = e.Activate(1, id); err != nil {
+			t.Fatal(err)
+		}
+		f, _ := wire.EncodeControl(id, wire.Credit{MaxStream: 1 << 20, MaxData: 4 << 20})
+		if _, err = e.Receive(1, f); err != nil {
+			t.Fatal(err)
+		}
+	}
+	first, err := e.Queue(1, 1, make([]byte, wire.MaxData))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = e.Queue(1, 1, make([]byte, wire.MaxData)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = e.Queue(1, 3, make([]byte, wire.MaxData)); err != nil {
+		t.Fatal(err)
+	}
+	j, err := e.Begin(1, first, "a01", 512, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := j.RejectBeforeCommit(errors.New("flight admission deferred"))
+	if err = e.Complete(1, r.Attempt, flow.NotCommitted); err != nil {
+		t.Fatal(err)
+	}
+	wake := make(chan struct{})
+	p := &Pump{ctx: context.Background(), engine: e, cfg: PumpConfig{Engine: cfg, Account: "a01"}, link: &eventLink{},
+		sockets: map[uint64]*socketState{}, attempted: map[uint64]bool{first: true}, retryWake: map[uint64]<-chan struct{}{first: wake},
+		dataBulk: make(chan *Job, 16), dataBulkRetry: make(chan *Job, 16), dataFast: make(chan *Job, 16), started: time.Now()}
+	if err = p.progress(); err != nil {
+		t.Fatal(err)
+	}
+	if len(p.dataBulk) != 1 || (<-p.dataBulk).Attempt().Stream != 3 {
+		t.Fatal("waiting prefix was bypassed or blocked an unrelated stream")
+	}
+	close(wake)
+	if err = p.progress(); err != nil {
+		t.Fatal(err)
+	}
+	if len(p.dataBulkRetry) != 1 || (<-p.dataBulkRetry).Attempt().Offset != 0 {
+		t.Fatal("ready predecessor was not dispatched ahead of speculative successors")
+	}
+}
+
+type earlyDeferralTestLink struct {
+	*eventLink
+	started chan struct{}
+	release chan struct{}
+}
+
+func (l *earlyDeferralTestLink) AdmitBatch(jobs []*Job) BatchAdmission {
+	immediate := jobs[1].RejectBeforeCommit(errors.New("prefix deferred"))
+	immediate.NonFatal = true
+	return BatchAdmission{Jobs: jobs[:1], Immediate: []Completion{immediate}, Write: func() []Completion {
+		close(l.started)
+		<-l.release
+		return []Completion{jobs[0].RejectBeforeCommit(context.Canceled)}
+	}}
+}
+func (l *earlyDeferralTestLink) WriteBatch(jobs []*Job) []Completion {
+	a := l.AdmitBatch(jobs)
+	return append(a.Write(), a.Immediate...)
+}
+func TestPumpReturnsDeferralBeforeSlowPhysicalSiblingCompletes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	l := &earlyDeferralTestLink{eventLink: &eventLink{}, started: make(chan struct{}), release: make(chan struct{})}
+	p := &Pump{ctx: ctx, link: l, events: make(chan pumpEvent, 2), dataFast: make(chan *Job, 1), dataBulk: make(chan *Job, 16)}
+	for id := uint64(1); id <= 2; id++ {
+		p.dataBulk <- &Job{ctx: ctx, claimed: new(atomic.Bool), bulk: true,
+			attempt: flow.Attempt{ID: id, PayloadBytes: wire.MaxData}, frame: wire.Frame{Type: wire.Data, Stream: id}}
+	}
+	done := make(chan struct{})
+	go func() { defer close(done); p.writeDataLoop(l, true) }()
+	defer func() { close(l.release); cancel(); <-done }()
+	select {
+	case <-l.started:
+	case <-ctx.Done():
+		t.Fatal("physical work did not start")
+	}
+	select {
+	case event := <-p.events:
+		if len(event.completions) != 1 || event.completions[0].Attempt != 2 || !event.completions[0].NonFatal {
+			t.Fatal("wrong early completion", event.completions)
+		}
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("unsent predecessor waited for an unrelated physical APPEND")
 	}
 }
 

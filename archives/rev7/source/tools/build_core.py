@@ -84,6 +84,9 @@ def enable_required_survival_tests(env: dict) -> None:
     # The performance test sets its own scoped scenario. Applying load knobs
     # globally would also delay unrelated real-IMAP correctness fixtures.
     env.update(ITOM_CORE_QUALIFICATION="1", ITOM_REWORK_QUALIFICATION="0")
+    # Rev7 release policy: the user waived the speed floor, while all byte
+    # integrity, liveness, RTT, recovery and post-load checks remain mandatory.
+    env["ITOM_STABILITY_QUALIFICATION"] = "1"
 
 
 def summarize_events(path: Path, expected: set[str]):
@@ -396,6 +399,7 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                 # must explicitly enable them, never silently permit SKIP.
                 enable_required_survival_tests(env)
                 report["unstable_survival_tests"] = "enabled (mandatory; SKIP fails the Go gate)"
+                report["qualification_policy"] = "stability; 90 Mbps floor waived by user; all liveness, RTT, integrity and recovery checks required"
                 log.write("Mandatory IMAP outage tests: ITOM_UNSTABLE_SURVIVAL=1\n")
                 log.flush()
                 modes = [("normal", False)] + ([("race", True)] if race else [])

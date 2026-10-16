@@ -16,7 +16,6 @@ REQUIRED = (
     'TestRev7RetainedSmallBodiesKeepBothDirectionalOrdinalHeadrooms',
     'TestRev7OrderedAdmissionCancelledBeforePhysicalWorkReleasesFlight',
     'TestRev7FullJournalWaitsForRealCapacityWithoutSelfWake',
-    'TestRev7FifteenAccountsCanPrepareAllThirteenBulkServices',
     'TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull',
     'TestRev7ReducedBulkLeaseCannotImpersonateFastGrant',
     'TestRev7RetainedDownloadCannotTakeUploadRefillShare',

@@ -306,6 +306,10 @@ func testSupervisedProductionLoad(t *testing.T) {
 				ns, bytes, samples := carrier.serviceNS, carrier.serviceBytes, carrier.serviceSamples
 				carrier.serviceMu.Unlock()
 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
+				if carrier.diag != nil {
+					d := carrier.diag.snapshot()
+					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
+				}
 			}
 		}
 		assertLoadCarriersPreserved(t, f, carriers)
@@ -357,11 +361,24 @@ func testSupervisedProductionLoad(t *testing.T) {
 		if os.Getenv("ITOM_REWORK_QUALIFICATION") == "1" {
 			tier = TransportRevision + "-100/100-lt1000ms-10pct-tolerance"
 			accepted = qualifiedMbps >= speedtestAcceptedMbps && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
+				tier = TransportRevision + "-stability-throughput-floor-waived"
+				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+				if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
+					accepted = false
+					t.Error(err)
+				}
+				t.Logf("supervised_stability windows=%d positive_duplex_every_window=%t throughput_floor_enforced=false", len(result.Bandwidth), accepted)
+			}
 			if err := speedtestRTTQualification(rtts, timeouts, missed, overlap); err != nil {
 				accepted = false
 				t.Error(err)
 			}
-			if err := speedtestWindowQualification(result.Bandwidth, result.Elapsed, 1, speedtestAcceptedMbps); err != nil {
+			minimumMbps := speedtestAcceptedMbps
+			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
+				minimumMbps = 0
+			}
+			if err := speedtestWindowQualification(result.Bandwidth, result.Elapsed, 1, minimumMbps); err != nil {
 				accepted = false
 				t.Error(err)
 			}
@@ -411,6 +428,34 @@ func testSupervisedProductionLoad(t *testing.T) {
 			}
 			t.Logf("supervised_post_stress index=%d same_socket=true idle_gap_ms=1100 rtt_ms=%d", i+1, rtt.Milliseconds())
 		}
+		// A live old chat socket is insufficient if new application streams
+		// cannot start after load. Verify a fresh bulk-sized round trip too,
+		// then recheck the original socket without reconnecting the session.
+		fresh, err := openApplication(target.echoConnect())
+		if err != nil {
+			t.Fatal("post-stress fresh application", err)
+		}
+		defer fresh.Close()
+		_ = fresh.SetDeadline(time.Now().Add(5 * time.Second))
+		payload := make([]byte, 256<<10)
+		newProductionPattern("post-stress-fresh").fill(payload)
+		written := make(chan error, 1)
+		go func() { written <- productionWriteFull(fresh, payload) }()
+		if _, err := readExactProbe(fresh, make([]byte, len(payload)), payload); err != nil {
+			t.Fatal("post-stress fresh transfer", err)
+		}
+		if err := <-written; err != nil {
+			t.Fatal("post-stress fresh write", err)
+		}
+		_ = probe.SetDeadline(time.Now().Add(time.Second))
+		payload = []byte("original-after-fresh")
+		if err := productionWriteFull(probe, payload); err != nil {
+			t.Fatal("original socket after fresh transfer", err)
+		}
+		if _, err := readExactProbe(probe, make([]byte, len(payload)), payload); err != nil {
+			t.Fatal("original echo after fresh transfer", err)
+		}
+		t.Log("supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true")
 		if f.client.logicalSession != logical || f.client.generation != generation {
 			t.Fatal("post-stress session replaced")
 		}

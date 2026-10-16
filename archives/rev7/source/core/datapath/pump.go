@@ -45,12 +45,20 @@ type BatchLink interface {
 	WriteBatch([]*Job) []Completion
 }
 
+type BatchAdmission struct {
+	Jobs []*Job
+	// Immediate contains definitive pre-publication results. Return these to
+	// the owner before executing the independent physical continuation.
+	Immediate []Completion
+	Write     func() []Completion
+}
+
 // OrderedBatchLink makes a nonblocking logical admission decision in collection
 // order, returning physical work that MUST be invoked once, even after cancel.
 // Admission cannot perform durable or network IO or wait for capacity. The work
 // owns cleanup of its logical reservation and remains parallel with other work.
 type OrderedBatchLink interface {
-	AdmitBatch([]*Job) func() []Completion
+	AdmitBatch([]*Job) BatchAdmission
 }
 
 // ParallelBatchLink opts into a small number of concurrent physical batch
@@ -82,9 +90,9 @@ const (
 	// short DATA gets both scheduler priority and a reserved storage permit.
 	InteractiveDataThreshold = 8 << 10
 	// MaxBulkWriters bounds scheduler work, not physical IMAP permissions.
-	// Fifteen accounts can expose thirteen bulk services after quiet reserves;
-	// the preparation gate still enforces the actual live physical capacity.
-	MaxBulkWriters = 16
+	// Workers rotate over the ready account pool. More speculative workers can
+	// amplify queued future offsets without creating useful physical service.
+	MaxBulkWriters = 8
 	// 336 KiB deliberately crosses to eleven full 32 KiB DATA records while
 	// the conservative MIME-bound regression still leaves several KiB below
 	// the 512 KiB physical permit. Twelve full records do not fit after the
@@ -193,13 +201,15 @@ type Pump struct {
 	tinyStreak         int
 	dataFastWake       chan struct{}
 	dataBulk           chan *Job
+	// Both bulk queues share dataBulkQueueRecords handoffs, not two budgets.
+	dataBulkRetry chan *Job
 	// batchMu serializes queue aggregation and nonblocking flight admission,
 	// never durable or physical I/O. Without a
 	// single collector, every parallel APPEND worker can steal one 32 KiB DATA
 	// record and independently wait for its coalescing timer. That defeats the
 	// 336 KiB physical target exactly when parallelism is highest. A worker holds
 	// this lock for at most the short coalescing window, releases it before
-	// WriteBatch, and the next worker immediately forms the following batch while
+	// physical work, and the next worker forms the following batch while
 	// previous batches are still in flight.
 	batchMu         sync.Mutex
 	batchFastStreak int
@@ -231,7 +241,7 @@ func StartPump(parent context.Context, cfg PumpConfig, link Link) (*Pump, error)
 		cancel()
 		return nil, err
 	}
-	p := &Pump{cfg: cfg, link: link, ctx: ctx, cancel: cancel, done: make(chan struct{}), add: make(chan addRequest), events: make(chan pumpEvent, 2*cfg.Engine.Limits.Streams+8), dataFast: make(chan *Job, dataFastQueueRecords), dataTiny: make(chan *Job, dataFastQueueRecords), dataFastWake: make(chan struct{}, 1), dataBulk: make(chan *Job, dataBulkQueueRecords), controls: make(chan wire.Frame, cfg.ControlQueue), urgentControls: make(chan wire.Frame, min(16, cfg.ControlQueue)), engine: e, sockets: map[uint64]*socketState{}, attempted: map[uint64]bool{}, started: time.Now()}
+	p := &Pump{cfg: cfg, link: link, ctx: ctx, cancel: cancel, done: make(chan struct{}), add: make(chan addRequest), events: make(chan pumpEvent, 2*cfg.Engine.Limits.Streams+8), dataFast: make(chan *Job, dataFastQueueRecords), dataTiny: make(chan *Job, dataFastQueueRecords), dataFastWake: make(chan struct{}, 1), dataBulk: make(chan *Job, dataBulkQueueRecords), dataBulkRetry: make(chan *Job, dataBulkQueueRecords), controls: make(chan wire.Frame, cfg.ControlQueue), urgentControls: make(chan wire.Frame, min(16, cfg.ControlQueue)), engine: e, sockets: map[uint64]*socketState{}, attempted: map[uint64]bool{}, started: time.Now()}
 	p.pendingControls.wake = make(chan struct{}, 1)
 	go p.run()
 	return p, nil
@@ -537,32 +547,50 @@ func (p *Pump) tookFastJob(tiny bool) {
 	}
 }
 
+// A retry rejected before physical admission may be the missing predecessor
+// of records already in the ordinary queue. Drain ready retries first; their
+// existing logical charge and the link's delivery admission remain authoritative.
+func (p *Pump) tryBulkJob() (*Job, bool) {
+	select {
+	case j := <-p.dataBulkRetry:
+		return j, true
+	default:
+	}
+	select {
+	case j := <-p.dataBulk:
+		return j, true
+	default:
+		return nil, false
+	}
+}
 func (p *Pump) nextDataJob(fastStreak *int) (*Job, bool) {
 	if *fastStreak >= dataFastBurst {
-		select {
-		case j := <-p.dataBulk:
-			*fastStreak = 0
+		*fastStreak = 0
+		if j, ok := p.tryBulkJob(); ok {
 			return j, true
-		default:
-			*fastStreak = 0
 		}
 	}
-	if *fastStreak < dataFastBurst {
-		if j, ok := p.tryFastJob(); ok {
-			*fastStreak = *fastStreak + 1
-			return j, true
-		}
+	if j, ok := p.tryFastJob(); ok {
+		*fastStreak++
+		return j, true
+	}
+	if j, ok := p.tryBulkJob(); ok {
+		*fastStreak = 0
+		return j, true
 	}
 	select {
 	case <-p.ctx.Done():
 		return nil, false
 	case j := <-p.dataFast:
 		p.tookFastJob(false)
-		*fastStreak = *fastStreak + 1
+		*fastStreak++
 		return j, true
 	case j := <-p.dataTiny:
 		p.tookFastJob(true)
-		*fastStreak = *fastStreak + 1
+		*fastStreak++
+		return j, true
+	case j := <-p.dataBulkRetry:
+		*fastStreak = 0
 		return j, true
 	case j := <-p.dataBulk:
 		*fastStreak = 0
@@ -601,17 +629,17 @@ func (p *Pump) collectDataBatch() ([]*Job, bool) {
 	return p.collectDataBatchLocked()
 }
 
-func (p *Pump) collectAdmittedBatch() ([]*Job, func() []Completion, bool) {
+func (p *Pump) collectAdmittedBatch() ([]*Job, BatchAdmission, bool) {
 	p.batchMu.Lock()
 	defer p.batchMu.Unlock()
 	batch, ok := p.collectDataBatchLocked()
 	if !ok {
-		return nil, nil, false
+		return nil, BatchAdmission{}, false
 	}
 	if admission, ok := p.link.(OrderedBatchLink); ok {
 		return batch, admission.AdmitBatch(batch), true
 	}
-	return batch, nil, true
+	return batch, BatchAdmission{}, true
 }
 
 func (p *Pump) collectDataBatchLocked() ([]*Job, bool) {
@@ -637,6 +665,7 @@ func (p *Pump) collectDataBatchLocked() ([]*Job, bool) {
 	}
 	if fastBatch {
 		maxRecords, targetBytes, delay = dataFastMaxRecords, uint64(dataFastTargetBytes), dataFastDelay
+
 	}
 	batch := []*Job{first}
 	payload := first.Attempt().PayloadBytes
@@ -705,14 +734,12 @@ collect:
 		// As with the fast collector, an expired coalescing deadline limits
 		// waiting for future records; it must not randomly beat bulk records that
 		// are already queued. Consume ready backlog before entering the timed select.
-		select {
-		case j := <-p.dataBulk:
+		if j, ok := p.tryBulkJob(); ok {
 			if j != nil {
 				batch = append(batch, j)
 				payload += j.Attempt().PayloadBytes
 			}
 			continue
-		default:
 		}
 		select {
 		case <-p.ctx.Done():
@@ -720,6 +747,11 @@ collect:
 				clear(j.frame.Payload)
 			}
 			return nil, false
+		case j := <-p.dataBulkRetry:
+			if j != nil {
+				batch = append(batch, j)
+				payload += j.Attempt().PayloadBytes
+			}
 		case j := <-p.dataBulk:
 			if j != nil {
 				batch = append(batch, j)
@@ -827,16 +859,17 @@ func (p *Pump) writeDataLoop(batchLink BatchLink, batching bool) {
 			continue
 		}
 
-		batch, work, ok := p.collectAdmittedBatch()
+		batch, admission, ok := p.collectAdmittedBatch()
 		if !ok {
 			return
 		}
 		// Queue collection is serialized, but the expensive durable bookkeeping
 		// and IMAP APPEND below remain fully parallel across all writer workers.
+		ordered := admission.Write != nil || admission.Immediate != nil
 		var release func()
-		if admission, ok := p.link.(BulkPreparationLink); work == nil && ok && !fastDataJob(batch[0]) {
+		if preparation, ok := p.link.(BulkPreparationLink); !ordered && ok && !fastDataJob(batch[0]) {
 			var err error
-			release, err = admission.AcquireBulkPreparation(p.ctx)
+			release, err = preparation.AcquireBulkPreparation(p.ctx)
 			if err != nil {
 				for _, job := range batch {
 					clear(job.frame.Payload)
@@ -847,20 +880,30 @@ func (p *Pump) writeDataLoop(batchLink BatchLink, batching bool) {
 				return
 			}
 		}
+		emitted := true
+		if len(admission.Immediate) > 0 {
+			emitted = p.emit(pumpEvent{completions: admission.Immediate})
+		}
 		var results []Completion
-		if work != nil {
-			results = work()
+		if ordered {
+			// The continuation owns its reservation even after cancellation.
+			if admission.Write != nil {
+				results = admission.Write()
+			}
 		} else {
 			results = batchLink.WriteBatch(batch)
 		}
 		if release != nil {
 			release()
 		}
-		if len(results) != len(batch) {
+		if len(results)+len(admission.Immediate) != len(batch) {
 			p.emit(pumpEvent{err: ErrState})
 			return
 		}
-		if !p.emit(pumpEvent{completions: results}) {
+		if !emitted {
+			return
+		}
+		if len(results) > 0 && !p.emit(pumpEvent{completions: results}) {
 			return
 		}
 	}
@@ -1180,12 +1223,18 @@ func (p *Pump) progress() error {
 		}
 	}
 	pending := p.engine.ReadyFair(p.lastDataStream)
+	blockedStreams := make(map[uint64]bool)
 	for _, id := range pending {
+		stream := p.engine.pending[id].stream
+		if blockedStreams[stream] {
+			continue
+		}
 		if wake := p.retryWake[id]; wake != nil {
 			select {
 			case <-wake:
 				delete(p.retryWake, id)
 			default:
+				blockedStreams[stream] = true
 				continue
 			}
 		}
@@ -1198,13 +1247,17 @@ func (p *Pump) progress() error {
 		}
 		fast := p.engine.ItemInteractive(id, payloadBytes)
 		queue := p.dataBulk
+		if !fast && p.attempted[id] && p.dataBulkRetry != nil {
+			queue = p.dataBulkRetry
+		}
 		if fast {
 			queue = p.dataFast
 			if p.dataTiny != nil && payloadBytes <= dataTinyThreshold {
 				queue = p.dataTiny
 			}
 		}
-		if len(queue) == cap(queue) {
+		if len(queue) == cap(queue) || !fast && len(p.dataBulk)+len(p.dataBulkRetry) >= dataBulkQueueRecords {
+			blockedStreams[stream] = true
 			// Bulk saturation cannot consume the reserved short-record queue.
 			// Leave the item queued in Engine and reconsider it after a worker drains.
 			continue

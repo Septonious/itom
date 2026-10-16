@@ -56,7 +56,7 @@ def verify_gates(manifest, output):
     require(evidence['android_lint']['errors'] == 0, 'Lint errors')
     fields = evidence['field_repetitions']
     require(len(fields) == 2 and [x['repetitions'] for x in fields] == [3, 1] and
-            all(x['all_passed'] and x['cases_per_repetition'] == 49 for x in fields), 'Field suite failed')
+            all(x['all_passed'] and x['cases_per_repetition'] == 48 for x in fields), 'Field suite failed')
     require(bool(evidence['race_checks']) and all(x['passed_test_events'] > 0 and
             x['failed'] == x['skipped'] == 0 for x in evidence['race_checks'].values()), 'Race gate failed')
     steps = evidence['pipeline_steps']

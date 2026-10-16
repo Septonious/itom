@@ -15,7 +15,7 @@ type SchedulerSnapshot struct {
 }
 
 func (p *Pump) captureScheduler() {
-	s := &SchedulerSnapshot{LogicalBytes: p.engine.tx.LogicalBytes(), Items: p.engine.tx.ItemCount(), Attempts: p.engine.tx.AttemptCount(), BulkQueued: len(p.dataBulk), FastQueued: len(p.dataFast) + len(p.dataTiny)}
+	s := &SchedulerSnapshot{LogicalBytes: p.engine.tx.LogicalBytes(), Items: p.engine.tx.ItemCount(), Attempts: p.engine.tx.AttemptCount(), BulkQueued: len(p.dataBulk) + len(p.dataBulkRetry), FastQueued: len(p.dataFast) + len(p.dataTiny)}
 	for id, entry := range p.engine.pending {
 		phase := "WAITING_ACK"
 		if p.engine.tx.IsQueued(id) {

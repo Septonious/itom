@@ -241,7 +241,7 @@ func TestRev7OrderedAdmissionCancelledBeforePhysicalWorkReleasesFlight(t *testin
 		t.Fatal("unexpected pre-IO admission state", g.delivery.bulk, g.prepared)
 	}
 	cancel()
-	results := work()
+	results := work.Write()
 	if len(results) != len(jobs) {
 		t.Fatal("lost completions", len(results))
 	}

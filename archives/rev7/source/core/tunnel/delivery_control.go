@@ -56,7 +56,14 @@ type deliveryRange struct {
 	isolatedFast      bool   // short-only startup traffic is not bulk queue evidence
 	carrier           string // advisory physical placement until logical ACK
 }
+
+// Diagnostic counts describe a single pure planning pass, never credit.
+type deliveryPlanDebug struct {
+	Offset, Share, Window, Repair         int
+	Bytes, InFlight, Stream, At, Expected uint64
+}
 type deliveryWaiter struct {
+	debug        deliveryPlanDebug
 	fast, repair bool
 	jobs         []*datapath.Job
 }
@@ -430,6 +437,7 @@ type deliveryReservation struct {
 	inserted []*deliveryRange
 	jobs     []*datapath.Job
 	repair   bool
+	debug    deliveryPlanDebug
 	once     sync.Once
 }
 
@@ -613,7 +621,7 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 				d.changed()
 			}
 			g.mu.Unlock()
-			return &deliveryReservation{g: g, inserted: entries, jobs: selected, repair: w.repair}, nil
+			return &deliveryReservation{g: g, inserted: entries, jobs: selected, repair: w.repair, debug: w.debug}, nil
 		}
 		wake := d.wake
 		if yield {
@@ -653,6 +661,7 @@ func (g *stripeGroup) deliveryRetryWake(j *datapath.Job) <-chan struct{} {
 // worker goroutines reach this controller. Filling a bounded window with later
 // offsets while the original predecessor waits would deadlock its own ACK.
 func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, []*datapath.Job, error) {
+	w.debug = deliveryPlanDebug{Bytes: d.window, InFlight: d.bulk}
 	seen := map[deliveryKey]bool{}
 	next := map[uint64]uint64{}
 	jobs := append([]*datapath.Job(nil), w.jobs...)
@@ -739,6 +748,7 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 			continue
 		}
 		if a.Repair && d.deferAcceptedRepair(a.Stream, a.Offset, a.Offset+a.PayloadBytes, time.Now()) {
+			w.debug.Repair++
 			orderBlocked = true
 			continue
 		}
@@ -756,10 +766,15 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		// more bytes than the remaining window. Publish ready prefixes; unselected
 		// members yield before sealing/Prepare and return to the logical actor.
 		if a.Offset > expected {
+			w.debug.Offset++
+			if w.debug.Stream == 0 {
+				w.debug.Stream, w.debug.At, w.debug.Expected = a.Stream, a.Offset, expected
+			}
 			orderBlocked = true
 			continue
 		}
 		if !w.fast && !w.repair && len(activeStreams) > 1 && perStream[a.Stream]+n > share {
+			w.debug.Share++
 			orderBlocked = true
 			continue
 		}
@@ -769,6 +784,7 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		// The hard session cap, stream credit and physical quota still apply.
 		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= deliveryMaxWindow
 		if n > remaining && !discovery || len(d.ranges)+len(entries) >= deliveryMaxRanges {
+			w.debug.Window++
 			continue
 		}
 		next[a.Stream] = max(expected, a.Offset+a.PayloadBytes)

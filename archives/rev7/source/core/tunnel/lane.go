@@ -1781,17 +1781,37 @@ func (l *lane) endCleanupIO() {
 // authenticated LogicalSession. Only physical mail I/O moves; stream ownership,
 // offsets and flow accounting remain serialized in the owner Pump.
 func (l *lane) WriteBatch(jobs []*datapath.Job) []datapath.Completion {
-	return l.AdmitBatch(jobs)()
+	if len(jobs) == 0 {
+		return []datapath.Completion{{Err: wire.ErrLimit}}
+	}
+	a := l.AdmitBatch(jobs)
+	completed := make(map[*datapath.Job]datapath.Completion, len(a.Jobs))
+	if a.Write != nil {
+		for i, r := range a.Write() {
+			completed[a.Jobs[i]] = r
+		}
+	}
+	results := make([]datapath.Completion, len(jobs))
+	deferred := 0
+	for i, j := range jobs {
+		if r, ok := completed[j]; ok {
+			results[i] = r
+		} else {
+			results[i] = a.Immediate[deferred]
+			deferred++
+		}
+	}
+	return results
 }
 
 // Admit in collector order, before any physical worker can overtake another
 // batch's stream prefixes. This is nonblocking logical flight admission only.
-func (l *lane) AdmitBatch(jobs []*datapath.Job) func() []datapath.Completion {
+func (l *lane) AdmitBatch(jobs []*datapath.Job) datapath.BatchAdmission {
 	if len(jobs) == 0 {
-		return func() []datapath.Completion { return []datapath.Completion{{Err: wire.ErrLimit}} }
+		return datapath.BatchAdmission{Immediate: []datapath.Completion{{Err: wire.ErrLimit}}}
 	}
 	if l.stripe == nil {
-		return func() []datapath.Completion { return l.writeBatchPhysical(l, jobs) }
+		return datapath.BatchAdmission{Jobs: jobs, Write: func() []datapath.Completion { return l.writeBatchPhysical(l, jobs) }}
 	}
 	fastBatch := true
 	for _, job := range jobs {
@@ -1810,51 +1830,45 @@ func (l *lane) AdmitBatch(jobs []*datapath.Job) func() []datapath.Completion {
 			l.traceBatchStage("delivery_admission_wait", admissionStarted, errorCode(admissionErr), map[string]any{"fast": fastBatch, "deferred_total": total, "deferred_since_last": sinceLast})
 		}
 	} else {
-		l.traceBatchStage("delivery_admission_wait", admissionStarted, errorCode(admissionErr), map[string]any{"fast": fastBatch})
+		selected, constraints := 0, (deliveryPlanDebug{})
+		if reservation != nil {
+			selected, constraints = len(reservation.jobs), reservation.debug
+		}
+		l.traceBatchStage("delivery_admission_wait", admissionStarted, errorCode(admissionErr), map[string]any{"fast": fastBatch, "batch_records": len(jobs), "admitted_records": selected, "constraints": constraints})
 	}
 	if admissionErr != nil {
-		return func() []datapath.Completion {
-			rejected := failBatch(jobs, nil, admissionErr)
-			if errors.Is(admissionErr, errDeliveryStopped) || errors.Is(admissionErr, errDeliveryDeferred) {
-				// A RESET/socket close can overtake an unstarted batch waiting on flight
-				// credit. Complete it exactly once without failing sibling stream owners.
-				for i := range rejected {
-					rejected[i].NonFatal = true
-					var deferred *deliveryDeferredError
-					if errors.As(admissionErr, &deferred) {
-						rejected[i].RetryWake = l.stripe.deliveryRetryWake(jobs[i])
-					}
+		rejected := failBatch(jobs, nil, admissionErr)
+		if errors.Is(admissionErr, errDeliveryStopped) || errors.Is(admissionErr, errDeliveryDeferred) {
+			// A RESET/socket close can overtake an unstarted batch waiting on flight
+			// credit. Complete it exactly once without failing sibling stream owners.
+			for i := range rejected {
+				rejected[i].NonFatal = true
+				var deferred *deliveryDeferredError
+				if errors.As(admissionErr, &deferred) {
+					rejected[i].RetryWake = l.stripe.deliveryRetryWake(jobs[i])
 				}
 			}
-			return rejected
+		}
+		return datapath.BatchAdmission{Immediate: rejected}
+	}
+	selected := make(map[*datapath.Job]bool, len(reservation.jobs))
+	for _, j := range reservation.jobs {
+		selected[j] = true
+	}
+	a := datapath.BatchAdmission{Jobs: reservation.jobs, Write: func() []datapath.Completion { return l.writeAdmittedBatch(reservation.jobs, reservation, fastBatch) }}
+	for _, j := range jobs {
+		if !selected[j] {
+			r := j.RejectBeforeCommit(errDeliveryDeferred)
+			r.NonFatal = true
+			r.RetryWake = l.stripe.deliveryRetryWake(j)
+			a.Immediate = append(a.Immediate, r)
 		}
 	}
-	return func() []datapath.Completion { return l.writeAdmittedBatch(jobs, reservation, fastBatch) }
+	return a
 }
 
 func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryReservation, fastBatch bool) (results []datapath.Completion) {
-	original := jobs
-	jobs = reservation.jobs
-	defer func() {
-		reservation.finish(jobs, results)
-		completed := make(map[*datapath.Job]datapath.Completion, len(jobs))
-		for i, j := range jobs {
-			if i < len(results) {
-				completed[j] = results[i]
-			}
-		}
-		full := make([]datapath.Completion, len(original))
-		for i, j := range original {
-			if result, ok := completed[j]; ok {
-				full[i] = result
-			} else {
-				full[i] = j.RejectBeforeCommit(errDeliveryDeferred)
-				full[i].NonFatal = true
-				full[i].RetryWake = l.stripe.deliveryRetryWake(j)
-			}
-		}
-		results = full
-	}()
+	defer func() { reservation.finish(jobs, results) }()
 	if !fastBatch {
 		release, err := l.AcquireBulkPreparation(l.logicalContext())
 		if err != nil {

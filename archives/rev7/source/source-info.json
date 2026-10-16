@@ -4,7 +4,7 @@
   "revision": "transport-rework3-rev7",
   "archive_name": "ITOM-0.9.2-Rev7-sources.zip",
   "baseline": "0.9.2-Rev6",
-  "qualification": "paired client/server field regression repair; full internal gates required; field-provider performance remains separate",
+  "qualification": "stability and post-load connection survival; 90 Mbps floor waived by user; every internal gate required; live provider/device validation remains separate",
   "android_version_name": "0.9.2-Rev7",
   "android_version_code": 9207,
   "android_application_id": "org.itom.client.dev.rev7"
