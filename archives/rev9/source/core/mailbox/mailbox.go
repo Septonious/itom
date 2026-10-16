@@ -72,7 +72,7 @@ func ValidateDialIP(value string) error {
 		return nil
 	}
 	ip, err := netip.ParseAddr(value)
-	if err != nil || ip.Zone() != "" || ip.IsUnspecified() || ip.IsMulticast() || ip.Unmap().String() == "255.255.255.255" {
+	if err != nil || ip.Zone() != "" || ip.Unmap().IsUnspecified() || ip.Unmap().IsMulticast() || ip.Unmap().String() == "255.255.255.255" {
 		return scopeFailure("IMAP_DIAL_IP_INVALID")
 	}
 	return nil
@@ -946,7 +946,17 @@ func (c *Client) Append(ctx context.Context, folder string, raw []byte) error {
 		return e
 	})
 	if e == nil && appended != nil && appended.UID != 0 && appended.UIDValidity != 0 {
-		if body, decodeErr := Decode(raw); decodeErr == nil {
+		// BINARY conversion already decoded this exact BODY before APPEND.
+		// Reuse it for the locator digest instead of decoding canonical MIME twice.
+		var body []byte
+		var decodeErr error
+		if useBinary {
+			body = physical[len(binaryHeader):]
+		} else {
+			body, decodeErr = Decode(raw)
+			defer clear(body)
+		}
+		if decodeErr == nil {
 			hint := AppendHint{MIMEBytes: uint64(len(raw)), Folder: folder, Validity: appended.UIDValidity, UID: uint32(appended.UID), Digest: sha256.Sum256(body)}
 			c.mu.Lock()
 			if len(c.appendHints) == 256 {

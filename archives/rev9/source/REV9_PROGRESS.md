@@ -15,3 +15,9 @@ Implemented optional `dial_ip` end to end: literal IPv4/IPv6 validation, TCP des
 Targeted Go race checks passed for pinned TLS/STARTTLS, strict certificate rejection, one-login persistent reuse including idle NOOP, profile export/clear and manager configuration. Android compilation and guarded mutation rollback verification remain pending at this checkpoint.
 
 Audit: the inherited client already maintains idle auxiliary connections using NOOP after 20 seconds without socket I/O, checks every ten seconds, and skips occupied command/IDLE slots. Existing dedicated readers use IDLE; no per-packet LOGIN redesign is needed. The new route report does not establish per-command latency, so the low-RTT laboratory case is a scenario, not a measured Finnish-provider certification.
+
+## Profile-guided transport checkpoint
+
+The retained-state 15-account low-RTT MULTI baseline completed all 30 probes and post-load reuse but failed strict 100 Mbps: 81.103 Mbps upload / 58.659 download, chronological jitter mean 129.032 ms. A diagnostic CPU profile found redundant whole-BODY hashing and base64 decoding plus actor/scheduler pool scans. The candidate now validates ITE2 digest + full descriptor in one payload-verification pass, reuses the already-decoded BINARY APPEND body for the locator hint, snapshots bulk-placement scores once and counts active bulk readers once per actor pass (updating classification/removal changes). Existing quotas, eight-worker limit, cryptographic checks and deletion proof remain intact.
+
+98 focused compatibility/race tests and 16 new-revision race tests passed before the final small UI/validation refinements. A supplementary race-instrumented 8 MiB initial-transfer deadline still failed and is retained as a failure, not a pass; normal recovery and final load checks remain pending.

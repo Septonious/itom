@@ -43,7 +43,13 @@ func (g *stripeGroup) prioritizeBulkTargetsLocked(keys []string) {
 		}
 		return n
 	}
-	sort.SliceStable(keys, func(i, j int) bool { return cost(g.lanes[keys[i]]) < cost(g.lanes[keys[j]]) })
+	// Snapshot once per selection. Re-reading queue/RTT state inside the sort
+	// comparator repeats pool scans and can make comparisons inconsistent.
+	scores := make(map[string]int64, len(keys))
+	for _, key := range keys {
+		scores[key] = cost(g.lanes[key])
+	}
+	sort.SliceStable(keys, func(i, j int) bool { return scores[keys[i]] < scores[keys[j]] })
 }
 func (m *observedMail) DataQueueCost() int64 {
 	if d, ok := m.Transport.(interface{ DataQueueCost() int64 }); ok {

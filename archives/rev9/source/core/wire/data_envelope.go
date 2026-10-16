@@ -5,7 +5,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 )
+
+// ErrDataEnvelopeDigest retains ErrFormat matching while identifying failed integrity.
+var ErrDataEnvelopeDigest = errors.New("DATA_ENVELOPE_DIGEST")
 
 const DataEnvelopeMagic = "ITE2"
 const MaxDataEnvelopeBody = MaxDataBatchBody + 512
@@ -85,10 +89,14 @@ func OpenDataEnvelope(body, key []byte, canonicalBytes uint64) (UsageReport, []b
 // descriptor, as in legacy control reconciliation. It cannot establish trust
 // from a clear header alone. Use OpenDataEnvelope on ordinary reception.
 func DataEnvelopePayload(body []byte, expected UsageReport) ([]byte, error) {
-	if expected.Attempt == nil || sha256.Sum256(body) != expected.Attempt.Digest {
+	if expected.Attempt == nil || len(body) > MaxDataEnvelopeBody {
 		return nil, ErrFormat
 	}
-	r, payload, err := parseDataEnvelope(body)
+	digest := sha256.Sum256(body)
+	if digest != expected.Attempt.Digest {
+		return nil, errors.Join(ErrFormat, ErrDataEnvelopeDigest)
+	}
+	r, payload, err := parseDataEnvelopeWithDigest(body, digest)
 	if err != nil || r.Key != expected.Key || r.Total != expected.Total || *r.Attempt != *expected.Attempt {
 		return nil, ErrFormat
 	}
@@ -96,6 +104,15 @@ func DataEnvelopePayload(body []byte, expected UsageReport) ([]byte, error) {
 }
 
 func parseDataEnvelope(body []byte) (UsageReport, []byte, error) {
+	if len(body) > MaxDataEnvelopeBody {
+		return UsageReport{}, nil, ErrLimit
+	}
+	return parseDataEnvelopeWithDigest(body, sha256.Sum256(body))
+}
+
+// digest belongs to these exact immutable bytes. This private helper is called
+// only after the enclosing entry point computes it; it is never supplied by a peer.
+func parseDataEnvelopeWithDigest(body []byte, digest [32]byte) (UsageReport, []byte, error) {
 	if len(body) > MaxDataEnvelopeBody || len(body) < 4+sha256.Size || !bytes.HasPrefix(body, []byte(DataEnvelopeMagic)) {
 		return UsageReport{}, nil, ErrLimit
 	}
@@ -118,7 +135,7 @@ func parseDataEnvelope(body []byte) (UsageReport, []byte, error) {
 	if payloadBytes == 0 || payloadBytes > MaxDataBatchBody || payloadBytes != uint64(len(p)-sha256.Size) || charge == 0 || totalBytes < charge {
 		return UsageReport{}, nil, ErrLimit
 	}
-	r := UsageReport{Key: k, Total: Quota{Bytes: totalBytes, Messages: ordinal}, Attempt: &PhysicalDescriptor{Batch: batch, EncodedBytes: charge, DecodedBytes: uint64(len(body)), Digest: sha256.Sum256(body), Folder: folder}}
+	r := UsageReport{Key: k, Total: Quota{Bytes: totalBytes, Messages: ordinal}, Attempt: &PhysicalDescriptor{Batch: batch, EncodedBytes: charge, DecodedBytes: uint64(len(body)), Digest: digest, Folder: folder}}
 	if _, err := EncodeControl(0, r); err != nil {
 		return UsageReport{}, nil, err
 	}

@@ -99,6 +99,8 @@ class ProfileEditorViewModel : ViewModel() {
     val state by editor.state.collectAsStateWithLifecycle()
     var discard by remember { mutableStateOf(false) }
     var reload by remember { mutableStateOf(false) }
+    var pinAll by remember { mutableStateOf(false) }
+    var pinAllValue by remember { mutableStateOf("") }
     var expanded by rememberSaveable(profileId) { mutableStateOf<String?>(null) }
     val activity = LocalActivity.current
     DisposableEffect(activity) {
@@ -166,6 +168,9 @@ class ProfileEditorViewModel : ViewModel() {
                         }, Blue, !state.saving)
                     }
                     SmallNote("IMAPS with certificate verification. Keep at least one account enabled.")
+                    TextButton(enabled = !state.saving && draft.accounts.isNotEmpty(), onClick = {
+                        pinAllValue = draft.accounts.map { it.dialIP }.distinct().singleOrNull().orEmpty(); pinAll = true
+                    }) { Text("Set IP pin for all accounts") }
                 }
                 items(draft.accounts, key = { it.localRef }) { account ->
                     val open = expanded == account.localRef
@@ -215,6 +220,15 @@ class ProfileEditorViewModel : ViewModel() {
             }
         }
     }
+    if (pinAll) AlertDialog(onDismissRequest = { pinAll = false }, title = { Text("IMAP IP pin for all accounts") },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ProfileField("IPv4 or IPv6", pinAllValue, 45, !state.saving, KeyboardType.Uri) { pinAllValue = it }
+            SmallNote("Blank restores DNS for all accounts. TLS continues to verify the IMAP hostname.")
+        } },
+        confirmButton = { TextButton(enabled = !state.saving && Validation.validDialIP(pinAllValue.trim()), onClick = {
+            val ip = pinAllValue.trim(); editor.change { p -> p.copy(accounts = p.accounts.map { it.copy(dialIP = ip) }) }; pinAll = false
+        }) { Text("Apply to all") } },
+        dismissButton = { TextButton(onClick = { pinAll = false }) { Text("Cancel") } })
     if (discard || reload) AlertDialog(onDismissRequest = { discard = false; reload = false }, title = { Text("Discard changes?") },
         text = { Text(if (reload) "The draft will be replaced with the latest saved data." else "This profile has unsaved changes.") },
         confirmButton = { TextButton(onClick = {

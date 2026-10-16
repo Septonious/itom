@@ -193,6 +193,13 @@ private enum class AdminSection(val label: String) { OVERVIEW("Overview"), CLIEN
                             TextButton(onClick = { change("Remove account", "account_remove") { put("account_id", account.id) } }, enabled = canChange) { Text("Remove", color = if (canChange) Red else Muted) }
                         }
                     } }
+                    item { OutlinedButton(enabled = canChange && status.accounts.isNotEmpty(), onClick = {
+                        form = AdminForm("Server IMAP IP pin for all accounts", listOf(AdminField("ip", "IPv4/IPv6; blank uses DNS", required = false))) { fields ->
+                            val ip = fields.getValue("ip").trim()
+                            if (!Validation.validDialIP(ip)) onMessage("Enter a literal IP address or leave blank for DNS.")
+                            else change("Change all server IMAP IP pins", "account_pin") { put("account_id", "*"); put("dial_ip", ip) }
+                        }
+                    }) { Text("Set IP pin for all server accounts") } }
                     item { GradientButton("Add mail account", {
                         val first = status.accounts.firstOrNull()
                         form = AdminForm("Add mail account", listOf(AdminField("host", "IMAP hostname", first?.host ?: ""), AdminField("dial_ip", "Pinned IMAP IP (optional)", first?.dial_ip ?: "", required = false), AdminField("port", "Port", (first?.port ?: 993).toString()), AdminField("tls", "Connection security", first?.tls ?: "tls", choices = listOf("tls" to "TLS", "starttls" to "STARTTLS")), AdminField("username", "Username"), AdminField("password", "Application password", secret = true))) { fields ->

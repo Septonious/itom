@@ -458,7 +458,14 @@ func apply(c *servercfg.Config, q adminapi.Request) error {
 	case "account_remove":
 		return c.RemoveAccount(q.AccountID)
 	case "account_pin":
-		return c.SetAccountDialIP(q.AccountID, q.DialIP)
+		if q.AccountID == "" {
+			return servercfg.ErrConfig
+		}
+		id := q.AccountID
+		if id == "*" {
+			id = ""
+		}
+		return c.SetAccountDialIP(id, q.DialIP)
 	case "account_password":
 		for i := range c.Accounts {
 			if c.Accounts[i].ID == q.AccountID {

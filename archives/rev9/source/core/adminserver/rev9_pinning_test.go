@@ -23,7 +23,7 @@ func TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection(t *testing.T) {
 			if initial != "" {
 				next = ""
 			}
-			q := adminapi.Request{Operation: "account_pin", ID: strings.Repeat("9", 32), AccountID: "a01", DialIP: next}
+			q := adminapi.Request{Operation: "account_pin", ID: strings.Repeat("9", 32), AccountID: "*", DialIP: next}
 			if reply := s.Execute(context.Background(), u, q); !reply.OK {
 				t.Fatal(reply)
 			}

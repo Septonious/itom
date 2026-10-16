@@ -1175,6 +1175,8 @@ func (p *Pump) completeAttempt(g uint64, result Completion) error {
 }
 
 func (p *Pump) progress() error {
+	// This actor-local cache lasts one progress pass, never across input events.
+	bulkReaders := -1
 	g := p.cfg.Engine.Generation
 	ids := make([]uint64, 0, len(p.sockets))
 	for id := range p.sockets {
@@ -1187,10 +1189,11 @@ func (p *Pump) progress() error {
 	for index := range ids {
 		id := ids[(index+p.turn)%len(ids)]
 		s := p.sockets[id]
-		if err := p.acceptRead(id, s); err != nil {
+		if err := p.acceptReadWithBulkCount(id, s, &bulkReaders); err != nil {
 			return err
 		}
 		if p.sockets[id] == nil {
+			bulkReaders = -1
 			continue
 		}
 		if !s.writing && !s.halfClosed {
@@ -1211,6 +1214,7 @@ func (p *Pump) progress() error {
 			err := p.engine.Retire(g, id)
 			if err == nil {
 				p.dropSocket(id)
+				bulkReaders = -1
 			} else if !errors.Is(err, ErrState) {
 				return err
 			}
@@ -1306,11 +1310,16 @@ func (p *Pump) progress() error {
 }
 
 func (p *Pump) acceptRead(id uint64, s *socketState) error {
+	return p.acceptReadWithBulkCount(id, s, nil)
+}
+
+func (p *Pump) acceptReadWithBulkCount(id uint64, s *socketState, cached *int) error {
 	r := s.read
 	if r == nil {
 		return nil
 	}
 	if len(r.data) > 0 {
+		wasBulk := s.bulkRead || r.bulk
 		if p.engine.fragmentedAdmission(id, len(r.data)) {
 			r.bulk = true
 		}
@@ -1325,6 +1334,13 @@ func (p *Pump) acceptRead(id uint64, s *socketState) error {
 				r.bulk = true
 			} else {
 				s.bulkRead = false
+			}
+		}
+		if cached != nil && *cached >= 0 && wasBulk != (s.bulkRead || r.bulk) {
+			if s.bulkRead || r.bulk {
+				*cached++
+			} else {
+				*cached--
 			}
 		}
 		reserve := uint64(0)
@@ -1347,10 +1363,19 @@ func (p *Pump) acceptRead(id uint64, s *socketState) error {
 					capacity = min(capacity, headroom)
 				}
 			}
-			active := 0
-			for _, socket := range p.sockets {
-				if socket.bulkRead || socket.read != nil && socket.read.bulk {
-					active++
+			active := -1
+			if cached != nil {
+				active = *cached
+			}
+			if active < 0 {
+				active = 0
+				for _, socket := range p.sockets {
+					if socket.bulkRead || socket.read != nil && socket.read.bulk {
+						active++
+					}
+				}
+				if cached != nil {
+					*cached = active
 				}
 			}
 			if active > 1 {

@@ -341,17 +341,26 @@ func OpenRemoteBatchBody(body []byte, canonicalBytes uint64, report wire.UsageRe
 	if uint64(len(body)) != d.DecodedBytes {
 		return nil, &BatchValidationError{Stage: "decoded_size"}
 	}
-	if sha256.Sum256(body) != d.Digest {
-		return nil, &BatchValidationError{Stage: "digest"}
-	}
-	if !wire.CheckPhysical(body, report.Key, report.Total.Messages, d.Batch) {
-		return nil, &BatchValidationError{Stage: "physical_binding"}
-	}
 	var payload []byte
 	var err error
 	if bytes.HasPrefix(body, []byte(wire.DataEnvelopeMagic)) {
+		// This validates the complete immutable descriptor, including its whole-
+		// BODY digest, quota identity, ordinal and batch. Rehashing through a
+		// separate CheckPhysical pass adds no independent evidence.
 		payload, err = wire.DataEnvelopePayload(body, report)
+		if errors.Is(err, wire.ErrDataEnvelopeDigest) {
+			return nil, &BatchValidationError{Stage: "digest"}
+		}
+		if err != nil {
+			return nil, &BatchValidationError{Stage: "physical_binding"}
+		}
 	} else {
+		if sha256.Sum256(body) != d.Digest {
+			return nil, &BatchValidationError{Stage: "digest"}
+		}
+		if !wire.CheckPhysical(body, report.Key, report.Total.Messages, d.Batch) {
+			return nil, &BatchValidationError{Stage: "physical_binding"}
+		}
 		var prefix []byte
 		prefix, err = wire.BindPhysical(report.Key, report.Total.Messages, d.Batch, []byte{0})
 		if err == nil && len(body) >= len(prefix) {
