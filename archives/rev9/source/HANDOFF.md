@@ -1,35 +1,51 @@
-# ITOM 0.9.2 Rev8 handoff
+# ITOM 0.9.2 Rev9 targeted handoff
 
-## Status and deliverables
+## Status
 
-This is a testing prerelease, not a certified stable release. The user requested a fast, targeted verification pass and immediate APK, server binaries, complete source and GitHub upload. A full final-source test suite and physical phone/provider qualification have not been completed. Earlier Rev7 results remain historical evidence, not Rev8 certification. Consult STATUS.json, VALIDATION.json and TEST_EVIDENCE.zip for the exact successful and unsuccessful checks. A failed 100 Mbps or jitter measurement is not waived or relabeled as a performance pass.
+Rev9 is a targeted testing candidate. A complete final internal suite and matching physical Android/Rambler qualification are not claimed. The 100 Mbps speed floor remains strict, without the old ten-percent speed tolerance. `VALIDATION.json` records the exact final measurements and any failed checks. A partial pass must not be represented as a stable release.
 
 Repository: https://github.com/Septonious/itom
-Branch: `codex/rev8-stability-throughput`
-Release tag: `v0.9.2-Rev8`
-Editable project: `archives/rev8/source/`, or `itom/` in the executable source ZIP.
+Branch: `codex/rev9-targeted`
+Release tag: `v0.9.2-Rev9`
+Editable source: `archives/rev9/source/`, or `itom/` in the executable source ZIP.
+Base: published Rev8 commit 644ad76. Published Rev7 and Rev8 archives remain intact for rollback. Source, progress and subsequent build/evidence checkpoints are pushed throughout development.
 
-The full release ZIP contains the signed Android APK, Linux AMD64 and ARM64 executables, source archive, handoff, analysis, sanitized field correlation, validation evidence and checksums. GitHub Actions assembles the exact locally built bits from hashed archive parts, verifies their source fingerprint and native-library hashes, uploads them as a draft, checks every remote asset size and SHA-256, then publishes a testing prerelease. It does not claim to have rebuilt or field-tested those bits on GitHub.
+## IMAP IP pinning
 
-## Changes from the supplied Rev8 source
+Each mail account accepts an optional `dial_ip` containing one literal IPv4 or IPv6 address. Blank retains DNS. The TCP socket connects to this address, while `host` remains the TLS SNI and certificate-verification name. TLS validation is never disabled, including STARTTLS. A failed explicit pin does not silently switch to a different DNS backend. There is no automatic IP selection or automatic exclusion of Rambler addresses.
 
-The supplied branch was essentially the published Rev7 transport plus bounded diagnostic sampling of expected cumulative grant rollover. Keep that sampling: WALLET_EXHAUSTED before APPEND is an atomic lease rollover, not proof that an account or its journal is corrupt. Physical completion errors and other errors remain visible.
+Server manager: stop the service, choose **3. Mail accounts → 7. IMAP IP pinning**, choose one account or all accounts, then enter the address or leave blank to restore DNS. Start the service afterward. The existing account IDs, credentials, journals and physical quota/debt remain intact. Newly added accounts inherit the first account's provider settings, including its pin.
 
-Rev8 now changes three latency policies. Once isolated short DATA/ACK samples establish the full-path baseline, the bulk governor permits 100 ms above that baseline instead of scaling extra delay with propagation RTT and retaining a 650 ms minimum. Uncalibrated paths retain the conservative bootstrap budget. Calibration still excludes repairs and traffic already sharing bulk load. This is a feedback threshold, not a guarantee that a provider can deliver every application exchange with under 100 ms jitter.
+Android: edit the profile and expand an IMAP account to set its pin. **Set IP pin for all accounts** applies or clears the value in one draft operation; Save commits it through the existing vault/restart flow. The authenticated admin tab provides server account/all-account pinning through the existing independent sixty-second rollback watchdog. A server pin and the phone's local pin can be different, because their routes may differ. Changing the server does not silently rewrite an already-installed phone profile: edit the phone or export/import an updated invitation.
 
-After two actual missing IDLE notifications followed by fetched rows, active-reader audit fallback is 50 ms instead of 150 ms, for the existing bounded 30-second interval. Quiet accounts retain their two-second cadence. A working notification path, an empty mailbox or merely having a TCP socket open cannot manufacture missing-notification evidence.
+Server Android invitation files and import links export nonempty pins; unpinned invitations omit the optional field. The native Android configuration carries the pin unchanged. Profile editing preserves the account's existing STARTTLS mode. Upgrade endpoints before distributing pinned profiles to older apps, whose strict parsers may reject the new field. TLS authenticates the configured hostname, not the pinned IP itself.
 
-Control collection can now shorten its absolute flush deadline, never extend it when more urgent records arrive. Ready startup bursts and the existing work/record caps remain intact. The CLI revision and server capture metadata now report Rev8; the supplied source left both at Rev7. Executable source ZIP export now recognizes Rev8 APK/server filenames.
+Example server account fragment:
 
-The strict laboratory qualification path now requires 100 useful Mbps in each direction, without the historical ten-percent speed margin. Full-window, final-30-second and final-10-second useful-byte measurements all contribute. All scheduled probes, original TCP/carrier identity, integrity and post-load recovery checks remain independent requirements. Adjacent RTT absolute differences are reported as a separate laboratory jitter metric; they are not claimed to reproduce Speedtest's estimator.
+```json
+{"id":"a01","imap":{"host":"imap.rambler.ru","dial_ip":"81.19.77.171","port":993,"tls":"tls","username":"YOUR_ACCOUNT","password":"YOUR_PASSWORD"}}
+```
 
-Increasing bulk workers from eight to twelve was evaluated and rejected because the measurement worsened. The final source keeps eight workers, the original bounded handoff queue, physical APPEND limits and durable accounting. No provider account reset, mailbox purge, forced physical-debt forgiveness or source-of-truth change is included.
+Use addresses appropriate to your own endpoint measurements. The supplied Finnish route report shows approximately 16–18 ms TCP establishment on four Rambler IPs and rare second-long setup outliers. It does not establish authenticated IMAP operation latency, client-side mobile RTT, steady throughput, or an ITOM performance result on the new server. This work does not migrate a VPS or contact it with user credentials.
 
-## Field evidence and interpretation
+## Persistent connections
 
-The new paired October 16 captures identify a Rev7-debug client. They contain 118,531 client and 116,690 server trace events covering fifteen accounts. There are 210 complete paired control echoes: median RTT 358.39 ms, p95 691.92 ms, maximum 2,145.60 ms. Client enqueue-to-seal p95 is 53.31 ms, maximum 289.42 ms; server receive-to-reply-seal p95 is 111.27 ms, maximum 297.69 ms. Much of total RTT is outside these queue intervals. One-way differences are not treated as synchronized network measurements.
+The inherited transport already reuses authenticated IMAP sockets. Dedicated readers use IDLE; DATA writers, control and cleaner sockets are retained. Idle auxiliary sockets are checked every ten seconds and receive a NOOP after twenty seconds without I/O. Keepalive skips an occupied command mutex or pending IDLE completion. It carries no mail, grant, useful application bytes or proof of quota reclamation. Real connection failures still use paced repair without discarding unknown APPEND debt.
 
-Application resets coexist with connected carriers. Generic client IO_ERROR and remote socket RESET records do not prove a unique Speedtest failure cause. A large cluster of local application resets is also consistent with the test cancelling its parallel sockets. Expected quota rollover is not a basis for throwing away charged debt. The precise Speedtest failure remains unconfirmed without a matching field pass of this candidate. Raw diagnostic ZIPs, target addresses, account identifiers, provider passwords, private signing material and profiles are excluded from publication.
+Rev9 targeted TLS and STARTTLS tests verify a single physical connection and exactly one LOGIN across multiple APPEND, FETCH and NOOP operations, including the actual idle keepalive path. Certificate-name failure rejects the pin with no DNS retry. Persistence is therefore an audited existing mechanism, not a claimed newly invented transport. Cold-start setup logins and recovery logins must be distinguished from steady command reuse.
+
+## Transport changes
+
+A diagnostic 60-second retained-state MULTI run and CPU profile on the two-core laboratory host showed repeated full-BODY SHA-256, repeated MIME decoding and actor/scheduler scans. The delivered changes reduce repeated work while keeping the original physical accounting and authorization checks:
+
+- ITE2 payload verification computes one whole-BODY digest and validates the complete immutable descriptor, including account, session, cumulative quota, ordinal, batch and folder, before returning encrypted DATA. The datapath avoids redoing the same proof through separate identity/hash passes. Per-frame Noise/AEAD and replay checks remain mandatory. Legacy ITQ1 verification remains separate.
+- Successful BINARY APPEND locator hints reuse the already-decoded physical BODY. Canonical MIME is not decoded again for that hint. The hint still grants no deletion/refund authority; exact fetched-body proof remains required.
+- Bulk carrier scores are sampled once per selection, avoiding repeated pool/queue scans from the sort comparator and inconsistent comparisons as queue state changes.
+- A Pump progress pass lazily counts active bulk readers once and updates that local count when classification changes. Socket removal invalidates it. The cache never survives an actor/input turn. The per-stream share, logical queue limits, interactive reserve and physical quotas are unchanged.
+
+The original eight bulk workers, bounded speculative queue, uncertain-APPEND treatment and grant rollover/fencing rules remain intact. No latency or provider caps are increased to manufacture a speed pass. Rev8's calibrated fast-delay allowance and temporary missed-IDLE fallback remain inherited.
+
+Before these optimizations, the low-RTT laboratory baseline completed thirty probes and post-load reuse, but achieved only 81.103 Mbps upload / 58.659 download; chronological adjacent RTT variation averaged 129.032 ms. A profiler-instrumented run is diagnostic, never performance certification. A supplementary race-instrumented initial bulk transfer timed out its existing deadline and remains disclosed. Exact final normal/race, Android and uninstrumented load outcomes belong to `VALIDATION.json` and `TEST_EVIDENCE.zip`.
 
 ## Rules to preserve
 
@@ -40,31 +56,24 @@ Keep physical socket caps, fast/control reserves, logical flight and shared hand
 Admin authorization remains server authoritative: an enabled client named exactly `admin` needs its own key challenge. Every reversible mutation arms an independent durable watchdog first. Sixty seconds without verified two-way recovery rolls back; sixty continuously healthy seconds commits. Permanent purges, uninstall, journal migration and full account reset stay CLI-only.
 
 
+
 ## Build and install
 
-Use pinned Go 1.27.1 and Python 3.10+. Android tooling pins JDK 17, Gradle 9.3.1, SDK 37 and NDK 28.2. Standard full-gate commands from the editable root are:
+Python 3.10+ and pinned Go 1.27.1 are required. Android tooling pins JDK 17, Gradle 9.3.1, SDK 37 and NDK 28.2. Standard build commands execute their full standard gates:
 
 ```bash
-python tools/build.py server --cache work/build-cache --expect-revision transport-rework3-rev8
-python tools/build.py android --cache work/build-cache --expect-revision transport-rework3-rev8 --accept-android-licenses
+python tools/build.py server --cache work/build-cache --expect-revision transport-rework3-rev9
+python tools/build.py android --cache work/build-cache --expect-revision transport-rework3-rev9 --accept-android-licenses
 ```
 
-The requested targeted finalization uses the archived release driver instead of asserting a full server gate. Its workspace/cache paths must be adapted on another machine. The precise performance command is:
+The archived Rev9 release drivers implement the requested targeted finalization and contain workspace/cache paths to adapt on another machine. Do not claim a full suite from these targeted commands. Never run builds, profiling or compression alongside a timed performance run. The final measurement uses the original strict useful-byte and complete-probe checks; provider/session/physical-accounting caps remain unchanged. Any low-RTT command-delay scenario is declared laboratory input, not inferred as a proven IMAP command time from TCP setup measurements.
 
-```bash
-python tools/transport_qualification.py --go /path/to/go --accounts 15 --streams multi --seconds 60 --repeats 1 --retained-state --minimum-mbps 100 --results work/rev8-load
-```
+Update both the app and the appropriate server binary while preserving configuration, wallets, journals and state. The APK retains application ID `org.itom.client.dev.rev7`, uses version code 9209, and the existing signing certificate SHA-256 `39667cd3f91521b09af012b2ca08f8f0ba0d7e07f14b32a9a1e794cb3f4bf999`. Check server `version` reports `transport-rework3-rev9`. The Linux AMD64 executable is for x86-64; use ARM64 for ARM Linux. Private signing/provider credentials are not included.
 
-Do not run builds or compression alongside this timed measurement. The qualification host has a two-core CPU quota. A timed-out test remains a failure; do not increase the provider bandwidth, remove retained state, remove samples, relax deadlines or substitute physical APPEND rate to claim the requested useful speed. SINGLE and additional repetitions were not run in the final targeted pass. Historical broader gates are preserved in older archives.
+The full package contains the APK, both Linux binaries, executable complete source archive, this handoff, analysis, validation evidence and checksums. GitHub Actions assembles the exact built bits from hashed parts, verifies source/native identities, uploads a draft, validates every remote asset size and digest, then publishes a testing prerelease. This is assembly and verification of the locally built artifacts, not an unclaimed Actions rebuild.
 
-Update both the app and server; preserve the existing configuration, wallets, journals and state directory. Choose AMD64 on x86-64 Linux or ARM64 on ARM Linux. Restore executable permission if necessary and verify `version` reports `transport-rework3-rev8`. Ordinary upgrades require no account reset. The APK retains application ID `org.itom.client.dev.rev7`, version code 9208, and certificate SHA-256 `39667cd3f91521b09af012b2ca08f8f0ba0d7e07f14b32a9a1e794cb3f4bf999`, allowing an update over the published Rev7 APK. Keep the owner's signing configuration outside source control.
+## Remaining field work
 
-The CLI account database reset remains manager **3. Mail accounts → 6. Reset accounts database**, requiring `RESET ACCOUNTS`. It is not a mailbox purge or forgiveness of durable physical accounting. Global/individual formatted messages and authenticated reversible admin UI remain inherited; irreversible operations stay CLI-only. Admin mutations retain independent durable sixty-second rollback supervision. The removed settings introduction banner stays removed.
+Use matching endpoints to check cold start, repeated SINGLE/MULTI, original Telegram/chat sockets after load, fresh connections, extended idle and Wi-Fi/mobile transitions. Compare DNS and pinned routes separately on each endpoint; do not assume that a good server-side IP is also best for a mobile ISP. Keep raw captures and exported invitations private. The earlier whole-app mobile crash remains unconfirmed without a fatal stack.
 
-## Remaining qualification
-
-Read VALIDATION.json before relying on the build. Passing targeted unit or recovery cases is not equivalent to a complete final suite. The older whole-app mobile crash has no verified fatal stack or confirmed root cause. A matching Android/server live-provider pass is still necessary: cold start, repeated SINGLE and MULTI, original Telegram/chat connection after load, a fresh connection, extended idle and Wi-Fi/mobile transition. Capture overlapping client/server evidence promptly after any failure, without publishing private profiles or raw captures.
-
-If strict useful throughput or measured jitter fails, continue from this bounded candidate and its recorded failed evidence. Avoid speculative extra workers: the tested overlap increase was worse. Investigate per-stream prefix/NACK residence, control service, provider visibility and delivered-body occupancy before increasing concurrency. Keep all uncertainty and proof contracts intact. Until the outstanding failures and full qualification are resolved, this build remains unstable.
-
-The final timed source fingerprint precedes two audited post-measurement corrections: the server diagnostic revision text and source ZIP export naming. VALIDATION.json and revision-metadata.patch record that exact delta. The publication verifier reconstructs the measured source fingerprint from the delivered sources to reject any additional change. Android/native host checks build from the corrected final source.
+If any strict speed, jitter, liveness or required targeted check fails, retain its evidence and keep the candidate unstable. A stable release still needs the outstanding failures resolved and the complete required qualification. Do not discard durable accounting or increase speculative concurrency as a shortcut.
