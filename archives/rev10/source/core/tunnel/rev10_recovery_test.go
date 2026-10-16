@@ -103,11 +103,11 @@ func TestRev10DiscoveryThenAllClientSocketsLost(t *testing.T) {
 				t.Fatalf("transient repair destroyed original carrier account=%s", l.account.ID)
 			}
 			m := physicalMail(l.mail)
-			if m.controlClient() != m.Client && m.controlClient().Ready() && m.DataAvailable() && m.readerRef().Ready() {
+			if m.controlClient() != m.Client && m.controlClient().Ready() && m.DataAvailable() && m.readerRef().Ready() && (l.dataShards == 0 || m.dataReaderRef().Ready()) {
 				ready++
 			}
 		}
-		if ready == len(lanes) {
+		if ready == len(lanes) && f.client.Snapshot().ActiveLines == 20 {
 			break
 		}
 		if time.Now().After(deadline) {
@@ -145,5 +145,5 @@ func TestRev10DiscoveryThenAllClientSocketsLost(t *testing.T) {
 	if n != 10 {
 		t.Fatalf("faults reached only %d control repairs", n)
 	}
-	t.Logf("accounts=10 discovery_connections=24 client_socket_closes=%d injected_control_login_eofs=%d minimum_service_recovery_ms=%d original_tcp_retained=true fresh_transfer_verified=true carrier_restarts=0", closed, n, recovered.Milliseconds())
+	t.Logf("accounts=10 discovery_connections=24 client_socket_closes=%d injected_control_login_eofs=%d minimum_service_recovery_ms=%d active_lines_restored=20 original_tcp_retained=true fresh_transfer_verified=true carrier_restarts=0", closed, n, recovered.Milliseconds())
 }
