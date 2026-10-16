@@ -1,0 +1,93 @@
+{"Time":"2026-10-16T16:43:44.209305912Z","Action":"start","Package":"itom.local/core/wire"}
+{"Time":"2026-10-16T16:43:44.227003029Z","Action":"run","Package":"itom.local/core/wire","Test":"TestRev9EnvelopeSingleDigestRejectsEveryByteMutation"}
+{"Time":"2026-10-16T16:43:44.227135529Z","Action":"output","Package":"itom.local/core/wire","Test":"TestRev9EnvelopeSingleDigestRejectsEveryByteMutation","Output":"=== RUN   TestRev9EnvelopeSingleDigestRejectsEveryByteMutation\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:44.228208814Z","Action":"output","Package":"itom.local/core/wire","Test":"TestRev9EnvelopeSingleDigestRejectsEveryByteMutation","Output":"--- PASS: TestRev9EnvelopeSingleDigestRejectsEveryByteMutation (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:44.228244358Z","Action":"pass","Package":"itom.local/core/wire","Test":"TestRev9EnvelopeSingleDigestRejectsEveryByteMutation","Elapsed":0}
+{"Time":"2026-10-16T16:43:44.228852957Z","Action":"output","Package":"itom.local/core/wire","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:45.230962017Z","Action":"output","Package":"itom.local/core/wire","Output":"ok  \titom.local/core/wire\t1.021s\n"}
+{"Time":"2026-10-16T16:43:45.231024663Z","Action":"pass","Package":"itom.local/core/wire","Elapsed":1.022}
+{"Time":"2026-10-16T16:43:49.345538612Z","Action":"start","Package":"itom.local/core/datapath"}
+{"Time":"2026-10-16T16:43:49.36028097Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay"}
+{"Time":"2026-10-16T16:43:49.360360707Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay","Output":"=== RUN   TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.360381358Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid"}
+{"Time":"2026-10-16T16:43:49.360386045Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid","Output":"=== RUN   TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.369766082Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid","Output":"--- PASS: TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.369842425Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/valid","Elapsed":0.01}
+{"Time":"2026-10-16T16:43:49.369858383Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest"}
+{"Time":"2026-10-16T16:43:49.369862839Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest","Output":"=== RUN   TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.378820165Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest","Output":"--- PASS: TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.378887683Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/digest","Elapsed":0.01}
+{"Time":"2026-10-16T16:43:49.378901142Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account"}
+{"Time":"2026-10-16T16:43:49.378905467Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account","Output":"=== RUN   TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.38653017Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account","Output":"--- PASS: TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.386679815Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/account","Elapsed":0.01}
+{"Time":"2026-10-16T16:43:49.386747646Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead"}
+{"Time":"2026-10-16T16:43:49.386751382Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead","Output":"=== RUN   TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.395515209Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead","Output":"--- PASS: TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.396388319Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay/aead","Elapsed":0.01}
+{"Time":"2026-10-16T16:43:49.396446119Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay","Output":"--- PASS: TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.396453656Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestRev9EnvelopeVerifiedOnceStillRejectsCrossAccountTamperingAndReplay","Elapsed":0.04}
+{"Time":"2026-10-16T16:43:49.396456678Z","Action":"output","Package":"itom.local/core/datapath","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.970804774Z","Action":"start","Package":"itom.local/core/mailbox"}
+{"Time":"2026-10-16T16:43:49.987814928Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin"}
+{"Time":"2026-10-16T16:43:49.987887349Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:49.988237428Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls"}
+{"Time":"2026-10-16T16:43:49.988243836Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.009597369Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.009734498Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Elapsed":0.02}
+{"Time":"2026-10-16T16:43:50.009742303Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls"}
+{"Time":"2026-10-16T16:43:50.009745232Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.027122406Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.02718224Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Elapsed":0.02}
+{"Time":"2026-10-16T16:43:50.027192985Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.027198943Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Elapsed":0.04}
+{"Time":"2026-10-16T16:43:50.027208031Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS"}
+{"Time":"2026-10-16T16:43:50.027212764Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"=== RUN   TestRev9PinNeverDisablesTLSOrFallsBackToDNS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.036708084Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"2026/10/16 16:43:50 failed to write greeting: read tcp 127.0.0.1:45571-\u003e127.0.0.1:44094: use of closed network connection\n"}
+{"Time":"2026-10-16T16:43:50.036763455Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"--- PASS: TestRev9PinNeverDisablesTLSOrFallsBackToDNS (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.036774433Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Elapsed":0.01}
+{"Time":"2026-10-16T16:43:50.036868113Z","Action":"output","Package":"itom.local/core/mailbox","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:50.402633402Z","Action":"output","Package":"itom.local/core/datapath","Output":"ok  \titom.local/core/datapath\t1.057s\n"}
+{"Time":"2026-10-16T16:43:50.402715987Z","Action":"pass","Package":"itom.local/core/datapath","Elapsed":1.057}
+{"Time":"2026-10-16T16:43:51.039799979Z","Action":"output","Package":"itom.local/core/mailbox","Output":"ok  \titom.local/core/mailbox\t1.069s\n"}
+{"Time":"2026-10-16T16:43:51.039856604Z","Action":"pass","Package":"itom.local/core/mailbox","Elapsed":1.069}
+{"Time":"2026-10-16T16:43:51.990078569Z","Action":"start","Package":"itom.local/core/servercfg"}
+{"Time":"2026-10-16T16:43:52.003067204Z","Action":"run","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity"}
+{"Time":"2026-10-16T16:43:52.003158255Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Output":"=== RUN   TestRev9PinExportAndClearKeepsAccountIdentity\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:52.00836613Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Output":"--- PASS: TestRev9PinExportAndClearKeepsAccountIdentity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:52.008648063Z","Action":"pass","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Elapsed":0}
+{"Time":"2026-10-16T16:43:52.008659008Z","Action":"output","Package":"itom.local/core/servercfg","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:53.011841695Z","Action":"output","Package":"itom.local/core/servercfg","Output":"ok  \titom.local/core/servercfg\t1.022s\n"}
+{"Time":"2026-10-16T16:43:53.011903726Z","Action":"pass","Package":"itom.local/core/servercfg","Elapsed":1.022}
+{"Time":"2026-10-16T16:43:57.133659599Z","Action":"start","Package":"itom.local/core/manager"}
+{"Time":"2026-10-16T16:43:57.163875907Z","Action":"run","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear"}
+{"Time":"2026-10-16T16:43:57.163948351Z","Action":"output","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Output":"=== RUN   TestRev9ManagerPinAllAndClear\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:57.167694545Z","Action":"output","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Output":"--- PASS: TestRev9ManagerPinAllAndClear (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:57.16772957Z","Action":"pass","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Elapsed":0}
+{"Time":"2026-10-16T16:43:57.167735559Z","Action":"output","Package":"itom.local/core/manager","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:43:58.169768703Z","Action":"output","Package":"itom.local/core/manager","Output":"ok  \titom.local/core/manager\t1.036s\n"}
+{"Time":"2026-10-16T16:43:58.169871663Z","Action":"pass","Package":"itom.local/core/manager","Elapsed":1.036}
+{"Time":"2026-10-16T16:44:00.451784868Z","Action":"start","Package":"itom.local/core/adminserver"}
+{"Time":"2026-10-16T16:44:00.472284804Z","Action":"run","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection"}
+{"Time":"2026-10-16T16:44:00.472361177Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection","Output":"=== RUN   TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.472381435Z","Action":"run","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-"}
+{"Time":"2026-10-16T16:44:00.472385243Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-","Output":"=== RUN   TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.552223011Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-","Output":"--- PASS: TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial- (0.08s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.553836709Z","Action":"pass","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-","Elapsed":0.08}
+{"Time":"2026-10-16T16:44:00.55384813Z","Action":"run","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168"}
+{"Time":"2026-10-16T16:44:00.553852324Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168","Output":"=== RUN   TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.593747759Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168","Output":"--- PASS: TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168 (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.593820118Z","Action":"pass","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection/initial-81.19.77.168","Elapsed":0.04}
+{"Time":"2026-10-16T16:44:00.593831813Z","Action":"output","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection","Output":"--- PASS: TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection (0.12s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:00.593836583Z","Action":"pass","Package":"itom.local/core/adminserver","Test":"TestRev9AdminPinUsesWatchdogAndRollsBackAfterLostConnection","Elapsed":0.12}
+{"Time":"2026-10-16T16:44:00.59384006Z","Action":"output","Package":"itom.local/core/adminserver","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:01.596009985Z","Action":"output","Package":"itom.local/core/adminserver","Output":"ok  \titom.local/core/adminserver\t1.144s\n"}
+{"Time":"2026-10-16T16:44:01.596101634Z","Action":"pass","Package":"itom.local/core/adminserver","Elapsed":1.144}
+{"Time":"2026-10-16T16:44:09.55096638Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-16T16:44:09.570819744Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev9BulkPlacementSamplesEachCarrierOnce"}
+{"Time":"2026-10-16T16:44:09.5708868Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev9BulkPlacementSamplesEachCarrierOnce","Output":"=== RUN   TestRev9BulkPlacementSamplesEachCarrierOnce\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:09.57091528Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev9BulkPlacementSamplesEachCarrierOnce","Output":"--- PASS: TestRev9BulkPlacementSamplesEachCarrierOnce (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:09.570920595Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev9BulkPlacementSamplesEachCarrierOnce","Elapsed":0}
+{"Time":"2026-10-16T16:44:09.571249152Z","Action":"output","Package":"itom.local/core/tunnel","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:44:10.574469695Z","Action":"output","Package":"itom.local/core/tunnel","Output":"ok  \titom.local/core/tunnel\t1.023s\n"}
+{"Time":"2026-10-16T16:44:10.574526281Z","Action":"pass","Package":"itom.local/core/tunnel","Elapsed":1.024}
