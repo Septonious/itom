@@ -1,6 +1,6 @@
-# ITOM 0.9.2 Rev11 — targeted transport testing build
+# ITOM 1.0.0 RC1 — stabilization candidate
 
-Rev11 prevents brief live-socket response stalls from triggering premature receive reconnection churn. It retains bounded blackhole repair and DATA receive first-close diagnostics. See [handoff](HANDOFF.md), [investigation](docs/rev11/INVESTIGATION.md) and final validation evidence for scope. Full stable, strict 100 Mbps, jitter and live-device qualification are not claimed. Older material below describes historical baselines.
+Retains authenticated early missing-range requests across writer ownership and BODY visibility grace, eliminating a needless extra repair-probe cycle. Includes bounded receive-stall recovery and DATA close-cause history. See [handoff](HANDOFF.md), [investigation](docs/v1/INVESTIGATION.md) and final validation for exact scope. Stable, sustained strict 100 Mbps, jitter and live-device qualification remain pending. Older sections below describe historical baselines.
 
 # ITOM 0.9.2-Rev7
 
