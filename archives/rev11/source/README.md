@@ -1,6 +1,6 @@
-# ITOM 0.9.2 Rev10 — targeted testing build
+# ITOM 0.9.2 Rev11 — targeted transport testing build
 
-Rev10 strengthens recovery after simultaneous IMAP socket loss and reorganizes the Android server-admin interface. See [the full handoff](HANDOFF.md), [field analysis](docs/rev10/INVESTIGATION.md), and release validation for exact results and limitations. Complete stable, strict 100 Mbps, jitter and live-device qualification are not claimed. Earlier revisions below document their own historical baselines.
+Rev11 prevents brief live-socket response stalls from triggering premature receive reconnection churn. It retains bounded blackhole repair and DATA receive first-close diagnostics. See [handoff](HANDOFF.md), [investigation](docs/rev11/INVESTIGATION.md) and final validation evidence for scope. Full stable, strict 100 Mbps, jitter and live-device qualification are not claimed. Older material below describes historical baselines.
 
 # ITOM 0.9.2-Rev7
 

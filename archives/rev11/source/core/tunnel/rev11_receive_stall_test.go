@@ -28,9 +28,13 @@ func TestRev11MultiRampThroughBriefProviderPause(t *testing.T) {
 		defer c.Close()
 	}
 	original := rev11StallClientResponses(t, f, lanes, 2400*time.Millisecond)
+	transferBudget := 15 * time.Second
+	if raceInstrumented {
+		transferBudget = 30 * time.Second
+	} // Correctness under instrumentation, not a throughput gate.
 	errs := make(chan error, len(streams))
 	for i, c := range streams {
-		go func(c net.Conn, label int) { errs <- rev4Exchange(c, label, 1<<20, 15*time.Second) }(c, 1121+i)
+		go func(c net.Conn, label int) { errs <- rev4Exchange(c, label, 1<<20, transferBudget) }(c, 1121+i)
 	}
 	if err := rev4Exchange(chat, 1140, 4096, 7*time.Second); err != nil {
 		t.Fatal("messaging stream during MULTI ramp", err)
@@ -212,6 +216,14 @@ func TestRev11PersistentReceiveBlackholeStillRepairs(t *testing.T) {
 	}
 	if err := rev4Exchange(chat, 1112, 4096, 10*time.Second); err != nil {
 		t.Fatal("original TCP after genuine blackhole", err)
+	}
+	for _, l := range lanes {
+		if l.dataShards > 0 {
+			previous := physicalMail(l.mail).previousDataReader.Load()
+			if previous == nil || previous.FirstCloseStage != "receive" || previous.FirstCloseReason != "no_progress" {
+				t.Fatal("DATA receive first-close cause was lost", l.account.ID, previous)
+			}
+		}
 	}
 	t.Logf("persistent_blackhole_receive_retirement_ms=%d original_tcp_retained=true", time.Since(started).Milliseconds())
 }
