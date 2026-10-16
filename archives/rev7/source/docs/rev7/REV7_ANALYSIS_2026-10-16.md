@@ -73,3 +73,7 @@ The user explicitly waived the 90 Mbps floor on 2026-10-16 and prioritized stabi
 ## Minimum DATA service recovery found during finalization
 
 An additional repetition exposed a five-second application recovery timeout after simultaneous client socket failures. Control repair alone was insufficient: the sole DATA receiver and the first usable DATA writer could join optional LOGIN queues, while the scheduler correctly refused lanes with no DATA writer. Their restoration now uses critical repair admission; extra parallel writers remain ordinary and paced. The targeted failure scenario passed three consecutive runs after both minimum services were prioritized. The final complete core/Android build and reduced fresh/retained load checks use this corrected runtime. At the user’s request, redundant standalone field repetitions and the added commit-delay experiment were removed; they are not claimed as final passes.
+
+## Final user-requested scope
+
+Broad final reruns and extra matrix repetitions were stopped to conserve usage at the user’s explicit request. Final corrected-source recovery tests, race checks, APK tests/lint, Linux builds and one retained MULTI/post-load check passed. Earlier full-suite evidence is identified by its pre-fix source and is not claimed as a full final-runtime pass. The final release is a targeted-validation prerelease; HANDOFF.md and VALIDATION.json supersede the earlier planned matrix descriptions.

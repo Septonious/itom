@@ -1,7 +1,7 @@
 # ITOM
 
-Rev7 development checkpoint: control socket repair, critical LOGIN capacity and priority, bounded handshake reply recovery, notification fallback and retained quota work. Qualification is incomplete; no Rev7 assets are published.
+[Rev7 APK, Linux binaries and full project bundle](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev7)
 
-Latest published testing release: https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev6
+[Full project handoff](archives/rev7/source/HANDOFF.md) · [Editable Rev7 source](archives/rev7/source) · [Exact validation scope](archives/rev7/source/docs/rev7/evidence/rev7_validation.json)
 
-Source: [archives/rev7/source](archives/rev7/source). Retained-state SINGLE upload remains below the required speed floor.
+Rev7 repairs transport recovery and multiplexing. At the user's request, finalization used targeted recovery/race, Android and retained-load checks after the last fix. The earlier full-suite pass is recorded separately; a complete final-runtime rerun and live-device/provider validation are not claimed. The 90 Mbps floor was waived. Update app and server together and preserve profiles and accounting state. GitHub Actions assembles and verifies exact artifacts and remote digests. Historical archives remain unchanged.

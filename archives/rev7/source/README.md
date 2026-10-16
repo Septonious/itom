@@ -1,6 +1,6 @@
 # ITOM 0.9.2-Rev7
 
-Rev7 repairs physical control sockets without restarting encrypted carriers, prioritizes critical socket repair, retries missing authenticated handshake replies, bounds missed-IDLE audit delay, and reworks retained-state duplex admission and ordered multiplexed batching. See [the paired-capture investigation](docs/rev7/REV7_ANALYSIS_2026-10-16.md) and [exact qualification evidence](docs/rev7/evidence/rev7_validation.json). All internal gates are required before packaging.
+Rev7 repairs physical control sockets without restarting encrypted carriers, prioritizes critical socket repair, retries missing authenticated handshake replies, bounds missed-IDLE audit delay, and reworks retained-state duplex admission and ordered multiplexed batching. See [the paired-capture investigation](docs/rev7/REV7_ANALYSIS_2026-10-16.md) and [exact qualification evidence](docs/rev7/evidence/rev7_validation.json). Final release validation was explicitly reduced to targeted checks at the user’s request; see [the complete handoff](HANDOFF.md) for exact scope and remaining validation.
 
 Rev6 bounds optional startup sockets, keeps idle IMAP sockets alive without blocking active commands, adds a CLI-only full accounts reset, exposes safe LOGIN response categories and removes the settings introduction banner. See [startup and idle analysis](docs/rev6/REV6_ANALYSIS_2026-10-16.md).
 

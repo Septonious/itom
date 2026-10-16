@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / 'archives/rev7/manifest.json'
-CLASSIFICATION = 'REV7_LAB_QUALIFIED_PRERELEASE'
+CLASSIFICATION = 'REV7_TARGETED_VALIDATION_PRERELEASE'
 
 
 def require(condition, message):
@@ -38,9 +38,9 @@ def verify_gates(manifest, output):
     require(status['classification'] == CLASSIFICATION and status['stable_release_ready'] is False,
             'Field validation must remain explicit')
     require(status['release_tag'] == manifest['release_tag'], 'Wrong testing tag')
-    require(status['all_internal_gates_passed'] is True and evidence['all_internal_gates_passed'] is True,
+    require(status['all_required_targeted_checks_passed'] is True and evidence['all_required_targeted_checks_passed'] is True,
             'Every internal gate must pass')
-    require(status['internally_stability_qualified'] is True and status['throughput_floor_waived_by_user'] is True,
+    require(status['internally_stability_qualified'] is False and status['throughput_floor_waived_by_user'] is True,
             'Stability qualification and the user throughput waiver must be explicit')
     require(status['mobile_crash_resolved'] is False and evidence['stable_release_ready'] is False,
             'Unconfirmed field crash must remain disclosed')
@@ -48,79 +48,47 @@ def verify_gates(manifest, output):
             manifest['qualification_source_sha256'], 'Qualification source mismatch')
     require(status['qualified_source_commit'] == manifest['qualified_source_commit'], 'Source commit mismatch')
     require(status['core_runtime_sha256'] == evidence['first_party_core_runtime_sha256'], 'Runtime mismatch')
-    core = evidence['core']
-    require(core['passed_test_events'] > 0 and core['failed'] == core['skipped'] == 0, 'Core gate failed')
-    require(evidence['imap_fork_tests'] == evidence['vet'] == 'passed', 'IMAP/vet gate failed')
-    for group in ('android_domain_tests', 'android_callback_adapter_tests'):
-        tests = evidence[group]
-        require(tests['tests'] > 0 and tests['failures'] == tests['errors'] == tests['skipped'] == 0,
-                'Android gate failed: ' + group)
-    require(evidence['android_lint']['errors'] == 0, 'Lint errors')
-    field = evidence['field_suite']
-    require(field['source']=='mandatory complete core gate' and field['repetitions']==1 and
-            field['all_passed'] and field['cases_passed']==48 and len(field['required_cases'])==48,
-            'Complete mandatory field suite missing')
-    require(evidence['reduced_testing_by_user_request'] is True, 'Reduced repetition scope must be explicit')
-    require(bool(evidence['race_checks']) and all(x['passed_test_events'] > 0 and
-            x['failed'] == x['skipped'] == 0 for x in evidence['race_checks'].values()), 'Race gate failed')
-    steps = evidence['pipeline_steps']
-    required_steps={'candidate-python','candidate-android','candidate-core-server','candidate-race-accounting','candidate-race-recovery','candidate-native-vet','candidate-admin-native-race','candidate-speed','candidate-speed-retained'}
-    require(len(steps) == 9 and {x['name'] for x in steps} == required_steps and all(x['passed'] and x['exit_code'] == 0 for x in steps), 'Incomplete pipeline')
-    admin=evidence['admin_features']
-    require(admin['server_authoritative_role'] and admin['additional_private_key_challenge'] and admin['durable_independent_watchdog'] and admin['loss_timeout_seconds']==60 and admin['healthy_trial_seconds']==60 and admin['irreversible_operations_cli_only'] and admin['native_imap_reconnect_race_test'] and admin['actual_server_supervisor_restart_tested'] and admin['server_restart_recovery_ms']<60000, 'Admin safety gates incomplete')
-    criteria = evidence['speed_criteria']
-    require(criteria['qualification_mode'] == 'stability' and criteria['throughput_floor_enforced'] is False and
-            criteria['useful_upload_mbps_min'] is criteria['useful_download_mbps_min'] is None and
-            criteria['positive_duplex_every_second_required'] is True and
-            criteria['tolerance_percent'] == 10 and
-            criteria['all_loaded_rtt_ns_strictly_below'] == 1100000000 and
-            evidence['internally_stability_qualified'] is True and evidence['throughput_floor_waived_by_user'] is True,
-            'Only the declared throughput floor waiver is allowed')
-    require(evidence['retained_speed_scenario']['retained_state'] is True, 'Missing retained-state matrix')
-    for group in ('speed_cases','retained_speed_cases'):
-        cases = evidence[group]
-        require({x['name'] for x in cases} == {f'{mode}-{i}' for mode in ('single','multi') for i in range(1,2)}
-                and len(cases) == 2, 'Missing fresh qualification cases')
-        for case in cases:
-            accepted = case['supervised_acceptance']
-            probes = case['supervised_result']
-            require(case['passed'] and accepted['accepted'] == 'true' and
-                    float(accepted['minimum_verified_mbps']) > 0 and 0 < int(accepted['max_rtt_ns']) < 1100000000
-                    and probes['timeouts'] == probes['missed'] == '0' and probes['rtt_samples'] == probes['overlap'] == '30',
-                    'Stability/RTT gate failed: ' + case['name'])
-            require(case['positive_duplex_every_second'] and case['post_load_original_socket_exchanges']==6 and
-                    case['post_load_fresh_verified_bytes']==262144 and case['original_socket_rechecked_after_fresh_transfer'] and
-                    case['carrier_epochs_preserved'], 'Post-load stability evidence incomplete: '+case['name'])
-    require((output/'HANDOFF.md').stat().st_size > 5000, 'Full project handoff missing')
+    require(status['all_required_targeted_checks_passed'] is True and evidence['all_required_targeted_checks_passed'] is True,
+            'Targeted checks incomplete')
+    require(status['all_internal_gates_passed'] is False and evidence['all_internal_gates_passed'] is False and
+            evidence['final_full_suite_completed'] is False and evidence['user_requested_targeted_finalization'] is True,
+            'Targeted release must disclose the incomplete final full suite')
+    require(evidence['baseline_full_suite']['core']['failed']==evidence['baseline_full_suite']['core']['skipped']==0 and
+            evidence['baseline_full_suite']['core']['passed_test_events']>0, 'Baseline evidence missing')
+    require(evidence['final_targeted_race']['passed'] and evidence['final_targeted_race']['failed']==evidence['final_targeted_race']['skipped']==0,
+            'Targeted recovery race failed')
+    for group in ('android_domain_tests','android_app_tests'):
+        tests=evidence[group]
+        require(tests['tests']>0 and tests['failures']==tests['errors']==tests['skipped']==0,'Android checks failed')
+    require(evidence['android_lint']['errors']==0,'Lint failed')
+    load=evidence['final_load']
+    require(load['source_sha256']==manifest['qualification_source_sha256'] and load['all_lab_cases_passed'] and
+            len(load['cases'])==1 and load['cases'][0]['ok'] and load['scenario']['retained_state'] and
+            load['scenario']['streams']=='multi' and load['scenario']['seconds']==60 and
+            load['criteria']['throughput_floor_enforced'] is False,'Final retained-load check failed')
+    require(evidence['post_load_same_socket_exchanges']==6 and evidence['post_load_fresh_verified_bytes']==262144 and
+            evidence['original_socket_rechecked'],'Post-load checks missing')
+    require((output/'HANDOFF.md').stat().st_size>4000,'Full handoff missing')
     with zipfile.ZipFile(output/'TEST_EVIDENCE.zip') as logs:
-        require(logs.testzip() is None, 'Test evidence ZIP corruption')
-        names = logs.namelist()
-        require(len(names) == len(set(names)), 'Duplicate test evidence entries')
-        index = json.loads(logs.read('MANIFEST.json'))
-        require(set(names) == set(index) | {'MANIFEST.json'}, 'Incomplete test evidence manifest')
+        require(logs.testzip() is None,'Evidence ZIP corruption')
+        index=json.loads(logs.read('MANIFEST.json'))
+        require(len(logs.namelist())==len(set(logs.namelist())) and set(logs.namelist())==set(index)|{'MANIFEST.json'},'Evidence entries mismatch')
         for name, expected in index.items():
-            path = PurePosixPath(name)
-            require(not path.is_absolute() and '..' not in path.parts, 'Unsafe test evidence path')
-            raw = logs.read(name)
-            require(len(raw) == expected['size'] and hashlib.sha256(raw).hexdigest() == expected['sha256'],
-                    'Test evidence manifest mismatch: '+name)
-        raw_core=logs.read('core/events.jsonl')
-        require(hashlib.sha256(raw_core).hexdigest()==field['core_events_sha256'], 'Core field evidence digest mismatch')
-        events=[json.loads(line) for line in raw_core.decode().splitlines() if line.startswith('{')]
-        require(not any(e.get('Action') in ('fail','skip') for e in events), 'Failed/skipped core evidence')
-        passed=[e['Test'] for e in events if e.get('Action')=='pass' and e.get('Test')]
-        require(len(passed)==core['passed_test_events'] and set(field['required_cases'])<=set(passed),
-                'Incomplete mandatory core or field evidence')
-        for folder, count in (('speed-final',2),('speed-retained',2)):
-            report = json.loads(logs.read(folder+'/results.json'))
-            require(report['source_sha256'] == manifest['qualification_source_sha256'], 'Evidence log source mismatch')
-            runs = report.get('cases',report.get('runs',[]))
-            require(len(runs) == count, 'Incomplete evidence log matrix')
-            for run in runs:
-                raw = logs.read(folder+'/'+basename(run['log']))
-                require(hashlib.sha256(raw).hexdigest() == run['log_sha256'], 'Qualification log digest mismatch')
-                require(run.get('ok',run.get('passed')) is True and run['exit_code'] == 0,
-                        'Failed qualification log included')
+            raw=logs.read(name)
+            require(len(raw)==expected['size'] and hashlib.sha256(raw).hexdigest()==expected['sha256'],'Evidence digest mismatch')
+        raw=logs.read('final-targeted-race.jsonl')
+        require(hashlib.sha256(raw).hexdigest()==evidence['final_targeted_race']['log_sha256'],'Targeted race digest mismatch')
+        events=[json.loads(x) for x in raw.decode().splitlines() if x.startswith('{')]
+        require(not any(x.get('Action') in ('fail','skip') for x in events),'Targeted race evidence failed')
+        passed={x['Test'] for x in events if x.get('Action')=='pass' and x.get('Test')}
+        require(set(evidence['final_targeted_race']['required'])<=passed,'Targeted recovery cases missing')
+        case=load['cases'][0];raw=logs.read('final-load/'+basename(case['log']))
+        require(hashlib.sha256(raw).hexdigest()==case['log_sha256'],'Final load digest mismatch')
+        messages=[json.loads(x).get('Output','') for x in raw.decode().splitlines() if x.startswith('{')]
+        require(sum('supervised_post_stress ' in x for x in messages)==6 and
+                any('supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true' in x for x in messages) and
+                any('supervised_stability windows=60 positive_duplex_every_window=true throughput_floor_enforced=false' in x for x in messages) and
+                any('supervised_acceptance ' in x and 'accepted=true' in x for x in messages),'Load/post-load evidence incomplete')
     apks = list(output.glob('*.apk'))
     require(len(apks) == 1 and digest(apks[0]) == status['apk_sha256'], 'APK identity mismatch')
     with zipfile.ZipFile(apks[0]) as apk:
@@ -188,7 +156,7 @@ def assemble(manifest, output):
         checksum_names.add(name)
     require(checksum_names == set(asset_names)-{full.name,full_sha,'SHA256SUMS'}, 'Incomplete checksum list')
     verify_gates(manifest, output)
-    print('Verified',len(asset_names),'assets; all internal gates passed; Rev7 prerelease; physical field validation pending')
+    print('Verified',len(asset_names),'assets; targeted checks passed; final full suite not rerun; Rev7 prerelease; physical field validation pending')
 
 
 def verify_remote(manifest, response, repository, output, expected_commit):
@@ -220,7 +188,7 @@ def main():
     args = parser.parse_args()
     manifest = json.loads(MANIFEST.read_text())
     require(manifest['classification'] == CLASSIFICATION and manifest['stable_release_ready'] is False and
-            manifest['all_internal_gates_passed'] is True, 'Manifest must describe qualified Rev7 prerelease assets')
+            manifest['all_internal_gates_passed'] is False and manifest['all_required_targeted_checks_passed'] is True, 'Manifest must describe qualified Rev7 prerelease assets')
     if args.verify_release_json:
         require(bool(args.repository and args.expected_commit), 'Remote verification needs repo and commit')
         verify_remote(manifest,json.loads(args.verify_release_json.read_text()),args.repository,
