@@ -31,14 +31,14 @@ checks={}
 for kind,name in [('race','final-correctness.jsonl'),('normal','final-recovery.jsonl')]:
  ev=events(W/name);line=next(e['Output'] for e in ev if 'minimum_service_recovery_ms=' in e.get('Output',''))
  checks[kind]={'passed':True,'log_sha256':digest(W/name),'passed_test_events':sum(e['Action']=='pass' and bool(e.get('Test'))for e in ev),'minimum_service_recovery_ms':int(re.search(r'minimum_service_recovery_ms=(\d+)',line).group(1)),'restored_active_lines':20,'original_tcp_retained':True,'fresh_256k_transfer_verified':True,'carrier_restarts':0}
-required={'TestV1EarlyNackSurvivesWriterAndVisibilityGrace','TestV1NackDuringVisibilityGraceNeedsNoSecondProbe','TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal','TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt','TestRev11MultiRampThroughBriefProviderPause','TestRev11BriefProviderSilencePreservesAllReceiveSockets','TestRev11PersistentReceiveBlackholeStillRepairs'}
+required={'TestRC2BulkFeedbackEscapesStalledAffinity','TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion','TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt','TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream','TestV1EarlyNackSurvivesWriterAndVisibilityGrace','TestV1NackDuringVisibilityGraceNeedsNoSecondProbe','TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal','TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt','TestRev11MultiRampThroughBriefProviderPause','TestRev11BriefProviderSilencePreservesAllReceiveSockets','TestRev11PersistentReceiveBlackholeStillRepairs'}
 assert required <= {e.get('Test')for e in events(W/'final-correctness.jsonl')if e['Action']=='pass'}
 assert any('concurrent_tcp_streams=12 verified_mib_each_direction=12' in e.get('Output','')for e in events(W/'final-recovery.jsonl'))
 q={'schema':5,'classification':CLASS,'stable_release_ready':False,'all_internal_gates_passed':False,
 'all_required_targeted_checks_passed':True,'targeted_correctness_passed':True,'final_full_suite_completed':False,
 'user_requested_targeted_finalization':True,'qualification_source_sha256':identity,'first_party_core_runtime_sha256':runtime,
 'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'recovery_checks':checks,
-'account_stall_routing_regressions_passed':True,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,
+'historical_rc1_capped_race_case_retested':True,'capped_mixed_socket_race_passed':True,'account_stall_routing_regressions_passed':True,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,
 'verified_mib_each_direction':12,'temporary_response_stall_ms':2400,'original_receive_generations_preserved':20,
 'baseline_regression_reproduced':True,'baseline_log_sha256':digest(W/'before-fix.jsonl'),
 'baseline_scope':'RC1 production routing plus inert elapsed-work observation fails the new feedback-affinity and OPEN-ranking regressions. No stall recovery or throughput certificate is inferred from this deterministic reproduction.',

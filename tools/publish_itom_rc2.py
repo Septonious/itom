@@ -47,7 +47,7 @@ def verify_gates(manifest, output):
     require(status['core_runtime_sha256'] == evidence['first_party_core_runtime_sha256'], 'Runtime mismatch')
     require(evidence['final_full_suite_completed'] is False and evidence['user_requested_targeted_finalization'] is True,
             'Targeted scope must remain explicit')
-    require(evidence['targeted_correctness_passed'] and evidence['android_build_passed'], 'Required build checks failed')
+    require(evidence['targeted_correctness_passed'] and evidence['android_build_passed'] and evidence['all_required_targeted_checks_passed'], 'Required targeted/build checks failed')
     for group in ('android_domain_tests','android_app_tests'):
         tests=evidence[group]
         require(tests['tests']>0 and tests['failures']==tests['errors']==tests['skipped']==0,'Android checks failed')
@@ -70,7 +70,7 @@ def verify_gates(manifest, output):
         events=[json.loads(x) for x in raw.decode().splitlines() if x.startswith('{')]
         require(not any(x.get('Action') in ('fail','skip') for x in events),'Targeted correctness failed')
         require(any(x.get('Action')=='pass' and not x.get('Test') for x in events),'Targeted correctness incomplete')
-        required = {'TestRC2BulkFeedbackEscapesStalledAffinity', 'TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion', 'TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt', 'TestRev10DiscoveryThenAllClientSocketsLost', 'TestRev10ControlReplacementRetryBoundaries', 'TestV1EarlyNackSurvivesWriterAndVisibilityGrace', 'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe', 'TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt',
+        required = {'TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream', 'TestRC2BulkFeedbackEscapesStalledAffinity', 'TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion', 'TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt', 'TestRev10DiscoveryThenAllClientSocketsLost', 'TestRev10ControlReplacementRetryBoundaries', 'TestV1EarlyNackSurvivesWriterAndVisibilityGrace', 'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe', 'TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt',
                     'TestRev11BriefProviderSilencePreservesAllReceiveSockets', 'TestRev11MultiRampThroughBriefProviderPause', 'TestRev11PersistentReceiveBlackholeStillRepairs'}
         require(required <= {x.get('Test') for x in events if x.get('Action') == 'pass'}, 'Required race tests missing')
         require(any('active_lines_restored=20 original_tcp_retained=true' in x.get('Output','') for x in events),
