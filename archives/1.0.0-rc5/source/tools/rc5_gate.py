@@ -66,7 +66,7 @@ def main():
                         result_lines.append(line)
             maxima = []
             for line in result_lines:
-                for match in re.finditer(r"supervised_result\\b[^\\n]*?\\bmax_ms=(\\d+(?:\\.\\d+)?)", line):
+                for match in re.finditer(r"supervised_result\b[^\n]*?\bmax_ms=(\d+(?:\.\d+)?)", line):
                     maxima.append(float(match.group(1)))
             if not maxima or max(maxima) >= a.rtt_ms:
                 all_ok = False
