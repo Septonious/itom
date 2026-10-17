@@ -1,3 +1,24 @@
+## 2026-10-17: ten-account downstream bottleneck investigation (still NOT qualified)
+
+All results below are **individual 60-second, in-process modeled-provider MULTI runs**, 10 accounts / 24 TCP streams per direction, 80 ms declared command delay, Go 1.27.1 and GOMAXPROCS=4 under a four-CPU container quota. Rates are full-interval useful APPLICATION Mbps (download/upload), followed by max loaded RTT. Every completed case preserved its original carriers and application connections and had 0 probe misses/timeouts; none passed strict 100 Mbps DOWNLOAD or the 125 Mbps final target. Do not extrapolate to a physical phone/provider.
+
+| Candidate | Download | Upload | Max RTT | Decision |
+| --- | ---: | ---: | ---: | --- |
+| RC5 baseline (prior) | 71.539 | 148.295 | 436 | Retain |
+| Dedicated ordered Pump batch collector | 71.613 | 149.016 | 480 | Reject; large mutex contention not throughput blocker |
+| Third BODY in flight after authenticated healthy reads | 60.494 | 131.076 | 698 | Reject; harms speed and approaches latency ceiling |
+| Later local journal cleanup, 1 MiB → 2 MiB | 69.669 | 149.916 | 379 | Reject; saves some latency but worsens speed |
+| Test-only 16 MiB DATA journal (supported offline profile) | 80.845 | 112.337 | 547 | Reject as default; final 10-second download only 76.100 |
+| Exact accounting/peer-receipt telemetry, unmodified production code | 71.286 | 149.619 | 502 | Diagnostics only |
+
+**New confirmed bottleneck evidence:** At the end of the diagnostic run, every server account's `HeldByOrigin().local.Bytes` was ~4,965,000–4,969,000 (messages 11–16). The 12 MiB profile reserves 6.5 MiB for incoming wallet grants and 0.5 MiB for outbound short-DATA protection, leaving ~5 MiB local bulk headroom. Next complete ~496 KiB physical MIME batch often cannot fit until previous authenticated receipts, provider deletion and durable journal reclaim complete. The system's outbound physical budget is saturated on all ten accounts. All server account peer-read records were healthy (`peer_target=0`, `peer_slow=0`, 165–220 complete receipts), refuting the previous idea that conservative peer BODY pacing remains the sustained cap. Higher local quota alone improves download slightly but also burdens the opposing direction and cannot fulfill 100/100.
+
+The new test-only `supervised_physical` telemetry captures per-account peer-read feedback, queued BODYs, local and remote durable bytes/ordinals at the **end** of the load measurement. No extra physical capacity, credit, cleanup proof, fsync, crypto, packet format or production scheduling was changed. Treat an end-state cap as evidence for reclamation/turnover pressure, not mathematical proof of one sole cause of all throughput loss.
+
+**Next priority:** quantitatively profile exact current-session receipt→obsolete→physical deletion→journal reclaim age and local grant-headroom wait distribution. Optimize proven cleanup/reuse inefficiencies without deleting unproven UID debt, raising message/account connection caps, shrinking the fast reserve, reusing unknown APPEND grants, or sacrificing the sub-750 ms loaded RTT goal. 12-case 10-account full fresh+retained speed gate remains mandatory. No release/tag or build is authorized by these tests.
+
+---
+
 ## Final supplementary 10-account A/B cases (unqualified single runs)
 
 - **SINGLE**, 10 accounts, one stream per direction, candidate with RC5 cold-ramp changes, GOMAXPROCS=4, 60 seconds: download 75.694 Mbps, upload 154.569 Mbps, max loaded RTT 438 ms; tails last30s download 75.069 and upload 153.651 Mbps. No missed/timed-out probes, but STRICT speed FAIL.
