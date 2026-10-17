@@ -13,3 +13,19 @@ All results here are **laboratory only**, not live IMAP/provider, and not a rele
 This distinguishes the observed server-outbound headroom limitation from the previously failed experiments enlarging *both* endpoint journals. Next isolate server 24 MiB/client 12 MiB entirely in disposable local test source without adding a non-allowlisted journal profile to GitHub or production. Even if a single laboratory case reaches 100/100 and <750ms, independent fresh/retained SINGLE/MULTI repeats and real Android/provider confirmation remain necessary.
 
 No deployment, release, migration or material performance guarantee is implied.
+
+
+## Server 24 MiB / client 12 MiB (local disposable, not a supported production profile)
+
+A separate test-only local source changed the **server's** physical DATA journal to 24 MiB / 384 messages and extended ONLY the local compatibility fixture. This value is NOT present in the committed production profile allowlist. Ten accounts, 24 concurrent application streams per direction, 80ms modeled IMAP commands, modeled 600 Mbps provider, four Go execution threads, fresh state, 60-second full measurement:
+
+- **Download 106.959 Mbps; upload 44.661 Mbps** over the full 60 seconds.
+- Last 30 seconds: download **111.455 Mbps**, upload **32.130 Mbps**.
+- Last 10 seconds: download **111.175 Mbps**, upload **16.803 Mbps**.
+- Loaded RTT median 309ms, p95 402ms, maximum **489.774ms**.
+- 30/30 overlapping probes, zero misses and zero timeouts. Original carrier/application survival and post-load exchanges were checked; **strict 100/100 throughput FAIL**.
+- Client delivery controller entered `CONGESTED` with observed ACK RTT ~2.39s, oldest bulk range ~2.78s and fast acknowledgment age ~2.47s while the server-side sender remained `NORMAL`. Several server accounts held ~11–12 MB of locally published outbound DATA at the end of the measurement.
+
+**Result:** Enlarging *only* server DATA journal did NOT prevent upstream starvation. Additional outbound capacity on the server alone cannot satisfy simultaneous upload/download targets. The 24 MiB profile is REJECTED; no code, journal migration, or operational recommendation uses it. The experiment strongly motivates measuring bidirectional peer feedback and DATA-read service latency rather than further buffer expansion.
+
+GitHub retains only the safe, allowlisted **server 16 MiB / client 12 MiB** test runner and documented failed results. Next software experiment should preserve RC2's 12 MiB production default, the two fast-carrier reserves, and the proof-based physical quota lifecycle.
