@@ -1,0 +1,46 @@
+{"Time":"2026-10-16T16:31:27.753036636Z","Action":"start","Package":"itom.local/core/mailbox"}
+{"Time":"2026-10-16T16:31:27.787041756Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin"}
+{"Time":"2026-10-16T16:31:27.787404031Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.78749854Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls"}
+{"Time":"2026-10-16T16:31:27.787503003Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.812142979Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.812193812Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/tls","Elapsed":0.02}
+{"Time":"2026-10-16T16:31:27.812254164Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls"}
+{"Time":"2026-10-16T16:31:27.812261494Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Output":"=== RUN   TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.833397529Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.833550273Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin/starttls","Elapsed":0.02}
+{"Time":"2026-10-16T16:31:27.833855954Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Output":"--- PASS: TestRev9PinnedIPPreservesTLSAndPersistentLogin (0.05s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.833870629Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinnedIPPreservesTLSAndPersistentLogin","Elapsed":0.05}
+{"Time":"2026-10-16T16:31:27.833876505Z","Action":"run","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS"}
+{"Time":"2026-10-16T16:31:27.833880495Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"=== RUN   TestRev9PinNeverDisablesTLSOrFallsBackToDNS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.853568288Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"--- PASS: TestRev9PinNeverDisablesTLSOrFallsBackToDNS (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:27.853616583Z","Action":"output","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Output":"2026/10/16 16:31:27 failed to write greeting: remote error: tls: bad certificate\n"}
+{"Time":"2026-10-16T16:31:27.853621872Z","Action":"pass","Package":"itom.local/core/mailbox","Test":"TestRev9PinNeverDisablesTLSOrFallsBackToDNS","Elapsed":0.02}
+{"Time":"2026-10-16T16:31:27.853629187Z","Action":"output","Package":"itom.local/core/mailbox","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.110053255Z","Action":"start","Package":"itom.local/core/servercfg"}
+{"Time":"2026-10-16T16:31:28.127919436Z","Action":"run","Package":"itom.local/core/servercfg","Test":"TestAndroidInvitationMatchesUserFoldersAndCredentials"}
+{"Time":"2026-10-16T16:31:28.128035647Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestAndroidInvitationMatchesUserFoldersAndCredentials","Output":"=== RUN   TestAndroidInvitationMatchesUserFoldersAndCredentials\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.131936568Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestAndroidInvitationMatchesUserFoldersAndCredentials","Output":"--- PASS: TestAndroidInvitationMatchesUserFoldersAndCredentials (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.131979238Z","Action":"pass","Package":"itom.local/core/servercfg","Test":"TestAndroidInvitationMatchesUserFoldersAndCredentials","Elapsed":0}
+{"Time":"2026-10-16T16:31:28.13302205Z","Action":"run","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity"}
+{"Time":"2026-10-16T16:31:28.133040366Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Output":"=== RUN   TestRev9PinExportAndClearKeepsAccountIdentity\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.135171653Z","Action":"output","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Output":"--- PASS: TestRev9PinExportAndClearKeepsAccountIdentity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.135204821Z","Action":"pass","Package":"itom.local/core/servercfg","Test":"TestRev9PinExportAndClearKeepsAccountIdentity","Elapsed":0}
+{"Time":"2026-10-16T16:31:28.135454248Z","Action":"output","Package":"itom.local/core/servercfg","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:28.860306092Z","Action":"output","Package":"itom.local/core/mailbox","Output":"ok  \titom.local/core/mailbox\t1.107s\n"}
+{"Time":"2026-10-16T16:31:28.860372528Z","Action":"pass","Package":"itom.local/core/mailbox","Elapsed":1.107}
+{"Time":"2026-10-16T16:31:29.139269975Z","Action":"output","Package":"itom.local/core/servercfg","Output":"ok  \titom.local/core/servercfg\t1.029s\n"}
+{"Time":"2026-10-16T16:31:29.139341074Z","Action":"pass","Package":"itom.local/core/servercfg","Elapsed":1.029}
+{"Time":"2026-10-16T16:31:35.579028597Z","Action":"start","Package":"itom.local/core/manager"}
+{"Time":"2026-10-16T16:31:35.599380641Z","Action":"run","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear"}
+{"Time":"2026-10-16T16:31:35.5994816Z","Action":"output","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Output":"=== RUN   TestRev9ManagerPinAllAndClear\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:35.602880691Z","Action":"output","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Output":"--- PASS: TestRev9ManagerPinAllAndClear (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:35.603006265Z","Action":"pass","Package":"itom.local/core/manager","Test":"TestRev9ManagerPinAllAndClear","Elapsed":0}
+{"Time":"2026-10-16T16:31:35.603176873Z","Action":"output","Package":"itom.local/core/manager","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:36.115538752Z","Action":"start","Package":"itom.local/core/adminserver"}
+{"Time":"2026-10-16T16:31:36.130038169Z","Action":"output","Package":"itom.local/core/adminserver","Output":"testing: warning: no tests to run\n"}
+{"Time":"2026-10-16T16:31:36.130160436Z","Action":"output","Package":"itom.local/core/adminserver","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-16T16:31:36.605008019Z","Action":"output","Package":"itom.local/core/manager","Output":"ok  \titom.local/core/manager\t1.026s\n"}
+{"Time":"2026-10-16T16:31:36.605066464Z","Action":"pass","Package":"itom.local/core/manager","Elapsed":1.026}
+{"Time":"2026-10-16T16:31:37.133459509Z","Action":"output","Package":"itom.local/core/adminserver","Output":"ok  \titom.local/core/adminserver\t1.018s [no tests to run]\n"}
+{"Time":"2026-10-16T16:31:37.133578384Z","Action":"pass","Package":"itom.local/core/adminserver","Elapsed":1.018}
