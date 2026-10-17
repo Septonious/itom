@@ -61,7 +61,7 @@ jobs:
           GOMAXPROCS: "4"
         run: |
           go test -race -count=1 -timeout=360s ./tunnel ./mailbox \
-            -run 'TestRC6|TestRC2|TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable|TestRev6OptionalLoginBudgetNeverSwallowsParentCancellation|TestIdleDoneStallInterruptsAndJoinsBeforeNextCommand'
+            -run 'TestRC5|TestRC6|TestRC2|TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable|TestRev6OptionalLoginBudgetNeverSwallowsParentCancellation|TestIdleDoneStallInterruptsAndJoinsBeforeNextCommand'
       - name: Record correctness outcome
         if: always()
         uses: actions/upload-artifact@v4
