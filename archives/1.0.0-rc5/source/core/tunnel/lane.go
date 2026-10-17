@@ -1121,6 +1121,7 @@ func (l *lane) sendCarrierControl(ctx context.Context, f wire.Frame) error {
 	l.traceFrame("frame_queued", f, nil)
 	f.Payload = append([]byte(nil), f.Payload...)
 	queued := queuedControl{Frame: f, added: time.Now()}
+	queued.latestAt = queued.added
 	if f.Type == wire.GCStatus {
 		return l.enqueueQuotaControl(ctx, queued)
 	}
