@@ -609,6 +609,20 @@ func supervisedSnapshots(ctx context.Context, t *testing.T, f *productionSupervi
 		raw, _ := json.Marshal(data)
 		t.Logf("supervised_debt index=%d lanes=%s", index, raw)
 		for _, l := range lanes {
+			// Diagnostic only: distinguish a saturated physical DATA receiver
+			// from queued account admission. Read each gate atomically under its
+			// own mutex; never hold it during logging or transport I/O.
+			if m := physicalMail(l.mail); m != nil && m.dialGate != nil {
+				b := &m.dialGate.work
+				b.mu.Lock()
+				var queued [workClassCount]int
+				for i := range queued {
+					queued[i] = len(b.queues[i])
+				}
+				busy, service := b.busy, b.service
+				b.mu.Unlock()
+				t.Logf("supervised_account_work index=%d account=%s server=%t queued=%v busy=%v service_ns=%v", index, l.account.ID, l.side, queued, busy, service)
+			}
 			if l.diag == nil {
 				continue
 			}
