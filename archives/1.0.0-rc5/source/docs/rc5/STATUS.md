@@ -1,3 +1,12 @@
+## Final supplementary 10-account A/B cases (unqualified single runs)
+
+- **SINGLE**, 10 accounts, one stream per direction, candidate with RC5 cold-ramp changes, GOMAXPROCS=4, 60 seconds: download 75.694 Mbps, upload 154.569 Mbps, max loaded RTT 438 ms; tails last30s download 75.069 and upload 153.651 Mbps. No missed/timed-out probes, but STRICT speed FAIL.
+- **MULTI**, 10 accounts, 24 streams per direction, existing DATA-shard configuration set to **2** instead of 1 (same code, GOMAXPROCS=4): download 70.892 Mbps, upload 151.921 Mbps, max loaded RTT 445 ms; last30s download 70.508, upload 152.349 Mbps. No missed/timed-out probes, but STRICT speed FAIL. This experiment does not justify changing default DATA-shard layout, which can consume extra provider resources.
+
+The existing eight-worker, one-shard, four-CPU MULTI reference remains 71.539 Mbps down, 148.295 Mbps up, max 436 ms. Neither extra workers nor an extra DATA shard lifted sustained downstream above the required floor. Source remains an **unpublished RC5 development branch** with no qualifying release artifact.
+
+---
+
 ## Additional performance investigation (2026-10-17)
 
 A separate GOMAXPROCS=4 experiment with *ten* global bulk workers, 10 accounts and identical provider parameters yielded download **68.931 Mbps**, upload **151.620 Mbps**, max loaded RTT **474 ms**. This lost download and worsened RTT versus eight workers (71.539 / 148.295 Mbps, 436 ms). The ten-worker experiment is rejected and was never added to the branch.
