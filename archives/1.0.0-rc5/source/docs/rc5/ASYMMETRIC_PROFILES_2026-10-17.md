@@ -48,3 +48,23 @@ A one-change experiment removed only the extra **rate-derived clamp** following 
 Server 24 MiB/client 12 MiB, 10 accounts, 24 streams/direction, 60 seconds: download **110.070 Mbps**, upload **27.700 Mbps**, last 30 seconds **110.590/14.759**, last 10 seconds **109.943/13.107** Mbps. Max loaded RTT **392.471ms**, all 30/30 probes completed. **Strict 100/100 FAIL.** The rate-clamp change is rejected and was reverted in the local experiment. The remaining deficit is authenticated upload feedback/service scheduling, not a single bad reduction formula.
 
 Next isolated hypothesis tests backlog-aware bulk feedback routing **only among existing eight non-reserved eligible carriers**, with the original control class, 20ms coalescing and physical quota unchanged. Do not commit that route change unless it meets duplex performance and unchanged stability tests.
+
+
+## 12 MiB versus server-only 24 MiB: control and receive counters (October 17)
+
+The new **development-only** `rc5_duplex_feedback` per-client-account counters were compared on two independent 10-account / 24-stream / 60s fresh-state modeled-provider runs. These aggregates include warmup and maintenance; they are not per-second TCP goodput.
+
+| Counter/measurement | 12 MiB server / 12 MiB client | 24 MiB server / 12 MiB client |
+| --- | ---: | ---: |
+| Full application download Mbps | 74.012 | 108.095 |
+| Full application upload Mbps | 152.878 | 34.891 |
+| Max loaded echo RTT ms | 498 | 412 |
+| Client-side physical CONTROL APPENDs, 10 accounts total | 6722 | 6744 |
+| Physical CONTROL bytes, client-side, 10 accounts total | 13,680,944 | 14,068,140 |
+| Client-side DATA FETCH MIME bytes, 10 accounts total | 912,809,965 | 1,291,951,896 |
+| Per-account client DATA callback maximum wait | 0 ms in recorded precision | 0 ms in recorded precision |
+| Client-side local cleanup runs, 10 accounts total | 1048 | 622 |
+
+The nearly unchanged **physical CONTROL APPEND count** does not support the simple theory that a new flood of tiny controls causes the 24 MiB failure. Increased physical client DATA FETCH bytes confirm greater downstream load. Only client-side diagnostic counters were available in this run, so these cannot establish the server-to-client ACK sealing or visibility time; these must be measured explicitly. Upload collapsed in the server-only 24 MiB run even though all ten client-side remote grant waits reported zero and DATA callback handoff delays were negligible. No counters contain account credentials, payloads, mailbox IDs or cryptographic material.
+
+An isolated test-only shared server DATA publication pacer is now being evaluated to see whether physical batch **burstiness**, rather than average control volume, causes bidirectional starvation. Its speed and RTT must be measured before any consideration of committing transport code. Neither extra 24 MiB quota nor pacer is part of the published/deployable source.
