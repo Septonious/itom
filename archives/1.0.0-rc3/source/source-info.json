@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "release": "RC3",
+  "revision": "itom-1-0-0-rc3",
+  "archive_name": "ITOM-1.0.0-RC3-sources.zip",
+  "baseline": "1.0.0 RC2",
+  "qualification": "1.0.0 stabilization candidate; no stable/live-provider certification until final gates pass",
+  "android_version_name": "1.0.0-rc3",
+  "android_version_code": 10002,
+  "android_application_id": "org.itom.client.dev.rev7"
+}

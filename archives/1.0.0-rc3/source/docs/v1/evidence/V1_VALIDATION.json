@@ -1,0 +1,92 @@
+{
+  "schema": 4,
+  "classification": "V1_0_0_RC1_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "qualification_source_sha256": "25d5746deca147a57770ac91b0399cd37660ffdc8a016d70700d1a51a9cf393b",
+  "first_party_core_runtime_sha256": "2d98090c39aedaeef3bec6a9cda81e9d8c88c2be74b765732666a4553d09138c",
+  "generated_utc": "2026-10-16T23:31:16.762286+00:00",
+  "recovery_checks": {
+    "race": {
+      "passed": true,
+      "log_sha256": "9a04c7310965432f6e683f79cebb6cb769beb65e5e3e912b581e821c43e884fa",
+      "passed_test_events": 22,
+      "minimum_service_recovery_ms": 1223,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    },
+    "normal": {
+      "passed": true,
+      "log_sha256": "4b24ece4f57341954c4bf66e79564620223c192e1672e4bd53e8387eb652fedc",
+      "passed_test_events": 6,
+      "minimum_service_recovery_ms": 1056,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    }
+  },
+  "deferred_nack_regressions_passed": true,
+  "multi_ramp_streams": 12,
+  "verified_mib_each_direction": 12,
+  "temporary_response_stall_ms": 2400,
+  "original_receive_generations_preserved": 20,
+  "baseline_regression_reproduced": true,
+  "baseline_log_sha256": "e280dc229fe84bcfad4e9973735208c09b12d9359675b51918b730bb6d98d6d0",
+  "baseline_scope": "The first two new tests reproduce discarded early NACKs. A third preliminary fixture used an unconfigured account and was corrected before final qualification.",
+  "performance_retested": false,
+  "strict_performance_passed": false,
+  "strict_performance_status": "not_retested",
+  "strict_speed_target_mbps": 100,
+  "speed_tolerance_percent": 0,
+  "jitter_target_passed": false,
+  "jitter_status": "not_retested",
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "launcher_tests_passed": 45,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "known_exploratory_race_timeout": "An older capped mixed-socket test exceeded its fixed 12-second transfer deadline under race instrumentation on this candidate. Its normal rerun passed in approximately 2.7 seconds. No blanket internal-gate pass is claimed.",
+  "limitations": [
+    "Targeted checks only; complete final internal suite not run.",
+    "The older capped-socket race deadline failure remains a qualification limit.",
+    "The supplied field captures and screenshot use Rev10; they do not qualify the new candidate.",
+    "No new sustained throughput or jitter certificate; strict 100 Mbps target remains unchanged.",
+    "No physical Android/provider follow-up or visual interaction qualification in this pass."
+  ]
+}
