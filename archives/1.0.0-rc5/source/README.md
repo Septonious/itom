@@ -1,3 +1,11 @@
+# ITOM 1.0.0 RC5 — unpublished RC2-based development
+
+This branch is derived from the exact v1.0.0-rc2 source. RC3 and RC4 hot-polling changes are not included because their field performance and stability regressed or remain unproven. Current progress: runtime/build identities and a strict 12-case >=100 Mbps / <750 ms qualification gate at `tools/rc5_gate.py`. NO RC5 runtime or throughput test has yet been completed in the authoring environment, and no release is authorized. See [RC5 status and qualification](docs/rc5/STATUS.md).
+
+The following is preserved RC2 historical documentation and its earlier test status, NOT RC5 validation.
+
+---
+
 # ITOM 1.0.0 RC2 — targeted stabilization candidate
 
 Steers new work and cumulative feedback away from an account with a stalled control writer while retaining its connection and durable accounting. See [handoff](HANDOFF.md), [analysis](docs/rc2/INVESTIGATION.md) and packaged validation for exact scope. Stable promotion and live throughput/jitter qualification remain pending. Older sections below describe historical baselines.
