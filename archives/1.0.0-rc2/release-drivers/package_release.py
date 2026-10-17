@@ -22,7 +22,7 @@ assert 'Ran 45 tests' in (W/'launcher-check.log').read_text() and (W/'launcher-c
 for group in ('domain_tests','app_unit_tests'):
  assert android[group]['tests']>0 and android[group]['failures']==android[group]['errors']==android[group]['skipped']==0
 assert android['lint']['errors']==android['lint']['warnings']==0
-assert android['apk_identity']['version_code']==10000
+assert android['apk_identity']['version_code']==10001
 public_android=dict(android)
 if 'java_version' in public_android:
  public_android['java_version']='\n'.join(line for line in public_android['java_version'].splitlines() if not any(x in line for x in ['Picked up','JAVA_TOOL_OPTIONS','JDK_JAVA_OPTIONS']))
@@ -34,21 +34,35 @@ for kind,name in [('race','final-correctness.jsonl'),('normal','final-recovery.j
 required={'TestV1EarlyNackSurvivesWriterAndVisibilityGrace','TestV1NackDuringVisibilityGraceNeedsNoSecondProbe','TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal','TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt','TestRev11MultiRampThroughBriefProviderPause','TestRev11BriefProviderSilencePreservesAllReceiveSockets','TestRev11PersistentReceiveBlackholeStillRepairs'}
 assert required <= {e.get('Test')for e in events(W/'final-correctness.jsonl')if e['Action']=='pass'}
 assert any('concurrent_tcp_streams=12 verified_mib_each_direction=12' in e.get('Output','')for e in events(W/'final-recovery.jsonl'))
-q={'schema':4,'classification':CLASS,'stable_release_ready':False,'all_internal_gates_passed':False,'all_required_targeted_checks_passed':False,'targeted_correctness_passed':True,'final_full_suite_completed':False,'user_requested_targeted_finalization':True,'qualification_source_sha256':identity,'first_party_core_runtime_sha256':runtime,'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'recovery_checks':checks,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,'verified_mib_each_direction':12,'temporary_response_stall_ms':2400,'original_receive_generations_preserved':20,'baseline_regression_reproduced':True,'baseline_log_sha256':digest(W/'before-fix.jsonl'),'baseline_scope':'The first two new tests reproduce discarded early NACKs. A third preliminary fixture used an unconfigured account and was corrected before final qualification.','performance_retested':False,'strict_performance_passed':False,'strict_performance_status':'not_retested','strict_speed_target_mbps':100,'speed_tolerance_percent':0,'jitter_target_passed':False,'jitter_status':'not_retested','android_build_passed':True,'android_domain_tests':{k:android['domain_tests'][k]for k in ('tests','failures','errors','skipped')},'android_app_tests':{k:android['app_unit_tests'][k]for k in ('tests','failures','errors','skipped')},'android_lint':android['lint'],'native_host_tests_passed':True,'vet_passed':True,'launcher_tests_passed':45,'built_targets':['linux/amd64','linux/arm64'],'real_provider_tested':False,'physical_android_device_tested':False,'mobile_crash_resolved':False,'known_exploratory_race_timeout':'An older capped mixed-socket test exceeded its fixed 12-second transfer deadline under race instrumentation on this candidate. Its normal rerun passed in approximately 2.7 seconds. No blanket internal-gate pass is claimed.','limitations':['Targeted checks only; complete final internal suite not run.','The older capped-socket race deadline failure remains a qualification limit.','The supplied field captures and screenshot use Rev10; they do not qualify the new candidate.','No new sustained throughput or jitter certificate; strict 100 Mbps target remains unchanged.','No physical Android/provider follow-up or visual interaction qualification in this pass.']}
+q={'schema':5,'classification':CLASS,'stable_release_ready':False,'all_internal_gates_passed':False,
+'all_required_targeted_checks_passed':True,'targeted_correctness_passed':True,'final_full_suite_completed':False,
+'user_requested_targeted_finalization':True,'qualification_source_sha256':identity,'first_party_core_runtime_sha256':runtime,
+'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'recovery_checks':checks,
+'account_stall_routing_regressions_passed':True,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,
+'verified_mib_each_direction':12,'temporary_response_stall_ms':2400,'original_receive_generations_preserved':20,
+'baseline_regression_reproduced':True,'baseline_log_sha256':digest(W/'before-fix.jsonl'),
+'baseline_scope':'RC1 production routing plus inert elapsed-work observation fails the new feedback-affinity and OPEN-ranking regressions. No stall recovery or throughput certificate is inferred from this deterministic reproduction.',
+'performance_retested':False,'strict_performance_passed':False,'strict_performance_status':'not_retested',
+'strict_speed_target_mbps':100,'speed_tolerance_percent':0,'jitter_target_passed':False,'jitter_status':'not_retested',
+'android_build_passed':True,'android_domain_tests':{k:android['domain_tests'][k]for k in ('tests','failures','errors','skipped')},
+'android_app_tests':{k:android['app_unit_tests'][k]for k in ('tests','failures','errors','skipped')},'android_lint':android['lint'],
+'native_host_tests_passed':True,'vet_passed':True,'launcher_tests_passed':45,'built_targets':['linux/amd64','linux/arm64'],
+'real_provider_tested':False,'physical_android_device_tested':False,'mobile_crash_resolved':False,
+'limitations':['Targeted checks only; complete final internal suite not run.','Supplied field evidence is RC1; earliest failed MULTI attempts were rotated out of both traces.','No new sustained throughput or jitter certificate; strict 100 Mbps target remains unchanged.','No physical Android/provider follow-up or visual interaction qualification in this pass.']}
 
-e=S/'docs/v1/evidence';e.mkdir(exist_ok=True);(e/'V1_VALIDATION.json').write_text(json.dumps(q,indent=2)+'\n')
+e=S/'docs/rc2/evidence';e.mkdir(exist_ok=True);(e/'V1_VALIDATION.json').write_text(json.dumps(q,indent=2)+'\n')
 for name in ('final-recovery.jsonl','final-correctness.jsonl','before-fix.jsonl','launcher-check.log'):shutil.copy2(W/name,e/name)
-notes=f'''# ITOM 1.0.0 RC2 — transport stabilization candidate
+notes=f'''# ITOM 1.0.0 RC2 — account-stall routing correction
 
-Authenticated missing-range requests are now retained while their original DATA write is completing or its BODY visibility grace is active. When those existing gates end, repair can proceed without another periodic peer probe. A stale scheduling wake is released once; all physical admission, retry, immutable-item, crypto, accounting and cleanup checks remain in force. Definite unpublished originals stay ordinary queued originals, and receipts do not refund physical debt.
+RC2 steers new work and cumulative stream feedback away from an account whose control writer has stalled. The RC1 captures show a single account with 10–16 second IMAP operations on both endpoints while siblings continue working. Stable feedback affinity and OPEN ranking could still select that delayed account; focused before/after regressions reproduce and correct this amplification.
 
-Includes bounded receive-stall recovery: a temporary 2400 ms response pause no longer closes otherwise live receive sockets at 1500 ms, while a genuine blackhole still triggers bounded repair. Failed DATA receive first-close causes remain visible after replacement. Existing admin categories, single export indicator, verified-TLS IP pinning and persistent connections are preserved.
+The advisory routing threshold uses unloaded RTT and is bounded between one and three seconds. It does not reconnect a lane, replay an uncertain APPEND, move account-bound controls or release durable debt. Ordinary busy/quiet paths retain their existing behavior; last-resort routing remains available. RC1 authenticated early-NACK retention and bounded receive-stall recovery remain intact. There is no speculative increase to flight, socket or LOGIN limits.
 
-The focused early-NACK regressions, selected final race checks and normal recovery checks passed. A ten-account/twelve-stream finite ramp verifies twelve MiB in each direction through the injected pause, preserving twenty original receive sockets and the original application connection. A fresh transfer and quiet-period follow-up also pass. This is an integrity/recovery regression, not a sustained speed benchmark. Android tests/lint, native host tests, vet and 45 source/build launcher checks passed.
+Selected race and normal checks exercise routing, multi-stream transfers through a temporary provider pause, persistent blackhole repair and original/fresh application connections after load. Android tests, lint, native host checks, targeted vet and 45 launcher checks also pass. See VALIDATION.json and TEST_EVIDENCE.zip for exact scope and any qualification limits.
 
-**Release candidate, not stable 1.0.0.** The complete final internal suite and live provider/physical phone follow-up are outstanding. An exploratory older capped mixed-socket race test exceeded its fixed transfer deadline; its normal rerun passed and both results remain included. Sustained strict 100 Mbps duplex and jitter have not been requalified. The supplied 101/77.9 Mbps result is Rev10 field evidence, not a new candidate measurement.
+**RC2 is a testing prerelease.** The complete final internal matrix and real phone/provider follow-up are outstanding. The captures identify RC1 and have lost the earliest failed MULTI startup attempts to trace rotation. No new sustained strict 100 Mbps or jitter guarantee is claimed. Update both endpoints, preserving accounts, profiles and durable state. Version code 10001 retains the existing app ID and signer.
 
-Update both endpoints and preserve existing configuration, account identities, profiles and durable state. APK version code 10000 retains the existing app ID and signer. APK, Linux AMD64/ARM64 binaries, executable sources, handoff, analysis and hashed evidence are included. GitHub Actions verifies and publishes these exact locally built assets; it does not claim an Actions compilation or provider performance run. See VALIDATION.json and HANDOFF.md for exact scope.
+Includes APK, Linux AMD64/ARM64 binaries, executable sources, analysis, handoff and hashed evidence. GitHub Actions assembles, verifies and publishes the exact locally built artifacts; it is not an Actions compilation or a live benchmark.
 '''
 B=R/'builds/1.0.0-RC2';B.mkdir(parents=True,exist_ok=True);(B/'RELEASE_NOTES.md').write_text(notes)
 ST.mkdir(exist_ok=False);apk=S/'dist'/f'{PREFIX}-debug.apk';assert digest(apk)==android['sha256'];jdk=next((C/'jdk17').rglob('bin/java')).parents[1];env=os.environ.copy();env['JAVA_HOME']=str(jdk);env['PATH']=str(jdk/'bin')+':'+env['PATH']
@@ -62,17 +76,17 @@ for arch,machine in [('amd64',62),('arm64',183)]:
  dest=ST/(p.name+'.bin');shutil.copy2(p,dest);dest.chmod(0o755)
 assert 'itom-1-0-0-rc2'in subprocess.check_output([str(ST/(PREFIX+'-linux-amd64.bin')),'version'],text=True)
 commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
-status={'schema':3,'classification':CLASS,'release_tag':TAG,'stable_release_ready':False,'all_internal_gates_passed':False,'all_required_targeted_checks_passed':False,'targeted_correctness_passed':True,'strict_performance_passed':False,'performance_retested':False,'jitter_target_passed':False,'qualified_source_commit':commit,'qualification_source_sha256':identity,'core_runtime_sha256':runtime,'apk_sha256':android['sha256'],'apk_native_libraries':android['apk_native_libraries'],'apk_identity':android['apk_identity'],'certificate_sha256':cert,'signature_v2_verified':True,'mobile_crash_resolved':False,'real_provider_tested':False,'physical_android_device_tested':False,'private_key_included':False,'binary_revision_string':'itom-1-0-0-rc2'}
+status={'schema':3,'classification':CLASS,'release_tag':TAG,'stable_release_ready':False,'all_internal_gates_passed':False,'all_required_targeted_checks_passed':True,'targeted_correctness_passed':True,'strict_performance_passed':False,'performance_retested':False,'jitter_target_passed':False,'qualified_source_commit':commit,'qualification_source_sha256':identity,'core_runtime_sha256':runtime,'apk_sha256':android['sha256'],'apk_native_libraries':android['apk_native_libraries'],'apk_identity':android['apk_identity'],'certificate_sha256':cert,'signature_v2_verified':True,'mobile_crash_resolved':False,'real_provider_tested':False,'physical_android_device_tested':False,'private_key_included':False,'binary_revision_string':'itom-1-0-0-rc2'}
 for name,value in [('STATUS.json',status),('VALIDATION.json',q)]: (ST/name).write_text(json.dumps(value,indent=2)+'\n')
 (ST/'SIGNER.txt').write_text(signer);(ST/'RELEASE_NOTES.md').write_text(notes)
-for src,name in [(S/'HANDOFF.md','HANDOFF.md'),(S/'docs/v1/INVESTIGATION.md','INVESTIGATION.md')]:shutil.copy2(src,ST/name)
+for src,name in [(S/'HANDOFF.md','HANDOFF.md'),(S/'docs/rc2/INVESTIGATION.md','INVESTIGATION.md')]:shutil.copy2(src,ST/name)
 assert not (S/'android/local.properties').exists();sourcezip=ST/(PREFIX+'-sources.zip');package(S,sourcezip)
 with zipfile.ZipFile(sourcezip)as z:
  assert z.testzip()is None
  assert not any(n.endswith(('.jks','.keystore','.key','.env'))for n in z.namelist())
  for n,h in json.loads(z.read('SOURCE_MANIFEST.json')).items():assert hashlib.sha256(z.read(n)).hexdigest()==h
 assert source_fingerprint()==identity
-files={'final-correctness-race.jsonl':W/'final-correctness.jsonl','normal-recovery-integration.jsonl':W/'final-recovery.jsonl','before-fix-regression.jsonl':W/'before-fix.jsonl','launcher-check.log':W/'launcher-check.log','android-build-report.json':W/'android-build-report-public.json','earlier-capped-race-timeout.jsonl':W/'earlier-broad-race.jsonl','normal-capped-rerun.jsonl':W/'capped-normal.jsonl','earlier-instrumented-ramp-timeout.jsonl':Path('/workspace/work/rev11/ramp-diagnostic.jsonl')}
+files={'final-correctness-race.jsonl':W/'final-correctness.jsonl','normal-recovery-integration.jsonl':W/'final-recovery.jsonl','before-fix-regression.jsonl':W/'before-fix.jsonl','launcher-check.log':W/'launcher-check.log','android-build-report.json':W/'android-build-report-public.json'}
 with zipfile.ZipFile(ST/'TEST_EVIDENCE.zip','x',zipfile.ZIP_DEFLATED,compresslevel=6)as z:
  for n,p in files.items():z.write(p,n)
  z.writestr('MANIFEST.json',json.dumps({n:entry(p)for n,p in files.items()},indent=2)+'\n')
@@ -88,5 +102,5 @@ with full.open('rb')as f:
   raw=f.read(8*1024*1024)
   if not raw:break
   p=parts/('full.zip.part%03d'%i);p.write_bytes(raw);entries.append({'path':str(p.relative_to(R)),'size':len(raw),'sha256':digest(p)})
-manifest={'schema':3,'classification':CLASS,'stable_release_ready':False,'all_internal_gates_passed':False,'all_required_targeted_checks_passed':False,'release_tag':TAG,'qualification_source_sha256':identity,'qualified_source_commit':commit,'archive':entry(full),'parts':entries,'assets':[entry(p)for p in sorted(ST.iterdir())if p.is_file()]};(A/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+manifest={'schema':3,'classification':CLASS,'stable_release_ready':False,'all_internal_gates_passed':False,'all_required_targeted_checks_passed':True,'release_tag':TAG,'qualification_source_sha256':identity,'qualified_source_commit':commit,'archive':entry(full),'parts':entries,'assets':[entry(p)for p in sorted(ST.iterdir())if p.is_file()]};(A/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print('Packaged',len(manifest['assets']),'assets',len(entries),'parts; targeted testing status retained')

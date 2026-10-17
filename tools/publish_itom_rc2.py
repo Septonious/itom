@@ -70,7 +70,7 @@ def verify_gates(manifest, output):
         events=[json.loads(x) for x in raw.decode().splitlines() if x.startswith('{')]
         require(not any(x.get('Action') in ('fail','skip') for x in events),'Targeted correctness failed')
         require(any(x.get('Action')=='pass' and not x.get('Test') for x in events),'Targeted correctness incomplete')
-        required = {'TestRev10DiscoveryThenAllClientSocketsLost', 'TestRev10ControlReplacementRetryBoundaries', 'TestV1EarlyNackSurvivesWriterAndVisibilityGrace', 'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe', 'TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt',
+        required = {'TestRC2BulkFeedbackEscapesStalledAffinity', 'TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion', 'TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt', 'TestRev10DiscoveryThenAllClientSocketsLost', 'TestRev10ControlReplacementRetryBoundaries', 'TestV1EarlyNackSurvivesWriterAndVisibilityGrace', 'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe', 'TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt',
                     'TestRev11BriefProviderSilencePreservesAllReceiveSockets', 'TestRev11MultiRampThroughBriefProviderPause', 'TestRev11PersistentReceiveBlackholeStillRepairs'}
         require(required <= {x.get('Test') for x in events if x.get('Action') == 'pass'}, 'Required race tests missing')
         require(any('active_lines_restored=20 original_tcp_retained=true' in x.get('Output','') for x in events),
@@ -84,7 +84,7 @@ def verify_gates(manifest, output):
         require(any(x.get('Test') == 'TestRev7CorrelatedControlEOFBetweenTransfersKeepsEveryCarrier' and x.get('Action') == 'pass' for x in normal),
                 'Post-load control EOF regression missing')
         baseline = [json.loads(x) for x in logs.read('before-fix-regression.jsonl').decode().splitlines() if x.startswith('{')]
-        require(any('authenticated early NACK was discarded' in x.get('Output','') for x in baseline), 'Before-fix regression evidence missing')
+        require(any('bulk feedback stayed pinned behind stalled APPEND' in x.get('Output','') for x in baseline) and any('new OPEN selected stalled control writer' in x.get('Output','') for x in baseline), 'Before-fix RC2 routing regression evidence missing')
     apks = list(output.glob('*.apk'))
     require(len(apks) == 1 and digest(apks[0]) == status['apk_sha256'], 'APK identity mismatch')
     with zipfile.ZipFile(apks[0]) as apk:
