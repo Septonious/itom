@@ -20,7 +20,11 @@ import (
 const (
 	deliveryInitialWindow = 1 << 20
 	deliveryMinWindow     = 64 << 10
-	deliveryMaxWindow     = 16 << 20
+	// Bound aggregate unacknowledged logical flight to the observed
+	// 0.5-0.8s duplex BDP instead of allowing a 16MiB burst to monopolize
+	// retained IMAP grant service. Physical quota accounting, receipts and
+	// TCP stream identities remain independent and unchanged.
+	deliveryMaxWindow     = 8 << 20
 	deliveryFastReserve   = 128 << 10
 	deliveryTargetAge     = 800 * time.Millisecond
 	deliveryDecisionEpoch = 250 * time.Millisecond
