@@ -60,4 +60,6 @@ jobs:
           GOTOOLCHAIN: local
           GOFLAGS: -mod=readonly
         run: |
+          go test ./servercfg -count=1 -run '^TestRC5ProviderSessionBudgetAlreadyPartitionsEndpointsTestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
+
           go test ./tunnel -count=1 -run 'TestRC5|TestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
