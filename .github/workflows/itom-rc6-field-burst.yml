@@ -44,7 +44,16 @@ jobs:
         run: |
           # Keep the strict <750ms RTT gate, every-second duplex positive,
           # zero probe failures and identical live TCP socket identity.
-          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification$' -v ./tunnel | tee "$RUNNER_TEMP/rc6-field-burst.log"
+          set -o pipefail
+          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification
+      - name: Record evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc6-field-burst-qualification-evidence
+          path: ${{ runner.temp }}/rc6-field-burst.log
+          retention-days: 14
+ -v ./tunnel | tee "$RUNNER_TEMP/rc6-field-burst.log"
       - name: Record evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
