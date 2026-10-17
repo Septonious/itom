@@ -336,6 +336,15 @@ func testSupervisedProductionLoad(t *testing.T) {
 			}
 			t.Logf("supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=%d mean_ms=%.3f p95_ms=%.3f max_ms=%.3f target_ms=100 field_qualified=false", len(changes), float64(total)/float64(len(changes))/float64(time.Millisecond), float64(productionPercentile(changes, .95))/float64(time.Millisecond), float64(productionPercentile(changes, 1))/float64(time.Millisecond))
 		}
+		// Test-only provider-wide session budget: a heavy sender must not
+		// monopolize account LOGIN slots needed by the opposite endpoint.
+		f.network.mu.Lock()
+		providerPeak, providerCurrent := map[string]int{}, map[string]int{}
+		for id, n := range f.network.sessionPeak { providerPeak[id] = n }
+		for id, n := range f.network.sessions { providerCurrent[id] = n }
+		providerDenied := f.network.sessionDenied
+		f.network.mu.Unlock()
+		t.Logf("rc5_provider_sessions peak=%v current=%v denied=%d cap=%d", providerPeak, providerCurrent, providerDenied, f.network.sessionLimit)
 		// Snapshot actual shared delivery state only after the timed interval.
 		f.client.mu.Lock()
 		clientGroup := f.client.stripe
@@ -374,6 +383,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 					t.Logf("supervised_physical account=%s server=%t peer_samples=%d peer_target=%d peer_slow=%d peer_fast=%d peer_age_ms=%d pending_bodies=%d active=%d held_local_bytes=%d held_local_messages=%d held_remote_bytes=%d held_remote_messages=%d hold_err=%v", carrier.account.ID, carrier.side, peerSamples, peerTarget, peerSlow, peerFast, peerAgeMS, carrier.peerReadPendingBodies.Load(), carrier.physicalActive.Load(), local.Bytes, local.Messages, remote.Bytes, remote.Messages, err)
 				}
 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
+				t.Logf("rc5_endpoint_sessions server=%t account=%s physical_data_parallelism=%d physical_slots=%d", carrier.side, carrier.account.ID, dataParallelism(carrier.mail), len(carrier.physicalSlots))
 				if carrier.diag != nil {
 					d := carrier.diag.snapshot()
 					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
