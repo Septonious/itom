@@ -314,7 +314,18 @@ func testSupervisedProductionLoad(t *testing.T) {
 			for _, carrier := range live {
 				carrier.serviceMu.Lock()
 				ns, bytes, samples := carrier.serviceNS, carrier.serviceBytes, carrier.serviceSamples
+				peerSamples, peerTarget := carrier.peerReadSamples, carrier.peerReadBatchTarget
+				peerSlow, peerFast := carrier.peerReadSlowCount, carrier.peerReadFastCount
+				peerLast := carrier.peerReadAt
 				carrier.serviceMu.Unlock()
+				peerAgeMS := int64(-1)
+				if !peerLast.IsZero() {
+					peerAgeMS = time.Since(peerLast).Milliseconds()
+				}
+				if carrier.side {
+					local, remote, err := carrier.data.HeldByOrigin(carrier.account.ID, carrier.user.ID)
+					t.Logf("supervised_physical account=%s server=%t peer_samples=%d peer_target=%d peer_slow=%d peer_fast=%d peer_age_ms=%d pending_bodies=%d active=%d held_local_bytes=%d held_local_messages=%d held_remote_bytes=%d held_remote_messages=%d hold_err=%v", carrier.account.ID, carrier.side, peerSamples, peerTarget, peerSlow, peerFast, peerAgeMS, carrier.peerReadPendingBodies.Load(), carrier.physicalActive.Load(), local.Bytes, local.Messages, remote.Bytes, remote.Messages, err)
+				}
 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
 				if carrier.diag != nil {
 					d := carrier.diag.snapshot()
