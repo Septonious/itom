@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -288,7 +289,31 @@ func testSupervisedProductionLoad(t *testing.T) {
 		// preceding full cadence. Keep every probe and the complete byte clock.
 		t.Logf("supervised_round_schedule round=%d cadence_ms=%d phase_ms=%d deadline_ms=%d expected=%d survival=%t bandwidth_clock_ms=1000", round+1, roundCadence.Milliseconds(), (roundCadence / 2).Milliseconds(), roundDeadline.Milliseconds(), roundExpected, false)
 		carriers := snapshotLoadCarriers(t, f, n, working)
-		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, t.Logf)
+		// Bounded test-only five-second duplex samples. Observe the actual
+		// production load clock; no extra polling, socket, ACK or journal work.
+		traceDuplex := os.Getenv("ITOM_LOAD_DUPLEX_TIMELINE") == "1"
+		measureLog := func(format string, args ...any) {
+			t.Logf(format, args...)
+			if !traceDuplex || !strings.HasPrefix(format, "production_window5") {
+				return
+			}
+			f.client.mu.Lock()
+			client := f.client.stripe
+			f.client.mu.Unlock()
+			f.mu.Lock()
+			var server *stripeGroup
+			for _, carrier := range f.serverLanes {
+				server = carrier.stripe
+				break
+			}
+			f.mu.Unlock()
+			if client == nil || server == nil {
+				return
+			}
+			c, ss := client.deliverySnapshot(), server.deliverySnapshot()
+			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps)
+		}
+		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, measureLog)
 		cancelProfile()
 		profileWG.Wait()
 		rtts, overlap, timeouts, missed := productionSampleSummary(result.Samples, 0)
