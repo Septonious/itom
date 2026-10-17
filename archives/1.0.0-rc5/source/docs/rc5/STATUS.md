@@ -1,3 +1,13 @@
+## Additional performance investigation (2026-10-17)
+
+A separate GOMAXPROCS=4 experiment with *ten* global bulk workers, 10 accounts and identical provider parameters yielded download **68.931 Mbps**, upload **151.620 Mbps**, max loaded RTT **474 ms**. This lost download and worsened RTT versus eight workers (71.539 / 148.295 Mbps, 436 ms). The ten-worker experiment is rejected and was never added to the branch.
+
+A ~97-second, non-qualification CPU profile from the eight-worker, 10-account candidate recorded 137.12 CPU-seconds. Top flat CPU time included SHA-256 hardware hashing (21.04s), Linux syscall operations (16.64s), memory copying/clearing (13.12s combined), and Base64 decode (11.91s cumulative). bbolt Update accounted for 20.53s cumulative across multiple durable paths; this includes fsync costs. The SHA-256 samples come from distinct authenticated payload, descriptor, wallet and proof operations, so none may be removed simply because hashing is expensive. The synthetic IMAP fixture also consumes CPU and is not a real provider profile. Do not weaken crypto, authenticated checks, or journal fsync based on these figures.
+
+Profiled throughput also missed the 100 Mbps floor. Next optimization must demonstrate genuine end-to-end useful-byte improvement without increasing loaded RTT. Neither increased worker count nor a single high early burst is sufficient.
+
+---
+
 ## Updated experimental results — 2026-10-17 (NOT A RELEASE)
 
 Current RC5 development branch contains two safe-to-test adaptive startup changes: (1) after the first complete, timely authenticated peer BODY receipt, the cold downstream BODY target can provisionally increase from 32 to 64 KiB; all later batch growth retains the two-receipt rule and two slow receipts restore 32 KiB. (2) while the logical bulk window is <=4 MiB, fresh useful ACK progress, actual outstanding flight >= half the current window, bulk age <75% of target, and no short-traffic pressure may double the next logical window probe. Physical IMAP polling cadence, account/scheduler worker caps (eight), journal debt and quota proofs, crypto, and wire format are unchanged. Unit and targeted race regressions passed using the supplied Go 1.27.1 binary.
