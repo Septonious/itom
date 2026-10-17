@@ -447,7 +447,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 			accepted = strictSpeedGate(qualifiedMbps, minimumMbps) && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
 				tier = TransportRevision + "-stability-throughput-floor-waived"
-				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < rc6StabilityRTTLimit && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 				if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
 					accepted = false
 					t.Error(err)
