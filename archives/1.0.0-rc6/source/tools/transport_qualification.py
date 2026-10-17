@@ -50,6 +50,8 @@ def main():
     report['criteria'].update(qualification_mode='stability' if a.stability_only else 'performance',throughput_floor_enforced=not a.stability_only,positive_duplex_every_second_required=a.stability_only)
     report['criteria'].update(useful_upload_mbps_min=a.minimum_mbps,useful_download_mbps_min=a.minimum_mbps,tolerance_percent=0,speed_tolerance_percent=0,rtt_tolerance_percent=10)
     if a.stability_only:
+        if info.get('release') == 'RC6':
+            report['criteria'].update(nominal_loaded_rtt_ns_strictly_below=750000000,all_loaded_rtt_ns_strictly_below=750000000,rtt_tolerance_percent=0)
         report['criteria'].update(useful_upload_mbps_min=None,useful_download_mbps_min=None,throughput_waiver='Explicit stability-only invocation waives the configured throughput floor; it cannot certify performance.')
     modes=('single','multi') if a.streams=='both' else (a.streams,)
     for mode in modes:
