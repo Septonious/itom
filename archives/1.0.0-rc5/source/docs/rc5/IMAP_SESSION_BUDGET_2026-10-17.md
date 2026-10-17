@@ -16,3 +16,17 @@ This test used the stock 12MiB client/server physical journals and no production
 **Decision:** Keep the default provider per-account budget 10 with 5/5 partition, preserve optional Login recovery, and do not commit any static reduction of the session limit. The remaining investigation is authenticated downstream/upstream delivery and credit feedback under large journal pressure; physical session allocation is not an identified root cause of the 100/100 deficit.
 
 No release, APK/server binary, provider migration, account reset, wallet forgiveness, or physical quota change.
+
+
+## Additional test: 4 server / 6 client sessions (REJECTED)
+
+A separate disposable test fixture explicitly divided the same shared **10-session per-account** provider budget into four Linux/server and six Android/client slots. This change is NOT in the RC5 runtime. Only the server-side DATA journal was 24 MiB (local test-only profile); client remained 12 MiB. Everything else matched the 10-account / 24-stream per-direction / 60-second simultaneous provider model with 80 ms IMAP command delay and four execution threads.
+
+- **Full download 103.717 Mbps, full upload 19.053 Mbps**.
+- Final 30 seconds: **109.209 / 9.507 Mbps** (download/upload).
+- Final 10 seconds: **109.104 / 8.625 Mbps**.
+- Loaded RTT median **390ms**, p95 **661ms**, max **706ms**, 30/30 valid overlapping probes, zero timeouts and misses.
+- Actual modeled provider occupied-session peak was **9 of 10** per account on all ten accounts; **0 LOGIN-cap denials**. The optional sixth client slot was not fully occupied, so the trial did not create six authenticated clients to improve useful upload.
+- **STRICT FAIL**: client upload collapsed harder than the previous 5+5/server24 setup (~107/45Mbps). Keeping unused per-account physical headroom is not a substitute for faster authenticated stream ACK service.
+
+The source files implementing the experimental override and unsupported 24 MiB DATA journal existed ONLY in a disposable local test directory; no deployment, migration, or published transport source change was made. Retain the original 5+5 account-session split. Additional per-direction authenticated DATA→ACK timing instrumentation is developed separately.
