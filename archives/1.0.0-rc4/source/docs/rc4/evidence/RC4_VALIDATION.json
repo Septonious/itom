@@ -1,0 +1,75 @@
+{
+  "schema": 6,
+  "classification": "V1_0_0_RC4_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "qualification_source_sha256": "ff6f565a4c409f5ee2141091036e7566a2de2dea141f2b139d81e2048ef41be8",
+  "first_party_core_runtime_sha256": "96556179dc0f789f69cc8e4573ee7c19875308079fe57d6baed6922ca93ed6e2",
+  "generated_utc": "2026-10-17T01:05:27.922284+00:00",
+  "focused_race_test_events_passed": 30,
+  "normal_recovery_test_events_passed": 6,
+  "default_hot_backoff_cap_ms": 80,
+  "light_reserved_response_cap_ms": 20,
+  "maximum_accelerated_readers": 2,
+  "bulk_and_fanout_use_rc2_pacing": true,
+  "shared_idle_history_preserved": true,
+  "performance_retested": false,
+  "strict_performance_passed": false,
+  "strict_performance_status": "not_retested",
+  "strict_speed_target_mbps": 100,
+  "speed_tolerance_percent": 0,
+  "jitter_target_passed": false,
+  "jitter_status": "not_retested",
+  "sub_200ms_measured": false,
+  "rtt_goal_ms": 200,
+  "supplied_rc3_control_echo_samples": 161,
+  "supplied_rc3_control_echo_min_ms": 176.07,
+  "supplied_rc3_control_echo_median_ms": 285.81,
+  "user_reported_rc3_speed_regression": true,
+  "user_reported_rc3_failed_speedtests": 1,
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "launcher_tests_passed": 45,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "known_qualification_limit": "Historical RC2 instrumented discovery timeout remains unresolved. Its failed run is preserved as historical evidence; it was not rerun as part of RC4 focused correctness.",
+  "limitations": [
+    "Targeted checks only; complete final internal matrix not executed.",
+    "No live RC4 sub-200ms or sustained throughput certificate.",
+    "Higher command frequency inside bounded response windows requires real-provider confirmation.",
+    "Historical RC2 startup race intermittency remains unresolved."
+  ]
+}

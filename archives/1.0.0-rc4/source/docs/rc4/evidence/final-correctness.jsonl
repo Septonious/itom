@@ -1,0 +1,137 @@
+{"Time":"2026-10-17T00:58:28.664697542Z","Action":"start","Package":"itom.local/core/datapath"}
+{"Time":"2026-10-17T00:58:28.684126565Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace"}
+{"Time":"2026-10-17T00:58:28.684214073Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"=== RUN   TestV1EarlyNackSurvivesWriterAndVisibilityGrace\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684291854Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"--- PASS: TestV1EarlyNackSurvivesWriterAndVisibilityGrace (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684315479Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Elapsed":0}
+{"Time":"2026-10-17T00:58:28.684382992Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe"}
+{"Time":"2026-10-17T00:58:28.684398582Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"=== RUN   TestV1NackDuringVisibilityGraceNeedsNoSecondProbe\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684654043Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"--- PASS: TestV1NackDuringVisibilityGraceNeedsNoSecondProbe (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.68466202Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Elapsed":0}
+{"Time":"2026-10-17T00:58:28.684665245Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal"}
+{"Time":"2026-10-17T00:58:28.684667418Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"=== RUN   TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684691709Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"--- PASS: TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684694319Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Elapsed":0}
+{"Time":"2026-10-17T00:58:28.684697634Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt"}
+{"Time":"2026-10-17T00:58:28.684699944Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Output":"=== RUN   TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684851536Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Output":"--- PASS: TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:28.684855779Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Elapsed":0}
+{"Time":"2026-10-17T00:58:28.685026996Z","Action":"output","Package":"itom.local/core/datapath","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:29.68761156Z","Action":"output","Package":"itom.local/core/datapath","Output":"ok  \titom.local/core/datapath\t1.023s\n"}
+{"Time":"2026-10-17T00:58:29.687691592Z","Action":"pass","Package":"itom.local/core/datapath","Elapsed":1.023}
+{"Time":"2026-10-17T00:58:41.420059654Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-17T00:58:41.43792821Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderOwnsSelectionIndependentOfCleaner"}
+{"Time":"2026-10-17T00:58:41.438056784Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderOwnsSelectionIndependentOfCleaner","Output":"=== RUN   TestReaderOwnsSelectionIndependentOfCleaner\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.521627034Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderOwnsSelectionIndependentOfCleaner","Output":"--- PASS: TestReaderOwnsSelectionIndependentOfCleaner (0.08s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.521692584Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderOwnsSelectionIndependentOfCleaner","Elapsed":0.08}
+{"Time":"2026-10-17T00:58:41.521702807Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderNeverCreatesIndependentCleanerAudits"}
+{"Time":"2026-10-17T00:58:41.521705251Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderNeverCreatesIndependentCleanerAudits","Output":"=== RUN   TestReaderNeverCreatesIndependentCleanerAudits\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.583631872Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderNeverCreatesIndependentCleanerAudits","Output":"--- PASS: TestReaderNeverCreatesIndependentCleanerAudits (0.06s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.583688103Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderNeverCreatesIndependentCleanerAudits","Elapsed":0.06}
+{"Time":"2026-10-17T00:58:41.583710436Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderRepairsIdleEOFWithoutResettingControl"}
+{"Time":"2026-10-17T00:58:41.583714739Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderRepairsIdleEOFWithoutResettingControl","Output":"=== RUN   TestReaderRepairsIdleEOFWithoutResettingControl\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.660181106Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderRepairsIdleEOFWithoutResettingControl","Output":"--- PASS: TestReaderRepairsIdleEOFWithoutResettingControl (0.08s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.660231187Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderRepairsIdleEOFWithoutResettingControl","Elapsed":0.08}
+{"Time":"2026-10-17T00:58:41.661286906Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderOwnAllocationProofPassesAllocatedHoles"}
+{"Time":"2026-10-17T00:58:41.661311412Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderOwnAllocationProofPassesAllocatedHoles","Output":"=== RUN   TestReaderOwnAllocationProofPassesAllocatedHoles\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.834613674Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderOwnAllocationProofPassesAllocatedHoles","Output":"--- PASS: TestReaderOwnAllocationProofPassesAllocatedHoles (0.17s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.834668869Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderOwnAllocationProofPassesAllocatedHoles","Elapsed":0.17}
+{"Time":"2026-10-17T00:58:41.834692919Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses"}
+{"Time":"2026-10-17T00:58:41.834696206Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses","Output":"=== RUN   TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.895462743Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses","Output":"--- PASS: TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses (0.06s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.895589863Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderPollsActiveSiblingThenIdlesAfterLastStreamCloses","Elapsed":0.06}
+{"Time":"2026-10-17T00:58:41.89627097Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestScenarioIo"}
+{"Time":"2026-10-17T00:58:41.896282026Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"=== RUN   TestScenarioIo\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:41.896294925Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:625: check=checkReaderWakeInterruptsIdleBackoff\n"}
+{"Time":"2026-10-17T00:58:41.896303554Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:627: check=checkLatencyControlWakesReader\n"}
+{"Time":"2026-10-17T00:58:41.896306088Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:629: check=checkReaderPollDelayDemandAndIdleBackoff\n"}
+{"Time":"2026-10-17T00:58:41.896308486Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:631: check=checkAccountRuntimeRoundRobinTake\n"}
+{"Time":"2026-10-17T00:58:41.896311101Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:633: check=checkLaneMailReserveDataWriterSkipsBusyConnection\n"}
+{"Time":"2026-10-17T00:58:41.896665679Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:635: check=checkLaneMailCleanupClientPrefersIsolatedCleaner\n"}
+{"Time":"2026-10-17T00:58:41.89667412Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:637: check=checkLaneMailReaderConnectionLimitStillEnablesBaseDataFallback\n"}
+{"Time":"2026-10-17T00:58:44.898750183Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:639: check=checkReaderSelectionProofFreshnessAndValidityBoundaries\n"}
+{"Time":"2026-10-17T00:58:44.89881205Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"    io_test.go:641: check=checkReaderAllocationProofBounds\n"}
+{"Time":"2026-10-17T00:58:44.898825584Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Output":"--- PASS: TestScenarioIo (3.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:44.898830356Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestScenarioIo","Elapsed":3}
+{"Time":"2026-10-17T00:58:44.899299479Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderNotificationDoesNotAddSelectionRoundTrip"}
+{"Time":"2026-10-17T00:58:44.899303745Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderNotificationDoesNotAddSelectionRoundTrip","Output":"=== RUN   TestReaderNotificationDoesNotAddSelectionRoundTrip\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.069636623Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderNotificationDoesNotAddSelectionRoundTrip","Output":"--- PASS: TestReaderNotificationDoesNotAddSelectionRoundTrip (0.17s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.0696873Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderNotificationDoesNotAddSelectionRoundTrip","Elapsed":0.17}
+{"Time":"2026-10-17T00:58:45.069715084Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderUsesIdleInsteadOfEmptyPollingLoop"}
+{"Time":"2026-10-17T00:58:45.069718523Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderUsesIdleInsteadOfEmptyPollingLoop","Output":"=== RUN   TestReaderUsesIdleInsteadOfEmptyPollingLoop\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.100624874Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderUsesIdleInsteadOfEmptyPollingLoop","Output":"--- PASS: TestReaderUsesIdleInsteadOfEmptyPollingLoop (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.100691097Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderUsesIdleInsteadOfEmptyPollingLoop","Elapsed":0.03}
+{"Time":"2026-10-17T00:58:45.1007034Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderStartsAfterAcceptedHandshakeUID"}
+{"Time":"2026-10-17T00:58:45.100707741Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderStartsAfterAcceptedHandshakeUID","Output":"=== RUN   TestReaderStartsAfterAcceptedHandshakeUID\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.100734767Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderStartsAfterAcceptedHandshakeUID","Output":"--- PASS: TestReaderStartsAfterAcceptedHandshakeUID (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.100738746Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderStartsAfterAcceptedHandshakeUID","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.101301679Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveAvoidsSlowIdleAccounts"}
+{"Time":"2026-10-17T00:58:45.101321952Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveAvoidsSlowIdleAccounts","Output":"=== RUN   TestInteractiveReserveAvoidsSlowIdleAccounts\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.101832316Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveAvoidsSlowIdleAccounts","Output":"--- PASS: TestInteractiveReserveAvoidsSlowIdleAccounts (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.101857064Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveAvoidsSlowIdleAccounts","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.101995089Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveDoesNotMoveIntoPublishedBulk"}
+{"Time":"2026-10-17T00:58:45.102001121Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveDoesNotMoveIntoPublishedBulk","Output":"=== RUN   TestInteractiveReserveDoesNotMoveIntoPublishedBulk\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.102204482Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveDoesNotMoveIntoPublishedBulk","Output":"--- PASS: TestInteractiveReserveDoesNotMoveIntoPublishedBulk (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.102212884Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestInteractiveReserveDoesNotMoveIntoPublishedBulk","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.1026313Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity"}
+{"Time":"2026-10-17T00:58:45.10264031Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"=== RUN   TestRC2BulkFeedbackEscapesStalledAffinity\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.102898064Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"--- PASS: TestRC2BulkFeedbackEscapesStalledAffinity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.102934482Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.102941332Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion"}
+{"Time":"2026-10-17T00:58:45.102944495Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"=== RUN   TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103122651Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"--- PASS: TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103131921Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.103143304Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt"}
+{"Time":"2026-10-17T00:58:45.103146835Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"=== RUN   TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103318075Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"--- PASS: TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103325675Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.103360171Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound"}
+{"Time":"2026-10-17T00:58:45.103364298Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Output":"=== RUN   TestRC3HotResponseBackoffBound\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103463558Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Output":"--- PASS: TestRC3HotResponseBackoffBound (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103468763Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.103496339Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff"}
+{"Time":"2026-10-17T00:58:45.103500347Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Output":"=== RUN   TestRC4UnscopedHotPollingUsesRC2Backoff\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103548925Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Output":"--- PASS: TestRC4UnscopedHotPollingUsesRC2Backoff (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.103573728Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.103644408Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC4RapidPollingRequiresQuietReserveAndLightDemand"}
+{"Time":"2026-10-17T00:58:45.103648694Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4RapidPollingRequiresQuietReserveAndLightDemand","Output":"=== RUN   TestRC4RapidPollingRequiresQuietReserveAndLightDemand\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.104076023Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4RapidPollingRequiresQuietReserveAndLightDemand","Output":"--- PASS: TestRC4RapidPollingRequiresQuietReserveAndLightDemand (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.104083975Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC4RapidPollingRequiresQuietReserveAndLightDemand","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.104109489Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior"}
+{"Time":"2026-10-17T00:58:45.10411319Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior","Output":"=== RUN   TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.104183832Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior","Output":"--- PASS: TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.104189839Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC4RapidDelayNeverChangesQuietOrBacklogBehavior","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.104557794Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderConcurrentRequestsKeepExistingResponseWindow"}
+{"Time":"2026-10-17T00:58:45.104566374Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderConcurrentRequestsKeepExistingResponseWindow","Output":"=== RUN   TestReaderConcurrentRequestsKeepExistingResponseWindow\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.10537302Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderConcurrentRequestsKeepExistingResponseWindow","Output":"--- PASS: TestReaderConcurrentRequestsKeepExistingResponseWindow (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.105381511Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderConcurrentRequestsKeepExistingResponseWindow","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.105458024Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderFreshHintRechecksBeforeLongEmptyBackoff"}
+{"Time":"2026-10-17T00:58:45.105462061Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderFreshHintRechecksBeforeLongEmptyBackoff","Output":"=== RUN   TestReaderFreshHintRechecksBeforeLongEmptyBackoff\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578737706Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderFreshHintRechecksBeforeLongEmptyBackoff","Output":"--- PASS: TestReaderFreshHintRechecksBeforeLongEmptyBackoff (0.47s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578793262Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderFreshHintRechecksBeforeLongEmptyBackoff","Elapsed":0.47}
+{"Time":"2026-10-17T00:58:45.578801393Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderIdleAuditDelayLimitedPostHotGrace"}
+{"Time":"2026-10-17T00:58:45.578804811Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderIdleAuditDelayLimitedPostHotGrace","Output":"=== RUN   TestReaderIdleAuditDelayLimitedPostHotGrace\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578812384Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderIdleAuditDelayLimitedPostHotGrace","Output":"--- PASS: TestReaderIdleAuditDelayLimitedPostHotGrace (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578815121Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderIdleAuditDelayLimitedPostHotGrace","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.578817837Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestParallelFastReaderDemandEndsAtAuthenticatedDrain"}
+{"Time":"2026-10-17T00:58:45.578842531Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestParallelFastReaderDemandEndsAtAuthenticatedDrain","Output":"=== RUN   TestParallelFastReaderDemandEndsAtAuthenticatedDrain\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578892289Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestParallelFastReaderDemandEndsAtAuthenticatedDrain","Output":"--- PASS: TestParallelFastReaderDemandEndsAtAuthenticatedDrain (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.578895904Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestParallelFastReaderDemandEndsAtAuthenticatedDrain","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.579024835Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayOneShot"}
+{"Time":"2026-10-17T00:58:45.579028331Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayOneShot","Output":"=== RUN   TestReaderWakeToFetchDelayOneShot\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579100488Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayOneShot","Output":"--- PASS: TestReaderWakeToFetchDelayOneShot (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579182717Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayOneShot","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.579186623Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayRejectsStaleTime"}
+{"Time":"2026-10-17T00:58:45.579188584Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayRejectsStaleTime","Output":"=== RUN   TestReaderWakeToFetchDelayRejectsStaleTime\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579194251Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayRejectsStaleTime","Output":"--- PASS: TestReaderWakeToFetchDelayRejectsStaleTime (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.57920828Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderWakeToFetchDelayRejectsStaleTime","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.579467053Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestShortRequestPrimesOnlyTwoQuietReceiveStripes"}
+{"Time":"2026-10-17T00:58:45.579470499Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestShortRequestPrimesOnlyTwoQuietReceiveStripes","Output":"=== RUN   TestShortRequestPrimesOnlyTwoQuietReceiveStripes\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579732563Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestShortRequestPrimesOnlyTwoQuietReceiveStripes","Output":"--- PASS: TestShortRequestPrimesOnlyTwoQuietReceiveStripes (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579735999Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestShortRequestPrimesOnlyTwoQuietReceiveStripes","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.579776809Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestReaderResponseBudgetBoundedAndNeverShortened"}
+{"Time":"2026-10-17T00:58:45.579779211Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderResponseBudgetBoundedAndNeverShortened","Output":"=== RUN   TestReaderResponseBudgetBoundedAndNeverShortened\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.57984973Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestReaderResponseBudgetBoundedAndNeverShortened","Output":"--- PASS: TestReaderResponseBudgetBoundedAndNeverShortened (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:45.579895625Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestReaderResponseBudgetBoundedAndNeverShortened","Elapsed":0}
+{"Time":"2026-10-17T00:58:45.581910608Z","Action":"output","Package":"itom.local/core/tunnel","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:46.586078327Z","Action":"output","Package":"itom.local/core/tunnel","Output":"ok  \titom.local/core/tunnel\t5.166s\n"}
+{"Time":"2026-10-17T00:58:46.5861301Z","Action":"pass","Package":"itom.local/core/tunnel","Elapsed":5.166}

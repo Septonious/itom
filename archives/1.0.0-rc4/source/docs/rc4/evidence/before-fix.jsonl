@@ -1,0 +1,9 @@
+{"Time":"2026-10-17T00:58:06.002150166Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-17T00:58:06.007458033Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff"}
+{"Time":"2026-10-17T00:58:06.007724762Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Output":"=== RUN   TestRC4UnscopedHotPollingUsesRC2Backoff\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:06.007755719Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Output":"    rc4_poll_pressure_test.go:13: unscoped hot polling lost RC2 pressure bound 20ms 40ns\n","OutputType":"error"}
+{"Time":"2026-10-17T00:58:06.007765056Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Output":"--- FAIL: TestRC4UnscopedHotPollingUsesRC2Backoff (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:06.007767921Z","Action":"fail","Package":"itom.local/core/tunnel","Test":"TestRC4UnscopedHotPollingUsesRC2Backoff","Elapsed":0}
+{"Time":"2026-10-17T00:58:06.007784205Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:06.008302577Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\titom.local/core/tunnel\t0.006s\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:58:06.008338579Z","Action":"fail","Package":"itom.local/core/tunnel","Elapsed":0.006}

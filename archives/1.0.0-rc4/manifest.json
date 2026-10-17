@@ -1,0 +1,119 @@
+{
+  "schema": 3,
+  "classification": "V1_0_0_RC4_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "release_tag": "v1.0.0-rc4",
+  "qualification_source_sha256": "ff6f565a4c409f5ee2141091036e7566a2de2dea141f2b139d81e2048ef41be8",
+  "qualified_source_commit": "7f759153378606996aa029aaedf5c87ef30325c2",
+  "archive": {
+    "name": "ITOM-1.0.0-RC4-full.zip",
+    "size": 45916687,
+    "sha256": "23001bc1f86934bfecc84320794c70f708c6a36f01e760404cc20cbd9a460e81"
+  },
+  "parts": [
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part001",
+      "size": 8388608,
+      "sha256": "d810a4de25df51f04846ba4dff33a3ad4d8085c7adad9dd06566b710035702f7"
+    },
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part002",
+      "size": 8388608,
+      "sha256": "d2ad1cf214af99490e9159a50036f93717f845b7d30fd6f7da287cec47d28655"
+    },
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part003",
+      "size": 8388608,
+      "sha256": "d4c3cd459a344c127454e738b2e3bb50a34252676fe275b9b5a967a42fb28066"
+    },
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part004",
+      "size": 8388608,
+      "sha256": "635c6d327c112e9c6bdcef0029cc0cbb6cc37cfd303466d2cba7cc4026e04459"
+    },
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part005",
+      "size": 8388608,
+      "sha256": "dc1fb3ddc768a4d8584dcd81a5b568dab9b8a58bb9eea869f5f531c583a30b2e"
+    },
+    {
+      "path": "archives/1.0.0-rc4/parts/full.zip.part006",
+      "size": 3973647,
+      "sha256": "644bd9e5f6f94dc205508f9e6ce426c9202dd0dce79a2b63b5860b8d8cf5127b"
+    }
+  ],
+  "assets": [
+    {
+      "name": "HANDOFF.md",
+      "size": 14568,
+      "sha256": "5589abb81bfc614b39c4447347764a9acb96435e9561e726cdb91e46fa30020d"
+    },
+    {
+      "name": "INVESTIGATION.md",
+      "size": 4149,
+      "sha256": "8e8612801d6445640e503459e0a21b783ed3299beed618be2847df17f6a6a8e3"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-debug.apk",
+      "size": 72144426,
+      "sha256": "35513344aa5bf8fcfe0a6f512f92cec21a2d0ce0361360268b1276bd062efeb7"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-full.zip",
+      "size": 45916687,
+      "sha256": "23001bc1f86934bfecc84320794c70f708c6a36f01e760404cc20cbd9a460e81"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-full.zip.sha256",
+      "size": 90,
+      "sha256": "2675754263ece53c6532feb940f36e5e4bd4fc6202edbe8ff0c2ee89741fc807"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-linux-amd64.bin",
+      "size": 14474099,
+      "sha256": "7cdeb57dee1df9fc5b3a9a0ac56015ebabd514ade549df4ab32c8ffdd36d0589"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-linux-arm64.bin",
+      "size": 13301795,
+      "sha256": "041e72e2a4c258567886425c73c0513d871181a3f6322156fa75ee94058f20be"
+    },
+    {
+      "name": "ITOM-1.0.0-RC4-sources.zip",
+      "size": 2505705,
+      "sha256": "cc3a0c0b2f2a40f9fc305d079b705b547e9952900a5a38e9765fd547f885af01"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "size": 1547,
+      "sha256": "f6097ad3a3e418561e57915eaccef521582ff9b0202ff341129465634c14e614"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 942,
+      "sha256": "ff891ce3fc7f12422717529133bedda8d5f76960ee49d28fdddac778ba69221d"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 955,
+      "sha256": "268c30dc485d5fca6c730493039643ef74a7590db3c713c59386dc62d7de9910"
+    },
+    {
+      "name": "STATUS.json",
+      "size": 1409,
+      "sha256": "4e37ce8f6477490f5c78b31cb63825fe8e3c296d144e3422eb76defbb7ef93c4"
+    },
+    {
+      "name": "TEST_EVIDENCE.zip",
+      "size": 13423,
+      "sha256": "40144bdf471d73d9a3d60668773b998e4398a53cee08be6ae7c63da1fd543f5f"
+    },
+    {
+      "name": "VALIDATION.json",
+      "size": 2636,
+      "sha256": "24354665d0f2c3162f09ab269f030cb0873d67c3edb44c67978550e78a6a4a55"
+    }
+  ]
+}
