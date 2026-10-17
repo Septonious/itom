@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
-  "release": "RC2",
-  "revision": "itom-1-0-0-rc2",
-  "archive_name": "ITOM-1.0.0-RC2-sources.zip",
-  "baseline": "1.0.0 RC1",
-  "qualification": "1.0.0 stabilization candidate; no stable/live-provider certification until final gates pass",
-  "android_version_name": "1.0.0-rc2",
-  "android_version_code": 10001,
+  "release": "RC5",
+  "revision": "itom-1-0-0-rc5",
+  "archive_name": "ITOM-1.0.0-RC5-sources.zip",
+  "baseline": "1.0.0 RC2",
+  "qualification": "RC2-based RC5 development, local tests and sustained >=100 Mbps qualification required before publication",
+  "android_version_name": "1.0.0-rc5",
+  "android_version_code": 10004,
   "android_application_id": "org.itom.client.dev.rev7"
 }
