@@ -68,3 +68,14 @@ The new **development-only** `rc5_duplex_feedback` per-client-account counters w
 The nearly unchanged **physical CONTROL APPEND count** does not support the simple theory that a new flood of tiny controls causes the 24 MiB failure. Increased physical client DATA FETCH bytes confirm greater downstream load. Only client-side diagnostic counters were available in this run, so these cannot establish the server-to-client ACK sealing or visibility time; these must be measured explicitly. Upload collapsed in the server-only 24 MiB run even though all ten client-side remote grant waits reported zero and DATA callback handoff delays were negligible. No counters contain account credentials, payloads, mailbox IDs or cryptographic material.
 
 An isolated test-only shared server DATA publication pacer is now being evaluated to see whether physical batch **burstiness**, rather than average control volume, causes bidirectional starvation. Its speed and RTT must be measured before any consideration of committing transport code. Neither extra 24 MiB quota nor pacer is part of the published/deployable source.
+
+
+## Rejected server-wide DATA publication pacing A/B
+
+An isolated **server-only** MIME DATA-byte rate pacer was inserted before any local grant selection, fsync, or physical APPEND, preserving short/control classes and the two quiet carriers. A shared per-session pacing timestamp spread out large batches while preserving physical quota and retry proof. The pacer itself has been removed from the experimental runtime after the test; it has **never been merged** into the RC5 branch.
+
+Server 24MiB/client 12MiB, 10 accounts, 24 streams per direction, 80ms modeled IMAP command delay, modeled 600Mbps provider, 60s sustained, GOMAXPROCS=4. Nominal 180 Mbps **physical MIME payload** send ceiling:
+- Full window download **107.903 Mbps**, upload **31.173 Mbps**; last30s **111.009/10.661 Mbps**, last10s **111.935/9.227 Mbps**.
+- Loaded RTT max **385.574ms**, 30/30 probes, no misses/timeouts. Original and fresh connections recovered after load.
+- Client delivery governor observed up to 4.07s bulk ACK age (oldest range 4.07s) and 29 short-pressure/congestion decisions; server remained NORMAL.
+- **Strict FAIL**. Smoothing downstream bursts at this ceiling did not restore upload; the bottleneck needs more than static physical outbound rate pacing. Do not promote this to deployment.
