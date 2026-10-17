@@ -348,6 +348,8 @@ func testSupervisedProductionLoad(t *testing.T) {
 				if carrier.diag != nil {
 					d := carrier.diag.snapshot()
 					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
+					// Development-only aggregate: do not trace plaintext, credentials or keys.
+					t.Logf("rc5_duplex_feedback server=%t account=%s control_wait_ms=%d max_control_wait_ms=%d control_appends=%d control_bytes=%d sent_window=%d received_window=%d sent_receipt=%d received_receipt=%d remote_grant_wait_ms=%d remote_grant_max_ms=%d data_fetch_bytes=%d data_fetch_callback_max_ms=%d remote_cleanup_runs=%d local_cleanup_runs=%d", carrier.side, carrier.account.ID, d.ControlWaitMS, d.MaxControlWaitMS, d.ControlAppendCount, d.ControlAppendBytes, d.WindowSent, d.WindowReceived, d.ReceiptSent, d.ReceiptReceived, d.RemoteGrantWaitMS, d.MaxRemoteGrantWaitMS, d.DataFetchPayloadBytes, d.DataFetchCallbackMaxMS, d.CleanupRemoteRuns, d.CleanupLocalDataRuns)
 				}
 			}
 		}
