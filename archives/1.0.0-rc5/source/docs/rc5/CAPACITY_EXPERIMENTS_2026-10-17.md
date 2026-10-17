@@ -26,3 +26,21 @@ Preserve RC2 carrier recovery, per-account quota and physical proof invariants, 
 The original 12 mandatory 10-account SINGLE/MULTI cases (three independent repeats in fresh and retained states) must all meet **100 Mbps download AND upload**, every maximum loaded RTT **strictly below 750ms**, zero missed/timed-out probes, and original/fresh connection survival. Startup ramp checks still apply. Aspirational goal 125 Mbps sustained each direction.
 
 **No GitHub release/tag, production migration, APK or deployable server binary is authorized by this experiment.**
+
+## Follow-up: 24 MiB and duplex interference
+
+All measurements below are independent 10-account 60-second MULTI laboratory runs with unmodified payload/proof rules, 80 ms simulated IMAP command delay, and four Go execution threads. **All fail the mandatory 100/100 Mbps qualification.**
+
+| Experimental configuration | Full download | Full upload | Final 10s download | Final 10s upload | Max RTT | Overlapping RTT probes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 24 MiB profile, original delivery governor | **107.348** | 27.538 | 111.333 | 8.913 | 466 ms | 30/30 |
+| 24 MiB, server-side bulk flight temporarily capped at 7 MiB | 91.213 | 61.001 | 95.420 | 32.113 | 417 ms | 30/30 |
+| 24 MiB, remote-cleanup cadence changed from 1500ms to 350ms | **108.086** | 24.471 | 112.407 | 8.441 | 423 ms | 29/30 (FAIL) |
+| 24 MiB, two supported DATA shards | **104.574** | 32.633 | 112.302 | 8.992 | 422 ms | 30/30 |
+
+The 24 MiB result demonstrates 100+ Mbps **download only**, again not upload. The client-side logical delivery monitor in the main 24 MiB run observed 2.68 s age and 3.55 s oldest bulk-range age and reduced its C2S window to about 1.16 MiB late in the load. Bounded server flight partially alleviated this starvation but cost downstream throughput, confirming the need for adaptive, authenticated **bidirectional service fairness** rather than static capacity or clock tuning.
+
+All four modifications were confined to disposable test directories. None of the 24/32 MiB profiles, remote cleanup shortcuts, server flight caps or extra shards has been merged into the deployable RC5 source. Do not use their laboratory numbers to claim a qualifying release or 100 Mbps real provider performance.
+
+The only production-path change accepted during this phase is bounded cold-to-warm resumption for an unchanged, recently authenticated DATA reader (`service_policy.go`, `rc5_warm_start_test.go`): one 128 KiB restart probe can replace the 32 KiB cold seed only after at least eight previously authenticated BODY receipts, a clean service history, and no more than 90 s since prior receipt. Truly cold, stale, restricted and previously slow paths still start at 32 KiB. This has passing focused tests, but the larger 12-case performance matrix and live-phone validation are pending.
+
