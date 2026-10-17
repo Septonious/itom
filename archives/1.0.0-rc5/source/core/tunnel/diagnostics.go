@@ -31,7 +31,7 @@ type LineDiagnostic struct {
 	ReaderRepairs                                          uint64
 	DataFetchPolls, DataEmptyFetchPolls, DataFetchMessages uint64
 	DataIdleWaits, DataIdleNotifies                        uint64
-	DataReceiveLatencyMillis                               int64
+	DataReceiveLatencyMillis, DataFetchCallbackTotalMS, DataFetchCallbackMaxMS, DataFetchPayloadBytes int64
 	DataLimitBytes, DataLimitMessages                      uint64
 	BulkBatchTargetBytes                                   uint64
 	GrantWaitReason                                        string
