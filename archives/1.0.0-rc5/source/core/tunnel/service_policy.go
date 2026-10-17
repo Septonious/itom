@@ -43,9 +43,17 @@ func (l *lane) serviceBatchTarget() uint64 {
 		target = min(target, max(uint64(32<<10), bytes))
 	}
 	if l.side && (l.peerReadAt.IsZero() || time.Since(l.peerReadAt) > 30*time.Second) {
-		// APPEND proves server ingress only. Cold downstream starts with one
-		// complete DATA record until authenticated BODY receipts establish speed.
-		target = min(target, uint64(32<<10))
+		// A recently and repeatedly proven peer BODY service can resume one
+		// conservative batch after a quiet spell. A first connection, repaired
+		// slow path or stale history still starts with a single 32 KiB record.
+		// This never creates grant authority or substitutes APPEND for a receipt.
+		resume := uint64(32 << 10)
+		if !l.peerReadAt.IsZero() && time.Since(l.peerReadAt) <= 90*time.Second &&
+			l.peerReadSamples >= 8 && l.peerReadSlowCount == 0 &&
+			l.peerReadBatchTarget == 0 {
+			resume = 128 << 10
+		}
+		target = min(target, resume)
 	} else if l.peerReadBatchTarget != 0 && time.Since(l.peerReadAt) <= 30*time.Second {
 		target = min(target, l.peerReadBatchTarget)
 	}
