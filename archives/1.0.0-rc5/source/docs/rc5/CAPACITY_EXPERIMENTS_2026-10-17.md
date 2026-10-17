@@ -44,3 +44,36 @@ All four modifications were confined to disposable test directories. None of the
 
 The only production-path change accepted during this phase is bounded cold-to-warm resumption for an unchanged, recently authenticated DATA reader (`service_policy.go`, `rc5_warm_start_test.go`): one 128 KiB restart probe can replace the 32 KiB cold seed only after at least eight previously authenticated BODY receipts, a clean service history, and no more than 90 s since prior receipt. Truly cold, stale, restricted and previously slow paths still start at 32 KiB. This has passing focused tests, but the larger 12-case performance matrix and live-phone validation are pending.
 
+
+
+## Final investigation: DATA receive and feedback starvation
+
+**Mandatory qualification is still failing.** All additional cases below used the 10-account/24-stream 60-second simultaneous duplex model, 80 ms simulated IMAP command cost, Go 1.27.1 with four execution threads. These are independent isolated disposable copies of RC5, NOT tagged builds or field measurements.
+
+| Experiment | Download Mbps | Upload Mbps | Max RTT ms | Result |
+| --- | ---: | ---: | ---: | --- |
+| 24 MiB journal with read-service/callback diagnostics | 106.085 | 25.153 | 520 | FAIL |
+| 24 MiB, allow bulk feedback CONTROL on two fast-reserve mailboxes | 112.731 | 18.442 | 434 | FAIL, worsened upload |
+| Intermediate 20 MiB journal, unchanged credit and routing | 95.254 | 45.674 | 423 | FAIL |
+
+All these completed 30/30 loaded probes without misses/timeouts, and verified original/fresh application TCP exchange after load. **Never use probe success or upload/download peaks to override simultaneous 100/100 failure.**
+
+### New forensic evidence
+
+- All work-class admission queue lengths remained **zero** in snapshots while server DATA receivers operated. The physical DATA receive class was continuously busy, but work was not waiting in the admission scheduler.
+- Dedicated callback timing confirms near-zero total waiting in the DATA reader's `emit`→lane actor callback; this rules out actor channel backpressure as the dominant sustained delay in these samples.
+- Received physical BODY counts differed sharply by account. A small set of accounts remained nearly unused for client→server DATA, consistent with deliberately protected quiet physical carriers; verify the exact reserved lane identities when further investigating apparent idle capacity.
+- Client authenticated upload bulk ACK age grew to 2–5 seconds, the cumulative delivery window fell below 1 MiB, and late-run application upload became 7–11 Mbps even while server→client remained above 100 Mbps. This reflects harmful reciprocal load, not an IMAP transport disconnect or lost journal authority.
+- Removing the two quiet reader exclusions **for bulk control feedback only** did not restore upload, and reduced it even further. That experiment is rejected.
+- Raising total physical journal from 12 to 20, 24 or 32 MiB failed to provide a simultaneous 100/100 operating point. No capacity migration or change to durability rules is justified by these trials.
+
+### Accepted RC5 change
+
+Only diagnostic visibility was merged into `core/tunnel/diagnostics.go`, `topology.go` and test instrumentation:
+`DataFetchCallbackTotalMS`, `DataFetchCallbackMaxMS`, and `DataFetchPayloadBytes`. The counters record duration/byte quantities only, not plaintext or provider credentials. Previous RC2 transport, physical quota caps and eight physical writers remain intact.
+
+### Next engineering work, not yet completed
+
+Instrument the send-side authenticated receipt pipeline: time from DATA APPEND completion to peer BODY FETCH, to logical ACK sealing, control APPEND, and ACK application, by physical carrier and by logical stream. Compare it against per-direction confirmed bulk goodput under 12 MiB and 24 MiB. Determine which specific stage becomes late as the other direction saturates. Prioritize only that stage with latency protection; do not enlarge physical debt, bypass cleanup proofs or suppress the controller's actual stall detection.
+
+Repeat the strict 12-case 10-account fresh/retained SINGLE/MULTI 100 Mbps **both-directions** gate and <750 ms loaded RTT; require successful real-phone/provider testing before declaring field success. RC5 stays **unreleased**.
