@@ -1,0 +1,63 @@
+name: RC5 development checks and source snapshot (NO RELEASE)
+on:
+  push:
+    branches:
+      - codex/v1.0.0-rc5
+    paths:
+      - "archives/1.0.0-rc5/source/**"
+      - ".github/workflows/itom-rc5-development.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: itom-rc5-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Produce exact source snapshot (not a release)
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf "$RUNNER_TEMP/itom-rc5-source.tar.gz" -C archives/1.0.0-rc5 source
+          sha256sum "$RUNNER_TEMP/itom-rc5-source.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc5-source-snapshot
+          path: ${{ runner.temp }}/itom-rc5-source.tar.gz
+          retention-days: 2
+  source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Go and Python version
+        run: |
+          go version
+          python3 --version
+      - name: Source identity and runner syntax
+        working-directory: archives/1.0.0-rc5/source
+        run: |
+          python3 -m py_compile tools/build.py tools/build_core.py tools/check_sources.py tools/rc5_gate.py tools/transport_qualification.py
+          python3 tools/check_sources.py
+      - name: Focused RC2 baseline regression (NO speed qualification)
+        working-directory: archives/1.0.0-rc5/source/core
+        env:
+          GOTOOLCHAIN: local
+          GOFLAGS: -mod=readonly
+        run: |
+          go test ./tunnel -count=1 -run 'TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
