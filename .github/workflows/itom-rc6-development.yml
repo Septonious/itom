@@ -52,8 +52,8 @@ jobs:
       - name: Source identity and runner syntax
         working-directory: archives/1.0.0-rc6/source
         run: |
-          python3 -m py_compile tools/build.py tools/build_core.py tools/check_sources.py tools/rc6_gate.py tools/transport_qualification.py tools/rc6_ack_path.py tools/test_rc6_ack_path.py
-          python3 -m unittest discover -s tools -p 'test_rc6_ack_path.py'
+          python3 -m py_compile tools/build.py tools/build_core.py tools/check_sources.py tools/rc5_gate.py tools/transport_qualification.py tools/rc5_ack_path.py tools/test_rc5_ack_path.py
+          python3 -m unittest discover -s tools -p 'test_rc5_ack_path.py'
           python3 tools/check_sources.py
       - name: Focused RC2 baseline regression (NO speed qualification)
         working-directory: archives/1.0.0-rc6/source/core
