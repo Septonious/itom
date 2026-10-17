@@ -27,3 +27,7 @@ Raw user captures, profiles and credentials remain private.
 ## Build identity correction
 
 The first RC2 Android build passed 82 domain and 7 app unit tests plus lint, but the mandatory post-build native identity gate rejected the leftover RC1 TransportRevision constant. It was corrected before any publication, and the offline identity check now explicitly validates core/tunnel/version.go too. The mismatched source-fixture regression was extended to prevent this omission. The final targeted checks and builds are rerun on the corrected source; the superseded failed build report is retained as clearly labeled historical evidence, not treated as a final build result.
+
+## Unresolved repeated startup qualification limit
+
+A repeat of the broader selected race run on the corrected-identity source timed out in the existing ten-account discovery test: a 4096-byte exchange exceeded its unchanged three-second deadline before any physical-socket fault was injected. The other twenty-four test events passed, including the new routing checks, twelve-stream pause integrity, bounded blackhole repair and capped-socket recovery. One isolated race rerun with provider tracing passed. This does not establish an instrumentation-only cause or resolve the intermittency. The complete failing run and isolated follow-up are shipped as evidence; all_required_targeted_checks_passed and all_internal_gates_passed remain false. No deadline was relaxed and no failed event was removed from its run. RC2 is an unstable testing candidate, not stable 1.0.0.

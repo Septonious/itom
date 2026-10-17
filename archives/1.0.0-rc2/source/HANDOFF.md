@@ -31,3 +31,7 @@ The admin UI retains categorized controls, one diagnostics export progress indic
 ## Remaining qualification
 
 Repeat early MULTI startup and ramp on the working server, keep an original messaging connection open throughout, verify a fresh application connection after load and again after a quiet interval. If failure recurs, export paired client/server traces immediately to retain the failing startup. Compare chronologically adjacent unloaded and loaded latency samples rather than sorted RTT differences, and distinguish application cancellation from transport-originated resets. Stable promotion requires the complete internal gates plus sustained strict speed and real-device/provider follow-up. No confirmed physical Android fatal-stack diagnosis or blanket mobile-crash resolution is claimed by this RC.
+
+## Explicit RC2 startup qualification limit
+
+A repeated broader race run failed its pre-fault discovery exchange at the unchanged three-second deadline. The remaining twenty-four test events passed. One isolated traced race rerun passed, but its cause is unresolved. The focused new routing/early-NACK checks are separately recorded as passing; this narrower scope does not supersede the failed broader run. The package includes both the full failure and follow-up, and all-targeted/all-internal gate flags remain false. Keep RC2 classified as unstable until this intermittent startup condition and the remaining stable gates are resolved.

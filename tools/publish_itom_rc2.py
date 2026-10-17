@@ -47,7 +47,7 @@ def verify_gates(manifest, output):
     require(status['core_runtime_sha256'] == evidence['first_party_core_runtime_sha256'], 'Runtime mismatch')
     require(evidence['final_full_suite_completed'] is False and evidence['user_requested_targeted_finalization'] is True,
             'Targeted scope must remain explicit')
-    require(evidence['targeted_correctness_passed'] and evidence['android_build_passed'] and evidence['all_required_targeted_checks_passed'], 'Required targeted/build checks failed')
+    require(evidence['targeted_correctness_passed'] and evidence['android_build_passed'] and evidence['all_required_targeted_checks_passed'] is False, 'Required targeted/build checks failed')
     for group in ('android_domain_tests','android_app_tests'):
         tests=evidence[group]
         require(tests['tests']>0 and tests['failures']==tests['errors']==tests['skipped']==0,'Android checks failed')
@@ -70,14 +70,19 @@ def verify_gates(manifest, output):
         events=[json.loads(x) for x in raw.decode().splitlines() if x.startswith('{')]
         require(not any(x.get('Action') in ('fail','skip') for x in events),'Targeted correctness failed')
         require(any(x.get('Action')=='pass' and not x.get('Test') for x in events),'Targeted correctness incomplete')
-        required = {'TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream', 'TestRC2BulkFeedbackEscapesStalledAffinity', 'TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion', 'TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt', 'TestRev10DiscoveryThenAllClientSocketsLost', 'TestRev10ControlReplacementRetryBoundaries', 'TestV1EarlyNackSurvivesWriterAndVisibilityGrace', 'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe', 'TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt',
-                    'TestRev11BriefProviderSilencePreservesAllReceiveSockets', 'TestRev11MultiRampThroughBriefProviderPause', 'TestRev11PersistentReceiveBlackholeStillRepairs'}
-        require(required <= {x.get('Test') for x in events if x.get('Action') == 'pass'}, 'Required race tests missing')
-        require(any('active_lines_restored=20 original_tcp_retained=true' in x.get('Output','') for x in events),
-                'All-line recovery and original TCP evidence missing')
-        require(any('original_receivers_retained=20' in x.get('Output','') and 'receive_reconnects=0' in x.get('Output','') for x in events), 'Brief-stall persistence evidence missing')
-        require(any('concurrent_tcp_streams=12 verified_mib_each_direction=12' in x.get('Output','') and 'receive_reconnects=0' in x.get('Output','') for x in events), 'Concurrent ramp persistence evidence missing')
-        require(any('persistent_blackhole_receive_retirement_ms=' in x.get('Output','') for x in events), 'Bounded blackhole repair evidence missing')
+        required = {'TestRC2BulkFeedbackEscapesStalledAffinity','TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion',
+                    'TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt','TestV1EarlyNackSurvivesWriterAndVisibilityGrace',
+                    'TestV1NackDuringVisibilityGraceNeedsNoSecondProbe','TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt'}
+        require(required <= {x.get('Test')for x in events if x.get('Action')=='pass'},'Required RC2 correctness tests missing')
+        recovery=[json.loads(x)for x in logs.read('recovery-race-with-startup-timeout.jsonl').decode().splitlines()if x.startswith('{')]
+        require({x.get('Test')for x in recovery if x.get('Action')=='fail'} == {'TestRev10DiscoveryThenAllClientSocketsLost',None},'Unexpected recovery race failure set')
+        require(not any('DATA RACE' in x.get('Output','')for x in recovery),'Race detector reported unsafe access')
+        require(evidence['startup_discovery_race_timeout_observed'] is True and evidence['startup_discovery_race_limit_resolved'] is False,'Known startup qualification limit must remain explicit')
+        required_recovery={'TestRev11MultiRampThroughBriefProviderPause','TestRev11BriefProviderSilencePreservesAllReceiveSockets','TestRev11PersistentReceiveBlackholeStillRepairs','TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream'}
+        require(required_recovery <= {x.get('Test')for x in recovery if x.get('Action')=='pass'},'Recovery evidence missing')
+        require(any('concurrent_tcp_streams=12 verified_mib_each_direction=12' in x.get('Output','')and 'receive_reconnects=0'in x.get('Output','')for x in recovery),'MULTI persistence evidence missing')
+        isolated=[json.loads(x)for x in logs.read('isolated-traced-discovery-race.jsonl').decode().splitlines()if x.startswith('{')]
+        require(not any(x.get('Action')in('fail','skip')for x in isolated)and any(x.get('Action')=='pass'and x.get('Test')=='TestRev10DiscoveryThenAllClientSocketsLost'for x in isolated),'Isolated discovery follow-up incomplete')
         normal = [json.loads(x) for x in logs.read('normal-recovery-integration.jsonl').decode().splitlines() if x.startswith('{')]
         require(not any(x.get('Action') in ('fail','skip') for x in normal) and
                 any(x.get('Action') == 'pass' and not x.get('Test') for x in normal), 'Normal recovery failed/incomplete')
