@@ -38,6 +38,9 @@ func (l *lane) enqueueFlowControl(ctx context.Context, item queuedControl) error
 				return nil
 			}
 			item.added = previous.added
+			// Only the queue's original birth time is preserved. The
+			// newest merged ACK payload was just observed.
+			item.latestAt = time.Now()
 			l.flowControlLatest[key] = item
 			l.flowControlMu.Unlock()
 			return nil
