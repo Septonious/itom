@@ -8,6 +8,7 @@ of phone/provider field performance.
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -57,6 +58,19 @@ def main():
             if not case.get("ok") or case.get("exit_code") != 0:
                 all_ok = False
                 print("FAIL:", case.get("name"), flush=True)
+            log = records[-1].parent / case.get("log", "")
+            result_lines = []
+            if log.is_file():
+                for line in log.read_text(errors="replace").splitlines():
+                    if "supervised_result" in line and "max_ms=" in line:
+                        result_lines.append(line)
+            maxima = []
+            for line in result_lines:
+                for match in re.finditer(r"supervised_result\\b[^\\n]*?\\bmax_ms=(\\d+(?:\\.\\d+)?)", line):
+                    maxima.append(float(match.group(1)))
+            if not maxima or max(maxima) >= a.rtt_ms:
+                all_ok = False
+                print("FAIL: missing or excessive loaded RTT", case.get("name"), maxima, flush=True)
         if result.returncode != 0:
             all_ok = False
     status = {"release":"RC5","gate":"strict-duplex-speed","minimum_mbps":a.minimum_mbps,
