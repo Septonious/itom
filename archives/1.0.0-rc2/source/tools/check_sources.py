@@ -68,6 +68,9 @@ def validate_release_identity(root: Path):
         source = (root / relative).read_text(encoding="utf-8")
         check('"' + info["revision"] + '"' in source,
               "Server revision mismatch in " + relative)
+    runtime = (root / "core/tunnel/version.go").read_text(encoding="utf-8")
+    check('"' + info["revision"] + '"' in runtime,
+          "Transport revision mismatch in core/tunnel/version.go")
     return info
 
 

@@ -70,7 +70,7 @@ class LauncherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             for rel in ("source-info.json", "android/app/build.gradle.kts",
-                        "core/cmd/itom/main.go", "core/manager/trace.go"):
+                        "core/cmd/itom/main.go", "core/manager/trace.go", "core/tunnel/version.go"):
                 target = root / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((source / rel).read_bytes())
@@ -82,6 +82,11 @@ class LauncherTests(unittest.TestCase):
             main = root / "core/cmd/itom/main.go"
             main.write_text(main.read_text().replace(build.read_source_info()["revision"], "old-revision"))
             with self.assertRaisesRegex(RuntimeError, "Server revision mismatch"):
+                check_sources.validate_release_identity(root)
+            main.write_bytes((source / "core/cmd/itom/main.go").read_bytes())
+            runtime = root / "core/tunnel/version.go"
+            runtime.write_text(runtime.read_text().replace(build.read_source_info()["revision"], "old-revision"))
+            with self.assertRaisesRegex(RuntimeError, "Transport revision mismatch"):
                 check_sources.validate_release_identity(root)
 
     def test_compiled_apk_identity_validation(self):
