@@ -20,7 +20,7 @@ class TestCorrelator(unittest.TestCase):
             (client / 'transport-trace.jsonl').write_text(
                 json.dumps({'time':'2026-10-17T00:00:00.001Z',
                     'event':'control_wait','side':'client','account':'a01',
-                    'user':'u','counter':10,'name':'WINDOW','duration_us':125000}) + '\\n'
+                    'user':'u','counter':10,'name':'WINDOW','duration_us':125000}) + '\n'
                 + ev('2026-10-17T00:00:00Z', 'frame_sealed', 'client', 10)
                 + ev('2026-10-17T00:00:02Z', 'frame_rx', 'client', 11))
             (server / 'transport-trace.jsonl').write_text(
