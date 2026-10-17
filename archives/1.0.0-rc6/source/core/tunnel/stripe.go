@@ -213,6 +213,10 @@ type stripeGroup struct {
 	turn               uint64
 	active             atomic.Int64
 	fastWaiters        atomic.Int64
+	// One-second fast placement history prevents an ACK-cleared short burst
+	// from repeatedly monopolizing the same physical mailbox.
+	fastPlacements     map[string]int
+	fastPlacementStart time.Time
 	wake               chan struct{}
 	fastWake           chan struct{}
 	hub                *stripeHub
@@ -786,10 +790,9 @@ func (g *stripeGroup) takeRemoteGrantPreferred(ctx context.Context, avoid, prefe
 					}
 					if key, ok := l.tryTakeRemoteGrant(fast); ok {
 						if fast {
-							g.turn++
-						} else {
-							g.turn++
+							g.recordFastPlacementLocked(l.account.ID, time.Now())
 						}
+						g.turn++
 						g.mu.Unlock()
 						return l, key, nil
 					}

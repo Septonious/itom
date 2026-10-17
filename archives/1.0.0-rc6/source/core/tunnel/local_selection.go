@@ -155,10 +155,9 @@ func (g *stripeGroup) takeLocalGrantPreferred(ctx context.Context, avoid, prefer
 						return nil, journal.Grant{}, err
 					}
 					if fast {
-						g.turn++
-					} else {
-						g.turn++
+						g.recordFastPlacementLocked(l.account.ID, time.Now())
 					}
+					g.turn++
 					g.mu.Unlock()
 					return l, grant, nil
 				}
@@ -219,7 +218,7 @@ func (g *stripeGroup) prioritizeFastTargetsLocked(keys []string, avoid *lane) {
 			scores[key] = int(^uint(0) >> 1)
 			continue
 		}
-		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l))
+		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l)) + g.fastPlacementPenaltyLocked(l.account.ID, time.Now())
 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
 			// Tagged APPEND can finish long before the peer's short BODY/ACK.
 			// Include client wallet publications as well as server journal debt.
