@@ -94,6 +94,8 @@ type deliveryController struct {
 	bulkDemandAt                        time.Time
 	fastPressureUntil                   time.Time
 	lastFastACKAgeMS                    int64
+	lastBulkACKAgeMS                    int64
+	lastBulkACKAt                       time.Time
 	lastFastACKAt                       time.Time
 	policy                              deliveryPolicy
 	fastPressureDecisions               uint64
@@ -261,6 +263,12 @@ func (d *deliveryController) progress(stream, frontier uint64, now time.Time) {
 					}
 				}
 			} else if !r.repaired {
+				// Only an authenticated logical ACK following definite physical
+				// publication measures actual physical-to-ACK turnaround.
+				if !r.accepted.IsZero() && r.flightAtAdmission > 0 {
+					d.lastBulkACKAgeMS = max(int64(0), now.Sub(r.accepted).Milliseconds())
+					d.lastBulkACKAt = now
+				}
 				d.ages[d.ageNext] = residence
 				// Sample only a newly charged original at low aggregate flight.
 				// Repair ACKs and stalled full-window traffic cannot raise the floor.
@@ -935,6 +943,7 @@ type latencyGovernorSnapshot struct {
 	OldestBulkRangeAgeMS                                                                       int64
 	AcknowledgementFloorMS                                                                     int64
 	LastFastACKAgeMS, FastPressureRemainingMS, FastPathBaselineMS, FastTargetMS                int64
+	LastBulkACKAgeMS, LastBulkACKSinceMS                                                        int64
 	FastPressureDecisions                                                                      uint64
 	ProbeAttempts, ProbeAccepted, ProbeRejected                                                uint64
 	RecoveryAttempts, RecoveryAccepted, RecoveryRejected, FastRampIncreases, FastRampRollbacks uint64
@@ -966,7 +975,12 @@ func (g *stripeGroup) deliverySnapshotLocked() latencyGovernorSnapshot {
 		short[account] = count
 	}
 	d.init()
+	bulkSince := int64(-1)
+	if !d.lastBulkACKAt.IsZero() {
+		bulkSince = max(int64(0), time.Since(d.lastBulkACKAt).Milliseconds())
+	}
 	return latencyGovernorSnapshot{Mode: string(d.policy.mode), BaselineMS: d.baselineMS, TargetMS: d.targetAge().Milliseconds(),
+		LastBulkACKAgeMS: d.lastBulkACKAgeMS, LastBulkACKSinceMS: bulkSince,
 		AcknowledgementFloorMS: d.acknowledgementFloor().Milliseconds(), LastFastACKAgeMS: d.lastFastACKAgeMS,
 		FastPathBaselineMS: d.fastPathBaseline().Milliseconds(), FastTargetMS: d.fastAgeBudget().Milliseconds(), PendingShortRangesByAccount: short,
 		FastPressureRemainingMS: max(int64(0), time.Until(d.fastPressureUntil).Milliseconds()), FastPressureDecisions: d.fastPressureDecisions,
