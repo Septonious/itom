@@ -294,7 +294,11 @@ func testSupervisedProductionLoad(t *testing.T) {
 		traceDuplex := os.Getenv("ITOM_LOAD_DUPLEX_TIMELINE") == "1"
 		measureLog := func(format string, args ...any) {
 			t.Logf(format, args...)
-			if !traceDuplex || !strings.HasPrefix(format, "production_window5") {
+			if !traceDuplex || len(args) != 1 || format != "%s" {
+				return
+			}
+			event, ok := args[0].(string)
+			if !ok || !strings.HasPrefix(event, "production_window5 ") {
 				return
 			}
 			f.client.mu.Lock()
