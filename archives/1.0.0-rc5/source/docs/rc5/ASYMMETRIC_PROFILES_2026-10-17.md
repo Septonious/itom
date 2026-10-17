@@ -79,3 +79,15 @@ Server 24MiB/client 12MiB, 10 accounts, 24 streams per direction, 80ms modeled I
 - Loaded RTT max **385.574ms**, 30/30 probes, no misses/timeouts. Original and fresh connections recovered after load.
 - Client delivery governor observed up to 4.07s bulk ACK age (oldest range 4.07s) and 29 short-pressure/congestion decisions; server remained NORMAL.
 - **Strict FAIL**. Smoothing downstream bursts at this ceiling did not restore upload; the bottleneck needs more than static physical outbound rate pacing. Do not promote this to deployment.
+
+
+## Isolated bulk ACK-age relaxation: 2.5 second threshold (strict failure)
+
+To distinguish genuine short-traffic RTT damage from merely late *bulk* authenticated progress, the local 24MiB-server/12MiB-client test temporarily used a 2500ms adaptive bulk target while retaining the separate short/fast delay guard, original physical credit, 3s no-progress outage guard, and provider model. This is a *local-only* policy experiment, not a production recommendation.
+
+- Full 60s useful download **96.858 Mbps**, upload **67.956 Mbps**; last30s **99.029/54.098 Mbps**, last10s **109.943/24.982 Mbps**.
+- Max loaded RTT **482.342ms**, 30/30 probes and successful same-socket and new-socket postload exchanges.
+- This improves upload over the default server24 108/35 result, but still fails **both** full-interval floors and upload tails. Late upload still collapses despite no disruption of fast-traffic RTT.
+- **Do not merge** as a solution. A larger ACK-age allowance delays a congestion response; it cannot correct authenticated DATA or ACK feedback service/visibility delays. A further 2.8s diagnostic was started solely to bound this effect.
+
+No release/tag, production change or quota-debt forgiveness was authorized by these tests.
