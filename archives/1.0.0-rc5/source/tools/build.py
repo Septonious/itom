@@ -45,11 +45,11 @@ def read_source_info(root: Path = ROOT) -> dict:
         fail("Invalid source version or revision")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
-    if info.get("release") == "RC2":
-        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-rc2"
-                or info["archive_name"] != "ITOM-1.0.0-RC2-sources.zip"
-                or info.get("android_version_name") != "1.0.0-rc2"
-                or info.get("android_version_code") != 10001
+    if info.get("release") in ("RC2","RC5"):
+        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-" + info["release"].lower()
+                or info["archive_name"] != f"ITOM-1.0.0-{info['release']}-sources.zip"
+                or info.get("android_version_name") != "1.0.0-" + info["release"].lower()
+                or info.get("android_version_code") != (10001 if info["release"] == "RC2" else 10004)
                 or info.get("android_application_id") != "org.itom.client.dev.rev7"):
             fail("Inconsistent ITOM 1.0.0 RC2 identity")
         return info
@@ -82,7 +82,7 @@ def read_source_info(root: Path = ROOT) -> dict:
 
 
 def android_identity(info):
-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2"):
+    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5"):
         return info["android_version_name"], info["android_version_code"]
     return f"{info['version']}-field{info['release'][5:]}", 9000 + int(info["release"][5:])
 
