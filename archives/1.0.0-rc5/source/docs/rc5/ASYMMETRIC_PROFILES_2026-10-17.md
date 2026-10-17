@@ -39,3 +39,12 @@ Both cases used server 24 MiB/client 12 MiB, 10 accounts, 24 streams per directi
 - **Double ordinary cumulative bulk-feedback coalescing interval from 20 to 40 ms:** full download **111.568 Mbps**, full upload **24.493 Mbps**; last 30 seconds download **111.385**, upload **8.223 Mbps**; last 10 seconds download **107.269**, upload **11.403 Mbps**. Maximum loaded RTT **405.248 ms**, all 30/30 RTT probes successful. **REJECT**. Saving some control APPEND activity cannot substitute for prompt upload feedback.
 
 Next isolated experiment preserves the original control queue and 20 ms coalescing, and removes only the delivery controller's **additional rate-dependent clamp after its guarded halving** to test whether its own throttled rate artificially reinforces an ACK slowdown. All actual pressure/outage decisions, original 50% reduction, physical journal spending, no-replay invariants and fast reserves remain intact. No qualification claimed without full results.
+
+
+## Rejected congestion-RTT simplification
+
+A one-change experiment removed only the extra **rate-derived clamp** following the logical delivery governor's mandatory guarded 50% window reduction; outage/short-pressure decisions and default feedback routing remained intact.
+
+Server 24 MiB/client 12 MiB, 10 accounts, 24 streams/direction, 60 seconds: download **110.070 Mbps**, upload **27.700 Mbps**, last 30 seconds **110.590/14.759**, last 10 seconds **109.943/13.107** Mbps. Max loaded RTT **392.471ms**, all 30/30 probes completed. **Strict 100/100 FAIL.** The rate-clamp change is rejected and was reverted in the local experiment. The remaining deficit is authenticated upload feedback/service scheduling, not a single bad reduction formula.
+
+Next isolated hypothesis tests backlog-aware bulk feedback routing **only among existing eight non-reserved eligible carriers**, with the original control class, 20ms coalescing and physical quota unchanged. Do not commit that route change unless it meets duplex performance and unchanged stability tests.
