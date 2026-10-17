@@ -57,12 +57,19 @@ def check_report(root: Path, state: str):
             fail(f"{state}/{name}: missing original Go JSONL")
         if hashlib.sha256(log.read_bytes()).hexdigest() != case.get("log_sha256"):
             fail(f"{state}/{name}: original Go event log hash mismatch")
-        results, accepted, post = [], [], 0
+        results, accepted = [], []
+        post_sockets, post_fresh = set(), 0
+        saw_json = False
         for line in log.read_text(errors="replace").splitlines():
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
+                # Go prints module-download notices before the first -json test
+                # event on a cold runner. Other malformed lines remain fatal.
+                if not saw_json and line.startswith("go: downloading "):
+                    continue
                 fail(f"{state}/{name}: invalid Go JSONL")
+            saw_json = True
             out = event.get("Output", "")
             match = RESULT.search(out)
             if match:
@@ -70,9 +77,16 @@ def check_report(root: Path, state: str):
             ack = ACCEPTED.search(out)
             if ack:
                 accepted.append(ack.group(1))
-            if "supervised_post_stress" in out:
-                post += 1
-        if len(results) != 1 or accepted != ["true"] or post < 7:
+            if "supervised_post_stress_fresh" in out:
+                if "integrity_verified=true" not in out or "original_socket_rechecked=true" not in out:
+                    fail(f"{state}/{name}: unverified fresh post-load exchange")
+                post_fresh += 1
+            elif "supervised_post_stress " in out:
+                m = re.search(r"supervised_post_stress index=(\\d+) same_socket=(true|false)", out)
+                if not m or m.group(2) != "true" or int(m.group(1)) in post_sockets:
+                    fail(f"{state}/{name}: invalid or duplicated original-socket post-load check")
+                post_sockets.add(int(m.group(1)))
+        if len(results) != 1 or accepted != ["true"] or post_sockets != set(range(1,7)) or post_fresh != 1:
             fail(f"{state}/{name}: incomplete authenticated load/postload evidence")
         up, down, probes, rtt, timedout, missed, overlap = map(float, results[0].groups())
         if min(up, down) <= 0:
@@ -82,7 +96,7 @@ def check_report(root: Path, state: str):
         if not 0 < rtt < 750:
             fail(f"{state}/{name}: loaded RTT {rtt}ms exceeds strict 750ms limit")
         verified.append(dict(case=name,download_mbps=down,upload_mbps=up,max_loaded_rtt_ms=rtt,
-                             probe_count=int(probes),probe_overlap=int(overlap),postload_checks=post))
+                             probe_count=int(probes),probe_overlap=int(overlap),postload_checks=len(post_sockets)+post_fresh))
     return dict(state=state,source_fingerprint=report.get("source_sha256"),
                 cases=verified,lab_qualified=True)
 
