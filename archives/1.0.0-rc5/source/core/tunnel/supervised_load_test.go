@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"itom.local/core/journal"
 	"itom.local/core/servercfg"
 	"itom.local/core/wire"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -61,6 +63,22 @@ func testSupervisedProductionLoad(t *testing.T) {
 	var retained func(string, string, servercfg.Config, servercfg.User)
 	if os.Getenv("ITOM_LOAD_RETAINED_STATE") == "1" {
 		retained = rev4RetainedState(t)
+	}
+	// Test-only, existing allowlisted 16 MiB server journal; no production
+	// default, profile migration, APPEND evidence, or client wallet changes.
+	if os.Getenv("ITOM_EXPERIMENT_SERVER_PROFILE") == "16" {
+		if retained != nil {
+			t.Fatal("cannot combine with retained-state qualification")
+		}
+		retained = func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
+			for _, account := range cfg.Accounts {
+				dir := filepath.Join(serverDir, account.ID, u.ID)
+				if err := os.MkdirAll(dir, 0700); err != nil { t.Fatal(err) }
+				store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(account, u, dataProfile16), time.Second)
+				if err != nil { t.Fatal(err) }
+				if err = store.Close(); err != nil { t.Fatal(err) }
+			}
+		}
 	}
 	f := newProductionSupervisorFixtureState(t, n, retained)
 	logical, generation := f.client.logicalSession, f.client.generation
