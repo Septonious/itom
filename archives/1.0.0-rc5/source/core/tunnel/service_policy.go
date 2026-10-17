@@ -75,6 +75,16 @@ func (l *lane) observePeerReadService(bytes int64, started time.Time, now time.T
 	}
 	l.peerReadAt = now
 	l.peerReadSamples++
+	// RC5 cold-ramp: one complete authenticated, promptly read physical BODY
+	// proves the initial 32 KiB path is usable. Permit just one tentative
+	// 64 KiB next batch instead of waiting for a second full mail round trip.
+	// Subsequent increases still require the original two fast receipts.
+	// This never observes APPEND-only success or grants extra physical quota.
+	if l.peerReadSamples == 1 && l.peerReadBatchTarget == 32<<10 && elapsed <= budget {
+		l.peerReadBatchTarget = 64 << 10
+		l.peerReadFastCount = 0
+		return
+	}
 	if elapsed > 2*budget {
 		l.peerReadFastCount = 0
 		l.peerReadSlowCount = min(l.peerReadSlowCount+1, 16)
