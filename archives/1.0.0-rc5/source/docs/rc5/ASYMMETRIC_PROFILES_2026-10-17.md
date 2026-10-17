@@ -29,3 +29,13 @@ A separate test-only local source changed the **server's** physical DATA journal
 **Result:** Enlarging *only* server DATA journal did NOT prevent upstream starvation. Additional outbound capacity on the server alone cannot satisfy simultaneous upload/download targets. The 24 MiB profile is REJECTED; no code, journal migration, or operational recommendation uses it. The experiment strongly motivates measuring bidirectional peer feedback and DATA-read service latency rather than further buffer expansion.
 
 GitHub retains only the safe, allowlisted **server 16 MiB / client 12 MiB** test runner and documented failed results. Next software experiment should preserve RC2's 12 MiB production default, the two fast-carrier reserves, and the proof-based physical quota lifecycle.
+
+
+## Rejected ACK routing/coalescing experiments (isolated test copies)
+
+Both cases used server 24 MiB/client 12 MiB, 10 accounts, 24 streams per direction, 60-second load and the same strict no-tolerance acceptance checks. **Neither change was committed to the production runtime.**
+
+- **Promote all established bulk ACK/WINDOW updates into the existing urgent control queue:** download **144.724 Mbps**, upload only **2.464 Mbps** in the first ten-second measured interval; test aborted on a 6.0-second upload progress blackhole. **REJECT**. The original queued class/service fairness must be preserved.
+- **Double ordinary cumulative bulk-feedback coalescing interval from 20 to 40 ms:** full download **111.568 Mbps**, full upload **24.493 Mbps**; last 30 seconds download **111.385**, upload **8.223 Mbps**; last 10 seconds download **107.269**, upload **11.403 Mbps**. Maximum loaded RTT **405.248 ms**, all 30/30 RTT probes successful. **REJECT**. Saving some control APPEND activity cannot substitute for prompt upload feedback.
+
+Next isolated experiment preserves the original control queue and 20 ms coalescing, and removes only the delivery controller's **additional rate-dependent clamp after its guarded halving** to test whether its own throttled rate artificially reinforces an ACK slowdown. All actual pressure/outage decisions, original 50% reduction, physical journal spending, no-replay invariants and fast reserves remain intact. No qualification claimed without full results.
