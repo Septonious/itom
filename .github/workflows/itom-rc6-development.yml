@@ -61,6 +61,6 @@ jobs:
           GOTOOLCHAIN: local
           GOFLAGS: -mod=readonly
         run: |
-          go test ./servercfg -count=1 -run '^TestRC6ProviderSessionBudgetAlreadyPartitionsEndpointsTestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
+          go test ./servercfg -count=1 -run '^TestRC5ProviderSessionBudgetAlreadyPartitionsEndpoints|TestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
 
-          go test ./tunnel -count=1 -run 'TestRC6|TestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
+          go test ./tunnel -count=1 -run 'TestRC5|TestRC6|TestRev2BatchedACKCannotHideFullUtilizationDuringRamp|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion|TestRC2BulkFeedbackEscapesStalledAffinity|TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt'
