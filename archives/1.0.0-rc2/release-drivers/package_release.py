@@ -55,8 +55,8 @@ q={'schema':5,'classification':CLASS,'stable_release_ready':False,'all_internal_
 'real_provider_tested':False,'physical_android_device_tested':False,'mobile_crash_resolved':False,
 'known_qualification_limit':'A repeated broader race run timed out in a 4096-byte startup discovery exchange at its unchanged 3-second deadline, before fault injection. One isolated traced race rerun passed, but no cause was established and the intermittency remains unresolved. The full failed run and rerun are included.','limitations':['Targeted checks only; complete final internal suite not run.','The repeated broader race startup-discovery timeout remains an explicit qualification limit.','Supplied field evidence is RC1; earliest failed MULTI attempts were rotated out of both traces.','No new sustained throughput or jitter certificate; strict 100 Mbps target remains unchanged.','No physical Android/provider follow-up or visual interaction qualification in this pass.']}
 
-e=S/'docs/rc2/evidence';e.mkdir(exist_ok=True);(e/'V1_VALIDATION.json').write_text(json.dumps(q,indent=2)+'\n')
-for name in ('final-recovery.jsonl','final-correctness.jsonl','before-fix.jsonl','launcher-check.log'):shutil.copy2(W/name,e/name)
+e=S/'docs/rc2/evidence';e.mkdir(exist_ok=True);(e/'RC2_VALIDATION.json').write_text(json.dumps(q,indent=2)+'\n')
+for name in ('final-recovery.jsonl','final-correctness.jsonl','before-fix.jsonl','launcher-check.log','recovery-race.jsonl','discovery-diagnostic-race.jsonl'):shutil.copy2(W/name,e/name)
 notes=f'''# ITOM 1.0.0 RC2 — account-stall routing correction
 
 RC2 steers new work and cumulative stream feedback away from an account whose control writer has stalled. The RC1 captures show a single account with 10–16 second IMAP operations on both endpoints while siblings continue working. Stable feedback affinity and OPEN ranking could still select that delayed account; focused before/after regressions reproduce and correct this amplification.
