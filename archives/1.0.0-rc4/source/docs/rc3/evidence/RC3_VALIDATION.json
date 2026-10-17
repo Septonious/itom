@@ -1,0 +1,73 @@
+{
+  "schema": 6,
+  "classification": "V1_0_0_RC3_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "qualification_source_sha256": "180dc64fc64fae07d37e2d0dd57a52d77d3304a33656c285c59a95772f7380cc",
+  "first_party_core_runtime_sha256": "acdeb4d98d78898f0567241772f7dccd92d047c4dfb4e11968f0aadd55331b9e",
+  "generated_utc": "2026-10-17T00:43:39.863437+00:00",
+  "focused_race_test_events_passed": 24,
+  "normal_recovery_test_events_passed": 6,
+  "hot_backoff_cap_ms_before": 80,
+  "hot_backoff_cap_ms_after": 20,
+  "quiet_active_bulk_policy_unchanged": true,
+  "performance_retested": false,
+  "strict_performance_passed": false,
+  "strict_performance_status": "not_retested",
+  "strict_speed_target_mbps": 100,
+  "speed_tolerance_percent": 0,
+  "jitter_target_passed": false,
+  "jitter_status": "not_retested",
+  "sub_200ms_measured": false,
+  "rtt_goal_ms": 200,
+  "supplied_rc2_control_echo_samples": 209,
+  "supplied_rc2_control_echo_min_ms": 216.21,
+  "supplied_rc2_control_echo_median_ms": 345.83,
+  "user_reported_rc2_speed_goal_achieved": true,
+  "user_reported_rc2_failed_speedtests": 0,
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "launcher_tests_passed": 45,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "known_qualification_limit": "Historical RC2 instrumented discovery timeout remains unresolved. Its failed run is preserved as historical evidence; it was not rerun as part of RC3 focused correctness.",
+  "limitations": [
+    "Targeted checks only; complete final internal matrix not executed.",
+    "No live RC3 sub-200ms or sustained throughput certificate.",
+    "Higher command frequency inside bounded response windows requires real-provider confirmation.",
+    "Historical RC2 startup race intermittency remains unresolved."
+  ]
+}

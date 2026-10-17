@@ -1,0 +1,9 @@
+{"Time":"2026-10-17T00:35:17.742004173Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-17T00:35:17.749178481Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound"}
+{"Time":"2026-10-17T00:35:17.749534566Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Output":"=== RUN   TestRC3HotResponseBackoffBound\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:35:17.749575837Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Output":"    rc3_latency_test.go:13: hot response backoff exceeds 20ms 40ms\n","OutputType":"error"}
+{"Time":"2026-10-17T00:35:17.749598292Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Output":"--- FAIL: TestRC3HotResponseBackoffBound (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:35:17.749601922Z","Action":"fail","Package":"itom.local/core/tunnel","Test":"TestRC3HotResponseBackoffBound","Elapsed":0}
+{"Time":"2026-10-17T00:35:17.749707396Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:35:17.750089579Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\titom.local/core/tunnel\t0.007s\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:35:17.750168416Z","Action":"fail","Package":"itom.local/core/tunnel","Elapsed":0.008}
