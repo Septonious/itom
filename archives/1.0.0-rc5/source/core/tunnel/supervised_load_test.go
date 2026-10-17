@@ -315,7 +315,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 				return
 			}
 			c, ss := client.deliverySnapshot(), server.deliverySnapshot()
-			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps)
+			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f client_bulk_ack_age_ms=%d client_bulk_ack_since_ms=%d server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f server_bulk_ack_age_ms=%d server_bulk_ack_since_ms=%d", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, c.LastBulkACKAgeMS, c.LastBulkACKSinceMS, ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps, ss.LastBulkACKAgeMS, ss.LastBulkACKSinceMS)
 		}
 		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, measureLog)
 		cancelProfile()
