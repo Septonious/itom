@@ -1,0 +1,57 @@
+name: RC5 cold-first-case independent stability reproduction (no release)
+on:
+  push:
+    branches: [codex/v1.0.0-rc5-prewarm-qualification]
+    paths:
+      - ".github/workflows/itom-rc5-prewarm-qualification.yml"
+      - "archives/1.0.0-rc5/source/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cold:
+    name: "Precompiled binary, NEW physical state: ${{ matrix.state }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        state: [fresh, retained]
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: "off"
+      GOMAXPROCS: "4"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Precompile Go dependencies and exact tunnel test binary, WITHOUT initializing any tunnel
+        working-directory: archives/1.0.0-rc5/source/core
+        run: |
+          go test -c -o "$RUNNER_TEMP/rc5-precompiled-tunnel.test" ./tunnel
+          test -s "$RUNNER_TEMP/rc5-precompiled-tunnel.test"
+      - name: Same 12-case qualification with full cold account/mailbox initialization every case
+        shell: bash
+        working-directory: archives/1.0.0-rc5/source
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ "${{ matrix.state }}" == "retained" ]]; then flags+=(--retained-state); fi
+          python3 tools/transport_qualification.py --go go \
+            --results reports/rc5-prewarm/${{ matrix.state }} \
+            --accounts 10 --seconds 60 --repeats 3 --streams both \
+            --warmup 10 --command-delay-ms 80 --provider-mbps 600 \
+            --provider-sessions 10 --stability-only "${flags[@]}"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc5-prewarm-${{ matrix.state }}
+          path: archives/1.0.0-rc5/source/reports/rc5-prewarm/${{ matrix.state }}/
+          if-no-files-found: warn
+          retention-days: 14
