@@ -1,0 +1,267 @@
+name: RC5 full stability qualification, build and prerelease
+on:
+  push:
+    branches: [codex/v1.0.0-rc5]
+    paths:
+      - "archives/1.0.0-rc5/source/**"
+      - ".github/workflows/itom-rc5-release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: itom-rc5-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOURCE: archives/1.0.0-rc5/source
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+
+jobs:
+  correctness:
+    name: Full correctness, recovery, race and native checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Source integrity, Python tools and UI structure
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc5
+      - name: Complete Go core/server suite (no skipped integrity/recovery gates)
+        working-directory: ${{ env.SOURCE }}/core
+        env:
+          ITOM_UNSTABLE_SURVIVAL: "1"
+          ITOM_CORE_QUALIFICATION: "1"
+          ITOM_REWORK_QUALIFICATION: "0"
+          GOMAXPROCS: "4"
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=1200s ./... | tee "$RUNNER_TEMP/rc5-core-tests.log"
+      - name: Complete pinned IMAP-fork suite
+        working-directory: ${{ env.SOURCE }}/core/third_party/go-imap
+        run: go test -p 2 -count=1 -timeout=240s ./...
+      - name: Vet and native host integration tests
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          (cd core && go vet ./...)
+          (cd native && go test -p 2 -count=1 -timeout=180s ./...)
+      - name: Race-enabled RC5, RC2 fallback and physical recovery tests
+        working-directory: ${{ env.SOURCE }}/core
+        env:
+          ITOM_UNSTABLE_SURVIVAL: "1"
+          GOMAXPROCS: "4"
+        run: |
+          go test -race -count=1 -timeout=360s ./tunnel ./mailbox \
+            -run 'TestRC5|TestRC2|TestRev6StalledOptionalLoginsKeepAuthenticatedBaseUsable|TestRev6OptionalLoginBudgetNeverSwallowsParentCancellation|TestIdleDoneStallInterruptsAndJoinsBeforeNextCommand'
+      - name: Record correctness outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc5-correctness-evidence
+          path: ${{ runner.temp }}/rc5-core-tests.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  stability:
+    name: "60s duplex stability: ${{ matrix.state }} state, SINGLE and MULTI x3"
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        state: [fresh, retained]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Fresh and retained state, ten real fixture accounts, no artificial speed floor
+        working-directory: ${{ env.SOURCE }}
+        env:
+          GOMAXPROCS: "4"
+        shell: bash
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ "${{ matrix.state }}" == "retained" ]]; then flags+=(--retained-state); fi
+          python3 tools/transport_qualification.py \
+            --go go --results reports/rc5-release/${{ matrix.state }} \
+            --accounts 10 --seconds 60 --repeats 3 --streams both \
+            --warmup 10 --command-delay-ms 80 --provider-mbps 600 \
+            --provider-sessions 10 --stability-only "${flags[@]}"
+      - name: Preserve every original speed/RTT/progress event, even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc5-duplex-${{ matrix.state }}
+          path: ${{ env.SOURCE }}/reports/rc5-release/${{ matrix.state }}/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native:
+    name: Produce matched Linux AMD64/ARM64 executables
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Pin and build exact runtime revisions
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc5
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" \
+              go build -trimpath -buildvcs=false -o "../dist/ITOM-1.0.0-RC5-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.0.0-RC5-linux-$arch.bin" | grep -q 'itom-1-0-0-rc5'
+          done
+          sha256sum dist/ITOM-1.0.0-RC5-linux-*.bin > dist/NATIVE_SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc5-native-binaries
+          path: ${{ env.SOURCE }}/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    name: Android SDK37, Kotlin/unit/lint/JNI and APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned local launcher installs and verifies JDK, Gradle, SDK and NDK
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc5 --accept-android-licenses
+      - name: Capture public APK certificate for before-install signer comparison
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="dist/ITOM-1.0.0-RC5-debug.apk"
+          test -s "$apk"
+          apksigner="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -n "$apksigner"
+          "$apksigner" verify --print-certs "$apk" > dist/SIGNER.txt
+          grep -qi 'Signer #1 certificate SHA-256 digest' dist/SIGNER.txt
+          echo "WARNING: verify this certificate against your INSTALLED RC2 APK before attempting any in-place update." >> dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc5-android-apk
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC5-debug.apk
+            ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC5-debug.apk.sha256
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Verify hashes and attach exact outputs to RC5 GitHub prerelease
+    needs: [correctness, stability, native, android]
+    if: ${{ github.ref == 'refs/heads/codex/v1.0.0-rc5' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-duplex-fresh
+          path: evidence/fresh
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-duplex-retained
+          path: evidence/retained
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-native-binaries
+          path: compiled/native
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-android-apk
+          path: compiled/android
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-correctness-evidence
+          path: evidence/correctness
+      - name: No metric substitution, no hidden dropped cases or RTT tolerance
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          python3 tools/rc5_release_validate.py \
+            --fresh "$GITHUB_WORKSPACE/evidence/fresh" \
+            --retained "$GITHUB_WORKSPACE/evidence/retained" \
+            --output "$GITHUB_WORKSPACE/RC5_VALIDATION.json"
+      - name: Assemble and rehash only the exact successful tested artifacts
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/rc5-package"
+          cp "$GITHUB_WORKSPACE"/compiled/native/ITOM-1.0.0-RC5-linux-*.bin "$GITHUB_WORKSPACE/rc5-package/"
+          cp "$GITHUB_WORKSPACE/compiled/android/ITOM-1.0.0-RC5-debug.apk" "$GITHUB_WORKSPACE/rc5-package/"
+          cp "$GITHUB_WORKSPACE/compiled/android/SIGNER.txt" "$GITHUB_WORKSPACE/rc5-package/"
+          cp "$GITHUB_WORKSPACE/RC5_VALIDATION.json" "$GITHUB_WORKSPACE/rc5-package/"
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/rc5-package/ITOM-1.0.0-RC5-sources.zip"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root=Path.cwd().parents[2]/"rc5-package"
+          for p in sorted(root.glob("*")):
+              if p.name.endswith(".bin") and p.stat().st_size<100_000: raise SystemExit("incomplete native binary")
+              if p.suffix==".apk" and p.stat().st_size<1_000_000: raise SystemExit("incomplete APK")
+          lines=[hashlib.sha256(p.read_bytes()).hexdigest()+"  "+p.name for p in sorted(root.iterdir()) if p.is_file()]
+          (root/"SHA256SUMS").write_text("\n".join(lines)+"\n")
+          PY
+          (cd "$GITHUB_WORKSPACE/rc5-package" && sha256sum -c SHA256SUMS)
+          (cd "$GITHUB_WORKSPACE" && zip -qr rc5-package/ITOM-1.0.0-RC5-test-evidence.zip evidence)
+      - name: Upload verified RC5 prerelease artifacts only after all gates pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-rc5
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Refusing to overwrite an existing RC5 release"; exit 1
+          fi
+          gh release create "$tag" rc5-package/* \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --draft --prerelease \
+            --title "ITOM 1.0.0 RC5 — stability-focused testing candidate" \
+            --notes-file "${{ env.SOURCE }}/docs/rc5/RELEASE_SELECTION.md"
+          gh release view "$tag" --json assets --repo "$GITHUB_REPOSITORY" > release-assets.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          expected={p.name for p in Path("rc5-package").iterdir() if p.is_file()}
+          uploaded={a["name"] for a in json.loads(Path("release-assets.json").read_text())["assets"]}
+          if expected!=uploaded: raise SystemExit("Remote prerelease assets differ: "+repr(expected^uploaded))
+          PY
+          gh release edit "$tag" --draft=false --prerelease --repo "$GITHUB_REPOSITORY"
