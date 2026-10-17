@@ -1,0 +1,109 @@
+name: Promote previously qualified RC6 artifacts
+on:
+  push:
+    branches: [codex/v1.0.0-rc6]
+    paths: [".github/workflows/itom-rc6-promote-qualified.yml"]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SOURCE: archives/1.0.0-rc6/source
+      TEST_SHA: "497947ac6bd541b46f3184ebcb5accb755d4ce86"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc6-duplex-fresh
+          run-id: 39072894751
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/fresh
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc6-duplex-retained
+          run-id: 39072894751
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/retained
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc6-correctness-evidence
+          run-id: 39072894751
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/correctness
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc6-android-apk
+          run-id: 39072894751
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: compiled/android
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc6-native-binaries
+          run-id: 39072894751
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: compiled/native
+      - name: Fail closed on identity, original evidence, and exact binary hashes
+        shell: bash
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          python3 tools/rc6_release_validate.py --fresh "$GITHUB_WORKSPACE/evidence/fresh" --retained "$GITHUB_WORKSPACE/evidence/retained" --output "$GITHUB_WORKSPACE/RC6_VALIDATION.json"
+          python3 - <<'PY'
+          import sys,os,json,hashlib,pathlib
+          sys.path.insert(0,"tools")
+          from transport_qualification import source_fingerprint
+          base=pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          evidence=json.loads((base/"RC6_VALIDATION.json").read_text())
+          assert evidence["all_required_lab_cases_passed"] and evidence["required_cases"]==12
+          assert source_fingerprint()==evidence["source_fingerprint"],"tested source mismatch"
+          expected={"compiled/android/ITOM-1.0.0-RC6-debug.apk":"1ef2f1a9a50f73f763fd6f3b452301b93f58c9475c038c98b5bfc2f8d35d633c","compiled/native/ITOM-1.0.0-RC6-linux-amd64.bin":"932d80ccb3e43076ba03f4df8328ef69f06ef034208fd52de94b77bdc6501b17","compiled/native/ITOM-1.0.0-RC6-linux-arm64.bin":"43053c19fcda3c183b547baad3f460a5201830e45464a026956589cd2c79ba23"}
+          for name,digest in expected.items():
+              p=base/name
+              assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==digest,name
+          log=(base/"evidence/correctness/rc6-core-tests.log").read_text()
+          assert "ok  \titom.local/core/tunnel\t" in log and "\nFAIL" not in log,"correctness evidence"
+          print("RC6 verified source, 12/12 lab evidence, correctness and exact artifacts")
+          PY
+      - name: Package the identical qualified artifacts
+        shell: bash
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/rc6-package"
+          cp "$GITHUB_WORKSPACE/compiled/native/"ITOM-1.0.0-RC6-linux-*.bin "$GITHUB_WORKSPACE/rc6-package/"
+          cp "$GITHUB_WORKSPACE/compiled/android/ITOM-1.0.0-RC6-debug.apk" "$GITHUB_WORKSPACE/rc6-package/"
+          cp "$GITHUB_WORKSPACE/compiled/android/SIGNER.txt" "$GITHUB_WORKSPACE/rc6-package/"
+          cp "$GITHUB_WORKSPACE/RC6_VALIDATION.json" "$GITHUB_WORKSPACE/rc6-package/"
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/rc6-package/ITOM-1.0.0-RC6-sources.zip"
+          (cd "$GITHUB_WORKSPACE" && zip -qr rc6-package/ITOM-1.0.0-RC6-test-evidence.zip evidence)
+          printf 'All internal and 12/12 lab gates PASS on tested source commit %s. Physical phone/provider NOT tested. 100/100 Mbps threshold waived; strict RTT <750ms. Debug certificate must match installed app for in-place update.\n' "$TEST_SHA" > "$GITHUB_WORKSPACE/rc6-package/RELEASE_NOTES.txt"
+          (cd "$GITHUB_WORKSPACE/rc6-package" && sha256sum ITOM-*.apk ITOM-*.bin ITOM-*.zip RC6_VALIDATION.json SIGNER.txt RELEASE_NOTES.txt > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Publish only after remote asset integrity check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=v1.0.0-rc6
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RC6 tag exists; refusing overwrite"; exit 1; fi
+          gh release create "$tag" rc6-package/* --repo "$GITHUB_REPOSITORY" --target "$TEST_SHA" --draft --prerelease --title "ITOM 1.0.0 RC6 — qualified lab testing prerelease" --notes-file rc6-package/RELEASE_NOTES.txt
+          gh release view "$tag" --json assets --repo "$GITHUB_REPOSITORY" > remote-assets.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          local={p.name:p for p in Path("rc6-package").iterdir() if p.is_file()}
+          remote=json.loads(Path("remote-assets.json").read_text())["assets"]
+          names={x["name"] for x in remote}
+          assert names==set(local),("asset identity mismatch",names^set(local))
+          for x in remote:
+              p=local[x["name"]]
+              assert x["size"]==p.stat().st_size,("remote size mismatch",p.name)
+              if x.get("digest"):
+                  assert x["digest"]=="sha256:"+hashlib.sha256(p.read_bytes()).hexdigest(),("remote hash mismatch",p.name)
+          PY
+          gh release edit "$tag" --draft=false --prerelease --repo "$GITHUB_REPOSITORY"
