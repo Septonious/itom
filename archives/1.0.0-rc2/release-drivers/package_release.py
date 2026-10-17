@@ -38,7 +38,7 @@ q={'schema':5,'classification':CLASS,'stable_release_ready':False,'all_internal_
 'all_required_targeted_checks_passed':True,'targeted_correctness_passed':True,'final_full_suite_completed':False,
 'user_requested_targeted_finalization':True,'qualification_source_sha256':identity,'first_party_core_runtime_sha256':runtime,
 'generated_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'recovery_checks':checks,
-'historical_rc1_capped_race_case_retested':True,'capped_mixed_socket_race_passed':True,'account_stall_routing_regressions_passed':True,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,
+'historical_rc1_capped_race_case_retested':True,'capped_mixed_socket_race_passed':True,'native_identity_mismatch_corrected_before_publication':True,'source_runtime_identity_gate_extended':True,'account_stall_routing_regressions_passed':True,'deferred_nack_regressions_passed':True,'multi_ramp_streams':12,
 'verified_mib_each_direction':12,'temporary_response_stall_ms':2400,'original_receive_generations_preserved':20,
 'baseline_regression_reproduced':True,'baseline_log_sha256':digest(W/'before-fix.jsonl'),
 'baseline_scope':'RC1 production routing plus inert elapsed-work observation fails the new feedback-affinity and OPEN-ranking regressions. No stall recovery or throughput certificate is inferred from this deterministic reproduction.',
@@ -86,7 +86,7 @@ with zipfile.ZipFile(sourcezip)as z:
  assert not any(n.endswith(('.jks','.keystore','.key','.env'))for n in z.namelist())
  for n,h in json.loads(z.read('SOURCE_MANIFEST.json')).items():assert hashlib.sha256(z.read(n)).hexdigest()==h
 assert source_fingerprint()==identity
-files={'final-correctness-race.jsonl':W/'final-correctness.jsonl','normal-recovery-integration.jsonl':W/'final-recovery.jsonl','before-fix-regression.jsonl':W/'before-fix.jsonl','launcher-check.log':W/'launcher-check.log','android-build-report.json':W/'android-build-report-public.json'}
+files={'final-correctness-race.jsonl':W/'final-correctness.jsonl','normal-recovery-integration.jsonl':W/'final-recovery.jsonl','before-fix-regression.jsonl':W/'before-fix.jsonl','launcher-check.log':W/'launcher-check.log','android-build-report.json':W/'android-build-report-public.json','superseded-identity-build-report.json':W/'superseded-identity-build-report.json'}
 with zipfile.ZipFile(ST/'TEST_EVIDENCE.zip','x',zipfile.ZIP_DEFLATED,compresslevel=6)as z:
  for n,p in files.items():z.write(p,n)
  z.writestr('MANIFEST.json',json.dumps({n:entry(p)for n,p in files.items()},indent=2)+'\n')

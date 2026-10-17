@@ -23,3 +23,7 @@ This is advisory placement only. No writer is canceled, socket reconnected, fram
 This change reduces exposure of new logical traffic to an observed account stall. It cannot eliminate provider stalls, guarantee every Speedtest server accepts every test, or certify a jitter ceiling from old screenshots. Do not claim the initial MULTI failures reproduced: their trace history was rotated out. No additional throughput/window/login tuning is justified by these retained samples. Qualification results and exact scope are recorded with the packaged artifacts; stable promotion still requires all internal gates and real-device/provider follow-up.
 
 Raw user captures, profiles and credentials remain private.
+
+## Build identity correction
+
+The first RC2 Android build passed 82 domain and 7 app unit tests plus lint, but the mandatory post-build native identity gate rejected the leftover RC1 TransportRevision constant. It was corrected before any publication, and the offline identity check now explicitly validates core/tunnel/version.go too. The mismatched source-fixture regression was extended to prevent this omission. The final targeted checks and builds are rerun on the corrected source; the superseded failed build report is retained as clearly labeled historical evidence, not treated as a final build result.
