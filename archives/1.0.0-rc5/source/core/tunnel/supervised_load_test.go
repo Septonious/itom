@@ -626,6 +626,10 @@ func supervisedSnapshots(ctx context.Context, t *testing.T, f *productionSupervi
 			if l.diag == nil {
 				continue
 			}
+			l.diag.mu.Lock()
+			diagRead := l.diag.line
+			l.diag.mu.Unlock()
+			t.Logf("rc5_receive_service index=%d account=%s server=%t polls=%d empty=%d bodies=%d latency_ms=%d callback_total_ms=%d callback_max_ms=%d physical_bytes=%d", index, l.account.ID, l.side, diagRead.DataFetchPolls, diagRead.DataEmptyFetchPolls, diagRead.DataFetchMessages, diagRead.DataReceiveLatencyMillis, diagRead.DataFetchCallbackTotalMS, diagRead.DataFetchCallbackMaxMS, diagRead.DataFetchPayloadBytes)
 			d := l.diag.snapshot()
 			if l.stripe != nil {
 				rawGovernor, _ := json.Marshal(l.stripe.deliverySnapshot())
