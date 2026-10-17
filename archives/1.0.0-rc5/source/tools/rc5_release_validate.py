@@ -99,7 +99,7 @@ def main():
         report=dict(release="1.0.0-RC5",classification="LABORATORY_STABILITY_ONLY",
                     physical_device_qualified=False,real_provider_qualified=False,
                     throughput_floor_waived_by_user=True,
-                    original_100_mbps_goal_met=False, # Waived, not newly proven false.
+                    original_100_mbps_goal_met=None, # Intentionally not evaluated under the owner's waiver.
                     all_required_lab_cases_passed=True,required_cases=12,
                     strict_max_loaded_rtt_ms=750,
                     source_fingerprint=fresh["source_fingerprint"],
