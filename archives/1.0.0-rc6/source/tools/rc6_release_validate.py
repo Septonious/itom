@@ -82,7 +82,7 @@ def check_report(root: Path, state: str):
                     fail(f"{state}/{name}: unverified fresh post-load exchange")
                 post_fresh += 1
             elif "supervised_post_stress " in out:
-                m = re.search(r"supervised_post_stress index=(\\d+) same_socket=(true|false)", out)
+                m = re.search(r"supervised_post_stress index=(\d+) same_socket=(true|false)", out)
                 if not m or m.group(2) != "true" or int(m.group(1)) in post_sockets:
                     fail(f"{state}/{name}: invalid or duplicated original-socket post-load check")
                 post_sockets.add(int(m.group(1)))
