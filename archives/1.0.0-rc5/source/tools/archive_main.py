@@ -28,7 +28,7 @@ def export_verified_artifacts(extracted_root: Path, source_archive: Path, info: 
         report = json.loads((internal / "build-report.json").read_text(encoding="utf-8"))
         if report.get("status") != "passed" or report.get("source_revision") != info["revision"]:
             raise RuntimeError("Android build was not verified; no APK published")
-        name = f"ITOM-{info['version']}-{release}-debug.apk" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2") else f"ITOM_{release}_debug.apk"
+        name = f"ITOM-{info['version']}-{release}-debug.apk" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5") else f"ITOM_{release}_debug.apk"
         apk = internal / name
         checksum = internal / (name + ".sha256")
         if not apk.is_file() or not checksum.is_file() or apk.is_symlink():
@@ -49,7 +49,7 @@ def export_verified_artifacts(extracted_root: Path, source_archive: Path, info: 
                 raise RuntimeError("Invalid server SHA256SUMS")
             checks[name] = digest
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2") else f"ITOM_{release}_linux_{arch}"
+            name = f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5") else f"ITOM_{release}_linux_{arch}"
             binary = internal / name
             if (not binary.is_file() or binary.is_symlink() or binary.stat().st_size == 0
                     or checks.get(name) != hashlib.sha256(binary.read_bytes()).hexdigest()):
