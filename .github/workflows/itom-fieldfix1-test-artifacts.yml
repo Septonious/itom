@@ -1,0 +1,76 @@
+name: RC6 FieldFix1 test artifacts (NOT a release)
+on:
+  push:
+    branches: ["codex/rc6-field-artifact-build"]
+    paths: [".github/workflows/itom-fieldfix1-test-artifacts.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  SOURCE: archives/1.0.0-rc6/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc6/source/core/go.mod
+          cache: false
+      - name: Build experimental Linux binaries with identity evidence
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc6
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-RC6-FieldFix1-linux-$arch.bin" ./cmd/itom)
+          done
+          (cd dist && sha256sum ITOM-RC6-FieldFix1-linux-*.bin > SHA256SUMS)
+          echo "Experimental field fix, NOT RC6 published bits; commit 0443e37b0968ba5cffd613f8abdfa4816a655225" > dist/CANDIDATE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc6-fieldfix1-linux-test-binaries
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-RC6-FieldFix1-linux-*.bin
+            ${{ env.SOURCE }}/dist/SHA256SUMS
+            ${{ env.SOURCE }}/dist/CANDIDATE.txt
+          retention-days: 14
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test Android APK with modified native tunnel core
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc6 --accept-android-licenses
+      - name: Preserve APK signer, build hashes and test evidence
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="dist/ITOM-1.0.0-RC6-debug.apk"
+          test -s "$apk"
+          apksigner="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -n "$apksigner"
+          "$apksigner" verify --print-certs "$apk" > dist/SIGNER.txt
+          mv "$apk" dist/ITOM-RC6-FieldFix1-debug.apk
+          (cd dist && sha256sum ITOM-RC6-FieldFix1-debug.apk > FIELD_FIX1_SHA256SUMS)
+          printf '%s\n' "TEST ONLY: tunnel patch commit 0443e37b0968ba5cffd613f8abdfa4816a655225; NOT field qualified." "APK internal version remains RC6; signer may differ from previously installed RC6. Do not clear production server journals or Android user data." > dist/FIELD_FIX1_INSTALL.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc6-fieldfix1-android-test-apk
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-RC6-FieldFix1-debug.apk
+            ${{ env.SOURCE }}/dist/FIELD_FIX1_SHA256SUMS
+            ${{ env.SOURCE }}/dist/FIELD_FIX1_INSTALL.txt
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 14
