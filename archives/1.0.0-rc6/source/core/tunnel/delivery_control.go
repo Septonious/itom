@@ -20,11 +20,11 @@ import (
 const (
 	deliveryInitialWindow = 1 << 20
 	deliveryMinWindow     = 64 << 10
-	// Bound aggregate unacknowledged logical flight to the observed
-	// 0.5-0.8s duplex BDP instead of allowing a 16MiB burst to monopolize
-	// retained IMAP grant service. Physical quota accounting, receipts and
-	// TCP stream identities remain independent and unchanged.
-	deliveryMaxWindow     = 8 << 20
+	// Cap aggregate unacknowledged bulk at 4MiB: the 8MiB field build
+	// retained 65 TCP streams but produced >1s RTT on 32-stream duplex.
+	// A smaller authenticated-credit ceiling passed that 60s workload at
+	// <750ms without stalls; physical journal debt is entirely independent.
+	deliveryMaxWindow     = 4 << 20
 	deliveryFastReserve   = 128 << 10
 	deliveryTargetAge     = 800 * time.Millisecond
 	deliveryDecisionEpoch = 250 * time.Millisecond
