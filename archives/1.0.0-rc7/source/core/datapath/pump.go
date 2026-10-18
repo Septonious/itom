@@ -93,11 +93,11 @@ const (
 	// Workers rotate over the ready account pool. More speculative workers can
 	// amplify queued future offsets without creating useful physical service.
 	MaxBulkWriters = 8
-	// 336 KiB deliberately crosses to eleven full 32 KiB DATA records while
-	// the conservative MIME-bound regression still leaves several KiB below
-	// the 512 KiB physical permit. Twelve full records do not fit after the
-	// ITD3/Noise/MIME overhead.
-	BulkBatchTargetBytes = 336 << 10
+	// RC7 experimental 384 KiB bulk collection target, still bounded by
+	// the existing 512 KiB physical MIME grant. The exact worst-case envelope
+	// regression must pass before any multi-stream performance claim.
+	// This changes neither per-account quota nor session concurrency.
+	BulkBatchTargetBytes = 384 << 10
 	dataBatchMaxRecords  = wire.MaxDataBatchRecords
 	dataBatchTargetBytes = BulkBatchTargetBytes
 	dataBatchDelay       = 20 * time.Millisecond
