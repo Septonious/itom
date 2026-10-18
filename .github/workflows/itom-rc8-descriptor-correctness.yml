@@ -1,0 +1,49 @@
+name: RC8 descriptor and journal full correctness (NO RELEASE)
+on:
+  push:
+    branches: ["codex/rc8-descriptor-burst"]
+    paths: [".github/workflows/itom-rc8-descriptor-correctness.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: off
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc8/source/core/go.mod
+          cache: false
+      - name: Source integrity, immutable Android ID and Python unit tests
+        working-directory: archives/1.0.0-rc8/source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc8
+          python3 -m unittest discover -s tools -p 'test_*.py' -q
+      - name: Full Go vet and all packages including journal, transport and retained account tests
+        working-directory: archives/1.0.0-rc8/source/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=1200s ./... 2>&1 | tee "$RUNNER_TEMP/rc8-full-go.log"
+      - name: Race detector, physical proof and descriptor stress invariants
+        working-directory: archives/1.0.0-rc8/source/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -race -p 2 -count=1 -timeout=420s ./tunnel -run 'TestRC8Descriptor|TestField68InvalidDataProof|TestFieldLegacyGrantPublication|TestRev4OldEnvelopeCannotInterrupt|TestRev4LongBlackoutPreserves|TestTrafficClassFragmented' 2>&1 | tee "$RUNNER_TEMP/rc8-race.log"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc8-descriptor-all-Go-and-race-evidence
+          path: |
+            ${{ runner.temp }}/rc8-full-go.log
+            ${{ runner.temp }}/rc8-race.log
+          retention-days: 14
