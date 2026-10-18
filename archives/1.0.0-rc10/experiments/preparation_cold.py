@@ -6,7 +6,7 @@ parallelism across quiet periods and repair. No new I/O gate or credit exists.
 """
 from pathlib import Path
 r=Path(__file__).resolve().parents[3];d=r/'archives/1.0.0-rc10/source/core/tunnel'
-p=d/'lane.go';s=p.read_text();a='uploadBatchTarget uint64';assert s.count(a)==1;s=s.replace(a,a+'\n\tbulkParallelismWarm bool');p.write_text(s)
+p=d/'lane.go';s=p.read_text();a='uploadBatchTarget uint64';assert s.count(a)==1;s=s.replace(a,a+'\n\tbulkParallelismWarm bool\n\tbulkWarmBodies int');p.write_text(s)
 p=d/'preparation.go';s=p.read_text();a='''\towners := map[*lane]bool{}''';assert s.count(a)==1
 s=s.replace(a,'''\t// Existing FIFO and cancellation own this admission, before sealing or
 \t// any physical Prepare/Spend. Fast DATA bypasses preparation as before.
@@ -22,7 +22,7 @@ func (g *stripeGroup) bulkParallelismWarmLocked(quiet [2]*lane) bool {
   ready++
   l.serviceMu.Lock()
   measured:=l.uploadBatchTarget>=uint64(datapath.BulkBatchTargetBytes)
-  if l.side {measured=!l.peerReadAt.IsZero() && l.peerReadSamples>=8 && l.peerReadBatchTarget==0}
+  if l.side {measured=l.bulkWarmBodies>=2}
   if measured {l.bulkParallelismWarm=true}
   if l.bulkParallelismWarm {warm++}
   l.serviceMu.Unlock()
@@ -30,8 +30,23 @@ func (g *stripeGroup) bulkParallelismWarmLocked(quiet [2]*lane) bool {
  return ready==0 || warm>=(ready+1)/2
 }
 ''';p.write_text(s)
+p=d/'service_policy.go';s=p.read_text()
+a='''\telapsed := now.Sub(started)
+\tl.serviceMu.Lock()
+\tdefer l.serviceMu.Unlock()'''
+b=a+'''\n\t// Small fast receipts may probe the next batch, but do not prove
+\t// that all accounts may concurrently transfer a full-sized BODY.
+\tif uint64(bytes) >= uint64(datapath.BulkBatchTargetBytes) && elapsed <= budget { l.bulkWarmBodies++ }'''
+assert s.count(a)==1;s=s.replace(a,b);p.write_text(s)
 (d/'rc10_preparation_test.go').write_text('''package tunnel
 import("context";"fmt";"testing";"time";"itom.local/core/wire")
+func TestRC10SmallPeerReceiptsCannotProveFullBodyParallelism(t *testing.T){
+ l:=&lane{side:true}
+ for i:=0;i<16;i++{l.observePeerReadService(32<<10,time.Now().Add(-100*time.Millisecond),time.Now())}
+ if l.bulkWarmBodies!=0{t.Fatal("small receipts proved full BODY service")}
+ for i:=0;i<2;i++{l.observePeerReadService(11*(32<<10),time.Now().Add(-100*time.Millisecond),time.Now())}
+ if l.bulkWarmBodies!=2{t.Fatal("full physical receipts did not prove service")}
+}
 func TestRC10PreparationExpandsOnlyAfterUsefulCapacityWithoutLosingLeases(t *testing.T){
  g:=newStripeGroup(wire.ID{1},1)
  var owner *lane
