@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "release": "RC9",
+  "revision": "itom-1-0-0-rc9",
+  "archive_name": "ITOM-1.0.0-RC9-sources.zip",
+  "baseline": "1.0.0 RC2",
+  "qualification": "RC9 DEVELOPMENT ONLY. Release requires >=75/75 Mbps sustained and tail, RTT<=750ms, zero probe loss, no TCP socket failure, 4/32 streams, fresh+retained, low-link ramps and Android/Rambler validation. Never waive gates.",
+  "android_version_name": "1.0.0-rc9",
+  "android_version_code": 10008,
+  "android_application_id": "org.itom.client"
+}

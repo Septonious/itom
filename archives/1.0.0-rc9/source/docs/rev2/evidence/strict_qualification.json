@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "release": {
+    "version": "0.9.2",
+    "release": "Rev2",
+    "revision": "transport-rework3-rev2",
+    "archive_name": "ITOM-0.9.2-Rev2-sources.zip",
+    "baseline": "0.9.2-Rev1",
+    "qualification": "implementation candidate; laboratory and real-provider qualification required",
+    "android_version_name": "0.9.2-Rev2",
+    "android_version_code": 9202,
+    "android_application_id": "org.itom.client.dev.rev7"
+  },
+  "source_sha256": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+  "go": "go version go1.27.1 linux/amd64",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "cpu_count": 3,
+  "gomaxprocs": "2",
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "android_device": "NOT_RUN",
+  "real_provider": "NOT_RUN",
+  "criteria": {
+    "useful_upload_mbps_min": 100,
+    "useful_download_mbps_min": 100,
+    "all_loaded_rtt_ns_strictly_below": 1000000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 10
+  },
+  "scenario": {
+    "go": "/workspace/toolchains/go/bin/go",
+    "results": "/workspace/work/itom-rev2/qualification",
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10
+  },
+  "cases": [
+    {
+      "name": "single-1",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 95.275,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "single-1.jsonl",
+      "log_sha256": "c84a501b22fcbeafeab67bce02134f0f5e8a1481b4c2a26fb08a1d7dd59cc938",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "single-2",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 0,
+      "elapsed_seconds": 90.906,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "single-2.jsonl",
+      "log_sha256": "635610f8183b9af15e168f932d302028e575f953d2b71cd3cf11eb1ae500ab55",
+      "summary": {
+        "passed": [
+          "TestTransportReworkQualification"
+        ],
+        "failed": [],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": true
+    },
+    {
+      "name": "single-3",
+      "streams_per_direction": 1,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 90.001,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "single-3.jsonl",
+      "log_sha256": "1619c71b30534123871adf24e40bcb861dec762603f17c17e8c508f8ee3001c4",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    },
+    {
+      "name": "multi-1",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 47.453,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "multi-1.jsonl",
+      "log_sha256": "777d4e381657038ffe7f0e3bba4c5a8515a2d403dee4e6ad45d59433bb23620a",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    },
+    {
+      "name": "multi-2",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 48.453,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "multi-2.jsonl",
+      "log_sha256": "3d4b4fe4dfe48a92bbc3b1c0e39ffbf62dfb328d89da7cbace456a419a06f677",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    },
+    {
+      "name": "multi-3",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": true,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 52.85,
+      "source_before": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "source_after": "220d3ec75ff9b1ed6b934b5b0c8adaf0892204ebac1164b77098b7f5718b50a0",
+      "log": "multi-3.jsonl",
+      "log_sha256": "a2edd077ba91131238a915e00271b013345ad73812382a8915e99b8c3a8d9f9f",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    }
+  ],
+  "all_lab_cases_passed": false
+}

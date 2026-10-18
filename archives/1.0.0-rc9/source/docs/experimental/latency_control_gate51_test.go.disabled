@@ -1,0 +1,205 @@
+package tunnel
+
+import (
+	"testing"
+	"time"
+)
+
+func addRateSample(g *latencyGovernor, now *time.Time, mbps float64, maxBulk int) {
+	g.recordBytes(uint64(mbps * 1e6 / 8))
+	*now = now.Add(time.Second)
+	g.sampleRate(*now, maxBulk)
+}
+
+func TestLatencyGovernorTargetFromInitialIMAPRTT(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond)
+	if g.baselineMS != 200 || g.targetMS != 600 {
+		t.Fatalf("baseline=%d target=%d, want 200/600", g.baselineMS, g.targetMS)
+	}
+	// The first successful calibration is session-stable; reconnect jitter must
+	// not silently move the user's latency target during a transfer.
+	g.observeBaseline(350 * time.Millisecond)
+	if g.baselineMS != 200 || g.targetMS != 600 {
+		t.Fatalf("recalibrated baseline=%d target=%d", g.baselineMS, g.targetMS)
+	}
+}
+
+func TestLatencyGovernorFloorBypassDoesNotChatterAtNineToElevenMbps(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond)
+	now := time.Unix(1, 0)
+	g.sampleRate(now, 8)
+
+	// Prove a fast path first so latency control becomes eligible.
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 20, 8)
+	}
+	if g.floorBypass {
+		t.Fatal("latency control did not arm on sustained >12 Mbps path")
+	}
+
+	// One sub-floor interval immediately removes a latency-imposed limit.
+	g.bulkLimit = 3
+	addRateSample(&g, &now, 9, 8)
+	if !g.floorBypass || g.bulkLimit != 8 {
+		t.Fatalf("floor protection not restored: bypass=%t limit=%d", g.floorBypass, g.bulkLimit)
+	}
+
+	// A network fluctuating 9..11 Mbps must remain unthrottled. Neither value is
+	// enough to satisfy the deliberately higher 12 Mbps re-arm hysteresis.
+	for i := 0; i < 12; i++ {
+		rate := 9.0
+		if i%2 == 1 {
+			rate = 11.0
+		}
+		addRateSample(&g, &now, rate, 8)
+		g.sampleRTT(900, now.UnixMilli(), 8, now)
+		if !g.floorBypass || g.bulkLimit != 8 || g.rateLimitMbps != 0 {
+			t.Fatalf("chatter at iteration %d: rate=%.1f bypass=%t limit=%d rate_limit=%.1f", i, rate, g.floorBypass, g.bulkLimit, g.rateLimitMbps)
+		}
+	}
+}
+
+func TestLatencyGovernorRTTFirstAboveFloor(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond) // target 600 ms
+	now := time.Unix(10, 0)
+	g.sampleRate(now, 8)
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 40, 8)
+	}
+	if g.floorBypass || g.bulkLimit != 8 {
+		t.Fatalf("governor not armed: bypass=%t limit=%d", g.floorBypass, g.bulkLimit)
+	}
+
+	at := now.Add(time.Second)
+	if !g.sampleRTT(650, at.UnixMilli(), 8, at) || g.bulkLimit != 6 {
+		t.Fatalf("moderate RTT excess did not reduce 8->6: limit=%d", g.bulkLimit)
+	}
+	at = at.Add(time.Second)
+	if !g.sampleRTT(900, at.UnixMilli(), 8, at) || g.bulkLimit != 3 {
+		t.Fatalf("large RTT excess did not halve 6->3: limit=%d", g.bulkLimit)
+	}
+
+	// Recovery is deliberately additive and requires three fresh control epochs
+	// with headroom; one lucky low sample cannot reopen the floodgates.
+	for i := 0; i < 2; i++ {
+		at = at.Add(time.Second)
+		g.sampleRTT(440, at.UnixMilli(), 8, at)
+	}
+	if g.bulkLimit != 3 {
+		t.Fatalf("bulk limit recovered too quickly: %d", g.bulkLimit)
+	}
+	at = at.Add(time.Second)
+	g.sampleRTT(440, at.UnixMilli(), 8, at)
+	if g.bulkLimit != 4 {
+		t.Fatalf("additive recovery did not advance 3->4: %d", g.bulkLimit)
+	}
+}
+
+func TestLatencyGovernorCoalescesCarrierSamplesWithinControlEpoch(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond)
+	now := time.Unix(15, 0)
+	g.sampleRate(now, 10)
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 50, 10)
+	}
+	first := now.Add(time.Second)
+	if !g.sampleRTT(700, first.UnixMilli(), 10, first) {
+		t.Fatal("first congested RTT did not change governor")
+	}
+	limit := g.bulkLimit
+	rate := g.rateLimitMbps
+	for i := 1; i <= 8; i++ {
+		at := first.Add(time.Duration(i) * 80 * time.Millisecond)
+		g.sampleRTT(720, at.UnixMilli(), 10, at)
+	}
+	if g.bulkLimit != limit || g.rateLimitMbps != rate {
+		t.Fatalf("same RTT cohort applied repeated throttle: limit %d->%d rate %.3f->%.3f", limit, g.bulkLimit, rate, g.rateLimitMbps)
+	}
+	second := first.Add(latencyControlPeriod + 50*time.Millisecond)
+	if !g.sampleRTT(720, second.UnixMilli(), 10, second) {
+		t.Fatal("fresh control epoch did not apply congestion signal")
+	}
+	if g.decisionCount != 2 {
+		t.Fatalf("decision count=%d, want 2", g.decisionCount)
+	}
+}
+
+func TestLatencyGovernorNeverKeepsThrottleBelowFloor(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(50 * time.Millisecond)
+	now := time.Unix(20, 0)
+	g.sampleRate(now, 12)
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 30, 12)
+	}
+	for i := 0; i < 4; i++ {
+		at := now.Add(time.Duration(i+1) * time.Second)
+		g.sampleRTT(1000, at.UnixMilli(), 12, at)
+	}
+	if g.bulkLimit >= 12 {
+		t.Fatal("RTT pressure did not throttle a path safely above the floor")
+	}
+	addRateSample(&g, &now, 9.4, 12)
+	if !g.floorBypass || g.bulkLimit != 12 {
+		t.Fatalf("latency throttle survived below floor: bypass=%t limit=%d", g.floorBypass, g.bulkLimit)
+	}
+}
+
+func TestLatencyGovernorRateCeilingNeverFallsBelowProductFloor(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond)
+	now := time.Unix(30, 0)
+	g.sampleRate(now, 8)
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 80, 8)
+	}
+	if g.floorBypass {
+		t.Fatal("governor did not arm")
+	}
+	// Repeated severe RTT pressure must converge on the protected rate ceiling,
+	// never below it. The throughput floor remains a hard product invariant.
+	for i := 0; i < 8; i++ {
+		at := now.Add(time.Duration(i+1) * time.Second)
+		g.sampleRTT(1400, at.UnixMilli(), 8, at)
+	}
+	if g.rateLimitMbps < latencyMinBulkRateMbps {
+		t.Fatalf("rate limiter fell below floor: %.3f", g.rateLimitMbps)
+	}
+	if g.rateLimitMbps != latencyMinBulkRateMbps {
+		t.Fatalf("severe RTT pressure did not converge to floor ceiling: %.3f", g.rateLimitMbps)
+	}
+}
+
+func TestLatencyGovernorRateCeilingRecoversSlowlyWithHeadroom(t *testing.T) {
+	g := newLatencyGovernor()
+	g.observeBaseline(200 * time.Millisecond)
+	now := time.Unix(40, 0)
+	g.sampleRate(now, 8)
+	for i := 0; i < latencyFloorExitRuns; i++ {
+		addRateSample(&g, &now, 60, 8)
+	}
+	at := now.Add(time.Second)
+	g.sampleRTT(800, at.UnixMilli(), 8, at)
+	limited := g.rateLimitMbps
+	if limited <= 0 || limited >= 60 {
+		t.Fatalf("expected active rate limit below measured rate, got %.3f", limited)
+	}
+	// Two good control epochs do not reopen throughput. The third gives one
+	// bounded additive step, preventing a single lucky RTT from recreating a queue burst.
+	for i := 0; i < 2; i++ {
+		at = at.Add(time.Second)
+		g.sampleRTT(400, at.UnixMilli(), 8, at)
+	}
+	if g.rateLimitMbps != limited {
+		t.Fatalf("rate recovered too quickly: %.3f -> %.3f", limited, g.rateLimitMbps)
+	}
+	at = at.Add(time.Second)
+	g.sampleRTT(400, at.UnixMilli(), 8, at)
+	if g.rateLimitMbps <= limited {
+		t.Fatalf("rate did not recover additively: %.3f -> %.3f", limited, g.rateLimitMbps)
+	}
+}
