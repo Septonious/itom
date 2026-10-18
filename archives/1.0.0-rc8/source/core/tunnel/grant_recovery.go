@@ -1,0 +1,168 @@
+package tunnel
+
+import (
+	"errors"
+	"time"
+
+	"itom.local/core/journal"
+	"itom.local/core/pool"
+	"itom.local/core/wallet"
+	"itom.local/core/wire"
+)
+
+// Called under localGrantMu. Historical debt may predate the current directional
+// shares and is not a live grant for this carrier. Keep every byte/message
+// charged, while leasing a full legal BODY from genuinely unused capacity.
+// Reduced fast leases carry an authenticated explicit class. Normal, debt-free
+// admission and the physical profile limits stay unchanged.
+func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.Amount, error) {
+	if l.cipher == nil || !l.side {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	usage, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
+	if err != nil {
+		return pool.Amount{}, err
+	}
+	historical := pool.Amount{Bytes: usage.HistoricalLocal.Bytes + usage.HistoricalRemote.Bytes, Messages: usage.HistoricalLocal.Messages + usage.HistoricalRemote.Messages}
+	retained := usage.HistoricalRemote.Bytes > 0 || usage.HistoricalRemote.Messages > 0
+	historicalMessages := historical.Messages
+	_, remoteShare, err := recoveredDirectionalShares(profile, usage)
+	if err != nil {
+		return pool.Amount{}, err
+	}
+	if usage.Remote.Bytes > remoteShare.Bytes || usage.Remote.Messages > remoteShare.Messages {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
+	reserveBytes := uint64(localFastReserveBytes + dataBatchMIMEHardCap)
+	if historicalMessages > profile.Messages {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	// Two local ordinals always protect fast + bulk. When historical debt
+	// leaves only a few ordinals, share the remainder with the remote classes
+	// instead of reserving all twelve free slots of a 180/192 field account.
+	reserveMessages := min(max(uint64(2), profile.Messages/16), max(uint64(2), (profile.Messages-historicalMessages)/2))
+	if !retained || held.Bytes > profile.Bytes || held.Messages > profile.Messages ||
+		profile.Bytes-held.Bytes < reserveBytes+dataBatchMIMEHardCap ||
+		profile.Messages-held.Messages <= reserveMessages {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	if fast {
+		available := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
+		// Leave at least one bulk ordinal. When the standard fast grant cannot
+		// fit alongside bulk, share the genuinely free message slots between
+		// the two classes instead of requiring 32 unused slots to connect.
+		if available < 2 || remoteFree.Bytes < fastLeaseBytes {
+			return pool.Amount{}, journal.ErrLimit
+		}
+		// Match the normal quota proportions instead of giving the half-MiB
+		// latency lease most of a debt-bound account's remaining ordinals.
+		messages := min(uint64(fastLeaseMessages), max(uint64(1), available/5))
+		return pool.Amount{Bytes: fastLeaseBytes, Messages: messages}, nil
+	}
+	fastActive, bulkActive := l.issuedGrantCounts()
+	if fastActive == 0 {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	// Lease several complete physical copies when the charged ledger allows
+	// it. A fixed one-BODY recovery lease made every copy wait for another
+	// fence/GC/offer round trip, despite MiBs of genuinely unused capacity.
+	remaining := uint64(max(1, remoteBulkLeases-bulkActive))
+	availableBytes := min(profile.Bytes-held.Bytes-reserveBytes, remoteFree.Bytes)
+	availableMessages := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
+	remaining = min(remaining, availableMessages, availableBytes/dataBatchMIMEHardCap)
+	if remaining == 0 {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	byteLimit := min(uint64(dataLeaseBytes), availableBytes/remaining)
+	// Whole maximum-BODY units avoid trapping nearly a full copy of unused
+	// permission in each small recovery lease. The next lease can use it.
+	byteLimit -= byteLimit % dataBatchMIMEHardCap
+	limit := pool.Amount{Bytes: byteLimit, Messages: min(uint64(dataLeaseMessages), availableMessages/remaining)}
+	// WRITE_GRANT's historical fast marker is exactly 512 KiB / 32 slots.
+	// A reduced bulk lease must never alias it and fill the peer's fast queue.
+	if limit.Bytes == fastLeaseBytes && limit.Messages == fastLeaseMessages {
+		limit.Messages--
+	}
+	if limit.Bytes < dataBatchMIMEHardCap || limit.Messages == 0 {
+		return pool.Amount{}, journal.ErrLimit
+	}
+	return limit, nil
+}
+
+// Reconcile all open old reservations, including partially spent grants. A lost
+// publication or final fence can otherwise permanently occupy message slots.
+// These controls describe immutable
+// journal allocations; they do not release a byte or authorize old-session DATA.
+func (l *lane) reconcileUnpublishedGrants() error {
+	if !l.side || l.cipher == nil || l.boot == nil || !l.boot.Ready() {
+		return nil
+	}
+	grants, err := l.data.ScanGrants(0, 256)
+	if err != nil {
+		return err
+	}
+	if l.grantRecoverySent == nil {
+		l.grantRecoverySent = make(map[wire.QuotaKey]time.Time)
+	}
+	now := time.Now()
+	interval := 15 * time.Second
+	if l.stripe != nil {
+		mode := l.stripe.deliverySnapshot().Mode
+		if mode == string(deliveryCongested) || mode == string(deliveryOutage) {
+			interval = 45 * time.Second
+		}
+	}
+	queued := 0
+	live := make(map[wire.QuotaKey]bool)
+	for _, g := range grants {
+		if !g.Remote || g.Closed || g.Ref.Scope.Session == l.cipher.Context().Session {
+			continue
+		}
+		key := wire.QuotaKey{Store: g.Ref.Store, Epoch: g.Run, Grant: g.Ref.ID, Session: g.Ref.Scope.Session, User: g.Ref.Scope.User, Account: g.Ref.Scope.Account}
+		if key.Account != l.account.ID || key.User != l.user.ID {
+			return journal.ErrScope
+		}
+		live[key] = true
+		if queued >= 4 || now.Sub(l.grantRecoverySent[key]) < interval {
+			continue
+		}
+		offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: g.Limit.Bytes, Messages: g.Limit.Messages}}
+		if err = l.controlSend(wire.GrantRecovery{Offer: offer}); err != nil {
+			return err
+		}
+		l.grantRecoverySent[key] = now
+		queued++
+	}
+	for key := range l.grantRecoverySent {
+		if !live[key] {
+			delete(l.grantRecoverySent, key)
+		}
+	}
+	return nil
+}
+
+func (l *lane) reconcileGrantOffer(offer wire.StorageGrant) error {
+	if l.side || l.wallet == nil || offer.Key.Account != l.account.ID || offer.Key.User != l.user.ID || offer.Key.Session == l.cipher.Context().Session {
+		return journal.ErrScope
+	}
+	entry, err := l.wallet.ReconcileOffer(offer)
+	if errors.Is(err, wallet.ErrMissing) {
+		if l.diag != nil {
+			l.diag.event("event=grant_recovery_deferred code=WALLET_HISTORY_MISSING")
+		}
+		return nil // lost client history is never substituted for a zero-spend proof
+	}
+	if err != nil {
+		return err
+	}
+	for _, report := range entry.Pending {
+		if err = l.controlSend(report); err != nil {
+			return err
+		}
+	}
+	if entry.Retired {
+		return l.sendRetirement(wire.Retirement{Key: offer.Key, Final: entry.Used})
+	}
+	return l.controlSend(wire.StorageRelease{Key: offer.Key, Final: entry.Used})
+}
