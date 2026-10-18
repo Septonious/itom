@@ -5,19 +5,18 @@ replace endpoint-local startup history as the tie-breaker, not polling cadence.
 """
 from pathlib import Path
 r=Path(__file__).resolve().parents[3];p=r/'archives/1.0.0-rc10/source/core/tunnel/reader_reserve.go';s=p.read_text()
-s=s.replace('"sort"','"sort"\n "hash/fnv"')
+
 a='''\tscores := map[*lane]int64{}
 \tfor _, l := range candidates {
 \t\tscores[l] = g.carrierLatencyLocked(l)
 \t}'''
 b='''\tscores := map[*lane]int64{}
-\tranks := map[*lane]uint64{}
-\tfor _, l := range candidates {
+\tranks := map[*lane]int{}
+\tsort.Slice(candidates, func(i,j int) bool { return candidates[i].account.ID < candidates[j].account.ID })
+\tstart := int(g.logical[len(g.logical)-1]) % len(candidates)
+\tfor i, l := range candidates {
 \t\tscores[l] = g.carrierLatencyLocked(l)
-\t\th := fnv.New64a()
-\t\t_, _ = h.Write(g.logical[:])
-\t\t_, _ = h.Write([]byte(l.account.ID))
-\t\tranks[l] = h.Sum64()
+\t\tranks[l] = (i-start+len(candidates)) % len(candidates)
 \t}'''
 assert s.count(a)==1;s=s.replace(a,b)
 a='''\t\tfor _, l := range candidates {
