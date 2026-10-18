@@ -1,0 +1,80 @@
+name: Assemble RC7 16x12 test-only bundle from matched tested revision
+on:
+  push:
+    branches: ["codex/rc7-16x12-test-package"]
+    paths: [".github/workflows/itom-rc7-16x12-package.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require exact qualified-source commit (build metadata-only workflow diff)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code 2b08127305530b2e16ee3c05f669ad8331a6d559 HEAD -- archives/1.0.0-rc7/source
+          git diff --exit-code 2b08127305530b2e16ee3c05f669ad8331a6d559 HEAD -- archives/1.0.0-rc7/RC2_ONWARD_EXPERIMENT_LEDGER.md
+      - name: Reuse matching CI Android artifact for this exact source commit
+        uses: actions/download-artifact@v4
+        with:
+          name: rc7-16x12-unqualified-android
+          path: downloaded/android
+          run-id: 39116058706
+          github-token: ${{ github.token }}
+      - name: Reuse matching CI Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rc7-16x12-unqualified-linux
+          path: downloaded/linux
+          run-id: 39116058706
+          github-token: ${{ github.token }}
+      - name: Archive unedited failed and successful test evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: rc7-strict-4-stream-evidence
+          path: evidence/four
+          run-id: 39116058706
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc7-strict-32-stream-evidence
+          path: evidence/thirtytwo
+          run-id: 39116058706
+          github-token: ${{ github.token }}
+      - name: Match Android/Linux and exact source snapshot, integrity and labels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          cp downloaded/android/ITOM-1.0.0-RC7-debug.apk bundle/
+          cp downloaded/android/SIGNER.txt bundle/
+          cp downloaded/linux/ITOM-1.0.0-RC7-linux-*.bin bundle/
+          cp archives/1.0.0-rc7/RC2_ONWARD_EXPERIMENT_LEDGER.md bundle/
+          (cd archives/1.0.0-rc7/source && python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/bundle/ITOM-1.0.0-RC7-sources.zip")
+          cat > bundle/README-TEST-ONLY.md <<'EOF'
+          # ITOM RC7 16/12MiB — DEVELOPMENT CANDIDATE ONLY
+          - **NOT A PASSED RELEASE. DO NOT DEPLOY OVER YOUR STABLE CONFIGURATION.**
+          - Source: codex/rc7-16x12-recovery commit 2b08127305530b2e16ee3c05f669ad8331a6d559; package includes exactly that source.
+          - Android APK ID: org.itom.client. Version 1.0.0-rc7, versionCode 10006.
+          - This package contains matched tested Android and Linux binaries.
+          - Some strict 75/75Mbps tests and 10/20Mbps ramps FAIL; see audit and attached CI evidence.
+          - 32-stream lab rounds 1/2 passed: up 130.1/125.6Mbps, down 80.2/77.9Mbps, max RTT 453/439ms.
+          - 32-stream round3 10s trailing upload 70.9Mbps (FAIL), 4-stream 60s download 73.4–74.7Mbps (FAIL).
+          - 10Mbps startup, 20Mbps acceleration and 150→20Mbps downgrade also FAIL stable RTT/continuity.
+          - Do not clear saved Android profiles, mailboxes or server journals. Compare signer SHA256 with existing org.itom.client APK before replacing it. Android treats older .dev.rev7 packages separately.
+          - Only a separate successful strict CI matrix and phone/provider testing may qualify a stable release.
+          EOF
+          (cd bundle && sha256sum ITOM-1.0.0-RC7-debug.apk ITOM-1.0.0-RC7-linux-*.bin ITOM-1.0.0-RC7-sources.zip > SHA256SUMS)
+          (cd bundle && sha256sum -c SHA256SUMS)
+          zip -qr bundle/RC7-STRICT-TEST-EVIDENCE.zip evidence
+          (cd bundle && zip -q -r "$GITHUB_WORKSPACE/ITOM-1.0.0-RC7-16x12-UNQUALIFIED.zip" .)
+          sha256sum ITOM-1.0.0-RC7-16x12-UNQUALIFIED.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-RC7-16x12-UNQUALIFIED-COMPLETE-TEST-PACKAGE
+          path: ITOM-1.0.0-RC7-16x12-UNQUALIFIED.zip
+          retention-days: 14
