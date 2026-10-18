@@ -1,46 +1,71 @@
 #!/usr/bin/env python3
-"""LAB ONLY: measure actual uplink service before sending large client literals.
-This is not a peer BODY receipt, physical quota or logical-flight grant. Server
-BODY pacing, RC2 delivery windows, growth, repair and discovery stay unchanged.
+"""LAB ONLY: measured C2S APPEND probes; no logical-window or recovery changes.
+Actual useful batch sizes must be demonstrated before growing. Fixed command
+latency must not turn small demand-limited samples into a permanent rate cap.
 """
 from pathlib import Path
-r=Path(__file__).resolve().parents[3];d=r/'archives/1.0.0-rc10/source/core/tunnel';p=d/'service_policy.go';s=p.read_text();a='target := uint64(datapath.BulkBatchTargetBytes)';assert s.count(a)==1;s=s.replace(a,a+'''
-\t// A new client has measured neither physical uplink throughput nor its
-\t// queue. Four successful bulk APPEND turns establish the existing service
-\t// estimate; unknown results and fast/control DATA cannot establish it.
-\tif !l.side && l.serviceSamples < 4 { target = min(target, uint64(32<<10)) }''');a='if l.serviceSamples >= 4 && l.serviceNS > uint64(400*time.Millisecond) {'
-assert s.count(a)==1
-s=s.replace(a,'if l.serviceSamples >= 4 && l.serviceNS > 0 {')
-s=s.replace('// A slow literal must not occupy its service for seconds. Base64/envelope', '// Normalize bytes by observed service time. A short successful literal\n\t\t// can complete under400ms on a slow link without proving a large one\n\t\t// can do so. Base64/envelope')
+r=Path(__file__).resolve().parents[3];d=r/'archives/1.0.0-rc10/source/core/tunnel'
+p=d/'lane.go';s=p.read_text();a='peerReadPendingBodies                       atomic.Int64';assert s.count(a)==1
+s=s.replace(a,a+'\n\tuploadBatchTarget uint64\n\tuploadBatchFastCount int')
+a='''\tappendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
+\tl.observeDataServiceClass(len(mime), time.Since(appendStarted), appendErr == nil, fastBatch)'''
+b='''\tappendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
+\telapsed := time.Since(appendStarted)
+\tl.observeDataServiceClass(len(mime), elapsed, appendErr == nil, fastBatch)
+\tl.observeUploadBatch(uint64(payloadBytes), elapsed, appendErr == nil, fastBatch)'''
+assert s.count(a)==1;s=s.replace(a,b);p.write_text(s)
+p=d/'service_policy.go';s=p.read_text();a='target := uint64(datapath.BulkBatchTargetBytes)';assert s.count(a)==1
+s=s.replace(a,a+'''
+\tif !l.side {
+\t\tupload := l.uploadBatchTarget
+\t\tif upload == 0 { upload = 32<<10 }
+\t\ttarget = min(target,upload)
+\t}''')
+s+='''
+// Successful local APPEND measures this endpoint's uplink, not peer BODY
+// delivery. Only two complete, sufficiently large bulk turns can grow the next
+// tentative batch. The server's authenticated peer-BODY policy is unchanged.
+func (l *lane) observeUploadBatch(useful uint64, elapsed time.Duration, accepted, fast bool) {
+ if l.side || fast || !accepted || useful < 32<<10 || useful > uint64(datapath.BulkBatchTargetBytes) || elapsed <= 0 { return }
+ budget := max(250*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
+ l.serviceMu.Lock()
+ defer l.serviceMu.Unlock()
+ target := l.uploadBatchTarget
+ if target == 0 { target = 32<<10 }
+ if target >= uint64(datapath.BulkBatchTargetBytes) { return }
+ if useful >= target && elapsed <= budget {
+  l.uploadBatchFastCount++
+  if l.uploadBatchFastCount >= 2 { l.uploadBatchTarget = min(uint64(datapath.BulkBatchTargetBytes), 2*target); l.uploadBatchFastCount=0 }
+ } else { l.uploadBatchFastCount=0 }
+}
+'''
 p.write_text(s)
-# This fixture concerns one paced account versus an established healthy pool.
-# Train its healthy upload service explicitly; do not call an unmeasured lane
-# established capacity. The four-of-five healthy majority assertion is kept.
+# Establish real healthy upload capacity in this existing majority-pool fixture.
 p=d/'rev5_peer_read_policy_test.go';s=p.read_text();a='''\t\tl.rtt.Store(42)
-\t\tg.lanes[l.account.ID] = l''';assert s.count(a)==1;s=s.replace(a,'''\t\tl.rtt.Store(42)
-\t\tfor n := 0; n < 4; n++ { l.observeDataService(350<<10, 40*time.Millisecond, true) }
+\t\tg.lanes[l.account.ID] = l''';assert s.count(a)==1
+s=s.replace(a,'''\t\tl.rtt.Store(42)
+\t\tfor n := 0; n < 8; n++ { l.observeUploadBatch(344064,40*time.Millisecond,true,false) }
 \t\tg.lanes[l.account.ID] = l''');p.write_text(s)
 (d/'rc10_client_cold_test.go').write_text('''package tunnel
 import("testing";"time";"itom.local/core/datapath")
-func TestRC10ClientColdUplinkUsesOnlyConfirmedBulkService(t *testing.T) {
+func TestRC10ClientColdUplinkUsesOnlyConfirmedSizedBulkService(t *testing.T){
  l:=&lane{}
- for i:=0;i<3;i++ {
-  if got:=l.serviceBatchTarget();got!=32<<10 { t.Fatal("cold upload burst",i,got) }
-  l.observeDataService(480<<10,80*time.Millisecond,false)
-  l.observeDataServiceClass(480<<10,80*time.Millisecond,true,true)
-  if l.serviceSamples!=uint64(i) {t.Fatal("unknown or control success trained bulk service")}
-  l.observeDataService(48<<10,80*time.Millisecond,true)
- }
- if l.serviceBatchTarget()!=32<<10 {t.Fatal("unproven fourth turn used large literal")}
- l.observeDataService(48<<10,80*time.Millisecond,true)
- if n:=l.serviceBatchTarget(); n < 64<<10 || n > 128<<10 {t.Fatal("small fast samples authorized a full burst",n)}
- for i:=0;i<8;i++ {l.observeDataService(480<<10,80*time.Millisecond,true)}
- if l.serviceBatchTarget()!=datapath.BulkBatchTargetBytes {t.Fatal("confirmed fast uplink remained throttled")}
+ for i:=0;i<8;i++ {l.observeUploadBatch(344064,time.Millisecond,false,false);l.observeUploadBatch(344064,time.Millisecond,true,true)}
+ if l.serviceBatchTarget()!=32<<10 {t.Fatal("unknown/control APPEND trained uplink")}
+ for i:=0;i<2;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
+ if l.serviceBatchTarget()!=64<<10 {t.Fatal("confirmed first probe cannot grow")}
+ for i:=0;i<12;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
+ if l.serviceBatchTarget()!=64<<10 {t.Fatal("small samples pretended to prove larger batches")}
+ for _,n:=range []uint64{64<<10,128<<10,256<<10} {for i:=0;i<2;i++ {l.observeUploadBatch(n,80*time.Millisecond,true,false)}}
+ if l.serviceBatchTarget()!=datapath.BulkBatchTargetBytes {t.Fatal("fast upload remained cold")}
  slow:=&lane{}
- for i:=0;i<4;i++ {slow.observeDataService(48<<10,300*time.Millisecond,true)}
- if slow.serviceBatchTarget()!=32<<10 {t.Fatal("slow upload became a large literal")}
+ for i:=0;i<20;i++ {slow.observeUploadBatch(32<<10,350*time.Millisecond,true,false)}
+ if slow.serviceBatchTarget()!=32<<10 {t.Fatal("slow small literal allowed a large burst")}
+ mobile:=&lane{providerBaseline:300*time.Millisecond}
+ for i:=0;i<8;i++ {mobile.observeUploadBatch(344064,350*time.Millisecond,true,false)}
+ if mobile.serviceBatchTarget()!=datapath.BulkBatchTargetBytes {t.Fatal("true propagation permanently capped upload")}
  server:=&lane{side:true}
- for i:=0;i<8;i++ {server.observeDataService(480<<10,80*time.Millisecond,true)}
- if server.serviceBatchTarget()!=32<<10 || server.peerReadSamples!=0 {t.Fatal("APPEND invented peer download receipt")}
+ for i:=0;i<8;i++ {server.observeUploadBatch(344064,time.Millisecond,true,false)}
+ if server.uploadBatchTarget!=0||server.peerReadSamples!=0||server.serviceBatchTarget()!=32<<10{t.Fatal("uplink APPEND invented peer download proof")}
 }
 ''')
