@@ -1018,12 +1018,14 @@ func (d *deliveryController) fastAgeBudget() time.Duration {
 		// hundreds of milliseconds of load-induced delay from bulk admission.
 		return baseline + 100*time.Millisecond
 	}
-	if baseline == 0 {
-		// Until isolated short exchanges provide a full-path sample, low-flight
-		// bulk/control calibration bounds both legs of a request/reply exchange.
-		baseline = max(time.Duration(d.baselineMS)*time.Millisecond, 2*d.acknowledgementFloor())
-	}
-	return max(deliveryFastMaxAge, min(1500*time.Millisecond, baseline+max(150*time.Millisecond, baseline/2)))
+	// Bulk/control ACK delay is not an unloaded fast-path measurement.
+	// Under a constrained 10-20Mbps path its low-flight receipt floor can
+	// grow to 2 seconds, formerly raising the short-path allowance to 1.5s
+	// even though the entire application RTT must remain <=750ms.
+	// Until isolated fast traffic provides its own baseline, use the
+	// existing conservative 650ms guard. Unloaded fast measurements retain
+	// their independent propagation floor+100ms allowance above.
+	return deliveryFastMaxAge
 }
 
 func (d *deliveryController) fastPathBaseline() time.Duration {
