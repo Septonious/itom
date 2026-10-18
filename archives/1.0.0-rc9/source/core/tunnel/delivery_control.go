@@ -48,6 +48,7 @@ func (e *deliveryDeferredError) Unwrap() error { return errDeliveryDeferred }
 
 type deliveryKey struct{ stream, offset uint64 }
 type deliveryRange struct {
+	firstDiscovery    bool
 	key               deliveryKey
 	start, end        uint64
 	fast              bool
@@ -55,7 +56,7 @@ type deliveryRange struct {
 	accepted          time.Time // last definitively accepted physical publication
 	repairAccepted    time.Time // complete remaining range republished after authenticated NACK
 	published         bool      // at least one physical outcome is committed or unknown
-	flightAtAdmission uint64
+	flightAtAdmission uint64 // Peak charged bulk exposure before ACK; zero excludes calibration.
 	repaired          bool
 	unloadedFast      bool   // original short DATA admitted outside a bulk epoch
 	isolatedFast      bool   // short-only startup traffic is not bulk queue evidence
@@ -97,6 +98,7 @@ type deliveryController struct {
 	ageCount, ageNext                   int
 	lastDecision                        time.Time
 	nextRepairWake                      time.Time
+	nextDiscoveryWake                   time.Time
 	bulkDemandAt                        time.Time
 	fastPressureUntil                   time.Time
 	lastFastACKAgeMS                    int64
@@ -222,7 +224,6 @@ func (g *stripeGroup) bindDeliveryCarrier(jobs []*datapath.Job, carrier string) 
 						g.shortAffinity = map[uint64]string{}
 					}
 					g.shortAffinity[a.Stream] = carrier
-					g.noteShortReaderLocked(carrier, time.Now())
 				}
 			}
 		}
@@ -296,7 +297,7 @@ func (d *deliveryController) progress(stream, frontier uint64, now time.Time) {
 				d.ages[d.ageNext] = residence
 				// Sample only a newly charged original at low aggregate flight.
 				// Repair ACKs and stalled full-window traffic cannot raise the floor.
-				if r.flightAtAdmission > 0 && r.flightAtAdmission <= deliveryInitialWindow/2 && residence > 0 {
+				if r.flightAtAdmission > 0 && r.flightAtAdmission <= min(d.initialWindow, uint64(deliveryInitialWindow))/2 && residence > 0 {
 					d.lowFlightAges[d.lowFlightNext] = residence
 					d.lowFlightNext = (d.lowFlightNext + 1) % len(d.lowFlightAges)
 					d.lowFlightCount = min(d.lowFlightCount+1, len(d.lowFlightAges))
@@ -330,6 +331,10 @@ func (d *deliveryController) retire(stream uint64) {
 // by a rate decision. Demand-limited samples cannot lower the capacity estimate.
 func (d *deliveryController) maintain(now time.Time, demand bool) {
 	d.init()
+	if !d.nextDiscoveryWake.IsZero() && !now.Before(d.nextDiscoveryWake) {
+		d.nextDiscoveryWake = time.Time{}
+		d.changed()
+	}
 	if !d.nextRepairWake.IsZero() && !now.Before(d.nextRepairWake) {
 		d.nextRepairWake = time.Time{}
 		d.changed()
@@ -620,6 +625,11 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 				// Actual bulk exposure additionally makes their age queue evidence.
 				for _, pending := range d.ranges {
 					pending.unloadedFast = false
+					if !w.fast && !w.repair && pending.flightAtAdmission > 0 {
+						// A later bulk admission can load the first range before
+						// its ACK. Calibration must remember that exposure too.
+						pending.flightAtAdmission = max(pending.flightAtAdmission, d.bulk+newBytes)
+					}
 					// Bulk arriving later cannot have caused an earlier short
 					// exchange's existing delay. Keep its admission-time exposure.
 					// New short traffic admitted during bulk remains exposed.
@@ -632,6 +642,9 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 					r.flightAtAdmission = d.bulk + newBytes
 				}
 				d.ranges[r.key] = r
+				if r.firstDiscovery {
+					d.nextDiscoveryWake = time.Now().Add(deliveryDecisionEpoch)
+				}
 				d.issued[r.key.stream] = max(d.issued[r.key.stream], r.end)
 			}
 			if !w.fast && !w.repair && len(selected) > 0 {
@@ -726,6 +739,8 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 	var entries []*deliveryRange
 	var selected []*datapath.Job
 	var size uint64
+	firstDiscoverySelected := false
+	now := time.Now()
 	orderBlocked := false
 	stoppedMembers := 0
 	remaining := uint64(0)
@@ -815,6 +830,14 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		// outstanding bulk may discover the path with one in-order frame.
 		// The hard session cap, stream credit and physical quota still apply.
 		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= d.maxWindow
+		// Pace only an unproven stream's first exception above the shared
+		// window. Otherwise many new TCPs can each bypass a contracted window
+		// simultaneously. Proven independent streams keep the original escape;
+		// neither existing charged ranges nor authenticated repairs are held.
+		firstDiscovery := discovery && n > remaining && d.frontiers[a.Stream] == 0
+		if firstDiscovery && (firstDiscoverySelected || now.Before(d.nextDiscoveryWake)) {
+			discovery = false
+		}
 		if n > remaining && !discovery || len(d.ranges)+len(entries) >= deliveryMaxRanges {
 			w.debug.Window++
 			continue
@@ -823,7 +846,8 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		remaining -= min(remaining, n)
 		perStream[a.Stream] += n
 		size += n
-		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: time.Now()})
+		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: now, firstDiscovery: firstDiscovery})
+		firstDiscoverySelected = firstDiscoverySelected || firstDiscovery
 		selected = append(selected, j)
 	}
 	if stoppedMembers == len(jobs) {
@@ -919,10 +943,10 @@ func (g *stripeGroup) observeProviderBaseline(rtt time.Duration) {
 			// A startup echo can include another account's boot queue. Before
 			// application work begins, retain the lowest independent cold
 			// observation instead of freezing whichever account arrived first.
-			seed := uint64(deliveryInitialWindow)
-			if sample >= 250 {
-				seed = 256 << 10
-			}
+			// NOOP propagation does not measure a shared access link's capacity.
+			// Both endpoints start with the same bounded probe; authenticated
+			// useful ACKs still expand to the unchanged role-specific ceiling.
+			seed := uint64(256 << 10)
 			d.window = seed
 			d.initialWindow = seed
 		}

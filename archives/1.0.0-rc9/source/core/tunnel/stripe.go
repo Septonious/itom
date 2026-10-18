@@ -179,30 +179,29 @@ type stripeRemoteKey struct {
 }
 
 type stripeGroup struct {
-	noticeDelivery      noticeDelivery
-	preparation         []*preparationWaiter
-	preparedByOwner     map[*lane]int
-	prepared            int
-	capacityNotice      capacityNotification
-	lastBulkAt          time.Time
-	delivery            deliveryController
-	bulkDelivered       atomic.Int64
-	downloadDelivered   atomic.Int64
-	logical             wire.ID
-	generation          uint64
-	mu                  sync.Mutex
-	lanes               map[string]*lane
-	owners              map[uint64]*lane
-	streamAccount       map[uint64]string
-	feedbackAffinity    map[uint64]string
-	feedbackPool        []string
-	shortAffinity       map[uint64]string
-	interactiveReserve  [2]string
-	shortReaderActivity [2]shortReaderActivity
-	logicalOwners       map[string]*lane
-	sessionOwner        *lane
-	ownerWG             sync.WaitGroup
-	stopped             bool
+	noticeDelivery     noticeDelivery
+	preparation        []*preparationWaiter
+	preparedByOwner    map[*lane]int
+	prepared           int
+	capacityNotice     capacityNotification
+	lastBulkAt         time.Time
+	delivery           deliveryController
+	bulkDelivered      atomic.Int64
+	downloadDelivered  atomic.Int64
+	logical            wire.ID
+	generation         uint64
+	mu                 sync.Mutex
+	lanes              map[string]*lane
+	owners             map[uint64]*lane
+	streamAccount      map[uint64]string
+	feedbackAffinity   map[uint64]string
+	feedbackPool       []string
+	shortAffinity      map[uint64]string
+	interactiveReserve [2]string
+	logicalOwners      map[string]*lane
+	sessionOwner       *lane
+	ownerWG            sync.WaitGroup
+	stopped            bool
 	// Only one planned key rotation at a time; released by replacement readiness.
 	rekeyAccount       string
 	configuredAccounts int
@@ -1298,9 +1297,6 @@ func (g *stripeGroup) dispatchStream(carrier *lane, f wire.Frame) error {
 				g.shortAffinity = map[uint64]string{}
 			}
 			g.shortAffinity[f.Stream] = carrier.account.ID
-			if f.Type == wire.Data {
-				g.noteShortReaderLocked(carrier.account.ID, time.Now())
-			}
 		}
 		g.mu.Unlock()
 	}

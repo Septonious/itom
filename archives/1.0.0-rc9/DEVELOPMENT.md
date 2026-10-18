@@ -44,3 +44,28 @@ for at most five seconds. Empty polls, OPEN and ordinary bulk/control traffic
 cannot extend that hint; completely idle accounts retain the old cadence.
 There is no global poll-rate increase, flight contraction, new timeout, credit
 return or socket replacement. Its measured benefit is still to be established.
+
+## Rejected receive experiment and startup calibration correction
+
+Run 39144827013 (`f549009`) rejected: full-rate 4-stream cold probe timed out;
+retained SINGLE round 2 stalled a one-second download window and averaged
+74.733Mbps down. Retained 32-stream final tails regressed to 34.157/47.789Mbps.
+All source/recovery/race checks passed, but those do not waive performance gates.
+The short-reader audit experiment is reverted. Original IDLE/audit behavior is
+preserved. See `evidence/f549009-qualification.json` for all chronological data.
+
+Next experiment starts both endpoints from 256KiB independent of NOOP RTT;
+propagation is not a bandwidth observation. First-frame exceptions for streams
+without any authenticated progress are paced at one per controller epoch while
+above the shared window. Proven streams retain their immediate independent
+escape, charged repairs are unchanged, and the existing actor owns the wake.
+A pacing wake returns no flight or physical credit. Maxima stay 16/12MiB.
+
+The ACK floor previously compared admission flight with half of a constant
+1MiB window even when the real initial window was 256KiB. It also forgot later
+bulk admitted before that ACK. Correct calibration uses half the actual initial
+window (capped by the old bound) and remembers subsequent bulk exposure. The
+regression checks a whole cold window submitted in one or two batches and
+proves its ACKs cannot inflate the unloaded baseline. This is not a cap on a
+legitimate measured propagation floor or an absolute tightening of outage age.
+Performance qualification is pending; build jobs must remain gated.
