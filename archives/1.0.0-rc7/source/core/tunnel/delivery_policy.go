@@ -172,6 +172,17 @@ func (p *deliveryPolicy) next(now time.Time, f deliveryFeedback) uint64 {
 		// bounded probe; requiring that rate first creates a circular slow ramp.
 		step = max(step, window/2)
 	}
+	// RC5: close a short-test cold-start feedback loop. A *fresh authenticated*
+	// useful-byte ACK under half-window-or-higher demand and comfortably below
+	// the bulk age budget can grow a small, fully utilized flight by one window
+	// rather than by half. This does not authorize physical journal spending,
+	// replay, or additional sockets. Stop accelerating once flight reaches 4 MiB;
+	// the established controller/RTT guard owns all subsequent probing.
+	if progress && f.Samples > 0 && window <= 4<<20 &&
+		f.Flight >= window/2 && f.Age > 0 &&
+		f.Age < f.Target*3/4 && f.FastAge < fastEarly && !f.Pressure {
+		step = max(step, window)
+	}
 	if p.capacityMbps >= 8 && f.Age < f.Target-100*time.Millisecond {
 		bdp := uint64(p.capacityMbps * 1e6 / 8 * max(200*time.Millisecond, min(f.Age, f.Target)).Seconds())
 		step = max(step, window/4)
