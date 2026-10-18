@@ -1,0 +1,85 @@
+name: FieldFix2 co-installable Android tester (NOT an RC6 update)
+on:
+  push:
+    branches: ["codex/rc6-field2-sidecar-android"]
+    paths: [".github/workflows/itom-fieldfix2-sidecar-android.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-sidecar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate original FieldFix2 native revision, Android unit tests and lint
+        working-directory: archives/1.0.0-rc6/source
+        run: |
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc6 --accept-android-licenses
+      - name: Create distinct application ID for coexistence, preserve original Java namespace
+        working-directory: archives/1.0.0-rc6/source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/build.gradle.kts")
+          s=p.read_text()
+          old='debug { applicationIdSuffix = ".dev.rev7"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }'
+          new='debug { applicationIdSuffix = ".dev.fieldfix2"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM FieldFix2") }'
+          if s.count(old)!=1: raise SystemExit("Gradle identity patch refused: original debug variant not found uniquely")
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Recompile co-installable APK using only the pinned validated toolchain
+        working-directory: archives/1.0.0-rc6/source/android
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache="$HOME/.cache/itom-build"
+          export ANDROID_HOME="$cache/android-sdk" ANDROID_SDK_ROOT="$cache/android-sdk"
+          gradle="$cache/gradle-9.3.1/bin/gradle"
+          test -x "$gradle"
+          if command -v javac >/dev/null && javac -version 2>&1 | grep -q 'javac 17'; then
+            export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+          else
+            javac="$(find "$cache/jdk17" -type f -path '*/bin/javac' -print -quit)"
+            test -n "$javac"
+            export JAVA_HOME="$(dirname "$(dirname "$javac")")"
+          fi
+          export PATH="$JAVA_HOME/bin:$PATH"
+          "$gradle" --no-daemon --console=plain --offline :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Verify distinct package, JNI parity, identical signed transport and sidecar label
+        working-directory: archives/1.0.0-rc6/source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/fieldfix2-sidecar
+          python3 - <<'PY'
+          import json,zipfile,hashlib,subprocess,shutil
+          from pathlib import Path
+          sdk=Path.home()/".cache/itom-build/android-sdk"
+          aapt=sdk/"build-tools/36.0.0/aapt2"
+          original=Path("dist/ITOM-1.0.0-RC6-debug.apk")
+          candidate=Path("android/app/build/outputs/apk/debug/app-debug.apk")
+          meta=json.loads(candidate.with_name("output-metadata.json").read_text())
+          assert meta["applicationId"]=="org.itom.client.dev.fieldfix2",meta
+          out=subprocess.run([str(aapt),"dump","badging",str(candidate)],check=True,capture_output=True,text=True).stdout
+          assert "name='org.itom.client.dev.fieldfix2'" in out.splitlines()[0]
+          assert "label='ITOM FieldFix2'" in out or "application-label:'ITOM FieldFix2'" in out
+          with zipfile.ZipFile(original) as ref,zipfile.ZipFile(candidate) as apk:
+            for abi in ("arm64-v8a","armeabi-v7a"):
+              p="lib/"+abi+"/libgojni.so"
+              old,cur=ref.read(p),apk.read(p)
+              assert old==cur,"Embedded native tunnel differs from validated FieldFix2: "+p
+              assert b"itom-1-0-0-rc6" in cur,"Wrong JNI transport revision"
+          target=Path("dist/fieldfix2-sidecar/ITOM-RC6-FieldFix2-sidecar-debug.apk")
+          shutil.copy2(candidate,target)
+          (target.parent/"SHA256SUMS").write_text(hashlib.sha256(target.read_bytes()).hexdigest()+"  "+target.name+"\n")
+          (target.parent/"INSTALL.txt").write_text("TEST ONLY. Package ID org.itom.client.dev.fieldfix2 differs from installed RC6 org.itom.client.dev.rev7. Both can coexist. New app starts with separate Android private data and requires separate profile setup. Transport source 5c93999818ee41b20eae57d72e113bf8e0990c6c. NOT field qualified. No server journal or quota changes.\n")
+          print("Verified co-installable APK:",target)
+          PY
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs dist/fieldfix2-sidecar/ITOM-RC6-FieldFix2-sidecar-debug.apk > dist/fieldfix2-sidecar/SIGNER.txt
+          (cd dist/fieldfix2-sidecar && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc6-fieldfix2-coinstallable-android-test
+          path: archives/1.0.0-rc6/source/dist/fieldfix2-sidecar/*
+          retention-days: 14
