@@ -69,3 +69,24 @@ regression checks a whole cold window submitted in one or two batches and
 proves its ACKs cannot inflate the unloaded baseline. This is not a cap on a
 legitimate measured propagation floor or an absolute tightening of outage age.
 Performance qualification is pending; build jobs must remain gated.
+
+## First full-capacity matrix pass
+
+`8868df3`, run 39145558661: **12/12** repeated full-capacity SINGLE/4/32,
+fresh/retained rounds passed. Maximum loaded RTT across those rounds was
+546.543ms; every round completed all 30 probes, positive duplex one-second
+windows, full/trailing 75.000Mbps floors, original TCPs and post-stress original
+and fresh connection checks. These are lab results, not a field guarantee.
+Core, recovery and race checks passed. Early 10Mbps still timed out; early
+20Mbps maximum RTT was 1123ms. Builds correctly skipped because those gates
+remain red. All rounds are retained in `evidence/8868df3-qualification.json`.
+
+The next bounded-discovery experiment limits normally outstanding window
+exceptions to two complete DATA records. Authenticated ACKs immediately free
+that logical scheduling allowance, with no physical journal refund. If both
+escape BODYs remain invisible, the existing actor permits one additional fully
+charged record per second to reach another independent stream. This avoids an
+indefinite new-stream deadlock; the unchanged role ceilings and physical quota
+still apply. Repairs and short DATA retain their separate paths. Existing Rev4
+stream-isolation, delayed-visibility, reader-restart, retained-state and long
+blackout tests are required in CI along with the strict load cases.

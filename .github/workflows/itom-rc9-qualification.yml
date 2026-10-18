@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           go vet ./...
           go test -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath ./mailbox
-          go test -p 2 -count=1 -timeout=150s ./tunnel -run 'TestRC9|TestRC8|TestRC7|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestLoadedOnlyCarriersUseUnloadedPoolEstimate|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4LongBlackoutPreservesInflightTCPAndMessages' -v | tee "$RUNNER_TEMP/rc9-focused.log"
+          go test -p 2 -count=1 -timeout=150s ./tunnel -run 'TestRC9|TestRC8|TestRC7|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestLoadedOnlyCarriersUseUnloadedPoolEstimate|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages' -v | tee "$RUNNER_TEMP/rc9-focused.log"
       - name: Race check proof accounting and cleanup cancellation
         working-directory: ${{ env.SOURCE }}/core
         run: go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./datapath ./tunnel -run 'TestRC9|TestRC8|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|Test.*(Quota|Unknown|Reclaim|Recovery|Proof)'
