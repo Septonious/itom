@@ -113,6 +113,17 @@ enum class Glyph { HOME, SERVERS, ROUTES, SETTINGS, APPS, BELL, CHART, BACK, NEX
     }
 }
 
+/** Single-track, gapless determinate bar. No stop-marker, detached end cap or gap. */
+@Composable fun ItomProgressBar(progress: Float, modifier: Modifier = Modifier, color: Color = Blue) {
+    val value = if (progress.isFinite()) progress.coerceIn(0f, 1f) else 0f
+    val shape = RoundedCornerShape(6.dp)
+    Box(modifier.height(8.dp).clip(shape).background(Color(0xFF24334B))) {
+        if (value > 0f) {
+            Box(Modifier.fillMaxWidth(value).fillMaxHeight().background(color, shape))
+        }
+    }
+}
+
 @Composable fun NavigationRow(glyph: Glyph, title: String, subtitle: String, onClick: () -> Unit) {
     InfoCard(Modifier.fillMaxWidth(), onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

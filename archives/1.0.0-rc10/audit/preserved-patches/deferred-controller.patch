@@ -1,0 +1,341 @@
+--- a/core/tunnel/delivery_control.go
++++ b/core/tunnel/delivery_control.go
+@@ -20,10 +20,15 @@
+ const (
+ 	deliveryInitialWindow = 1 << 20
+ 	deliveryMinWindow     = 64 << 10
+-	deliveryMaxWindow     = 16 << 20
+-	deliveryFastReserve   = 128 << 10
+-	deliveryTargetAge     = 800 * time.Millisecond
+-	deliveryDecisionEpoch = 250 * time.Millisecond
++	// Bound aggregate unacknowledged logical flight to the observed
++	// 0.5-0.8s duplex BDP instead of allowing a 16MiB burst to monopolize
++	// retained IMAP grant service. Physical quota accounting, receipts and
++	// TCP stream identities remain independent and unchanged.
++	deliveryMaxWindow       = 16 << 20
++	deliveryClientMaxWindow = 12 << 20
++	deliveryFastReserve     = 128 << 10
++	deliveryTargetAge       = 800 * time.Millisecond
++	deliveryDecisionEpoch   = 250 * time.Millisecond
+ 	// Short DATA ACK is one leg of an application exchange; keep headroom for
+ 	// its other leg. This is feedback, not the 1500ms application test limit.
+ 	deliveryFastMaxAge = 650 * time.Millisecond
+@@ -43,6 +48,7 @@
+ 
+ type deliveryKey struct{ stream, offset uint64 }
+ type deliveryRange struct {
++	firstDiscovery    bool
+ 	key               deliveryKey
+ 	start, end        uint64
+ 	fast              bool
+@@ -50,7 +56,7 @@
+ 	accepted          time.Time // last definitively accepted physical publication
+ 	repairAccepted    time.Time // complete remaining range republished after authenticated NACK
+ 	published         bool      // at least one physical outcome is committed or unknown
+-	flightAtAdmission uint64
++	flightAtAdmission uint64 // Peak charged bulk exposure before ACK; zero excludes calibration.
+ 	repaired          bool
+ 	unloadedFast      bool   // original short DATA admitted outside a bulk epoch
+ 	isolatedFast      bool   // short-only startup traffic is not bulk queue evidence
+@@ -71,6 +77,7 @@
+ 	wake                                chan struct{}
+ 	window                              uint64
+ 	initialWindow                       uint64
++	maxWindow                           uint64
+ 	ranges                              map[deliveryKey]*deliveryRange
+ 	frontiers                           map[uint64]uint64
+ 	issued                              map[uint64]uint64
+@@ -91,9 +98,12 @@
+ 	ageCount, ageNext                   int
+ 	lastDecision                        time.Time
+ 	nextRepairWake                      time.Time
++	nextDiscoveryWake                   time.Time
+ 	bulkDemandAt                        time.Time
+ 	fastPressureUntil                   time.Time
+ 	lastFastACKAgeMS                    int64
++	lastBulkACKAgeMS                    int64
++	lastBulkACKAt                       time.Time
+ 	lastFastACKAt                       time.Time
+ 	policy                              deliveryPolicy
+ 	fastPressureDecisions               uint64
+@@ -112,11 +122,28 @@
+ }
+ 
+ func newDeliveryController() deliveryController {
+-	return deliveryController{wake: make(chan struct{}), window: deliveryInitialWindow, initialWindow: deliveryInitialWindow, ranges: map[deliveryKey]*deliveryRange{}, frontiers: map[uint64]uint64{}, issued: map[uint64]uint64{}, stopped: map[uint64]bool{}}
+-}
++	return deliveryController{wake: make(chan struct{}), window: deliveryInitialWindow, initialWindow: deliveryInitialWindow, maxWindow: deliveryMaxWindow, ranges: map[deliveryKey]*deliveryRange{}, frontiers: map[uint64]uint64{}, issued: map[uint64]uint64{}, stopped: map[uint64]bool{}}
++}
++
++// setRoleWindow applies the restored asymmetric RC5 experiment to the
++// authenticated endpoint (lane.side=true is server). This is logical credit
++// only, never physical mailbox/journal quota or a credit refund.
++func (d *deliveryController) setRoleWindow(server bool) {
++	d.init()
++	if server {
++		d.maxWindow = deliveryMaxWindow
++	} else {
++		d.maxWindow = deliveryClientMaxWindow
++	}
++	d.window = min(d.window, d.maxWindow)
++}
++
+ func (d *deliveryController) init() {
+ 	if d.window == 0 {
+ 		*d = newDeliveryController()
++	}
++	if d.maxWindow == 0 {
++		d.maxWindow = deliveryMaxWindow
+ 	}
+ 	if d.wake == nil {
+ 		d.wake = make(chan struct{})
+@@ -261,10 +288,16 @@
+ 					}
+ 				}
+ 			} else if !r.repaired {
++				// Only an authenticated logical ACK following definite physical
++				// publication measures actual physical-to-ACK turnaround.
++				if !r.accepted.IsZero() && r.flightAtAdmission > 0 {
++					d.lastBulkACKAgeMS = max(int64(0), now.Sub(r.accepted).Milliseconds())
++					d.lastBulkACKAt = now
++				}
+ 				d.ages[d.ageNext] = residence
+ 				// Sample only a newly charged original at low aggregate flight.
+ 				// Repair ACKs and stalled full-window traffic cannot raise the floor.
+-				if r.flightAtAdmission > 0 && r.flightAtAdmission <= deliveryInitialWindow/2 && residence > 0 {
++				if r.flightAtAdmission > 0 && r.flightAtAdmission <= min(d.initialWindow, uint64(deliveryInitialWindow))/2 && residence > 0 {
+ 					d.lowFlightAges[d.lowFlightNext] = residence
+ 					d.lowFlightNext = (d.lowFlightNext + 1) % len(d.lowFlightAges)
+ 					d.lowFlightCount = min(d.lowFlightCount+1, len(d.lowFlightAges))
+@@ -298,6 +331,10 @@
+ // by a rate decision. Demand-limited samples cannot lower the capacity estimate.
+ func (d *deliveryController) maintain(now time.Time, demand bool) {
+ 	d.init()
++	if !d.nextDiscoveryWake.IsZero() && !now.Before(d.nextDiscoveryWake) {
++		d.nextDiscoveryWake = time.Time{}
++		d.changed()
++	}
+ 	if !d.nextRepairWake.IsZero() && !now.Before(d.nextRepairWake) {
+ 		d.nextRepairWake = time.Time{}
+ 		d.changed()
+@@ -387,7 +424,7 @@
+ 		d.fastPressureUntil = time.Time{}
+ 	}
+ 	before := d.window
+-	d.window = d.policy.next(now, deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
++	d.window = d.policy.next(now, deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, MaxWindow: d.maxWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
+ 		Delivered: d.bulkDelivered, RateMbps: d.bulkRateMbps, Age: age, FastAge: fastAge,
+ 		Samples: d.ageCount, Target: d.targetAge(), FastTarget: d.fastAgeBudget(), FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)})
+ 	if d.policy.mode == deliveryCongested || d.policy.mode == deliveryOutage {
+@@ -588,6 +625,11 @@
+ 				// Actual bulk exposure additionally makes their age queue evidence.
+ 				for _, pending := range d.ranges {
+ 					pending.unloadedFast = false
++					if !w.fast && !w.repair && pending.flightAtAdmission > 0 {
++						// A later bulk admission can load the first range before
++						// its ACK. Calibration must remember that exposure too.
++						pending.flightAtAdmission = max(pending.flightAtAdmission, d.bulk+newBytes)
++					}
+ 					// Bulk arriving later cannot have caused an earlier short
+ 					// exchange's existing delay. Keep its admission-time exposure.
+ 					// New short traffic admitted during bulk remains exposed.
+@@ -600,6 +642,9 @@
+ 					r.flightAtAdmission = d.bulk + newBytes
+ 				}
+ 				d.ranges[r.key] = r
++				if r.firstDiscovery {
++					d.nextDiscoveryWake = time.Now().Add(deliveryDecisionEpoch)
++				}
+ 				d.issued[r.key.stream] = max(d.issued[r.key.stream], r.end)
+ 			}
+ 			if !w.fast && !w.repair && len(selected) > 0 {
+@@ -694,6 +739,8 @@
+ 	var entries []*deliveryRange
+ 	var selected []*datapath.Job
+ 	var size uint64
++	firstDiscoverySelected := false
++	now := time.Now()
+ 	orderBlocked := false
+ 	stoppedMembers := 0
+ 	remaining := uint64(0)
+@@ -782,7 +829,15 @@
+ 		// strand unrelated TCPs behind one invisible BODY. A stream with no
+ 		// outstanding bulk may discover the path with one in-order frame.
+ 		// The hard session cap, stream credit and physical quota still apply.
+-		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= deliveryMaxWindow
++		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= d.maxWindow
++		// Pace only an unproven stream's first exception above the shared
++		// window. Otherwise many new TCPs can each bypass a contracted window
++		// simultaneously. Proven independent streams keep the original escape;
++		// neither existing charged ranges nor authenticated repairs are held.
++		firstDiscovery := discovery && n > remaining && d.frontiers[a.Stream] == 0
++		if firstDiscovery && (firstDiscoverySelected || now.Before(d.nextDiscoveryWake)) {
++			discovery = false
++		}
+ 		if n > remaining && !discovery || len(d.ranges)+len(entries) >= deliveryMaxRanges {
+ 			w.debug.Window++
+ 			continue
+@@ -791,7 +846,8 @@
+ 		remaining -= min(remaining, n)
+ 		perStream[a.Stream] += n
+ 		size += n
+-		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: time.Now()})
++		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: now, firstDiscovery: firstDiscovery})
++		firstDiscoverySelected = firstDiscoverySelected || firstDiscovery
+ 		selected = append(selected, j)
+ 	}
+ 	if stoppedMembers == len(jobs) {
+@@ -807,7 +863,7 @@
+ // congestion window. It remains real charged flight until an authenticated ACK
+ // or stream retirement; it cannot replenish itself on writer completion.
+ func (d *deliveryController) bulkAdmissionAllowed(entries []*deliveryRange, bytes uint64) bool {
+-	if d.bulk+bytes > deliveryMaxWindow {
++	if d.bulk+bytes > d.maxWindow {
+ 		return false
+ 	}
+ 	if d.bulk+bytes <= d.window {
+@@ -887,10 +943,10 @@
+ 			// A startup echo can include another account's boot queue. Before
+ 			// application work begins, retain the lowest independent cold
+ 			// observation instead of freezing whichever account arrived first.
+-			seed := uint64(deliveryInitialWindow)
+-			if sample >= 250 {
+-				seed = 256 << 10
+-			}
++			// NOOP propagation does not measure a shared access link's capacity.
++			// Both endpoints start with the same bounded probe; authenticated
++			// useful ACKs still expand to the unchanged role-specific ceiling.
++			seed := uint64(256 << 10)
+ 			d.window = seed
+ 			d.initialWindow = seed
+ 		}
+@@ -935,6 +991,7 @@
+ 	OldestBulkRangeAgeMS                                                                       int64
+ 	AcknowledgementFloorMS                                                                     int64
+ 	LastFastACKAgeMS, FastPressureRemainingMS, FastPathBaselineMS, FastTargetMS                int64
++	LastBulkACKAgeMS, LastBulkACKSinceMS                                                       int64
+ 	FastPressureDecisions                                                                      uint64
+ 	ProbeAttempts, ProbeAccepted, ProbeRejected                                                uint64
+ 	RecoveryAttempts, RecoveryAccepted, RecoveryRejected, FastRampIncreases, FastRampRollbacks uint64
+@@ -966,7 +1023,12 @@
+ 		short[account] = count
+ 	}
+ 	d.init()
++	bulkSince := int64(-1)
++	if !d.lastBulkACKAt.IsZero() {
++		bulkSince = max(int64(0), time.Since(d.lastBulkACKAt).Milliseconds())
++	}
+ 	return latencyGovernorSnapshot{Mode: string(d.policy.mode), BaselineMS: d.baselineMS, TargetMS: d.targetAge().Milliseconds(),
++		LastBulkACKAgeMS: d.lastBulkACKAgeMS, LastBulkACKSinceMS: bulkSince,
+ 		AcknowledgementFloorMS: d.acknowledgementFloor().Milliseconds(), LastFastACKAgeMS: d.lastFastACKAgeMS,
+ 		FastPathBaselineMS: d.fastPathBaseline().Milliseconds(), FastTargetMS: d.fastAgeBudget().Milliseconds(), PendingShortRangesByAccount: short,
+ 		FastPressureRemainingMS: max(int64(0), time.Until(d.fastPressureUntil).Milliseconds()), FastPressureDecisions: d.fastPressureDecisions,
+--- a/core/tunnel/delivery_policy.go
++++ b/core/tunnel/delivery_policy.go
+@@ -16,7 +16,7 @@
+ )
+ 
+ type deliveryFeedback struct {
+-	Window, Flight, ACKFlight, Delivered, InitialWindow uint64
++	Window, Flight, ACKFlight, Delivered, InitialWindow, MaxWindow uint64
+ 	Demand                                              bool
+ 	RateMbps                                            float64
+ 	Age, FastAge, Target, FastTarget, FastBaseline      time.Duration
+@@ -35,6 +35,8 @@
+ 
+ func (p *deliveryPolicy) next(now time.Time, f deliveryFeedback) uint64 {
+ 	window := f.Window
++	limit := f.MaxWindow
++	if limit == 0 { limit = deliveryMaxWindow }
+ 	fastTarget := f.FastTarget
+ 	if fastTarget <= 0 {
+ 		fastTarget = deliveryFastMaxAge
+@@ -172,6 +174,17 @@
+ 		// bounded probe; requiring that rate first creates a circular slow ramp.
+ 		step = max(step, window/2)
+ 	}
++	// RC5: close a short-test cold-start feedback loop. A *fresh authenticated*
++	// useful-byte ACK under half-window-or-higher demand and comfortably below
++	// the bulk age budget can grow a small, fully utilized flight by one window
++	// rather than by half. This does not authorize physical journal spending,
++	// replay, or additional sockets. Stop accelerating once flight reaches 4 MiB;
++	// the established controller/RTT guard owns all subsequent probing.
++	if progress && f.Samples > 0 && window <= 4<<20 &&
++		f.Flight >= window/2 && f.Age > 0 &&
++		f.Age < f.Target*3/4 && f.FastAge < fastEarly && !f.Pressure {
++		step = max(step, window)
++	}
+ 	if p.capacityMbps >= 8 && f.Age < f.Target-100*time.Millisecond {
+ 		bdp := uint64(p.capacityMbps * 1e6 / 8 * max(200*time.Millisecond, min(f.Age, f.Target)).Seconds())
+ 		step = max(step, window/4)
+@@ -192,8 +205,8 @@
+ 	p.mode = deliveryProbeUp
+ 	p.probes++
+ 	p.lastProbe = now
+-	if window >= deliveryMaxWindow {
++	if window >= limit {
+ 		p.mode = deliveryNormal
+ 	}
+-	return min(uint64(deliveryMaxWindow), window+step)
++	return min(limit, window+step)
+ }
+--- a/core/tunnel/service_policy.go
++++ b/core/tunnel/service_policy.go
+@@ -43,9 +43,17 @@
+ 		target = min(target, max(uint64(32<<10), bytes))
+ 	}
+ 	if l.side && (l.peerReadAt.IsZero() || time.Since(l.peerReadAt) > 30*time.Second) {
+-		// APPEND proves server ingress only. Cold downstream starts with one
+-		// complete DATA record until authenticated BODY receipts establish speed.
+-		target = min(target, uint64(32<<10))
++		// A recently and repeatedly proven peer BODY service can resume one
++		// conservative batch after a quiet spell. A first connection, repaired
++		// slow path or stale history still starts with a single 32 KiB record.
++		// This never creates grant authority or substitutes APPEND for a receipt.
++		resume := uint64(32 << 10)
++		if !l.peerReadAt.IsZero() && time.Since(l.peerReadAt) <= 90*time.Second &&
++			l.peerReadSamples >= 8 && l.peerReadSlowCount == 0 &&
++			l.peerReadBatchTarget == 0 {
++			resume = 128 << 10
++		}
++		target = min(target, resume)
+ 	} else if l.peerReadBatchTarget != 0 && time.Since(l.peerReadAt) <= 30*time.Second {
+ 		target = min(target, l.peerReadBatchTarget)
+ 	}
+@@ -75,6 +83,16 @@
+ 	}
+ 	l.peerReadAt = now
+ 	l.peerReadSamples++
++	// RC5 cold-ramp: one complete authenticated, promptly read physical BODY
++	// proves the initial 32 KiB path is usable. Permit just one tentative
++	// 64 KiB next batch instead of waiting for a second full mail round trip.
++	// Subsequent increases still require the original two fast receipts.
++	// This never observes APPEND-only success or grants extra physical quota.
++	if l.peerReadSamples == 1 && l.peerReadBatchTarget == 32<<10 && elapsed <= budget {
++		l.peerReadBatchTarget = 64 << 10
++		l.peerReadFastCount = 0
++		return
++	}
+ 	if elapsed > 2*budget {
+ 		l.peerReadFastCount = 0
+ 		l.peerReadSlowCount = min(l.peerReadSlowCount+1, 16)
+--- a/core/tunnel/stripe.go
++++ b/core/tunnel/stripe.go
+@@ -207,6 +207,7 @@
+ 	configuredAccounts int
+ 	cleanupActive      map[*lane]bool
+ 	cleanupQueue       []*lane
++	cleanupReads       chan struct{}
+ 	crossLocal         map[stripeLocalKey][]remoteLogicalAttempt
+ 	crossRemote        map[stripeRemoteKey][]remoteLogicalAttempt
+ 	nextID             uint64
+@@ -420,6 +421,9 @@
+ 		l.fastPhysicalSlots = make(chan struct{}, 1)
+ 	}
+ 	g.mu.Lock()
++	// Each endpoint's first authenticated carrier fixes its directional
++	// logical flight ceiling before any bulk admission. Reconnects retain it.
++	g.delivery.setRoleWindow(l.side)
+ 	old := g.lanes[l.account.ID]
+ 	if old != nil && old != l && l.carrierEpoch < old.carrierEpoch {
+ 		g.mu.Unlock()

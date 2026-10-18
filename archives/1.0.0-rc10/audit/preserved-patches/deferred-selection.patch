@@ -1,0 +1,73 @@
+--- a/core/tunnel/carrier_feedback.go
++++ b/core/tunnel/carrier_feedback.go
+@@ -13,6 +13,24 @@
+ 	sample := func(c *lane) int64 {
+ 		if c == nil {
+ 			return 0
++		}
++		// With no logical streams and no physical/control work, a fresh
++		// echo is a better predictor than an idle snapshot retained for up to
++		// two minutes. This matters when two equally idle IMAP accounts report
++		// 165ms and 583ms: new short work should follow the responsive lane.
++		// Require a genuinely quiet carrier; never train a baseline from a
++		// loaded echo or change existing physical credits and queue ownership.
++		if g.active.Load() == 0 && g.delivery.bulk == 0 && c.controlDebt.Load() == 0 &&
++			c.controlWriting.Load() == 0 && c.physicalActive.Load() == 0 &&
++			c.unreceivedLocalRecords.Load() == 0 {
++			if at := c.rttAt.Load(); at > 0 && now >= at && now-at <= 10000 {
++				if rtt := c.smoothedRTT.Load(); rtt > 0 {
++					return min(int64(2500), rtt)
++				}
++				if rtt := c.rtt.Load(); rtt > 0 {
++					return min(int64(2500), rtt)
++				}
++			}
+ 		}
+ 		// Classify path propagation using unloaded samples. A busy pool's
+ 		// queue-inflated ping must not make a slow backend look comparable to
+@@ -50,6 +68,25 @@
+ 	}
+ 	sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+ 	return values[(len(values)-1)/2]
++}
++
++// Only fresh, positive loaded-RTT spikes affect short/interactive placement.
++// An elevated busy RTT may reflect transient queueing rather than propagation.
++// This advisory cost never excludes a carrier or changes authenticated credit,
++// physical quota, journal ownership or in-flight TCP socket identity.
++func fastLoadedRTTSpikePenalty(sampleAgeMS, currentMS, smoothedMS int64) int {
++    if sampleAgeMS < 0 || sampleAgeMS > 10000 || currentMS <= 0 || smoothedMS <= 0 {
++        return 0
++    }
++    excess := currentMS - smoothedMS - 40 // ignore normal sample variation
++    if excess <= 0 { return 0 }
++    return int(min(int64(240), excess * 2))
++}
++
++func (g *stripeGroup) fastLoadedRTTSpikePenaltyLocked(l *lane) int {
++    if l == nil { return 0 }
++    now := time.Now().UnixMilli()
++    return fastLoadedRTTSpikePenalty(now-l.rttAt.Load(), l.rtt.Load(), l.smoothedRTT.Load())
+ }
+ 
+ // A short burst should await a responsive reader's slot before spilling onto
+@@ -123,7 +160,7 @@
+ 	score := func(l *lane) int {
+ 		// The peer can choose a different outgoing reserve. Compare actual
+ 		// latency/backlog here, without our own reserve's artificial bonus.
+-		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l))
++		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l)) + g.fastLoadedRTTSpikePenaltyLocked(l)
+ 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
+ 			// A serial reply can arrive before its preceding cumulative ACK.
+ 			// Retain a small cost for that charged range, while a parallel burst
+--- a/core/tunnel/local_selection.go
++++ b/core/tunnel/local_selection.go
+@@ -219,7 +219,7 @@
+ 			scores[key] = int(^uint(0) >> 1)
+ 			continue
+ 		}
+-		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l))
++		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l)) + g.fastLoadedRTTSpikePenaltyLocked(l)
+ 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
+ 			// Tagged APPEND can finish long before the peer's short BODY/ACK.
+ 			// Include client wallet publications as well as server journal debt.

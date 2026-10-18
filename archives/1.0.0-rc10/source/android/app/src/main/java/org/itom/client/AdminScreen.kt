@@ -3,6 +3,10 @@ package org.itom.client
 import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -162,10 +166,23 @@ private enum class AdminSection(val label: String, val description: String, val 
                 SmallNote(section.description)
             }
             Box {
-                OutlinedButton(onClick = { sectionsOpen = true }) { Text("Sections") }
-                DropdownMenu(expanded = sectionsOpen, onDismissRequest = { sectionsOpen = false }) {
+                OutlinedButton(onClick = { sectionsOpen = true }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Panel, contentColor = Blue)) { Text("Sections") }
+                DropdownMenu(
+                    expanded = sectionsOpen,
+                    onDismissRequest = { sectionsOpen = false },
+                    modifier = Modifier.background(Panel, RoundedCornerShape(18.dp))
+                        .border(1.dp, Outline.copy(alpha = .6f), RoundedCornerShape(18.dp))
+                ) {
                     AdminSection.entries.forEach { item ->
-                        DropdownMenuItem(text = { Text(item.label, color = if (item == section) Blue else Ink) }, leadingIcon = { AppIcon(item.glyph, Modifier.size(20.dp), if (item == section) Blue else Muted) }, onClick = { sectionsOpen = false; section = item; output = ""; live = false })
+                        val selected = item == section
+                        DropdownMenuItem(
+                            text = { Text(item.label, color = if (selected) Blue else Ink) },
+                            leadingIcon = { AppIcon(item.glyph, Modifier.size(20.dp), if (selected) Blue else Muted) },
+                            modifier = Modifier.padding(horizontal = 6.dp).clip(RoundedCornerShape(10.dp))
+                                .background(if (selected) Blue.copy(alpha = .16f) else Panel),
+                            colors = MenuDefaults.itemColors(textColor = Ink, leadingIconColor = Muted),
+                            onClick = { sectionsOpen = false; section = item; output = ""; live = false }
+                        )
                     }
                 }
             }
@@ -260,7 +277,7 @@ private enum class AdminSection(val label: String, val description: String, val 
                                 SmallNote("Saving server diagnostics")
                                 SmallNote("${(exportProgress.coerceIn(0f, 1f) * 100).toInt()}%", color = Blue)
                             }
-                            LinearProgressIndicator(progress = { exportProgress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                            ItomProgressBar(exportProgress, modifier = Modifier.fillMaxWidth(), color = Blue)
                         }
                     }
                 }

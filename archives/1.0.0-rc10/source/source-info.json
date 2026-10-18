@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
-  "release": "RC2",
-  "revision": "itom-1-0-0-rc2",
-  "archive_name": "ITOM-1.0.0-RC2-sources.zip",
-  "baseline": "1.0.0 RC1",
-  "qualification": "1.0.0 stabilization candidate; no stable/live-provider certification until final gates pass",
-  "android_version_name": "1.0.0-rc2",
-  "android_version_code": 10001,
-  "android_application_id": "org.itom.client.dev.rev7"
+  "release": "RC10",
+  "revision": "itom-1-0-0-rc10",
+  "archive_name": "ITOM-1.0.0-RC10-sources.zip",
+  "baseline": "1.0.0 RC2 (tagged exact source)",
+  "qualification": "NOT QUALIFIED: RC2 baseline plus independently reviewed fixes; unchanged RC8/RC9 gates required",
+  "android_version_name": "1.0.0-rc10",
+  "android_version_code": 10009,
+  "android_application_id": "org.itom.client"
 }

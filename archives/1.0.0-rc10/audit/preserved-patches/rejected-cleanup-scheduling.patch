@@ -1,0 +1,98 @@
+--- a/core/tunnel/cleanup_service.go
++++ b/core/tunnel/cleanup_service.go
+@@ -137,3 +137,36 @@
+ 	g.mu.Unlock()
+ 	g.signal()
+ }
++
++// Bound concurrent DATA proof-body reads, not cleaners. Eight 4 MiB FETCHes
++// can otherwise queue a large shared-link burst ahead of interactive traffic.
++// Keep four readers to retain parallel reclamation; deletes, remote cleanup,
++// presence and control discovery do not consume these slots. This changes no
++// deletion proof, journal authority, quota or admitted delivery bytes.
++const cleanupDataReadConcurrency = 4
++
++func (l *lane) cleanupRead(kind cleanupKind, read func() error) error {
++	if kind != cleanupLocalData || l.stripe == nil {
++		return read()
++	}
++	g := l.stripe
++	g.mu.Lock()
++	if g.cleanupReads == nil {
++		g.cleanupReads = make(chan struct{}, cleanupDataReadConcurrency)
++	}
++	slots := g.cleanupReads
++	g.mu.Unlock()
++	if err := l.ctx.Err(); err != nil {
++		return err
++	}
++	select {
++	case slots <- struct{}{}:
++		defer func() { <-slots }()
++		if err := l.ctx.Err(); err != nil {
++			return err
++		}
++		return read()
++	case <-l.ctx.Done():
++		return l.ctx.Err()
++	}
++}
+--- a/core/tunnel/io.go
++++ b/core/tunnel/io.go
+@@ -1813,6 +1813,29 @@
+ 	if len(hints) == 0 {
+ 		return nil, nil
+ 	}
++	validity, ids := cleanupCandidateUIDs(hints)
++	var rows []mailbox.Message
++	err := m.command(ctx, workMaintenance, func() error {
++		var e error
++		rows, e = m.cleanupClient().FetchExact(ctx, folder, validity, ids)
++		return e
++	})
++	if errors.Is(err, mailbox.ErrChanged) {
++		return nil, nil
++	}
++	return rows, err
++}
++
++// Eight normal DATA bodies fit in one discovery turn instead of four. This
++// amortizes SELECT/FETCH/STORE/EXPUNGE overhead before the outbound share fills.
++// It remains below the existing proof-cache bound; physical per-message limits,
++// the 32-UID bound and every observation/deletion proof remain unchanged.
++const cleanupCandidateBytes = 4 << 20
++
++func cleanupCandidateUIDs(hints []mailbox.AppendHint) (uint32, []uint32) {
++	if len(hints) == 0 {
++		return 0, nil
++	}
+ 	validity := hints[0].Validity
+ 	ids := make([]uint32, 0, 32)
+ 	seen := map[uint32]bool{}
+@@ -1823,7 +1846,7 @@
+ 			if size == 0 {
+ 				size = mailbox.MaxMIME
+ 			}
+-			if len(ids) > 0 && candidateBytes+size > 2<<20 {
++			if len(ids) > 0 && candidateBytes+size > cleanupCandidateBytes {
+ 				break
+ 			}
+ 			candidateBytes += size
+@@ -1834,16 +1857,7 @@
+ 			break
+ 		}
+ 	}
+-	var rows []mailbox.Message
+-	err := m.command(ctx, workMaintenance, func() error {
+-		var e error
+-		rows, e = m.cleanupClient().FetchExact(ctx, folder, validity, ids)
+-		return e
+-	})
+-	if errors.Is(err, mailbox.ErrChanged) {
+-		return nil, nil
+-	}
+-	return rows, err
++	return validity, ids
+ }
+ 
+ func extendReaderHot(value *atomic.Int64, until int64) {

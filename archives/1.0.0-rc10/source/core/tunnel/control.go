@@ -26,6 +26,7 @@ const (
 type queuedControl struct {
 	wire.Frame
 	added          time.Time
+	latestAt       time.Time // diagnostic only; newest unsent cumulative payload
 	coalesced      bool
 	quotaCoalesced bool
 	quotaKey       wire.QuotaKey
@@ -183,6 +184,7 @@ func (l *lane) appendControlBatch(batch []queuedControl, f queuedControl, source
 				if f.Type == wire.Status {
 					if merged, ok := wire.MergeProgressFrames(batch[i].Frame, f.Frame); ok {
 						batch[i].Frame = merged
+						batch[i].latestAt = f.latestAt
 						return batch
 					}
 					// Never discard incompatible terminal state.
@@ -433,6 +435,15 @@ func (l *lane) writeControls(frames []queuedControl) error {
 			// when it actually waited long enough to matter for application latency.
 			if (latencyControl(f.Frame) && !(f.Type == wire.Status && f.Offset == 0)) || waited >= 100*time.Millisecond {
 				l.diag.trace(traceEvent{Event: "control_wait", Name: f.Type.String(), Counter: &h.Counter, Stream: f.Stream, DurationUS: waited.Microseconds()})
+				if f.Type == wire.Status {
+					// Keep the age of the *current* coalesced ACK distinct from
+					// the age of its first queue token. Neither time is proof.
+					latest := f.latestAt
+					if latest.IsZero() {
+						latest = f.added
+					}
+					l.diag.trace(traceEvent{Event: "control_latest_wait", Name: "STATUS", Counter: &h.Counter, Stream: f.Stream, DurationUS: max(int64(0), time.Since(latest).Microseconds())})
+				}
 			}
 			body = binary.BigEndian.AppendUint32(body, uint32(len(packet)))
 			body = append(body, packet...)

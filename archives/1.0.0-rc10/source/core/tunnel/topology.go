@@ -359,6 +359,9 @@ func (l *lane) readDataObserved(io *laneMail, folder string, cursor mailbox.Curs
 	d.mu.Lock()
 	d.line.DataFetchPolls++
 	d.line.DataFetchMessages += uint64(rows)
+	d.line.DataFetchCallbackTotalMS += callbackWait.Milliseconds()
+	d.line.DataFetchCallbackMaxMS = max(d.line.DataFetchCallbackMaxMS, callbackWait.Milliseconds())
+	d.line.DataFetchPayloadBytes += int64(bodyBytes)
 	if rows == 0 {
 		d.line.DataEmptyFetchPolls++
 	}

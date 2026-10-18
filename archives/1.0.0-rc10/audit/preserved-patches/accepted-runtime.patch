@@ -1,0 +1,125 @@
+--- a/core/tunnel/lane.go
++++ b/core/tunnel/lane.go
+@@ -1121,6 +1121,7 @@
+ 	l.traceFrame("frame_queued", f, nil)
+ 	f.Payload = append([]byte(nil), f.Payload...)
+ 	queued := queuedControl{Frame: f, added: time.Now()}
++	queued.latestAt = queued.added
+ 	if f.Type == wire.GCStatus {
+ 		return l.enqueueQuotaControl(ctx, queued)
+ 	}
+@@ -2842,6 +2843,19 @@
+ 			}
+ 		}
+ 		if m.Attempt != nil {
++			// ApplyRemote acknowledges delayed registered ordinals even after
++			// proof-based GC removed their rows. Do not resurrect those descriptors
++			// in the BODY cache: their deleted BODY will never arrive to evict them.
++			// Registered/Released are cumulative counters, not a per-ordinal proof;
++			// only the durable live-attempt index can distinguish this case.
++			if _, err := l.data.RemoteAttempt(m.Key, m.Total.Messages); err != nil {
++				if !errors.Is(err, journal.ErrMissing) {
++					return err
++				}
++				delete(l.reports, m.Attempt.Digest)
++				delete(l.pending, m.Attempt.Digest)
++				return nil
++			}
+ 			if l.dataProofQuarantined(m.Attempt.Digest) {
+ 				return nil
+ 			}
+@@ -2853,11 +2867,15 @@
+ 				delete(l.pending, m.Attempt.Digest)
+ 				return l.remoteData(raw, m)
+ 			}
+-			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= 128 {
+-				// Prefer shedding one expired or invalid physical retry cache
+-				// over disconnecting a healthy carrier. Durable debt is retained.
++			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= dataDescriptorCacheLimit {
++				// The remote authenticated register may race ahead of reader BODY
++				// and proof-based GC. A 128-entry cache incorrectly rejected a
++				// valid 129th receipt, killing the carrier during 32-stream
++				// repeated speed tests. Keep bounded headroom across the entire
++				// 192-message physical window and delayed old-session cleanup.
++				// Prefer shedding invalid proofs, never an unverified valid one.
+ 				l.evictOldestBadDataProof()
+-				if len(l.reports) >= 128 {
++				if len(l.reports) >= dataDescriptorCacheLimit {
+ 					return errors.New("DESCRIPTOR_LIMIT")
+ 				}
+ 			}
+@@ -3021,6 +3039,12 @@
+ 	}
+ 	return journal.AttemptRef{}
+ }
++
++// A complete physical lease can contain 192 DATA messages and UsageReports
++// may arrive ahead of their BODY, including old-epoch cleanup. Allow more
++// than two concurrent physical inventories, without an unbounded retry map.
++// Distinct validated reports are NEVER discarded merely to admit a new one.
++const dataDescriptorCacheLimit = 512
+ 
+ // Invalid DATA evidence must not tear down an otherwise healthy IMAP carrier.
+ // A bounded per-lane quarantine only suppresses retries of the same physical
+--- a/core/tunnel/cleanup.go
++++ b/core/tunnel/cleanup.go
+@@ -451,7 +451,12 @@
+ 					}
+ 				}
+ 				if len(wanted) > 0 {
+-					rows, err := finder.FetchCleanupCandidates(l.ctx, folder, wanted)
++					var rows []mailbox.Message
++					err := l.cleanupRead(kind, func() error {
++						var err error
++						rows, err = finder.FetchCleanupCandidates(l.ctx, folder, wanted)
++						return err
++					})
+ 					if err != nil {
+ 						r.err = err
+ 						return
+@@ -481,7 +486,13 @@
+ 			}
+ 		}
+ 		for pages := 0; !drainCached && pages < runtimeCleanupPages; pages++ {
+-			rows, next, err := l.mail.Page(l.ctx, folder, l.outCursor)
++			var rows []mailbox.Message
++			var next mailbox.Cursor
++			err := l.cleanupRead(kind, func() error {
++				var err error
++				rows, next, err = l.mail.Page(l.ctx, folder, l.outCursor)
++				return err
++			})
+ 			if err != nil {
+ 				r.err = err
+ 				return
+@@ -501,6 +512,30 @@
+ 				break
+ 			}
+ 			l.outCursor = next
++			if kind == cleanupLocalData {
++				// Without usable APPENDUID hints, one page can already contain
++				// a useful DATA reclaim batch. Prove/delete it before fetching a
++				// second page of large bodies. Otherwise eligible capacity waits
++				// behind another read exactly when download headroom is scarce.
++				// This only ends discovery: reclaimWithProofs still validates every
++				// BODY, journal binding, UID incarnation and physical deletion.
++				digests := map[[32]byte]bool{}
++				for _, row := range l.outCache {
++					proof := proofs.decode(row.MIME)
++					if proof.err == nil {
++						digests[proof.digest] = true
++					}
++				}
++				ready := 0
++				for _, a := range attempts {
++					if a.Folder == folder && digests[a.Digest] && (eligible[a.Ref] || a.Ordinal == 0 && a.Ref.Grant.Scope.Session != currentSession) {
++						ready++
++					}
++				}
++				if ready >= cachedBatchMinimum {
++					break
++				}
++			}
+ 			if pageRows < 16 {
+ 				break
+ 			}

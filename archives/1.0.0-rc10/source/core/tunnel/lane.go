@@ -1121,6 +1121,7 @@ func (l *lane) sendCarrierControl(ctx context.Context, f wire.Frame) error {
 	l.traceFrame("frame_queued", f, nil)
 	f.Payload = append([]byte(nil), f.Payload...)
 	queued := queuedControl{Frame: f, added: time.Now()}
+	queued.latestAt = queued.added
 	if f.Type == wire.GCStatus {
 		return l.enqueueQuotaControl(ctx, queued)
 	}
@@ -2842,6 +2843,19 @@ func (l *lane) process(f wire.Frame) error {
 			}
 		}
 		if m.Attempt != nil {
+			// ApplyRemote acknowledges delayed registered ordinals even after
+			// proof-based GC removed their rows. Do not resurrect those descriptors
+			// in the BODY cache: their deleted BODY will never arrive to evict them.
+			// Registered/Released are cumulative counters, not a per-ordinal proof;
+			// only the durable live-attempt index can distinguish this case.
+			if _, err := l.data.RemoteAttempt(m.Key, m.Total.Messages); err != nil {
+				if !errors.Is(err, journal.ErrMissing) {
+					return err
+				}
+				delete(l.reports, m.Attempt.Digest)
+				delete(l.pending, m.Attempt.Digest)
+				return nil
+			}
 			if l.dataProofQuarantined(m.Attempt.Digest) {
 				return nil
 			}
@@ -2853,11 +2867,15 @@ func (l *lane) process(f wire.Frame) error {
 				delete(l.pending, m.Attempt.Digest)
 				return l.remoteData(raw, m)
 			}
-			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= 128 {
-				// Prefer shedding one expired or invalid physical retry cache
-				// over disconnecting a healthy carrier. Durable debt is retained.
+			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= dataDescriptorCacheLimit {
+				// The remote authenticated register may race ahead of reader BODY
+				// and proof-based GC. A 128-entry cache incorrectly rejected a
+				// valid 129th receipt, killing the carrier during 32-stream
+				// repeated speed tests. Keep bounded headroom across the entire
+				// 192-message physical window and delayed old-session cleanup.
+				// Prefer shedding invalid proofs, never an unverified valid one.
 				l.evictOldestBadDataProof()
-				if len(l.reports) >= 128 {
+				if len(l.reports) >= dataDescriptorCacheLimit {
 					return errors.New("DESCRIPTOR_LIMIT")
 				}
 			}
@@ -3021,6 +3039,12 @@ func remoteAttemptRef(attempts []journal.Attempt, key wire.QuotaKey, ordinal uin
 	}
 	return journal.AttemptRef{}
 }
+
+// A complete physical lease can contain 192 DATA messages and UsageReports
+// may arrive ahead of their BODY, including old-epoch cleanup. Allow more
+// than two concurrent physical inventories, without an unbounded retry map.
+// Distinct validated reports are NEVER discarded merely to admit a new one.
+const dataDescriptorCacheLimit = 512
 
 // Invalid DATA evidence must not tear down an otherwise healthy IMAP carrier.
 // A bounded per-lane quarantine only suppresses retries of the same physical

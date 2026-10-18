@@ -6,12 +6,12 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10001; versionName = "1.0.0-rc2"
-        buildConfigField("String", "UI_BASELINE", "\"ui-rev12-startup\"")
+        versionCode = 10009; versionName = "1.0.0-rc10"
+        buildConfigField("String", "UI_BASELINE", "\"ui-rc8-contrast\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
     buildTypes {
-        debug { applicationIdSuffix = ".dev.rev7"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
+        debug { versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
         release { isMinifyEnabled = true; resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

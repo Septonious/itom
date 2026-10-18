@@ -292,7 +292,7 @@ def build_binaries(command, work: Path, dist: Path, env: dict, release: str | No
             sha = hashlib.sha256(destination.read_bytes()).hexdigest()
             files.append((name, sha))
             if release:
-                named = (f"ITOM-1.0.0-RC2-{system}-{arch}" if release == "RC2"
+                named = (f"ITOM-1.0.0-{release}-{system}-{arch}" if release in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10")
                          else f"ITOM-0.9.1-Rev10-{system}-{arch}" if release == "Rev10" and build.read_source_info()["version"] == "0.9.1"
                          else f"ITOM-0.9.2-{release}-{system}-{arch}" if release in ("Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev10","Rev11")
                          else f"ITOM_{release}_{system}_{arch}")

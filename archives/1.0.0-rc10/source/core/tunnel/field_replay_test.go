@@ -75,8 +75,18 @@ func TestFieldLegacyGrantPublicationDoesNotStrandThreeAccounts(t *testing.T) {
 	f := newProductionSupervisorFixtureState(t, 10, fieldLegacyState(t))
 	for i := 1; i <= 10; i++ {
 		l := f.waitLane(t, fmt.Sprintf("a%02d", i), 0)
+		// Readiness proves grant publication, not that active DATA workers
+		// must leave both queues nonempty at one particular instant. Require
+		// bounded physical refill, then retain the live TCP echo assertion.
+		deadline := time.Now().Add(5 * time.Second)
+		for (len(l.grants) == 0 || len(l.fastGrants) == 0) && time.Now().Before(deadline) {
+			if err := l.ctx.Err(); err != nil {
+				t.Fatal("carrier lost during grant refill", err)
+			}
+			time.Sleep(25 * time.Millisecond)
+		}
 		if len(l.grants) == 0 || len(l.fastGrants) == 0 {
-			t.Fatalf("%s readiness concealed missing bulk/fast grants", l.account.ID)
+			t.Fatalf("%s refill stalled: bulk=%d fast=%d", l.account.ID, len(l.grants), len(l.fastGrants))
 		}
 		p := f.openOn(t, l.account.ID)
 		if err := supervisorEcho(p, i); err != nil {

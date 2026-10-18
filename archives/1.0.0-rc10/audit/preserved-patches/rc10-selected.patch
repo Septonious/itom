@@ -1,0 +1,962 @@
+--- a/android/app/build.gradle.kts
++++ b/android/app/build.gradle.kts
+@@ -6,12 +6,12 @@
+     defaultConfig {
+         applicationId = "org.itom.client"
+         minSdk = 29; targetSdk = 37
+-        versionCode = 10001; versionName = "1.0.0-rc2"
+-        buildConfigField("String", "UI_BASELINE", "\"ui-rev12-startup\"")
++        versionCode = 10009; versionName = "1.0.0-rc10"
++        buildConfigField("String", "UI_BASELINE", "\"ui-rc8-contrast\"")
+         buildConfigField("int", "CONFIG_SCHEMA", "5")
+     }
+     buildTypes {
+-        debug { applicationIdSuffix = ".dev.rev7"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
++        debug { versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
+         release { isMinifyEnabled = true; resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
+     }
+     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+--- a/android/app/src/main/java/org/itom/client/AdminScreen.kt
++++ b/android/app/src/main/java/org/itom/client/AdminScreen.kt
+@@ -3,6 +3,10 @@
+ import android.os.SystemClock
+ import androidx.activity.compose.rememberLauncherForActivityResult
+ import androidx.activity.result.contract.ActivityResultContracts
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.ui.draw.clip
+ import androidx.compose.foundation.horizontalScroll
+ import androidx.compose.foundation.layout.*
+ import androidx.compose.foundation.lazy.LazyColumn
+@@ -162,10 +166,23 @@
+                 SmallNote(section.description)
+             }
+             Box {
+-                OutlinedButton(onClick = { sectionsOpen = true }) { Text("Sections") }
+-                DropdownMenu(expanded = sectionsOpen, onDismissRequest = { sectionsOpen = false }) {
++                OutlinedButton(onClick = { sectionsOpen = true }, colors = ButtonDefaults.outlinedButtonColors(containerColor = Panel, contentColor = Blue)) { Text("Sections") }
++                DropdownMenu(
++                    expanded = sectionsOpen,
++                    onDismissRequest = { sectionsOpen = false },
++                    modifier = Modifier.background(Panel, RoundedCornerShape(18.dp))
++                        .border(1.dp, Outline.copy(alpha = .6f), RoundedCornerShape(18.dp))
++                ) {
+                     AdminSection.entries.forEach { item ->
+-                        DropdownMenuItem(text = { Text(item.label, color = if (item == section) Blue else Ink) }, leadingIcon = { AppIcon(item.glyph, Modifier.size(20.dp), if (item == section) Blue else Muted) }, onClick = { sectionsOpen = false; section = item; output = ""; live = false })
++                        val selected = item == section
++                        DropdownMenuItem(
++                            text = { Text(item.label, color = if (selected) Blue else Ink) },
++                            leadingIcon = { AppIcon(item.glyph, Modifier.size(20.dp), if (selected) Blue else Muted) },
++                            modifier = Modifier.padding(horizontal = 6.dp).clip(RoundedCornerShape(10.dp))
++                                .background(if (selected) Blue.copy(alpha = .16f) else Panel),
++                            colors = MenuDefaults.itemColors(textColor = Ink, leadingIconColor = Muted),
++                            onClick = { sectionsOpen = false; section = item; output = ""; live = false }
++                        )
+                     }
+                 }
+             }
+@@ -260,7 +277,7 @@
+                                 SmallNote("Saving server diagnostics")
+                                 SmallNote("${(exportProgress.coerceIn(0f, 1f) * 100).toInt()}%", color = Blue)
+                             }
+-                            LinearProgressIndicator(progress = { exportProgress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
++                            ItomProgressBar(exportProgress, modifier = Modifier.fillMaxWidth(), color = Blue)
+                         }
+                     }
+                 }
+--- a/android/app/src/main/java/org/itom/client/Theme.kt
++++ b/android/app/src/main/java/org/itom/client/Theme.kt
+@@ -28,26 +28,26 @@
+ import androidx.compose.ui.unit.sp
+ import org.itom.domain.*
+ 
+-val Blue = Color(0xFF25C9FF)
+-val ActionBlue = Color(0xFF25C9FF)
+-val Green = Color(0xFF37E5B0)
+-val Yellow = Color(0xFFFFCF67)
+-val Red = Color(0xFFFF6685)
+-val Ink = Color(0xFFF3F7FF)
+-val Muted = Color(0xFFB0BED2)
+-val Panel = Color(0xFF101827)
+-val Background = Color(0xFF060A12)
+-val OnAccent = Color(0xFF04121F)
+-val Violet = Color(0xFFB893FF)
+-val Outline = Color(0xFF5A708E)
++val Blue = Color(0xFF42D6FF)
++val ActionBlue = Color(0xFF42D6FF)
++val Green = Color(0xFF4BF3B5)
++val Yellow = Color(0xFFFFCC70)
++val Red = Color(0xFFFF728F)
++val Ink = Color(0xFFF7FAFF)
++val Muted = Color(0xFFB8C7DD)
++val Panel = Color(0xFF0C1425)
++val Background = Color(0xFF03060D)
++val OnAccent = Color(0xFF05101A)
++val Violet = Color(0xFFCD99FF)
++val Outline = Color(0xFF8396B5)
+ 
+ @Composable fun ItomSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+     Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier, enabled = enabled,
+         colors = SwitchDefaults.colors(
+             checkedThumbColor = Color(0xFF05291D), checkedTrackColor = Green, checkedBorderColor = Green,
+-            uncheckedThumbColor = Muted, uncheckedTrackColor = Color(0xFF182337), uncheckedBorderColor = Outline,
++            uncheckedThumbColor = Muted, uncheckedTrackColor = Color(0xFF19263C), uncheckedBorderColor = Outline,
+             disabledCheckedThumbColor = Color(0xFF91C2AC), disabledCheckedTrackColor = Color(0xFF244C3D),
+-            disabledUncheckedThumbColor = Muted.copy(alpha = .4f), disabledUncheckedTrackColor = Color(0xFF101827)))
++            disabledUncheckedThumbColor = Muted.copy(alpha = .4f), disabledUncheckedTrackColor = Color(0xFF0C1425)))
+ }
+ 
+ fun phaseColor(p: Phase) = when (p) { Phase.OFF -> Color(0xFF8193A4); Phase.CONNECTING -> Yellow; Phase.CONNECTED -> Green; Phase.ERROR -> Red }
+@@ -62,12 +62,16 @@
+     MaterialTheme(
+         colorScheme = darkColorScheme(primary = Blue, onPrimary = OnAccent, secondary = Green, onSecondary = OnAccent, tertiary = Violet, onTertiary = OnAccent,
+             background = Background, surface = Panel, onBackground = Ink, onSurface = Ink,
+-            surfaceVariant = Color(0xFF182337), onSurfaceVariant = Muted, outline = Outline,
++            surfaceVariant = Color(0xFF19263C), onSurfaceVariant = Muted, outline = Outline,
+             outlineVariant = Outline.copy(alpha = .6f), error = Red, onError = OnAccent,
+-            primaryContainer = Color(0xFF10324C), onPrimaryContainer = Ink,
+-            secondaryContainer = Color(0xFF153D35), onSecondaryContainer = Ink,
+-            tertiaryContainer = Color(0xFF153D35), onTertiaryContainer = Ink,
+-            inverseSurface = Color(0xFF1B293E), inverseOnSurface = Ink, inversePrimary = Blue),
++            surfaceContainerLowest = Background, surfaceContainerLow = Color(0xFF080F1E),
++            surfaceContainer = Panel, surfaceContainerHigh = Color(0xFF15233A),
++            surfaceContainerHighest = Color(0xFF1E3050), surfaceBright = Color(0xFF213350),
++            surfaceDim = Color(0xFF080F1E), surfaceTint = Blue,
++            primaryContainer = Color(0xFF10324A), onPrimaryContainer = Ink,
++            secondaryContainer = Color(0xFF103B31), onSecondaryContainer = Ink,
++            tertiaryContainer = Color(0xFF342247), onTertiaryContainer = Ink,
++            inverseSurface = Color(0xFF19283F), inverseOnSurface = Ink, inversePrimary = Blue),
+         shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(18.dp), large = RoundedCornerShape(24.dp)),
+         typography = Typography(
+             headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Medium),
+@@ -88,7 +92,7 @@
+ 
+ @Composable fun ItomBackdrop(content: @Composable BoxScope.() -> Unit) {
+     Box(Modifier.fillMaxSize().background(Background).drawBehind {
+-        drawRect(Brush.verticalGradient(listOf(Color(0xFF0B1320), Background)))
++        drawRect(Brush.verticalGradient(listOf(Color(0xFF071024), Background)))
+         val radius = size.maxDimension.coerceAtLeast(1f) * .7f
+         drawCircle(Brush.radialGradient(listOf(Blue.copy(alpha = .045f), Color.Transparent), Offset(size.width, 0f), radius), radius, Offset(size.width, 0f))
+     }, content = content)
+@@ -104,8 +108,8 @@
+ ) {
+     val shape = RoundedCornerShape(22.dp)
+     Column(modifier.clip(shape)
+-        .background(Brush.linearGradient(listOf(accent?.copy(alpha = .12f) ?: Color(0xFF131E30), Color(0xFF0D1421))))
+-        .border(1.dp, Brush.linearGradient(listOf(accent?.copy(alpha = .48f) ?: Color(0xFF3B4D67), Outline.copy(alpha = .55f))), shape)
++        .background(Brush.linearGradient(listOf(accent?.copy(alpha = .12f) ?: Color(0xFF111E33), Color(0xFF090F20))))
++        .border(1.dp, Brush.linearGradient(listOf(accent?.copy(alpha = .48f) ?: Color(0xFF395476), Outline.copy(alpha = .55f))), shape)
+         .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+         .padding(contentPadding), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+ }
+--- a/android/app/src/main/java/org/itom/client/UiComponents.kt
++++ b/android/app/src/main/java/org/itom/client/UiComponents.kt
+@@ -113,6 +113,17 @@
+     }
+ }
+ 
++/** Single-track, gapless determinate bar. No stop-marker, detached end cap or gap. */
++@Composable fun ItomProgressBar(progress: Float, modifier: Modifier = Modifier, color: Color = Blue) {
++    val value = if (progress.isFinite()) progress.coerceIn(0f, 1f) else 0f
++    val shape = RoundedCornerShape(6.dp)
++    Box(modifier.height(8.dp).clip(shape).background(Color(0xFF24334B))) {
++        if (value > 0f) {
++            Box(Modifier.fillMaxWidth(value).fillMaxHeight().background(color, shape))
++        }
++    }
++}
++
+ @Composable fun NavigationRow(glyph: Glyph, title: String, subtitle: String, onClick: () -> Unit) {
+     InfoCard(Modifier.fillMaxWidth(), onClick = onClick) {
+         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+--- a/core/cmd/itom/main.go
++++ b/core/cmd/itom/main.go
+@@ -17,7 +17,7 @@
+ 	"runtime"
+ )
+ 
+-const revision = "itom-1-0-0-rc2"
++const revision = "itom-1-0-0-rc10"
+ 
+ func run(args []string) error {
+ 	command := "menu"
+--- a/core/mailbox/idle_ahead_test.go
++++ b/core/mailbox/idle_ahead_test.go
+@@ -201,7 +201,10 @@
+ 	cfg, tc := testServerWithSession(t, "tls", true, func(s imapserver.Session) imapserver.Session {
+ 		return &idleCompletionBarrier{s, entered, doneSeen, release}
+ 	})
+-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
++	// The receive no-progress watchdog intentionally requires at least eight
++	// seconds. The old four-second parent deadline raced the guard instead
++	// of exercising its bounded interruption and join.
++	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+ 	defer cancel()
+ 	c, err := dial(ctx, cfg, []string{"done-stall"}, tc)
+ 	if err != nil {
+@@ -245,7 +248,7 @@
+ 	case <-ctx.Done():
+ 		t.Fatal("DONE not joined")
+ 	}
+-	if time.Since(begin) > 2*time.Second || c.Ready() {
++	if time.Since(begin) > 11*time.Second || c.Ready() {
+ 		t.Fatal("stalled receive still live", time.Since(begin))
+ 	}
+ 	if _, err = c.Tail(ctx, "done-stall"); err == nil {
+--- a/core/manager/trace.go
++++ b/core/manager/trace.go
+@@ -90,7 +90,7 @@
+ 	if e != nil {
+ 		return e
+ 	}
+-	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-0-0-rc2", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
++	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-0-0-rc10", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
+ 		return e
+ 	}
+ 	for _, s := range sources {
+--- a/core/tunnel/cleanup.go
++++ b/core/tunnel/cleanup.go
+@@ -501,6 +501,30 @@
+ 				break
+ 			}
+ 			l.outCursor = next
++			if kind == cleanupLocalData {
++				// Without usable APPENDUID hints, one page can already contain
++				// a useful DATA reclaim batch. Prove/delete it before fetching a
++				// second page of large bodies. Otherwise eligible capacity waits
++				// behind another read exactly when download headroom is scarce.
++				// This only ends discovery: reclaimWithProofs still validates every
++				// BODY, journal binding, UID incarnation and physical deletion.
++				digests := map[[32]byte]bool{}
++				for _, row := range l.outCache {
++					proof := proofs.decode(row.MIME)
++					if proof.err == nil {
++						digests[proof.digest] = true
++					}
++				}
++				ready := 0
++				for _, a := range attempts {
++					if a.Folder == folder && digests[a.Digest] && (eligible[a.Ref] || a.Ordinal == 0 && a.Ref.Grant.Scope.Session != currentSession) {
++						ready++
++					}
++				}
++				if ready >= cachedBatchMinimum {
++					break
++				}
++			}
+ 			if pageRows < 16 {
+ 				break
+ 			}
+--- a/core/tunnel/control.go
++++ b/core/tunnel/control.go
+@@ -26,6 +26,7 @@
+ type queuedControl struct {
+ 	wire.Frame
+ 	added          time.Time
++	latestAt       time.Time // diagnostic only; newest unsent cumulative payload
+ 	coalesced      bool
+ 	quotaCoalesced bool
+ 	quotaKey       wire.QuotaKey
+@@ -183,6 +184,7 @@
+ 				if f.Type == wire.Status {
+ 					if merged, ok := wire.MergeProgressFrames(batch[i].Frame, f.Frame); ok {
+ 						batch[i].Frame = merged
++						batch[i].latestAt = f.latestAt
+ 						return batch
+ 					}
+ 					// Never discard incompatible terminal state.
+@@ -433,6 +435,15 @@
+ 			// when it actually waited long enough to matter for application latency.
+ 			if (latencyControl(f.Frame) && !(f.Type == wire.Status && f.Offset == 0)) || waited >= 100*time.Millisecond {
+ 				l.diag.trace(traceEvent{Event: "control_wait", Name: f.Type.String(), Counter: &h.Counter, Stream: f.Stream, DurationUS: waited.Microseconds()})
++				if f.Type == wire.Status {
++					// Keep the age of the *current* coalesced ACK distinct from
++					// the age of its first queue token. Neither time is proof.
++					latest := f.latestAt
++					if latest.IsZero() {
++						latest = f.added
++					}
++					l.diag.trace(traceEvent{Event: "control_latest_wait", Name: "STATUS", Counter: &h.Counter, Stream: f.Stream, DurationUS: max(int64(0), time.Since(latest).Microseconds())})
++				}
+ 			}
+ 			body = binary.BigEndian.AppendUint32(body, uint32(len(packet)))
+ 			body = append(body, packet...)
+--- a/core/tunnel/delivery_control.go
++++ b/core/tunnel/delivery_control.go
+@@ -94,6 +94,8 @@
+ 	bulkDemandAt                        time.Time
+ 	fastPressureUntil                   time.Time
+ 	lastFastACKAgeMS                    int64
++	lastBulkACKAgeMS                    int64
++	lastBulkACKAt                       time.Time
+ 	lastFastACKAt                       time.Time
+ 	policy                              deliveryPolicy
+ 	fastPressureDecisions               uint64
+@@ -261,6 +263,11 @@
+ 					}
+ 				}
+ 			} else if !r.repaired {
++				// Observation only: confirmed original publication to authenticated ACK.
++				if !r.accepted.IsZero() && r.flightAtAdmission > 0 {
++					d.lastBulkACKAgeMS = max(int64(0), now.Sub(r.accepted).Milliseconds())
++					d.lastBulkACKAt = now
++				}
+ 				d.ages[d.ageNext] = residence
+ 				// Sample only a newly charged original at low aggregate flight.
+ 				// Repair ACKs and stalled full-window traffic cannot raise the floor.
+@@ -935,6 +942,7 @@
+ 	OldestBulkRangeAgeMS                                                                       int64
+ 	AcknowledgementFloorMS                                                                     int64
+ 	LastFastACKAgeMS, FastPressureRemainingMS, FastPathBaselineMS, FastTargetMS                int64
++	LastBulkACKAgeMS, LastBulkACKSinceMS                                                       int64
+ 	FastPressureDecisions                                                                      uint64
+ 	ProbeAttempts, ProbeAccepted, ProbeRejected                                                uint64
+ 	RecoveryAttempts, RecoveryAccepted, RecoveryRejected, FastRampIncreases, FastRampRollbacks uint64
+@@ -966,7 +974,12 @@
+ 		short[account] = count
+ 	}
+ 	d.init()
++	bulkSince := int64(-1)
++	if !d.lastBulkACKAt.IsZero() {
++		bulkSince = max(int64(0), time.Since(d.lastBulkACKAt).Milliseconds())
++	}
+ 	return latencyGovernorSnapshot{Mode: string(d.policy.mode), BaselineMS: d.baselineMS, TargetMS: d.targetAge().Milliseconds(),
++		LastBulkACKAgeMS: d.lastBulkACKAgeMS, LastBulkACKSinceMS: bulkSince,
+ 		AcknowledgementFloorMS: d.acknowledgementFloor().Milliseconds(), LastFastACKAgeMS: d.lastFastACKAgeMS,
+ 		FastPathBaselineMS: d.fastPathBaseline().Milliseconds(), FastTargetMS: d.fastAgeBudget().Milliseconds(), PendingShortRangesByAccount: short,
+ 		FastPressureRemainingMS: max(int64(0), time.Until(d.fastPressureUntil).Milliseconds()), FastPressureDecisions: d.fastPressureDecisions,
+--- a/core/tunnel/diagnostics.go
++++ b/core/tunnel/diagnostics.go
+@@ -31,7 +31,7 @@
+ 	ReaderRepairs                                          uint64
+ 	DataFetchPolls, DataEmptyFetchPolls, DataFetchMessages uint64
+ 	DataIdleWaits, DataIdleNotifies                        uint64
+-	DataReceiveLatencyMillis                               int64
++	DataReceiveLatencyMillis, DataFetchCallbackTotalMS, DataFetchCallbackMaxMS, DataFetchPayloadBytes int64
+ 	DataLimitBytes, DataLimitMessages                      uint64
+ 	BulkBatchTargetBytes                                   uint64
+ 	GrantWaitReason                                        string
+@@ -44,7 +44,7 @@
+ 
+ 	ReaderHandoffs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           int64
+ 	LatencyGovernor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          latencyGovernorSnapshot
+-	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         int
++	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, CachedDataDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         int
+ 	IOConnections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            int
+ 	ReaderIdle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               bool
+ 	LastOrigin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               string
+@@ -177,6 +177,9 @@
+ 	d.line.AvailableGrants = len(l.grants)
+ 	d.line.IssuedGrants = len(l.issued)
+ 	d.line.PendingDescriptors = len(l.pending)
++	// A descriptor cache can grow while its validated DATA BODY waits for
++	// visibility/GC; make this distinct from pending BODY-without-descriptor.
++	d.line.CachedDataDescriptors = len(l.reports)
+ 	d.line.RemoteGC = len(l.remoteGC)
+ 	d.line.Obsolete = obsolete
+ 	d.line.Known = len(l.known)
+--- a/core/tunnel/field_replay_test.go
++++ b/core/tunnel/field_replay_test.go
+@@ -75,8 +75,18 @@
+ 	f := newProductionSupervisorFixtureState(t, 10, fieldLegacyState(t))
+ 	for i := 1; i <= 10; i++ {
+ 		l := f.waitLane(t, fmt.Sprintf("a%02d", i), 0)
++		// Readiness proves grant publication, not that active DATA workers
++		// must leave both queues nonempty at one particular instant. Require
++		// bounded physical refill, then retain the live TCP echo assertion.
++		deadline := time.Now().Add(5 * time.Second)
++		for (len(l.grants) == 0 || len(l.fastGrants) == 0) && time.Now().Before(deadline) {
++			if err := l.ctx.Err(); err != nil {
++				t.Fatal("carrier lost during grant refill", err)
++			}
++			time.Sleep(25 * time.Millisecond)
++		}
+ 		if len(l.grants) == 0 || len(l.fastGrants) == 0 {
+-			t.Fatalf("%s readiness concealed missing bulk/fast grants", l.account.ID)
++			t.Fatalf("%s refill stalled: bulk=%d fast=%d", l.account.ID, len(l.grants), len(l.fastGrants))
+ 		}
+ 		p := f.openOn(t, l.account.ID)
+ 		if err := supervisorEcho(p, i); err != nil {
+--- a/core/tunnel/flow_control.go
++++ b/core/tunnel/flow_control.go
+@@ -38,6 +38,9 @@
+ 				return nil
+ 			}
+ 			item.added = previous.added
++			// Only the queue's original birth time is preserved. The
++			// newest merged ACK payload was just observed.
++			item.latestAt = time.Now()
+ 			l.flowControlLatest[key] = item
+ 			l.flowControlMu.Unlock()
+ 			return nil
+--- a/core/tunnel/lane.go
++++ b/core/tunnel/lane.go
+@@ -1121,6 +1121,7 @@
+ 	l.traceFrame("frame_queued", f, nil)
+ 	f.Payload = append([]byte(nil), f.Payload...)
+ 	queued := queuedControl{Frame: f, added: time.Now()}
++	queued.latestAt = queued.added
+ 	if f.Type == wire.GCStatus {
+ 		return l.enqueueQuotaControl(ctx, queued)
+ 	}
+@@ -2842,6 +2843,19 @@
+ 			}
+ 		}
+ 		if m.Attempt != nil {
++			// ApplyRemote acknowledges delayed registered ordinals even after
++			// proof-based GC removed their rows. Do not resurrect those descriptors
++			// in the BODY cache: their deleted BODY will never arrive to evict them.
++			// Registered/Released are cumulative counters, not a per-ordinal proof;
++			// only the durable live-attempt index can distinguish this case.
++			if _, err := l.data.RemoteAttempt(m.Key, m.Total.Messages); err != nil {
++				if !errors.Is(err, journal.ErrMissing) {
++					return err
++				}
++				delete(l.reports, m.Attempt.Digest)
++				delete(l.pending, m.Attempt.Digest)
++				return nil
++			}
+ 			if l.dataProofQuarantined(m.Attempt.Digest) {
+ 				return nil
+ 			}
+@@ -2853,11 +2867,15 @@
+ 				delete(l.pending, m.Attempt.Digest)
+ 				return l.remoteData(raw, m)
+ 			}
+-			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= 128 {
+-				// Prefer shedding one expired or invalid physical retry cache
+-				// over disconnecting a healthy carrier. Durable debt is retained.
++			if _, exists := l.reports[m.Attempt.Digest]; !exists && len(l.reports) >= dataDescriptorCacheLimit {
++				// The remote authenticated register may race ahead of reader BODY
++				// and proof-based GC. A 128-entry cache incorrectly rejected a
++				// valid 129th receipt, killing the carrier during 32-stream
++				// repeated speed tests. Keep bounded headroom across the entire
++				// 192-message physical window and delayed old-session cleanup.
++				// Prefer shedding invalid proofs, never an unverified valid one.
+ 				l.evictOldestBadDataProof()
+-				if len(l.reports) >= 128 {
++				if len(l.reports) >= dataDescriptorCacheLimit {
+ 					return errors.New("DESCRIPTOR_LIMIT")
+ 				}
+ 			}
+@@ -3021,6 +3039,12 @@
+ 	}
+ 	return journal.AttemptRef{}
+ }
++
++// A complete physical lease can contain 192 DATA messages and UsageReports
++// may arrive ahead of their BODY, including old-epoch cleanup. Allow more
++// than two concurrent physical inventories, without an unbounded retry map.
++// Distinct validated reports are NEVER discarded merely to admit a new one.
++const dataDescriptorCacheLimit = 512
+ 
+ // Invalid DATA evidence must not tear down an otherwise healthy IMAP carrier.
+ // A bounded per-lane quarantine only suppresses retries of the same physical
+--- a/core/tunnel/supervised_load_test.go
++++ b/core/tunnel/supervised_load_test.go
+@@ -4,11 +4,14 @@
+ 	"context"
+ 	"encoding/json"
+ 	"fmt"
++	"itom.local/core/journal"
+ 	"itom.local/core/servercfg"
+ 	"itom.local/core/wire"
+ 	"net"
+ 	"os"
++	"path/filepath"
+ 	"sort"
++	"strings"
+ 	"sync"
+ 	"sync/atomic"
+ 	"testing"
+@@ -19,6 +22,12 @@
+ // These are not validated against the field provider and cannot qualify a release.
+ // Half outages include stream owners; the same application sockets and verified
+ // byte generators remain active across outage, warmup and measurement phases.
++// Strictly test-fixture-only choice. No live transport config is touched.
++func initialProviderProfileMbps(steps []providerCapStep, fallback float64, early bool) float64 {
++	if early && len(steps) > 0 { return steps[0].Mbps }
++	return fallback
++}
++
+ func testSupervisedProductionLoad(t *testing.T) {
+ 	t.Log("synthetic_measurement=true field_qualified=false")
+ 	if raceInstrumented {
+@@ -62,11 +71,32 @@
+ 	if os.Getenv("ITOM_LOAD_RETAINED_STATE") == "1" {
+ 		retained = rev4RetainedState(t)
+ 	}
++	// Test-only, existing allowlisted 16 MiB server journal; no production
++	// default, profile migration, APPEND evidence, or client wallet changes.
++	if os.Getenv("ITOM_EXPERIMENT_SERVER_PROFILE") == "16" {
++		if retained != nil {
++			t.Fatal("cannot combine with retained-state qualification")
++		}
++		retained = func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
++			for _, account := range cfg.Accounts {
++				dir := filepath.Join(serverDir, account.ID, u.ID)
++				if err := os.MkdirAll(dir, 0700); err != nil { t.Fatal(err) }
++				store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(account, u, dataProfile16), time.Second)
++				if err != nil { t.Fatal(err) }
++				if err = store.Close(); err != nil { t.Fatal(err) }
++			}
++		}
++	}
+ 	f := newProductionSupervisorFixtureState(t, n, retained)
+ 	logical, generation := f.client.logicalSession, f.client.generation
+ 	target := newProductionLoadTarget(t, fmt.Sprintf("%x/supervised", logical))
+-	f.network.setMbps(loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
+ 	profiles := parseProviderProfile(t, os.Getenv("ITOM_LOAD_PROVIDER_PROFILE"), loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
++	// True low-to-high speedup starts at the first profile cap BEFORE OPEN.
++	// The old 150->10Mbps immediate downgrade is a separate failure mode.
++	profileEarly := os.Getenv("ITOM_LOAD_PROVIDER_PROFILE_EARLY") == "1"
++	providerStart := initialProviderProfileMbps(profiles, loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0), profileEarly)
++	f.network.setMbps(providerStart)
++	t.Logf("supervised_provider_initial mbps=%.3f early_profile=%t", providerStart, profileEarly)
+ 	mobile := os.Getenv("ITOM_LOAD_MOBILE") == "1"
+ 	mobileCap := loadEnvFloat(t, "ITOM_LOAD_MOBILE_MBPS", 600)
+ 	var baseline time.Duration
+@@ -251,8 +281,10 @@
+ 			profileWG.Add(1)
+ 			go func() {
+ 				defer profileWG.Done()
+-				for _, step := range profiles {
+-					f.network.setMbps(step.Mbps)
++				for i, step := range profiles {
++					if !profileEarly || i > 0 {
++						f.network.setMbps(step.Mbps)
++					}
+ 					t.Logf("supervised_cap mbps=%.3f", step.Mbps)
+ 					if step.Duration <= 0 {
+ 						return
+@@ -270,7 +302,35 @@
+ 		// preceding full cadence. Keep every probe and the complete byte clock.
+ 		t.Logf("supervised_round_schedule round=%d cadence_ms=%d phase_ms=%d deadline_ms=%d expected=%d survival=%t bandwidth_clock_ms=1000", round+1, roundCadence.Milliseconds(), (roundCadence / 2).Milliseconds(), roundDeadline.Milliseconds(), roundExpected, false)
+ 		carriers := snapshotLoadCarriers(t, f, n, working)
+-		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, t.Logf)
++		// Bounded test-only five-second duplex samples. Observe the actual
++		// production load clock; no extra polling, socket, ACK or journal work.
++		traceDuplex := os.Getenv("ITOM_LOAD_DUPLEX_TIMELINE") == "1"
++		measureLog := func(format string, args ...any) {
++			t.Logf(format, args...)
++			if !traceDuplex || len(args) != 1 || format != "%s" {
++				return
++			}
++			event, ok := args[0].(string)
++			if !ok || !strings.HasPrefix(event, "production_window5 ") {
++				return
++			}
++			f.client.mu.Lock()
++			client := f.client.stripe
++			f.client.mu.Unlock()
++			f.mu.Lock()
++			var server *stripeGroup
++			for _, carrier := range f.serverLanes {
++				server = carrier.stripe
++				break
++			}
++			f.mu.Unlock()
++			if client == nil || server == nil {
++				return
++			}
++			c, ss := client.deliverySnapshot(), server.deliverySnapshot()
++			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f client_bulk_ack_age_ms=%d client_bulk_ack_since_ms=%d server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f server_bulk_ack_age_ms=%d server_bulk_ack_since_ms=%d", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, c.LastBulkACKAgeMS, c.LastBulkACKSinceMS, ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps, ss.LastBulkACKAgeMS, ss.LastBulkACKSinceMS)
++		}
++		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, measureLog)
+ 		cancelProfile()
+ 		profileWG.Wait()
+ 		rtts, overlap, timeouts, missed := productionSampleSummary(result.Samples, 0)
+@@ -289,6 +349,15 @@
+ 			}
+ 			t.Logf("supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=%d mean_ms=%.3f p95_ms=%.3f max_ms=%.3f target_ms=100 field_qualified=false", len(changes), float64(total)/float64(len(changes))/float64(time.Millisecond), float64(productionPercentile(changes, .95))/float64(time.Millisecond), float64(productionPercentile(changes, 1))/float64(time.Millisecond))
+ 		}
++		// Test-only provider-wide session budget: a heavy sender must not
++		// monopolize account LOGIN slots needed by the opposite endpoint.
++		f.network.mu.Lock()
++		providerPeak, providerCurrent := map[string]int{}, map[string]int{}
++		for id, n := range f.network.sessionPeak { providerPeak[id] = n }
++		for id, n := range f.network.sessions { providerCurrent[id] = n }
++		providerDenied := f.network.sessionDenied
++		f.network.mu.Unlock()
++		t.Logf("rc5_provider_sessions peak=%v current=%v denied=%d cap=%d", providerPeak, providerCurrent, providerDenied, f.network.sessionLimit)
+ 		// Snapshot actual shared delivery state only after the timed interval.
+ 		f.client.mu.Lock()
+ 		clientGroup := f.client.stripe
+@@ -314,11 +383,25 @@
+ 			for _, carrier := range live {
+ 				carrier.serviceMu.Lock()
+ 				ns, bytes, samples := carrier.serviceNS, carrier.serviceBytes, carrier.serviceSamples
++				peerSamples, peerTarget := carrier.peerReadSamples, carrier.peerReadBatchTarget
++				peerSlow, peerFast := carrier.peerReadSlowCount, carrier.peerReadFastCount
++				peerLast := carrier.peerReadAt
+ 				carrier.serviceMu.Unlock()
++				peerAgeMS := int64(-1)
++				if !peerLast.IsZero() {
++					peerAgeMS = time.Since(peerLast).Milliseconds()
++				}
++				if carrier.side {
++					local, remote, err := carrier.data.HeldByOrigin(carrier.account.ID, carrier.user.ID)
++					t.Logf("supervised_physical account=%s server=%t peer_samples=%d peer_target=%d peer_slow=%d peer_fast=%d peer_age_ms=%d pending_bodies=%d active=%d held_local_bytes=%d held_local_messages=%d held_remote_bytes=%d held_remote_messages=%d hold_err=%v", carrier.account.ID, carrier.side, peerSamples, peerTarget, peerSlow, peerFast, peerAgeMS, carrier.peerReadPendingBodies.Load(), carrier.physicalActive.Load(), local.Bytes, local.Messages, remote.Bytes, remote.Messages, err)
++				}
+ 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
++				t.Logf("rc5_endpoint_sessions server=%t account=%s physical_data_parallelism=%d physical_slots=%d", carrier.side, carrier.account.ID, dataParallelism(carrier.mail), len(carrier.physicalSlots))
+ 				if carrier.diag != nil {
+ 					d := carrier.diag.snapshot()
+ 					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
++					// Development-only aggregate: do not trace plaintext, credentials or keys.
++					t.Logf("rc5_duplex_feedback server=%t account=%s control_wait_ms=%d max_control_wait_ms=%d control_appends=%d control_bytes=%d sent_window=%d received_window=%d sent_receipt=%d received_receipt=%d remote_grant_wait_ms=%d remote_grant_max_ms=%d data_fetch_bytes=%d data_fetch_callback_max_ms=%d remote_cleanup_runs=%d local_cleanup_runs=%d", carrier.side, carrier.account.ID, d.ControlWaitMS, d.MaxControlWaitMS, d.ControlAppendCount, d.ControlAppendBytes, d.WindowSent, d.WindowReceived, d.ReceiptSent, d.ReceiptReceived, d.RemoteGrantWaitMS, d.MaxRemoteGrantWaitMS, d.DataFetchPayloadBytes, d.DataFetchCallbackMaxMS, d.CleanupRemoteRuns, d.CleanupLocalDataRuns)
+ 				}
+ 			}
+ 		}
+@@ -377,7 +460,7 @@
+ 			accepted = strictSpeedGate(qualifiedMbps, minimumMbps) && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+ 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
+ 				tier = TransportRevision + "-stability-throughput-floor-waived"
+-				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
++				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < rc6StabilityRTTLimit && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+ 				if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
+ 					accepted = false
+ 					t.Error(err)
+@@ -395,6 +478,30 @@
+ 				accepted = false
+ 				t.Error(err)
+ 			}
++		}
++		// RC8 hard release gate: never inherit RC6's throughput-floor waiver.
++		// Runs under a 150+ Mbps unconstrained provider; a deliberately 10/20
++		// Mbps profile uses a separate connection/RTT test (not a speed claim).
++		if os.Getenv("ITOM_RC8_RELEASE_GATE") == "1" {
++			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
++				t.Fatal("RC8 release qualification forbids the old throughput-floor waiver")
++			}
++			minimum := loadEnvFloat(t, "ITOM_LOAD_MIN_MBPS", 75)
++			if minimum < rc8MinimumDuplexMbps {
++				t.Fatalf("RC8 refuses throughput floor below 75/75: %.3f", minimum)
++			}
++			tier = "rc8-75-75mbps-max750ms-hard-release"
++			accepted = rc8ReleasePerformanceGate(up, down, qualifiedMbps, maxRTTDuration, minimum) &&
++				len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
++			if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
++				accepted = false
++				t.Error(err)
++			}
++			if err := speedtestRTTQualification(rtts, timeouts, missed, overlap); err != nil {
++				accepted = false
++				t.Error(err)
++			}
++			t.Logf("rc8_hard_gate upload_mbps=%.3f download_mbps=%.3f verified_tail_mbps=%.3f rtt_ms=%.3f accepted=%t", up, down, qualifiedMbps, float64(maxRTTDuration)/float64(time.Millisecond), accepted)
+ 		}
+ 		t.Logf("supervised_acceptance round=%d tier=%s minimum_verified_mbps=%.6f max_rtt_ns=%d accepted=%t field_qualified=false", round+1, tier, qualifiedMbps, maxRTTDuration.Nanoseconds(), accepted)
+ 		target.mu.Lock()
+@@ -598,9 +705,27 @@
+ 		raw, _ := json.Marshal(data)
+ 		t.Logf("supervised_debt index=%d lanes=%s", index, raw)
+ 		for _, l := range lanes {
++			// Diagnostic only: distinguish a saturated physical DATA receiver
++			// from queued account admission. Read each gate atomically under its
++			// own mutex; never hold it during logging or transport I/O.
++			if m := physicalMail(l.mail); m != nil && m.dialGate != nil {
++				b := &m.dialGate.work
++				b.mu.Lock()
++				var queued [workClassCount]int
++				for i := range queued {
++					queued[i] = len(b.queues[i])
++				}
++				busy, service := b.busy, b.service
++				b.mu.Unlock()
++				t.Logf("supervised_account_work index=%d account=%s server=%t queued=%v busy=%v service_ns=%v", index, l.account.ID, l.side, queued, busy, service)
++			}
+ 			if l.diag == nil {
+ 				continue
+ 			}
++			l.diag.mu.Lock()
++			diagRead := l.diag.line
++			l.diag.mu.Unlock()
++			t.Logf("rc5_receive_service index=%d account=%s server=%t polls=%d empty=%d bodies=%d latency_ms=%d callback_total_ms=%d callback_max_ms=%d physical_bytes=%d", index, l.account.ID, l.side, diagRead.DataFetchPolls, diagRead.DataEmptyFetchPolls, diagRead.DataFetchMessages, diagRead.DataReceiveLatencyMillis, diagRead.DataFetchCallbackTotalMS, diagRead.DataFetchCallbackMaxMS, diagRead.DataFetchPayloadBytes)
+ 			d := l.diag.snapshot()
+ 			if l.stripe != nil {
+ 				rawGovernor, _ := json.Marshal(l.stripe.deliverySnapshot())
+--- a/core/tunnel/topology.go
++++ b/core/tunnel/topology.go
+@@ -359,6 +359,9 @@
+ 	d.mu.Lock()
+ 	d.line.DataFetchPolls++
+ 	d.line.DataFetchMessages += uint64(rows)
++	d.line.DataFetchCallbackTotalMS += callbackWait.Milliseconds()
++	d.line.DataFetchCallbackMaxMS = max(d.line.DataFetchCallbackMaxMS, callbackWait.Milliseconds())
++	d.line.DataFetchPayloadBytes += int64(bodyBytes)
+ 	if rows == 0 {
+ 		d.line.DataEmptyFetchPolls++
+ 	}
+--- a/core/tunnel/version.go
++++ b/core/tunnel/version.go
+@@ -1,4 +1,4 @@
+ package tunnel
+ 
+ // TransportRevision identifies the native runtime, not only the APK manifest.
+-const TransportRevision = "itom-1-0-0-rc2"
++const TransportRevision = "itom-1-0-0-rc10"
+--- a/source-info.json
++++ b/source-info.json
+@@ -1,11 +1,11 @@
+ {
+   "version": "1.0.0",
+-  "release": "RC2",
+-  "revision": "itom-1-0-0-rc2",
+-  "archive_name": "ITOM-1.0.0-RC2-sources.zip",
+-  "baseline": "1.0.0 RC1",
+-  "qualification": "1.0.0 stabilization candidate; no stable/live-provider certification until final gates pass",
+-  "android_version_name": "1.0.0-rc2",
+-  "android_version_code": 10001,
+-  "android_application_id": "org.itom.client.dev.rev7"
++  "release": "RC10",
++  "revision": "itom-1-0-0-rc10",
++  "archive_name": "ITOM-1.0.0-RC10-sources.zip",
++  "baseline": "1.0.0 RC2 (tagged exact source)",
++  "qualification": "NOT QUALIFIED: RC2 baseline plus independently reviewed fixes; unchanged RC8/RC9 gates required",
++  "android_version_name": "1.0.0-rc10",
++  "android_version_code": 10009,
++  "android_application_id": "org.itom.client"
+ }
+--- a/tools/archive_main.py
++++ b/tools/archive_main.py
+@@ -28,7 +28,7 @@
+         report = json.loads((internal / "build-report.json").read_text(encoding="utf-8"))
+         if report.get("status") != "passed" or report.get("source_revision") != info["revision"]:
+             raise RuntimeError("Android build was not verified; no APK published")
+-        name = f"ITOM-{info['version']}-{release}-debug.apk" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2") else f"ITOM_{release}_debug.apk"
++        name = f"ITOM-{info['version']}-{release}-debug.apk" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10") else f"ITOM_{release}_debug.apk"
+         apk = internal / name
+         checksum = internal / (name + ".sha256")
+         if not apk.is_file() or not checksum.is_file() or apk.is_symlink():
+@@ -49,7 +49,7 @@
+                 raise RuntimeError("Invalid server SHA256SUMS")
+             checks[name] = digest
+         for arch in ("amd64", "arm64"):
+-            name = f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2") else f"ITOM_{release}_linux_{arch}"
++            name = f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10") else f"ITOM_{release}_linux_{arch}"
+             binary = internal / name
+             if (not binary.is_file() or binary.is_symlink() or binary.stat().st_size == 0
+                     or checks.get(name) != hashlib.sha256(binary.read_bytes()).hexdigest()):
+--- a/tools/build.py
++++ b/tools/build.py
+@@ -45,13 +45,13 @@
+         fail("Invalid source version or revision")
+     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
+         fail("Invalid source archive name")
+-    if info.get("release") == "RC2":
+-        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-rc2"
+-                or info["archive_name"] != "ITOM-1.0.0-RC2-sources.zip"
+-                or info.get("android_version_name") != "1.0.0-rc2"
+-                or info.get("android_version_code") != 10001
+-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
+-            fail("Inconsistent ITOM 1.0.0 RC2 identity")
++    if info.get("release") in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10"):
++        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-" + info["release"].lower()
++                or info["archive_name"] != f"ITOM-1.0.0-{info['release']}-sources.zip"
++                or info.get("android_version_name") != "1.0.0-" + info["release"].lower()
++                or info.get("android_version_code") != {"RC2":10001,"RC5":10004,"RC6":10005,"RC7":10006,"RC8":10007,"RC9":10008,"RC10":10009}[info["release"]]
++                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10") else "org.itom.client.dev.rev7")):
++            fail("Inconsistent ITOM 1.0.0 release identity")
+         return info
+     if info["version"] == "0.9.2" and info.get("release") in ("Rev1", "Rev2", "Rev3", "Rev4", "Rev5", "Rev6", "Rev7", "Rev8", "Rev9", "Rev10", "Rev11"):
+         release = info["release"]
+@@ -60,7 +60,7 @@
+                 or info["archive_name"] != f"ITOM-0.9.2-{release}-sources.zip"
+                 or info.get("android_version_name") != f"0.9.2-{release}"
+                 or info.get("android_version_code") != 9200 + number
+-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
++                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10") else "org.itom.client.dev.rev7")):
+             fail(f"Inconsistent ITOM-0.9.2-{release} release identity")
+         return info
+     if info.get("release") == "Rev10":
+@@ -68,7 +68,7 @@
+                 or info["archive_name"] != "ITOM-0.9.1-Rev10-sources.zip"
+                 or info.get("android_version_name") != "0.9.1-Rev10"
+                 or info.get("android_version_code") != 9089
+-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
++                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10") else "org.itom.client.dev.rev7")):
+             fail("Inconsistent ITOM-0.9.1-Rev10 release identity")
+         return info
+     if not re.fullmatch(r"FIELD[1-9][0-9]*", info.get("release", "")):
+@@ -82,13 +82,13 @@
+ 
+ 
+ def android_identity(info):
+-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2"):
++    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10"):
+         return info["android_version_name"], info["android_version_code"]
+     return f"{info['version']}-field{info['release'][5:]}", 9000 + int(info["release"][5:])
+ 
+ 
+ def public_apk_name(info):
+-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2"):
++    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10"):
+         return f"ITOM-{info['version']}-{info['release']}-debug.apk"
+     return f"ITOM_{info['release']}_debug.apk"
+ 
+@@ -102,12 +102,12 @@
+     metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+     expected_name, expected_code = android_identity(info)
+     expected_name += "-debug"
+-    if (metadata.get("applicationId") != "org.itom.client.dev.rev7" or
++    if (metadata.get("applicationId") != info["android_application_id"] or
+         not any(isinstance(e, dict) and e.get("versionName") == expected_name and e.get("versionCode") == expected_code and
+                 e.get("outputFile") == apk.name for e in metadata.get("elements", []))):
+         fail("Gradle finished but APK output-metadata identity differs from " + info['release'] +
+              ". Expected " + expected_name + " (" + str(expected_code) +
+-             ", org.itom.client.dev.rev7) at " + str(metadata_file))
++             ", " + info["android_application_id"] + ") at " + str(metadata_file))
+     aapt2 = sdk / "build-tools" / BUILD_TOOLS / ("aapt2.exe" if os.name == "nt" else "aapt2")
+     if not aapt2.is_file():
+         fail("Gradle finished, but Android build-tools aapt2 is missing: " + str(aapt2))
+@@ -120,7 +120,7 @@
+     # Match *whole* aapt2 attribute names: compileSdkVersionCodename='17'
+     # contains a suffix "name='17'" that must never shadow package name.
+     found = dict(re.findall(r"(?<!\S)(name|versionCode|versionName)='([^']*)'", line))
+-    if found != {"name":"org.itom.client.dev.rev7", "versionCode":str(expected_code), "versionName":expected_name}:
++    if found != {"name":info["android_application_id"], "versionCode":str(expected_code), "versionName":expected_name}:
+         fail("Compiled APK identity differs from " + info['release'] + ": " + str(found))
+     return {"application_id": found["name"], "version_code": expected_code, "version_name": expected_name}
+ 
+--- a/tools/build_core.py
++++ b/tools/build_core.py
+@@ -292,7 +292,7 @@
+             sha = hashlib.sha256(destination.read_bytes()).hexdigest()
+             files.append((name, sha))
+             if release:
+-                named = (f"ITOM-1.0.0-RC2-{system}-{arch}" if release == "RC2"
++                named = (f"ITOM-1.0.0-{release}-{system}-{arch}" if release in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10")
+                          else f"ITOM-0.9.1-Rev10-{system}-{arch}" if release == "Rev10" and build.read_source_info()["version"] == "0.9.1"
+                          else f"ITOM-0.9.2-{release}-{system}-{arch}" if release in ("Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev10","Rev11")
+                          else f"ITOM_{release}_{system}_{arch}")
+--- a/tools/check_sources.py
++++ b/tools/check_sources.py
+@@ -57,6 +57,10 @@
+     info = read_source_info(root)
+     name, code = android_identity(info)
+     app = (root / "android/app/build.gradle.kts").read_text(encoding="utf-8")
++    if info.get("release") in ("RC7", "RC8","RC9","RC10"):
++        check(info.get("android_application_id") == "org.itom.client", "RC7/RC8 APK ID must equal org.itom.client")
++        check('applicationId = "org.itom.client"' in app, "RC7 Gradle applicationId changed")
++        check("applicationIdSuffix" not in app, "RC7 debug build must NEVER add an application ID suffix")
+     if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9"):
+         check('applicationIdSuffix = ".dev.rev7"' in app,
+               "Rev10 test APK package differs from its separate-install identity")
+--- a/tools/test_launcher.py
++++ b/tools/test_launcher.py
+@@ -52,9 +52,9 @@
+ 
+     def test_public_release_consistent_across_gradle_server_and_archive(self):
+         info = check_sources.validate_release_identity(check_sources.ROOT)
+-        self.assertEqual("RC2", info["release"])
+-        self.assertEqual("ITOM-1.0.0-RC2-debug.apk", build.public_apk_name(info))
+-        self.assertEqual("ITOM-1.0.0-RC2-sources.zip", info["archive_name"])
++        self.assertEqual("RC10", info["release"])
++        self.assertEqual("ITOM-1.0.0-RC10-debug.apk", build.public_apk_name(info))
++        self.assertEqual("ITOM-1.0.0-RC10-sources.zip", info["archive_name"])
+ 
+     def test_public_release_mismatch_is_fatal(self):
+         info = build.read_source_info()
+@@ -97,13 +97,13 @@
+             apk.write_bytes(b"fake fixture")
+             version, code = build.android_identity(info)
+             version += "-debug"
+-            metadata = {"applicationId":"org.itom.client.dev.rev7", "elements":[{"versionCode":code,
++            metadata = {"applicationId":"org.itom.client", "elements":[{"versionCode":code,
+                          "versionName":version, "outputFile":"app-debug.apk"}]}
+             (root / "output-metadata.json").write_text(json.dumps(metadata))
+             aapt2 = root / "build-tools" / build.BUILD_TOOLS / ("aapt2.exe" if build.os.name == "nt" else "aapt2")
+             aapt2.parent.mkdir(parents=True, exist_ok=True)
+             aapt2.touch()
+-            aapt_stdout = f"package: name='org.itom.client.dev.rev7' versionCode='{code}' versionName='{version}'\n"
++            aapt_stdout = f"package: name='org.itom.client' versionCode='{code}' versionName='{version}'\n"
+             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess([], 0, aapt_stdout, "")):
+                 self.assertEqual(version, build.verify_apk_identity(apk, root, info)["version_name"])
+                 bad = dict(metadata, elements=[dict(metadata["elements"][0], versionName="old-version")])
+@@ -112,7 +112,7 @@
+                     build.verify_apk_identity(apk, root, info)
+                 (root / "output-metadata.json").write_text(json.dumps(metadata))
+                 with patch("build.subprocess.run", return_value=subprocess.CompletedProcess([],0,
+-                    "package: name='org.itom.client.dev.rev7' versionCode='9037' versionName='old'", "")):
++                    "package: name='org.itom.client' versionCode='9037' versionName='old'", "")):
+                     with self.assertRaisesRegex(RuntimeError, "Compiled APK identity differs"):
+                         build.verify_apk_identity(apk, root, info)
+ 
+@@ -127,7 +127,7 @@
+             version, code = build.android_identity(info)
+             version += "-debug"
+             (root / "output-metadata.json").write_text(json.dumps({
+-                "applicationId": "org.itom.client.dev.rev7",
++                "applicationId": "org.itom.client",
+                 "elements": [{"versionCode": code, "versionName": version,
+                               "outputFile": apk.name}]
+             }), encoding="utf-8")
+@@ -135,18 +135,18 @@
+                 "aapt2.exe" if build.os.name == "nt" else "aapt2")
+             aapt2.parent.mkdir(parents=True)
+             aapt2.touch()
+-            badging = (f"package: name='org.itom.client.dev.rev7' versionCode='{code}' "
++            badging = (f"package: name='org.itom.client' versionCode='{code}' "
+                        f"versionName='{version}' compileSdkVersion='37' "
+                        "compileSdkVersionCodename='17'\n")
+             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess(
+                 [], 0, badging, "")):
+                 identity = build.verify_apk_identity(apk, root, info)
+-                self.assertEqual(identity["application_id"], "org.itom.client.dev.rev7")
++                self.assertEqual(identity["application_id"], "org.itom.client")
+                 self.assertEqual(identity["version_name"], version)
+                 self.assertEqual(identity["version_code"], code)
+ 
+             # A misleading suffixed key must not be accepted as package name.
+-            spoofed = (f"package: fakename='org.itom.client.dev.rev7' versionCode='{code}' "
++            spoofed = (f"package: fakename='org.itom.client' versionCode='{code}' "
+                        f"versionName='{version}' compileSdkVersionCodename='17'\n")
+             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess(
+                 [], 0, spoofed, "")):
+@@ -170,7 +170,7 @@
+             version, code = build.android_identity(info)
+             version += "-debug"
+             (root / "output-metadata.json").write_text(json.dumps({
+-                "applicationId": "org.itom.client.dev.rev7", "elements": [{
++                "applicationId": "org.itom.client", "elements": [{
+                     "versionCode": code, "versionName": version,
+                     "outputFile": "app-debug.apk"}]}))
+             aapt2 = root / "build-tools" / build.BUILD_TOOLS / ("aapt2.exe" if build.os.name == "nt" else "aapt2")
+@@ -229,7 +229,7 @@
+         (source / "build-report.json").write_text(json.dumps({"status":"passed", "source_revision":info["revision"], "sha256":sha}))
+         sums = []
+         for arch in ("amd64", "arm64"):
+-            name = f"ITOM-1.0.0-RC2-linux-{arch}"
++            name = f"ITOM-1.0.0-RC10-linux-{arch}"
+             data = b"fixture-" + arch.encode()
+             (source / name).write_bytes(data)
+             sums.append(hashlib.sha256(data).hexdigest() + "  " + name)
+@@ -238,7 +238,7 @@
+         result = archive_main.export_verified_artifacts(self.root / "ITOM_FIELD77_tmp", archive, info, "all")
+         self.assertEqual(7, len(result))
+         self.assertEqual(b"verified-test-apk", (self.root / "dist" / apk_name).read_bytes())
+-        self.assertTrue((self.root / "dist" / "ITOM-1.0.0-RC2-linux-arm64").is_file())
++        self.assertTrue((self.root / "dist" / "ITOM-1.0.0-RC10-linux-arm64").is_file())
+         # Failed gate and tampered APK must NEVER overwrite the public dist.
+         apk.write_bytes(b"tampered")
+         with self.assertRaisesRegex(RuntimeError, "APK checksum mismatch"):
+@@ -491,7 +491,7 @@
+                     for abi in ("arm64-v8a", "armeabi-v7a"):
+                         native_fixture.writestr(f"lib/{abi}/libgojni.so", info["revision"].encode("ascii"))
+                 version, code = build.android_identity(info)
+-                (apk.parent / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client.dev.rev7",
++                (apk.parent / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client",
+                     "elements":[{"versionCode": code,
+                     "versionName": version + "-debug", "outputFile": "app-debug.apk"}]}))
+                 return self
+@@ -510,7 +510,7 @@
+              patch("build.ensure_sdk", return_value=root / "sdk"), \
+              patch("build_android_core.run"), \
+              patch("build.subprocess.run", return_value=subprocess.CompletedProcess([], 0,
+-                   stdout=f"package: name='org.itom.client.dev.rev7' versionCode='{build.android_identity(info)[1]}' versionName='{build.android_identity(info)[0]}-debug'\n",
++                   stdout=f"package: name='org.itom.client' versionCode='{build.android_identity(info)[1]}' versionName='{build.android_identity(info)[0]}-debug'\n",
+                    stderr="test JDK fixture")), \
+              patch("build.subprocess.Popen", return_value=Process()) as process, redirect_stdout(output):
+             try: result = build.main(["android", "--cache", str(root / "cache")])

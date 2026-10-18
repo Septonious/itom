@@ -1,0 +1,10 @@
+--- FAIL: TestRC8UnhintedDataCleanupReclaimsBeforeFetchingMoreBodies (0.05s)
+    --- FAIL: TestRC8UnhintedDataCleanupReclaimsBeforeFetchingMoreBodies/proven (0.03s)
+        rc8_cleanup_discovery_test.go:88: eligible DATA waited behind another page 2 {1 20}
+    --- FAIL: TestRC8UnhintedDataCleanupReclaimsBeforeFetchingMoreBodies/delete-failed (0.02s)
+        rc8_cleanup_discovery_test.go:88: eligible DATA waited behind another page 2 {1 20}
+--- FAIL: TestRC8ReclaimedDescriptorReplayCannotResurrectBodyCache (0.01s)
+    rc8_reclaimed_descriptor_test.go:105: DESCRIPTOR_LIMIT
+FAIL
+FAIL	itom.local/core/tunnel	0.080s
+FAIL

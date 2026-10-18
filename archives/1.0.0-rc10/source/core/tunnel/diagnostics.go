@@ -31,7 +31,7 @@ type LineDiagnostic struct {
 	ReaderRepairs                                          uint64
 	DataFetchPolls, DataEmptyFetchPolls, DataFetchMessages uint64
 	DataIdleWaits, DataIdleNotifies                        uint64
-	DataReceiveLatencyMillis                               int64
+	DataReceiveLatencyMillis, DataFetchCallbackTotalMS, DataFetchCallbackMaxMS, DataFetchPayloadBytes int64
 	DataLimitBytes, DataLimitMessages                      uint64
 	BulkBatchTargetBytes                                   uint64
 	GrantWaitReason                                        string
@@ -44,7 +44,7 @@ type LineDiagnostic struct {
 
 	ReaderHandoffs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           int64
 	LatencyGovernor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          latencyGovernorSnapshot
-	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         int
+	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, CachedDataDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         int
 	IOConnections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            int
 	ReaderIdle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               bool
 	LastOrigin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               string
@@ -177,6 +177,9 @@ func (l *lane) health() {
 	d.line.AvailableGrants = len(l.grants)
 	d.line.IssuedGrants = len(l.issued)
 	d.line.PendingDescriptors = len(l.pending)
+	// A descriptor cache can grow while its validated DATA BODY waits for
+	// visibility/GC; make this distinct from pending BODY-without-descriptor.
+	d.line.CachedDataDescriptors = len(l.reports)
 	d.line.RemoteGC = len(l.remoteGC)
 	d.line.Obsolete = obsolete
 	d.line.Known = len(l.known)

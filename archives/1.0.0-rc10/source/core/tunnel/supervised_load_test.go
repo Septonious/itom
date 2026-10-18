@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"itom.local/core/journal"
 	"itom.local/core/servercfg"
 	"itom.local/core/wire"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -19,6 +22,12 @@ import (
 // These are not validated against the field provider and cannot qualify a release.
 // Half outages include stream owners; the same application sockets and verified
 // byte generators remain active across outage, warmup and measurement phases.
+// Strictly test-fixture-only choice. No live transport config is touched.
+func initialProviderProfileMbps(steps []providerCapStep, fallback float64, early bool) float64 {
+	if early && len(steps) > 0 { return steps[0].Mbps }
+	return fallback
+}
+
 func testSupervisedProductionLoad(t *testing.T) {
 	t.Log("synthetic_measurement=true field_qualified=false")
 	if raceInstrumented {
@@ -62,11 +71,32 @@ func testSupervisedProductionLoad(t *testing.T) {
 	if os.Getenv("ITOM_LOAD_RETAINED_STATE") == "1" {
 		retained = rev4RetainedState(t)
 	}
+	// Test-only, existing allowlisted 16 MiB server journal; no production
+	// default, profile migration, APPEND evidence, or client wallet changes.
+	if os.Getenv("ITOM_EXPERIMENT_SERVER_PROFILE") == "16" {
+		if retained != nil {
+			t.Fatal("cannot combine with retained-state qualification")
+		}
+		retained = func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
+			for _, account := range cfg.Accounts {
+				dir := filepath.Join(serverDir, account.ID, u.ID)
+				if err := os.MkdirAll(dir, 0700); err != nil { t.Fatal(err) }
+				store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(account, u, dataProfile16), time.Second)
+				if err != nil { t.Fatal(err) }
+				if err = store.Close(); err != nil { t.Fatal(err) }
+			}
+		}
+	}
 	f := newProductionSupervisorFixtureState(t, n, retained)
 	logical, generation := f.client.logicalSession, f.client.generation
 	target := newProductionLoadTarget(t, fmt.Sprintf("%x/supervised", logical))
-	f.network.setMbps(loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
 	profiles := parseProviderProfile(t, os.Getenv("ITOM_LOAD_PROVIDER_PROFILE"), loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
+	// True low-to-high speedup starts at the first profile cap BEFORE OPEN.
+	// The old 150->10Mbps immediate downgrade is a separate failure mode.
+	profileEarly := os.Getenv("ITOM_LOAD_PROVIDER_PROFILE_EARLY") == "1"
+	providerStart := initialProviderProfileMbps(profiles, loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0), profileEarly)
+	f.network.setMbps(providerStart)
+	t.Logf("supervised_provider_initial mbps=%.3f early_profile=%t", providerStart, profileEarly)
 	mobile := os.Getenv("ITOM_LOAD_MOBILE") == "1"
 	mobileCap := loadEnvFloat(t, "ITOM_LOAD_MOBILE_MBPS", 600)
 	var baseline time.Duration
@@ -251,8 +281,10 @@ func testSupervisedProductionLoad(t *testing.T) {
 			profileWG.Add(1)
 			go func() {
 				defer profileWG.Done()
-				for _, step := range profiles {
-					f.network.setMbps(step.Mbps)
+				for i, step := range profiles {
+					if !profileEarly || i > 0 {
+						f.network.setMbps(step.Mbps)
+					}
 					t.Logf("supervised_cap mbps=%.3f", step.Mbps)
 					if step.Duration <= 0 {
 						return
@@ -270,7 +302,35 @@ func testSupervisedProductionLoad(t *testing.T) {
 		// preceding full cadence. Keep every probe and the complete byte clock.
 		t.Logf("supervised_round_schedule round=%d cadence_ms=%d phase_ms=%d deadline_ms=%d expected=%d survival=%t bandwidth_clock_ms=1000", round+1, roundCadence.Milliseconds(), (roundCadence / 2).Milliseconds(), roundDeadline.Milliseconds(), roundExpected, false)
 		carriers := snapshotLoadCarriers(t, f, n, working)
-		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, t.Logf)
+		// Bounded test-only five-second duplex samples. Observe the actual
+		// production load clock; no extra polling, socket, ACK or journal work.
+		traceDuplex := os.Getenv("ITOM_LOAD_DUPLEX_TIMELINE") == "1"
+		measureLog := func(format string, args ...any) {
+			t.Logf(format, args...)
+			if !traceDuplex || len(args) != 1 || format != "%s" {
+				return
+			}
+			event, ok := args[0].(string)
+			if !ok || !strings.HasPrefix(event, "production_window5 ") {
+				return
+			}
+			f.client.mu.Lock()
+			client := f.client.stripe
+			f.client.mu.Unlock()
+			f.mu.Lock()
+			var server *stripeGroup
+			for _, carrier := range f.serverLanes {
+				server = carrier.stripe
+				break
+			}
+			f.mu.Unlock()
+			if client == nil || server == nil {
+				return
+			}
+			c, ss := client.deliverySnapshot(), server.deliverySnapshot()
+			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f client_bulk_ack_age_ms=%d client_bulk_ack_since_ms=%d server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f server_bulk_ack_age_ms=%d server_bulk_ack_since_ms=%d", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, c.LastBulkACKAgeMS, c.LastBulkACKSinceMS, ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps, ss.LastBulkACKAgeMS, ss.LastBulkACKSinceMS)
+		}
+		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, measureLog)
 		cancelProfile()
 		profileWG.Wait()
 		rtts, overlap, timeouts, missed := productionSampleSummary(result.Samples, 0)
@@ -289,6 +349,15 @@ func testSupervisedProductionLoad(t *testing.T) {
 			}
 			t.Logf("supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=%d mean_ms=%.3f p95_ms=%.3f max_ms=%.3f target_ms=100 field_qualified=false", len(changes), float64(total)/float64(len(changes))/float64(time.Millisecond), float64(productionPercentile(changes, .95))/float64(time.Millisecond), float64(productionPercentile(changes, 1))/float64(time.Millisecond))
 		}
+		// Test-only provider-wide session budget: a heavy sender must not
+		// monopolize account LOGIN slots needed by the opposite endpoint.
+		f.network.mu.Lock()
+		providerPeak, providerCurrent := map[string]int{}, map[string]int{}
+		for id, n := range f.network.sessionPeak { providerPeak[id] = n }
+		for id, n := range f.network.sessions { providerCurrent[id] = n }
+		providerDenied := f.network.sessionDenied
+		f.network.mu.Unlock()
+		t.Logf("rc5_provider_sessions peak=%v current=%v denied=%d cap=%d", providerPeak, providerCurrent, providerDenied, f.network.sessionLimit)
 		// Snapshot actual shared delivery state only after the timed interval.
 		f.client.mu.Lock()
 		clientGroup := f.client.stripe
@@ -314,11 +383,25 @@ func testSupervisedProductionLoad(t *testing.T) {
 			for _, carrier := range live {
 				carrier.serviceMu.Lock()
 				ns, bytes, samples := carrier.serviceNS, carrier.serviceBytes, carrier.serviceSamples
+				peerSamples, peerTarget := carrier.peerReadSamples, carrier.peerReadBatchTarget
+				peerSlow, peerFast := carrier.peerReadSlowCount, carrier.peerReadFastCount
+				peerLast := carrier.peerReadAt
 				carrier.serviceMu.Unlock()
+				peerAgeMS := int64(-1)
+				if !peerLast.IsZero() {
+					peerAgeMS = time.Since(peerLast).Milliseconds()
+				}
+				if carrier.side {
+					local, remote, err := carrier.data.HeldByOrigin(carrier.account.ID, carrier.user.ID)
+					t.Logf("supervised_physical account=%s server=%t peer_samples=%d peer_target=%d peer_slow=%d peer_fast=%d peer_age_ms=%d pending_bodies=%d active=%d held_local_bytes=%d held_local_messages=%d held_remote_bytes=%d held_remote_messages=%d hold_err=%v", carrier.account.ID, carrier.side, peerSamples, peerTarget, peerSlow, peerFast, peerAgeMS, carrier.peerReadPendingBodies.Load(), carrier.physicalActive.Load(), local.Bytes, local.Messages, remote.Bytes, remote.Messages, err)
+				}
 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
+				t.Logf("rc5_endpoint_sessions server=%t account=%s physical_data_parallelism=%d physical_slots=%d", carrier.side, carrier.account.ID, dataParallelism(carrier.mail), len(carrier.physicalSlots))
 				if carrier.diag != nil {
 					d := carrier.diag.snapshot()
 					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
+					// Development-only aggregate: do not trace plaintext, credentials or keys.
+					t.Logf("rc5_duplex_feedback server=%t account=%s control_wait_ms=%d max_control_wait_ms=%d control_appends=%d control_bytes=%d sent_window=%d received_window=%d sent_receipt=%d received_receipt=%d remote_grant_wait_ms=%d remote_grant_max_ms=%d data_fetch_bytes=%d data_fetch_callback_max_ms=%d remote_cleanup_runs=%d local_cleanup_runs=%d", carrier.side, carrier.account.ID, d.ControlWaitMS, d.MaxControlWaitMS, d.ControlAppendCount, d.ControlAppendBytes, d.WindowSent, d.WindowReceived, d.ReceiptSent, d.ReceiptReceived, d.RemoteGrantWaitMS, d.MaxRemoteGrantWaitMS, d.DataFetchPayloadBytes, d.DataFetchCallbackMaxMS, d.CleanupRemoteRuns, d.CleanupLocalDataRuns)
 				}
 			}
 		}
@@ -377,7 +460,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 			accepted = strictSpeedGate(qualifiedMbps, minimumMbps) && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
 				tier = TransportRevision + "-stability-throughput-floor-waived"
-				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < rc6StabilityRTTLimit && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 				if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
 					accepted = false
 					t.Error(err)
@@ -395,6 +478,30 @@ func testSupervisedProductionLoad(t *testing.T) {
 				accepted = false
 				t.Error(err)
 			}
+		}
+		// RC8 hard release gate: never inherit RC6's throughput-floor waiver.
+		// Runs under a 150+ Mbps unconstrained provider; a deliberately 10/20
+		// Mbps profile uses a separate connection/RTT test (not a speed claim).
+		if os.Getenv("ITOM_RC8_RELEASE_GATE") == "1" {
+			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
+				t.Fatal("RC8 release qualification forbids the old throughput-floor waiver")
+			}
+			minimum := loadEnvFloat(t, "ITOM_LOAD_MIN_MBPS", 75)
+			if minimum < rc8MinimumDuplexMbps {
+				t.Fatalf("RC8 refuses throughput floor below 75/75: %.3f", minimum)
+			}
+			tier = "rc8-75-75mbps-max750ms-hard-release"
+			accepted = rc8ReleasePerformanceGate(up, down, qualifiedMbps, maxRTTDuration, minimum) &&
+				len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+			if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
+				accepted = false
+				t.Error(err)
+			}
+			if err := speedtestRTTQualification(rtts, timeouts, missed, overlap); err != nil {
+				accepted = false
+				t.Error(err)
+			}
+			t.Logf("rc8_hard_gate upload_mbps=%.3f download_mbps=%.3f verified_tail_mbps=%.3f rtt_ms=%.3f accepted=%t", up, down, qualifiedMbps, float64(maxRTTDuration)/float64(time.Millisecond), accepted)
 		}
 		t.Logf("supervised_acceptance round=%d tier=%s minimum_verified_mbps=%.6f max_rtt_ns=%d accepted=%t field_qualified=false", round+1, tier, qualifiedMbps, maxRTTDuration.Nanoseconds(), accepted)
 		target.mu.Lock()
@@ -598,9 +705,27 @@ func supervisedSnapshots(ctx context.Context, t *testing.T, f *productionSupervi
 		raw, _ := json.Marshal(data)
 		t.Logf("supervised_debt index=%d lanes=%s", index, raw)
 		for _, l := range lanes {
+			// Diagnostic only: distinguish a saturated physical DATA receiver
+			// from queued account admission. Read each gate atomically under its
+			// own mutex; never hold it during logging or transport I/O.
+			if m := physicalMail(l.mail); m != nil && m.dialGate != nil {
+				b := &m.dialGate.work
+				b.mu.Lock()
+				var queued [workClassCount]int
+				for i := range queued {
+					queued[i] = len(b.queues[i])
+				}
+				busy, service := b.busy, b.service
+				b.mu.Unlock()
+				t.Logf("supervised_account_work index=%d account=%s server=%t queued=%v busy=%v service_ns=%v", index, l.account.ID, l.side, queued, busy, service)
+			}
 			if l.diag == nil {
 				continue
 			}
+			l.diag.mu.Lock()
+			diagRead := l.diag.line
+			l.diag.mu.Unlock()
+			t.Logf("rc5_receive_service index=%d account=%s server=%t polls=%d empty=%d bodies=%d latency_ms=%d callback_total_ms=%d callback_max_ms=%d physical_bytes=%d", index, l.account.ID, l.side, diagRead.DataFetchPolls, diagRead.DataEmptyFetchPolls, diagRead.DataFetchMessages, diagRead.DataReceiveLatencyMillis, diagRead.DataFetchCallbackTotalMS, diagRead.DataFetchCallbackMaxMS, diagRead.DataFetchPayloadBytes)
 			d := l.diag.snapshot()
 			if l.stripe != nil {
 				rawGovernor, _ := json.Marshal(l.stripe.deliverySnapshot())

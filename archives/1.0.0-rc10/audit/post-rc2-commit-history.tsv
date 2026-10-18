@@ -118,3 +118,8 @@ f549009e4f6edf0e9980c48358078aa7a6ae4350	perf(rc9): bound missed-notification de
 5a8baff9fa642baa4205f198def505e202cce42c	docs(rc9): preserve full-capacity pass evidence and pending low-link qualification
 eef1123c52b76b34bb1571bdbe2ab60c5fb7b5b9	revert(rc9): preserve independent stream progress after retained-throughput regression
 1a284ace0cc48b8adc329efbca1fe81bbba0db79	docs(rc9): retain failed repeat evidence and block unqualified packaging
+2089b2dc3a98d6ea3fba149eef6ef8a20c9237c9	Checkpoint RC3 bounded short-response latency adjustment and complete handoff
+f11ae9295f485917d7d243c92b1cbb1bd6d30ece	Finalize RC3 focused evidence, historical limits and release packaging
+a42b7d5a0141bfc46cdb5dd2c2ba5d056be05f53	Package ITOM 1.0.0 RC3 APK, Linux binaries, complete handoff and targeted evidence
+7f759153378606996aa029aaedf5c87ef30325c2	Checkpoint RC4 scoped response polling, RC2 bulk pacing and regression evidence
+f519882241838841397444deb6d02140434659ad	Package ITOM 1.0.0 RC4 APK, Linux binaries, complete handoff and targeted evidence
