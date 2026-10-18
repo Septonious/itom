@@ -1,7 +1,7 @@
 name: RC7 cold-start flight A/B 128KiB 256KiB (strict)
 on:
   push:
-    branches: ["codex/rc7-seed128", "codex/rc7-seed256"]
+    branches: ["codex/rc7-batch352"]
     paths: [".github/workflows/itom-rc7-seed-comparison.yml"]
 permissions:
   contents: read
