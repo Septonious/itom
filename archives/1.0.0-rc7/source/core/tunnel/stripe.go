@@ -213,6 +213,10 @@ type stripeGroup struct {
 	turn               uint64
 	active             atomic.Int64
 	fastWaiters        atomic.Int64
+	// Short-burst carrier history expires after one second; it is placement
+	// advice only, never account quota, physical admission or ACK authority.
+	fastPlacements map[string]int
+	fastPlacementStart time.Time
 	wake               chan struct{}
 	fastWake           chan struct{}
 	hub                *stripeHub
@@ -788,11 +792,8 @@ func (g *stripeGroup) takeRemoteGrantPreferred(ctx context.Context, avoid, prefe
 						continue
 					}
 					if key, ok := l.tryTakeRemoteGrant(fast); ok {
-						if fast {
-							g.turn++
-						} else {
-							g.turn++
-						}
+						if fast {g.recordFastPlacementLocked(l.account.ID, time.Now())}
+						g.turn++
 						g.mu.Unlock()
 						return l, key, nil
 					}
