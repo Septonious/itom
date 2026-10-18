@@ -3,7 +3,7 @@
 **Baseline:** archived 1.0.0 RC2 (previously relatively stable in field). RC7 remains **unqualified** until required gates pass. The published RC6 tag is not overwritten.
 
 ## Immutable user requirements
-1. Android debug application ID exactly `org.itom.client.dev.rev7`, namespace `org.itom.client`, Gradle debug suffix `.dev.rev7`. Never build another package ID for an ITOM candidate.
+1. **Updated user requirement (2026-10-18):** Android application ID exactly `org.itom.client`, namespace `org.itom.client`, and no debug applicationIdSuffix. RC2–RC6 debug packages were `org.itom.client.dev.rev7`. Android treats RC7 as a different app with separate private storage. Back up/export profiles; preserve server journals and mailboxes.
 2. Full-capacity release qualification: at least **75.000 Mbps upload AND 75.000 Mbps download**, verified over the whole 60-second duplex measurement, trailing 30-second and trailing 10-second windows, never a peak or averaged-up one-way result.
 3. Loaded maximum RTT **<=750 ms** (no tolerance), 30/30 overlapping scheduled probes, zero probe failures, original application sockets survive, no missing or zero-rate duplex seconds; full recovery and correctness suites mandatory.
 4. Under deliberate 10-20Mbps provider emulation, 75/75 is physically impossible. These ramp/outage tests must instead enforce continuity, zero error probes and <=750ms loaded RTT. They cannot be represented as passing full-capacity throughput qualification.

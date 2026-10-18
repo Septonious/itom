@@ -11,7 +11,7 @@ android {
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
     buildTypes {
-        debug { applicationIdSuffix = ".dev.rev7"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
+        debug { versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
         release { isMinifyEnabled = true; resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

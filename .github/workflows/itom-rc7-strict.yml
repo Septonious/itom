@@ -30,12 +30,12 @@ jobs:
           from pathlib import Path
           d=json.loads(Path('source-info.json').read_text())
           gradle=Path('android/app/build.gradle.kts').read_text()
-          assert d["android_application_id"] == "org.itom.client.dev.rev7"
+          assert d["android_application_id"] == "org.itom.client"
           assert 'applicationId = "org.itom.client"' in gradle
-          assert 'applicationIdSuffix = ".dev.rev7"' in gradle
+          assert "applicationIdSuffix" not in gradle
           assert 'versionCode = 10006; versionName = "1.0.0-rc7"' in gradle
           assert 'fieldfix2' not in gradle.lower()
-          print('RC2/RC6 app ID preserved: org.itom.client.dev.rev7')
+          print('RC7 application ID enforced: org.itom.client')
           PY
           python3 -m unittest discover -s tools -p 'test_*.py' -q
       - name: Full Go core/server correctness and recovery

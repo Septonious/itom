@@ -20,7 +20,7 @@ Rev5 addresses the paired Wi-Fi/mobile field failures: recovery uses remaining o
 
 Healthy TCP streams can advance a bounded charged frame beside delayed published flight. Short recovery uses authenticated NACKs with separate pacing, and the wallet accepts reordered unseen offers while retaining bounded retirement protection.
 
-Use matching Rev7 endpoints. Preserve server configuration, quota journals and wallet state. The Android package remains `org.itom.client.dev.rev7`, version code 9207. The build reuses the Rev3 testing signing certificate so profiles and wallet history can remain installed. Check the published `SIGNER.txt` before updating another APK.
+Use matching Rev7 endpoints. Preserve server configuration, quota journals and wallet state. RC7 Android package identity is `org.itom.client`, version code 10006. RC2–RC6 debug package IDs differ; Android treats them as different apps. The build reuses the Rev3 testing signing certificate so profiles and wallet history can remain installed. Check the published `SIGNER.txt` before updating another APK.
 
 See [the Rev5 investigation and qualification](docs/rev5/REV5_ANALYSIS_2026-10-15.md), [the earlier field investigation](docs/rev4/REV4_FIELD_ANALYSIS.md), [the test design](docs/rev4/REV4_TEST_DESIGN.md) and [installation instructions](docs/rev4/REV4_BUILD_AND_INSTALL.md). Historical Rev2/Rev3 reports describe their own sources and builds.
 

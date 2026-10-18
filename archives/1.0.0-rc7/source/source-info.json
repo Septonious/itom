@@ -4,8 +4,8 @@
   "revision": "itom-1-0-0-rc7",
   "archive_name": "ITOM-1.0.0-RC7-sources.zip",
   "baseline": "1.0.0 RC2",
-  "qualification": "RC2-centered regression candidate. HARD GATES: >=75 Mbps upload and download on full-capacity qualification, loaded RTT <=750ms, no zero-rate 1s windows, original sockets preserved, recovery verified. Android ID invariant org.itom.client.dev.rev7. NOT certified without all gates and live field evidence.",
+  "qualification": "RC2-centered regression candidate. HARD GATES: >=75 Mbps upload and download on full-capacity qualification, loaded RTT <=750ms, no zero-rate 1s windows, original sockets preserved, recovery verified. Android ID invariant org.itom.client. NOT certified without all gates and live field evidence.",
   "android_version_name": "1.0.0-rc7",
   "android_version_code": 10006,
-  "android_application_id": "org.itom.client.dev.rev7"
+  "android_application_id": "org.itom.client"
 }
