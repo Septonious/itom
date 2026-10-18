@@ -19,11 +19,11 @@ jobs:
         with:
           go-version-file: archives/1.0.0-rc6/source/core/go.mod
           cache: false
-      - name: Fast placement, TCP parity, delivery and journal invariants
+      - name: Short placement and full HTTPS cancellation burst regressions
         working-directory: ${{ env.SOURCE }}/core
         run: |
-          go test -p 2 -count=1 -timeout=180s ./datapath ./flow ./journal ./tunnel -run 'TestFieldParallelStartupDoesNotConcentrateShortWrites|TestFastPlacementHistoryIsIdleSafeAndAdvisory|TestShortAffinityAcrossDifferentEndpointReserves|TestParallelShortBurstWaitsForResponsiveSlotInsteadOfSlowOutlier|TestTrafficClassFragmentedBurstAndAuthenticatedDrain|TestRev4LongBlackoutPreservesInflightTCPAndMessages|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers'
-      - name: 60s high fan-out, real TCP connections, startup and 150Mbps acceleration
+          go test -p 2 -count=1 -timeout=180s ./datapath ./flow ./journal ./tunnel -run 'TestFieldParallelStartup|TestFastPlacementHistory|TestShortAffinity|TestParallelShortBurst|TestTrafficClassFragmented|TestRev4LongBlackout|TestFieldHTTPSBurst'
+      - name: 32-stream steady-state measurement, strict latency gate
         working-directory: ${{ env.SOURCE }}/core
         env:
           ITOM_REWORK_QUALIFICATION: "1"
@@ -44,15 +44,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/rc6-field-burst.log"
-      - name: Record evidence even on failure
+          go test -p 2 -count=1 -timeout=300s -run TestTransportReworkQualification -v ./tunnel 2>&1 | tee "${RUNNER_TEMP}/rc6-field-burst.log"
+      - name: Save constant-cap evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rc6-field-burst-qualification-evidence
           path: ${{ runner.temp }}/rc6-field-burst.log
           retention-days: 14
-      - name: Field acceleration: 10 to 20 to 50 to 150 Mbps with 32 TCP streams
+      - name: 32-stream staged startup 10 to 20 to 50 to 150 Mbps
         if: always()
         working-directory: ${{ env.SOURCE }}/core
         env:
@@ -75,13 +75,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification
- -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/rc6-field-acceleration.log"
-      - name: Record speedup evidence even on failure
+          go test -p 2 -count=1 -timeout=300s -run TestTransportReworkQualification -v ./tunnel 2>&1 | tee "${RUNNER_TEMP}/rc6-field-acceleration.log"
+      - name: Save acceleration evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rc6-field-acceleration-evidence
           path: ${{ runner.temp }}/rc6-field-acceleration.log
           retention-days: 14
-
