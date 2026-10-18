@@ -2843,6 +2843,19 @@ func (l *lane) process(f wire.Frame) error {
 			}
 		}
 		if m.Attempt != nil {
+			// ApplyRemote acknowledges delayed registered ordinals even after
+			// proof-based GC removed their rows. Do not resurrect those descriptors
+			// in the BODY cache: their deleted BODY will never arrive to evict them.
+			// Registered/Released are cumulative counters, not a per-ordinal proof;
+			// only the durable live-attempt index can distinguish this case.
+			if _, err := l.data.RemoteAttempt(m.Key, m.Total.Messages); err != nil {
+				if !errors.Is(err, journal.ErrMissing) {
+					return err
+				}
+				delete(l.reports, m.Attempt.Digest)
+				delete(l.pending, m.Attempt.Digest)
+				return nil
+			}
 			if l.dataProofQuarantined(m.Attempt.Digest) {
 				return nil
 			}
