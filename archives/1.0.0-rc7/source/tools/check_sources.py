@@ -59,7 +59,7 @@ def validate_release_identity(root: Path):
     app = (root / "android/app/build.gradle.kts").read_text(encoding="utf-8")
     if info.get("release") == "RC7":
         check(info.get("android_application_id") == "org.itom.client", "RC7 APK ID must equal org.itom.client")
-        check(re.search(r'\\bapplicationId\\s*=\\s*"org\\.itom\\.client"', app) is not None, "RC7 Gradle applicationId changed")
+        check('applicationId = "org.itom.client"' in app, "RC7 Gradle applicationId changed")
         check("applicationIdSuffix" not in app, "RC7 debug build must NEVER add an application ID suffix")
     if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9"):
         check('applicationIdSuffix = ".dev.rev7"' in app,
