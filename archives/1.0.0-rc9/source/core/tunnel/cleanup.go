@@ -451,7 +451,12 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 					}
 				}
 				if len(wanted) > 0 {
-					rows, err := finder.FetchCleanupCandidates(l.ctx, folder, wanted)
+					var rows []mailbox.Message
+					err := l.cleanupRead(kind, func() error {
+						var err error
+						rows, err = finder.FetchCleanupCandidates(l.ctx, folder, wanted)
+						return err
+					})
 					if err != nil {
 						r.err = err
 						return
@@ -481,7 +486,13 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 			}
 		}
 		for pages := 0; !drainCached && pages < runtimeCleanupPages; pages++ {
-			rows, next, err := l.mail.Page(l.ctx, folder, l.outCursor)
+			var rows []mailbox.Message
+			var next mailbox.Cursor
+			err := l.cleanupRead(kind, func() error {
+				var err error
+				rows, next, err = l.mail.Page(l.ctx, folder, l.outCursor)
+				return err
+			})
 			if err != nil {
 				r.err = err
 				return

@@ -137,3 +137,36 @@ func (g *stripeGroup) endCleanup(l *lane) {
 	g.mu.Unlock()
 	g.signal()
 }
+
+// Bound concurrent DATA proof-body reads, not cleaners. Eight 4 MiB FETCHes
+// can otherwise queue a large shared-link burst ahead of interactive traffic.
+// Keep four readers to retain parallel reclamation; deletes, remote cleanup,
+// presence and control discovery do not consume these slots. This changes no
+// deletion proof, journal authority, quota or admitted delivery bytes.
+const cleanupDataReadConcurrency = 4
+
+func (l *lane) cleanupRead(kind cleanupKind, read func() error) error {
+	if kind != cleanupLocalData || l.stripe == nil {
+		return read()
+	}
+	g := l.stripe
+	g.mu.Lock()
+	if g.cleanupReads == nil {
+		g.cleanupReads = make(chan struct{}, cleanupDataReadConcurrency)
+	}
+	slots := g.cleanupReads
+	g.mu.Unlock()
+	if err := l.ctx.Err(); err != nil {
+		return err
+	}
+	select {
+	case slots <- struct{}{}:
+		defer func() { <-slots }()
+		if err := l.ctx.Err(); err != nil {
+			return err
+		}
+		return read()
+	case <-l.ctx.Done():
+		return l.ctx.Err()
+	}
+}

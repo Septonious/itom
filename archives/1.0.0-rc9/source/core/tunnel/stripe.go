@@ -207,6 +207,7 @@ type stripeGroup struct {
 	configuredAccounts int
 	cleanupActive      map[*lane]bool
 	cleanupQueue       []*lane
+	cleanupReads       chan struct{}
 	crossLocal         map[stripeLocalKey][]remoteLogicalAttempt
 	crossRemote        map[stripeRemoteKey][]remoteLogicalAttempt
 	nextID             uint64
