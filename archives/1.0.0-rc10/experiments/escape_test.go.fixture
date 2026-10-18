@@ -1,0 +1,44 @@
+package tunnel
+
+import (
+    "context"
+    "testing"
+    "time"
+    "itom.local/core/flow"
+    "itom.local/core/wire"
+)
+
+// A successful stream is not an unlimited exception to a contracted session
+// window. The old code paces only unseen streams, allowing every established
+// stream to queue another32KiB and overwhelm a slow shared link.
+func TestRC10EstablishedStreamsShareEscapeWakeWithoutForgivingDebt(t *testing.T) {
+    g:=newStripeGroup(wire.ID{1},1)
+    old:=deliveryJobs(t,1,6,32<<10)
+    r,err:=g.reserveDeliveryBatch(context.Background(),old)
+    if err!=nil {t.Fatal(err)}
+    r.finish(r.jobs,committed(r.jobs,flow.Committed))
+    g.delivery.window=deliveryMinWindow
+    first,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,3,1,32<<10))
+    if err!=nil {t.Fatal("first independent stream stranded",err)}
+    first.finish(first.jobs,committed(first.jobs,flow.Committed))
+    g.delivery.frontiers[5]=32<<10
+    g.delivery.issued[5]=32<<10
+    known:=deliveryJobs(t,5,2,32<<10)[1:]
+    if _,err=g.reserveDeliveryBatch(context.Background(),known);err==nil {
+        t.Fatal("established stream bypassed the shared escape wake")
+    }
+    before:=g.delivery.bulk
+    g.deliveryProgress(3,32<<10)
+    if g.delivery.bulk!=before-(32<<10) {t.Fatal("ACK changed unrelated charged debt")}
+    next,err:=g.reserveDeliveryBatch(context.Background(),known)
+    if err!=nil {t.Fatal("useful ACK did not immediately release healthy stream",err)}
+    next.finish(next.jobs,committed(next.jobs,flow.Committed))
+    if _,err=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10));err==nil {t.Fatal("unreceived escape admitted a burst")}
+    before=g.delivery.bulk
+    g.maintainDelivery(time.Now().Add(2*deliveryDecisionEpoch))
+    if g.delivery.bulk!=before {t.Fatal("timer returned unacknowledged credit")}
+    last,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10))
+    if err!=nil {t.Fatal("invisible BODY permanently stranded another stream",err)}
+    last.finish(last.jobs,committed(last.jobs,flow.Committed))
+    if g.delivery.bulk!=256<<10 || g.delivery.bulkDelivered!=32<<10 {t.Fatal("incorrect charged ranges",g.delivery.bulk,g.delivery.bulkDelivered)}
+}

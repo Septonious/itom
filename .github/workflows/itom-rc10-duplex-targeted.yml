@@ -2,13 +2,13 @@ name: RC10 isolated directional admission with bounded cleanup; no artifacts
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/asym12.py", ".github/workflows/itom-rc10-duplex-targeted.yml"]
+    paths: ["archives/1.0.0-rc10/experiments/read2.py", ".github/workflows/itom-rc10-duplex-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   duplex:
-    name: RC2 growth,16/12 flight,4MiB cleanup; retained ${{ matrix.streams }}
+    name: RC2 flight/growth,2 proof readers,4MiB cleanup; retained ${{ matrix.streams }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     strategy:
@@ -24,10 +24,10 @@ jobs:
       - name: Apply independently bounded experimental deltas
         run: |
           python3 archives/1.0.0-rc10/experiments/apply.py cleanup4
-          python3 archives/1.0.0-rc10/experiments/asym12.py
+          python3 archives/1.0.0-rc10/experiments/read2.py
       - name: Verify role bounds and recovery invariants
         working-directory: archives/1.0.0-rc10/source/core
-        run: go test -p 2 -count=1 -timeout=120s ./tunnel -run 'TestRC7Directional|TestRC7Asymmetric|TestRC8|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix'
+        run: go test -p 2 -count=1 -timeout=120s ./tunnel -run 'TestRC9|TestRC8|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix'
       - name: Strict retained tail and latency comparison
         working-directory: archives/1.0.0-rc10/source/core
         shell: bash
@@ -59,6 +59,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc10-asym12-cleanup4-${{ matrix.streams }}
+          name: rc10-read2-cleanup4-${{ matrix.streams }}
           path: ${{ runner.temp }}/duplex.log
           retention-days: 30

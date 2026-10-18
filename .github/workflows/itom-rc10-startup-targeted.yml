@@ -2,7 +2,7 @@ name: RC10 isolated cold-capacity probe and recovery tests; no artifacts
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/cold64.py", "archives/1.0.0-rc10/experiments/escaped_ack.py", ".github/workflows/itom-rc10-startup-targeted.yml"]
+    paths: ["archives/1.0.0-rc10/experiments/cold64.py", "archives/1.0.0-rc10/experiments/escaped_ack.py", "archives/1.0.0-rc10/experiments/read2.py", ".github/workflows/itom-rc10-startup-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,9 +29,10 @@ jobs:
         run: |
           python3 archives/1.0.0-rc10/experiments/cold64.py
           python3 archives/1.0.0-rc10/experiments/escaped_ack.py
+          python3 archives/1.0.0-rc10/experiments/read2.py
       - name: Verify independent recovery before measuring startup
         working-directory: archives/1.0.0-rc10/source/core
-        run: go test -p 2 -count=1 -timeout=180s ./tunnel -run 'TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages'
+        run: go test -p 2 -count=1 -timeout=180s ./tunnel -run 'TestRC9|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages'
       - name: Strict real low-capacity startup; zero lost probes or sockets
         working-directory: archives/1.0.0-rc10/source/core
         shell: bash
