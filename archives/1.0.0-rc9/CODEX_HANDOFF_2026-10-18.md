@@ -1,7 +1,9 @@
 # Continue ITOM RC9 development
 
 Repository: Septonious/itom. Branch: `codex/v1.0.0-rc9-development`.
-Current runtime candidate: `0dc4e91`; qualification run:
+Current runtime is restored exactly to `8868df3` after rejecting `0dc4e91`.
+The subsequent repeat qualification must complete before judging the restored
+state. Rejected experiment run:
 https://github.com/Septonious/itom/actions/runs/39146157950
 **Do not build or promote a release with failing gates.** The workflow blocks
 APK/Linux builds behind all core, repeated-load and low-rate startup jobs.
@@ -15,11 +17,12 @@ APK/Linux builds behind all core, repeated-load and low-rate startup jobs.
   window, and retain later bulk exposure until ACK. The regression fails with
   the prior calibration (8 loaded samples admitted), and passes with the fix.
   Both endpoints start at 256KiB; role ceilings remain 16MiB server/12MiB client.
-- `0dc4e91`: normally at most two complete records may be independent-stream
-  exceptions above the shared window. An ACK releases charged logical occupancy
-  immediately. If both BODYs remain invisible, one additional fully charged
-  frame per second can discover another stream. Existing actor wakes implement
-  the pacing; no speculative APPEND replay, credit return or socket replacement.
+- `8868df3`: pace only first-frame exceptions of unproven new streams, at
+  most one per controller epoch. Proven independent streams retain their
+  existing immediate escape; repairs and physical debt are unchanged.
+- Reverted `0dc4e91` global exception restriction: retained 4-stream full
+  rates fell below75Mbps, with a one-second upload stall. Extended recovery
+  tests passed, but those cannot waive retained-throughput or latency gates.
 - Reverted `f549009` short-reader audit experiment: retained 32-stream tails
   regressed to 34.157/47.789Mbps. Original IDLE/audit behavior is restored.
 
@@ -34,8 +37,9 @@ original/fresh-socket integrity. Core/recovery/race checks passed.
 Early 10Mbps still timed out; early 20Mbps exceeded 750ms. No APK/binary was
 built because the complete qualification remained red.
 
-`0dc4e91` is pending its own full qualification; the prior pass cannot qualify
-this subsequent scheduling change. Its targeted delivery/calibration and Rev4
+`0dc4e91` completed qualification and is rejected. Full chronology is retained
+in `evidence/0dc4e91-qualification.json`; do not reintroduce that scheduling
+change merely because it stopped low-rate probe loss. Its targeted delivery/calibration and Rev4
 independent-stream regression selection passed locally. A 2-core local early
 10Mbps run reached ~55s before a missed probe cadence, with maximum RTT1114ms;
 it is a FAIL, never a throughput or latency certification. CI has the unchanged

@@ -48,7 +48,7 @@ func (e *deliveryDeferredError) Unwrap() error { return errDeliveryDeferred }
 
 type deliveryKey struct{ stream, offset uint64 }
 type deliveryRange struct {
-	discoveryEscape   bool
+	firstDiscovery    bool
 	key               deliveryKey
 	start, end        uint64
 	fast              bool
@@ -56,7 +56,7 @@ type deliveryRange struct {
 	accepted          time.Time // last definitively accepted physical publication
 	repairAccepted    time.Time // complete remaining range republished after authenticated NACK
 	published         bool      // at least one physical outcome is committed or unknown
-	flightAtAdmission uint64    // Peak charged bulk exposure before ACK; zero excludes calibration.
+	flightAtAdmission uint64 // Peak charged bulk exposure before ACK; zero excludes calibration.
 	repaired          bool
 	unloadedFast      bool   // original short DATA admitted outside a bulk epoch
 	isolatedFast      bool   // short-only startup traffic is not bulk queue evidence
@@ -642,8 +642,8 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 					r.flightAtAdmission = d.bulk + newBytes
 				}
 				d.ranges[r.key] = r
-				if r.discoveryEscape {
-					d.nextDiscoveryWake = time.Now().Add(time.Second)
+				if r.firstDiscovery {
+					d.nextDiscoveryWake = time.Now().Add(deliveryDecisionEpoch)
 				}
 				d.issued[r.key.stream] = max(d.issued[r.key.stream], r.end)
 			}
@@ -739,9 +739,7 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 	var entries []*deliveryRange
 	var selected []*datapath.Job
 	var size uint64
-	discoveryBytes := d.discoveryEscapeBytes()
-	discoveryAtStart := discoveryBytes
-	overflowSelected := false
+	firstDiscoverySelected := false
 	now := time.Now()
 	orderBlocked := false
 	stoppedMembers := 0
@@ -832,18 +830,13 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		// outstanding bulk may discover the path with one in-order frame.
 		// The hard session cap, stream credit and physical quota still apply.
 		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= d.maxWindow
-		// Bound simultaneous window exceptions, including proven streams.
-		// A useful ACK releases its charged slot immediately. If all escape
-		// BODYs remain invisible, one additional charged frame per second
-		// can discover another independent path; no old debt is forgiven.
-		discoveryEscape := discovery && n > remaining
-		if discoveryEscape && discoveryBytes+n > deliveryDiscoveryReserve {
-			fallback := discoveryAtStart >= deliveryDiscoveryReserve && !overflowSelected && !now.Before(d.nextDiscoveryWake)
-			if !fallback {
-				discovery = false
-			} else {
-				overflowSelected = true
-			}
+		// Pace only an unproven stream's first exception above the shared
+		// window. Otherwise many new TCPs can each bypass a contracted window
+		// simultaneously. Proven independent streams keep the original escape;
+		// neither existing charged ranges nor authenticated repairs are held.
+		firstDiscovery := discovery && n > remaining && d.frontiers[a.Stream] == 0
+		if firstDiscovery && (firstDiscoverySelected || now.Before(d.nextDiscoveryWake)) {
+			discovery = false
 		}
 		if n > remaining && !discovery || len(d.ranges)+len(entries) >= deliveryMaxRanges {
 			w.debug.Window++
@@ -853,10 +846,8 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		remaining -= min(remaining, n)
 		perStream[a.Stream] += n
 		size += n
-		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: now, discoveryEscape: discoveryEscape})
-		if discoveryEscape {
-			discoveryBytes += n
-		}
+		entries = append(entries, &deliveryRange{key: key, start: start, end: a.Offset + a.PayloadBytes, fast: w.fast, admitted: now, firstDiscovery: firstDiscovery})
+		firstDiscoverySelected = firstDiscoverySelected || firstDiscovery
 		selected = append(selected, j)
 	}
 	if stoppedMembers == len(jobs) {
@@ -868,18 +859,6 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 	return entries, size, selected, nil
 }
 
-const deliveryDiscoveryReserve = 2 * wire.MaxData
-
-func (d *deliveryController) discoveryEscapeBytes() uint64 {
-	var total uint64
-	for _, r := range d.ranges {
-		if r.discoveryEscape {
-			total += r.end - r.start
-		}
-	}
-	return total
-}
-
 // One frame per empty bulk stream is bounded independently of a shrunken
 // congestion window. It remains real charged flight until an authenticated ACK
 // or stream retirement; it cannot replenish itself on writer completion.
@@ -889,17 +868,6 @@ func (d *deliveryController) bulkAdmissionAllowed(entries []*deliveryRange, byte
 	}
 	if d.bulk+bytes <= d.window {
 		return true
-	}
-	var escape uint64
-	for _, r := range entries {
-		if r.discoveryEscape {
-			escape += r.end - r.start
-		}
-	}
-	chargedEscape := d.discoveryEscapeBytes()
-	if chargedEscape+escape > deliveryDiscoveryReserve &&
-		!(chargedEscape >= deliveryDiscoveryReserve && escape <= wire.MaxData && !time.Now().Before(d.nextDiscoveryWake)) {
-		return false
 	}
 	occupied := map[uint64]bool{}
 	published := false

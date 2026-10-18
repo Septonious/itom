@@ -24,36 +24,33 @@ func TestRC9UnprovenDiscoveryPacesWithoutStrandingIndependentStreams(t *testing.
 	}
 	first.finish(first.jobs, committed(first.jobs, flow.Committed))
 	later := deliveryJobs(t, 5, 1, 32<<10)
-	second, err := g.reserveDeliveryBatch(context.Background(), later)
-	if err != nil {
-		t.Fatal("second independent escape blocked", err)
-	}
-	second.finish(second.jobs, committed(second.jobs, flow.Committed))
-	thirdJobs := deliveryJobs(t, 7, 1, 32<<10)
-	if _, err := g.reserveDeliveryBatch(context.Background(), thirdJobs); err == nil {
-		t.Fatal("unbounded stream exceptions bypassed shared flight")
+	if _, err := g.reserveDeliveryBatch(context.Background(), later); err == nil {
+		t.Fatal("new streams bypassed the shared window as a burst")
 	}
 	wake := g.delivery.wake
 	charged := g.delivery.bulk
-	g.maintainDelivery(time.Now().Add(2 * time.Second))
+	g.maintainDelivery(time.Now().Add(2 * deliveryDecisionEpoch))
 	select {
 	case <-wake:
 	default:
-		t.Fatal("invisible escape BODYs stranded later streams")
+		t.Fatal("paced new stream lost its timer wake")
 	}
 	if g.delivery.bulk != charged || g.delivery.delivered != 0 {
-		t.Fatal("timer invented ACK or credit")
+		t.Fatal("timer invented ACK/credit")
 	}
-	third, err := g.reserveDeliveryBatch(context.Background(), thirdJobs)
+	second, err := g.reserveDeliveryBatch(context.Background(), later)
 	if err != nil {
-		t.Fatal("bounded fallback did not discover an independent stream", err)
+		t.Fatal("unseen BODY on old streams stranded an independent new stream", err)
 	}
-	third.finish(third.jobs, committed(third.jobs, flow.Committed))
-	if g.delivery.bulk != 288<<10 || g.delivery.delivered != 0 {
-		t.Fatal("fallback forgave old flight")
+	second.finish(second.jobs, committed(second.jobs, flow.Committed))
+	if g.delivery.bulk != 256<<10 || len(g.delivery.ranges) != 8 || g.delivery.delivered != 0 {
+		t.Fatal("charged flight changed", g.delivery.bulk, len(g.delivery.ranges))
 	}
-	if _, err := g.reserveDeliveryBatch(context.Background(), deliveryJobs(t, 9, 1, 32<<10)); err == nil {
-		t.Fatal("fallback burst exceeded one frame")
+	g.deliveryProgress(3, 32<<10)
+	// Proven independent progress keeps its escape immediately, not on a timer.
+	more := deliveryJobs(t, 3, 2, 32<<10)[1:]
+	if _, err := g.reserveDeliveryBatch(context.Background(), more); err != nil {
+		t.Fatal("healthy stream held behind cold discovery", err)
 	}
 }
 

@@ -90,3 +90,17 @@ indefinite new-stream deadlock; the unchanged role ceilings and physical quota
 still apply. Repairs and short DATA retain their separate paths. Existing Rev4
 stream-isolation, delayed-visibility, reader-restart, retained-state and long
 blackout tests are required in CI along with the strict load cases.
+
+## Global exception restriction rejected
+
+`0dc4e91`, run39146157950: both early low-rate cases completed full60s and all
+30 probes with no timeout/miss, original TCP integrity and post-load connections
+intact, but maximum RTTs1027.256/997.011ms still exceeded750ms. Worse, retained
+4-stream throughput regressed to72.439/71.150Mbps and67.205/68.760Mbps, with
+one-second upload stall and757.129ms RTT. Both rounds failed strict gates.
+Other full-capacity matrix cases passed, and extended delayed-BODY/reader-restart,
+retained-state, >60s blackout and race/proof/accounting checks passed.
+The global restriction is reverted to the exact `8868df3` runtime. Its earlier
+12/12 pass is retained as one experiment, not release certification. A repeat
+of the restored runtime is required; no red case is dropped or threshold waived.
+Chronological data: `evidence/0dc4e91-qualification.json`.
