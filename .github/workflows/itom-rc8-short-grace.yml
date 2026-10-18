@@ -1,0 +1,92 @@
+name: RC8 short-grace controlled RTT/throughput comparison
+on:
+  push:
+    branches: ["codex/rc8-short-grace-latency"]
+    paths: [".github/workflows/itom-rc8-short-grace.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  single-and-ramp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - title: full4
+            streams: "4"
+            profile: ""
+            early: "0"
+            hard: "1"
+            stability: "0"
+          - title: full32
+            streams: "32"
+            profile: ""
+            early: "0"
+            hard: "1"
+            stability: "0"
+          - title: single
+            streams: "1"
+            profile: ""
+            early: "0"
+            hard: "1"
+            stability: "0"
+          - title: start10
+            streams: "32"
+            profile: "10:10,20:10,50:10,150:30"
+            early: "1"
+            hard: "0"
+            stability: "1"
+          - title: start20
+            streams: "32"
+            profile: "20:10,50:10,150:40"
+            early: "1"
+            hard: "0"
+            stability: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc8/source/core/go.mod
+          cache: false
+      - name: RTT grace unit test and existing carrier selection invariants
+        working-directory: archives/1.0.0-rc8/source/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -count=1 -timeout=90s ./tunnel -run 'TestRC8InteractiveFallbackLeavesRoundTripBudget|TestRC8FastSpikePenaltyIsBoundedAndFresh|TestFastSlotGrace|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline'
+      - name: Startup under real low-capacity cap and single-stream 75/75 hard gate
+        working-directory: archives/1.0.0-rc8/source/core
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+          GOWORK: off
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "${{ matrix.hard }}"
+          ITOM_STABILITY_QUALIFICATION: "${{ matrix.stability }}"
+          ITOM_LOAD_MIN_MBPS: "75"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "${{ matrix.streams }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "1"
+          ITOM_LOAD_PROVIDER_MBPS: "600"
+          ITOM_LOAD_PROVIDER_PROFILE: "${{ matrix.profile }}"
+          ITOM_LOAD_PROVIDER_PROFILE_EARLY: "${{ matrix.early }}"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/rc8-${{ matrix.title }}.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc8-${{ matrix.title }}-evidence
+          path: ${{ runner.temp }}/rc8-${{ matrix.title }}.log
+          retention-days: 14
