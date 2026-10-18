@@ -6,7 +6,7 @@ latency must not turn small demand-limited samples into a permanent rate cap.
 from pathlib import Path
 r=Path(__file__).resolve().parents[3];d=r/'archives/1.0.0-rc10/source/core/tunnel'
 p=d/'lane.go';s=p.read_text();a='peerReadPendingBodies                       atomic.Int64';assert s.count(a)==1
-s=s.replace(a,a+'\n\tuploadBatchTarget uint64\n\tuploadBatchFastCount int')
+s=s.replace(a,a+'\n\tuploadBatchTarget uint64\n\tuploadBatchFastCount int\n\tuploadBatchSlowCount int')
 a='''\tappendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
 \tl.observeDataServiceClass(len(mime), time.Since(appendStarted), appendErr == nil, fastBatch)'''
 b='''\tappendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
@@ -27,16 +27,20 @@ s+='''
 // tentative batch. The server's authenticated peer-BODY policy is unchanged.
 func (l *lane) observeUploadBatch(useful uint64, elapsed time.Duration, accepted, fast bool) {
  if l.side || fast || !accepted || useful < 32<<10 || useful > uint64(dataBatchMIMEHardCap) || elapsed <= 0 { return }
- budget := max(250*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
+ budget := max(150*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
  l.serviceMu.Lock()
  defer l.serviceMu.Unlock()
  target := l.uploadBatchTarget
  if target == 0 { target = 32<<10 }
- if target >= uint64(datapath.BulkBatchTargetBytes) { return }
- if useful >= target && elapsed <= budget {
+ if elapsed > 2*budget {
+  l.uploadBatchFastCount=0
+  l.uploadBatchSlowCount++
+  if l.uploadBatchSlowCount >= 2 { l.uploadBatchTarget=max(uint64(32<<10),target/2); l.uploadBatchSlowCount=0 }
+ } else if useful >= target && elapsed <= budget {
+  l.uploadBatchSlowCount=0
   l.uploadBatchFastCount++
   if l.uploadBatchFastCount >= 2 { l.uploadBatchTarget = min(uint64(datapath.BulkBatchTargetBytes), 2*target); l.uploadBatchFastCount=0 }
- } else { l.uploadBatchFastCount=0 }
+ } else { l.uploadBatchFastCount=0; l.uploadBatchSlowCount=0 }
 }
 '''
 p.write_text(s)
@@ -59,6 +63,11 @@ func TestRC10ClientColdUplinkUsesOnlyConfirmedSizedBulkService(t *testing.T){
  if l.serviceBatchTarget()!=64<<10 {t.Fatal("confirmed first probe cannot grow")}
  for i:=0;i<12;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
  if l.serviceBatchTarget()!=64<<10 {t.Fatal("small samples pretended to prove larger batches")}
+ l.observeUploadBatch(64<<10,400*time.Millisecond,true,false)
+ if l.serviceBatchTarget()!=64<<10 {t.Fatal("one outlier contracted upload")}
+ l.observeUploadBatch(64<<10,400*time.Millisecond,true,false)
+ if l.serviceBatchTarget()!=32<<10 {t.Fatal("confirmed slow upload did not reject a large literal")}
+ for i:=0;i<2;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
  for _,n:=range []uint64{64<<10,128<<10,256<<10} {for i:=0;i<2;i++ {l.observeUploadBatch(n,80*time.Millisecond,true,false)}}
  if l.serviceBatchTarget()!=datapath.BulkBatchTargetBytes {t.Fatal("fast upload remained cold")}
  slow:=&lane{}
