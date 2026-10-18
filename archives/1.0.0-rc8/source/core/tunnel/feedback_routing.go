@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+// Non-bulk WINDOW/ACK/repair feedback must not be pinned behind a carrier
+// whose newly observed RTT is queue-inflated. The penalty is bounded, and
+// stale samples do not exclude the carrier. Durable credit and stream/OPEN
+// affinity rules remain unchanged.
+func (g *stripeGroup) rc8FastControlScoreLocked(l *lane) int {
+	return interactiveCarrierScore(l,[2]*lane{}) + int(g.carrierLatencyLocked(l)) +
+		int(g.delivery.carrierBytes[l.account.ID]/(32<<10)) +
+		g.fastLoadedRTTSpikePenaltyLocked(l)
+}
+
 // DATA on independent sockets is not control queue debt. Keep bulk snapshots
 // on responsive services so receipt and credit updates coalesce before sealing.
 // No account has a permanent role: detached/full paths fall back immediately.
