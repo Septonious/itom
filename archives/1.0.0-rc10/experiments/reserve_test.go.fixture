@@ -1,0 +1,41 @@
+package tunnel
+
+import (
+ "fmt"
+ "testing"
+ "time"
+ "itom.local/core/wire"
+)
+
+func TestRC10QuietReserveAgreesAcrossIndependentEndpointHistory(t *testing.T) {
+ groups:=[]*stripeGroup{newStripeGroup(wire.ID{9,7},1),newStripeGroup(wire.ID{9,7},1)}
+ for side,g:=range groups {
+  for i:=1;i<=8;i++ {
+   l:=stripeTestLane(g,fmt.Sprintf("a%02d",i),side==1)
+   defer l.cancel()
+   if err:=g.attach(l);err!=nil {t.Fatal(err)}
+   // NOOP and server control-echo paths have different propagation floors
+   // and small opposite jitter, but every lane is in the old healthy band.
+   l.idleRTTAt.Store(time.Now().UnixMilli())
+   if side==0 {l.idleRTT.Store(int64(20+i))} else {l.idleRTT.Store(int64(260-i))}
+  }
+ }
+ groups[0].interactiveReserve=[2]string{"a01","a02"}
+ groups[1].interactiveReserve=[2]string{"a08","a07"}
+ for _,g:=range groups {g.mu.Lock();g.interactiveReadersLocked();g.mu.Unlock()}
+ if groups[0].interactiveReserve!=groups[1].interactiveReserve {t.Fatal("endpoints protect different accounts",groups[0].interactiveReserve,groups[1].interactiveReserve)}
+ for _,g:=range groups {
+  chosen:=g.interactiveReserve
+  // Active bulk must not move the reserve onto a currently busy BODY path.
+  g.delivery.bulk=32<<10
+  for _,l:=range g.lanes {l.idleRTT.Store(900)}
+  g.mu.Lock();g.interactiveReadersLocked();g.mu.Unlock()
+  if g.interactiveReserve!=chosen {t.Fatal("loaded echo rotated bulk reserve")}
+  // A genuinely slow candidate remains outside the original latency band.
+  g.delivery.bulk=0
+  for _,l:=range g.lanes {l.idleRTT.Store(40)}
+  g.lanes[chosen[0]].idleRTT.Store(900)
+  g.mu.Lock();g.interactiveReadersLocked();g.mu.Unlock()
+  for _,id:=range g.interactiveReserve {if id==chosen[0] {t.Fatal("deterministic tie-breaker selected slow outlier")}}
+ }
+}
