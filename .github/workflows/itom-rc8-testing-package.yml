@@ -1,0 +1,135 @@
+name: RC8 matched APK/Linux TESTING package (NOT RELEASE QUALIFIED)
+on:
+  push:
+    branches: ["codex/v1.0.0-rc8-development"]
+    paths:
+      - "archives/1.0.0-rc8/source/**"
+      - ".github/workflows/itom-rc8-testing-package.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  SOURCE: archives/1.0.0-rc8/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  linux:
+    name: Build Linux amd64 and arm64
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc8
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.0.0-RC8-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.0.0-RC8-linux-$arch.bin" | grep -q 'itom-1-0-0-rc8'
+            test "$(stat -c %s "dist/ITOM-1.0.0-RC8-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.0.0-RC8-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc8-testing-linux
+          path: ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC8-linux-*.bin
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    name: Build Android APK, SDK tests, lint and JNI
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin SDK/JDK/NDK and build exact RC8 application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc8 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10007 and x['versionName']=='1.0.0-rc8-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.0.0-RC8-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-0-0-rc8' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.0.0-RC8-debug.apk > dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc8-testing-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC8-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+  source:
+    name: Package executable RC8 source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integrity check and source archive
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc8
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/ITOM-1.0.0-RC8-sources.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc8-testing-source
+          path: ITOM-1.0.0-RC8-sources.zip
+          if-no-files-found: error
+          retention-days: 30
+  package:
+    name: Assemble verified files; testing only, no release tag
+    needs: [linux, android, source]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc8-testing-linux
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc8-testing-android
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc8-testing-source
+          path: package
+      - name: Archive matched outputs and source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd package
+          test -s ITOM-1.0.0-RC8-debug.apk
+          test -s ITOM-1.0.0-RC8-linux-amd64.bin
+          test -s ITOM-1.0.0-RC8-linux-arm64.bin
+          test -s ITOM-1.0.0-RC8-sources.zip
+          printf '%s\n'             'ITOM 1.0.0 RC8 — UNQUALIFIED TESTING PACKAGE'             'Build commit: ${{ github.sha }}'             'Update Android and server together. APK app ID org.itom.client.'             'Check installed APK signing certificate before in-place upgrade.'             'Do NOT reset accounts, IMAP quota journals, wallets or client identities.'             'Real-provider stability, 75/75Mbps tails and 750ms RTT are NOT certified.'             'See the parallel RC8 development CI for pass/fail results.' > TESTING_NOTES.txt
+          sha256sum ITOM-1.0.0-RC8-* SIGNER.txt TESTING_NOTES.txt > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          zip -q ../ITOM-1.0.0-RC8-testing-package.zip ./*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.0.0-RC8-testing-package
+          path: ITOM-1.0.0-RC8-testing-package.zip
+          if-no-files-found: error
+          retention-days: 30

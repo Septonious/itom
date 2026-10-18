@@ -14,6 +14,24 @@ func (g *stripeGroup) carrierLatencyLocked(l *lane) int64 {
 		if c == nil {
 			return 0
 		}
+		// With no logical streams and no physical/control work, a fresh
+		// echo is a better predictor than an idle snapshot retained for up to
+		// two minutes. This matters when two equally idle IMAP accounts report
+		// 165ms and 583ms: new short work should follow the responsive lane.
+		// Require a genuinely quiet carrier; never train a baseline from a
+		// loaded echo or change existing physical credits and queue ownership.
+		if g.active.Load() == 0 && c.controlDebt.Load() == 0 &&
+			c.controlWriting.Load() == 0 && c.physicalActive.Load() == 0 &&
+			c.unreceivedLocalRecords.Load() == 0 {
+			if at := c.rttAt.Load(); at > 0 && now >= at && now-at <= 10000 {
+				if rtt := c.smoothedRTT.Load(); rtt > 0 {
+					return min(int64(2500), rtt)
+				}
+				if rtt := c.rtt.Load(); rtt > 0 {
+					return min(int64(2500), rtt)
+				}
+			}
+		}
 		// Classify path propagation using unloaded samples. A busy pool's
 		// queue-inflated ping must not make a slow backend look comparable to
 		// healthy but temporarily busy readers. Current RTT remains diagnostic;
