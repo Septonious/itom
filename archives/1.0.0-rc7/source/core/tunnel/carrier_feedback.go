@@ -116,6 +116,17 @@ func (g *stripeGroup) shortTarget(jobs []*datapath.Job) *lane {
 
 // Affinity is a small preference among responsive paths. Congestion and atomic
 // grant/slot eligibility always take precedence. Caller holds g.mu.
+func (g *stripeGroup) fastPlacementPenaltyLocked(account string, now time.Time) int {
+	if account == "" || g.fastPlacementStart.IsZero() || now.Sub(g.fastPlacementStart) >= time.Second {return 0}
+	return min(1024, max(0, g.fastPlacements[account]-3)*64)
+}
+func (g *stripeGroup) recordFastPlacementLocked(account string, now time.Time) {
+	if account == "" {return}
+	if g.fastPlacements == nil || g.fastPlacementStart.IsZero() || now.Sub(g.fastPlacementStart) >= time.Second {
+		g.fastPlacements = make(map[string]int,len(g.lanes));g.fastPlacementStart=now
+	}
+	g.fastPlacements[account]++
+}
 func (g *stripeGroup) preferShortTargetLocked(keys []string, preferred *lane) {
 	if preferred == nil || len(keys) < 2 {
 		return
@@ -123,7 +134,7 @@ func (g *stripeGroup) preferShortTargetLocked(keys []string, preferred *lane) {
 	score := func(l *lane) int {
 		// The peer can choose a different outgoing reserve. Compare actual
 		// latency/backlog here, without our own reserve's artificial bonus.
-		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l))
+		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l)) + g.fastPlacementPenaltyLocked(l.account.ID,time.Now())
 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
 			// A serial reply can arrive before its preceding cumulative ACK.
 			// Retain a small cost for that charged range, while a parallel burst
