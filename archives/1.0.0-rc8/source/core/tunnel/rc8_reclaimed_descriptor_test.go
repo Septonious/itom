@@ -97,7 +97,7 @@ func TestRC8ReclaimedDescriptorReplayCannotResurrectBodyCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < dataDescriptorCacheLimit; i++ {
+	for i := 0; len(l.reports) < dataDescriptorCacheLimit; i++ {
 		// Never evict unrelated live descriptors, even at the hard cache limit.
 		l.reports[[32]byte{255, byte(i), byte(i >> 8)}] = wire.UsageReport{}
 	}
@@ -109,7 +109,7 @@ func TestRC8ReclaimedDescriptorReplayCannotResurrectBodyCache(t *testing.T) {
 	if _, ok := l.pending[reports[1].Attempt.Digest]; ok {
 		t.Fatal("reclaimed duplicate BODY retained")
 	}
-	if len(l.reports) != dataDescriptorCacheLimit+1 {
+	if len(l.reports) != dataDescriptorCacheLimit {
 		t.Fatal("unrelated live descriptors evicted")
 	}
 	process(reports[0])

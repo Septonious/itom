@@ -1813,27 +1813,7 @@ func (m *laneMail) FetchCleanupCandidates(ctx context.Context, folder string, wa
 	if len(hints) == 0 {
 		return nil, nil
 	}
-	validity := hints[0].Validity
-	ids := make([]uint32, 0, 32)
-	seen := map[uint32]bool{}
-	var candidateBytes uint64
-	for _, hint := range hints {
-		if hint.Validity == validity && !seen[hint.UID] {
-			size := hint.MIMEBytes
-			if size == 0 {
-				size = mailbox.MaxMIME
-			}
-			if len(ids) > 0 && candidateBytes+size > 2<<20 {
-				break
-			}
-			candidateBytes += size
-			ids = append(ids, hint.UID)
-			seen[hint.UID] = true
-		}
-		if len(ids) == 32 {
-			break
-		}
-	}
+	validity, ids := cleanupCandidateUIDs(hints)
 	var rows []mailbox.Message
 	err := m.command(ctx, workMaintenance, func() error {
 		var e error
@@ -1844,6 +1824,40 @@ func (m *laneMail) FetchCleanupCandidates(ctx context.Context, folder string, wa
 		return nil, nil
 	}
 	return rows, err
+}
+
+// Eight normal DATA bodies fit in one discovery turn instead of four. This
+// amortizes SELECT/FETCH/STORE/EXPUNGE overhead before the outbound share fills.
+// It remains below the existing proof-cache bound; physical per-message limits,
+// the 32-UID bound and every observation/deletion proof remain unchanged.
+const cleanupCandidateBytes = 4 << 20
+
+func cleanupCandidateUIDs(hints []mailbox.AppendHint) (uint32, []uint32) {
+	if len(hints) == 0 {
+		return 0, nil
+	}
+	validity := hints[0].Validity
+	ids := make([]uint32, 0, 32)
+	seen := map[uint32]bool{}
+	var candidateBytes uint64
+	for _, hint := range hints {
+		if hint.Validity == validity && !seen[hint.UID] {
+			size := hint.MIMEBytes
+			if size == 0 {
+				size = mailbox.MaxMIME
+			}
+			if len(ids) > 0 && candidateBytes+size > cleanupCandidateBytes {
+				break
+			}
+			candidateBytes += size
+			ids = append(ids, hint.UID)
+			seen[hint.UID] = true
+		}
+		if len(ids) == 32 {
+			break
+		}
+	}
+	return validity, ids
 }
 
 func extendReaderHot(value *atomic.Int64, until int64) {
