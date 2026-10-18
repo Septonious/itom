@@ -1,5 +1,9 @@
 # ITOM 1.0.0 RC8 — Codex development handoff (2026-10-18)
 
+Later continuation: read [the cleanup/descriptor checkpoint](CLEANUP_DEVELOPMENT_CHECKPOINT_20261018.md)
+first for subsequent source commits, repeated qualification and remaining blockers.
+The measurements below describe the earlier `91db2a5` checkpoint.
+
 ## Start here — current checkpoint, not a stable release
 
 Repository: https://github.com/Septonious/itom
