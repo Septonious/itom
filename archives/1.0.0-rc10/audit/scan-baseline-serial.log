@@ -1,0 +1,9 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedScanPage/0-2 	   40784	     31187 ns/op	   49568 B/op	       7 allocs/op
+BenchmarkRC10OwnedScanPage/8-2 	    7324	    180753 ns/op	   63226 B/op	      95 allocs/op
+BenchmarkRC10OwnedScanPage/32-2         	    1831	    554006 ns/op	  104190 B/op	     360 allocs/op
+PASS
+ok  	itom.local/core/journal	5.668s
