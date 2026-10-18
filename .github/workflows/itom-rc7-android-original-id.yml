@@ -1,7 +1,7 @@
 name: RC7 Android original package ID and source candidate builds (TEST ONLY)
 on:
   push:
-    branches: [codex/v1.0.0-rc7]
+    branches: [codex/v1.0.0-rc7-appid]
     paths: [".github/workflows/itom-rc7-android-original-id.yml"]
 permissions:
   contents: read
