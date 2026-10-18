@@ -52,6 +52,25 @@ func (g *stripeGroup) carrierLatencyLocked(l *lane) int64 {
 	return values[(len(values)-1)/2]
 }
 
+// Only fresh, positive loaded-RTT spikes affect short/interactive placement.
+// An elevated busy RTT may reflect transient queueing rather than propagation.
+// This advisory cost never excludes a carrier or changes authenticated credit,
+// physical quota, journal ownership or in-flight TCP socket identity.
+func fastLoadedRTTSpikePenalty(sampleAgeMS, currentMS, smoothedMS int64) int {
+    if sampleAgeMS < 0 || sampleAgeMS > 10000 || currentMS <= 0 || smoothedMS <= 0 {
+        return 0
+    }
+    excess := currentMS - smoothedMS - 40 // ignore normal sample variation
+    if excess <= 0 { return 0 }
+    return int(min(int64(240), excess * 2))
+}
+
+func (g *stripeGroup) fastLoadedRTTSpikePenaltyLocked(l *lane) int {
+    if l == nil { return 0 }
+    now := time.Now().UnixMilli()
+    return fastLoadedRTTSpikePenalty(now-l.rttAt.Load(), l.rtt.Load(), l.smoothedRTT.Load())
+}
+
 // A short burst should await a responsive reader's slot before spilling onto
 // an idle but much slower account. This is relative to the measured pool, so
 // high mobile RTT alone excludes no path. Selection uses a bounded grace and
@@ -123,7 +142,7 @@ func (g *stripeGroup) preferShortTargetLocked(keys []string, preferred *lane) {
 	score := func(l *lane) int {
 		// The peer can choose a different outgoing reserve. Compare actual
 		// latency/backlog here, without our own reserve's artificial bonus.
-		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l))
+		n := interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l)) + g.fastLoadedRTTSpikePenaltyLocked(l)
 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
 			// A serial reply can arrive before its preceding cumulative ACK.
 			// Retain a small cost for that charged range, while a parallel burst

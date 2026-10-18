@@ -219,7 +219,7 @@ func (g *stripeGroup) prioritizeFastTargetsLocked(keys []string, avoid *lane) {
 			scores[key] = int(^uint(0) >> 1)
 			continue
 		}
-		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l))
+		n := int(l.predictedServiceMS(true)) + interactiveCarrierScore(l, quiet) + int(g.carrierLatencyLocked(l)) + g.fastLoadedRTTSpikePenaltyLocked(l)
 		if pending := g.delivery.fastCarrierRanges[l.account.ID]; pending > 0 {
 			// Tagged APPEND can finish long before the peer's short BODY/ACK.
 			// Include client wallet publications as well as server journal debt.
