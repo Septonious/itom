@@ -1,8 +1,5 @@
 name: RC10 isolated cold-capacity probe and recovery tests; no artifacts
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/cold64.py", "archives/1.0.0-rc10/experiments/escaped_ack.py", "archives/1.0.0-rc10/experiments/read2.py", ".github/workflows/itom-rc10-startup-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read

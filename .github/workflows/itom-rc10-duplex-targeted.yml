@@ -1,8 +1,5 @@
 name: RC10 isolated directional admission with bounded cleanup; no artifacts
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/read2.py", ".github/workflows/itom-rc10-duplex-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read

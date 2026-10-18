@@ -35,7 +35,7 @@ func TestRC10EstablishedStreamsShareEscapeWakeWithoutForgivingDebt(t *testing.T)
     next.finish(next.jobs,committed(next.jobs,flow.Committed))
     if _,err=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10));err==nil {t.Fatal("unreceived escape admitted a burst")}
     before=g.delivery.bulk
-    g.maintainDelivery(time.Now().Add(2*deliveryDecisionEpoch))
+    g.maintainDelivery(time.Now().Add(3*time.Second))
     if g.delivery.bulk!=before {t.Fatal("timer returned unacknowledged credit")}
     last,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10))
     if err!=nil {t.Fatal("invisible BODY permanently stranded another stream",err)}
