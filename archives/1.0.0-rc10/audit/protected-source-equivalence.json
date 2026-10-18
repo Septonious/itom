@@ -1,0 +1,273 @@
+{
+  "baseline_tree": "9cd9cc3fa2e07882b4d8154d7836e112840e3f1d",
+  "unchanged_protected_files": [
+    {
+      "path": "core/journal/audit.go",
+      "sha256": "5a7abcc95038cf294e8b39fbc05cabce86a8d87639420367010e5455c6197e7b"
+    },
+    {
+      "path": "core/journal/commit_metrics.go",
+      "sha256": "dde60fb66269cd67fb96e8089af611a002a7af5607e5f30d869e1651b7eb5dbb"
+    },
+    {
+      "path": "core/journal/latency_itomtest.go",
+      "sha256": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50"
+    },
+    {
+      "path": "core/journal/ledger.go",
+      "sha256": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534"
+    },
+    {
+      "path": "core/journal/model.go",
+      "sha256": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532"
+    },
+    {
+      "path": "core/journal/origin_view.go",
+      "sha256": "097656fcef7d3db609a3b62d6b8296a4c1c96761775d39efa17e077f0fc2033a"
+    },
+    {
+      "path": "core/journal/profile.go",
+      "sha256": "2a546b9559e11267cd8a5e5db365c9e0ae104bfdbdac906021b30c710e4724e9"
+    },
+    {
+      "path": "core/journal/remote.go",
+      "sha256": "16f39d5dfc47f8c1c67c6d0d623bc6ddbf0eb19dde9dd66266858ac8e94625ad"
+    },
+    {
+      "path": "core/journal/remote_index.go",
+      "sha256": "60ddfc25b941524f27f1251b5587871a5f7c3ba2796c55c94cd5af2d5236f230"
+    },
+    {
+      "path": "core/journal/store.go",
+      "sha256": "f45833b8b06e2de8b0f658b5459ef40ff69966e9e5285694155dc9d974905148"
+    },
+    {
+      "path": "core/wallet/reconcile.go",
+      "sha256": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165"
+    },
+    {
+      "path": "core/wallet/wallet.go",
+      "sha256": "5cef740ff3e8c2174007b38e6e091890f13ce1026b68eb3ee91ade1f4d7bde0b"
+    },
+    {
+      "path": "core/flow/rx.go",
+      "sha256": "c74f7a0650b7fed2035cdc8fc3870574d8e98da523d148977350a9b31a14c56f"
+    },
+    {
+      "path": "core/flow/tx.go",
+      "sha256": "be30c5a040c4be6752679e0d50286810fea6550c377531efa9589f39e492f370"
+    },
+    {
+      "path": "core/datapath/control_queue.go",
+      "sha256": "b9756ed11e05a85bf8ad08bc739c761c2980083dbaa9cb7b6a9a183a0893f2aa"
+    },
+    {
+      "path": "core/datapath/engine.go",
+      "sha256": "c817c49be995b35e0c8ad9441934f0806c4467bdd212d346a3c3e6c0bca1a962"
+    },
+    {
+      "path": "core/datapath/pump.go",
+      "sha256": "fc7263d24caf4f26a8258286f40f79b5068f15fd91af43cf9383fd1395c1a922"
+    },
+    {
+      "path": "core/datapath/scheduler_snapshot.go",
+      "sha256": "a2a267c4af1f0fd471534629cc9293c960463fbc48f59aeea0e03e74cd14824f"
+    },
+    {
+      "path": "core/datapath/socket_copy.go",
+      "sha256": "db8dd6f9ba0baacb0435ae42368ef08d1e53bf3af62554f5e71c8a351ad680fc"
+    },
+    {
+      "path": "core/datapath/tcp.go",
+      "sha256": "99fb05a727f2dcf03a4d0bf2bd959a676fb96e2d276f691aae745f73300e76d9"
+    },
+    {
+      "path": "core/datapath/writer.go",
+      "sha256": "b700590a54456ed3bfca877e7c0b932837da82c21d706a1e5bf5e98cb7f34f06"
+    },
+    {
+      "path": "core/recovery/recovery.go",
+      "sha256": "984c115b361eb13b6ada0a69c1419961201ae973006919a6a0c16e29eaedb9da"
+    },
+    {
+      "path": "core/servercfg/accounts.go",
+      "sha256": "0fcc35a6f00f684cc194b4d9be2c6b5e702b092050918af7bbc68ca8960a280c"
+    },
+    {
+      "path": "core/servercfg/android.go",
+      "sha256": "ed5e4223a08f6ef18313052d2525303c6c66a6190c113df21f6594f9cfb005c9"
+    },
+    {
+      "path": "core/servercfg/config.go",
+      "sha256": "cd1334ce59d18ea36d6bc44b518f9a66284c4e07df933ee1667b6dc3e1ee02ec"
+    },
+    {
+      "path": "core/servercfg/guard.go",
+      "sha256": "7092998ed538d0e00396285736a24c225c3f3d082ee3e1bd96034b1afba165f3"
+    },
+    {
+      "path": "core/servercfg/notice.go",
+      "sha256": "57fd9bd3dea3de3cae98cdd1793053ec65ffaba98686223fb4e5789d06fee7f6"
+    },
+    {
+      "path": "core/servercfg/transport.go",
+      "sha256": "d2c8c53b6165808097c3c6a8ee2674996539b78769dc72735024944c832a9d8c"
+    },
+    {
+      "path": "core/servercfg/users.go",
+      "sha256": "5cd15ae975124385122d1d211b056b79b8f50d1ba25776ef90a70d752e57aab0"
+    },
+    {
+      "path": "core/adminapi/api.go",
+      "sha256": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876"
+    },
+    {
+      "path": "core/adminserver/server.go",
+      "sha256": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39"
+    },
+    {
+      "path": "core/adminserver/watchdog.go",
+      "sha256": "d3ef6f9932d23c8c5be84d9c111d42b639b3527da697a2ded4a6ad5b5571b6ea"
+    },
+    {
+      "path": "core/mailbox/admin.go",
+      "sha256": "d3a2b069b2eb1d4117724e03cf4ba736041ffe4317db2565f8eda5594297cc25"
+    },
+    {
+      "path": "core/mailbox/append_hints.go",
+      "sha256": "7231ba9c73bda9018e079d2988cf2732847705b061b77523804a1a5ad60b6a82"
+    },
+    {
+      "path": "core/mailbox/batch.go",
+      "sha256": "e960e684ef155c991fecde10b25c96910eb0ad4c8e54ead60f1feedf44056c3e"
+    },
+    {
+      "path": "core/mailbox/binary_policy.go",
+      "sha256": "5fd51cb3b7aaf18c3ea698ebad355e7a45ea2b43484a9973f709e8ada7919587"
+    },
+    {
+      "path": "core/mailbox/check.go",
+      "sha256": "dad4df454c586c7dc025ed8727a196f6e2ec187d40b408f2c95a8784023e3966"
+    },
+    {
+      "path": "core/mailbox/connection_error.go",
+      "sha256": "e7f7709d642cc1e627d2b8c2122caaded58a043d93c265fa766ee2c2e1933916"
+    },
+    {
+      "path": "core/mailbox/dispatcher.go",
+      "sha256": "52f9e36e3070df5b1b8efe24f8258a7096473320f182f4e993f13cb9f32820db"
+    },
+    {
+      "path": "core/mailbox/inbox.go",
+      "sha256": "a96864d8ff299a73afb47461555da45ce14e3f4786f09b54ad7cb1fda342dacf"
+    },
+    {
+      "path": "core/mailbox/keepalive.go",
+      "sha256": "d53aa0f4f8b5c6d86352c1734c6f0f68c89300b9f9014239491c921a1a4071a6"
+    },
+    {
+      "path": "core/mailbox/mailbox.go",
+      "sha256": "058e1e980f9a227d03b83ea561718a57a7bc58c73e7018b7a65a0a2e1642d5e7"
+    },
+    {
+      "path": "core/mailbox/purge.go",
+      "sha256": "7063023bfb0c9ebfdf421b1aa54ee23a61494be049cf6acf01ce7acd3372e644"
+    },
+    {
+      "path": "core/mailbox/receive_interrupt.go",
+      "sha256": "25c69bb3928137a4cfdd7b7a156d3fc9ed79cfaed67db2d2b791d5731c05fe83"
+    },
+    {
+      "path": "core/mailbox/socket_lifecycle.go",
+      "sha256": "92337b11775ae2113d0a874d341979785d615f9cb8611564e0fbae6fee56b2ee"
+    },
+    {
+      "path": "core/mailbox/tail_gaps.go",
+      "sha256": "37385485165d17bcb972722566efe6594339f6c4384249192740ea19480333ff"
+    },
+    {
+      "path": "core/mailbox/tail_sparse.go",
+      "sha256": "27a3110e2dfbb3aa04ba3ef179bb39f4015f8f651c8034a008250c44f5337d19"
+    },
+    {
+      "path": "native/admin.go",
+      "sha256": "181cfd4fb11407a5a3f95e88b5fb8a8be2ea8a3ac60ddbaaf9b05ad9bdf2c80d"
+    },
+    {
+      "path": "native/dns.go",
+      "sha256": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912"
+    },
+    {
+      "path": "native/go.mod",
+      "sha256": "0c1e3f707eb4c289eddc48139c437710cfaa8daf2b0c0e5389f31d1f0d2e6679"
+    },
+    {
+      "path": "native/go.sum",
+      "sha256": "3b2bf006809fa32acb3b302e26a1ea3ddd499a346347d2bb0041be66ddfc1f53"
+    },
+    {
+      "path": "native/mobile.go",
+      "sha256": "232c3958b68a66b86651bd01ac68e9ce0ce0012607907f091dc0aac4baf734a7"
+    },
+    {
+      "path": "native/tools.go",
+      "sha256": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f"
+    },
+    {
+      "path": "native/version.go",
+      "sha256": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee"
+    },
+    {
+      "path": "android/domain/build.gradle.kts",
+      "sha256": "d9aba1b51349fdbf37f42361484451ec9682cb1c15f652fe26e5d724e61df1df"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Admin.kt",
+      "sha256": "e2ebd88752c3b0186131f95662b32d887c3898b4123354fc462274436875d270"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Codec.kt",
+      "sha256": "9e7e670bc817f7c4c792df3bf0d5bb26f9651f3de0bc42ffd47755681bfdeea1"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Diagnostics.kt",
+      "sha256": "37e63d9ca9b250d6ba3c1609b5b1e404047718b16ad7ffb82350fecaaff53e80"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Models.kt",
+      "sha256": "004720d303f4e8a142c01b388d6c9c95f7ba4e6659147b06389e435507df8e2f"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/NetworkSelection.kt",
+      "sha256": "0d597dfed423236fcf61cee7069f5c49986f5ff34cddac2b41e473cc515a70b3"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/ProfileEditing.kt",
+      "sha256": "94ae9f2bddafb62c03eb58fb1d71f481060b02a7d47ead1f8bdf6a7eb6346248"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Routing.kt",
+      "sha256": "900f47c279266c2ae1f07f31bd214e4a362e6ad9a2cf372300f9482de3567c93"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/ServerMessageFormatting.kt",
+      "sha256": "aee39fd2dbf870b0e185cf3e589f953ec84a190ae09cd2c15cbaad23ceeea3e5"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Session.kt",
+      "sha256": "139a5c2bf0366f4408ae3e6632aa93e4d76d849cbfd5d2dbe7510266ea980a40"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/SocksCredentials.kt",
+      "sha256": "655806a6e2a65c90390d309f162b739c8c2ad76a0a572e3dc9d8910b26a2bd1d"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Validation.kt",
+      "sha256": "d783a5e20d3a6f127b6b1166eba070303efadd18a3f1cd61c635fee238880659"
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/VaultMigration.kt",
+      "sha256": "c72ad63300ff60da5c318c0871f327ec38142ed8e2226df92a1231f6d13267e5"
+    }
+  ]
+}
