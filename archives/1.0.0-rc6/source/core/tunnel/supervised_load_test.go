@@ -22,6 +22,14 @@ import (
 // These are not validated against the field provider and cannot qualify a release.
 // Half outages include stream owners; the same application sockets and verified
 // byte generators remain active across outage, warmup and measurement phases.
+// Only a test-fixture choice: do not alter the live provider or tunnel.
+func initialProviderProfileMbps(steps []providerCapStep, fallback float64, early bool) float64 {
+	if early && len(steps) != 0 {
+		return steps[0].Mbps
+	}
+	return fallback
+}
+
 func testSupervisedProductionLoad(t *testing.T) {
 	t.Log("synthetic_measurement=true field_qualified=false")
 	if raceInstrumented {
@@ -84,8 +92,14 @@ func testSupervisedProductionLoad(t *testing.T) {
 	f := newProductionSupervisorFixtureState(t, n, retained)
 	logical, generation := f.client.logicalSession, f.client.generation
 	target := newProductionLoadTarget(t, fmt.Sprintf("%x/supervised", logical))
-	f.network.setMbps(loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
 	profiles := parseProviderProfile(t, os.Getenv("ITOM_LOAD_PROVIDER_PROFILE"), loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
+	// Test both a genuine speedup (initial low link before the first app OPEN)
+	// and a sudden downgrade of an already-busy high-speed IMAP channel.
+	// Without EARLY, a 150->10Mbps drop incorrectly masquerades as a ramp.
+	profileEarly := os.Getenv("ITOM_LOAD_PROVIDER_PROFILE_EARLY") == "1"
+	providerStart := initialProviderProfileMbps(profiles, loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0), profileEarly)
+	f.network.setMbps(providerStart)
+	t.Logf("supervised_provider_initial mbps=%.3f early_profile=%t", providerStart, profileEarly)
 	mobile := os.Getenv("ITOM_LOAD_MOBILE") == "1"
 	mobileCap := loadEnvFloat(t, "ITOM_LOAD_MOBILE_MBPS", 600)
 	var baseline time.Duration
@@ -270,8 +284,10 @@ func testSupervisedProductionLoad(t *testing.T) {
 			profileWG.Add(1)
 			go func() {
 				defer profileWG.Done()
-				for _, step := range profiles {
-					f.network.setMbps(step.Mbps)
+				for i, step := range profiles {
+					if !profileEarly || i > 0 {
+						f.network.setMbps(step.Mbps)
+					}
 					t.Logf("supervised_cap mbps=%.3f", step.Mbps)
 					if step.Duration <= 0 {
 						return
