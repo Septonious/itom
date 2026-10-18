@@ -61,3 +61,14 @@ All results are saved in `evidence/experiment-*.json`, including failed rounds. 
 - Calibration defect: a range originally admitted at low flight can later experience a fully loaded epoch but still inflate the unloaded ACK floor. The isolated correction tracks peak exposure and uses half of the actual cold seed; existing windows, independent escapes and authenticated credit stay unchanged. Deterministic regression passes in the integrated scratch tree.
 
 The candidate source is still commit05383c2; current experiments remain separate until they pass targeted checks. No RC10 APK/binary has been built.
+
+
+## Final checkpoint for this work interval
+
+Run39169810153: retained32 down72.487Mbps, max471.343ms; early10 timed out. Run39169810144: prefetch-only down70.215Mbps,max465.821ms. Neither qualifies. Their per-run evidence is retained.
+
+The pressure-conditional escape experiment (64KiB cold seed,250ms wake, proof of exact wake ownership, peak/congestion calibration,cleanup4) preserved normal established-stream independence in deterministic tests. Its650ms default fast guard completed all30low-capacity probes and post-load original/fresh integrity, but max1444.943ms fails750ms. A350ms guard brought median334ms,max810.549ms, but upload fell21.692→8.454Mbps across the same10/20/50/150 profile; reject the tighter guard. These are synthetic local results, not a live Rambler claim. No threshold was relaxed.
+
+The calibration test now derives cardinality/frontier from the actual cold seed, verifying both whole/split full-window exposure and exact authenticated credit without assuming256KiB. Broad focused controller/mobile/RC2/RC10 regressions passed0.085s for the isolated350variant; that functional pass does not certify performance. A prematurely started measurement was terminated before use and replaced with the complete recorded100.67s run. No favorable samples from that aborted attempt were used.
+
+All source policies remain the reviewed candidate at05383c2. Unqualified experiments are stashed durably as separate scripts and evidence on the pushed branch. Retired prefetch/combined matrices are manual-only now; pushing an audit correction does not repeat known-red load tests. The strict main qualification and its package prerequisites are untouched. RC10 is not ready for APK/binary packaging.

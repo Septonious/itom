@@ -1,8 +1,5 @@
 name: RC10 bounded cleanup prefetch proof and retained tail
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/prefetch.py", ".github/workflows/itom-rc10-prefetch-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read

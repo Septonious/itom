@@ -1,8 +1,5 @@
 name: RC10 measured cold uplink with original RC2 recovery; two targeted blockers
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-combined-targeted.yml", "archives/1.0.0-rc10/experiments/client_cold.py", "archives/1.0.0-rc10/experiments/prefetch.py", "archives/1.0.0-rc10/experiments/preparation_cold.py", "archives/1.0.0-rc10/experiments/calibration.py"]
   workflow_dispatch:
 permissions:
   contents: read
