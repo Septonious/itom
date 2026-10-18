@@ -2,7 +2,7 @@ name: RC8 descriptor cache GC and physical inventory endurance
 on:
   push:
     branches: ["codex/rc8-descriptor-burst"]
-    paths: [".github/workflows/itom-rc8-descriptor-endurance.yml"]
+    paths: [".github/workflows/itom-rc8-descriptor-endurance.yml", "archives/1.0.0-rc8/source/core/tunnel/**"]
   workflow_dispatch:
 permissions:
   contents: read
