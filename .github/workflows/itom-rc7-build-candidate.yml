@@ -1,0 +1,65 @@
+name: RC7 Android native and source candidate builds (TEST ONLY)
+on:
+  push:
+    branches: [codex/rc7-build-validation]
+    paths: [".github/workflows/itom-rc7-build-candidate.yml"]
+permissions:
+  contents: read
+jobs:
+  android:
+    name: RC7 Android APK ID invariant, native JNI parity, tests and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned Android and verify unchanged application ID
+        working-directory: archives/1.0.0-rc7/source
+        run: |
+          set -euo pipefail
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc7 --accept-android-licenses
+      - name: Reject any changed APK ID or release identity
+        working-directory: archives/1.0.0-rc7/source
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path("android/app/build/outputs/apk/debug/output-metadata.json")
+          d=json.loads(p.read_text())
+          assert d["applicationId"]=="org.itom.client.dev.rev7",d
+          assert any(x["versionCode"]==10006 and x["versionName"]=="1.0.0-rc7-debug" for x in d["elements"])
+          print("RC7 kept original org.itom.client.dev.rev7 application ID")
+          PY
+          apksigner="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$apksigner"
+          "$apksigner" verify --print-certs dist/ITOM-1.0.0-RC7-debug.apk > dist/SIGNER.txt
+          (cd dist && sha256sum ITOM-1.0.0-RC7-debug.apk > RC7_APK_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc7-unqualified-android-apk
+          path: |
+            archives/1.0.0-rc7/source/dist/ITOM-1.0.0-RC7-debug.apk
+            archives/1.0.0-rc7/source/dist/RC7_APK_SHA256SUMS
+            archives/1.0.0-rc7/source/dist/SIGNER.txt
+            archives/1.0.0-rc7/source/dist/build-report.json
+            archives/1.0.0-rc7/source/dist/test-summary.json
+            archives/1.0.0-rc7/source/dist/lint-summary.json
+          retention-days: 14
+  sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package exact tested RC7 candidate sources and manifest
+        working-directory: archives/1.0.0-rc7/source
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc7
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/ITOM-1.0.0-RC7-sources.zip"
+          (cd "$GITHUB_WORKSPACE" && sha256sum ITOM-1.0.0-RC7-sources.zip > RC7_SOURCE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc7-unqualified-source-snapshot
+          path: |
+            ITOM-1.0.0-RC7-sources.zip
+            RC7_SOURCE_SHA256SUMS
+          retention-days: 14
