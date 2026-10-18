@@ -53,3 +53,26 @@ The archived RC2→RC6 core diff has 19 changed paths, predominantly diagnostics
 ## Next RC decision
 
 Restore **RC5 16MiB server / 12MiB client** ACK growth and BODY service policy while keeping RC6+ recovery, quota and diagnostic improvements. Encode separate hard ceilings for both delivery policy probing and fresh path discovery; verify side mapping and migration. **Do not call it the exact original experiment** without the original patch. Run full correctness, 4/32-stream strict 75/75 ≤750ms, low-speed ramp, fresh/retained and live Android validation. If any fail, keep it **test-only** and do not publish tag `v1.0.0-rc7`.
+
+
+## Follow-up October 18 2026: reproducible A/B after 16/12 restore
+
+All variants below retained exactly `org.itom.client` source identity, the authenticated 16MiB server / 12MiB client maximum, and the strict 75/75 Mbps, max 750ms qualification without any tolerance or fabricated results. Each entry links an independent, full 60-second 10-account laboratory run.
+
+| Experimental variant | 4-stream Mbps up/down, worst RTT | 32-stream Mbps up/down, worst RTT | Low-link result | Decision |
+|---|---|---|---|---|
+| Cold initial window **128KiB**, original 336KiB batch | 151.690/76.183, 447ms; trailing floor 72.378 | **131.640/79.832, 428ms**, verified tail 78.014 | True 10Mbps startup timed out; 20→50→150 reached 1141ms | **Reject**: 4-stream trailing floor and low-link RTT |
+| Cold initial window **256KiB**, original batch | 157.933/77.472, 431ms; trailing floor 73.995 | **123.404/80.806, 405ms**, verified tail 79.561 | 10Mbps timeout; 20→50→150 1430ms | **Reject**: 4-stream trailing and low-link |
+| 128KiB seed + **352KiB** batch target (physical 512KiB hard cap unchanged) | 157.706/76.773, 359ms; tail floor 72.955 | **135.000/79.386, 365ms**, tail 77.813 | 10Mbps timed out; 20→50→150 1356ms | **Reject**: no sustained tail or RTT improvement |
+| 128KiB seed + one-second fast-placement balancing | 153.695/76.900, 421ms; tail floor 74.396 | **127.459/78.193, 371ms**, tail 76.389 | 10Mbps timed out; 20→50→150 1163ms | **Reject**: 4-stream tail still <75, low-link RTT |
+| 128KiB seed + **10** bulk scheduler workers (from 8), same ten accounts | 155.591/75.340, 517ms; tail floor **70.648** | 112.237/73.335, 615ms; tail floor **59.900** | 10Mbps 1342ms; 20Mbps probe timeout | **Reject**: worsened both sustained speed and stability |
+
+GitHub raw CI:
+- Initial windows: https://github.com/Septonious/itom/actions/runs/39121098217 (128KiB), https://github.com/Septonious/itom/actions/runs/39121100927 (256KiB)
+- 352KiB batch: https://github.com/Septonious/itom/actions/runs/39121472631
+- Short-placement: https://github.com/Septonious/itom/actions/runs/39121668904
+- Ten writers: https://github.com/Septonious/itom/actions/runs/39121764599
+
+Grant-readiness regression: original `TestFieldLegacyGrantPublicationDoesNotStrandThreeAccounts` intermittently asserts that *both grant queues are nonempty at the very instant a ready carrier is inspected*. Production readiness only attests both grant classes were published, and active DATA workers can consume them immediately. A test-only **bounded 5s refill plus original account-specific TCP echo** passed **six consecutive local repetitions**, but this does *not* qualify production refill without full CI. No production change or test loophole has been promoted.
+
+**Current engineering disposition:** original tested 16/12MiB candidate `2b08127305530b2e16ee3c05f669ad8331a6d559` remains the best reproducible source. Its matched APK, Linux AMD64/ARM64 binaries, source and checksums are built and can be supplied **for controlled tests only**. Full strict fresh+retained 12-case throughput and 10/20Mbps stability still FAIL. **Do not publish `v1.0.0-rc7` as a qualified release.**
