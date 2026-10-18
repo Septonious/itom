@@ -26,7 +26,7 @@ s+='''
 // delivery. Only two complete, sufficiently large bulk turns can grow the next
 // tentative batch. The server's authenticated peer-BODY policy is unchanged.
 func (l *lane) observeUploadBatch(useful uint64, elapsed time.Duration, accepted, fast bool) {
- if l.side || fast || !accepted || useful < 32<<10 || useful > uint64(datapath.BulkBatchTargetBytes) || elapsed <= 0 { return }
+ if l.side || fast || !accepted || useful < 32<<10 || useful > uint64(dataBatchMIMEHardCap) || elapsed <= 0 { return }
  budget := max(250*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
  l.serviceMu.Lock()
  defer l.serviceMu.Unlock()
@@ -46,6 +46,9 @@ p=d/'rev5_peer_read_policy_test.go';s=p.read_text();a='''\t\tl.rtt.Store(42)
 s=s.replace(a,'''\t\tl.rtt.Store(42)
 \t\tfor n := 0; n < 8; n++ { l.observeUploadBatch(344064,40*time.Millisecond,true,false) }
 \t\tg.lanes[l.account.ID] = l''');p.write_text(s)
+# Keep the existing slow-literal test scoped to an established upload path.
+p=d/'service_policy_test.go';s=p.read_text();a='l := &lane{}';assert a in s
+s=s.replace(a,'l := &lane{}\n\tfor i := 0; i < 8; i++ { l.observeUploadBatch(11*(32<<10),80*time.Millisecond,true,false) }',1);p.write_text(s)
 (d/'rc10_client_cold_test.go').write_text('''package tunnel
 import("testing";"time";"itom.local/core/datapath")
 func TestRC10ClientColdUplinkUsesOnlyConfirmedSizedBulkService(t *testing.T){
@@ -62,7 +65,7 @@ func TestRC10ClientColdUplinkUsesOnlyConfirmedSizedBulkService(t *testing.T){
  for i:=0;i<20;i++ {slow.observeUploadBatch(32<<10,350*time.Millisecond,true,false)}
  if slow.serviceBatchTarget()!=32<<10 {t.Fatal("slow small literal allowed a large burst")}
  mobile:=&lane{providerBaseline:300*time.Millisecond}
- for i:=0;i<8;i++ {mobile.observeUploadBatch(344064,350*time.Millisecond,true,false)}
+ for i:=0;i<8;i++ {mobile.observeUploadBatch(11*(32<<10),350*time.Millisecond,true,false)}
  if mobile.serviceBatchTarget()!=datapath.BulkBatchTargetBytes {t.Fatal("true propagation permanently capped upload")}
  server:=&lane{side:true}
  for i:=0;i<8;i++ {server.observeUploadBatch(344064,time.Millisecond,true,false)}
