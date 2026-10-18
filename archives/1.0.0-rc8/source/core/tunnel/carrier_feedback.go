@@ -92,6 +92,20 @@ func (g *stripeGroup) fastLatencyCeilingLocked() int64 {
 	return best + max(int64(250), best/2)
 }
 
+// Keep enough measured RTT budget for the wire round trip *after* carrier
+// selection. A congested preferred reader should not hold a short request
+// for hundreds of milliseconds before an otherwise usable carrier is tried.
+func boundedInteractiveGrace(bestMS, outlierMS int64) time.Duration {
+	if bestMS <= 0 || outlierMS <= bestMS {
+		return 100 * time.Millisecond
+	}
+	// A smaller difference makes waiting unhelpful. An outlier that is much
+	// slower may still warrant one short (at most 150ms) preferential turn.
+	difference := time.Duration(outlierMS-bestMS) * time.Millisecond / 3
+	wireBudget := time.Duration(max(int64(0), 750-bestMS)) * time.Millisecond / 4
+	return max(25*time.Millisecond, min(150*time.Millisecond, difference, wireBudget))
+}
+
 func (g *stripeGroup) fastSlotGraceLocked() time.Duration {
 	ceiling := g.fastLatencyCeilingLocked()
 	best, outlier := int64(1<<62), int64(1<<62)
@@ -109,12 +123,13 @@ func (g *stripeGroup) fastSlotGraceLocked() time.Duration {
 		}
 	}
 	if outlier == 1<<62 {
-		return 150 * time.Millisecond
+		return 100 * time.Millisecond
 	}
-	// Awaiting a responsive turn is worthwhile for at most half the measured
-	// extra delay of the nearest slow alternative. Keep fallback bounded;
-	// an indefinitely unavailable grant must not strand the logical writer.
-	return max(150*time.Millisecond, min(650*time.Millisecond, time.Duration(outlier-best)*time.Millisecond/2))
+	// Even a healthy 300-500ms path cannot afford a 650ms additional wait
+	// for physical grant availability within the 750ms application RTT budget.
+	// This is only a scheduling preference: no grant, TCP stream, journal
+	// record or logical credit is discarded when the brief grace expires.
+	return boundedInteractiveGrace(best, outlier)
 }
 
 // One short stream can return on its actual incoming physical reader. A batch
