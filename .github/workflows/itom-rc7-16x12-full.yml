@@ -1,0 +1,250 @@
+name: RC7 16-12MiB full lab qualification (strict 75/75 and 750ms)
+on:
+  push:
+    branches: ["codex/rc7-16x12-recovery"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  SOURCE: archives/1.0.0-rc7/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  correctness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc7/source/core/go.mod
+          cache: false
+      - name: Validate source, 92 Python tests and Android ID invariant
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc7
+          python3 -m unittest discover -s tools -p 'test_*.py' -q
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path("source-info.json").read_text())
+          gradle=Path("android/app/build.gradle.kts").read_text()
+          assert meta['android_application_id']=='org.itom.client'
+          assert 'applicationId = "org.itom.client"' in gradle
+          assert 'applicationIdSuffix' not in gradle
+          PY
+      - name: Complete Go tests, provider journal recovery and vet
+        working-directory: ${{ env.SOURCE }}/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=1200s ./... 2>&1 | tee "${RUNNER_TEMP}/rc7-full-core.log"
+      - name: Race focused on authenticated admission, journal and reconnect
+        working-directory: ${{ env.SOURCE }}/core
+        run: |
+          set -euo pipefail
+          go test -race -p 2 -count=1 -timeout=300s ./tunnel -run 'TestRC7AsymmetricWindow|TestRC7Directional|TestRC7SpeedupReallyStarts|TestRev4LongBlackout|TestTrafficClassFragmentedBurst'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc7-core-integrity-evidence
+          path: ${{ runner.temp }}/rc7-full-core.log
+          retention-days: 14
+  hard-perf:
+    name: "Strict 75/75, 750ms — ${{ matrix.streams }} streams"
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        streams: [4, 32]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc7/source/core/go.mod
+          cache: false
+      - name: Three independent full 60s duplex rounds, original sockets, no tolerance
+        working-directory: ${{ env.SOURCE }}/core
+        env:
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC7_RELEASE_GATE: "1"
+          ITOM_STABILITY_QUALIFICATION: "0"
+          ITOM_LOAD_MIN_MBPS: "75"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "${{ matrix.streams }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "3"
+          ITOM_LOAD_PROVIDER_MBPS: "600"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=1100s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "${RUNNER_TEMP}/rc7-strict-${{ matrix.streams }}.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc7-strict-${{ matrix.streams }}-stream-evidence
+          path: ${{ runner.temp }}/rc7-strict-${{ matrix.streams }}.log
+          retention-days: 14
+  retained:
+    name: "12 case hard 75/75 matrix — ${{ matrix.state }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    strategy:
+      fail-fast: false
+      matrix:
+        state: [fresh, retained]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc7/source/core/go.mod
+          cache: false
+      - name: Repeated SINGLE/MULTI 60s x3, strict RTT and verified tail
+        working-directory: ${{ env.SOURCE }}
+        env:
+          ITOM_RC7_RELEASE_GATE: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ "${{ matrix.state }}" == "retained" ]]; then flags+=(--retained-state); fi
+          python3 tools/transport_qualification.py \
+            --results "$GITHUB_WORKSPACE/reports/${{ matrix.state }}" \
+            --accounts 10 --seconds 60 --repeats 3 --streams both \
+            --warmup 10 --command-delay-ms 80 --provider-mbps 600 \
+            --provider-sessions 10 --minimum-mbps 75 "${flags[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc7-matrix-${{ matrix.state }}-evidence
+          path: reports/${{ matrix.state }}
+          retention-days: 14
+  ramps:
+    name: "Low capacity speedup/downgrade stability — ${{ matrix.profile }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: low10-up
+            caps: "10:10,20:10,50:10,150:30"
+            early: "1"
+          - profile: low20-up
+            caps: "20:10,50:10,150:40"
+            early: "1"
+          - profile: high150-down
+            caps: "150:10,50:10,20:10,10:30"
+            early: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc7/source/core/go.mod
+          cache: false
+      - name: Strict 750ms startup and every-second traffic, do not demand 75Mbps at 10Mbps link
+        working-directory: ${{ env.SOURCE }}/core
+        env:
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_STABILITY_QUALIFICATION: "1"
+          ITOM_RC7_RELEASE_GATE: "0"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "32"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "1"
+          ITOM_LOAD_PROVIDER_MBPS: "600"
+          ITOM_LOAD_PROVIDER_PROFILE: "${{ matrix.caps }}"
+          ITOM_LOAD_PROVIDER_PROFILE_EARLY: "${{ matrix.early }}"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "${RUNNER_TEMP}/ramp.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc7-ramp-${{ matrix.profile }}-evidence
+          path: ${{ runner.temp }}/ramp.log
+          retention-days: 14
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc7/source/core/go.mod
+          cache: false
+      - name: Build signed-source Linux AMD64/ARM64 from exact commit
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc7
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.0.0-RC7-linux-$arch.bin" ./cmd/itom)
+          done
+          (cd dist && sha256sum ITOM-1.0.0-RC7-linux-*.bin > SHA256SUMS)
+          echo "RC7 EXPERIMENTAL until all strict CI and real-field gates are green" > dist/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc7-16x12-unqualified-linux
+          path: ${{ env.SOURCE }}/dist/
+          retention-days: 14
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Android SDK37 JNI both ABIs, 82+ tests, lint, pinned build
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc7 --accept-android-licenses
+      - name: Enforce exact Android application ID with no suffix; validate native revision and signer
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,zipfile
+          d=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert d['applicationId']=='org.itom.client',d
+          assert any(x['versionCode']==10006 and x['versionName']=='1.0.0-rc7-debug' for x in d['elements']),d
+          p=Path('dist/ITOM-1.0.0-RC7-debug.apk')
+          assert p.stat().st_size>1000000
+          with zipfile.ZipFile(p) as z:
+            for abi in ('arm64-v8a','armeabi-v7a'):
+              assert b'itom-1-0-0-rc7' in z.read(f'lib/{abi}/libgojni.so')
+          print("Verified exact RC7 Android ID: org.itom.client")
+          PY
+          apksigner="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$apksigner"
+          "$apksigner" verify --print-certs dist/ITOM-1.0.0-RC7-debug.apk > dist/SIGNER.txt
+          (cd dist && sha256sum ITOM-1.0.0-RC7-debug.apk > APK_SHA256SUMS)
+          echo "Test-only build until every strict stability gate is green; check APK signer before existing-app upgrade." > dist/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc7-16x12-unqualified-android
+          path: ${{ env.SOURCE }}/dist/
+          retention-days: 14
