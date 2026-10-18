@@ -20,7 +20,7 @@ func (g *stripeGroup) carrierLatencyLocked(l *lane) int64 {
 		// 165ms and 583ms: new short work should follow the responsive lane.
 		// Require a genuinely quiet carrier; never train a baseline from a
 		// loaded echo or change existing physical credits and queue ownership.
-		if g.active.Load() == 0 && c.controlDebt.Load() == 0 &&
+		if g.active.Load() == 0 && g.delivery.bulk == 0 && c.controlDebt.Load() == 0 &&
 			c.controlWriting.Load() == 0 && c.physicalActive.Load() == 0 &&
 			c.unreceivedLocalRecords.Load() == 0 {
 			if at := c.rttAt.Load(); at > 0 && now >= at && now-at <= 10000 {

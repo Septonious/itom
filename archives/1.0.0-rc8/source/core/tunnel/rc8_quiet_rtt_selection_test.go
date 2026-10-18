@@ -58,6 +58,18 @@ func TestRC8FreshQuietEchoOverridesOlderIdleBaseline(t *testing.T) {
         t.Fatalf("stale quiet sample replaced idle baseline: %d", stale)
     }
 
+    // Retained logical DATA ranges can be in flight even after TCP streams
+    // close. Their loaded echo must not retrain the unloaded path baseline.
+    fast.rttAt.Store(now)
+    g.delivery.bulk = 32 << 10
+    g.mu.Lock()
+    retained := g.carrierLatencyLocked(fast)
+    g.mu.Unlock()
+    if retained != 583 {
+        t.Fatalf("outstanding logical bulk retrained unloaded baseline: %d", retained)
+    }
+    g.delivery.bulk = 0
+
     // Physical outstanding writes mean a nominally zero-stream sample
     // can still be queue-inflated. Preserve the prior idle baseline.
     fast.rttAt.Store(now)
