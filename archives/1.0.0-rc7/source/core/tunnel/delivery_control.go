@@ -18,7 +18,7 @@ import (
 // One charged frame on an empty stream can discover a path beside published
 // stalled flight. All admission precedes grant selection and journal Prepare.
 const (
-	deliveryInitialWindow = 1 << 20
+	deliveryInitialWindow = 128 << 10
 	deliveryMinWindow     = 64 << 10
 	// Bound aggregate unacknowledged logical flight to the observed
 	// 0.5-0.8s duplex BDP instead of allowing a 16MiB burst to monopolize
