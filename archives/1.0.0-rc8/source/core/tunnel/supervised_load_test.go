@@ -479,19 +479,19 @@ func testSupervisedProductionLoad(t *testing.T) {
 				t.Error(err)
 			}
 		}
-		// RC7 hard release gate: never inherit RC6's throughput-floor waiver.
+		// RC8 hard release gate: never inherit RC6's throughput-floor waiver.
 		// Runs under a 150+ Mbps unconstrained provider; a deliberately 10/20
 		// Mbps profile uses a separate connection/RTT test (not a speed claim).
-		if os.Getenv("ITOM_RC7_RELEASE_GATE") == "1" {
+		if os.Getenv("ITOM_RC8_RELEASE_GATE") == "1" {
 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
-				t.Fatal("RC7 release qualification forbids the old throughput-floor waiver")
+				t.Fatal("RC8 release qualification forbids the old throughput-floor waiver")
 			}
 			minimum := loadEnvFloat(t, "ITOM_LOAD_MIN_MBPS", 75)
-			if minimum < rc7MinimumDuplexMbps {
-				t.Fatalf("RC7 refuses throughput floor below 75/75: %.3f", minimum)
+			if minimum < rc8MinimumDuplexMbps {
+				t.Fatalf("RC8 refuses throughput floor below 75/75: %.3f", minimum)
 			}
-			tier = "rc7-75-75mbps-max750ms-hard-release"
-			accepted = rc7ReleasePerformanceGate(up, down, qualifiedMbps, maxRTTDuration, minimum) &&
+			tier = "rc8-75-75mbps-max750ms-hard-release"
+			accepted = rc8ReleasePerformanceGate(up, down, qualifiedMbps, maxRTTDuration, minimum) &&
 				len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
 			if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
 				accepted = false
@@ -501,7 +501,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 				accepted = false
 				t.Error(err)
 			}
-			t.Logf("rc7_hard_gate upload_mbps=%.3f download_mbps=%.3f verified_tail_mbps=%.3f rtt_ms=%.3f accepted=%t", up, down, qualifiedMbps, float64(maxRTTDuration)/float64(time.Millisecond), accepted)
+			t.Logf("rc8_hard_gate upload_mbps=%.3f download_mbps=%.3f verified_tail_mbps=%.3f rtt_ms=%.3f accepted=%t", up, down, qualifiedMbps, float64(maxRTTDuration)/float64(time.Millisecond), accepted)
 		}
 		t.Logf("supervised_acceptance round=%d tier=%s minimum_verified_mbps=%.6f max_rtt_ns=%d accepted=%t field_qualified=false", round+1, tier, qualifiedMbps, maxRTTDuration.Nanoseconds(), accepted)
 		target.mu.Lock()
