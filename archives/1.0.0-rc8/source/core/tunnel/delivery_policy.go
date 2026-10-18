@@ -33,6 +33,22 @@ type deliveryPolicy struct {
 	probes, accepted, rejected             uint64
 }
 
+// Advisory early congestion guard, limited to measured low-rate *and*
+// load-inflated ACK age. High-capacity traffic with healthy ACK age retains
+// the original RC5 growth and 16/12MiB maximum; never infer physical quota
+// from this value. One short no-progress tick cannot trigger this policy.
+func rc8SlowBacklogGuard(f deliveryFeedback) (uint64,bool) {
+	if !f.Demand || f.Flight==0 || f.RateMbps<=0 || f.RateMbps>=30 ||
+		(f.Age<500*time.Millisecond && f.FastAge<500*time.Millisecond) {
+		return 0,false
+	}
+	// Allow approximately 320ms of already proven useful-byte bandwidth.
+	// Keep 128KiB of headroom at low rate and never over 512KiB when the
+	// provider is showing a congested 10-20Mbps-like service path.
+	budget:=uint64(f.RateMbps*1e6/8*.32)
+	return max(uint64(128<<10),min(uint64(512<<10),budget)),true
+}
+
 func (p *deliveryPolicy) next(now time.Time, f deliveryFeedback) uint64 {
 	window := f.Window
 	limit := f.MaxWindow
@@ -132,6 +148,14 @@ func (p *deliveryPolicy) next(now time.Time, f deliveryFeedback) uint64 {
 	if !f.Demand {
 		// Draining existing work is not a request for extra publication credit.
 		return window
+	}
+	if guard,active := rc8SlowBacklogGuard(f); active {
+		// Authenticated useful-byte rate + bulk/fast ACK age signal a slow
+		// congested path. Stop granting new logical flight before 10-20Mbps
+		// queueing consumes the remaining interactive RTT budget.
+		// Charged ranges, APPEND proof and durable quota remain unchanged.
+		p.mode=deliveryCongested
+		return min(window,guard)
 	}
 	if p.mode == deliveryIdle {
 		p.mode = deliveryNormal
