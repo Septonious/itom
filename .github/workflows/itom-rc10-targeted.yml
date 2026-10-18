@@ -1,8 +1,5 @@
 name: RC10 isolated retained-download and latency A/B; no artifacts
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/**", ".github/workflows/itom-rc10-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read
