@@ -1204,7 +1204,7 @@ func (g *stripeGroup) sendStreamControl(ctx context.Context, preferred *lane, f 
 				if bulkFeedback {
 					return controlCarrierScore(l) + int(g.carrierLatencyLocked(l))
 				}
-				return interactiveCarrierScore(l, [2]*lane{}) + int(g.carrierLatencyLocked(l)) + int(g.delivery.carrierBytes[l.account.ID]/(32<<10))
+				return g.rc8FastControlScoreLocked(l)
 			}
 			sort.SliceStable(candidates, func(i, j int) bool { return score(candidates[i]) < score(candidates[j]) })
 			if bulkFeedback {
