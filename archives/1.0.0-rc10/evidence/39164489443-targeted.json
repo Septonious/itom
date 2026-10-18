@@ -1,0 +1,132 @@
+{
+  "run": 39164489443,
+  "candidate": "e011c9cc7bb2562b4d8afc024870830bbecb9748",
+  "qualified": false,
+  "classification": "ISOLATED EXPERIMENT; not full release qualification",
+  "jobs": [
+    {
+      "id": 117784470614,
+      "name": "cleanup4 retained 1 streams",
+      "conclusion": "success",
+      "records": [
+        "2026-10-18T20:43:04.6630700Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=359 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:04.6635867Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=81.903 download_mbps=78.613 rtt_samples=30 p50_ms=294 p95_ms=406 max_ms=452 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:04.6639055Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=54.901 p95_ms=150.631 max_ms=200.800 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:04.6854202Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=81.903 download_mbps=78.613 verified_tail_mbps=75.550 rtt_ms=452.399 accepted=true",
+        "2026-10-18T20:44:04.6855545Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=75.549901 max_rtt_ns=452399315 accepted=true field_qualified=false",
+        "2026-10-18T20:44:06.0982176Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=332",
+        "2026-10-18T20:44:07.4627601Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=263",
+        "2026-10-18T20:44:08.8227840Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=259",
+        "2026-10-18T20:44:10.1848228Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=261",
+        "2026-10-18T20:44:11.6143023Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=328",
+        "2026-10-18T20:44:12.9935762Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=279",
+        "2026-10-18T20:44:14.0431633Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true"
+      ]
+    },
+    {
+      "id": 117784470750,
+      "name": "selection retained 32 streams",
+      "conclusion": "failure",
+      "records": [
+        "2026-10-18T20:43:21.1168872Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=263 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:21.1174847Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=82.353 download_mbps=64.557 rtt_samples=30 p50_ms=308 p95_ms=501 max_ms=552 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:21.1177434Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=84.489 p95_ms=227.383 max_ms=235.723 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:21.1448402Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=82.353 download_mbps=64.557 verified_tail_mbps=63.360 rtt_ms=552.828 accepted=false",
+        "2026-10-18T20:44:21.1450730Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=63.360205 max_rtt_ns=552828368 accepted=false field_qualified=false",
+        "2026-10-18T20:44:22.5129415Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=290",
+        "2026-10-18T20:44:23.9274840Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=313",
+        "2026-10-18T20:44:25.2873674Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=259",
+        "2026-10-18T20:44:26.6683534Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=280",
+        "2026-10-18T20:44:28.0492049Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=280",
+        "2026-10-18T20:44:29.4058687Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=255",
+        "2026-10-18T20:44:30.4750223Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T20:44:30.5053462Z --- FAIL: TestTransportReworkQualification (99.17s)",
+        "2026-10-18T20:44:30.5087077Z FAIL\titom.local/core/tunnel\t99.179s"
+      ]
+    },
+    {
+      "id": 117784470785,
+      "name": "selection retained 1 streams",
+      "conclusion": "failure",
+      "records": [
+        "2026-10-18T20:43:11.0211248Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=339 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:11.0226557Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=83.506 download_mbps=70.691 rtt_samples=30 p50_ms=288 p95_ms=373 max_ms=399 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:11.0229607Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=58.727 p95_ms=115.129 max_ms=128.755 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:11.0410422Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=83.506 download_mbps=70.691 verified_tail_mbps=69.494 rtt_ms=399.161 accepted=false",
+        "2026-10-18T20:44:11.0411722Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=69.494374 max_rtt_ns=399160721 accepted=false field_qualified=false",
+        "2026-10-18T20:44:12.3621969Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=231",
+        "2026-10-18T20:44:13.8810411Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=418",
+        "2026-10-18T20:44:15.3188287Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=337",
+        "2026-10-18T20:44:16.7519485Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=332",
+        "2026-10-18T20:44:18.1119248Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=259",
+        "2026-10-18T20:44:19.4929171Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=280",
+        "2026-10-18T20:44:20.4377273Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T20:44:20.4689354Z --- FAIL: TestTransportReworkQualification (81.24s)",
+        "2026-10-18T20:44:20.4728432Z FAIL\titom.local/core/tunnel\t81.251s"
+      ]
+    },
+    {
+      "id": 117784470819,
+      "name": "reference retained 32 streams",
+      "conclusion": "failure",
+      "records": [
+        "2026-10-18T20:43:20.6768996Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=334 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:20.6776445Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=82.720 download_mbps=65.466 rtt_samples=30 p50_ms=306 p95_ms=398 max_ms=400 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:20.6779227Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=61.041 p95_ms=116.369 max_ms=118.888 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:20.7095773Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=82.720 download_mbps=65.466 verified_tail_mbps=63.124 rtt_ms=400.574 accepted=false",
+        "2026-10-18T20:44:20.7097886Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=63.124275 max_rtt_ns=400574060 accepted=false field_qualified=false",
+        "2026-10-18T20:44:22.1642411Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=382",
+        "2026-10-18T20:44:23.6032922Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=338",
+        "2026-10-18T20:44:25.0553597Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=351",
+        "2026-10-18T20:44:26.4376744Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=281",
+        "2026-10-18T20:44:27.8195642Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=281",
+        "2026-10-18T20:44:29.2131534Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=293",
+        "2026-10-18T20:44:30.1947221Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T20:44:30.2249887Z --- FAIL: TestTransportReworkQualification (99.54s)",
+        "2026-10-18T20:44:30.2283393Z FAIL\titom.local/core/tunnel\t99.545s"
+      ]
+    },
+    {
+      "id": 117784470866,
+      "name": "cleanup4 retained 32 streams",
+      "conclusion": "failure",
+      "records": [
+        "2026-10-18T20:43:20.0645618Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=257 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:20.0711387Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=82.003 download_mbps=71.976 rtt_samples=30 p50_ms=285 p95_ms=364 max_ms=388 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:20.0729299Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=67.336 p95_ms=142.275 max_ms=143.877 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:20.1108522Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=82.003 download_mbps=71.976 verified_tail_mbps=71.976 rtt_ms=388.599 accepted=false",
+        "2026-10-18T20:44:20.1109832Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=71.975595 max_rtt_ns=388599046 accepted=false field_qualified=false",
+        "2026-10-18T20:44:21.4455191Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=270",
+        "2026-10-18T20:44:22.8565009Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=310",
+        "2026-10-18T20:44:24.2711531Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=313",
+        "2026-10-18T20:44:25.7082670Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=336",
+        "2026-10-18T20:44:27.1279260Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=319",
+        "2026-10-18T20:44:28.5385236Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=310",
+        "2026-10-18T20:44:29.5188548Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T20:44:29.5497367Z --- FAIL: TestTransportReworkQualification (99.07s)",
+        "2026-10-18T20:44:29.5533432Z FAIL\titom.local/core/tunnel\t99.073s"
+      ]
+    },
+    {
+      "id": 117784470877,
+      "name": "reference retained 1 streams",
+      "conclusion": "failure",
+      "records": [
+        "2026-10-18T20:43:02.7895726Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=340 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T20:44:02.7902181Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=84.227 download_mbps=72.457 rtt_samples=30 p50_ms=278 p95_ms=415 max_ms=442 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T20:44:02.7905283Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=75.065 p95_ms=190.547 max_ms=233.851 target_ms=100 field_qualified=false",
+        "2026-10-18T20:44:02.8137310Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=84.227 download_mbps=72.457 verified_tail_mbps=70.263 rtt_ms=442.357 accepted=false",
+        "2026-10-18T20:44:02.8139499Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=70.263330 max_rtt_ns=442357481 accepted=false field_qualified=false",
+        "2026-10-18T20:44:04.2131905Z     supervised_load_test.go:549: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=321",
+        "2026-10-18T20:44:05.5748797Z     supervised_load_test.go:549: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=259",
+        "2026-10-18T20:44:06.8953008Z     supervised_load_test.go:549: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=221",
+        "2026-10-18T20:44:08.2987347Z     supervised_load_test.go:549: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=303",
+        "2026-10-18T20:44:09.6021547Z     supervised_load_test.go:549: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=202",
+        "2026-10-18T20:44:10.9059582Z     supervised_load_test.go:549: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=203",
+        "2026-10-18T20:44:11.8546389Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T20:44:11.8830469Z --- FAIL: TestTransportReworkQualification (80.52s)",
+        "2026-10-18T20:44:11.8862954Z FAIL\titom.local/core/tunnel\t80.530s"
+      ]
+    }
+  ]
+}
