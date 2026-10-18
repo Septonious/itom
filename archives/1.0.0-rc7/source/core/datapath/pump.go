@@ -90,9 +90,9 @@ const (
 	// short DATA gets both scheduler priority and a reserved storage permit.
 	InteractiveDataThreshold = 8 << 10
 	// MaxBulkWriters bounds scheduler work, not physical IMAP permissions.
-	// Workers rotate over the ready account pool. More speculative workers can
+	// Ten independent account collectors; speculative workers beyond this can
 	// amplify queued future offsets without creating useful physical service.
-	MaxBulkWriters = 8
+	MaxBulkWriters = 10
 	// 336 KiB deliberately crosses to eleven full 32 KiB DATA records while
 	// the conservative MIME-bound regression still leaves several KiB below
 	// the 512 KiB physical permit. Twelve full records do not fit after the
