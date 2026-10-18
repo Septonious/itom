@@ -43,9 +43,17 @@ func (l *lane) serviceBatchTarget() uint64 {
 		target = min(target, max(uint64(32<<10), bytes))
 	}
 	if l.side && (l.peerReadAt.IsZero() || time.Since(l.peerReadAt) > 30*time.Second) {
-		// APPEND proves server ingress only. Cold downstream starts with one
-		// complete DATA record until authenticated BODY receipts establish speed.
-		target = min(target, uint64(32<<10))
+		// A recently and repeatedly proven peer BODY service can resume one
+		// conservative batch after a quiet spell. A first connection, repaired
+		// slow path or stale history still starts with a single 32 KiB record.
+		// This never creates grant authority or substitutes APPEND for a receipt.
+		resume := uint64(32 << 10)
+		if !l.peerReadAt.IsZero() && time.Since(l.peerReadAt) <= 90*time.Second &&
+			l.peerReadSamples >= 8 && l.peerReadSlowCount == 0 &&
+			l.peerReadBatchTarget == 0 {
+			resume = 128 << 10
+		}
+		target = min(target, resume)
 	} else if l.peerReadBatchTarget != 0 && time.Since(l.peerReadAt) <= 30*time.Second {
 		target = min(target, l.peerReadBatchTarget)
 	}
@@ -75,6 +83,16 @@ func (l *lane) observePeerReadService(bytes int64, started time.Time, now time.T
 	}
 	l.peerReadAt = now
 	l.peerReadSamples++
+	// RC5 cold-ramp: one complete authenticated, promptly read physical BODY
+	// proves the initial 32 KiB path is usable. Permit just one tentative
+	// 64 KiB next batch instead of waiting for a second full mail round trip.
+	// Subsequent increases still require the original two fast receipts.
+	// This never observes APPEND-only success or grants extra physical quota.
+	if l.peerReadSamples == 1 && l.peerReadBatchTarget == 32<<10 && elapsed <= budget {
+		l.peerReadBatchTarget = 64 << 10
+		l.peerReadFastCount = 0
+		return
+	}
 	if elapsed > 2*budget {
 		l.peerReadFastCount = 0
 		l.peerReadSlowCount = min(l.peerReadSlowCount+1, 16)
@@ -100,6 +118,14 @@ func (l *lane) observePeerReadService(bytes int64, started time.Time, now time.T
 		l.peerReadFastCount = 0
 	}
 }
+// A longer batch coalescing interval is deliberately isolated to bulk DATA
+// when >=16 logical streams compete for the same bounded physical append pool.
+// This never alters physical session count, grant authority or durable credits.
+func rc7BulkCollectionResidence(activeStreams int) time.Duration {
+	if activeStreams >= 16 { return 35 * time.Millisecond }
+	return 20 * time.Millisecond
+}
+
 func (l *lane) BulkBatchPolicy() (uint64, time.Duration) {
 	if l.stripe == nil {
 		return l.serviceBatchTarget(), 20 * time.Millisecond
@@ -127,7 +153,10 @@ func (l *lane) BulkBatchPolicy() (uint64, time.Duration) {
 			fits[j], fits[j-1] = fits[j-1], fits[j]
 		}
 	}
-	return fits[len(fits)/2], 20 * time.Millisecond
+	// On high stream fan-out, coalesce bulk records for one additional bounded
+	// collector turn. The independent fast collector/short reserve bypasses
+	// this delay, so Ping/Pong, WINDOW and short DATA retain strict priority.
+	return fits[len(fits)/2], rc7BulkCollectionResidence(len(g.owners))
 }
 func (l *lane) predictedServiceMS(fast bool) int64 {
 	l.serviceMu.Lock()
