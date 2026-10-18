@@ -1,0 +1,14 @@
+package journal
+import("fmt";"path/filepath";"testing";"time";"itom.local/core/pool";"itom.local/core/wire")
+func BenchmarkRC10OwnedScanPage(b *testing.B){
+ for _,count:=range []int{0,8,32}{b.Run(fmt.Sprint(count),func(b *testing.B){
+ cfg:=testConfig(1);cfg.MaxGrants=256;cfg.MaxAttempts=256;cfg.Accounts[0].Users=cfg.Accounts[0].Users[:1]
+ cfg.Accounts[0].Limit=pool.Amount{Bytes:2<<20,Messages:192};cfg.Accounts[0].Users[0].Limit=cfg.Accounts[0].Limit
+ s,err:=Open(filepath.Join(b.TempDir(),"scan.db"),cfg,time.Second);if err!=nil{b.Fatal(err)};defer s.Close()
+ if err=s.EnableAfterInventory("a0","12345678",s.Run());err!=nil{b.Fatal(err)}
+ if count>0 {g,err:=s.Issue(Scope{Account:"a0",User:"12345678",Session:wire.ID{1}},pool.Amount{Bytes:uint64(count*1000),Messages:uint64(count)});if err!=nil{b.Fatal(err)}
+ for i:=0;i<count;i++{if _,err=s.Prepare(g.Ref,"itom-u1-up",wire.ID{byte(i+1)},1000,[]byte{byte(i+1)});err!=nil{b.Fatal(err)}}}
+ b.ReportAllocs();b.ResetTimer()
+ for i:=0;i<b.N;i++{rows,err:=s.ScanAttempts(0,256);if err!=nil||len(rows)!=count{b.Fatal(len(rows),err)}}
+ })}
+}

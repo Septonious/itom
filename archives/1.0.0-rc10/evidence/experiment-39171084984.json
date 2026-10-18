@@ -1,0 +1,63 @@
+{
+  "run_id": 39171084984,
+  "head_sha": "007826083c32c41dec920d81ab69408cfa1abddc",
+  "classification": "ISOLATED COMPARISON; one passing round does not qualify a release",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117804089790,
+      "name": "compare (adaptive240)",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:12:12.7228603Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=338 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:13:12.7236787Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=83.637 download_mbps=46.159 rtt_samples=30 p50_ms=314 p95_ms=423 max_ms=440 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:13:12.7239772Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=57.837 p95_ms=147.393 max_ms=150.226 target_ms=100 field_qualified=false",
+        "2026-10-18T22:13:12.7512730Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=83.637 download_mbps=46.159 verified_tail_mbps=46.159 rtt_ms=440.481 accepted=false",
+        "2026-10-18T22:13:12.7514041Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=46.159189 max_rtt_ns=440481245 accepted=false field_qualified=false",
+        "2026-10-18T22:13:21.8678049Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T22:13:21.9007628Z --- FAIL: TestTransportReworkQualification (97.61s)"
+      ]
+    },
+    {
+      "id": 117804089990,
+      "name": "compare (fixed4)",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:12:11.5628641Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=269 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:13:11.5640191Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=80.732 download_mbps=74.436 rtt_samples=30 p50_ms=304 p95_ms=496 max_ms=509 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:13:11.5643400Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=92.745 p95_ms=228.606 max_ms=245.490 target_ms=100 field_qualified=false",
+        "2026-10-18T22:13:11.5935926Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=80.732 download_mbps=74.436 verified_tail_mbps=72.378 rtt_ms=509.827 accepted=false",
+        "2026-10-18T22:13:11.5937521Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=72.377958 max_rtt_ns=509827415 accepted=false field_qualified=false",
+        "2026-10-18T22:13:20.9371282Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T22:13:20.9667737Z --- FAIL: TestTransportReworkQualification (99.83s)"
+      ]
+    },
+    {
+      "id": 117804090045,
+      "name": "compare (fixed8)",
+      "conclusion": "success",
+      "evidence": [
+        "2026-10-18T22:12:06.5556538Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=1 max_ms=355 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:13:06.5564419Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=83.969 download_mbps=77.931 rtt_samples=30 p50_ms=272 p95_ms=373 max_ms=387 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:13:06.5565903Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=43.615 p95_ms=125.184 max_ms=166.568 target_ms=100 field_qualified=false",
+        "2026-10-18T22:13:06.5705831Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=83.969 download_mbps=77.931 verified_tail_mbps=77.931 rtt_ms=387.559 accepted=true",
+        "2026-10-18T22:13:06.5706488Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=77.931042 max_rtt_ns=387558653 accepted=true field_qualified=false",
+        "2026-10-18T22:13:15.9775408Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true"
+      ]
+    },
+    {
+      "id": 117804090108,
+      "name": "compare (adaptive160)",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:12:17.2054508Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=1 max_ms=259 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:13:17.2062110Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=86.193 download_mbps=16.607 rtt_samples=30 p50_ms=295 p95_ms=389 max_ms=415 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:13:17.2065378Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=43.648 p95_ms=107.996 max_ms=144.672 target_ms=100 field_qualified=false",
+        "2026-10-18T22:13:17.2420062Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=86.193 download_mbps=16.607 verified_tail_mbps=16.607 rtt_ms=415.680 accepted=false",
+        "2026-10-18T22:13:17.2421359Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=16.606822 max_rtt_ns=415679970 accepted=false field_qualified=false",
+        "2026-10-18T22:13:27.0077286Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T22:13:27.0413573Z --- FAIL: TestTransportReworkQualification (98.88s)"
+      ]
+    }
+  ]
+}
