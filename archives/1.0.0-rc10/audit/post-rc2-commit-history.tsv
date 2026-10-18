@@ -1,0 +1,120 @@
+3031fb7f923c7ae1ec35fe1e0ff2c80d36bd7b5d	RC5 development: fork tested RC2 sources; preserve RC2 transport behavior
+79634aa6b01591db6d5d26ddfd1da8964065667b	RC5: align source, runtime and build identities: source-info.json
+1b9ad88c2dcf2e795f5535c724ba63bdcc205494	RC5: align source, runtime and build identities: core/tunnel/version.go
+b44e7d7c0946eb5ed9045e9f39966f66fb854792	RC5: align source, runtime and build identities: android/app/build.gradle.kts
+121883adfa6a6dbe8c6141cd7b57ef0fc355f7b2	RC5: align source, runtime and build identities: tools/build.py
+f0d20f726067fc3eca582b4d84045ccfd355c386	RC5: align source, runtime and build identities: tools/build_core.py
+b070c5f876eeb62bfacc39f1fb7ab126662ad87f	RC5: align source, runtime and build identities: tools/test_launcher.py
+f72233ad6dff8241b6e83d5b2bebe411109d2dcd	RC5: strict 100 Mbps fresh/retained MULTI and SINGLE qualification gate, no speed waiver
+001344f76ff385096c5000b2d92f63ab181738d0	RC5: enforce loaded RTT <750ms using original supervised logs, fail closed
+739579f00c649282f675098eb740b53bfd351454	RC5: document RC2 stability baseline, RC3/RC4 regressions, and explicit no-release gate
+7d7a79c4455bb204fa775fc6a347edea48806f13	RC5: fix strict per-case RTT log regex before qualification
+04a871ed2c8d8e156fa75209c137b1eb09062d4c	RC5: distinguish new development from inherited RC2 release documentation
+b715d24cd46c45f4fbd1be149772280ee516998c	RC5: snapshot sources and run non-release focused correctness checks on push
+dd14c043e508065f9d581d29e6cfd862297b66eb	RC5: repair binary trace identity and packaging for core/cmd/itom/main.go
+37f93c4dd09a6faefef79f583a09d5ecb9dea60b	RC5: repair binary trace identity and packaging for core/manager/trace.go
+8f7a0ae842a3a7ef34ef2903af59f2237d9a8328	RC5: repair binary trace identity and packaging for tools/build.py
+77001763c107a00d55bb26bb2ca497b7cb350b2a	RC5: repair binary trace identity and packaging for tools/archive_main.py
+6ac4f03c2ae8d429baaee940d358efc78b54fdb2	RC5: ACK/physical-receipt gated cold-ramp improvement without polling changes
+1cf987dac572ba7a1ac55e5db4bf2bfc38ce6633	RC5: ACK/physical-receipt gated cold-ramp improvement without polling changes
+366f837a0280f5c44d6374f15eab78d635a83bd4	RC5: regression tests for quick authenticated ramp, slow fallback, and RTT pressure
+49d339e54053d5616c31753ead574ca62d34a7a1	RC5: require 10-account early-ramp and strict RTT in every no-release qualification case
+ac96c6280c19374f3d14838d2d2731073cdd5fba	RC5: execute cold-ramp and legacy no-overcommit regression tests in non-release CI
+1fba8477b49d9fc28debc6be66a92ce3514d3938	RC5: record 10-account startup/steady-state benchmarks and strict no-release qualification
+0f202f9317271021be251e12b9d3e2c14de1b179	RC5: record rejected 10/12-worker tests and CPU profile without weakening transport integrity
+979214f2db6bc610b0bba4a16eeba996e058ae68	RC5: document failed 10-account SINGLE and two-shard MULTI acceptance cases
+46a9655bd47d2a1bcc09081309b6d9aba3edcf52	RC5: profile authenticated peer-read state and exact per-origin durable occupancy in laboratory traces
+520820c6ed85d0aff3480cc8385769b12d838533	RC5: document failed performance A/B and confirmed 10-account durable headroom saturation; no release
+1744a7183138ec904687be779f3835cc5d52ffd2	RC5: record 103.4 Mbps downstream laboratory milestone and unqualified duplex/RTT failures
+d81ab6a595920e2b5e7cfae08690d935c428cb98	RC5: bound quiet-to-bulk resume to prior authenticated BODY service, retain cold safety floor
+f1fdbe72ca15ad9d338c370ea14f48747aa4cd0f	RC5: test safe authenticated quiet-to-bulk ramp and stale/slow fallbacks
+5c6e2b54946a0b26e56769da44666cd8210393cd	RC5: preserve 24 MiB downstream milestones and reject duplex-starving parameter experiments
+75a5745f00b09f1d16af7f5e9a3e016c1a3a6692	RC5: distinguish active DATA receiver service from account admission waits in optional laboratory traces
+649854be0190e6599c25484e0c6a4ef61fc7e6d6	RC5: capture physical DATA-reader callback waits and authenticated BODY progress for duplex diagnosis
+1c346b65e442f2f5f2d179c2f1a38b0ecb312e0f	RC5: capture physical DATA-reader callback waits and authenticated BODY progress for duplex diagnosis
+86f51bbec681d54f21e6b85502f3d3f6b5498903	RC5: capture physical DATA-reader callback waits and authenticated BODY progress for duplex diagnosis
+6189c8b12020ebc36fa0e5c93c253ee83e1c92c7	RC5: document bidirectional failures and instrumented DATA/ACK bottleneck; no release
+f2de4be2ec5dda3f2aae2643404e74182ee1d736	RC5 development: reproducible isolated server-only 16MiB journal A/B, leave client at 12MiB
+56b41048f4a9d798dc070d699b517da47adac282	RC5: commit proven server16/client12 10-account full-window + tail/RTT evidence, strict FAIL
+04930ed250efafee343b6d35758b9566dbdc6c95	RC5 evidence: server24/client12 downstream 107 Mbps, upload collapses to 16.8 Mbps tail, reject
+ca7d0a728ad3690a562b59467ff72a10d56a8516	RC5: record rejected urgent-ACK and 40ms control coalescing A/B under strict duplex qualification
+9e236ebc133ece09906e262a05791bd6cd9df8ec	RC5: record failed ACK-rate clamp experiment and preserve original congestion governor
+9e69c9b29ac27df9965911fbf7e067239b78fd96	RC5 development: add per-account duplex control/ACK/physical service counters to load evidence
+8986b9eed81c813665e8118d37093b4c3813a6e9	RC5: commit 12-vs-24MiB duplex diagnostic comparison and strict failure evidence
+f3b86b1e349c427e72311d94ec9f94f0201d1cd0	RC5: record rejected 180Mbps physical publication pacer and severe late upload starvation
+0f8a545d1e500c3ffcd94aa2e46b1c94383f0b8d	RC5: commit failed bulk-age2500 A/B; 96.9/68Mbps and upload-tail collapse despite RTT pass
+577cfec0ade9e062fc86f66caa5806826dc1d0c2	RC5: sampled five-second ACK-age/window/RTT duplex timeline for strict 10-account lab tests
+c098055da306e99737eeb367143ce509e7a85ca0	RC5: correct five-second timeline hook for preformatted production measurement events
+004f58e85453dff595c17701e104a5fa7ac3f2e2	RC5: instrument actual per-account provider session contention and endpoint DATA parallelism
+49fad8a025e33a67ef1391ce8c961f9ec566b778	RC5: 10-account IMAP 5-session experiment fails 41/14 Mbps, RTT1011; partition already 5+5
+8b185e5cb02744bfc169efdf9b1045249a8d14ad	RC5 regression: provider 10-session budget is already partitioned 5+5 between endpoints
+8480923ae5886c34a6e67b7b5f6fa94b9f18d182	RC5: rejected fast-ACK congestion episode experiment, 106/39 Mbps strict duplex FAIL
+a025ec8e643feac3685109f3ce9caf10c9d6a1ac	RC5: run provider-wide 5+5 session partition regression during non-release CI
+57387bbe14a69a9873af5e88032193102d6b6396	RC5: observe confirmed physical DATA publication to authenticated bulk ACK duration
+f82a54291275ed050b548cf4f92a0c1efbcb0417	RC5: correlate five-second duplex rate/windows with physical-to-ACK age on both endpoints
+366347f067858b909dd2ffbfabc050bdba871d20	RC5: regression-test physical-to-ACK telemetry never derives from unproven debt or repairs
+608f9bf113830b45598076649775d718246d077d	RC5: document failed 4+6 physical session A/B (103.7/19.1 Mbps, 706ms RTT), retain 5+5
+26abde82806ea50291fd980020c2455db0e34663	RC5: authenticated physical-to-ACK timeline and rejected 106/39 and 110/26 duplex controller A/B
+edcac2d9a1c3b9c2e1328b363d9f737892815a02	RC5: preserve all seven failed 10-account duplex A/B cases and ACK turnaround diagnosis; no release
+8358b4e28978c9a67f2c2bec9cd50993a1402646	RC5: privacy-preserving authenticated control frame seal→receive cross-endpoint forensic correlator
+7e7ee4fe44f210981b5323f4e565d2ffbb80a388	RC5: regression-test authenticated control matching with paired sender/receiver timestamps
+41b629c7900fd1f9c3246b64a464028332af9c65	RC5: validate cross-endpoint ACK tracing forensic parser in development CI
+604ce3554589d057fc52c9e4654ee0fe4ca9a489	RC5: correlate sampled pre-seal control queue delay with authenticated physical CONTROL delivery
+6baadd512d4bd4f5c50e9df45185140c1a2da4fe	RC5: test sampled queued-control latency matching without changing raw authenticated proof rules
+d224d70e6c9229521825f82139d52c5ef1e15e53	RC5: record 6177 CONTROL trace pairs, timestamp-coalescing caveat, and failed STATUS fairness A/B
+6feec228d962046b5910aab830e1d6009feaf36b	RC5 diagnostic: distinguish original control token age from latest authenticated STATUS payload freshness
+782127557de1924be4e7806cc9ac5b2452026237	RC5 diagnostic: distinguish original control token age from latest authenticated STATUS payload freshness
+bdc8bd7d2b4af131f5b023b771b76248155f7ee2	RC5 diagnostic: distinguish original control token age from latest authenticated STATUS payload freshness
+9872d01999862eb5859db09cffd770a8fd6b409d	RC5: test cumulative STATUS freshness separate from original queue-token age
+67bd288f276ad0664f89bee0e2f42b5601a12d06	RC5: fix test fixture JSONL newline, restore required development CI gates
+bbfa7fcbb9365df05bc47291b9353cb27200a8a8	RC5: align stalled IMAP IDLE join regression with invariant 8-second receive-progress floor
+6765f924d53781901a120dbbc0c87580cc371884	RC5: record explicit throughput-target waiver without waiving recovery, integrity or stability checks
+2cdc67b62e2aebade17cc69539d4608a721d9ad5	RC5: explicit throughput waiver with fail-closed 12-case duplex/RTT/connection-survival prerelease validation
+5c0ee7593184ed1a3a58a4e266b77d3e10ecbbeb	RC5: select deployable safe 12MiB baseline and explicit stability-focused prerelease acceptance policy
+90169b78f841e22f33e5ec1c684a21dabd3bc8ab	RC5: distinguish withdrawn speed requirement from measured result in prerelease evidence
+64e446a1a318cc05f488f6d82cd4732a8d71bac4	RC5: full fail-closed Go/Android/stability evidence and reproducible GitHub Actions prerelease pipeline
+f24cd73b543e29a785d5da0b3aa4d3d8cd1e6b73	RC6: copy complete qualified RC5 source snapshot without resetting journal or profiles
+708ea35cf304165444474d74f22a9ae985059d43	RC6: pin Go transport and Android version identity
+26dbce285d9b0e8fa11ff7b41c1c00daacee938c	RC6: strict 750ms per-case RTT guard, test regression and fail-closed release validation
+b9a3952080d00479724a36c7885b760b1937d8b8	RC6: publish complete fail-closed Actions development and release pipelines
+03aa284d774b1b37005089c916d2ba5e60651e8d	RC6 CI: retain existing RC5 diagnostic helper filenames instead of renaming absent modules
+112c39509ca4817f997d7a705cd9c0bdc9af6cf1	RC6: restore RC5 regression test coverage and correct regex in .github/workflows/itom-rc6-development.yml
+bbaaf5c95ccbb83bf8cfabf701d6e8adc61f7489	RC6: restore RC5 regression test coverage and correct regex in .github/workflows/itom-rc6-release.yml
+edea75e97e96714ec8a0b12f576528c7c86fb039	RC6: correct lab evidence integrity and 750ms report metadata
+59f714dcd5cdd82bf05d9c06302540cd2f370b0f	RC6: correct lab evidence integrity and 750ms report metadata
+2e7c692178aec32381666070835f713c64243e45	RC6: correct regex matching six post-load original-socket exchanges
+497947ac6bd541b46f3184ebcb5accb755d4ce86	RC6: bound aggregate in-flight bulk to 8MiB to reduce retained-state scheduling stalls
+d95c420bae1173b759e11049f7414e12b43841b8	RC7 candidate: restore RC2 cold growth, retain recovery safety, enforce immutable Android ID and 75/75 <=750ms release gates
+e94b5ccda9d3a396e26caf4833460b2af1d20431	RC7: use exact org.itom.client Android app ID; forbid suffix and verify source/APK identity
+0bd6588bb5168df2d2d9e8bb4b6d402f9d81d8b1	Trigger RC7 org.itom.client native Android build on APK identity validation branch
+683aacfb04249e04610547dd799df1487c8b2ed1	Fix RC7 Android package-ID assertion escaping; fail closed on suffix or mismatch
+2b7a2683ac54ebc4a79620e75131344675d18625	Rerun RC7 exact-package Android build whenever RC7 source changes
+a282caa22a102b33bddc847bef3e7d0245a0a6b4	Document all RC2→RC7 successful and failed transport experiments, metrics and immutable release gates
+ed77f9b5367f79dd827b47734562116e1dc249f9	RC7 recover RC5 16MiB server/12MiB client flight, growth and BODY policy with role-bound safety regression tests
+0ed27b1ee3d265540f8771f8c4712c18ec9e0caa	RC7 16/12 restore true low-capacity startup fixture, separate downgrade; retain hard 75/75 full-capacity gate
+387426e70a323ef800cc18c91532ba675838c74d	Test early low-capacity ramp fixture cannot be mistaken for a high-to-low drop
+2b08127305530b2e16ee3c05f669ad8331a6d559	RC7 16/12 strict CI: 75/75 max750ms, 4+32 streams, 12 fresh/retained, speedup, recovery, Android, Linux, all Go
+fd344b1253d5309b21462c0db71631dac82c8f83	Start RC8 from last measured 16/12MiB RC7 source; record stability and UI hard-gate development plan
+dbd8b5706f26a2135e876f467afcae6b7ec2a9e4	RC8 development version identity, unchanged org.itom.client, fail-closed 75/75 and 750ms release gate
+3e3377ab69bca63672958fe45db10900a1d2df85	RC8: bounded freshness-aware loaded RTT spike penalty for short traffic, preserve bulk and physical grant accounting
+3a37841dc435fd82c8bd9a65d744a78f34398ae0	RC8 visual pass: darker high-contrast Material3 palette, themed admin Sections menu, continuous gapless progress fill
+6da7ffd07277425a689c772ea25c11c55120e94b	RC8 CI: enforce APK identity, Go regressions, Android build and strict 75/75 <=750ms 4/32 stream benchmarks
+bfe69459de499d7bd124b55eb9d0ccd627a8f25d	RC8: independent one-stream 75/75 and true 10/20Mbps startup acceleration hard-latency regressions
+46b5948f9bfd99fc714c3565cc160da31ed0505d	Record RC8 Android/Go PASS, 32-stream PASS, single/4-stream tail and 10/20Mbps ramp FAIL as release blockers
+a39eb02d5abb93e544dfaa3dfd3353318f2ee2ef	RC8 reliability: merge Go/race-qualified descriptor cache headroom, grant refill tests and occupancy diagnostics; keep latency A/B isolated
+49836cb886457cca75113ca82a9c34ae9a864831	RC8: prefer fresh quiet RTT over stale baseline; add regression and matched testing artifacts
+91db2a504a0615c6c3837ccb84001322c73c5f6f	RC8: retain unloaded RTT baseline while logical bulk debt survives TCP shutdown
+1153de94a10640c5b73cb7124ded850f4db53c58	docs(rc8): hand off exact APK/Linux build, CI performance failures and next Codex actions
+8cc24a47977c78772e74c65faf1bfff0c4a7d34d	fix(rc8): ignore replayed descriptors already reclaimed by durable proof
+9c89675287b4df459f9bc3d5d354c94a29981b1f	perf(rc8): reclaim discovered DATA before fetching another cleanup page
+1c43069e4ee04caa9d4d912087a2a0efa884137f	experiment(rc8): amortize bounded DATA cleanup reads without changing quota
+93063e195138e48567dc3a46195443a76799b534	ci(rc8): repeat strict SINGLE and MULTI gates on fresh and retained journals
+7851e2237aee47edfded4a117f0f0c69a254503c	docs(rc8): preserve twelve-case qualification evidence and remaining release blockers
+79d1eaaba38271757456c387e35ec296d7bb32ea	chore(rc9): preserve RC8 transport baseline and initialize RC9 development identity
+41688d1e5afadae829fbaebbf94143394109dd2a	perf(rc9): bound parallel DATA proof reads and gate matched builds on qualification
+f549009e4f6edf0e9980c48358078aa7a6ae4350	perf(rc9): bound missed-notification delay on actual short readers
+8868df3bd9661ca5884edb7b6daacefcf217c17f	fix(rc9): reject loaded cold-window calibration and pace unproven discovery
+0dc4e910675f27b7d40ed9dbf32cebc6f01e60d2	fix(rc9): bound simultaneous discovery exceptions without losing recovery escape
+5a8baff9fa642baa4205f198def505e202cce42c	docs(rc9): preserve full-capacity pass evidence and pending low-link qualification
+eef1123c52b76b34bb1571bdbe2ab60c5fb7b5b9	revert(rc9): preserve independent stream progress after retained-throughput regression
+1a284ace0cc48b8adc329efbca1fe81bbba0db79	docs(rc9): retain failed repeat evidence and block unqualified packaging
