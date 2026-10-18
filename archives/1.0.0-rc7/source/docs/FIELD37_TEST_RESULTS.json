@@ -1,0 +1,104 @@
+{
+  "revision": "transport-s1-perf5-field16",
+  "code_gate_passed": true,
+  "real_connection_restored": false,
+  "field_performance_qualified": false,
+  "core_tests": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 437,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_optional": [
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestFieldHTTPSColdStartAndDuplex130"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationProductionHarness"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+      }
+    ]
+  },
+  "race_tests": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 437,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_optional": [
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestFieldHTTPSColdStartAndDuplex130"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationProductionHarness"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+      }
+    ]
+  },
+  "provider_tested": false,
+  "apk_built": false,
+  "four_account_startup": {
+    "wait_seconds": 17,
+    "normal": "passed",
+    "race": "passed",
+    "selects_per_account": 10,
+    "fetches_per_account": 9,
+    "negative_control_selects_per_account": 170
+  }
+}

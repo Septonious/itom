@@ -1,0 +1,7 @@
+# Rev10 field investigation
+
+Both captures identify Rev9. Ten accounts expose twenty logical lines. The client is ready at 17:45:55–56 UTC. At 17:47:30.467 UTC, physical client sockets across multiple accounts and roles report read EOF within milliseconds; there is no corresponding server-side IMAP failure and no underlying-network change recorded at that instant. The only recorded loss event is for a different, unselected network at 17:46:15.725 UTC. No measured bulk Speedtest transfer was run, as reported by the user. Background application connections and short data transfers did occur.
+
+Control replacements are recorded at 17:47:30.594 and .606; DATA writers recover capacity at 17:47:31.650–.874. The client capture ends at 17:47:32.227 and snapshots still show zero active lines; it cannot establish complete recovery or its absence. A simultaneous remote EOF is evidence of lost physical connections, not proof of a specific ISP/provider fault. No credential, TLS, quota or data-envelope failure explains this event.
+
+Targeted work: retain logical carriers through transient replacement-login failures, restore minimum DATA capacity without an unconditional one-second delay, exercise simultaneous socket loss after short-connection discovery traffic, and reorganize admin categories with a single export progress indicator. Existing accounting, verified TLS, protected socket routing and rollback policy remain required. Raw captures remain private.
