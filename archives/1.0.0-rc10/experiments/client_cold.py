@@ -27,7 +27,7 @@ s+='''
 // tentative batch. The server's authenticated peer-BODY policy is unchanged.
 func (l *lane) observeUploadBatch(useful uint64, elapsed time.Duration, accepted, fast bool) {
  if l.side || fast || !accepted || useful < 32<<10 || useful > uint64(dataBatchMIMEHardCap) || elapsed <= 0 { return }
- budget := max(150*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
+ budget := max(250*time.Millisecond, min(2*time.Second, 2*l.providerBaseline))
  l.serviceMu.Lock()
  defer l.serviceMu.Unlock()
  target := l.uploadBatchTarget
@@ -63,9 +63,9 @@ func TestRC10ClientColdUplinkUsesOnlyConfirmedSizedBulkService(t *testing.T){
  if l.serviceBatchTarget()!=64<<10 {t.Fatal("confirmed first probe cannot grow")}
  for i:=0;i<12;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
  if l.serviceBatchTarget()!=64<<10 {t.Fatal("small samples pretended to prove larger batches")}
- l.observeUploadBatch(64<<10,400*time.Millisecond,true,false)
+ l.observeUploadBatch(64<<10,600*time.Millisecond,true,false)
  if l.serviceBatchTarget()!=64<<10 {t.Fatal("one outlier contracted upload")}
- l.observeUploadBatch(64<<10,400*time.Millisecond,true,false)
+ l.observeUploadBatch(64<<10,600*time.Millisecond,true,false)
  if l.serviceBatchTarget()!=32<<10 {t.Fatal("confirmed slow upload did not reject a large literal")}
  for i:=0;i<2;i++ {l.observeUploadBatch(32<<10,80*time.Millisecond,true,false)}
  for _,n:=range []uint64{64<<10,128<<10,256<<10} {for i:=0;i<2;i++ {l.observeUploadBatch(n,80*time.Millisecond,true,false)}}
