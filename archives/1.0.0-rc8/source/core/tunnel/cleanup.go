@@ -501,6 +501,30 @@ func (l *lane) cleanupRemoteAt(kind cleanupKind, eligible map[journal.AttemptRef
 				break
 			}
 			l.outCursor = next
+			if kind == cleanupLocalData {
+				// Without usable APPENDUID hints, one page can already contain
+				// a useful DATA reclaim batch. Prove/delete it before fetching a
+				// second page of large bodies. Otherwise eligible capacity waits
+				// behind another read exactly when download headroom is scarce.
+				// This only ends discovery: reclaimWithProofs still validates every
+				// BODY, journal binding, UID incarnation and physical deletion.
+				digests := map[[32]byte]bool{}
+				for _, row := range l.outCache {
+					proof := proofs.decode(row.MIME)
+					if proof.err == nil {
+						digests[proof.digest] = true
+					}
+				}
+				ready := 0
+				for _, a := range attempts {
+					if a.Folder == folder && digests[a.Digest] && (eligible[a.Ref] || a.Ordinal == 0 && a.Ref.Grant.Scope.Session != currentSession) {
+						ready++
+					}
+				}
+				if ready >= cachedBatchMinimum {
+					break
+				}
+			}
 			if pageRows < 16 {
 				break
 			}
