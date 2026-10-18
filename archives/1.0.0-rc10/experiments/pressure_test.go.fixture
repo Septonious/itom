@@ -1,0 +1,73 @@
+package tunnel
+
+import (
+    "context"
+    "testing"
+    "time"
+    "itom.local/core/flow"
+    "itom.local/core/wire"
+)
+
+// A successful stream is not an unlimited exception to a contracted session
+// window. The old code paces only unseen streams, allowing every established
+// stream to queue another32KiB and overwhelm a slow shared link.
+func TestRC10PressureBoundsEstablishedEscapesWithoutForgivingDebt(t *testing.T) {
+    g:=newStripeGroup(wire.ID{1},1)
+    old:=deliveryJobs(t,1,6,32<<10)
+    r,err:=g.reserveDeliveryBatch(context.Background(),old)
+    if err!=nil {t.Fatal(err)}
+    r.finish(r.jobs,committed(r.jobs,flow.Committed))
+    g.delivery.window=deliveryMinWindow
+    g.delivery.fastPressureUntil=time.Now().Add(10*time.Second)
+    first,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,3,1,32<<10))
+    if err!=nil {t.Fatal("first independent stream stranded",err)}
+    first.finish(first.jobs,committed(first.jobs,flow.Committed))
+    g.delivery.frontiers[5]=32<<10
+    g.delivery.issued[5]=32<<10
+    known:=deliveryJobs(t,5,2,32<<10)[1:]
+    if _,err=g.reserveDeliveryBatch(context.Background(),known);err==nil {
+        t.Fatal("established stream bypassed the shared escape wake")
+    }
+    before:=g.delivery.bulk
+    g.deliveryProgress(3,32<<10)
+    if g.delivery.bulk!=before-(32<<10) {t.Fatal("ACK changed unrelated charged debt")}
+    next,err:=g.reserveDeliveryBatch(context.Background(),known)
+    if err!=nil {t.Fatal("useful ACK did not immediately release healthy stream",err)}
+    next.finish(next.jobs,committed(next.jobs,flow.Committed))
+    if _,err=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10));err==nil {t.Fatal("unreceived escape admitted a burst")}
+    before=g.delivery.bulk
+    g.maintainDelivery(time.Now().Add(3*time.Second))
+    if g.delivery.bulk!=before {t.Fatal("timer returned unacknowledged credit")}
+    last,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,7,1,32<<10))
+    if err!=nil {t.Fatal("invisible BODY permanently stranded another stream",err)}
+    last.finish(last.jobs,committed(last.jobs,flow.Committed))
+    if g.delivery.bulk!=256<<10 || g.delivery.bulkDelivered!=32<<10 {t.Fatal("incorrect charged ranges",g.delivery.bulk,g.delivery.bulkDelivered)}
+}
+
+// An unseen BODY on one stream cannot globally serialize healthy established
+// streams when interactive delivery has no measured queue pressure.
+func TestRC10HealthyEstablishedStreamPreservesRC2IndependentProgress(t *testing.T) {
+ g:=newStripeGroup(wire.ID{1},1)
+ r,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,1,6,32<<10));if err!=nil{t.Fatal(err)}
+ r.finish(r.jobs,committed(r.jobs,flow.Committed));g.delivery.window=deliveryMinWindow
+ cold,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,3,1,32<<10));if err!=nil{t.Fatal(err)}
+ cold.finish(cold.jobs,committed(cold.jobs,flow.Committed))
+ g.delivery.frontiers[5]=32<<10;g.delivery.issued[5]=32<<10
+ healthy,err:=g.reserveDeliveryBatch(context.Background(),deliveryJobs(t,5,2,32<<10)[1:]);if err!=nil{t.Fatal("healthy established stream was globally paced",err)}
+ healthy.finish(healthy.jobs,committed(healthy.jobs,flow.Committed))
+ if g.delivery.bulk!=256<<10{t.Fatal("independent progress changed charges",g.delivery.bulk)}
+}
+func TestRC10ExpiredEscapeACKCannotReleaseNewerWake(t *testing.T) {
+ g:=newStripeGroup(wire.ID{1},1);d:=&g.delivery;now:=time.Now()
+ old:=&deliveryRange{key:deliveryKey{3,0},end:32<<10,firstDiscovery:true,discoveryWake:now.Add(-time.Second),admitted:now.Add(-time.Second)}
+ d.ranges[old.key]=old;d.bulk=32<<10;d.nextDiscoveryWake=now.Add(time.Second)
+ expected:=d.nextDiscoveryWake;g.deliveryProgress(3,32<<10)
+ if d.nextDiscoveryWake!=expected{t.Fatal("older ACK released newer escape wake")}
+ if d.bulk!=0||d.delivered!=32<<10{t.Fatal("ACK changed other accounting")}
+}
+func TestRC10CongestedACKCannotCalibrateUnloadedFloor(t *testing.T) {
+ d:=newDeliveryController();d.policy.mode=deliveryCongested;now:=time.Now()
+ for i:=0;i<4;i++{id:=uint64(2*i+1);r:=&deliveryRange{key:deliveryKey{id,0},end:32<<10,admitted:now,flightAtAdmission:32<<10};d.ranges[r.key]=r;d.bulk+=32<<10;d.progress(id,32<<10,now.Add(1500*time.Millisecond))}
+ if d.acknowledgementFloor()!=0||d.lowFlightCount!=0{t.Fatal("congested ACK raised unloaded floor")}
+ if d.delivered!=128<<10||d.bulk!=0{t.Fatal("calibration changed charges")}
+}

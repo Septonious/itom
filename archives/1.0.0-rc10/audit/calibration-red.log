@@ -1,0 +1,5 @@
+--- FAIL: TestRC10ColdFullWindowCannotInflateUnloadedACKFloor (0.00s)
+    rc10_calibration_test.go:30: loaded cold flight calibrated the unloaded floor false 8
+FAIL
+FAIL	itom.local/core/tunnel	0.009s
+FAIL

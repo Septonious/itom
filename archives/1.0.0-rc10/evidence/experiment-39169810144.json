@@ -1,0 +1,24 @@
+{
+  "run_id": 39169810144,
+  "head_sha": "4b51862612bf7cdfb9b7a206e05bc0a7bc4347ad",
+  "url": "https://github.com/Septonious/itom/actions/runs/39169810144",
+  "conclusion": "failure",
+  "classification": "ISOLATED EXPERIMENT; not a qualified release",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117800324054,
+      "name": "retained",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:54:58.7621913Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=361 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T21:55:58.7627821Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=76.869 download_mbps=70.215 rtt_samples=30 p50_ms=323 p95_ms=461 max_ms=465 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T21:55:58.7630490Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=67.310 p95_ms=182.521 max_ms=212.673 target_ms=100 field_qualified=false",
+        "2026-10-18T21:55:58.7943880Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=76.869 download_mbps=70.215 verified_tail_mbps=70.215 rtt_ms=465.821 accepted=false",
+        "2026-10-18T21:55:58.7945693Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=70.215270 max_rtt_ns=465821030 accepted=false field_qualified=false",
+        "2026-10-18T21:56:08.2763357Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T21:56:08.3412557Z --- FAIL: TestTransportReworkQualification (100.05s)"
+      ]
+    }
+  ]
+}

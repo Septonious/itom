@@ -1,0 +1,14 @@
+{
+  "classification": "ISOLATED LOCAL EXPERIMENT; not qualified",
+  "configuration": "cleanup4 + cold64, peak/congestion calibration,250ms discovery wake; established escapes paced only during measured fast pressure; original650ms fast guard",
+  "qualified": false,
+  "exit_code": 1,
+  "evidence": [
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=647 timeouts=0 missed=0 failure=<nil>",
+    "supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=21.692 download_mbps=16.725 rtt_samples=30 p50_ms=427 p95_ms=1331 max_ms=1444 timeouts=0 missed=0 overlap=30 failure=<nil>",
+    "supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=278.246 p95_ms=892.064 max_ms=1050.661 target_ms=100 field_qualified=false",
+    "supervised_load_test.go:506: supervised_acceptance round=1 tier=itom-1-0-0-rc10-stability-throughput-floor-waived minimum_verified_mbps=16.724787 max_rtt_ns=1444942734 accepted=false field_qualified=false",
+    "supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+    "--- FAIL: TestTransportReworkQualification (101.05s)"
+  ]
+}

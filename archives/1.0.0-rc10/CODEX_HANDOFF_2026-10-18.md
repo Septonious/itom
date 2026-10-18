@@ -35,3 +35,12 @@ The current combined runner experiment applies cleanup4 + original four-row pref
 A local low10 diagnostic of the prior cap4 variant showed virtually zero fast writer queue waits but shared mail path RTT928–988ms before a1.5s timeout. Both controllers had allowed loaded low-flight ACK samples to raise their floor toward2s. This motivates the independently scoped calibration correction; do not infer a socket or quota failure from teardown broken pipes.
 
 Prepare integration helper now also saves/restores delivery_control.go and rc10_calibration_test.go. Source/protected package identity requirements, strict main qualification, signing uncertainty and no-build status above still apply. Continue from latest pushed commit; do not reapply rejected global escapes, two-reader proof semaphore, loaded scoring or byte/time batch cap.
+
+
+## Follow-up outcome and bounded last probe
+
+Run39169810153 FAILED both blockers: retained32 upload77.228/download72.487Mbps,max471ms;10Mbps timed out after an831ms probe. Prefetch-only repeat39169810144 FAILED at70.215Mbps down,max466ms. The cap2/client-batch/prefetch combination is not selected. The calibration correction alone removes a real loaded-floor bug but has not independently qualified throughput.
+
+A local pressure-conditional escape experiment (pressure_escape.py, default650ms fast guard) completed all30probes with no timeout/miss and intact original/new sockets, but max1444.943ms still fails750ms. It retains RC2's proven-stream independent escape whenever short-path pressure is absent, uses250ms actor fallback (not rejected2s global pacing), and ties ACK wake release to the exact current range so an older expired ACK cannot release a newer wake. Congested/recovery/pressure samples cannot raise unloaded calibration. Cold64 and cleanup4 are explicit lab settings. Not applied to candidate source.
+
+The optional350ms fast-guard variant is being checked locally; this parameter is not a threshold change. All measurement limits stay unchanged. `pressure_test.go.fixture` checks pressure debt, normal independent progress, expired-ACK wake ownership and floor rejection. Do not apply any experiment merely because a functional regression passes. Candidate source remains05383c2, no APK/binary built, main build gates remain red.
