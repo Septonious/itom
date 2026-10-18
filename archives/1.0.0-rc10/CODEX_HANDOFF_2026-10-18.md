@@ -65,3 +65,16 @@ A separate exact_scan.py variant counts up to256keys inside the same immutable r
 
 
 Serial same-host benchmarks now confirm the exact-page scan change: empty24x faster,8rows22% faster,32rows within2%;99%/75%/41% fewer allocated bytes. No local load or compiler overlapped this repeat. Raw scan-*-serial.log files and updated PROFILE_FINDINGS.md retained. End-to-end exact-scan+fixed8 result is pending in run39172082949 along with dynamic-service250/400 high/low cases. Before starting more local measurements, await session54953: a four-repeat startup-only instrumented reproducer for the prior rare closed-pipe failure is active. It is deliberately not release qualification. Its test-only instrumentation exists only in /workspace/work/rc10/stream-repro-core, never in source or release builds.
+
+
+## Latest wave: reject coupled cold/body changes, test useful maintenance
+
+Run39172082949: service250 FAILED delayed BODY/reader-restart recovery before load (both copies); service400 passed recovery but FAILED retained32down70.748Mbps and early10 timeout; exact-scan+fixed8 passed recovery but FAILED72.194Mbps tail. All outcomes are retained in experiment-39172082949.json. Do not integrate the cold64/client-cold/body-budget bundle. The earlier fixed8 pass does not qualify these later configurations.
+
+A four-repeat profiled startup-only reproducer finished3PASS/1probe-timeout on originalRC2+fixed4. It did not reproduce the application-worker closed pipe. Instrumented socket RESET events were teardown, not carrier loss. Evidence startup-profile-reproducer.json; no production code gained test hooks.
+
+Next experiment restores exact RC2 controller/seed/growth/polling and BODY policy. It adds fixed8, exact-page allocations and skips speculative localDATA cleanup only when there is no obsolete local reference and the journal proves no historical local debt. This guard runs BEFORE cleanup ownership/worker start to avoid empty-GC spinning. Unknown/committed unacknowledged current DATA remains charged. Historical sessions and eligible bodies keep original scans/proofs. Tests pass0.102s, including historical/local guard, cleanup/admission/proof and existing invariants; a hidden-audit test now seeds real eligible-but-absent DATA so it still exercises actual maintenance without a fabricated refund.
+
+Two optional variants adapt only the existing cleanup admission limit to1or2while short DATA is pending. No new gate/timer/writer/window exists. Outstanding operations finish; any queued control debt>=48restores full original service to preserve descriptor/ACK liveness. On short drain, original FIFO capacity resumes. Unit tests cover restoration, urgent-control override and ownership/debt. Workflowitom-rc10-maintenance compares skip/fastgc1/fastgc2 on retained32/early10 plus a matched fixed8control. All strict qualification limits remain.
+
+No local tests are pending after session11130. Source is unchanged05383c2; no APK/binary built. Continue with the new maintenance workflow results, then integrate only a configuration that passes both blockers, followed by the unchanged full qualification. Do not stop at a single favorable case.

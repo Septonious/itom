@@ -1,0 +1,77 @@
+{
+  "run_id": 39172082949,
+  "head_sha": "c6b153d20b3a28eb0066a299e81bf8e5e55f4e04",
+  "classification": "ISOLATED COMPARISON; failed recovery or performance remains failure",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117807084735,
+      "name": "service400-early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:27:35.9073081Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=586 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:27:40.4089300Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=4501 upload_mbps=2.854 download_mbps=2.155 rtt_samples=1 p50_ms=770 p95_ms=770 max_ms=770 timeouts=1 missed=0 overlap=1 failure=probe user=1 index=2 status=timeout: read pipe: i/o timeout",
+        "2026-10-18T22:27:40.5578378Z --- FAIL: TestTransportReworkQualification (34.24s)"
+      ],
+      "recovery_failure": []
+    },
+    {
+      "id": 117807084770,
+      "name": "service400-retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:27:33.7896775Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=272 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:28:33.7902245Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=80.098 download_mbps=70.748 rtt_samples=30 p50_ms=279 p95_ms=363 max_ms=391 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:28:33.7905143Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=56.185 p95_ms=114.105 max_ms=117.978 target_ms=100 field_qualified=false",
+        "2026-10-18T22:28:33.8184360Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=80.098 download_mbps=70.748 verified_tail_mbps=70.748 rtt_ms=391.381 accepted=false",
+        "2026-10-18T22:28:33.8185943Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=70.748297 max_rtt_ns=391380957 accepted=false field_qualified=false",
+        "2026-10-18T22:28:43.9688044Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T22:28:43.9981184Z --- FAIL: TestTransportReworkQualification (99.48s)"
+      ],
+      "recovery_failure": []
+    },
+    {
+      "id": 117807084820,
+      "name": "service250-early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:27:04.6036208Z --- FAIL: TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream (29.28s)"
+      ],
+      "recovery_failure": [
+        "2026-10-18T22:27:04.6038106Z     rev4_delayed_visibility_test.go:31: recovery_failure account=a03 repair_busy=false flight=1015808 window=1048576 waiting=0",
+        "2026-10-18T22:27:04.6062388Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout",
+        "2026-10-18T22:27:04.6062841Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout"
+      ]
+    },
+    {
+      "id": 117807084860,
+      "name": "service250-retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:27:02.5194709Z --- FAIL: TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream (28.72s)"
+      ],
+      "recovery_failure": [
+        "2026-10-18T22:27:02.5195766Z     rev4_delayed_visibility_test.go:31: recovery_failure account=a04 repair_busy=true flight=655360 window=1015808 waiting=0",
+        "2026-10-18T22:27:02.5210145Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout",
+        "2026-10-18T22:27:02.5210573Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout",
+        "2026-10-18T22:27:02.5210993Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout",
+        "2026-10-18T22:27:02.5211505Z     rev4_delayed_visibility_test.go:56: TCP data did not recover intact read 1048576 bytes: read pipe: i/o timeout"
+      ]
+    },
+    {
+      "id": 117807084900,
+      "name": "exact-scan-retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T22:27:27.3326922Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=272 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T22:28:27.3331614Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=80.046 download_mbps=73.046 rtt_samples=30 p50_ms=313 p95_ms=403 max_ms=409 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T22:28:27.3333997Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=51.567 p95_ms=142.445 max_ms=171.007 target_ms=100 field_qualified=false",
+        "2026-10-18T22:28:27.3593671Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=80.046 download_mbps=73.046 verified_tail_mbps=72.194 rtt_ms=409.659 accepted=false",
+        "2026-10-18T22:28:27.3595878Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=72.194458 max_rtt_ns=409658666 accepted=false field_qualified=false",
+        "2026-10-18T22:28:36.7232467Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T22:28:36.7889759Z --- FAIL: TestTransportReworkQualification (98.26s)"
+      ],
+      "recovery_failure": []
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "classification": "STARTUP-ONLY PROFILED DIAGNOSTIC; not full release qualification",
+  "configuration": "original RC2 policy+fixed4, instrumented socket/target/abort hooks;4startup repeats,2s loaded startup each",
+  "qualified": false,
+  "evidence": [
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=1 overlap=1 max_ms=445 timeouts=1 missed=0 failure=probe user=1 index=2 status=timeout: read pipe: i/o timeout",
+    "supervised_load_test.go:257: cold startup failed probe user=1 index=2 status=timeout: read pipe: i/o timeout samples 1 timeouts 1 missed 0",
+    "--- FAIL: TestTransportReworkQualification (31.00s)",
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=432 timeouts=0 missed=0 failure=<nil>",
+    "--- PASS: TestTransportReworkQualification (31.48s)",
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=385 timeouts=0 missed=0 failure=<nil>",
+    "--- PASS: TestTransportReworkQualification (30.09s)",
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=451 timeouts=0 missed=0 failure=<nil>",
+    "--- PASS: TestTransportReworkQualification (32.81s)"
+  ],
+  "observation": "3startup runs completed,1startup probe timed out. No original application-worker closed-pipe recurrence was captured. Printed socket-close/RESET events followed intentional teardown of a successful startup-only run; they are not a spontaneous outage."
+}
