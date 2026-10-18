@@ -420,6 +420,9 @@ func (g *stripeGroup) attach(l *lane) error {
 		l.fastPhysicalSlots = make(chan struct{}, 1)
 	}
 	g.mu.Lock()
+	// Each endpoint's first authenticated carrier fixes its directional
+	// logical flight ceiling before any bulk admission. Reconnects retain it.
+	g.delivery.setRoleWindow(l.side)
 	old := g.lanes[l.account.ID]
 	if old != nil && old != l && l.carrierEpoch < old.carrierEpoch {
 		g.mu.Unlock()

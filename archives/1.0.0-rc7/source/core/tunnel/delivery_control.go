@@ -24,7 +24,8 @@ const (
 	// 0.5-0.8s duplex BDP instead of allowing a 16MiB burst to monopolize
 	// retained IMAP grant service. Physical quota accounting, receipts and
 	// TCP stream identities remain independent and unchanged.
-	deliveryMaxWindow     = 8 << 20
+	deliveryMaxWindow       = 16 << 20
+	deliveryClientMaxWindow = 12 << 20
 	deliveryFastReserve   = 128 << 10
 	deliveryTargetAge     = 800 * time.Millisecond
 	deliveryDecisionEpoch = 250 * time.Millisecond
@@ -75,6 +76,7 @@ type deliveryController struct {
 	wake                                chan struct{}
 	window                              uint64
 	initialWindow                       uint64
+	maxWindow                           uint64
 	ranges                              map[deliveryKey]*deliveryRange
 	frontiers                           map[uint64]uint64
 	issued                              map[uint64]uint64
@@ -118,12 +120,26 @@ type deliveryController struct {
 }
 
 func newDeliveryController() deliveryController {
-	return deliveryController{wake: make(chan struct{}), window: deliveryInitialWindow, initialWindow: deliveryInitialWindow, ranges: map[deliveryKey]*deliveryRange{}, frontiers: map[uint64]uint64{}, issued: map[uint64]uint64{}, stopped: map[uint64]bool{}}
+	return deliveryController{wake: make(chan struct{}), window: deliveryInitialWindow, initialWindow: deliveryInitialWindow, maxWindow: deliveryMaxWindow, ranges: map[deliveryKey]*deliveryRange{}, frontiers: map[uint64]uint64{}, issued: map[uint64]uint64{}, stopped: map[uint64]bool{}}
 }
+// setRoleWindow applies the restored asymmetric RC5 experiment to the
+// authenticated endpoint (lane.side=true is server). This is logical credit
+// only, never physical mailbox/journal quota or a credit refund.
+func (d *deliveryController) setRoleWindow(server bool) {
+	d.init()
+	if server {
+		d.maxWindow = deliveryMaxWindow
+	} else {
+		d.maxWindow = deliveryClientMaxWindow
+	}
+	d.window = min(d.window, d.maxWindow)
+}
+
 func (d *deliveryController) init() {
 	if d.window == 0 {
 		*d = newDeliveryController()
 	}
+	if d.maxWindow == 0 { d.maxWindow = deliveryMaxWindow }
 	if d.wake == nil {
 		d.wake = make(chan struct{})
 	}
@@ -399,7 +415,7 @@ func (d *deliveryController) maintain(now time.Time, demand bool) {
 		d.fastPressureUntil = time.Time{}
 	}
 	before := d.window
-	d.window = d.policy.next(now, deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
+	d.window = d.policy.next(now, deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, MaxWindow: d.maxWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
 		Delivered: d.bulkDelivered, RateMbps: d.bulkRateMbps, Age: age, FastAge: fastAge,
 		Samples: d.ageCount, Target: d.targetAge(), FastTarget: d.fastAgeBudget(), FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)})
 	if d.policy.mode == deliveryCongested || d.policy.mode == deliveryOutage {
@@ -794,7 +810,7 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 		// strand unrelated TCPs behind one invisible BODY. A stream with no
 		// outstanding bulk may discover the path with one in-order frame.
 		// The hard session cap, stream credit and physical quota still apply.
-		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= deliveryMaxWindow
+		discovery := !w.fast && !w.repair && publishedBulk && perStream[a.Stream] == 0 && n <= wire.MaxData && d.bulk+size+n <= d.maxWindow
 		if n > remaining && !discovery || len(d.ranges)+len(entries) >= deliveryMaxRanges {
 			w.debug.Window++
 			continue
@@ -819,7 +835,7 @@ func (d *deliveryController) plan(w *deliveryWaiter) ([]*deliveryRange, uint64, 
 // congestion window. It remains real charged flight until an authenticated ACK
 // or stream retirement; it cannot replenish itself on writer completion.
 func (d *deliveryController) bulkAdmissionAllowed(entries []*deliveryRange, bytes uint64) bool {
-	if d.bulk+bytes > deliveryMaxWindow {
+	if d.bulk+bytes > d.maxWindow {
 		return false
 	}
 	if d.bulk+bytes <= d.window {
