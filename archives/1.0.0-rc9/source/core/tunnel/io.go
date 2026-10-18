@@ -1656,6 +1656,7 @@ func (l *lane) startReader() {
 			// retain a short audit for delayed visibility and missing notifications.
 			if !hot && !advanced && len(rows) == 0 && (active == 0 || idle >= 2) {
 				audit := readerIdleAuditDelay(active, l.readHotUntil.Load(), time.Now())
+				audit = l.stripe.interactiveReaderAuditDelay(l, active, audit)
 				audit = notificationPolicy.delay(active, audit, time.Now())
 				if waiter, ok := l.mail.(interface {
 					WaitReadWake(context.Context, string, time.Duration, <-chan struct{}) (bool, bool, bool, error)

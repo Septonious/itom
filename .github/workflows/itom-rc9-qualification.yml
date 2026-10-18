@@ -168,7 +168,7 @@ jobs:
           retention-days: 14
 
   linux:
-    needs: [core, sustained, startup-ramp]
+    needs: [core, sustained, startup-ramp, android]
     name: Build Linux amd64 and arm64
     runs-on: ubuntu-latest
     timeout-minutes: 20

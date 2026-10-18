@@ -26,9 +26,9 @@ const (
 	// TCP stream identities remain independent and unchanged.
 	deliveryMaxWindow       = 16 << 20
 	deliveryClientMaxWindow = 12 << 20
-	deliveryFastReserve   = 128 << 10
-	deliveryTargetAge     = 800 * time.Millisecond
-	deliveryDecisionEpoch = 250 * time.Millisecond
+	deliveryFastReserve     = 128 << 10
+	deliveryTargetAge       = 800 * time.Millisecond
+	deliveryDecisionEpoch   = 250 * time.Millisecond
 	// Short DATA ACK is one leg of an application exchange; keep headroom for
 	// its other leg. This is feedback, not the 1500ms application test limit.
 	deliveryFastMaxAge = 650 * time.Millisecond
@@ -122,6 +122,7 @@ type deliveryController struct {
 func newDeliveryController() deliveryController {
 	return deliveryController{wake: make(chan struct{}), window: deliveryInitialWindow, initialWindow: deliveryInitialWindow, maxWindow: deliveryMaxWindow, ranges: map[deliveryKey]*deliveryRange{}, frontiers: map[uint64]uint64{}, issued: map[uint64]uint64{}, stopped: map[uint64]bool{}}
 }
+
 // setRoleWindow applies the restored asymmetric RC5 experiment to the
 // authenticated endpoint (lane.side=true is server). This is logical credit
 // only, never physical mailbox/journal quota or a credit refund.
@@ -139,7 +140,9 @@ func (d *deliveryController) init() {
 	if d.window == 0 {
 		*d = newDeliveryController()
 	}
-	if d.maxWindow == 0 { d.maxWindow = deliveryMaxWindow }
+	if d.maxWindow == 0 {
+		d.maxWindow = deliveryMaxWindow
+	}
 	if d.wake == nil {
 		d.wake = make(chan struct{})
 	}
@@ -219,6 +222,7 @@ func (g *stripeGroup) bindDeliveryCarrier(jobs []*datapath.Job, carrier string) 
 						g.shortAffinity = map[uint64]string{}
 					}
 					g.shortAffinity[a.Stream] = carrier
+					g.noteShortReaderLocked(carrier, time.Now())
 				}
 			}
 		}
@@ -963,7 +967,7 @@ type latencyGovernorSnapshot struct {
 	OldestBulkRangeAgeMS                                                                       int64
 	AcknowledgementFloorMS                                                                     int64
 	LastFastACKAgeMS, FastPressureRemainingMS, FastPathBaselineMS, FastTargetMS                int64
-	LastBulkACKAgeMS, LastBulkACKSinceMS                                                        int64
+	LastBulkACKAgeMS, LastBulkACKSinceMS                                                       int64
 	FastPressureDecisions                                                                      uint64
 	ProbeAttempts, ProbeAccepted, ProbeRejected                                                uint64
 	RecoveryAttempts, RecoveryAccepted, RecoveryRejected, FastRampIncreases, FastRampRollbacks uint64

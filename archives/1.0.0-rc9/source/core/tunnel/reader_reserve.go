@@ -147,3 +147,59 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 	}
 	return best
 }
+
+// Split DATA already has a separate BODY reader, so it has no quiet reserve.
+// Remember at most two actual short-DATA carriers instead. Only authenticated
+// incoming DATA or charged outgoing fast ranges extend this scheduling hint;
+// OPEN, bulk/control traffic and empty polls cannot keep it alive.
+type shortReaderActivity struct {
+	account string
+	until   time.Time
+}
+
+const shortReaderAuditHold = 5 * time.Second
+
+func (g *stripeGroup) noteShortReaderLocked(account string, now time.Time) {
+	if account == "" {
+		return
+	}
+	chosen := 0
+	for i, entry := range g.shortReaderActivity {
+		if entry.account == account {
+			chosen = i
+			break
+		}
+		if entry.until.Before(g.shortReaderActivity[chosen].until) {
+			chosen = i
+		}
+	}
+	g.shortReaderActivity[chosen] = shortReaderActivity{account, now.Add(shortReaderAuditHold)}
+}
+
+// Missed EXISTS must not impose the full 500 ms audit on both short-data hops.
+// Only two shared-mailbox quiet reserves, or two recently used split short
+// readers, pay the shorter audit during application traffic. Other accounts
+// retain event-driven cadence. This never restarts a socket or changes debt.
+func (g *stripeGroup) interactiveReaderAuditDelay(l *lane, active int64, base time.Duration) time.Duration {
+	if g == nil || l == nil || active <= 0 {
+		return base
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	quiet := g.interactiveReadersLocked()
+	if quiet[0] != nil {
+		if l == quiet[0] || l == quiet[1] {
+			return min(base, readerResponseAuditDelay)
+		}
+		return base
+	}
+	if l.dataShards > 0 {
+		now := time.Now()
+		for _, entry := range g.shortReaderActivity {
+			if entry.account == l.account.ID && now.Before(entry.until) {
+				return min(base, readerResponseAuditDelay)
+			}
+		}
+	}
+	return base
+}
