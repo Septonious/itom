@@ -1,12 +1,13 @@
-# Continue ITOM RC9 development
+# Continue ITOM RC9 development — BLOCKED, not release-ready
 
 Repository: Septonious/itom. Branch: `codex/v1.0.0-rc9-development`.
 Current runtime is restored exactly to `8868df3` after rejecting `0dc4e91`.
-The subsequent repeat qualification must complete before judging the restored
-state. Rejected experiment run:
-https://github.com/Septonious/itom/actions/runs/39146157950
-**Do not build or promote a release with failing gates.** The workflow blocks
-APK/Linux builds behind all core, repeated-load and low-rate startup jobs.
+Final source checkpoint: `eef1123` (later documentation-only commits do not
+change it). Repeat qualification completed and **failed**:
+https://github.com/Septonious/itom/actions/runs/39146596629
+**No RC9 APK or Linux binary was built.** Do not build or promote with failing
+gates. The workflow blocked all artifact jobs as intended. The earlier 12/12
+pass did not reproduce and must not be presented as release qualification.
 
 ## Retained changes
 
@@ -65,3 +66,34 @@ Real Android/Rambler validation is required before release qualification.
 Source: `archives/1.0.0-rc9/source`. `.github/workflows/itom-rc9-qualification.yml`
 contains reproducible strict cases and gated matching APK, Linux amd64/arm64,
 source ZIP and checksum/signer artifact jobs. No release tag is published.
+
+## Final repeat — current blockers
+
+The unchanged restored source completed only **8/12** strict full-capacity cases:
+
+| Case | Round1 | Round2 |
+|---|---|---|
+| SINGLE fresh | FAIL,850.441ms RTT | PASS |
+| 4 fresh | FAIL,68.835Mbps down,1166.058ms RTT,1s download stall | FAIL,51.363Mbps minimum tail,1160.829ms RTT |
+| 32 fresh | PASS | PASS |
+| SINGLE retained | PASS | PASS |
+| 4 retained | PASS | FAIL,zero download bytes in1s window51 |
+| 32 retained | PASS | PASS |
+
+All full-capacity cases still completed 60s,30/30 probes, original TCP identity
+and post-load original/fresh-socket integrity. This does NOT waive their RTT,
+positive-duplex-window or throughput failures. Early10Mbps timed out after6.5s
+(max completed RTT1446ms); early20Mbps completed but maxRTT1136.082ms failed.
+Expanded core, quota/proof, race, delayed-BODY/reader restart, retained mixed
+traffic and >60s blackout recovery tests all passed on this restored source.
+APK/Android/lint/JNI/Linux/source-package build jobs correctly skipped.
+Full chronology is `evidence/eef1123-repeat-qualification.json`.
+
+The retained-source calibration regression is a proven logic correction, not
+proof that mean RTT or field Speedtest reliability improved. Do not select only
+the earlier all-green matrix. All five rounds of candidate evidence remain.
+Next investigation should target 4-stream interactive APPEND/FETCH queue dwell
+and the one-second download holes, with low-overhead segment timing retained
+until after measurement. Compare actual service/cleanup and physical occupancy
+before changing admission again. Avoid broad new flight reductions: both audit
+and global exception restrictions already regressed retained throughput.

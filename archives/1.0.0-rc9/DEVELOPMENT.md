@@ -1,4 +1,4 @@
-# ITOM 1.0.0 RC9 development
+# ITOM 1.0.0 RC9 development — NOT RELEASE READY
 
 Based on RC8 checkpoint `7851e22`, copied without resetting journals or accounts.
 Current experiment bounds simultaneous outgoing DATA proof-body reads to four
@@ -104,3 +104,15 @@ The global restriction is reverted to the exact `8868df3` runtime. Its earlier
 12/12 pass is retained as one experiment, not release certification. A repeat
 of the restored runtime is required; no red case is dropped or threshold waived.
 Chronological data: `evidence/0dc4e91-qualification.json`.
+
+## Restored-source repeat failed; packaging blocked
+
+`eef1123` has byte-identical source to `8868df3`, but repeat run39146596629
+passed only8/12 full-capacity rounds. SINGLE/fresh RTT850.441ms failed;
+4/fresh both rounds failed (maxRTT1166.058/1160.829ms, second minimum tail
+51.362748Mbps); retained4 had a one-second download stall. All full-rate
+probe schedules, original sockets and post-stress integrity checks completed.
+Low10/20Mbps cases still failed. Expanded recovery/proof/race checks passed.
+No RC9 artifacts were built. See the final handoff and
+`evidence/eef1123-repeat-qualification.json`; the earlier12/12 pass does not
+certify this source. Qualification thresholds remain unchanged.
