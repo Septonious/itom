@@ -2,7 +2,7 @@ name: RC10 measured cold uplink with original RC2 recovery; two targeted blocker
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-combined-targeted.yml", "archives/1.0.0-rc10/experiments/client_cold.py", "archives/1.0.0-rc10/experiments/prefetch.py", "archives/1.0.0-rc10/experiments/preparation_cold.py"]
+    paths: [".github/workflows/itom-rc10-combined-targeted.yml", "archives/1.0.0-rc10/experiments/client_cold.py", "archives/1.0.0-rc10/experiments/prefetch.py", "archives/1.0.0-rc10/experiments/preparation_cold.py", "archives/1.0.0-rc10/experiments/calibration.py"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +39,7 @@ jobs:
           python3 archives/1.0.0-rc10/experiments/client_cold.py
           python3 archives/1.0.0-rc10/experiments/prefetch.py
           python3 archives/1.0.0-rc10/experiments/preparation_cold.py
+          python3 archives/1.0.0-rc10/experiments/calibration.py
       - name: Verify escape accounting, invisible BODY recovery and cancellation
         working-directory: archives/1.0.0-rc10/source/core
         run: go test -p 2 -count=1 -timeout=180s ./tunnel -run 'TestPreparationSharesPhysicalCapacityAndCancellation|TestRC10|TestRC9|TestRC8|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages'

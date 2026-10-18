@@ -1,0 +1,26 @@
+{
+  "run_id": 39165923779,
+  "head_sha": "986da89c59baf3bc0d5267802a5e6cc6bb796c5c",
+  "url": "https://github.com/Septonious/itom/actions/runs/39165923779",
+  "conclusion": "failure",
+  "classification": "ISOLATED EXPERIMENT; not a qualified release",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117788724199,
+      "name": "Aligned quiet reserve, RC2 policy,4MiB cleanup; retained 1",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:01:59.2085142Z --- FAIL: TestFieldBulkLeavesTwoReadableAccountsForInteractiveData (0.00s)"
+      ]
+    },
+    {
+      "id": 117788724373,
+      "name": "Aligned quiet reserve, RC2 policy,4MiB cleanup; retained 32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:02:13.5025166Z --- FAIL: TestFieldBulkLeavesTwoReadableAccountsForInteractiveData (0.00s)"
+      ]
+    }
+  ]
+}

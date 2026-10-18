@@ -1,0 +1,34 @@
+{
+  "run_id": 39166492170,
+  "head_sha": "9b3ec49b35be31e2722a752ff67de1013951a7b6",
+  "url": "https://github.com/Septonious/itom/actions/runs/39166492170",
+  "conclusion": "failure",
+  "classification": "ISOLATED EXPERIMENT; not a qualified release",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117790410321,
+      "name": "retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:11:28.5817157Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=393 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T21:12:28.5820240Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=61.429 download_mbps=61.219 rtt_samples=30 p50_ms=411 p95_ms=767 max_ms=863 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T21:12:28.5822019Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=174.712 p95_ms=383.713 max_ms=397.123 target_ms=100 field_qualified=false",
+        "2026-10-18T21:12:28.6175092Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=61.429 download_mbps=61.219 verified_tail_mbps=47.710 rtt_ms=863.874 accepted=false",
+        "2026-10-18T21:12:28.6176919Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=47.710208 max_rtt_ns=863873674 accepted=false field_qualified=false",
+        "2026-10-18T21:12:38.7387364Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T21:12:38.8295874Z --- FAIL: TestTransportReworkQualification (103.19s)"
+      ]
+    },
+    {
+      "id": 117790410459,
+      "name": "early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:11:19.7215132Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=1000 samples=0 overlap=0 max_ms=0 timeouts=1 missed=0 failure=probe user=1 index=1 status=timeout: read pipe: i/o timeout",
+        "2026-10-18T21:11:19.7216147Z     supervised_load_test.go:257: cold startup failed probe user=1 index=1 status=timeout: read pipe: i/o timeout samples 0 timeouts 1 missed 0",
+        "2026-10-18T21:11:19.9521664Z --- FAIL: TestTransportReworkQualification (28.94s)"
+      ]
+    }
+  ]
+}

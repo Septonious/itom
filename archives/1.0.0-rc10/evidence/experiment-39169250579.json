@@ -1,0 +1,35 @@
+{
+  "run_id": 39169250579,
+  "head_sha": "40325033399892c14d725cfbc9fd37547a22d4ee",
+  "url": "https://github.com/Septonious/itom/actions/runs/39169250579",
+  "conclusion": "failure",
+  "classification": "ISOLATED EXPERIMENT; not a qualified release",
+  "qualified": false,
+  "jobs": [
+    {
+      "id": 117798673854,
+      "name": "retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:48:34.6425342Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=650 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T21:49:34.6433528Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=75.825 download_mbps=66.694 rtt_samples=30 p50_ms=324 p95_ms=566 max_ms=574 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-18T21:49:34.6434695Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=89.137 p95_ms=257.873 max_ms=307.219 target_ms=100 field_qualified=false",
+        "2026-10-18T21:49:34.6822631Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=75.825 download_mbps=66.694 verified_tail_mbps=66.694 rtt_ms=574.302 accepted=false",
+        "2026-10-18T21:49:34.6824463Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=66.693803 max_rtt_ns=574302081 accepted=false field_qualified=false",
+        "2026-10-18T21:49:44.4202493Z     supervised_load_test.go:578: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+        "2026-10-18T21:49:44.4733830Z --- FAIL: TestTransportReworkQualification (102.68s)"
+      ]
+    },
+    {
+      "id": 117798674102,
+      "name": "early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-18T21:48:23.3849203Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=586 timeouts=0 missed=0 failure=<nil>",
+        "2026-10-18T21:48:31.8854858Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=8500 upload_mbps=2.344 download_mbps=2.190 rtt_samples=3 p50_ms=722 p95_ms=778 max_ms=778 timeouts=1 missed=0 overlap=3 failure=probe user=1 index=4 status=timeout: read pipe: i/o timeout",
+        "2026-10-18T21:48:31.8856674Z     supervised_load_test.go:350: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=2 mean_ms=44.052 p95_ms=55.390 max_ms=55.390 target_ms=100 field_qualified=false",
+        "2026-10-18T21:48:32.0758994Z --- FAIL: TestTransportReworkQualification (38.45s)"
+      ]
+    }
+  ]
+}

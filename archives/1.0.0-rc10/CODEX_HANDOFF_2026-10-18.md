@@ -24,3 +24,14 @@ All post-RC2 release-file changes and intermediate/reverted commits were reviewe
 6. Package ID org.itom.client, no suffix, versionCode10009, JNI/server itom-1-0-0-rc10. Native Version() references transport revision. Source/Python checks91tests pass. No private signing key was found in workspace. Existing CI uses Gradle debug signing and records SIGNER.txt; do not promise in-place signing continuity or replace keys silently. Original RC2 release driver expected cert39667cd3f91521b09af012b2ca08f8f0ba0d7e07f14b32a9a1e794cb3f4bf999 for its old dev.rev7 package; this is not evidence of the current installed org.itom.client signer.
 
 Workspace /workspace/work/rc8/repository; scratch /workspace/work/rc10. PATH /workspace/toolchains/go/bin. Go1.27.1, GOTOOLCHAIN=local GOWORK=off GOFLAGS=-mod=readonly GOMAXPROCS=2, GOCACHE=/workspace/toolchains/go-cache GOPATH=/workspace/toolchains/gopath.2CPU quota; never measure performance concurrently with compilation/race/compression locally. Git auth works through inherited proxy. Do not print credentials. Use GitHub tools for workflow jobs/logs; GitHub commit push triggers narrow workflows. Keep interim commits pushed.
+
+
+## Latest checkpoint
+
+Chronological evidence now saved through run39169250590, plus combined39169250579. The latest cached-two-row cleanup variant regressed retained32 download to66.694Mbps and is reverted in the runner script. Prefetch alone passed once at minimum76.607Mbps,max414ms; repeat74.029Mbps fails, so no release claim.
+
+The current combined runner experiment applies cleanup4 + original four-row prefetch + measured-size client batches + cold FIFO preparation cap2 + isolated peak-flight calibration. Full-sized server BODY evidence must meet max250ms/twice true propagation, not the looser1s BODY tuning budget. New unit tests reject small or paced receipts as proof of full parallelism. Main candidate source remains05383c2. Scratch focused regression tests PASS0.168s; GitHub combined workflow will run the unchanged retained32 and early10 blockers after this push.
+
+A local low10 diagnostic of the prior cap4 variant showed virtually zero fast writer queue waits but shared mail path RTT928–988ms before a1.5s timeout. Both controllers had allowed loaded low-flight ACK samples to raise their floor toward2s. This motivates the independently scoped calibration correction; do not infer a socket or quota failure from teardown broken pipes.
+
+Prepare integration helper now also saves/restores delivery_control.go and rc10_calibration_test.go. Source/protected package identity requirements, strict main qualification, signing uncertainty and no-build status above still apply. Continue from latest pushed commit; do not reapply rejected global escapes, two-reader proof semaphore, loaded scoring or byte/time batch cap.

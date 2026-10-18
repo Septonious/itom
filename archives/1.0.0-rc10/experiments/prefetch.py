@@ -21,15 +21,7 @@ b='''\t\t\t\tif len(wanted) > 0 {
 \t\t\t\t\t\t}
 \t\t\t\t\t}
 \t\t\t\t\trows, err := finder.FetchCleanupCandidates'''
-assert s.count(a)==1;s=s.replace(a,b);s=s.replace('cachedEligible := map[journal.AttemptRef]bool{}','cachedEligible := map[journal.AttemptRef]bool{}\n\t\tvar cachedEligibleBytes uint64',1)
-s=s.replace('cachedEligible[a.Ref] = true','cachedEligible[a.Ref] = true\n\t\t\t\tcachedEligibleBytes += a.EncodedBytes',1)
-a='drainCached := len(cachedEligible) >= cachedBatchMinimum'
-assert s.count(a)==1
-s=s.replace(a,a+'''\n\t\t// Two observed large BODYs already return at least one full physical
-\t\t// batch of headroom. Do not delay their exact proof/deletion behind
-\t\t// another FETCH just to fill a four-row batch. Tiny DATA keeps batching.
-\t\tif kind == cleanupLocalData && len(cachedEligible) >= 2 && cachedEligibleBytes >= dataBatchMIMEHardCap { drainCached = true }''')
-p.write_text(s)
+assert s.count(a)==1;s=s.replace(a,b);p.write_text(s)
 # RC9's io delta is only the already isolated4MiB cleanup selector extraction.
 shutil.copy(old/'io.go',d/'io.go');p=d/'io.go';s=p.read_text()
 if '\n\t"sort"' not in s:s=s.replace('import (','import (\n\t"sort"',1)
@@ -69,7 +61,7 @@ func TestRC10PrefetchedUnacknowledgedDataCannotRefundEarly(t *testing.T){
  if err=m.Ensure(context.Background(),u.Down);err!=nil{t.Fatal(err)}
  g,err:=s.Issue(journal.Scope{Account:a.ID,User:u.ID,Session:cipher.Context().Session},pool.Amount{Bytes:2<<20,Messages:8});if err!=nil{t.Fatal(err)}
  var attempts []journal.Attempt
- for i:=0;i<4;i++ {body:=bytes.Repeat([]byte{byte(i+1)},256<<10);raw,err:=mailbox.Encode(body);if err!=nil{t.Fatal(err)}
+ for i:=0;i<4;i++ {body:=bytes.Repeat([]byte{byte(i+1)},32<<10);raw,err:=mailbox.Encode(body);if err!=nil{t.Fatal(err)}
  at,err:=s.PrepareStarted(g.Ref,u.Down,[16]byte{byte(i+1)},uint64(len(raw)),body);if err!=nil{t.Fatal(err)}
  if err=s.Complete(at.Ref,journal.Accepted);err!=nil{t.Fatal(err)};if err=m.Append(context.Background(),u.Down,raw);err!=nil{t.Fatal(err)};attempts=append(attempts,at)}
  if err=s.CloseGrant(g.Ref);err!=nil{t.Fatal(err)}
@@ -79,22 +71,9 @@ func TestRC10PrefetchedUnacknowledgedDataCannotRefundEarly(t *testing.T){
  for i,a:=range attempts{priority,ok:=m.requested[a.Digest];if !ok||priority!=(i==0){t.Fatal("wrong discovery priority",i,priority,ok)}}
  held,err:=s.Held(a.ID,u.ID);if err!=nil||held.Messages!=3{t.Fatal("prefetch refunded unacknowledged debt",held,err)}
  for uid:=uint32(2);uid<=4;uid++{absent,err:=m.Absent(l.ctx,u.Down,1,uid);if err!=nil||absent{t.Fatal("prefetch deleted unacknowledged BODY",uid,err)}}
- // A newly eligible BODY was not in the earlier observation. Reclaim two
- // already-observed large peers first, keeping that fifth BODY charged until
- // a later bounded FETCH proves it too. The fourth remains unacknowledged.
- body:=bytes.Repeat([]byte{5},256<<10);raw,err:=mailbox.Encode(body);if err!=nil{t.Fatal(err)}
- extra,err:=s.Issue(journal.Scope{Account:a.ID,User:u.ID,Session:cipher.Context().Session},pool.Amount{Bytes:uint64(len(raw)),Messages:1});if err!=nil{t.Fatal(err)}
- fifth,err:=s.PrepareStarted(extra.Ref,u.Down,[16]byte{5},uint64(len(raw)),body);if err!=nil{t.Fatal(err)}
- if err=s.Complete(fifth.Ref,journal.Accepted);err!=nil{t.Fatal(err)};if err=s.CloseGrant(extra.Ref);err!=nil{t.Fatal(err)}
- if err=m.Append(l.ctx,u.Down,raw);err!=nil{t.Fatal(err)}
- later:=map[journal.AttemptRef]bool{attempts[1].Ref:true,attempts[2].Ref:true,fifth.Ref:true}
+ later:=map[journal.AttemptRef]bool{};for _,a:=range attempts[1:]{later[a.Ref]=true}
  result=l.cleanup(cleanupLocalData,later,nil,nil,true,s)
- if result.err!=nil||len(result.local)!=2||m.calls!=1{t.Fatal("ready large proofs waited behind another FETCH",result,m.calls)}
- held,err=s.Held(a.ID,u.ID);if err!=nil||held.Messages!=2{t.Fatal("unobserved or unacknowledged BODY refunded",held,err)}
- result=l.cleanup(cleanupLocalData,map[journal.AttemptRef]bool{fifth.Ref:true},nil,nil,true,s)
- if result.err!=nil||len(result.local)!=1||m.calls!=2{t.Fatal("later proof discovery failed",result,m.calls)}
- result=l.cleanup(cleanupLocalData,map[journal.AttemptRef]bool{attempts[3].Ref:true},nil,nil,true,s)
- if result.err!=nil||len(result.local)!=1||m.calls!=2{t.Fatal("prefetched fourth BODY lost its proof",result,m.calls)}
+ if result.err!=nil||len(result.local)!=3||m.calls!=1{t.Fatal("cached observations did not amortize FETCH",result,m.calls)}
  if err=s.Audit();err!=nil{t.Fatal(err)}
 }
 func TestRC10CleanupEligibleHintsPrecedePrefetchWithinByteLimit(t *testing.T){

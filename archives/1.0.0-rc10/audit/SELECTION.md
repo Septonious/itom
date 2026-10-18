@@ -46,3 +46,18 @@ RC7's16/12 directional bound was then isolated from its accelerated growth: reta
 A64KiB capacity-unmeasured cold probe plus the RC9 first-stream pacing/calibration hunks preserved existing recovery tests but still timed out under10/20Mbps. Logs exposed continued above-window escapes by established streams. A deterministic red/green regression reproduces that bypass and checks that a shared scheduling wake is released by an authenticated useful ACK or the existing bounded actor timer, with every other byte still charged. Extending pacing to those escapes passed the20Mbps startup case (30/30 probes, no timeout/miss,745.548ms max, original/new sockets intact);10Mbps still timed out. It remains an experiment, not a selected candidate policy. Both outcomes are retained in chronological evidence; neither authorizes a build.
 
 Next isolated test bounds simultaneous local DATA proof-BODY reads to two. It does not limit cleaner ownership, remote/control cleanup, deletion or absence checks, and cancellation returns the scheduling slot. The shared12MiB journal, wallet, logical identities and all physical proof requirements remain unchanged. No experimental code has been applied to the RC10 source at this checkpoint.
+
+
+## Later bounded experiments and current decision
+
+All results are saved in `evidence/experiment-*.json`, including failed rounds. None changes the qualification criteria or authorizes packaging.
+
+- Global above-window escape pacing with a 2s fallback violated `TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream`'s recovery deadline; reject. The 10Mbps result also exceeded 1s. Original independent-stream progress stays.
+- Aligned quiet reserves passed SINGLE but retained32 download remained72.688Mbps. No demonstrated gain; defer.
+- Bounded cleanup observation prefetch (eligible bodies first; only current-session committed local DATA) passed retained32 once at82.798/77.717Mbps, minimum full/tail76.607Mbps,max413.753ms. Unacknowledged bodies remain charged and present until their original ACK/delete proofs. A later repeat missed at74.029Mbps. Promising, not yet selected.
+- Draining two large cached rows before another discovery was tested and rejected: combined retained download66.694Mbps. Restore the original four-row cache coalescing in the experiment.
+- Measured C2S APPEND batch probes require two actual sufficiently sized successes, ignore fast/control/unknown outcomes, and reject repeated slow larger probes. A simple byte/time estimator permanently capped demand-limited healthy links and was rejected. One measured-size combined run passed retained32 at84.174/77.822Mbps,max487.550ms, but10Mbps startup still failed.
+- Cold FIFO preparation cap4 with nominal server warm evidence was insufficient. Requiring two actual full BODY receipts avoided inventing measured parallelism from small receipts, but did not pass both blockers. New runner-only test uses cap2, proof within a propagation-aware250ms budget, and an isolated RC9 calibration correction. No logical flight/growth/polling/repair policy changes.
+- Calibration defect: a range originally admitted at low flight can later experience a fully loaded epoch but still inflate the unloaded ACK floor. The isolated correction tracks peak exposure and uses half of the actual cold seed; existing windows, independent escapes and authenticated credit stay unchanged. Deterministic regression passes in the integrated scratch tree.
+
+The candidate source is still commit05383c2; current experiments remain separate until they pass targeted checks. No RC10 APK/binary has been built.
