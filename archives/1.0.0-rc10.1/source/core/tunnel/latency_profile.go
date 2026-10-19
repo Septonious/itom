@@ -109,7 +109,7 @@ func (d *diagnostic) profileObserve(stage, class int, elapsed time.Duration, fai
 	p.mu.Unlock()
 }
 func (p *latencyProfile) snapshot() *latencyProfileSnapshot {
-	s := &latencyProfileSnapshot{Schema: 1, Clock: "local_monotonic_duration_us", Scope: "endpoint_cumulative_since_process_start; per-stage observation counts, not additive RTT", BucketUpperUS: append([]int64(nil), profileBoundsUS[:]...), Summaries: p.summaries.Load(), SuppressedSummaries: p.suppressed.Load()}
+	s := &latencyProfileSnapshot{Schema: 1, Clock: "local_monotonic_duration_us", Scope: "endpoint_cumulative_since_diagnostic_creation; per-stage observation counts, not additive RTT", BucketUpperUS: append([]int64(nil), profileBoundsUS[:]...), Summaries: p.summaries.Load(), SuppressedSummaries: p.suppressed.Load()}
 	// The final bucket is unbounded. Its percentile is capped by exact observed
 	// max, as are normal buckets. Percentiles are upper-bound estimates, not exact.
 	s.BucketUpperUS = append(s.BucketUpperUS, -1)
