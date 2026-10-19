@@ -1,8 +1,5 @@
 name: RC10 bounded authenticated short recovery on RC2 bulk policy
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-short-recovery.yml", "archives/1.0.0-rc10/experiments/short_recovery.py"]
   workflow_dispatch:
 permissions:
   contents: read
