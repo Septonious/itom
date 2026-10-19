@@ -1,0 +1,229 @@
+name: RC13 requested field-test APK and server binaries
+# RC13: recovery-only adaptive fast reserves under severe retained-byte pressure; all existing qualification thresholds retained.
+on:
+  push:
+    branches: ["codex/v1.0.0-rc13-development"]
+    paths: [".github/workflows/itom-rc13-field-test-build.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  SOURCE: archives/1.0.0-rc13/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  core:
+    name: Go source integrity, latency selection and account recovery
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc13/source/core/go.mod
+          cache: false
+      - name: Source ID and immutable APK package validation
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc13
+          python3 -m unittest discover -s tools -p 'test_*.py' -q
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('source-info.json').read_text())
+          b=Path('android/app/build.gradle.kts').read_text()
+          assert d['android_application_id']=='org.itom.client'
+          assert 'applicationId = "org.itom.client"' in b
+          assert 'applicationIdSuffix' not in b
+          assert 'versionCode = 10013; versionName = "1.0.0-rc13"' in b
+          PY
+      - name: gofmt go vet and focused field regressions
+        working-directory: ${{ env.SOURCE }}/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=120s ./tunnel -run 'TestRC13|TestRC12|TestRC11|TestRev7Retained|TestRev7Reduced|TestRev5Historical180SlotsBootstrap|TestRetainedQuotaCannotManufactureFullJournalCapacity|TestRC101|TestObservedReaderDoesNotHideStreamingBehindDiagnostics|TestTraceCompactPacketMetadataAndBoundedRotation|TestTraceOverflowAndConcurrentClose' -v | tee "$RUNNER_TEMP/profiler.log"
+          go test -p 2 -count=1 -timeout=180s ./journal ./wallet ./flow ./datapath
+          go test -p 2 -count=1 -timeout=150s ./tunnel -run 'TestDelivery|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix' -v | tee "$RUNNER_TEMP/rc13-focused.log"
+      - name: Phased retained transfers with observed journal service cost
+        working-directory: ${{ env.SOURCE }}/core
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -tags=itomtest -p 2 -count=1 -timeout=180s ./tunnel -run '^(TestRC12RetainedPhased|TestRC13FieldBytePressureTLS)' -v | tee "$RUNNER_TEMP/rc13-phased.log"
+      - name: Race check proof accounting and cleanup cancellation
+        working-directory: ${{ env.SOURCE }}/core
+        run: go test -race -p 2 -count=1 -timeout=180s ./journal ./tunnel -run 'TestRC13|TestRC12|TestRC11Duplicate|TestRC11Mixed|TestRC11Remote|TestRC11Changed|TestRC11Historical|TestRC101|TestObservedReaderDoesNotHideStreamingBehindDiagnostics|TestTraceOverflowAndConcurrentClose|TestDeliveryFullBulkLeavesFastReserveAndCancellation'
+      - name: Save regression evidence on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc13-focused-core-evidence
+          path: |
+            ${{ runner.temp }}/rc13-focused.log
+            ${{ runner.temp }}/profiler.log
+            ${{ runner.temp }}/rc13-phased.log
+          retention-days: 14
+  linux:
+    needs: [core]
+    name: Build Linux amd64 and arm64
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc13
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.0.0-RC13-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.0.0-RC13-linux-$arch.bin" | grep -q 'itom-1-0-0-rc13'
+            test "$(stat -c %s "dist/ITOM-1.0.0-RC13-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.0.0-RC13-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc13-field-test-linux
+          path: ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC13-linux-*.bin
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [core]
+    name: Build Android APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact RC13 application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py android --expect-revision itom-1-0-0-rc13 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10013 and x['versionName']=='1.0.0-rc13-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.0.0-RC13-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-0-0-rc13' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.0.0-RC13-debug.apk > dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc13-field-test-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.0.0-RC13-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc13-field-test-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30
+  source:
+    needs: [core]
+    name: Package executable RC13 source
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integrity check and source archive
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-rc13
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/ITOM-1.0.0-RC13-sources.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc13-field-test-source
+          path: ITOM-1.0.0-RC13-sources.zip
+          if-no-files-found: error
+          retention-days: 30
+  package:
+    name: Assemble verified files; testing only, no release tag
+    needs: [linux, android, source]
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-field-test-linux
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-field-test-android
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-field-test-source
+          path: package
+      - name: Archive matched outputs and source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd package
+          test -s ITOM-1.0.0-RC13-debug.apk
+          test -s ITOM-1.0.0-RC13-linux-amd64.bin
+          test -s ITOM-1.0.0-RC13-linux-arm64.bin
+          test -s ITOM-1.0.0-RC13-sources.zip
+          printf '%s\n'             'ITOM 1.0.0 RC13 — USER-REQUESTED FIELD TEST BUILD; NOT RELEASE QUALIFIED'             'Build commit: ${{ github.sha }}'             'Server-side correction: existing RC12 Android users should keep the installed app/profile and update the server. RC13 APK app ID org.itom.client; use only for a fresh installation or compatible signer.'             'Debug APK: signer compatibility with the installed app is UNVERIFIED. SIGNER.txt records the certificate; do not uninstall or clear state to bypass a mismatch.'             'Do NOT reset accounts, IMAP quota journals, wallets or client identities.'             'Focused journal/quota, recovery, repeated startup, profiler and race regressions passed. RC13 scales recovery-only reserves under severe historical byte debt. The early bulk-refill experiment was rejected. Normal grant shapes and physical limits are unchanged. Real-provider Speedtest resolution, sustained throughput and sub-200ms RTT remain unqualified. No threshold is waived or reported passed.'             'Source thresholds remain unchanged. This build is explicitly authorized for testing; it is not a stable release. See archives/1.0.0-rc13/source/HANDOFF.md and archives/1.0.0-rc13/audit/FOLLOWUP_FIELD_FINDINGS.md.' > TESTING_NOTES.txt
+          sha256sum ITOM-1.0.0-RC13-* SIGNER.txt TESTING_NOTES.txt > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          zip -q ../ITOM-1.0.0-RC13-field-testing-package.zip ./*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.0.0-RC13-field-testing-package
+          path: ITOM-1.0.0-RC13-field-testing-package.zip
+          if-no-files-found: error
+          retention-days: 30

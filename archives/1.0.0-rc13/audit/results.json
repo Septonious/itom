@@ -1,0 +1,47 @@
+[
+  {
+    "variant": "rc13-field",
+    "exit_code": 0,
+    "elapsed_s": 11.09,
+    "metrics": [
+      "exact_three_field_accounts_restored accounts=10 active_directions=20 old_debt_unchanged=true sparse_uid_history=64 per_account_TCP_verified=true"
+    ],
+    "failures": []
+  },
+  {
+    "variant": "rc2",
+    "exit_code": 1,
+    "elapsed_s": 68.06,
+    "metrics": [
+      "phase=D application_mbps=25.491 duration_ms=10530",
+      "phase=U application_mbps=28.770 duration_ms=9330",
+      "short_requests=11 mean_ms=561 max_ms=2884"
+    ],
+    "failures": [
+      "--- FAIL: TestRC12RetainedPhasedTransfersWithObservedJournalCost (67.84s)",
+      "FAIL"
+    ]
+  },
+  {
+    "variant": "rc12",
+    "exit_code": 0,
+    "elapsed_s": 57.8,
+    "metrics": [
+      "phase=D application_mbps=66.029 duration_ms=4065",
+      "phase=U application_mbps=41.509 duration_ms=6466",
+      "short_requests=32 mean_ms=232 max_ms=461"
+    ],
+    "failures": []
+  },
+  {
+    "variant": "rc13",
+    "exit_code": 0,
+    "elapsed_s": 61.02,
+    "metrics": [
+      "phase=D application_mbps=59.593 duration_ms=4504",
+      "phase=U application_mbps=37.928 duration_ms=7077",
+      "short_requests=35 mean_ms=234 max_ms=546"
+    ],
+    "failures": []
+  }
+]

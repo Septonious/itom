@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -64,6 +65,19 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	var received atomic.Uint64
+	readProgress := func(r io.Reader, b []byte) (int, error) {
+		off := 0
+		for off < len(b) {
+			n, err := io.ReadFull(r, b[off:min(off+(256<<10), len(b))])
+			off += n
+			received.Add(uint64(n))
+			if err != nil {
+				return off, err
+			}
+		}
+		return off, nil
+	}
 	var mu sync.Mutex
 	var accepted []net.Conn
 	t.Cleanup(func() {
@@ -74,7 +88,7 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 			c.Close()
 		}
 	})
-	const size = 4 << 20
+	size := loadEnvInt(t, "ITOM_PHASE_BYTES_PER_STREAM", 4<<20, 4<<20, 16<<20)
 	pattern := func(seed byte) []byte {
 		b := make([]byte, size)
 		for i := range b {
@@ -102,7 +116,7 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 					productionWriteFull(c, pattern(request[1]))
 				case 'U':
 					got := make([]byte, size)
-					if _, err := io.ReadFull(c, got); err == nil && bytes.Equal(got, pattern(request[1])) {
+					if _, err := readProgress(c, got); err == nil && bytes.Equal(got, pattern(request[1])) {
 						productionWriteFull(c, []byte("OK"))
 					}
 				case 'C':
@@ -161,6 +175,23 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 	}()
 	for _, phase := range []byte{'D', 'U'} {
 		begin := time.Now()
+		pulseStop, pulseDone := make(chan struct{}), make(chan struct{})
+		go func(phase byte) {
+			defer close(pulseDone)
+			tick := time.NewTicker(5 * time.Second)
+			defer tick.Stop()
+			lastTime, lastBytes := time.Now(), received.Load()
+			for {
+				select {
+				case <-pulseStop:
+					return
+				case now := <-tick.C:
+					n := received.Load()
+					t.Logf("phase=%c sink_interval_mbps=%.3f elapsed_ms=%d", phase, float64((n-lastBytes)*8)/now.Sub(lastTime).Seconds()/1e6, now.Sub(begin).Milliseconds())
+					lastTime, lastBytes = now, n
+				}
+			}
+		}(phase)
 		var wg sync.WaitGroup
 		fail := make(chan error, 8)
 		for i := 0; i < 8; i++ {
@@ -182,7 +213,7 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 				b := pattern(seed)
 				if phase == 'D' {
 					got := make([]byte, size)
-					_, err = io.ReadFull(c, got)
+					_, err = readProgress(c, got)
 					if err == nil && !bytes.Equal(b, got) {
 						err = fmt.Errorf("download bytes changed")
 					}
@@ -201,6 +232,8 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 			}(i)
 		}
 		wg.Wait()
+		close(pulseStop)
+		<-pulseDone
 		close(fail)
 		for err := range fail {
 			t.Error(err)

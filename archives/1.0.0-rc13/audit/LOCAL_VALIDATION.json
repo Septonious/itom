@@ -1,0 +1,23 @@
+{
+  "source_revision": "itom-1-0-0-rc13",
+  "source_integrity": "passed",
+  "python_tests": 91,
+  "python_failures": 0,
+  "go_vet": "passed",
+  "go_full_suites": [
+    "journal",
+    "wallet",
+    "flow",
+    "datapath",
+    "wire"
+  ],
+  "go_focused_regressions": "passed, including simultaneous local bulk/fast reservation on exact field debt",
+  "go_focused_tunnel_race": "passed",
+  "exact_tls_active_directions": 20,
+  "lane_go_matches_rc12": true,
+  "qualification_thresholds_unchanged": true,
+  "full_field_qualified": false,
+  "existing_rc12_android_supported_server_update": true,
+  "new_private_signing_key_generated": true,
+  "new_private_signing_key_provisioned_to_actions": false
+}

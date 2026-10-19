@@ -1,0 +1,16 @@
+=== RUN   TestRC13FieldBytePressureTLSTenAccounts
+    rc13_field_itomtest_test.go:21: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rc13_field_itomtest_test.go:81: exact_three_field_accounts_restored accounts=10 active_directions=20 old_debt_unchanged=true sparse_uid_history=64 per_account_TCP_verified=true
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a08 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a09 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a10 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a07 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a05 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a06 session=8913984614e08bfaac10579644c37e6b generation=18138997367463269602 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=10 dial_attempts=100 dial_denied=0 target_tcp_dials=10 provider={HealthyEndpoints:false ClientMbps:0 ServerMbps:0 ClientRTTMS:0 ServerRTTMS:0 Active:0 DownAccounts:0 Accepted:120 Dropped:0 UplinkBytes:5443795 DownlinkBytes:7851440 Mbps:0}
+--- PASS: TestRC13FieldBytePressureTLSTenAccounts (3.60s)
+PASS

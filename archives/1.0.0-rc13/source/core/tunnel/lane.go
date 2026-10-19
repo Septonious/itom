@@ -3817,16 +3817,16 @@ func (l *lane) publishCleanup(status wire.CleanupStatus) error {
 	if status.Closed {
 		return l.offer()
 	}
-	return l.refillExhaustedGrant(status)
+	return l.refillExhaustedFast(status)
 }
 
 // Used is a durable authenticated cumulative report. A grant with no message
 // permissions left is not usable even while its separate fence is in flight.
 // Issue the next permission only through the unchanged journal allocator; never
 // close the old grant or release physical exposure here. The honest wallet
-// cannot requeue the exhausted key. Both classes keep their normal usable count.
-func (l *lane) refillExhaustedGrant(status wire.CleanupStatus) error {
-	if !l.side || status.Closed || !l.issued[status.Key] {
+// cannot requeue the exhausted key, so at most one writable fast lease exists.
+func (l *lane) refillExhaustedFast(status wire.CleanupStatus) error {
+	if !l.side || status.Closed || !l.issuedFast[status.Key] {
 		return nil
 	}
 	limit, ok := l.issuedLimits[status.Key]
@@ -3834,8 +3834,8 @@ func (l *lane) refillExhaustedGrant(status wire.CleanupStatus) error {
 		return nil
 	}
 	l.issued[status.Key] = false
-	fast, bulk := l.issuedGrantCounts()
-	if l.issuedFast[status.Key] && fast >= fastGrantReserve || !l.issuedFast[status.Key] && bulk >= remoteBulkLeases {
+	fast, _ := l.issuedGrantCounts()
+	if fast >= fastGrantReserve {
 		return nil
 	}
 	return l.offer()

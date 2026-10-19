@@ -1,7 +1,6 @@
 package tunnel
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"itom.local/core/journal"
 	"itom.local/core/pool"
 	"itom.local/core/servercfg"
-	"itom.local/core/wallet"
 	"itom.local/core/wire"
 )
 
@@ -57,14 +55,15 @@ func TestRC13FieldBytePressureBootstrap(t *testing.T) {
 			if err != nil {
 				t.Fatal("no full local bulk BODY headroom", err)
 			}
-			if err = s.CloseGrant(g.Ref); err != nil {
-				t.Fatal(err)
-			}
+			bulkGrant := g
 			g, err = l.tryLocalGrant(128<<10, true)
 			if err != nil {
 				t.Fatal("no bounded local fast headroom", err)
 			}
 			if err = s.CloseGrant(g.Ref); err != nil {
+				t.Fatal(err)
+			}
+			if err = s.CloseGrant(bulkGrant.Ref); err != nil {
 				t.Fatal(err)
 			}
 			got, err := s.GetGrant(old.Ref)
@@ -75,71 +74,5 @@ func TestRC13FieldBytePressureBootstrap(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
-	}
-}
-
-// A single-ordinal recovery bulk lease is common at 175+/192 retained slots.
-// Reported exhaustion must pipeline the next permission before a separate fence,
-// while retaining the original open grant and its full physical charge.
-func TestRC13SpentBulkRefillBeforeFence(t *testing.T) {
-	l, s, _ := rc13RetainedLane(t, pool.Amount{})
-	if err := l.offer(); err != nil {
-		t.Fatal(err)
-	}
-	var g wire.StorageGrant
-	for len(l.urgentQueue) > 0 {
-		c, err := wire.DecodeControl((<-l.urgentQueue).Frame)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if x, ok := c.(wire.StorageGrant); ok && !l.issuedFast[x.Key] {
-			g = x
-		}
-	}
-	if g.Key.Grant == 0 {
-		t.Fatal("no initial bulk lease")
-	}
-	w, err := wallet.OpenBound(filepath.Join(t.TempDir(), "wallet.db"), s.StoreID(), l.cipher)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer w.Close()
-	if err = w.Accept(g); err != nil {
-		t.Fatal(err)
-	}
-	var status wire.CleanupStatus
-	for i := uint64(0); i < g.Limit.Messages; i++ {
-		r, _, err := w.Spend(g.Key, l.user.Up, bytes.Repeat([]byte{byte(i)}, 256), canonicalDataSize)
-		if err != nil {
-			t.Fatal(err)
-		}
-		status, err = s.ApplyRemote(l.user.ID, s.Run(), r)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err = l.publishCleanup(status); err != nil {
-		t.Fatal(err)
-	}
-	if l.issued[g.Key] {
-		t.Fatal("spent bulk grant still counted usable before fence")
-	}
-	_, bulk := l.issuedGrantCounts()
-	if bulk != remoteBulkLeases {
-		t.Fatal("replacement not pipelined", bulk)
-	}
-	old, err := s.GetGrant(journal.GrantRef{Store: g.Key.Store, ID: g.Key.Grant, Scope: journal.Scope{Account: g.Key.Account, User: g.Key.User, Session: g.Key.Session}})
-	if err != nil || old.Closed || old.Released != (pool.Amount{}) {
-		t.Fatal("unproved debt refunded", old, err)
-	}
-	count := len(l.issued)
-	if err = l.publishCleanup(status); err != nil {
-		t.Fatal(err)
-	}
-	if len(l.issued) != count {
-		t.Fatal("duplicate status issued another grant")
-	}
-	if err = s.Audit(); err != nil {
-		t.Fatal(err)
 	}
 }
