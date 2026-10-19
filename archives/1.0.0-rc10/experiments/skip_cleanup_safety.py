@@ -3,7 +3,8 @@
 No-op queued work must return scheduler ownership; an active worker is untouched.
 """
 from pathlib import Path
-r=Path(__file__).resolve().parents[3];d=r/'archives/1.0.0-rc10/source/core/tunnel';p=d/'cleanup.go';s=p.read_text()
+import sys
+r=Path(__file__).resolve().parents[3];d=(Path(sys.argv[1])/'tunnel' if len(sys.argv)>1 else r/'archives/1.0.0-rc10/source/core/tunnel');p=d/'cleanup.go';s=p.read_text()
 a=s.index('\t// Avoid speculative full-BODY discovery');b=s.index('\tif !l.cleanupQueued && l.deferOwnerCleanup(kind)',a);guard=s[a:b];s=s[:a]+s[b:]
 a='''\tif l.gcBusy {
 \t\treturn false
