@@ -1,0 +1,248 @@
+go: downloading go.etcd.io/bbolt v1.4.3
+go: downloading github.com/flynn/noise v1.1.0
+go: downloading github.com/emersion/go-message v0.18.2
+go: downloading github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
+go: downloading golang.org/x/crypto v0.57.0
+go: downloading golang.org/x/sys v0.48.0
+=== RUN   TestHealthyServerClientInterruptionPreservesTCP
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:47: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=40 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=4 gomaxprocs=4 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:13 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:13 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:16 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:16 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:16 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:16 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:16 failed to read command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=db7c5c7a97f0383820b230cebafe3fdc generation=16003833986806384996 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=db7c5c7a97f0383820b230cebafe3fdc generation=16003833986806384996 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=db7c5c7a97f0383820b230cebafe3fdc generation=16003833986806384996 epoch=3
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=db7c5c7a97f0383820b230cebafe3fdc generation=16003833986806384996 epoch=3
+    supervisor_fixture_test.go:254: supervisor_summary accounts=2 dial_attempts=38 dial_denied=0 target_tcp_dials=1 provider={HealthyEndpoints:true ClientMbps:600 ServerMbps:1000 ClientRTTMS:40 ServerRTTMS:20 Active:17 DownAccounts:0 Accepted:42 Dropped:0 UplinkBytes:580430 DownlinkBytes:810455 Mbps:0}
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:20 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 handling APPEND command: use of closed network connection
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:20 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestHealthyServerClientInterruptionPreservesTCP (11.90s)
+=== RUN   TestHealthyEndpointScopeAndCapacityTransitions
+    healthy_endpoints_test.go:130: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=40 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=4 gomaxprocs=4 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+--- PASS: TestHealthyEndpointScopeAndCapacityTransitions (0.00s)
+=== RUN   TestHealthyEndpointTLSNoopCalibration
+    healthy_endpoints_test.go:166: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=100 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=4 gomaxprocs=4 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    healthy_endpoints_test.go:186: endpoint_calibration endpoint=server method=authenticated_TLS_NOOP median_ms=20.550
+    healthy_endpoints_test.go:186: endpoint_calibration endpoint=client method=authenticated_TLS_NOOP median_ms=100.569
+2026/10/19 10:51:21 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:51:21 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestHealthyEndpointTLSNoopCalibration (0.91s)
+=== RUN   TestScenarioMobileNetworkRegression
+    mobile_network_regression_test.go:230: check=checkMobileScopeUsesBothSocketEndpoints
+    mobile_network_regression_test.go:232: check=checkMobileByteClockDoesNotChargeLateWakePerTLSRecord
+--- PASS: TestScenarioMobileNetworkRegression (0.00s)
+=== RUN   TestProviderAccess20Calibration
+    provider_calibration_test.go:77: access_calibration mode=full-duplex-account-shared connections=2 incompressible_bytes_per_direction=4194304 cap_mbps=20.000 path_rtt_ms=20 elapsed_ns=1684457661 ideal_ns=1687721600 verified=true
+--- PASS: TestProviderAccess20Calibration (1.69s)
+PASS
+ok  	itom.local/core/tunnel	14.514s
+ok  	itom.local/core/journal	0.293s
+ok  	itom.local/core/wallet	0.040s
+ok  	itom.local/core/flow	0.003s
+ok  	itom.local/core/datapath	0.940s
+ok  	itom.local/core/mailbox	9.629s
+=== RUN   TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    field_burst_test.go:114: verified_https=65 canceled_open_sockets=64 provider_accounts=4 carrier_rebuilds=0; functional workload, not a bandwidth measurement
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=17d81340a564629f064a19198d67e7d5 generation=18081442809952347723 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=17d81340a564629f064a19198d67e7d5 generation=18081442809952347723 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=17d81340a564629f064a19198d67e7d5 generation=18081442809952347723 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=17d81340a564629f064a19198d67e7d5 generation=18081442809952347723 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=4 dial_attempts=40 dial_denied=0 target_tcp_dials=64 provider={HealthyEndpoints:false ClientMbps:0 ServerMbps:0 ClientRTTMS:0 ServerRTTMS:0 Active:10 DownAccounts:0 Accepted:48 Dropped:0 UplinkBytes:1695551 DownlinkBytes:2941446 Mbps:0}
+2026/10/19 10:51:39 handling UID FETCH command: write tcp 127.0.0.1:34687->127.0.0.1:46612: write: broken pipe
+2026/10/19 10:51:39 failed to read command: write tcp 127.0.0.1:34687->127.0.0.1:46612: write: broken pipe
+2026/10/19 10:51:39 handling UID FETCH command: write tcp 127.0.0.1:43275->127.0.0.1:45740: write: broken pipe
+2026/10/19 10:51:39 failed to read command: write tcp 127.0.0.1:43275->127.0.0.1:45740: write: broken pipe
+2026/10/19 10:51:39 handling UID FETCH command: write tcp 127.0.0.1:46429->127.0.0.1:35780: write: broken pipe
+2026/10/19 10:51:39 failed to read command: write tcp 127.0.0.1:46429->127.0.0.1:35780: write: broken pipe
+--- PASS: TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers (4.05s)
+=== RUN   TestFieldBulkLeavesTwoReadableAccountsForInteractiveData
+2026/10/19 10:51:39 handling APPEND command: use of closed network connection
+2026/10/19 10:51:39 handling UID FETCH command: use of closed network connection
+2026/10/19 10:51:39 handling UID FETCH command: use of closed network connection
+--- PASS: TestFieldBulkLeavesTwoReadableAccountsForInteractiveData (0.03s)
+=== RUN   TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline
+--- PASS: TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline (0.00s)
+=== RUN   TestLoadedOnlyCarriersUseUnloadedPoolEstimate
+--- PASS: TestLoadedOnlyCarriersUseUnloadedPoolEstimate (0.00s)
+=== RUN   TestRC2BulkFeedbackEscapesStalledAffinity
+--- PASS: TestRC2BulkFeedbackEscapesStalledAffinity (0.00s)
+=== RUN   TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion
+--- PASS: TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion (0.00s)
+=== RUN   TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt
+--- PASS: TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt (0.00s)
+=== RUN   TestRev4RetainedStateMixedTrafficAndNextTransfer
+    rev4_field_lifecycle_test.go:150: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=connecting
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=connecting
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=connecting
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=imap_connected duration_ms=4
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=connecting
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=imap_connected duration_ms=11
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=imap_connected duration_ms=4
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=recovery
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=imap_connected duration_ms=4
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=recovery
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=journal_profile kind=data existing=true bytes=12582912 messages=192 run=2
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=recovery
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=journal_profile kind=data existing=true bytes=12582912 messages=192 run=2
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=recovery
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=journal_profile kind=data existing=true bytes=12582912 messages=192 run=2
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=journal_profile kind=data existing=true bytes=12582912 messages=192 run=2
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=preauth_challenge_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=preauth_challenge_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=preauth_challenge_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=preauth_challenge_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=preauth_hello_rx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=preauth_hello_rx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=preauth_hello_rx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=preauth_hello_rx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=preauth_reply_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=preauth_reply_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=preauth_reply_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=preauth_reply_tx
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=fetch_capability binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=activation
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=123b13539b40c30c39f7e384704caa9b generation=12621222549589260510 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=authenticated
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=fetch_capability binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=activation
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=123b13539b40c30c39f7e384704caa9b generation=12621222549589260510 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=authenticated
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=fetch_capability binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=activation
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=123b13539b40c30c39f7e384704caa9b generation=12621222549589260510 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=authenticated
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=fetch_capability binary=true
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=activation
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=123b13539b40c30c39f7e384704caa9b generation=12621222549589260510 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=authenticated
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=130 last_op=activate_io op_ms=5 max_op_ms=101 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1792 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=130 last_op=activate_io op_ms=7 max_op_ms=101 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1772 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=130 last_op=activate_io op_ms=5 max_op_ms=101 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1784 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=130 last_op=activate_io op_ms=6 max_op_ms=101 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1772 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=coordinator
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=coordinator
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=coordinator
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=grants
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=grant_recovery_capacity bytes=524288 messages=6 held_bytes=6291456 held_messages=130
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=12 held_bytes=6815744 held_messages=136
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=7864320 held_messages=148
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=phase stage=ready
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=grants
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=grants
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=524288 messages=6 held_bytes=6291456 held_messages=130
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=524288 messages=6 held_bytes=6291456 held_messages=130
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=12 held_bytes=6815744 held_messages=136
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=12 held_bytes=6815744 held_messages=136
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=7864320 held_messages=148
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=phase stage=ready
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=7864320 held_messages=148
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=phase stage=ready
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=coordinator
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=grants
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=6 held_bytes=6291456 held_messages=130
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=12 held_bytes=6815744 held_messages=136
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=7864320 held_messages=148
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=phase stage=ready
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=8092472 held_messages=152
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=10 held_bytes=8543903 held_messages=156
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=524288 messages=11 held_bytes=8454575 held_messages=156
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=14 held_bytes=8200387 held_messages=153
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=1572864 messages=14 held_bytes=7657985 held_messages=152
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=8136251 held_messages=152
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=1572864 messages=14 held_bytes=8230556 held_messages=160
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=grant_recovery_capacity bytes=524288 messages=1 held_bytes=7910656 held_messages=165
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=13 held_bytes=9489328 held_messages=153
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=11 held_bytes=8388608 held_messages=150
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=524288 messages=12 held_bytes=9264310 held_messages=153
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=524288 messages=11 held_bytes=9117243 held_messages=153
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1572864 messages=14 held_bytes=8694932 held_messages=152
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=12 held_bytes=9607820 held_messages=154
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=20 held_bytes=10022047 held_messages=147
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=1572864 messages=5 held_bytes=9101222 held_messages=162
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=grant_recovery_capacity bytes=1048576 messages=14 held_bytes=9472566 held_messages=154
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=524288 messages=11 held_bytes=9959226 held_messages=155
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=grant_recovery_capacity bytes=524288 messages=1 held_bytes=7891739 held_messages=162
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=grant_recovery_capacity bytes=1572864 messages=14 held_bytes=9551625 held_messages=152
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=grant_recovery_capacity bytes=524288 messages=24 held_bytes=9343156 held_messages=145
+    supervisor_fixture_test.go:227: supervisor_timeline account=a02 user=91431044 event=imap_error operation=delete_observed_batch duration_ms=39 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=imap_error operation=fetch_page duration_ms=6 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=data_reader_repair code=CANCELED
+    supervisor_fixture_test.go:227: supervisor_timeline account=a03 user=91431044 event=imap_error operation=fetch_page duration_ms=46 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=imap_error operation=delete_observed_batch duration_ms=86 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:227: supervisor_timeline account=a01 user=91431044 event=imap_error operation=delete_observed_batch duration_ms=79 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:227: supervisor_timeline account=a04 user=91431044 event=data_reader_repair code=CANCELED
+    supervisor_fixture_test.go:254: supervisor_summary accounts=4 dial_attempts=40 dial_denied=0 target_tcp_dials=25 provider={HealthyEndpoints:false ClientMbps:0 ServerMbps:0 ClientRTTMS:0 ServerRTTMS:0 Active:16 DownAccounts:0 Accepted:48 Dropped:0 UplinkBytes:27098750 DownlinkBytes:40492605 Mbps:40}
+2026/10/19 10:51:52 handling SELECT command: write tcp 127.0.0.1:33139->127.0.0.1:44522: write: broken pipe
+2026/10/19 10:51:52 failed to read command: write tcp 127.0.0.1:33139->127.0.0.1:44522: write: broken pipe
+2026/10/19 10:51:52 handling SELECT command: write tcp 127.0.0.1:34015->127.0.0.1:48784: write: broken pipe
+2026/10/19 10:51:52 failed to read command: write tcp 127.0.0.1:34015->127.0.0.1:48784: write: broken pipe
+2026/10/19 10:51:52 handling SELECT command: write tcp 127.0.0.1:33493->127.0.0.1:54664: write: broken pipe
+2026/10/19 10:51:52 failed to read command: write tcp 127.0.0.1:33493->127.0.0.1:54664: write: broken pipe
+2026/10/19 10:51:52 handling SELECT command: write tcp 127.0.0.1:34015->127.0.0.1:48758: write: broken pipe
+2026/10/19 10:51:52 failed to read command: write tcp 127.0.0.1:34015->127.0.0.1:48758: write: broken pipe
+--- PASS: TestRev4RetainedStateMixedTrafficAndNextTransfer (13.28s)
+=== RUN   TestRev4DelayedStreamCannotBlockHealthyStreamPrefix
+2026/10/19 10:51:52 handling APPEND command: use of closed network connection
+2026/10/19 10:51:52 handling UID FETCH command: use of closed network connection
+--- PASS: TestRev4DelayedStreamCannotBlockHealthyStreamPrefix (0.02s)
+PASS
+ok  	itom.local/core/tunnel	17.407s
+ok  	itom.local/core/journal	3.142s
+ok  	itom.local/core/wallet	1.020s
+ok  	itom.local/core/datapath	1.288s
+ok  	itom.local/core/tunnel	4.873s

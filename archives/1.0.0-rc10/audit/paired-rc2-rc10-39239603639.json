@@ -5,7 +5,7 @@
   "scope": "Paired serial runs on same four-core shared host per scenario; common identical load fixtures; original production unchanged",
   "qualification_thresholds_relaxed": false,
   "field_qualified": false,
-  "core_result": "Original paired core inconclusive for RC2: historical mailbox timeout fixture differed. Corrected shared core rerun39240291399 pending.",
+  "core_result": "Corrected identical common core PASS on both RC2 and RC10; run39240291399, job118019195238. Original historical-fixture failure remains documented.",
   "cases": [
     {
       "title": "client50",
@@ -3863,5 +3863,12 @@
         }
       }
     }
-  ]
+  ],
+  "corrected_core_run_id": 39240291399,
+  "corrected_core_source_commit": "8dc17e16a1d5a5052f472c57277365b4ff15a385",
+  "common_core_fixture_count": 12,
+  "production_manifests": {
+    "rc2": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+    "rc10": "a8cffe76e63fd15b880ed23e61734de8fc60f7ba92853c74f5900b5ede828b1b"
+  }
 }

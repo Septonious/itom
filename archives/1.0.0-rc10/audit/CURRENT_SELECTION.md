@@ -1,6 +1,6 @@
 # RC10 selection status
 
-Latest paired comparison39239603639: both original RC2 and current RC10 pass all six normal load cases (12 rounds each), while both fail10/20Mbps client ramps and100ms-client upload/tail. Performance differences are mixed, not universal improvement. See `RC2_HEALTHY_COMPARISON.md` and `paired-rc2-rc10-39239603639.json`. The corrected common core rerun is pending. No production change is selected from this comparison; packaging stays blocked.
+Latest paired comparison39239603639: both original RC2 and current RC10 pass all six normal load cases (12 rounds each), while both fail10/20Mbps client ramps and100ms-client upload/tail. Performance differences are mixed, not universal improvement. See `RC2_HEALTHY_COMPARISON.md` and `paired-rc2-rc10-39239603639.json`. The corrected common core rerun39240291399 passes on both versions. No production change is selected from this comparison; packaging stays blocked.
 
 ## Current primary model: healthy server (supersedes old benchmark assumptions)
 
