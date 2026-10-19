@@ -1,0 +1,94 @@
+name: Publish verified RC10 field-test handoff
+on:
+  push:
+    branches: ["codex/v1.0.0-rc10-development"]
+    paths: [".github/workflows/itom-rc10-publish-field-test.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: "39242364068"
+      BUILD_SHA: "fe59b071a6ec2bf44a5380c782038de2fbfb7653"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: fe59b071a6ec2bf44a5380c782038de2fbfb7653
+      - name: Require successful exact-source testing build
+        run: |
+          set -euo pipefail
+          actual="$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)"
+          test "$actual" = "$BUILD_SHA"
+          gh run watch "$BUILD_RUN" --exit-status --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39242364068
+          name: ITOM-1.0.0-RC10-field-testing-package
+          path: download
+      - name: Verify and prepare matched source and binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir release
+          unzip -q download/ITOM-1.0.0-RC10-field-testing-package.zip -d release
+          cd release
+          sha256sum -c SHA256SUMS
+          chmod +x ITOM-1.0.0-RC10-linux-amd64.bin
+          test "$(./ITOM-1.0.0-RC10-linux-amd64.bin version)" = itom-1-0-0-rc10
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          with zipfile.ZipFile('ITOM-1.0.0-RC10-sources.zip') as z:
+              info=json.loads(z.read('itom/source-info.json'))
+              assert info['revision']=='itom-1-0-0-rc10'
+              assert info['android_application_id']=='org.itom.client'
+          with zipfile.ZipFile('ITOM-1.0.0-RC10-debug.apk') as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-0-0-rc10' in z.read(f'lib/{abi}/libgojni.so')
+          notes=Path('TESTING_NOTES.txt').read_text()
+          assert 'NOT RELEASE QUALIFIED' in notes
+          assert 'Build commit: fe59b071a6ec2bf44a5380c782038de2fbfb7653' in notes
+          PY
+          cd ..
+          cp download/ITOM-1.0.0-RC10-field-testing-package.zip release/
+          git archive --format=zip --output=release/ITOM-1.0.0-RC10-full-handoff.zip "$BUILD_SHA" archives/1.0.0-rc10 .github/workflows/itom-rc10-qualification.yml .github/workflows/itom-rc10-field-test-build.yml .github/workflows/itom-rc10-rc2-comparison.yml .github/workflows/itom-rc10-rc2-core-comparison.yml
+          cp archives/1.0.0-rc10/audit/RC2_HEALTHY_COMPARISON.md release/
+          printf '%s\n' "$BUILD_SHA" > release/BUILD_COMMIT.txt
+          (cd release && sha256sum ITOM-1.0.0-RC10-* SIGNER.txt TESTING_NOTES.txt BUILD_COMMIT.txt RC2_HEALTHY_COMPARISON.md test-summary.json lint-summary.json > SHA256SUMS && sha256sum -c SHA256SUMS)
+          cat > release/RELEASE_NOTES.md <<'NOTES'
+          RC10 field-test build, explicitly requested for testing. **Not release-qualified.**
+
+          - RC2 transport windows, framing, polling and recovery policy retained.
+          - Reviewed descriptor/reclaim correctness, metadata allocation, admin UI and identity updates retained.
+          - Bounded feedback quartiles now avoid six allocations per pair of reads; exact RC2 output-equivalence and sample-ring tests pass. No claim that this alone fixes RTT spikes.
+          - Core safety/recovery/proof/race, Android tests/lint and JNI/APK identity checks passed for this exact build.
+          - Previous paired normal-load cases passed for RC2 and RC10. Low-capacity ramps and100ms-client upload/tail qualification remain unresolved; numerical thresholds are unchanged.
+
+          Update both endpoints together. Android package `org.itom.client`, version code10009. This APK is debug-signed; installed signing-certificate compatibility is unverified. Check SIGNER.txt. Do not uninstall or clear accounts, profiles, journals, wallets or identities to bypass a mismatch.
+
+          APK includes arm64-v8a and armeabi-v7a. Linux binaries include amd64 and arm64. Sources, full development handoff, checksums and testing notes are attached. Real Android/Rambler performance still needs field testing.
+
+          Build source: fe59b071a6ec2bf44a5380c782038de2fbfb7653
+          NOTES
+      - name: Publish testing prerelease without replacing any existing tag or asset
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.0-rc10 >/dev/null 2>&1; then
+            echo 'RC10 release already exists; refusing to replace it.' >&2
+            exit 1
+          fi
+          gh release create v1.0.0-rc10 release/* --target "$BUILD_SHA" --prerelease --title 'ITOM 1.0.0 RC10 — field testing' --notes-file release/RELEASE_NOTES.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc10-published-testing-evidence
+          path: release/
+          retention-days: 30
