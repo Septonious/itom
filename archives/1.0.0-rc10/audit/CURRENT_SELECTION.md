@@ -23,3 +23,10 @@ Independent-stream discovery can exceed a small learned window by one full 32 Ki
 All original quota, durable journal, unknown APPEND, wallet, recovery, Android identity and release thresholds remain mandatory. No RC10 APK or binary exists.
 
 The first all-record quantum variant regressed delayed-BODY recovery (20-second socket read deadline exceeded). Reject it. A corrected fixture explicitly attaches the unit lane to its group; it previously exercised the no-stripe fallback. The narrowed variant limits only a stream with no actor-pending bytes, keeps subsequent records intact and explicitly preserves bulk classification. Focused datapath tests pass 0.653s; delayed BODY + reader restart and independent-prefix checks pass 26.894s. Load comparison is still pending; this correctness pass is not acceptance.
+
+
+Prefix variant rejected too: GitHub39208684384 failed long-blackout recovery before retained load; early10 cold probe2 timed out. Local low profile completed all30probes and socket checks with no carrier resets but max1491.209ms and8.993/21.453Mbps, still a failure. Do not promote either framing variant.
+
+Exact journal scan full-page check (two serial repeats, no local load/compiler overlap):256rows baseline4.252/3.707ms vs exact3.211/3.620ms, same~486KiB allocation; empty18.938–22.487us vs1.079–1.083us,49,568→416bytes;8rows153.096–155.999us vs113.444–130.531us,63,231→15,844–15,845bytes.32rows baseline535.531–635.262us vs392.687–510.346us,104,191–104,202→61,545–61,553bytes. Retain the exact-allocation patch. This does not replace end-to-end qualification.
+
+Next isolated calibration test keeps all original RC2 framing, seed, growth, recovery and independent-stream discovery. Track peak outstanding logical flight during each original range's ACK residence, and exclude congestion/recovery/outage samples from unloaded-floor training. This corrects classification of observations, not ACK or quota authority. No shorter RTT target or extra retransmission is introduced.

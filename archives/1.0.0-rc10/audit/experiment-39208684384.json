@@ -1,0 +1,23 @@
+{
+  "run": 39208684384,
+  "decision": "reject quantum bundle; candidate source unchanged",
+  "jobs": [
+    {
+      "id": 117917017049,
+      "name": "prefix-quantum-early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:16:36.9707699Z     supervised_load_test.go:257: cold startup failed final probe user=1 index=2 status=timeout: read pipe: i/o timeout samples 1 timeouts 1 missed 0",
+        "2026-10-19T06:16:37.0273047Z --- FAIL: TestTransportReworkQualification (29.01s)"
+      ]
+    },
+    {
+      "id": 117917017184,
+      "name": "prefix-quantum-retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:16:24.8515964Z --- FAIL: TestRev4LongBlackoutPreservesInflightTCPAndMessages (74.52s)"
+      ]
+    }
+  ]
+}
