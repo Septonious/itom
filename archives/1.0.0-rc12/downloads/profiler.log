@@ -1,0 +1,91 @@
+=== RUN   TestRC101ProfileQuantilesAndBoundedClasses
+--- PASS: TestRC101ProfileQuantilesAndBoundedClasses (0.00s)
+=== RUN   TestRC101ProfileDisabledAndConcurrentExport
+--- PASS: TestRC101ProfileDisabledAndConcurrentExport (0.00s)
+=== RUN   TestRC101ProfileACKObservesOnlyAuthenticatedProgress
+--- PASS: TestRC101ProfileACKObservesOnlyAuthenticatedProgress (0.00s)
+=== RUN   TestRC101ProfileSummaryBound
+--- PASS: TestRC101ProfileSummaryBound (0.00s)
+=== RUN   TestObservedReaderDoesNotHideStreamingBehindDiagnostics
+--- PASS: TestObservedReaderDoesNotHideStreamingBehindDiagnostics (0.00s)
+=== RUN   TestRC11HomeRetainedRepeatedMultiStartupAndTail
+    rc11_field_startup_test.go:28: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rc11_field_startup_test.go:28: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=10 client_mbps=500.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=4 gomaxprocs=4 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    rc11_field_startup_test.go:73: round=0 interactive_ms=94
+    rc11_field_startup_test.go:73: round=0 interactive_ms=100
+    rc11_field_startup_test.go:73: round=0 interactive_ms=92
+    rc11_field_startup_test.go:73: round=0 interactive_ms=98
+    rc11_field_startup_test.go:73: round=1 interactive_ms=120
+    rc11_field_startup_test.go:73: round=1 interactive_ms=119
+    rc11_field_startup_test.go:73: round=1 interactive_ms=88
+    rc11_field_startup_test.go:73: round=1 interactive_ms=136
+    rc11_field_startup_test.go:73: round=2 interactive_ms=105
+    rc11_field_startup_test.go:73: round=2 interactive_ms=127
+    rc11_field_startup_test.go:73: round=2 interactive_ms=58
+    rc11_field_startup_test.go:73: round=2 interactive_ms=72
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling IDLE command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling IDLE command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=001a785f310f8c44a33e0ee403f23ec7 generation=11520305466211665031 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=001a785f310f8c44a33e0ee403f23ec7 generation=11520305466211665031 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=001a785f310f8c44a33e0ee403f23ec7 generation=11520305466211665031 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=001a785f310f8c44a33e0ee403f23ec7 generation=11520305466211665031 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=4 dial_attempts=40 dial_denied=0 target_tcp_dials=73 provider={HealthyEndpoints:true ClientMbps:500 ServerMbps:1000 ClientRTTMS:10 ServerRTTMS:20 Active:34 DownAccounts:0 Accepted:48 Dropped:0 UplinkBytes:17535107 DownlinkBytes:24961957 Mbps:0}
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling UID SEARCH command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling UID FETCH command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling APPEND command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling IDLE command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 19:22:58 handling IDLE command: io: read/write on closed pipe
+--- PASS: TestRC11HomeRetainedRepeatedMultiStartupAndTail (21.58s)
+=== RUN   TestRC11HistoricalRecoveryBackoffResetsOnDurableProgress
+--- PASS: TestRC11HistoricalRecoveryBackoffResetsOnDurableProgress (0.00s)
+2026/10/19 19:22:58 failed to read command: in command: io: read/write on closed pipe
+=== RUN   TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion
+--- PASS: TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion (0.01s)
+=== RUN   TestRC12ReducedFastGrantFitsMaximumFastBatch
+--- PASS: TestRC12ReducedFastGrantFitsMaximumFastBatch (0.00s)
+=== RUN   TestRetainedQuotaCannotManufactureFullJournalCapacity
+--- PASS: TestRetainedQuotaCannotManufactureFullJournalCapacity (0.00s)
+=== RUN   TestRev5Historical180SlotsBootstrapWithoutForgivingDebt
+--- PASS: TestRev5Historical180SlotsBootstrapWithoutForgivingDebt (0.00s)
+=== RUN   TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull
+=== RUN   TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull/fresh
+=== RUN   TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull/retained
+--- PASS: TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull (0.01s)
+    --- PASS: TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull/fresh (0.00s)
+    --- PASS: TestRev7RetainedOutboundCleanupStartsBeforeSmallWindowIsFull/retained (0.00s)
+=== RUN   TestRev7RetainedDebtAllowsConsecutiveBulkBodiesWithoutGrantRoundTrips
+--- PASS: TestRev7RetainedDebtAllowsConsecutiveBulkBodiesWithoutGrantRoundTrips (0.01s)
+=== RUN   TestRev7RetainedDownloadCannotTakeUploadRefillShare
+--- PASS: TestRev7RetainedDownloadCannotTakeUploadRefillShare (0.01s)
+=== RUN   TestRev7ReducedBulkLeaseCannotImpersonateFastGrant
+--- PASS: TestRev7ReducedBulkLeaseCannotImpersonateFastGrant (0.00s)
+=== RUN   TestRev7RetainedSmallBodiesKeepBothDirectionalOrdinalHeadrooms
+--- PASS: TestRev7RetainedSmallBodiesKeepBothDirectionalOrdinalHeadrooms (0.01s)
+=== RUN   TestTraceCompactPacketMetadataAndBoundedRotation
+--- PASS: TestTraceCompactPacketMetadataAndBoundedRotation (0.00s)
+=== RUN   TestTraceOverflowAndConcurrentClose
+--- PASS: TestTraceOverflowAndConcurrentClose (0.00s)
+PASS
+ok  	itom.local/core/tunnel	21.666s

@@ -1,0 +1,175 @@
+{
+  "build_commit": "270b4656168b6298ab9411f2c8a4bfca29f874ee",
+  "workflow_run": 39310282404,
+  "artifacts": [
+    {
+      "id": 12216865976,
+      "name": "ITOM-1.0.0-RC12-field-testing-package",
+      "size_in_bytes": 45920231,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216865976",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216865976/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:32:39Z",
+      "expires_at": "2026-11-18T19:32:36Z",
+      "updated_at": "2026-10-19T19:32:39Z",
+      "digest": "sha256:2d33d6ed57c2168d3881cc6c1a6fe2c476b1b266b8bedad3d1a7f7ede9642b7f",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    },
+    {
+      "id": 12216741105,
+      "name": "rc12-field-test-android",
+      "size_in_bytes": 28789879,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216741105",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216741105/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:32:17Z",
+      "expires_at": "2026-11-18T19:32:14Z",
+      "updated_at": "2026-10-19T19:32:17Z",
+      "digest": "sha256:a7b8e693ab0bb5e420b3bea59d708c471d79431382ece858e96403eed7cae99b",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    },
+    {
+      "id": 12216430977,
+      "name": "rc12-field-test-android-build-evidence",
+      "size_in_bytes": 4312,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216430977",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12216430977/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:32:17Z",
+      "expires_at": "2026-11-18T19:32:17Z",
+      "updated_at": "2026-10-19T19:32:17Z",
+      "digest": "sha256:5eb008e68685b29d2af50a39d3d8864f4d54a9c2f1e4c6a7bd34c4a9189b1310",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    },
+    {
+      "id": 12215711045,
+      "name": "rc12-field-test-source",
+      "size_in_bytes": 2424191,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215711045",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215711045/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:25:18Z",
+      "expires_at": "2026-11-18T19:25:16Z",
+      "updated_at": "2026-10-19T19:25:18Z",
+      "digest": "sha256:4c0b41e0e2c81fcb64f6beae42f309d8803c61da22c11336b31b0eb4d6237972",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    },
+    {
+      "id": 12215463156,
+      "name": "rc12-focused-core-evidence",
+      "size_in_bytes": 4144,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215463156",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215463156/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:24:40Z",
+      "expires_at": "2026-11-02T19:24:39Z",
+      "updated_at": "2026-10-19T19:24:40Z",
+      "digest": "sha256:ba79a747a3238f4b88302feb9b9d806c1eed56ce868bdcce2c00bbe580d1e105",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    },
+    {
+      "id": 12215268637,
+      "name": "rc12-field-test-linux",
+      "size_in_bytes": 15585512,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215268637",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12215268637/zip",
+      "expired": false,
+      "created_at": "2026-10-19T19:26:09Z",
+      "expires_at": "2026-11-18T19:26:06Z",
+      "updated_at": "2026-10-19T19:26:09Z",
+      "digest": "sha256:ba4b5b6995836717cd080713ac6e69995039f65d5085b1be13a965bf52219cbd",
+      "workflow_run": {
+        "id": 39310282404,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc12-development",
+        "head_sha": "270b4656168b6298ab9411f2c8a4bfca29f874ee"
+      }
+    }
+  ],
+  "status": "focused_checks_passed_field_testing_only",
+  "revision": "itom-1-0-0-rc12",
+  "verified_at_moscow": "2026-10-19T22:37:52+03:00",
+  "workflow_jobs": {
+    "core": "success",
+    "linux": "success",
+    "android": "success",
+    "source": "success",
+    "package": "success"
+  },
+  "files_sha256": {
+    "ITOM-1.0.0-RC12-debug.apk": "6c7e30d23aaf6b52820096941563f751e764833d0250658ae01c17c5ffa4c217",
+    "ITOM-1.0.0-RC12-linux-amd64.bin": "12038fdedb21c0d2f77f1a11bb8526089e8547a58fbc2e39ac8421a2bab4701b",
+    "ITOM-1.0.0-RC12-linux-arm64.bin": "d4a562a1437f5e755324153f2f74779233003d37685f444d5e116d943c1e20c4",
+    "ITOM-1.0.0-RC12-sources.zip": "2de0d7bc7ed612bebbea922124b8b5587f7356d29faa5d066b5923511d955f1f"
+  },
+  "verification": {
+    "linux_both_architectures": "CI binaries match local builds byte for byte",
+    "source_zip": "CI archive matches local source archive byte for byte",
+    "apk": "CI identity, both native revisions and apksigner verification passed; SHA from CI build report. A second local APK verification was not completed because large artifact download repeatedly disconnected the workspace.",
+    "package": "CI downloaded component artifacts, verified their artifact digests, generated and checked SHA256SUMS, and uploaded matched package."
+  },
+  "android": {
+    "domain_tests": 82,
+    "app_unit_tests": 7,
+    "test_failures": 0,
+    "lint_errors": 0,
+    "lint_warnings": 1,
+    "lint_warning": "NewerVersionAvailable for kotlinx-serialization-json; dependency update deferred to preserve scope"
+  },
+  "paired_lab": {
+    "baseline": "RC11",
+    "baseline_download_mbps": 46.44,
+    "baseline_upload_mbps": 28.157,
+    "baseline_short_mean_ms": 248,
+    "baseline_short_max_ms": 844,
+    "rc12_download_mbps": 53.427,
+    "rc12_upload_mbps": 38.115,
+    "rc12_short_mean_ms": 244,
+    "rc12_short_max_ms": 557,
+    "limitation": "Single paired run in a shared two-CPU process; not full qualification or an eight-core CPU emulation"
+  },
+  "ci_lab_unpaired": {
+    "download_mbps": 92.932,
+    "upload_mbps": 40.022,
+    "short_mean_ms": 188,
+    "short_max_ms": 253
+  },
+  "qualification": {
+    "thresholds_unchanged": true,
+    "full_qualification_passed": false,
+    "real_provider_speedtest_resolution": "unqualified",
+    "sustained_100mbps": "unqualified",
+    "sub_200ms_rtt": "unqualified"
+  }
+}

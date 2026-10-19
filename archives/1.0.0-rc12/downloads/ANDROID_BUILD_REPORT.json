@@ -1,0 +1,89 @@
+{
+  "itom": "1.0.0",
+  "source_revision": "itom-1-0-0-rc12",
+  "gradle": "9.3.1",
+  "agp": "9.1.1",
+  "sdk": "37",
+  "build_tools": "36.0.0",
+  "host": "Linux",
+  "started_utc": "2026-10-19T19:25:18Z",
+  "jdk_source": "local JDK 17",
+  "cmdline_tools": {
+    "version": "22.0",
+    "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+    "algorithm": "sha1"
+  },
+  "stage": "completed",
+  "native": {
+    "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+    "ndk": "28.2.13676358",
+    "aar_sha256": "9125dda4e9f4944a37355033b9eeeec6b6eeedd5840304b2d524e757200a616e",
+    "targets": [
+      "android/arm64",
+      "android/arm"
+    ],
+    "api": 29
+  },
+  "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true,
+    "task_failed_this_run": false
+  },
+  "app_unit_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true
+  },
+  "lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 1,
+    "issues": [
+      {
+        "id": "NewerVersionAvailable",
+        "severity": "Warning",
+        "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+        "locations": [
+          {
+            "file": "/home/runner/work/itom/itom/archives/1.0.0-rc12/source/android/app/build.gradle.kts",
+            "line": "46",
+            "column": "20"
+          }
+        ]
+      }
+    ],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10012,
+    "version_name": "1.0.0-rc12-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "3dc8dd34515f64079d27eb06732bd001759996252846ca6bc11ebc4b6ad57021",
+    "lib/armeabi-v7a/libgojni.so": "e1eb810f81ccadc25ca499e66d607b7eec335ec1393360ce0f18ad36b1248624"
+  },
+  "status": "passed",
+  "apk": "ITOM-1.0.0-RC12-debug.apk",
+  "sha256": "6c7e30d23aaf6b52820096941563f751e764833d0250658ae01c17c5ffa4c217",
+  "checks": [
+    "domain:test",
+    "app:lintDebug",
+    "app:compileReleaseKotlin",
+    "app:assembleDebug"
+  ]
+}
