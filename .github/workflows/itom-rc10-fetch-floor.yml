@@ -1,8 +1,5 @@
 name: RC10 measured FETCH floor for adaptive DATA cleanup
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-fetch-floor.yml", "archives/1.0.0-rc10/experiments/measured_fetch_floor.py"]
   workflow_dispatch:
 permissions:
   contents: read
