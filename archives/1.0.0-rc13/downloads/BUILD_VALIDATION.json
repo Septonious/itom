@@ -1,12 +1,13 @@
 {
-  "status": "server_and_source_ready_apk_building",
+  "status": "focused_checks_and_all_build_jobs_passed_field_testing_only",
   "build_commit": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d",
   "workflow_run": 39335976534,
   "revision": "itom-1-0-0-rc13",
   "files_sha256": {
     "ITOM-1.0.0-RC13-linux-amd64.bin": "364404f3b80dd9863d5f11ca46920be3705392a7ba0e9497ee62e6fe132d2b82",
     "ITOM-1.0.0-RC13-linux-arm64.bin": "b8933084250e51d5765ca93235b3f6fa18af0a7831bfdd72b1a185025ea04df7",
-    "ITOM-1.0.0-RC13-sources.zip": "395c68c60a0e9082eadf128814714f8fb764f05ab43b86ff42a7a960ea925e93"
+    "ITOM-1.0.0-RC13-sources.zip": "395c68c60a0e9082eadf128814714f8fb764f05ab43b86ff42a7a960ea925e93",
+    "ITOM-1.0.0-RC13-debug.apk": "5585c2e6ffd7d0534bc9287f7aa193c63ec39b0fc49274dfa2cd34a7c60ed430"
   },
   "linux_source_match_local": true,
   "ci_core_passed": true,
@@ -19,5 +20,159 @@
   },
   "qualification_thresholds_unchanged": true,
   "field_qualified": false,
-  "new_key_actions_provisioned": false
+  "new_key_actions_provisioned": false,
+  "verified_at_moscow": "2026-10-20T01:46:43+03:00",
+  "artifacts": [
+    {
+      "id": 12227510143,
+      "name": "rc13-field-test-android-build-evidence",
+      "size_in_bytes": 4317,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227510143",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227510143/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:45:16Z",
+      "expires_at": "2026-11-18T22:45:16Z",
+      "updated_at": "2026-10-19T22:45:16Z",
+      "digest": "sha256:16c324ac579a6d60a2a0b73250cdc82f02e1200177e46060c59750c23d2d138c",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    },
+    {
+      "id": 12227081643,
+      "name": "rc13-field-test-android",
+      "size_in_bytes": 28791001,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227081643",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227081643/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:45:16Z",
+      "expires_at": "2026-11-18T22:45:13Z",
+      "updated_at": "2026-10-19T22:45:16Z",
+      "digest": "sha256:837e8555cd61a510338dd25b407f8c564214ff6befe09e2a121583ec2ac90328",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    },
+    {
+      "id": 12227011017,
+      "name": "rc13-field-test-source",
+      "size_in_bytes": 2428924,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227011017",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12227011017/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:39:00Z",
+      "expires_at": "2026-11-18T22:38:59Z",
+      "updated_at": "2026-10-19T22:39:00Z",
+      "digest": "sha256:fca8db283842127d48d2f40d6ad5dfe1c059fc8b5539cbd71e185d6fee7a3457",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    },
+    {
+      "id": 12226424241,
+      "name": "rc13-field-test-linux",
+      "size_in_bytes": 15585950,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226424241",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226424241/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:39:43Z",
+      "expires_at": "2026-11-18T22:39:41Z",
+      "updated_at": "2026-10-19T22:39:43Z",
+      "digest": "sha256:a09ba08390af686c28d39f953391eeaf290878eede15b82ebea8c261450ada51",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    },
+    {
+      "id": 12226369138,
+      "name": "rc13-focused-core-evidence",
+      "size_in_bytes": 4489,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226369138",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226369138/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:38:24Z",
+      "expires_at": "2026-11-02T22:38:23Z",
+      "updated_at": "2026-10-19T22:38:24Z",
+      "digest": "sha256:8783ba0488a3dc8ecc7b95d7f00928856e89857eb650f3c154b9e38642166555",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    },
+    {
+      "id": 12226044474,
+      "name": "ITOM-1.0.0-RC13-field-testing-package",
+      "size_in_bytes": 45927279,
+      "url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226044474",
+      "archive_download_url": "https://api.github.com/repos/Septonious/itom/actions/artifacts/12226044474/zip",
+      "expired": false,
+      "created_at": "2026-10-19T22:45:31Z",
+      "expires_at": "2026-11-18T22:45:29Z",
+      "updated_at": "2026-10-19T22:45:31Z",
+      "digest": "sha256:1e0841c1e70c6f0ae83ca6b4c3de27bb70ed6175c4d8bde9e7467831f584cac4",
+      "workflow_run": {
+        "id": 39335976534,
+        "repository_id": 1414788638,
+        "head_repository_id": 1414788638,
+        "head_branch": "codex/v1.0.0-rc13-development",
+        "head_sha": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d"
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "Go source integrity, latency selection and account recovery",
+      "conclusion": "success"
+    },
+    {
+      "name": "Package executable RC13 source",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build Linux amd64 and arm64",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build Android APK, SDK tests, lint and JNI",
+      "conclusion": "success"
+    },
+    {
+      "name": "Assemble verified files; testing only, no release tag",
+      "conclusion": "success"
+    }
+  ],
+  "apk_signing_mode": "temporary_debug",
+  "android": {
+    "domain_tests": 82,
+    "app_tests": 7,
+    "failures": 0,
+    "lint_errors": 0,
+    "lint_warnings": 1,
+    "identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10013,
+      "version_name": "1.0.0-rc13-debug"
+    }
+  },
+  "apk_verification": "CI identity, both JNI revision markers and apksigner verification passed; APK hash comes from CI build report. Local duplicate APK inspection was not attempted because large artifact transfers previously disconnected the workspace.",
+  "package_verification": "CI downloaded matching component artifacts, checked their artifact digests, generated/verified SHA256SUMS, and uploaded the assembled package."
 }

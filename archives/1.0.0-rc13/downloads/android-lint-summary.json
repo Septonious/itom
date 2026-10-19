@@ -1,0 +1,24 @@
+{
+  "available": true,
+  "errors": 0,
+  "warnings": 1,
+  "issues": [
+    {
+      "id": "NewerVersionAvailable",
+      "severity": "Warning",
+      "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+      "locations": [
+        {
+          "file": "/home/runner/work/itom/itom/archives/1.0.0-rc13/source/android/app/build.gradle.kts",
+          "line": "60",
+          "column": "20"
+        }
+      ]
+    }
+  ],
+  "report_errors": [],
+  "saved_reports": [
+    "lint-results.xml",
+    "lint-results.txt"
+  ]
+}
