@@ -1,5 +1,7 @@
 # RC10 selection status
 
+Latest comparison: the six normal healthy-profile RC10 load jobs pass, but sensitivity/startup gates still fail. User now requests untouched RC2 under identical fixtures before further selection. See `healthy-qualification-39238567647.json` and the paired comparison workflow; no new transport policy is selected.
+
 ## Current primary model: healthy server (supersedes old benchmark assumptions)
 
 User reports an eight-core server with a 20 ms Rambler route and strong uplinks, and a phone route normally 20–50 ms, almost always <=100 ms. Primary qualification now applies independent below-TLS endpoint paths: server 20 ms / 1000 Mbps; phone 40 ms / 600 Mbps reference, with 20/50/100 ms client sensitivity and client-only capacity transitions. Backend service 2 ms and server capacity are configurable assumptions, not measurements. Actual CPU quota is recorded; local runs have two cores and do not certify eight-core hardware.
