@@ -1,4 +1,12 @@
-# RC10 selection status
+# RC10 field-test package complete
+
+Verified permanent downloads are in `../downloads/README.md`: APK, Linuxamd64/arm64 binaries, source ZIP, full handoff, signer, validation and checksums. Build commitbfde1250bce0788a55ed99cdd5cb2ecdc5bcade0; production core exactly matches paired checkpoint522d7cf.
+
+Build39243128236 passed source/vet, targeted accounting/proof/recovery/race,82 Android domain tests,7 app JVM tests, zero-error/zero-warning lint and both JNI/APK identity checks. No physical-device/provider qualification is claimed. Strict run39243128189 still fails fresh4-stream RTT784.168ms, low-capacity ramps and100ms-client upload/tail; thresholds remain unchanged. Five of six normal two-round cases passed. The optional feedback-allocation experiment is archived and excluded; reverting also showed intermittent RTT, so no causal claim is made.
+
+GitHub release creation was denied HTTP403 Resource not accessible by integration. Files were uploaded to Actions successfully and are also committed as permanent repository downloads. The release publisher is manual-only pending a permission change. User says prior APK certificate compatibility is not a major concern; standard debug signing is documented.
+
+## Earlier selection and experiment history
 
 User explicitly requested a field-test package after reviewing the failures. Testing workflow builds after safety and Android gates; strict release qualification stays unchanged. The packaged core is exactly checkpoint522d7cf from the paired comparison. A later feedback-allocation experiment is archived, not selected; no controller policy changes. Packaging is authorized for testing, not certified performance.
 

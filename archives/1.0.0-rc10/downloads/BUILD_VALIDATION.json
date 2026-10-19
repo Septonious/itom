@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "version": "1.0.0-rc10",
+  "classification": "USER_REQUESTED_FIELD_TEST_BUILD",
+  "release_qualified": false,
+  "build_commit": "bfde1250bce0788a55ed99cdd5cb2ecdc5bcade0",
+  "production_core_matches_checkpoint": "522d7cf21061e65d955f0885a7df53e9e68592fb",
+  "build_run": "https://github.com/Septonious/itom/actions/runs/39243128236",
+  "qualification_run": "https://github.com/Septonious/itom/actions/runs/39243128189",
+  "checks": {
+    "source_checks": "passed",
+    "python_tests": 91,
+    "go_vet": "passed",
+    "focused_go_recovery_accounting_proof": "passed",
+    "go_race": "passed",
+    "android_domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "android_app_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "android_lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 0,
+      "issues": [],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "android_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10009,
+      "version_name": "1.0.0-rc10-debug"
+    },
+    "android_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "bdf8882db4ff55319c1745329834bd1bec748d59c5d2cb135aebd044ff042dc0",
+      "lib/armeabi-v7a/libgojni.so": "05457cc7b86800058f96211b6cdbfc87d1644c477746c4ab1ba3da0578994126"
+    },
+    "linux_amd64_version": "ITOM itom-1-0-0-rc10 linux amd64"
+  },
+  "qualification_thresholds_unchanged": true,
+  "known_unresolved": [
+    "Fresh4-stream first round RTT784.168ms exceeded750ms; second round passed.",
+    "10/20Mbps client ramp probe timeouts.",
+    "100ms client RTT upload/tail71.168Mbps missed75Mbps floor."
+  ],
+  "github_release_publication": "Denied HTTP403 Resource not accessible by integration; verified files permanently stored on development branch instead.",
+  "signing": "Standard debug signing; user stated prior certificate compatibility is not a major concern. Certificate recorded in SIGNER.txt.",
+  "artifacts": {
+    "ITOM-1.0.0-RC10-debug.apk": {
+      "bytes": 72144406,
+      "sha256": "c4583e53149f79538790462e324a223aac0ed30d7062b1966ee3ff7b31b88192"
+    },
+    "ITOM-1.0.0-RC10-linux-amd64.bin": {
+      "bytes": 14469770,
+      "sha256": "76ca9cffdb56b098464d5b47a8e171490aa4672de28dd21928800cb5020ebd25"
+    },
+    "ITOM-1.0.0-RC10-linux-arm64.bin": {
+      "bytes": 13301498,
+      "sha256": "20a5136b756d8d92a6dd61b555cb9f3e8b0155c47d02040e743238c428e69eca"
+    },
+    "ITOM-1.0.0-RC10-sources.zip": {
+      "bytes": 2497620,
+      "sha256": "58aea9800dfefd2c22ffde06dcb1ad62a6d5b01b2ab3c7c0c9e5f2750a28f29e"
+    },
+    "SIGNER.txt": {
+      "bytes": 307,
+      "sha256": "af7b0b93812177620cd2565ea5f4c5218630cc513ac9d3b8a3e4aa71091ea096"
+    }
+  }
+}

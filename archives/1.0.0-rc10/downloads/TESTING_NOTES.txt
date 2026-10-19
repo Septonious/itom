@@ -1,0 +1,10 @@
+ITOM1.0.0 RC10 — FIELD TEST BUILD, NOT RELEASE QUALIFIED
+Build source: bfde1250bce0788a55ed99cdd5cb2ecdc5bcade0
+Production core matches paired-comparison checkpoint522d7cf.
+Update Android and server together. Android org.itom.client, versionCode10009.
+APK includes ARM64 and ARMv7; server binaries include Linuxamd64 and Linuxarm64.
+Core safety/recovery/accounting/race checks,89 Android JVM tests, lint and native/APK identity checks passed.
+Strict performance qualification remains incomplete: intermittent RTT excursions, low-client-capacity probe timeouts and100ms-client upload/tail. Thresholds are unchanged.
+Preserve accounts, profiles, quota journals, wallets and client/server identities. No reset is part of this update.
+Debug APK certificate details are in SIGNER.txt.
+GitHub release creation was denied403; these files are permanently committed on the development branch.

@@ -1,8 +1,6 @@
+# Release creation was denied403. Permanent assets are in archives/1.0.0-rc10/downloads/.
 name: Publish verified RC10 field-test handoff
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-publish-field-test.yml"]
   workflow_dispatch:
 permissions:
   contents: write
