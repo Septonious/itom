@@ -1,0 +1,23 @@
+{
+  "status": "server_and_source_ready_apk_building",
+  "build_commit": "ce755aa2b96acdbeadf7ef038e700f79e1a2772d",
+  "workflow_run": 39335976534,
+  "revision": "itom-1-0-0-rc13",
+  "files_sha256": {
+    "ITOM-1.0.0-RC13-linux-amd64.bin": "364404f3b80dd9863d5f11ca46920be3705392a7ba0e9497ee62e6fe132d2b82",
+    "ITOM-1.0.0-RC13-linux-arm64.bin": "b8933084250e51d5765ca93235b3f6fa18af0a7831bfdd72b1a185025ea04df7",
+    "ITOM-1.0.0-RC13-sources.zip": "395c68c60a0e9082eadf128814714f8fb764f05ab43b86ff42a7a960ea925e93"
+  },
+  "linux_source_match_local": true,
+  "ci_core_passed": true,
+  "ci_exact_active_directions": 20,
+  "ci_phased_unpaired": {
+    "down_mbps": 93.339,
+    "up_mbps": 37.623,
+    "short_mean_ms": 190,
+    "short_max_ms": 311
+  },
+  "qualification_thresholds_unchanged": true,
+  "field_qualified": false,
+  "new_key_actions_provisioned": false
+}
