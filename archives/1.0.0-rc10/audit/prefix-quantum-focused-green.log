@@ -1,0 +1,119 @@
+ok  	itom.local/core/datapath	0.653s
+=== RUN   TestRC10QuantumFollowsOnlySharedWindow
+--- PASS: TestRC10QuantumFollowsOnlySharedWindow (0.00s)
+=== RUN   TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream
+    rev4_delayed_visibility_test.go:15: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+2026/10/19 06:12:42 failed to read command: write tcp 127.0.0.1:38501->127.0.0.1:45160: write: broken pipe
+2026/10/19 06:12:42 failed to read command: write tcp 127.0.0.1:34689->127.0.0.1:51400: write: broken pipe
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=connecting
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=connecting
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=connecting
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=imap_connected duration_ms=6
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=connecting
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=imap_connected duration_ms=17
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=recovery
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=journal_profile kind=data existing=false bytes=12582912 messages=192 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=imap_connected duration_ms=30
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=recovery
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=journal_profile kind=data existing=false bytes=12582912 messages=192 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=imap_connected duration_ms=7
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=recovery
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=recovery
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=journal_profile kind=data existing=false bytes=12582912 messages=192 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=journal_profile kind=control existing=false bytes=2097152 messages=128 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=journal_profile kind=data existing=false bytes=12582912 messages=192 run=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=handshake_wait
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=preauth_challenge_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=preauth_challenge_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=preauth_challenge_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=preauth_challenge_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=preauth_hello_rx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=preauth_hello_rx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=preauth_hello_rx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=preauth_hello_rx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=preauth_reply_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=preauth_reply_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=preauth_reply_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=preauth_reply_tx
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=fetch_capability binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=activation
+    supervisor_fixture_test.go:223: supervisor_timeline event=carrier_authenticated account=a04 session=59efa5555eb80882686f18b9199c6045 generation=7910187937908776223 epoch=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=authenticated
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=fetch_capability binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=activation
+    supervisor_fixture_test.go:223: supervisor_timeline event=carrier_authenticated account=a03 session=59efa5555eb80882686f18b9199c6045 generation=7910187937908776223 epoch=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=authenticated
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=fetch_capability binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=activation
+    supervisor_fixture_test.go:223: supervisor_timeline event=carrier_authenticated account=a01 session=59efa5555eb80882686f18b9199c6045 generation=7910187937908776223 epoch=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=authenticated
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=io_mode lane_connections=5 data_parallel=1 reader_isolated=true reader_idle=true cleanup_isolated=true fallback=
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=append_capability mode=literal-plus binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=fetch_capability binary=true
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=activation
+    supervisor_fixture_test.go:223: supervisor_timeline event=carrier_authenticated account=a02 session=59efa5555eb80882686f18b9199c6045 generation=7910187937908776223 epoch=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=authenticated
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=health stage=activation rtt_ms=0 rx_age_ms=104 control_queue=0 outbox=0 control_held=0 data_held=0 last_op=activate_io op_ms=6 max_op_ms=104 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1788 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=0 last_op=activate_io op_ms=14 max_op_ms=102 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1784 fetch_polls=1 empty_fetch_polls=0 fetch_messages=1 reader_idle=true idle_waits=0 idle_notifies=0 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=0 last_op=activate_io op_ms=10 max_op_ms=102 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1796 fetch_polls=2 empty_fetch_polls=1 fetch_messages=1 reader_idle=true idle_waits=1 idle_notifies=1 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=0 data_records=0 control_records=0 received_records=0 pending_retirements=0 available_grants=0 issued_grants=0 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=health stage=activation rtt_ms=0 rx_age_ms=100 control_queue=0 outbox=0 control_held=0 data_held=0 last_op=activate_io op_ms=13 max_op_ms=103 control_wait_ms=0 max_control_wait_ms=0 gc_ms=0 gc_messages=0 append_count=2 append_bytes=1772 fetch_polls=2 empty_fetch_polls=1 fetch_messages=1 reader_idle=true idle_waits=1 idle_notifies=1 idle_audits=0 idle_kicks=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=coordinator
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=coordinator
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=coordinator
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=grants
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=phase stage=ready
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=grants
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=phase stage=ready
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=grants
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=phase stage=ready
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=coordinator
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=grants
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=phase stage=ready
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=64 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=33 data_records=42 control_records=135 received_records=169 pending_retirements=0 available_grants=0 issued_grants=3 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=health stage=ready rtt_ms=865 rx_age_ms=837 control_queue=0 outbox=43 control_held=37 data_held=83 last_op=append_data op_ms=55 max_op_ms=828 control_wait_ms=20 max_control_wait_ms=695 gc_ms=295 gc_messages=92 append_count=117 append_bytes=1729729 fetch_polls=155 empty_fetch_polls=81 fetch_messages=77 reader_idle=true idle_waits=15 idle_notifies=11 idle_audits=1 idle_kicks=3
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=123 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=39 data_records=47 control_records=170 received_records=223 pending_retirements=0 available_grants=0 issued_grants=3 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=health stage=ready rtt_ms=2320 rx_age_ms=844 control_queue=0 outbox=59 control_held=41 data_held=83 last_op=append_control op_ms=60 max_op_ms=891 control_wait_ms=10 max_control_wait_ms=162 gc_ms=464 gc_messages=105 append_count=135 append_bytes=1991949 fetch_polls=156 empty_fetch_polls=82 fetch_messages=86 reader_idle=true idle_waits=16 idle_notifies=15 idle_audits=0 idle_kicks=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=0 max_pump_queue_wait_ms=0 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=0 stripe_wait_ms=0 max_stripe_wait_ms=213 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=0 fast_grant_select_wait_ms=0 max_fast_grant_select_wait_ms=0 bulk_replacements=0 data_attempts=38 data_records=48 control_records=140 received_records=168 pending_retirements=0 available_grants=0 issued_grants=3 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=health stage=ready rtt_ms=852 rx_age_ms=760 control_queue=0 outbox=17 control_held=10 data_held=71 last_op=append_control op_ms=758 max_op_ms=882 control_wait_ms=35 max_control_wait_ms=666 gc_ms=357 gc_messages=138 append_count=125 append_bytes=1866251 fetch_polls=145 empty_fetch_polls=82 fetch_messages=71 reader_idle=true idle_waits=17 idle_notifies=11 idle_audits=4 idle_kicks=2
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=flow_health data_wait_ms=0 max_data_wait_ms=0 fast_data_wait_ms=0 max_fast_data_wait_ms=0 pump_queue_wait_ms=4 max_pump_queue_wait_ms=635 fast_pump_queue_wait_ms=0 max_fast_pump_queue_wait_ms=9 stripe_wait_ms=0 max_stripe_wait_ms=0 fast_stripe_wait_ms=0 max_fast_stripe_wait_ms=0 grant_select_wait_ms=0 max_grant_select_wait_ms=239 fast_grant_select_wait_ms=2 max_fast_grant_select_wait_ms=3 bulk_replacements=0 data_attempts=13 data_records=14 control_records=103 received_records=108 pending_retirements=0 available_grants=0 issued_grants=3 trace_dropped=0 trace_errors=0
+    supervisor_fixture_test.go:223: supervisor_timeline account=a04 user=65090194 event=health stage=ready rtt_ms=224 rx_age_ms=616 control_queue=0 outbox=46 control_held=43 data_held=94 last_op=fetch_page op_ms=125 max_op_ms=848 control_wait_ms=24 max_control_wait_ms=82 gc_ms=278 gc_messages=51 append_count=94 append_bytes=573924 fetch_polls=153 empty_fetch_polls=73 fetch_messages=89 reader_idle=true idle_waits=19 idle_notifies=16 idle_audits=2 idle_kicks=1
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=descriptor_gap_repair
+    supervisor_fixture_test.go:223: supervisor_timeline account=a01 user=65090194 event=imap_error operation=cleanup_fetch_exact duration_ms=35 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=imap_error operation=fetch_page duration_ms=199 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=imap_error operation=delete_observed_batch duration_ms=5 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:223: supervisor_timeline account=a02 user=65090194 event=imap_error operation=fetch_page duration_ms=7 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:223: supervisor_timeline account=a03 user=65090194 event=imap_error operation=fetch_page duration_ms=127 code=CANCELED reason=canceled
+    supervisor_fixture_test.go:250: supervisor_summary accounts=4 dial_attempts=44 dial_denied=0 target_tcp_dials=9 provider={Active:11 DownAccounts:0 Accepted:52 Dropped:0 UplinkBytes:20548850 DownlinkBytes:31420197 Mbps:40}
+--- PASS: TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream (26.84s)
+=== RUN   TestRev4DelayedStreamCannotBlockHealthyStreamPrefix
+2026/10/19 06:12:58 handling APPEND command: use of closed network connection
+2026/10/19 06:12:58 handling UID FETCH command: use of closed network connection
+2026/10/19 06:12:58 handling SELECT command: use of closed network connection
+--- PASS: TestRev4DelayedStreamCannotBlockHealthyStreamPrefix (0.02s)
+PASS
+ok  	itom.local/core/tunnel	26.894s

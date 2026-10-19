@@ -1,4 +1,4 @@
-name: RC10 bulk quantum with shared window
+name: RC10 bounded bulk discovery prefix
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]
@@ -16,8 +16,8 @@ jobs:
       matrix:
         include:
           - {title: useful-fixed8-control, variant: control, profile: "", early: "0", retained: "1", hard: "1", stability: "0"}
-          - {title: quantum-retained32, variant: quantum, profile: "", early: "0", retained: "1", hard: "1", stability: "0"}
-          - {title: quantum-early10, variant: quantum, profile: "10:10,20:10,50:10,150:30", early: "1", retained: "0", hard: "0", stability: "1"}
+          - {title: prefix-quantum-retained32, variant: quantum, profile: "", early: "0", retained: "1", hard: "1", stability: "0"}
+          - {title: prefix-quantum-early10, variant: quantum, profile: "10:10,20:10,50:10,150:30", early: "1", retained: "0", hard: "0", stability: "1"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v6
