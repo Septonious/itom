@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"itom.local/core/datapath"
 	"itom.local/core/journal"
 	"itom.local/core/mailbox"
 	"itom.local/core/pool"
@@ -130,5 +131,48 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 	}
 	if err = s.Audit(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Exercise actual sealed records and the authenticated envelope, rather than
+// assuming that a raw payload size is the physical storage size.
+func TestRC12ReducedFastGrantFitsMaximumFastBatch(t *testing.T) {
+	jobs := deliveryJobs(t, 1, 4, datapath.InteractiveDataThreshold)
+	cipher := cleanupFixtureEpoch(t)
+	var packets [][]byte
+	for _, job := range jobs {
+		if !job.Interactive() {
+			t.Fatal("fixture is not a fast batch")
+		}
+		result, packet, _ := job.SealForBatch(cipher)
+		if result.Err != nil {
+			t.Fatal(result.Err)
+		}
+		packets = append(packets, packet)
+	}
+	body, err := wire.PackDataBatch(wire.ID{1}, packets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := wire.QuotaKey{Store: wire.ID{2}, Epoch: 1, Grant: 1, Session: cipher.Context().Session, User: "12345678", Account: "a01"}
+	_, physical, err := wire.BindDataEnvelope(key, 1, wire.ID{3}, 0, "up", body, bytes.Repeat([]byte{7}, 32), canonicalDataSize)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := mailbox.Encode(physical)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(raw) > recoveryFastLeaseBytes/2 {
+		t.Fatal("two maximum fast batches no longer fit recovery grant", len(raw))
+	}
+	offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: recoveryFastLeaseBytes, Messages: 32}}
+	frame, err := wire.EncodeControl(0, wire.RecoveryFastGrant{Offer: offer})
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded, err := wire.DecodeControl(frame)
+	if err != nil || decoded.(wire.RecoveryFastGrant).Offer != offer {
+		t.Fatal("explicit class or quota changed", err)
 	}
 }

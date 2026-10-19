@@ -2626,7 +2626,7 @@ func (l *lane) issueRemoteGrantBounded(limit pool.Amount, fast, recovery bool) e
 	if recovery && l.diag != nil {
 		l.diag.event(fmt.Sprintf("event=grant_recovery_capacity bytes=%d messages=%d held_bytes=%d held_messages=%d", limit.Bytes, limit.Messages, held.Bytes, held.Messages))
 	}
-	if fast && limit.Messages < fastLeaseMessages {
+	if fast && (limit.Messages != fastLeaseMessages || limit.Bytes != fastLeaseBytes) {
 		return l.controlSend(wire.RecoveryFastGrant{Offer: offer})
 	}
 	return l.controlSend(offer)

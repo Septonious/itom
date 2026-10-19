@@ -10,6 +10,11 @@ import (
 	"itom.local/core/wire"
 )
 
+// Recovery fast batches are bounded to four <=8 KiB DATA records plus
+// authenticated envelope/MIME overhead. Keep space for a following fast grant
+// instead of tying up a full maximum bulk BODY for a few short requests.
+const recoveryFastLeaseBytes = 128 << 10
+
 // Called under localGrantMu. Historical debt may predate the current directional
 // shares and is not a live grant for this carrier. Keep every byte/message
 // charged, while leasing a full legal BODY from genuinely unused capacity.
@@ -47,20 +52,22 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		profile.Messages-held.Messages <= reserveMessages {
 		return pool.Amount{}, journal.ErrLimit
 	}
+	fastActive, bulkActive := l.issuedGrantCounts()
+	// Base the short-traffic target on the directional share, not the shrinking
+	// remainder after existing bulk leases. Repeated refills must not ratchet
+	// a healthy multi-message grant down to one message while bulk stays open.
+	fastMessages := min(uint64(fastLeaseMessages), max(uint64(1), (remoteShare.Messages-usage.HistoricalRemote.Messages)/5))
 	if fast {
 		available := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
-		// Leave at least one bulk ordinal. When the standard fast grant cannot
-		// fit alongside bulk, share the genuinely free message slots between
-		// the two classes instead of requiring 32 unused slots to connect.
-		if available < 2 || remoteFree.Bytes < fastLeaseBytes {
+		if available == 0 || remoteFree.Bytes < recoveryFastLeaseBytes {
 			return pool.Amount{}, journal.ErrLimit
 		}
-		// Match the normal quota proportions instead of giving the half-MiB
-		// latency lease most of a debt-bound account's remaining ordinals.
-		messages := min(uint64(fastLeaseMessages), max(uint64(1), available/5))
-		return pool.Amount{Bytes: fastLeaseBytes, Messages: messages}, nil
+		// Existing bulk leases already provide their ordinals. At bootstrap keep
+		// at least one slot for each remaining class whenever capacity permits.
+		bulkReserve := min(uint64(max(0, remoteBulkLeases-bulkActive)), available-1)
+		messages := min(fastMessages, available-bulkReserve)
+		return pool.Amount{Bytes: recoveryFastLeaseBytes, Messages: messages}, nil
 	}
-	fastActive, bulkActive := l.issuedGrantCounts()
 	if fastActive == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}
@@ -70,6 +77,15 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	remaining := uint64(max(1, remoteBulkLeases-bulkActive))
 	availableBytes := min(profile.Bytes-held.Bytes-reserveBytes, remoteFree.Bytes)
 	availableMessages := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
+	// Keep an unissued short-traffic refill cushion in both finite resources.
+	// This is a partition of genuinely unused quota, never a release of spent
+	// attempts. Preserve at least one complete BODY per remaining bulk lease.
+	if availableMessages > remaining {
+		availableMessages -= min(fastMessages, availableMessages-remaining)
+	}
+	if availableBytes > remaining*dataBatchMIMEHardCap {
+		availableBytes -= min(uint64(recoveryFastLeaseBytes), availableBytes-remaining*dataBatchMIMEHardCap)
+	}
 	remaining = min(remaining, availableMessages, availableBytes/dataBatchMIMEHardCap)
 	if remaining == 0 {
 		return pool.Amount{}, journal.ErrLimit

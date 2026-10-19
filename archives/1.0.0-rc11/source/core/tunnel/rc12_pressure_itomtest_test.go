@@ -7,8 +7,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"itom.local/core/journal"
+	"itom.local/core/pool"
+	"itom.local/core/servercfg"
 	"itom.local/core/wire"
 	"net"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -28,7 +33,27 @@ func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
 	t.Setenv("ITOM_LOAD_BINARY_FETCH", "1")
 	t.Setenv("ITOM_LOAD_UID_HISTORY", "64")
 	t.Setenv("ITOM_LOAD_DATA_SHARDS", "4")
-	f := newProductionSupervisorFixtureState(t, 10, rev4RetainedState(t))
+	f := newProductionSupervisorFixtureState(t, 10, func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
+		for _, a := range cfg.Accounts {
+			dir := filepath.Join(serverDir, a.ID, u.ID)
+			if err := os.MkdirAll(dir, 0700); err != nil {
+				t.Fatal(err)
+			}
+			store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(a, u, dataProfile12), time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = store.EnableAfterInventory(a.ID, u.ID, store.Run()); err != nil {
+				t.Fatal(err)
+			}
+			if _, err = store.IssueRemote(journal.Scope{Account: a.ID, User: u.ID, Session: wire.ID{99}}, pool.Amount{Bytes: 15 << 19, Messages: 150}); err != nil {
+				t.Fatal(err)
+			}
+			if err = store.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}
+	})
 	f.mu.Lock()
 	for _, l := range f.serverLanes {
 		applyTestCommitDelay(l, 20*time.Millisecond)
