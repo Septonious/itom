@@ -1,0 +1,6 @@
+=== RUN   TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion
+    rc12_refill_test.go:114: short traffic stalls or falls into one-message fencing before any deletion: initial={Bytes:524288 Messages:6} replacement={Bytes:0 Messages:0}
+--- FAIL: TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion (0.01s)
+FAIL
+FAIL	itom.local/core/tunnel	0.014s
+FAIL

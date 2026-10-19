@@ -1,0 +1,9 @@
+# RC11 field follow-up
+
+Four uploaded archives contain three unique captures: the last two client ZIPs are byte-identical. Client1 spans 21:36:48–21:38:47 Moscow, client2 21:42:02–21:45:16, server 21:41:15–21:44:03. Trace rotation prevents retrospective diagnosis of every attempt. Both retained client sessions keep all ten carriers without a new reconnect. One retained server target dial fails on port 80; the retained Speedtest port-8080 dials succeed. Application cancellation/reset bursts alone do not identify the application error trigger.
+
+Historical wallet-missing recovery traffic fell to 90 deferrals per retained client capture. Server no-op transaction counts remain a small fraction of writes. Server durable commits average roughly 19–20 ms for DATA and 17–19 ms for control. Server interactive selection averaged 57.8 ms and physical batch time 139.5 ms. Those per-stage populations are not an additive RTT budget.
+
+Server traces show frequent reduced one-message fast recovery grants and client cumulative-lease rollovers. A new regression reproduces a refill stall on unmodified RC11: with 6 MiB/130 historical remote ordinals retained, initial fast plus two bulk grants exhaust the incoming directional quota. Spending/fencing the six-message fast grant does not permit any replacement until physical deletion, despite unused bulk permissions. No physical debt may be forgiven to resolve this.
+
+The follow-up targets a bounded refill cushion and a fast recovery lease sized for real bounded fast batches. Normal debt-free grants, physical profiles, proof authority and qualification thresholds must remain unchanged. A separate targeted integration case adds phased download/upload streams and persistent small requests with the observed 20 ms server commit service cost, instead of relying only on short symmetric echo bursts.
