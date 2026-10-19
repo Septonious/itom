@@ -1,8 +1,5 @@
 name: RC10 complete APPEND service and unloaded control feedback
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-complete-service.yml", "archives/1.0.0-rc10/experiments/append_service_clock.py", "archives/1.0.0-rc10/experiments/control_echo_feedback.py"]
   workflow_dispatch:
 permissions:
   contents: read

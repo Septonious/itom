@@ -1,0 +1,83 @@
+name: RC10 measured DATA page and cleanup service on original RC2 transport
+on:
+  push:
+    branches: ["codex/v1.0.0-rc10-development"]
+    paths: [".github/workflows/itom-rc10-adaptive-data-cleanup.yml", "archives/1.0.0-rc10/experiments/adaptive_data_cleanup.py", "archives/1.0.0-rc10/experiments/data_page_service.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  targeted:
+    name: ${{ matrix.title }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {title: measured-page-retained32, variant: page, profile: "", early: "0", retained: "1", hard: "1", stability: "0"}
+          - {title: measured-page-early10, variant: page, profile: "10:10,20:10,50:10,150:30", early: "1", retained: "0", hard: "0", stability: "1"}
+          - {title: measured-page-gc-retained32, variant: pagegc, profile: "", early: "0", retained: "1", hard: "1", stability: "0"}
+          - {title: measured-page-gc-early10, variant: pagegc, profile: "10:10,20:10,50:10,150:30", early: "1", retained: "0", hard: "0", stability: "1"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc10/source/core/go.mod
+          cache: false
+      - name: Explicit single experimental configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 archives/1.0.0-rc10/experiments/adaptive_cleanup.py fixed8
+          python3 archives/1.0.0-rc10/experiments/exact_scan.py
+          python3 archives/1.0.0-rc10/experiments/skip_data_scan.py
+          python3 archives/1.0.0-rc10/experiments/skip_cleanup_safety.py
+          python3 archives/1.0.0-rc10/experiments/data_page_service.py
+          if [ '${{ matrix.variant }}' = 'pagegc' ]; then
+            python3 archives/1.0.0-rc10/experiments/adaptive_data_cleanup.py
+          fi
+          gofmt -w archives/1.0.0-rc10/source/core/tunnel/*rc10*go archives/1.0.0-rc10/source/core/tunnel/cleanup.go archives/1.0.0-rc10/source/core/tunnel/cleanup_service.go archives/1.0.0-rc10/source/core/tunnel/stripe.go archives/1.0.0-rc10/source/core/tunnel/io.go archives/1.0.0-rc10/source/core/tunnel/cleanup_service_test.go archives/1.0.0-rc10/source/core/tunnel/topology.go
+      - name: Current vs historical cleanup, urgent control, cursor and recovery regressions
+        working-directory: archives/1.0.0-rc10/source/core
+        env:
+          GOMAXPROCS: "2"
+        run: |
+          go test -p 2 -count=1 -timeout=180s ./journal
+          go test -p 2 -count=1 -timeout=180s ./tunnel -run 'TestRC10|TestRC8|TestCleanup|TestScenarioCleanupService|TestServicePolicy|TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover|TestRev5PacedAccountDoesNotShrinkHealthyPoolOrRTT|TestRev5PeerReadSeparatesUnloadedPropagationFromBodyPacing|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages'
+      - name: Unchanged complete throughput, tails, RTT, probes, sockets
+        working-directory: archives/1.0.0-rc10/source/core
+        shell: bash
+        env:
+          GOTOOLCHAIN: local
+          GOWORK: off
+          GOMAXPROCS: "2"
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "${{ matrix.hard }}"
+          ITOM_STABILITY_QUALIFICATION: "${{ matrix.stability }}"
+          ITOM_LOAD_MIN_MBPS: "75"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "32"
+          ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "1"
+          ITOM_LOAD_PROVIDER_MBPS: "600"
+          ITOM_LOAD_PROVIDER_PROFILE: "${{ matrix.profile }}"
+          ITOM_LOAD_PROVIDER_PROFILE_EARLY: "${{ matrix.early }}"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=300s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/service.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc10-${{ matrix.title }}
+          path: ${{ runner.temp }}/service.log
+          retention-days: 30
