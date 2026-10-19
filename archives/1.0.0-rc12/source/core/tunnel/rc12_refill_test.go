@@ -45,6 +45,7 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 	}
 	defer w.Close()
 	var fast wire.StorageGrant
+	var physicalBodies [][]byte
 	bulk := map[wire.QuotaKey]journal.Grant{}
 	for len(l.urgentQueue) > 0 {
 		c, err := wire.DecodeControl((<-l.urgentQueue).Frame)
@@ -77,10 +78,11 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := uint64(0); i < fast.Limit.Messages; i++ {
-		report, _, err := w.Spend(fast.Key, u.Up, bytes.Repeat([]byte{byte(i)}, 256), func(b []byte) (uint64, error) { return mailbox.EncodedSize(len(b)) })
+		report, physicalBody, err := w.Spend(fast.Key, u.Up, bytes.Repeat([]byte{byte(i)}, 256), func(b []byte) (uint64, error) { return mailbox.EncodedSize(len(b)) })
 		if err != nil {
 			t.Fatal(err)
 		}
+		physicalBodies = append(physicalBodies, physicalBody)
 		if _, err = s.ApplyRemote(u.ID, s.Run(), report); err != nil {
 			t.Fatal(err)
 		}
@@ -111,8 +113,8 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 			replacement = x.Offer
 		}
 	}
-	if replacement.Key.Grant == 0 || replacement.Limit.Messages < 4 {
-		t.Fatalf("short traffic stalls or falls into one-message fencing before any deletion: initial=%+v replacement=%+v", fast.Limit, replacement.Limit)
+	if replacement.Key.Grant == 0 || replacement.Limit.Messages < 1 {
+		t.Fatalf("short traffic has no reserved refill before any deletion: initial=%+v replacement=%+v", fast.Limit, replacement.Limit)
 	}
 	// Original unknown debt and every old spent physical message are unchanged.
 	got, err := s.GetGrant(old.Ref)
@@ -122,6 +124,61 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 	previous, err := s.GetGrant(journal.GrantRef{Store: fast.Key.Store, ID: fast.Key.Grant, Scope: journal.Scope{Account: a.ID, User: u.ID, Session: fast.Key.Session}})
 	if err != nil || previous.Released != (pool.Amount{}) || previous.Used.Messages != fast.Limit.Messages {
 		t.Fatal("unproved physical debt refunded", previous, err)
+	}
+	// Real partial deletion, rather than a peer counter, creates new capacity.
+	// The following refill must grow again, not divide the free remainder by five.
+	if err = w.Accept(replacement); err != nil {
+		t.Fatal(err)
+	}
+	unused, err := w.Fence(replacement.Key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.ApplyRemote(u.ID, s.Run(), unused); err != nil {
+		t.Fatal(err)
+	}
+	l.issued[replacement.Key] = false
+	rows, err := s.ScanAttempts(0, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	removed := 0
+	for _, a := range rows {
+		if a.Ref.Grant.ID != fast.Key.Grant || a.Ordinal > 4 {
+			continue
+		}
+		loc := journal.Location{UIDValidity: 11, UID: uint32(a.Ordinal)}
+		if err = s.Observe(a.Ref, s.Run(), journal.Observation{Account: a.Ref.Grant.Scope.Account, Folder: a.Folder, EncodedBytes: a.EncodedBytes, Location: loc, Decoded: physicalBodies[a.Ordinal-1]}); err != nil {
+			t.Fatal(err)
+		}
+		if err = s.Deleted(a.Ref, s.Run(), loc); err != nil {
+			t.Fatal(err)
+		}
+		removed++
+	}
+	if removed != 4 {
+		t.Fatal("partial proof fixture", removed)
+	}
+	if err = l.offer(); err != nil {
+		t.Fatal(err)
+	}
+	var grown wire.StorageGrant
+	for len(l.urgentQueue) > 0 {
+		c, err := wire.DecodeControl((<-l.urgentQueue).Frame)
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch x := c.(type) {
+		case wire.RecoveryFastGrant:
+			grown = x.Offer
+		case wire.StorageGrant:
+			if l.issuedFast[x.Key] {
+				grown = x
+			}
+		}
+	}
+	if grown.Limit.Messages < 4 {
+		t.Fatal("partial proofs did not restore multi-message refill", grown.Limit)
 	}
 	for _, b := range bulk {
 		got, err := s.GetGrant(b.Ref)

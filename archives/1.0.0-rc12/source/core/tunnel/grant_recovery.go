@@ -81,7 +81,7 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	// This is a partition of genuinely unused quota, never a release of spent
 	// attempts. Preserve at least one complete BODY per remaining bulk lease.
 	if availableMessages > remaining {
-		availableMessages -= min(max(uint64(1), 2*fastMessages/3), availableMessages-remaining)
+		availableMessages -= min(uint64(1), availableMessages-remaining)
 	}
 	if availableBytes > remaining*dataBatchMIMEHardCap {
 		availableBytes -= min(uint64(recoveryFastLeaseBytes), availableBytes-remaining*dataBatchMIMEHardCap)

@@ -1,0 +1,7 @@
+# Targeted RC11/RC12 comparison
+
+Same ten-account 10 ms/500 Mbps client and 20 ms/1 Gbps server reference. The phased test retains 7.5 MiB/150 old remote ordinals per account, adds the observed 20 ms durable-commit service time after startup (real fsync remains enabled), verifies every download/upload byte and carries persistent 32-byte requests during both phases. This is a targeted service-cost replay, not full qualification or an eight-core CPU emulation.
+
+A 1 MiB/stream preliminary pair rejected the larger message cushion: candidate download 23.508 versus RC11 28.340 Mbps; upload 31.485 versus 31.054; short-request mean 266 versus 210 ms. A longer 4 MiB/stream pair with a smaller cushion improved throughput (51.206/32.920 versus 46.440/28.157 Mbps) but still raised short-request mean/max (285/1,100 versus 248/844 ms). These are single-run samples; the tuning is rejected conservatively rather than claiming a win from throughput alone.
+
+The current candidate reserves just one message slot for the next short request, while retaining the smaller recovery fast byte lease and stable refill target. Its regression also exercises real partial physical deletion proofs: available message capacity must restore a multi-message grant rather than repeatedly divide the free remainder down to one. Every spent byte/ordinal remains charged until its exact proof. Results of the current candidate are pending.
