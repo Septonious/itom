@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "release": "RC10.1",
+  "revision": "itom-1-0-0-rc10-1",
+  "archive_name": "ITOM-1.0.0-RC10.1-sources.zip",
+  "baseline": "Packaged RC10, build bfde1250bce0788a55ed99cdd5cb2ecdc5bcade0",
+  "qualification": "Diagnostic field-test build; RC10 transport policy and qualification thresholds unchanged",
+  "android_version_name": "1.0.0-rc10.1",
+  "android_version_code": 10010,
+  "android_application_id": "org.itom.client"
+}

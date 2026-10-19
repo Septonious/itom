@@ -1,0 +1,19 @@
+{"Time":"2026-10-16T23:12:40.772858604Z","Action":"start","Package":"itom.local/core/datapath"}
+{"Time":"2026-10-16T23:12:40.782866862Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace"}
+{"Time":"2026-10-16T23:12:40.78309251Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"=== RUN   TestV1EarlyNackSurvivesWriterAndVisibilityGrace\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783130501Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"    v1_deferred_repair_test.go:43: authenticated early NACK was discarded; repair needs an unnecessary second probe\n","OutputType":"error"}
+{"Time":"2026-10-16T23:12:40.783154358Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"--- FAIL: TestV1EarlyNackSurvivesWriterAndVisibilityGrace (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783158132Z","Action":"fail","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Elapsed":0}
+{"Time":"2026-10-16T23:12:40.783226121Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe"}
+{"Time":"2026-10-16T23:12:40.783228626Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"=== RUN   TestV1NackDuringVisibilityGraceNeedsNoSecondProbe\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783231547Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"    v1_deferred_repair_test.go:93: visibility-grace NACK was discarded\n","OutputType":"error"}
+{"Time":"2026-10-16T23:12:40.783238317Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"--- FAIL: TestV1NackDuringVisibilityGraceNeedsNoSecondProbe (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783241028Z","Action":"fail","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Elapsed":0}
+{"Time":"2026-10-16T23:12:40.783243771Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal"}
+{"Time":"2026-10-16T23:12:40.783247652Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"=== RUN   TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783252508Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"    v1_deferred_repair_test.go:124: CREDIT_EXHAUSTED\n","OutputType":"error"}
+{"Time":"2026-10-16T23:12:40.783263364Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"--- FAIL: TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783266567Z","Action":"fail","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Elapsed":0}
+{"Time":"2026-10-16T23:12:40.783272552Z","Action":"output","Package":"itom.local/core/datapath","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783826537Z","Action":"output","Package":"itom.local/core/datapath","Output":"FAIL\titom.local/core/datapath\t0.010s\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:12:40.783855686Z","Action":"fail","Package":"itom.local/core/datapath","Elapsed":0.011}
