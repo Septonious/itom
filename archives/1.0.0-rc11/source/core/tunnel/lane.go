@@ -219,7 +219,7 @@ type lane struct {
 	grants, fastGrants                          chan wire.QuotaKey
 	grantLimits                                 map[wire.QuotaKey]wire.Quota
 	grantFast                                   map[wire.QuotaKey]bool
-	grantRecoverySent                           map[wire.QuotaKey]time.Time
+	grantRecoverySent                           map[wire.QuotaKey]grantRecoveryRetry
 	stripe                                      *stripeGroup
 	physicalSlots                               chan struct{}
 	fastPhysicalSlots                           chan struct{}

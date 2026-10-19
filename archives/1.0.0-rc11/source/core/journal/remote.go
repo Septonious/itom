@@ -95,6 +95,7 @@ func (s *Store) ApplyRemote(authenticatedUser string, run uint64, message wire.C
 		if !g.Remote || g.Run != k.Epoch {
 			return ErrScope
 		}
+		before := g
 		switch x := message.(type) {
 		case wire.UsageReport:
 			if x.Attempt == nil {
@@ -126,6 +127,11 @@ func (s *Store) ApplyRemote(authenticatedUser string, run uint64, message wire.C
 			return e
 		}
 		result = cleanupStatus(g)
+		if g == before {
+			// Duplicate reports cannot register rows: registerRemote only writes
+			// while advancing Registered. All authority checks ran above.
+			return errNoChange
+		}
 		return s.saveGrant(tx, g)
 	})
 	if err != nil {

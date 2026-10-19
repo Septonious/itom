@@ -90,6 +90,33 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	return limit, nil
 }
 
+// A missing wallet cannot answer historical debt. Keep reconciling without
+// continuously competing with live OPEN/DATA/echo controls. Progress reopens
+// the short retry cadence; losing a reply still retries within five minutes.
+type grantRecoveryRetry struct {
+	sent                       time.Time
+	attempts                   uint8
+	used, registered, released pool.Amount
+}
+
+func (r grantRecoveryRetry) matches(g journal.Grant) bool {
+	return r.used == g.Used && r.registered == g.Registered && r.released == g.Released
+}
+func (r grantRecoveryRetry) due(g journal.Grant, now time.Time, floor time.Duration) bool {
+	if r.sent.IsZero() || !r.matches(g) {
+		return true
+	}
+	delay := min(5*time.Minute, 15*time.Second*time.Duration(1<<min(r.attempts-1, uint8(5))))
+	return now.Sub(r.sent) >= max(floor, delay)
+}
+func (r grantRecoveryRetry) sentFor(g journal.Grant, now time.Time) grantRecoveryRetry {
+	attempts := uint8(1)
+	if !r.sent.IsZero() && r.matches(g) {
+		attempts = min(r.attempts+1, uint8(6))
+	}
+	return grantRecoveryRetry{sent: now, attempts: attempts, used: g.Used, registered: g.Registered, released: g.Released}
+}
+
 // Reconcile all open old reservations, including partially spent grants. A lost
 // publication or final fence can otherwise permanently occupy message slots.
 // These controls describe immutable
@@ -103,7 +130,7 @@ func (l *lane) reconcileUnpublishedGrants() error {
 		return err
 	}
 	if l.grantRecoverySent == nil {
-		l.grantRecoverySent = make(map[wire.QuotaKey]time.Time)
+		l.grantRecoverySent = make(map[wire.QuotaKey]grantRecoveryRetry)
 	}
 	now := time.Now()
 	interval := 15 * time.Second
@@ -124,14 +151,14 @@ func (l *lane) reconcileUnpublishedGrants() error {
 			return journal.ErrScope
 		}
 		live[key] = true
-		if queued >= 4 || now.Sub(l.grantRecoverySent[key]) < interval {
+		if queued >= 4 || !l.grantRecoverySent[key].due(g, now, interval) {
 			continue
 		}
 		offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: g.Limit.Bytes, Messages: g.Limit.Messages}}
 		if err = l.controlSend(wire.GrantRecovery{Offer: offer}); err != nil {
 			return err
 		}
-		l.grantRecoverySent[key] = now
+		l.grantRecoverySent[key] = l.grantRecoverySent[key].sentFor(g, now)
 		queued++
 	}
 	for key := range l.grantRecoverySent {

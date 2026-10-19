@@ -301,6 +301,11 @@ func (s *Store) write(fn func(*bolt.Tx) error) error {
 	defer s.mu.Unlock()
 	return s.writeLocked(fn)
 }
+
+// errNoChange rolls back a fully validated, read-only transaction. Callers must
+// never return it after mutating durable state or cached authorization.
+var errNoChange = errors.New("JOURNAL_NO_CHANGE")
+
 func (s *Store) writeLocked(fn func(*bolt.Tx) error) error {
 	if s.closed || s.poisoned {
 		return ErrPoisoned
@@ -315,6 +320,10 @@ func (s *Store) writeLocked(fn func(*bolt.Tx) error) error {
 		}
 		return nil
 	})
+	if errors.Is(err, errNoChange) {
+		s.metrics.noop.Add(1)
+		return nil
+	}
 	if err == nil && s.afterCommit != nil {
 		err = s.afterCommit()
 	}

@@ -389,6 +389,7 @@ func (s *Store) ObserveMany(run uint64, proofs []ObservedAttempt) error {
 			account, folder string
 			location        Location
 		}
+		changed := false
 		seen := map[locator]bool{}
 		refs := map[AttemptRef]bool{}
 		for i, proof := range proofs {
@@ -416,10 +417,17 @@ func (s *Store) ObserveMany(run uint64, proofs []ObservedAttempt) error {
 			if a.Location.UIDValidity == evidence.Location.UIDValidity && a.Location.UID != evidence.Location.UID {
 				return ErrState
 			}
+			if a.State == Committed && a.Location == evidence.Location {
+				continue // full proof validation above is still mandatory
+			}
+			changed = true
 			a.State, a.Location = Committed, evidence.Location
 			if e = putJSON(tx.Bucket(attemptBucket), ref.ID, a); e != nil {
 				return e
 			}
+		}
+		if !changed {
+			return errNoChange
 		}
 		return nil
 	})
