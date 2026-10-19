@@ -13,7 +13,7 @@ import (
 // Recovery fast batches are bounded to four <=8 KiB DATA records plus
 // authenticated envelope/MIME overhead. Keep space for a following fast grant
 // instead of tying up a full maximum bulk BODY for a few short requests.
-const recoveryFastLeaseBytes = 128 << 10
+const recoveryFastLeaseBytes = dataBatchMIMEHardCap / 2
 
 // Called under localGrantMu. Historical debt may predate the current directional
 // shares and is not a live grant for this carrier. Keep every byte/message
@@ -81,7 +81,7 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	// This is a partition of genuinely unused quota, never a release of spent
 	// attempts. Preserve at least one complete BODY per remaining bulk lease.
 	if availableMessages > remaining {
-		availableMessages -= min(uint64(1), availableMessages-remaining)
+		availableMessages -= min(uint64(2), availableMessages-remaining)
 	}
 	if availableBytes > remaining*dataBatchMIMEHardCap {
 		availableBytes -= min(uint64(recoveryFastLeaseBytes), availableBytes-remaining*dataBatchMIMEHardCap)

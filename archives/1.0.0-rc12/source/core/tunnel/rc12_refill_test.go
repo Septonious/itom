@@ -46,6 +46,7 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 	defer w.Close()
 	var fast wire.StorageGrant
 	var physicalBodies [][]byte
+	var lastStatus wire.CleanupStatus
 	bulk := map[wire.QuotaKey]journal.Grant{}
 	for len(l.urgentQueue) > 0 {
 		c, err := wire.DecodeControl((<-l.urgentQueue).Frame)
@@ -83,9 +84,24 @@ func TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion(t *testing.T) {
 			t.Fatal(err)
 		}
 		physicalBodies = append(physicalBodies, physicalBody)
-		if _, err = s.ApplyRemote(u.ID, s.Run(), report); err != nil {
+		if lastStatus, err = s.ApplyRemote(u.ID, s.Run(), report); err != nil {
 			t.Fatal(err)
 		}
+	}
+	// All message permissions are spent already. A replacement must pipeline
+	// from the durable report while the old grant is still open and charged.
+	if err = l.publishCleanup(lastStatus); err != nil {
+		t.Fatal(err)
+	}
+	if l.issued[fast.Key] {
+		t.Fatal("fully spent fast grant still counted usable before fence")
+	}
+	if f, b := l.issuedGrantCounts(); f != 1 || b != 2 {
+		t.Fatal("replacement did not pipeline before fence", f, b)
+	}
+	beforeFence, err := s.GetGrant(journal.GrantRef{Store: fast.Key.Store, ID: fast.Key.Grant, Scope: journal.Scope{Account: a.ID, User: u.ID, Session: fast.Key.Session}})
+	if err != nil || beforeFence.Closed || beforeFence.Released != (pool.Amount{}) {
+		t.Fatal("pipeline changed open physical debt", beforeFence, err)
 	}
 	release, err := w.Fence(fast.Key)
 	if err != nil {
