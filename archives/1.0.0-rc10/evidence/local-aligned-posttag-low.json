@@ -1,0 +1,8 @@
+{
+  "qualified": false,
+  "evidence": [
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=1 overlap=1 max_ms=559 timeouts=1 missed=0 failure=final probe user=1 index=2 status=timeout: read pipe: i/o timeout",
+    "supervised_load_test.go:257: cold startup failed final probe user=1 index=2 status=timeout: read pipe: i/o timeout samples 1 timeouts 1 missed 0",
+    "--- FAIL: TestTransportReworkQualification (31.20s)"
+  ]
+}
