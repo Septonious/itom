@@ -1823,8 +1823,10 @@ func (l *lane) AdmitBatch(jobs []*datapath.Job) datapath.BatchAdmission {
 			break
 		}
 	}
+	l.diag.profileHandoff(jobs)
 	admissionStarted := time.Now()
 	reservation, admissionErr := l.stripe.reserveDeliveryBatch(l.logicalContext(), jobs)
+	l.diag.profileObserve(profileAdmission, profileClass(jobs), time.Since(admissionStarted), admissionErr != nil && !errors.Is(admissionErr, errDeliveryDeferred) && !errors.Is(admissionErr, errDeliveryStopped), errors.Is(admissionErr, errDeliveryDeferred))
 	// A deferred DATA member is a normal flow-control event. During busy TCP
 	// multiplexing it can occur hundreds of times per second. Trace a sampled
 	// aggregate instead of serializing every retry into the ring buffer.
@@ -1873,7 +1875,9 @@ func (l *lane) AdmitBatch(jobs []*datapath.Job) datapath.BatchAdmission {
 func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryReservation, fastBatch bool) (results []datapath.Completion) {
 	defer func() { reservation.finish(jobs, results) }()
 	if !fastBatch {
+		preparationStarted := time.Now()
 		release, err := l.AcquireBulkPreparation(l.logicalContext())
+		l.diag.profileObserve(profilePreparation, profileClass(jobs), time.Since(preparationStarted), err != nil, false)
 		if err != nil {
 			return failBatch(jobs, nil, err)
 		}
@@ -1959,6 +1963,7 @@ func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryRes
 		// retry round-robin selection instead of waiting behind maintenance.
 		runtime.Gosched()
 	}
+	l.diag.profileObserve(profileSelection, profileClass(jobs), time.Since(selectStarted), err != nil, false)
 	l.recordGrantSelectWait(selectStarted, fastBatch)
 	l.traceBatchStage("stripe_select_wait", selectStarted, errorCode(err), map[string]any{"fast": fastBatch})
 	if err != nil {
@@ -1969,10 +1974,17 @@ func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryRes
 	}
 	if l.diag != nil && l.diag.tracer != nil {
 		details, _ := json.Marshal(map[string]any{
-			"owner_account":  l.account.ID,
-			"target_account": target.account.ID,
-			"records":        len(jobs),
-			"remote":         target != l,
+			"owner_account":           l.account.ID,
+			"target_account":          target.account.ID,
+			"records":                 len(jobs),
+			"remote":                  target != l,
+			"class":                   profileClasses[profileClass(jobs)],
+			"first_stream":            jobs[0].Attempt().Stream,
+			"first_offset":            jobs[0].Attempt().Offset,
+			"first_attempt":           jobs[0].Attempt().ID,
+			"grant_select_us":         time.Since(selectStarted).Microseconds(),
+			"target_control_queue":    len(target.controlQueue) + len(target.urgentQueue),
+			"target_unreceived_bytes": target.unreceivedLocalBytes.Load(),
 		})
 		l.diag.trace(traceEvent{Event: "stripe_select", Details: details})
 	}
@@ -2058,6 +2070,34 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 			break
 		}
 	}
+	var span *profileBatchTimeline
+	classIndex := profileClass(jobs)
+	if l.diag.profileEnabled() {
+		span = &profileBatchTimeline{Owner: owner.account.ID, Class: profileClasses[classIndex], Records: len(jobs), FirstStream: jobs[0].Attempt().Stream, FirstOffset: jobs[0].Attempt().Offset}
+		defer func() { l.diag.profileBatchDone(started, jobs, results, span) }()
+	}
+	mark := func(stage int, begin time.Time, err error) {
+		if span == nil {
+			return
+		}
+		elapsed := time.Since(begin)
+		l.diag.profileObserve(stage, classIndex, elapsed, err != nil, false)
+		us := elapsed.Microseconds()
+		switch stage {
+		case profileSeal:
+			span.SealPackUS += us
+		case profileGrant:
+			span.GrantUS += us
+		case profileSlot:
+			span.SlotUS += us
+		case profilePrepare, profileSpend:
+			span.DurableUS += us
+		case profileAppend:
+			span.AppendUS += us
+		case profileComplete:
+			span.FinalizeUS += us
+		}
+	}
 	results = make([]datapath.Completion, 0, len(jobs))
 	packets := make([][]byte, 0, len(jobs))
 	counters := make([]uint64, 0, len(jobs))
@@ -2083,6 +2123,10 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		return failBatch(jobs, results, err)
 	}
 	body, err := wire.PackDataBatch(batch, packets)
+	mark(profileSeal, started, err)
+	if span != nil {
+		span.Batch = batch
+	}
 	folder := l.nextDataFolder()
 	if fastBatch && l.dataShards > 0 {
 		folder = l.sendFolder
@@ -2094,6 +2138,9 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 	payloadBytes := int64(0)
 	for _, job := range jobs {
 		payloadBytes += int64(job.Attempt().PayloadBytes)
+	}
+	if span != nil {
+		span.PayloadBytes = payloadBytes
 	}
 	if l.diag != nil {
 		l.diag.mu.Lock()
@@ -2141,6 +2188,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		} else {
 			g, grantErr = l.waitLocalGrantContextClass(opCtx, encoded, fastBatch)
 		}
+		mark(profileGrant, grantStarted, grantErr)
 		l.recordDataWait(grantStarted, fastBatch, true)
 		l.traceBatchStage("data_batch_grant", grantStarted, errorCode(grantErr), map[string]any{"records": len(jobs), "encoded_bytes": encoded})
 		if grantErr != nil {
@@ -2174,7 +2222,9 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		// Reserve actual service before transferring durable writer permission.
 		// Preparation + Start is one fsynced transaction; no APPEND is possible
 		// until it returns success, and an unknown commit reply stays charged.
+		slotStarted := time.Now()
 		lease, slotErr := acquireSlot(opCtx, fastBatch)
+		mark(profileSlot, slotStarted, slotErr)
 		if slotErr != nil {
 			clear(mime)
 			cleanupErr := l.data.CloseGrant(g.Ref)
@@ -2188,6 +2238,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		}
 		prepareStarted := time.Now()
 		a, prepErr := l.data.PrepareStarted(g.Ref, folder, physical, encoded, physicalBody)
+		mark(profilePrepare, prepareStarted, prepErr)
 		l.traceBatchStage("data_journal_prepare_start", prepareStarted, errorCode(prepErr), map[string]any{"encoded_bytes": encoded})
 		if prepErr != nil {
 			lease.release()
@@ -2206,6 +2257,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		}
 		appendStarted := time.Now()
 		appendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
+		mark(profileAppend, appendStarted, appendErr)
 		l.observeDataServiceClass(len(mime), time.Since(appendStarted), appendErr == nil, fastBatch)
 		lease.release()
 		l.traceBatchStage("data_batch_append", appendStarted, errorCode(appendErr), map[string]any{"records": len(jobs), "encoded_bytes": encoded, "direction": "s2c"})
@@ -2218,6 +2270,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		}
 		completeStarted := time.Now()
 		storeErr := l.data.CompleteAndClose(a.Ref, journalOutcome)
+		mark(profileComplete, completeStarted, storeErr)
 		l.traceBatchStage("data_journal_complete_close", completeStarted, errorCode(storeErr), nil)
 		if storeErr == nil {
 			reservedLocal = nil
@@ -2250,6 +2303,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 	} else {
 		key, grantErr = l.takeRemoteGrantContext(opCtx, fastBatch)
 	}
+	mark(profileGrant, grantStarted, grantErr)
 	l.recordDataWait(grantStarted, fastBatch, false)
 	class := "bulk"
 	if fastBatch {
@@ -2264,7 +2318,9 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 	var physicalBody []byte
 	for {
 		var slotErr error
+		slotStarted := time.Now()
 		lease, slotErr = acquireSlot(opCtx, fastBatch)
+		mark(profileSlot, slotStarted, slotErr)
 		if slotErr != nil {
 			returnErr := l.returnUnusedRemoteGrant(key)
 			return l.retryBeforeAppend(owner, jobs, results, slotErr, returnErr)
@@ -2276,6 +2332,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		} else {
 			usage, physicalBody, spendErr = l.wallet.Spend(key, folder, body, canonicalDataSize)
 		}
+		mark(profileSpend, spendStarted, spendErr)
 		// Spending failure on a full cumulative lease is an expected, atomic
 		// rollover event under MULTI load, not evidence of corrupt accounting.
 		// Sample it instead of writing potentially thousands of JSON events and
@@ -2358,6 +2415,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 		owner.stripe.expectFastResponseOn(owner, l)
 	}
 	appendErr := appendData(opCtx, l.mail, folder, mime, fastBatch)
+	mark(profileAppend, appendStarted, appendErr)
 	l.observeDataServiceClass(len(mime), time.Since(appendStarted), appendErr == nil, fastBatch)
 	lease.release()
 	l.traceBatchStage("data_batch_append", appendStarted, errorCode(appendErr), map[string]any{"records": len(jobs), "encoded_bytes": len(mime), "direction": "c2s"})
@@ -2372,11 +2430,13 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 	// Only descriptor enqueue may be retried after early backpressure. APPEND
 	// remains one-shot, including an unknown physical completion.
 	var bookErr error
+	finalizeStarted := time.Now()
 	if earlyUsage {
 		bookErr = l.finishRemoteUsage(key, usage.Total)
 	} else {
 		bookErr = l.publishRemoteUsage(key, usage)
 	}
+	mark(profileComplete, finalizeStarted, bookErr)
 	combined := errors.Join(appendErr, bookErr)
 	nonFatalUnknown := appendErr != nil && bookErr == nil
 	for i := range results {

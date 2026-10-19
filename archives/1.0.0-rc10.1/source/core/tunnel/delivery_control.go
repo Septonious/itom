@@ -43,6 +43,7 @@ func (e *deliveryDeferredError) Unwrap() error { return errDeliveryDeferred }
 
 type deliveryKey struct{ stream, offset uint64 }
 type deliveryRange struct {
+	profile           *diagnostic // observation only; logical owner, not quota authority
 	key               deliveryKey
 	start, end        uint64
 	fast              bool
@@ -227,6 +228,17 @@ func (d *deliveryController) progress(stream, frontier uint64, now time.Time) {
 		r.start += n
 		if r.start == r.end {
 			residence := max(time.Duration(0), now.Sub(r.admitted))
+			class := profileBulk
+			if r.fast {
+				class = profileFast
+			}
+			if r.repaired {
+				class = profileRepair
+			}
+			r.profile.profileObserve(profileACK, class, residence, false, false)
+			if !r.accepted.IsZero() && !now.Before(r.accepted) {
+				r.profile.profileObserve(profilePublishedACK, class, now.Sub(r.accepted), false, false)
+			}
 			// Only signed logical ACKs create carrier samples. Repair and unknown
 			// attempts and retirement neither prove delivery nor refund journal debt.
 			if r.carrier != "" && !r.accepted.IsZero() && r.flightAtAdmission > 0 {
@@ -601,6 +613,9 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 				}
 			}
 			for _, r := range entries {
+				if owner := g.owners[r.key.stream]; owner != nil && owner.diag.profileEnabled() {
+					r.profile = owner.diag
+				}
 				r.isolatedFast = w.fast && !w.repair && d.bulk == 0
 				r.unloadedFast = r.isolatedFast && d.fast == 0 && newBytes <= 8<<10 && len(entries) == 1
 				if !w.fast && !w.repair {
@@ -937,6 +952,8 @@ func (d *deliveryController) deferAcceptedRepair(stream, start, end uint64, now 
 // Preserve the diagnostic DTO name for existing Android readers. Removed
 // controller fields stay zero; Mode and flight counters describe the new path.
 type latencyGovernorSnapshot struct {
+	OldestFastRangeAgeMS                                                                       int64
+	UnconfirmedPublicationRanges, RepairedRanges                                               int
 	Mode                                                                                       string
 	BaselineMS, TargetMS, ObservedRTTMS                                                        int64
 	OldestBulkRangeAgeMS                                                                       int64
@@ -978,7 +995,21 @@ func (g *stripeGroup) deliverySnapshotLocked() latencyGovernorSnapshot {
 	if !d.lastBulkACKAt.IsZero() {
 		bulkSince = max(int64(0), time.Since(d.lastBulkACKAt).Milliseconds())
 	}
-	return latencyGovernorSnapshot{Mode: string(d.policy.mode), BaselineMS: d.baselineMS, TargetMS: d.targetAge().Milliseconds(),
+	var fastAge int64
+	var unconfirmed, repaired int
+	now := time.Now()
+	for _, r := range d.ranges {
+		if r.fast {
+			fastAge = max(fastAge, max(int64(0), now.Sub(r.admitted).Milliseconds()))
+		}
+		if r.accepted.IsZero() {
+			unconfirmed++
+		}
+		if r.repaired {
+			repaired++
+		}
+	}
+	return latencyGovernorSnapshot{OldestFastRangeAgeMS: fastAge, UnconfirmedPublicationRanges: unconfirmed, RepairedRanges: repaired, Mode: string(d.policy.mode), BaselineMS: d.baselineMS, TargetMS: d.targetAge().Milliseconds(),
 		LastBulkACKAgeMS: d.lastBulkACKAgeMS, LastBulkACKSinceMS: bulkSince,
 		AcknowledgementFloorMS: d.acknowledgementFloor().Milliseconds(), LastFastACKAgeMS: d.lastFastACKAgeMS,
 		FastPathBaselineMS: d.fastPathBaseline().Milliseconds(), FastTargetMS: d.fastAgeBudget().Milliseconds(), PendingShortRangesByAccount: short,

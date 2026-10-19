@@ -1,3 +1,25 @@
-# RC10.1 latency profiler
+# ITOM 1.0.0 RC10.1 — diagnostic field-test build
 
-Work in progress. Forked from the exact packaged RC10 source. No controller, batching, routing, quota, journal or recovery tuning is authorized as part of this diagnostic increment.
+Baseline: the packaged RC10 source (build bfde1250bce0788a55ed99cdd5cb2ecdc5bcade0). No transport policy, scheduling thresholds, framing, mailbox topology, quota, journal schema, accounting, recovery or package identity changes. Existing incomplete RC10 qualification remains incomplete; this is a requested diagnostic test package, not a newly qualified stable release.
+
+## Available in the existing Android/server diagnostics exports
+
+Each account's `LineDiagnostic.LatencyProfile` contains fixed-size cumulative histograms of local stage durations, with count, errors, normal flow-control deferrals, mean, exact maximum and estimated p50/p95/p99 upper bounds, all in microseconds. Histogram bounds and complete bucket counts are exported so accounts can be aggregated by summing compatible buckets rather than averaging percentiles. Measurements survive trace rotation (in memory); they reset on process restart. They are enabled with the existing trace diagnostics, and disabled when diagnostics are off or the trace cannot be opened. No new user setting is required.
+
+Stages: Pump handoff, logical delivery admission, bulk preparation permit, account/grant selection, grant wait, physical APPEND slot, sealing/packing, durable journal preparation, wallet spend, DATA APPEND, final accounting, physical batch total, authenticated logical DATA ACK, accepted-publication-to-ACK, empty/data FETCH, first BODY, receive callback and reader wake. Traffic classes are bulk, interactive, repair and other. Mixed/control FETCH cannot identify its DATA traffic class before decrypting; it is explicitly `other`, not guessed to be interactive.
+
+`latency_batch` trace events correlate sampled physical batches with class, owner and physical account, first stream/offset and opaque batch ID. They expose local stage durations and unknown-APPEND outcomes. The existing `stripe_select` event now includes first stream/offset/attempt, class, selection duration and target backlog. Added `mono_us` is endpoint process-relative event emission time; retrospective FETCH `time` may describe an earlier start, so use `duration_us` for operation durations.
+
+Detailed new summaries are capped at four per second per account. Normal sub-100ms successful batches are sampled 1/64; slower/error batches are eligible within the same cap. Histograms observe every instrumented stage completion, including unsuccessful operations and admission deferrals. `summaries` counts attempted emitted summaries, `suppressed_summaries` counts rate-limited eligible summaries; ordinary sampling is not a trace drop. Existing trace drop/write error counters remain authoritative for missing disk evidence.
+
+## Interpretation and limits
+
+- Histograms count stage observations, not unique TCP requests. Pump handoff is the oldest member's time from its current immutable Pump handoff to collector admission; it does not include the earlier application/credit wait, and retries are separate observations. It is not the old worker-entry `PumpQueueWaitMS` metric.
+- Account selection includes grant reservation and any durable work needed there. Physical batch timing begins after selection, includes its local stages, and excludes the previous Pump/admission/selection waits. The sampled timeline's grant/slot/durable/APPEND/finalize fields accumulate retries where applicable; they are not a complete nonoverlapping decomposition of application RTT. Do not add per-stage percentiles.
+- APPEND is the whole adapter call, including local service admission and provider response. It is not a measurement of pure network RTT. FETCH totals include callback/backpressure; first-BODY and callback totals expose the distinction, but subtracting callbacks does not prove provider latency.
+- DATA ACK counts only fully acknowledged original logical ranges. Partial and duplicate ACKs are not new samples. Repair-tainted ranges have a separate class. Retirement is not delivery. Publication-to-ACK is recorded only when a successful publication completion was observed before that ACK; it can be absent for legitimate early delivery and does not cover unknown outcomes.
+- Completed samples alone cannot expose a permanently stuck operation. Existing scheduler phase/frontier/queue snapshots and outstanding delivery ranges must be inspected too. Governor snapshots now also include oldest short-range age, count of ranges without confirmed publication and repair-tainted ranges. An unconfirmed publication count also includes work not yet sent; it is not an unknown-APPEND count.
+- Never subtract phone/server wall clocks to infer one-way delivery. Use local monotonic durations and authenticated stream/offset/counter/batch metadata to correlate endpoints. No plaintext, target addresses, credentials or provider response text are added by this profiler.
+- Bucket percentiles are bounded approximations, not exact quantiles. The final bucket is unbounded (`-1`); percentile upper estimates are capped by the exact observed maximum. Exported per-stage maxima remain exact to integer-microsecond resolution.
+
+Install the APK and server binary together, retain account data, identity, wallets and journals, perform normal SINGLE/MULTI tests, then export both endpoint diagnostics. Do not clear state for profiling.

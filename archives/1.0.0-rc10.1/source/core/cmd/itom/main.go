@@ -17,7 +17,7 @@ import (
 	"runtime"
 )
 
-const revision = "itom-1-0-0-rc10"
+const revision = "itom-1-0-0-rc10-1"
 
 func run(args []string) error {
 	command := "menu"

@@ -19,32 +19,33 @@ import (
 
 // No hostnames, target domains, mailbox names, keys or credentials are logged.
 type LineDiagnostic struct {
-	Scheduler                                              datapath.SchedulerSnapshot
-	RTTSampleAgeMS, RTTSmoothedMillis, RTTIdleMillis       int64
-	RTTFresh                                               bool
-	RTTSampleKind                                          string
-	UploadBytes, DownloadBytes                             uint64
-	TCPStreams                                             int
-	IMAPLatencyMillis                                      int64
-	ControlSuppressed                                      uint64
-	DataCommits, ControlCommits                            journal.CommitSnapshot
-	ReaderRepairs                                          uint64
-	DataFetchPolls, DataEmptyFetchPolls, DataFetchMessages uint64
-	DataIdleWaits, DataIdleNotifies                        uint64
+	LatencyProfile                                                                                    *latencyProfileSnapshot `json:",omitempty"`
+	Scheduler                                                                                         datapath.SchedulerSnapshot
+	RTTSampleAgeMS, RTTSmoothedMillis, RTTIdleMillis                                                  int64
+	RTTFresh                                                                                          bool
+	RTTSampleKind                                                                                     string
+	UploadBytes, DownloadBytes                                                                        uint64
+	TCPStreams                                                                                        int
+	IMAPLatencyMillis                                                                                 int64
+	ControlSuppressed                                                                                 uint64
+	DataCommits, ControlCommits                                                                       journal.CommitSnapshot
+	ReaderRepairs                                                                                     uint64
+	DataFetchPolls, DataEmptyFetchPolls, DataFetchMessages                                            uint64
+	DataIdleWaits, DataIdleNotifies                                                                   uint64
 	DataReceiveLatencyMillis, DataFetchCallbackTotalMS, DataFetchCallbackMaxMS, DataFetchPayloadBytes int64
-	DataLimitBytes, DataLimitMessages                      uint64
-	BulkBatchTargetBytes                                   uint64
-	GrantWaitReason                                        string
-	DeferredAdmissions                                     uint64
-	Ready                                                  bool
-	InitialReadyMS                                         int64 // Latest connection attempt: start through authenticated application readiness.
-	Extended                                               bool
-	ActiveLines, TotalLines                                int
-	ReadinessReason                                        string
+	DataLimitBytes, DataLimitMessages                                                                 uint64
+	BulkBatchTargetBytes                                                                              uint64
+	GrantWaitReason                                                                                   string
+	DeferredAdmissions                                                                                uint64
+	Ready                                                                                             bool
+	InitialReadyMS                                                                                    int64 // Latest connection attempt: start through authenticated application readiness.
+	Extended                                                                                          bool
+	ActiveLines, TotalLines                                                                           int
+	ReadinessReason                                                                                   string
 
 	ReaderHandoffs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           int64
 	LatencyGovernor                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          latencyGovernorSnapshot
-	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, CachedDataDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         int
+	PendingRetirements, AvailableGrants, IssuedGrants, PendingDescriptors, CachedDataDescriptors, RemoteGC, Obsolete, Known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  int
 	IOConnections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            int
 	ReaderIdle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               bool
 	LastOrigin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               string
@@ -59,6 +60,7 @@ type LineDiagnostic struct {
 	LastOperationMS, MaxOperationMS, Operations, RXAgeMS, RTTMillis                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          int64
 }
 type diagnostic struct {
+	profile             latencyProfile
 	metricsOnly         bool
 	tracer              *traceLog
 	account, user, side string
@@ -120,7 +122,15 @@ func errorCode(err error) string {
 	}
 	return "IO_OR_PROTOCOL_ERROR"
 }
-func (d *diagnostic) snapshot() LineDiagnostic { d.mu.Lock(); defer d.mu.Unlock(); return d.line }
+func (d *diagnostic) snapshot() LineDiagnostic {
+	d.mu.Lock()
+	s := d.line
+	d.mu.Unlock()
+	if d.profileEnabled() {
+		s.LatencyProfile = d.profile.snapshot()
+	}
+	return s
+}
 func (d *diagnostic) event(text string) {
 	d.trace(traceEvent{Event: "lifecycle", Name: text})
 	if d != nil && d.log != nil {
@@ -199,6 +209,9 @@ func (l *lane) health() {
 	s := d.line
 	d.mu.Unlock()
 	if emit {
+		if d.profileEnabled() {
+			s.LatencyProfile = d.profile.snapshot()
+		}
 		status := traceStatus{}
 		if d.tracer != nil {
 			status = d.tracer.status()
@@ -272,6 +285,16 @@ func (m *observedMail) operation(name string, fn func(uint64) error) error {
 	m.d.trace(traceEvent{Event: "imap_begin", Name: name, Operation: id})
 	start := time.Now()
 	e := fn(id)
+	stage := profileControl
+	if name == "append_data" {
+		stage = profileAppend
+	} else if name == "ensure" {
+		stage = profileMaintenance
+	}
+	// DATA APPEND is measured with its true traffic class by the batch writer.
+	if name != "append_data" {
+		m.d.profileObserve(stage, profileOther, time.Since(start), e != nil, false)
+	}
 	detail := mailbox.ScopeDetail(e)
 	var traceDetails json.RawMessage
 	if m.d.tracer != nil {
@@ -467,6 +490,7 @@ func (m *observedMail) pageObserved(c context.Context, f string, p mailbox.Curso
 	if m.d != nil && m.d.tracer != nil {
 		if reporter, ok := m.Transport.(interface{ ReaderWakeToFetchDelay() time.Duration }); ok {
 			if gap := reporter.ReaderWakeToFetchDelay(); gap >= 200*time.Millisecond {
+				m.d.profileObserve(profileReaderWake, profileOther, gap, false, false)
 				m.d.trace(traceEvent{Event: "reader_wake_to_fetch", DurationUS: gap.Microseconds()})
 			}
 		}
@@ -485,19 +509,31 @@ func (m *observedMail) pageObserved(c context.Context, f string, p mailbox.Curso
 	binaryReader, hasBinaryReader := m.Transport.(interface{ ReaderBinaryFetchEnabled() bool })
 	wasBinary := hasBinaryReader && binaryReader.ReaderBinaryFetchEnabled()
 	streamed := false
+	profileRows := 0
+	var profileFirst, profileCallbacks time.Duration
+	profileEmit := func(row mailbox.Message) error {
+		profileRows++
+		if profileRows == 1 {
+			profileFirst = time.Since(start)
+		}
+		callbackStart := time.Now()
+		err := emit(row)
+		profileCallbacks += time.Since(callbackStart)
+		return err
+	}
 	if reader, ok := m.Transport.(interface {
 		PageStream(context.Context, string, mailbox.Cursor, func(mailbox.Message) error) ([]mailbox.Message, mailbox.Cursor, error)
 	}); ok && emit != nil {
 		streamed = true
 		rows, next, e = reader.PageStream(c, f, p, func(row mailbox.Message) error {
 			m.d.packet("packet_rx", id, row)
-			return emit(row)
+			return profileEmit(row)
 		})
 	} else {
 		rows, next, e = m.Transport.Page(c, f, p)
 		if emit != nil && e == nil {
 			for _, row := range rows {
-				if e = emit(row); e != nil {
+				if e = profileEmit(row); e != nil {
 					break
 				}
 			}
@@ -507,6 +543,18 @@ func (m *observedMail) pageObserved(c context.Context, f string, p mailbox.Curso
 		m.d.event("event=fetch_capability binary=false fallback=true")
 	}
 	elapsed := time.Since(start)
+	if !streamed && emit == nil {
+		profileRows = len(rows)
+	}
+	stage := profileFetchEmpty
+	if profileRows > 0 {
+		stage = profileFetchData
+	}
+	m.d.profileObserve(stage, profileOther, elapsed, e != nil, false)
+	if profileRows > 0 && emit != nil {
+		m.d.profileObserve(profileFirstBody, profileOther, profileFirst, false, false)
+		m.d.profileObserve(profileCallback, profileOther, profileCallbacks, e != nil, false)
+	}
 	var handoffs uint64
 	if stats, ok := m.Transport.(interface{ ReaderHandoffs() uint64 }); ok {
 		handoffs = stats.ReaderHandoffs()

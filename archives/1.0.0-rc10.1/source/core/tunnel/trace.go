@@ -27,6 +27,7 @@ type traceEvent struct {
 	Run        string          `json:"run"`
 	Seq        uint64          `json:"seq"`
 	Time       string          `json:"time"`
+	MonoUS     int64           `json:"mono_us,omitempty"`
 	Event      string          `json:"event"`
 	Account    string          `json:"account,omitempty"`
 	User       string          `json:"user,omitempty"`
@@ -106,6 +107,7 @@ func (t *traceLog) emit(e traceEvent) {
 		t.dropped.Add(1)
 		return
 	}
+	e.MonoUS = time.Since(profileEpoch).Microseconds()
 	e.Run = t.runID
 	e.Seq = t.seq.Add(1)
 	if e.Time == "" {

@@ -356,6 +356,15 @@ func (l *lane) readDataObserved(io *laneMail, folder string, cursor mailbox.Curs
 		return emit(row)
 	})
 	elapsed := time.Since(start)
+	stage := profileFetchEmpty
+	if rows > 0 {
+		stage = profileFetchData
+	}
+	d.profileObserve(stage, profileBulk, elapsed, err != nil, false)
+	if rows > 0 {
+		d.profileObserve(profileFirstBody, profileBulk, firstBody, false, false)
+		d.profileObserve(profileCallback, profileBulk, callbackWait, err != nil, false)
+	}
 	d.mu.Lock()
 	d.line.DataFetchPolls++
 	d.line.DataFetchMessages += uint64(rows)
