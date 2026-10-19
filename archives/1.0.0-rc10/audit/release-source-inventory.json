@@ -15,7 +15,7 @@
         "RC8": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734",
         "RC9": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734"
       },
-      "rc10_sha256": "3ddead4e75dc483d9ee3cbcaa3c40d2b77b5fef69f4798ecbd2f645897e3aad2",
+      "rc10_sha256": "8954b2d79d7d77c8f3684b30b6a981791fe5749a10a6bf10cb441460d07e4515",
       "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
@@ -31,7 +31,7 @@
         "RC8": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e",
         "RC9": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e"
       },
-      "rc10_sha256": "e5921ae5d0a65fab3218ed36d91db591ea68729723b1a054c17c3e8eeae17776",
+      "rc10_sha256": "68170b5e0da21cdde165a4d40de47a210e7a2134bfd8aca4ce83132e176cb31f",
       "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
@@ -248,8 +248,8 @@
         "RC8": "32b6e7414b379f4a96dcff608fd7b41541428121d11019aa8798d62491959b97",
         "RC9": "dc4824c9d54bedfe54e9205ead81aff005c13a6813fb2ea0696b19af2a782968"
       },
-      "rc10_sha256": "554c35d7751859981a0a9fd98d3a0c55627e1f4cca20cbc73f9f47fcdb2bc2b2",
-      "decision": "Only authenticated physical-to-ACK diagnostic fields; original RC2 seed, floor, windows, escape and growth unchanged."
+      "rc10_sha256": "6e2ef28241204120d0df209fad83fa2f22dbc5be6c6c75a0e53243aefb881d0f",
+      "decision": "RC2 policy and outputs retained; bounded feedback sample copies remove allocation, with equivalence tests. Existing additive diagnostics retained."
     },
     {
       "path": "core/tunnel/delivery_policy.go",
@@ -1366,6 +1366,12 @@
       "category": "documentation-or-fixture",
       "rc10_sha256": "558de4eff904cbae5ece61d42354a6c6863097452ebcba1356b76944d10b66a3",
       "decision": "Healthy-server endpoint reference only; no production transport policy change."
+    },
+    {
+      "path": "core/tunnel/rc10_feedback_allocation_test.go",
+      "category": "documentation-or-fixture",
+      "rc10_sha256": "a01cff56b08006f59d9a4eda50520c2b135ccadab1f7f26856c1884e406741ff",
+      "decision": "Exact RC2 feedback equivalence, immutable sample rings, zero allocation and isolated microbenchmark."
     }
   ]
 }

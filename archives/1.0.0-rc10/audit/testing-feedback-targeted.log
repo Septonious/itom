@@ -1,0 +1,56 @@
+=== RUN   TestHealthyServerClientInterruptionPreservesTCP
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:47: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=40 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=2 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 handling IDLE command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:17 handling IDLE command: io: read/write on closed pipe
+2026/10/19 11:06:17 failed to read command: io: read/write on closed pipe
+2026/10/19 11:06:22 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:22 failed to read command: io: read/write on closed pipe
+2026/10/19 11:06:23 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:23 failed to read command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=127303c442f7babe2e921d148520ba9b generation=477201050434428135 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=127303c442f7babe2e921d148520ba9b generation=477201050434428135 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=127303c442f7babe2e921d148520ba9b generation=477201050434428135 epoch=3
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=127303c442f7babe2e921d148520ba9b generation=477201050434428135 epoch=3
+    supervisor_fixture_test.go:254: supervisor_summary accounts=2 dial_attempts=38 dial_denied=0 target_tcp_dials=1 provider={HealthyEndpoints:true ClientMbps:600 ServerMbps:1000 ClientRTTMS:40 ServerRTTMS:20 Active:12 DownAccounts:0 Accepted:42 Dropped:0 UplinkBytes:583778 DownlinkBytes:879488 Mbps:0}
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 11:06:28 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestHealthyServerClientInterruptionPreservesTCP (17.51s)
+=== RUN   TestRC10FeedbackQuartilesPreserveRC2PolicyAndSampleRings
+--- PASS: TestRC10FeedbackQuartilesPreserveRC2PolicyAndSampleRings (0.00s)
+=== RUN   TestRC10FeedbackQuartilesDoNotAllocateWhileHoldingGroupMutex
+--- PASS: TestRC10FeedbackQuartilesDoNotAllocateWhileHoldingGroupMutex (0.00s)
+=== RUN   TestRC2BulkFeedbackEscapesStalledAffinity
+--- PASS: TestRC2BulkFeedbackEscapesStalledAffinity (0.00s)
+=== RUN   TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion
+--- PASS: TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion (0.00s)
+=== RUN   TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt
+--- PASS: TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt (0.00s)
+PASS
+ok  	itom.local/core/tunnel	17.555s

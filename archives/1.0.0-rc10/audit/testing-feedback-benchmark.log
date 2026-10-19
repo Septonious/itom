@@ -1,0 +1,10 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/tunnel
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10FeedbackQuartiles/RC2-copy-and-reflect-sort-2         	  311408	      1631 ns/op	     304 B/op	       6 allocs/op
+BenchmarkRC10FeedbackQuartiles/RC2-copy-and-reflect-sort-2         	  674030	      1585 ns/op	     304 B/op	       6 allocs/op
+BenchmarkRC10FeedbackQuartiles/bounded-stack-copy-2                	 1889852	       302.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRC10FeedbackQuartiles/bounded-stack-copy-2                	 2084886	       257.4 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	itom.local/core/tunnel	2.762s

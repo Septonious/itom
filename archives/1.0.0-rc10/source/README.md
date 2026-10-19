@@ -26,7 +26,7 @@ python3 tools/build.py server --expect-revision itom-1-0-0-rc10
 python3 tools/build.py android --expect-revision itom-1-0-0-rc10 --accept-android-licenses
 ```
 
-These builds verify source/runtime/native/APK identities and include their own checks. Successful compilation alone does not certify transport performance. CI packages only after its required gates pass. Real-device/provider measurements remain separate from synthetic qualification.
+These builds verify source/runtime/native/APK identities and include their own checks. Successful compilation alone does not certify transport performance. The qualification workflow packages only after all its required gates pass. A separate explicitly requested field-test workflow builds after source, safety, Android tests and lint, and labels unresolved performance qualification in TESTING_NOTES.txt. Real-device/provider measurements remain separate from synthetic qualification.
 
 ## Server and admin
 
@@ -35,3 +35,9 @@ The binary opens the manager menu without arguments. `version` prints its revisi
 The app's authenticated admin UI retains categorized server management and a 60-second rollback for reversible actions. Destructive mailbox purges, uninstall and full account reset remain CLI-only. Individual client messages override the global message; updating the global message clears individual overrides. Minecraft-style color codes are supported. The dark UI and single diagnostics export progress indicator remain selected.
 
 Configuration, journals, keys and private diagnostic captures are not project-release assets. Historical evidence remains available in the repository archives; it is not evidence that the current candidate passed.
+
+## Requested RC10 field-test package
+
+The user explicitly requested an APK and server binaries for testing after reviewing the paired RC2 comparison. This build retains the RC2 controller parameters and removes allocations from bounded latency-feedback quartiles using stack copies. Sample selection, caps and outputs are unchanged; equivalence and zero-allocation checks pass. This is a small CPU/GC improvement, not proof that RTT spikes are fixed.
+
+Prior paired normal load cases passed for both RC2 and RC10, while both failed low-capacity ramps and the100ms-client upload/tail floor. Those failures remain open and thresholds remain unchanged. A testing package is not a qualified stable release. The package includes exact source, Linuxamd64/arm64 binaries, an Androiddebug APK with both ARM ABIs, signer metadata and checksums. Installed-certificate compatibility has not been established; preserve all private state.

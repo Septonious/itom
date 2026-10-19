@@ -21,3 +21,9 @@ The unchanged CI floor is 75.000 Mbps in both directions over full and trailing 
 Fresh and retained journals must both pass. Keep historical reservations charged, including after app reinstall or lost client wallet. Source, Go vet, targeted functional/race checks, Android domain/app tests, lint, JNI/APK identity and exact binary revision precede packaging. Preserve and compare the installed APK certificate; signing-secret names were requested but no prior key has been confirmed. Do not clear state to install an APK with a different signer.
 
 The prior combined-model source checkpoint passed core correctness/recovery/race and some SINGLE runs but failed retained tails and low-capacity startup. Those historical results do not certify the new profile. Record the actual new workflow commit and complete results before packaging.
+
+## Explicit field-test build request
+
+After the paired comparison, the user requested development and packaging RC10 for testing. The separate `itom-rc10-field-test-build.yml` requires source/vet, focused core/proof/recovery/race checks and the unchanged Android SDK/app/domain/lint/JNI gates, then creates a testing package. The strict release-qualification workflow is unchanged and may remain red; no test failure is converted into a pass. The packaged notes state the unresolved low-capacity and100ms-client throughput issues.
+
+Selected final optimization: feedback quartiles copy their bounded8/16-element rings to the stack and use typed sort. The original RC2 quartile indices, sample eligibility, caps, thresholds and dynamic controller decisions are unchanged. Exhaustive counts plus deterministic sample permutations compare to the former implementation, check rings are unchanged and require zero allocations. Serial benchmark:304bytes/6allocations→0 for the pair of feedback reads, about1.6us→0.26–0.30us locally. This does not establish an end-to-end RTT improvement.

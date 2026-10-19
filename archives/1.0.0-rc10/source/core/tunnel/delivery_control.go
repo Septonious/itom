@@ -3,6 +3,7 @@ package tunnel
 import (
 	"context"
 	"errors"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -415,9 +416,11 @@ func (d *deliveryController) acknowledgementFloor() time.Duration {
 	if d.lowFlightCount < 4 {
 		return 0
 	}
-	values := append([]time.Duration(nil), d.lowFlightAges[:d.lowFlightCount]...)
-	sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
-	return min(values[(len(values)-1)/4], 2*time.Second)
+	// These bounded samples are read under the group mutex on the admission
+	// path. Sort a stack copy; neither allocate nor mutate the sample ring.
+	values := d.lowFlightAges
+	slices.Sort(values[:d.lowFlightCount])
+	return min(values[(d.lowFlightCount-1)/4], 2*time.Second)
 }
 func (d *deliveryController) invalidateRepairFloor(stream, start, end uint64) {
 	for _, r := range d.ranges {
@@ -1009,9 +1012,9 @@ func (d *deliveryController) fastPathBaseline() time.Duration {
 	if d.fastBaselineCount < 4 {
 		return 0
 	}
-	values := append([]time.Duration(nil), d.fastBaselineAges[:d.fastBaselineCount]...)
-	sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+	values := d.fastBaselineAges
+	slices.Sort(values[:d.fastBaselineCount])
 	// The unloaded upper quartile includes ordinary radio jitter. Loaded or
 	// repaired ranges never contribute, and the observation is capped at 2s.
-	return min(2*time.Second, values[(len(values)-1)*3/4])
+	return min(2*time.Second, values[(d.fastBaselineCount-1)*3/4])
 }
