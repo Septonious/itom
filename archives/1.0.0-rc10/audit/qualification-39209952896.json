@@ -1,0 +1,147 @@
+{
+  "run": 39209952896,
+  "commit": "4c56511",
+  "source_tree": "8deb4a90d94b535e1383be8f4a01bf4533d4f21c",
+  "result": "not qualified; builds correctly skipped",
+  "jobs": [
+    {
+      "id": 117920893797,
+      "name": "Go source integrity, latency selection and account recovery",
+      "conclusion": "success",
+      "evidence": [
+        "2026-10-19T06:27:54.6327925Z ok  \titom.local/core/journal\t0.460s",
+        "2026-10-19T06:27:54.7331620Z ok  \titom.local/core/wallet\t0.072s",
+        "2026-10-19T06:27:57.8924464Z ok  \titom.local/core/datapath\t1.241s",
+        "2026-10-19T06:29:40.3356389Z ok  \titom.local/core/tunnel\t89.707s",
+        "2026-10-19T06:29:57.2596983Z ok  \titom.local/core/journal\t3.169s",
+        "2026-10-19T06:29:57.2597833Z ok  \titom.local/core/wallet\t1.023s",
+        "2026-10-19T06:30:10.2987048Z ok  \titom.local/core/datapath\t1.302s",
+        "2026-10-19T06:30:20.5173024Z ok  \titom.local/core/tunnel\t7.024s"
+      ]
+    },
+    {
+      "id": 117920893926,
+      "name": "1 streams, retained=0, two 60s rounds",
+      "conclusion": "success",
+      "evidence": [
+        "2026-10-19T06:28:50.5959336Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=157.557 download_mbps=79.465 rtt_samples=30 p50_ms=278 p95_ms=360 max_ms=367 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:28:50.6041251Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=77.568410 max_rtt_ns=367065085 accepted=true field_qualified=false",
+        "2026-10-19T06:29:52.8608526Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=161.664 download_mbps=76.231 rtt_samples=30 p50_ms=289 p95_ms=354 max_ms=444 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:52.8713094Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=75.025613 max_rtt_ns=444535129 accepted=true field_qualified=false",
+        "2026-10-19T06:30:02.2608959Z ok  \titom.local/core/tunnel\t143.579s"
+      ]
+    },
+    {
+      "id": 117920893958,
+      "name": "startup-ramp (start20, 32, 20:10,50:10,150:40, 1, 0, 1)",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:28:35.3302280Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=16500 upload_mbps=8.309 download_mbps=6.990 rtt_samples=7 p50_ms=785 p95_ms=1428 max_ms=1428 timeouts=1 missed=0 overlap=7 failure=probe user=1 index=8 status=timeout: read pipe: i/o timeout",
+        "2026-10-19T06:28:35.3854150Z --- FAIL: TestTransportReworkQualification (46.06s)"
+      ]
+    },
+    {
+      "id": 117920893962,
+      "name": "32 streams, retained=0, two 60s rounds",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:29:17.1016942Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=135.070 download_mbps=77.372 rtt_samples=30 p50_ms=299 p95_ms=394 max_ms=414 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:17.1396519Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=77.349956 max_rtt_ns=414162521 accepted=true field_qualified=false",
+        "2026-10-19T06:30:19.4316961Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=152.367 download_mbps=74.222 rtt_samples=30 p50_ms=292 p95_ms=370 max_ms=373 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:30:19.4639868Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=74.221705 max_rtt_ns=373178260 accepted=false field_qualified=false",
+        "2026-10-19T06:30:28.6980820Z --- FAIL: TestTransportReworkQualification (161.11s)"
+      ]
+    },
+    {
+      "id": 117920894007,
+      "name": "4 streams, retained=1, two 60s rounds",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:29:14.6287439Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=87.202 download_mbps=73.457 rtt_samples=30 p50_ms=290 p95_ms=393 max_ms=422 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:14.6474924Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=72.089600 max_rtt_ns=422237965 accepted=false field_qualified=false",
+        "2026-10-19T06:30:16.9006222Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=86.324 download_mbps=71.369 rtt_samples=30 p50_ms=282 p95_ms=361 max_ms=419 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:30:16.9242014Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=69.494374 max_rtt_ns=419160319 accepted=false field_qualified=false",
+        "2026-10-19T06:30:26.0902489Z --- FAIL: TestTransportReworkQualification (144.48s)"
+      ]
+    },
+    {
+      "id": 117920894024,
+      "name": "startup-ramp (start10, 32, 10:10,20:10,50:10,150:30, 1, 0, 1)",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:28:14.2079761Z     supervised_load_test.go:257: cold startup failed probe user=1 index=2 status=timeout: read pipe: i/o timeout samples 1 timeouts 1 missed 0",
+        "2026-10-19T06:28:14.4116207Z --- FAIL: TestTransportReworkQualification (28.90s)"
+      ]
+    },
+    {
+      "id": 117920894032,
+      "name": "4 streams, retained=0, two 60s rounds",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:28:50.0698617Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=159.082 download_mbps=76.415 rtt_samples=30 p50_ms=293 p95_ms=406 max_ms=464 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:28:50.0798613Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=74.108109 max_rtt_ns=464193360 accepted=false field_qualified=false",
+        "2026-10-19T06:29:52.2864466Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=160.642 download_mbps=74.108 rtt_samples=30 p50_ms=267 p95_ms=332 max_ms=556 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:52.2962657Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=73.915870 max_rtt_ns=556226083 accepted=false field_qualified=false",
+        "2026-10-19T06:30:01.8333079Z --- FAIL: TestTransportReworkQualification (145.66s)"
+      ]
+    },
+    {
+      "id": 117920894056,
+      "name": "32 streams, retained=1, two 60s rounds",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:29:04.7172643Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=86.599 download_mbps=68.948 rtt_samples=30 p50_ms=293 p95_ms=403 max_ms=407 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:04.7304269Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=68.769109 max_rtt_ns=407667520 accepted=false field_qualified=false",
+        "2026-10-19T06:30:06.9623250Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=85.948 download_mbps=67.524 rtt_samples=30 p50_ms=273 p95_ms=381 max_ms=453 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:30:06.9789541Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=65.640858 max_rtt_ns=453900977 accepted=false field_qualified=false",
+        "2026-10-19T06:30:16.5847512Z --- FAIL: TestTransportReworkQualification (160.71s)"
+      ]
+    },
+    {
+      "id": 117920894141,
+      "name": "1 streams, retained=1, two 60s rounds",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:28:56.8859579Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=86.927 download_mbps=75.698 rtt_samples=30 p50_ms=265 p95_ms=375 max_ms=447 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:28:56.9023666Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=74.684826 max_rtt_ns=447212449 accepted=false field_qualified=false",
+        "2026-10-19T06:29:59.2102425Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=85.752 download_mbps=74.300 rtt_samples=30 p50_ms=282 p95_ms=380 max_ms=453 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:59.2336465Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=73.819750 max_rtt_ns=453338666 accepted=false field_qualified=false",
+        "2026-10-19T06:30:08.4477662Z --- FAIL: TestTransportReworkQualification (143.38s)"
+      ]
+    },
+    {
+      "id": 117920894204,
+      "name": "startup-ramp (single, 1, 0, 1, 0)",
+      "conclusion": "success",
+      "evidence": [
+        "2026-10-19T06:29:06.3350481Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=154.866 download_mbps=76.668 rtt_samples=30 p50_ms=284 p95_ms=418 max_ms=541 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:29:06.3506200Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=76.414976 max_rtt_ns=541315826 accepted=true field_qualified=false",
+        "2026-10-19T06:29:15.7107272Z ok  \titom.local/core/tunnel\t81.214s"
+      ]
+    },
+    {
+      "id": 117922012142,
+      "name": "Build Android APK, SDK tests, lint and JNI",
+      "conclusion": "skipped",
+      "evidence": []
+    },
+    {
+      "id": 117922012348,
+      "name": "Package executable RC10 source",
+      "conclusion": "skipped",
+      "evidence": []
+    },
+    {
+      "id": 117922012673,
+      "name": "Build Linux amd64 and arm64",
+      "conclusion": "skipped",
+      "evidence": []
+    },
+    {
+      "id": 117922012912,
+      "name": "Assemble verified files; testing only, no release tag",
+      "conclusion": "skipped",
+      "evidence": []
+    }
+  ]
+}

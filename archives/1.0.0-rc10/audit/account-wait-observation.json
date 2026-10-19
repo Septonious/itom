@@ -1,0 +1,14 @@
+{
+  "kind": "observer-only diagnostic; not qualification",
+  "configuration": "selected source + wait counters; original account cap7/classes, cold10Mbps,32streams",
+  "result_lines": [
+    "    supervised_load_test.go:273: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=891 timeouts=0 missed=0 failure=<nil>",
+    "    supervised_load_test.go:359: supervised_result round=1 measured_ms=2511 upload_mbps=1.566 download_mbps=2.401 rtt_samples=0 p50_ms=0 p95_ms=0 max_ms=0 timeouts=1 missed=0 overlap=0 failure=probe user=1 index=1 status=timeout: read pipe: i/o timeout",
+    "    supervised_load_test.go:214: diagnostic_only_account_admission class=0 count=324 waits_ge10ms=0 max_wait_ms=2.576",
+    "    supervised_load_test.go:214: diagnostic_only_account_admission class=1 count=341 waits_ge10ms=0 max_wait_ms=1.287",
+    "    supervised_load_test.go:214: diagnostic_only_account_admission class=2 count=105 waits_ge10ms=0 max_wait_ms=2.286",
+    "    supervised_load_test.go:214: diagnostic_only_account_admission class=3 count=78 waits_ge10ms=0 max_wait_ms=0.003",
+    "    supervised_load_test.go:214: diagnostic_only_account_admission class=4 count=327 waits_ge10ms=1 max_wait_ms=95.037"
+  ],
+  "decision": "Reject account command-gate saturation hypothesis for this failure. Urgent max2.576ms, no urgent waits>=10ms; timeout1500ms. No cap/scheduler change."
+}
