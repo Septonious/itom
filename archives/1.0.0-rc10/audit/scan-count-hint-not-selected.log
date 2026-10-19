@@ -1,0 +1,21 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedScanPage/0-2  	  379906	      1425 ns/op	     528 B/op	       9 allocs/op
+BenchmarkRC10OwnedScanPage/0-2  	  427682	      1285 ns/op	     528 B/op	       9 allocs/op
+BenchmarkRC10OwnedScanPage/8-2  	    5497	    115279 ns/op	   16533 B/op	      99 allocs/op
+BenchmarkRC10OwnedScanPage/8-2  	    5670	    143466 ns/op	   16534 B/op	      99 allocs/op
+BenchmarkRC10OwnedScanPage/32-2 	    1162	    575211 ns/op	   62231 B/op	     364 allocs/op
+BenchmarkRC10OwnedScanPage/32-2 	     711	    926658 ns/op	   61682 B/op	     363 allocs/op
+BenchmarkRC10OwnedScanPage/256-2         	     100	   6817364 ns/op	  486731 B/op	    2828 allocs/op
+BenchmarkRC10OwnedScanPage/256-2         	     141	   5403300 ns/op	  486186 B/op	    2827 allocs/op
+BenchmarkRC10OwnedGrantPage/0-2          	  264181	      1917 ns/op	     560 B/op	      10 allocs/op
+BenchmarkRC10OwnedGrantPage/0-2          	  406114	      1757 ns/op	     560 B/op	      10 allocs/op
+BenchmarkRC10OwnedGrantPage/8-2          	    5512	    125627 ns/op	   15205 B/op	      99 allocs/op
+BenchmarkRC10OwnedGrantPage/8-2          	    4984	    138753 ns/op	   15208 B/op	      99 allocs/op
+BenchmarkRC10OwnedGrantPage/32-2         	    1550	    502001 ns/op	   59507 B/op	     364 allocs/op
+BenchmarkRC10OwnedGrantPage/32-2         	    1502	    354616 ns/op	   59498 B/op	     364 allocs/op
+BenchmarkRC10OwnedGrantPage/256-2        	     213	   2781592 ns/op	  469898 B/op	    2828 allocs/op
+BenchmarkRC10OwnedGrantPage/256-2        	     100	  10159246 ns/op	  469842 B/op	    2828 allocs/op
+PASS

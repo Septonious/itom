@@ -14,10 +14,6 @@
       "sha256": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50"
     },
     {
-      "path": "core/journal/ledger.go",
-      "sha256": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534"
-    },
-    {
       "path": "core/journal/model.go",
       "sha256": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532"
     },
@@ -268,6 +264,14 @@
     {
       "path": "android/domain/src/main/kotlin/org/itom/domain/VaultMigration.kt",
       "sha256": "c72ad63300ff60da5c318c0871f327ec38142ed8e2226df92a1231f6d13267e5"
+    }
+  ],
+  "reviewed_exceptions": [
+    {
+      "path": "core/journal/ledger.go",
+      "baseline_sha256": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534",
+      "rc10_sha256": "0270cd49ed33ddbfd0deb92fed1fb16a6da19e88a6bae172f90f66884856809d",
+      "scope": "Only owned ScanAttempts/ScanGrants slice preallocation changes; transaction, decode, cursor, bounds, write/proof/quota routines unchanged."
     }
   ]
 }

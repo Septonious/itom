@@ -1,0 +1,35 @@
+{
+  "run": 39209203584,
+  "decision": "defer honest-floor controller; no consistent no-regression performance win",
+  "jobs": [
+    {
+      "id": 117918599324,
+      "name": "useful-fixed8-control",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:22:53.3640882Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=79.561 download_mbps=75.170 rtt_samples=30 p50_ms=319 p95_ms=423 max_ms=427 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:22:53.3973387Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=74.545015 max_rtt_ns=427247272 accepted=false field_qualified=false",
+        "2026-10-19T06:23:02.5246169Z --- FAIL: TestTransportReworkQualification (97.68s)"
+      ]
+    },
+    {
+      "id": 117918599604,
+      "name": "honest-floor-early10",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:21:53.4456362Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=4500 upload_mbps=3.611 download_mbps=2.679 rtt_samples=1 p50_ms=1277 p95_ms=1277 max_ms=1277 timeouts=1 missed=0 overlap=1 failure=probe user=1 index=2 status=timeout: read pipe: i/o timeout",
+        "2026-10-19T06:21:53.5058969Z --- FAIL: TestTransportReworkQualification (34.78s)"
+      ]
+    },
+    {
+      "id": 117918599606,
+      "name": "honest-floor-retained32",
+      "conclusion": "failure",
+      "evidence": [
+        "2026-10-19T06:22:57.1041233Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=80.662 download_mbps=74.475 rtt_samples=30 p50_ms=301 p95_ms=437 max_ms=438 timeouts=0 missed=0 overlap=30 failure=<nil>",
+        "2026-10-19T06:22:57.1337713Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=73.828489 max_rtt_ns=438222221 accepted=false field_qualified=false",
+        "2026-10-19T06:23:06.7096141Z --- FAIL: TestTransportReworkQualification (98.48s)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedGrantPage/256-2         	     480	   2525914 ns/op	  469742 B/op	    2825 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedGrantPage/256-2         	     427	   2669496 ns/op	  469784 B/op	    2825 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedGrantPage/256-2         	     506	   3329262 ns/op	  469721 B/op	    2825 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: itom.local/core/journal
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRC10OwnedGrantPage/256-2         	     478	   2663182 ns/op	  469676 B/op	    2825 allocs/op
+PASS

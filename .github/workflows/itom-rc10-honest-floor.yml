@@ -1,8 +1,5 @@
 name: RC10 reject loaded latency calibration
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-honest-floor.yml", "archives/1.0.0-rc10/experiments/honest_floor.py"]
   workflow_dispatch:
 permissions:
   contents: read

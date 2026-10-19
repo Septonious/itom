@@ -1,10 +1,10 @@
 # RC10 selection status
 
-Candidate source remains `05383c2` (source tree `ad90d1a900b7914ffce9bdc8482de1150fc21847`). It is exact RC2 transport policy plus the separately reviewed descriptor, cleanup-proof, observation, UI and identity fixes in `SELECTION.md`. No later transport experiment has been integrated or packaged.
+Candidate source now adds the measured exact scan preallocation to checkpoint `05383c2`. Transport window, seed, routing, batching, polling and recovery policy remain RC2. The only new source hunk is the owned scan allocation; reviewed accounting/proof writes are unchanged. No controller or framing experiment has been integrated or packaged.
 
 ## Retained for further comparison, not release-qualified
 
-- Exact-sized journal scan allocations: same immutable transaction, bounded cursor and owned rows. Serial empty/sparse scan measurements improve time and allocation; full-page cost still needs measurement.
+- Integrated exact-sized journal scan allocations: same immutable transaction, bounded cursor and owned rows. Serial empty/sparse scans reduce allocation; full-page attempt/grant results and interleaved noisy grant repeats are retained. No blanket CPU-speed claim is made.
 - Fixed 8 MiB hinted cleanup command bound: original proof/accounting and 32-UID bound. Some retained32 rounds pass unchanged throughput/tail/RTT gates; repeats still fail, so this is promising rather than certified.
 - Skip speculative DATA cleanup only when no obsolete local ref or historical debt exists, with the required idle FIFO/ownership correction. No active cleaner is cancelled and no missing proof refunds debt.
 
@@ -30,3 +30,9 @@ Prefix variant rejected too: GitHub39208684384 failed long-blackout recovery bef
 Exact journal scan full-page check (two serial repeats, no local load/compiler overlap):256rows baseline4.252/3.707ms vs exact3.211/3.620ms, same~486KiB allocation; empty18.938–22.487us vs1.079–1.083us,49,568→416bytes;8rows153.096–155.999us vs113.444–130.531us,63,231→15,844–15,845bytes.32rows baseline535.531–635.262us vs392.687–510.346us,104,191–104,202→61,545–61,553bytes. Retain the exact-allocation patch. This does not replace end-to-end qualification.
 
 Next isolated calibration test keeps all original RC2 framing, seed, growth, recovery and independent-stream discovery. Track peak outstanding logical flight during each original range's ACK residence, and exclude congestion/recovery/outage samples from unloaded-floor training. This corrects classification of observations, not ACK or quota authority. No shorter RTT target or extra retransmission is introduced.
+
+Counter-hint allocation alternative is NOT selected: focused semantic tests pass, but it adds metadata lookups and allocations and has no established advantage over exact same-snapshot counting. Counter contents never controlled enumeration even in that experiment. Keep the simpler exact allocation variant. All journal tests pass on actual selected source (0.110s). Full main qualification is required after this source checkpoint; no build exemption.
+
+Selected source tree: `8deb4a90d94b535e1383be8f4a01bf4533d4f21c`.
+
+Honest-floor run39209203584 deferred: retained32 80.662/74.475Mbps, minimum73.828489, max438.222ms; matched control79.561/75.170Mbps, minimum74.545015, max427.247ms. Early10 timed out measured probe2 (first1277ms). Correctness tests passed15.527s, but the isolated controller still did not demonstrate an improvement without regression.

@@ -115,6 +115,15 @@
       "decision": "Retarget native/server/Android identity to RC10; no runtime policy change."
     },
     {
+      "path": "core/journal/ledger.go",
+      "category": "selected-allocation-only",
+      "sha256": {
+        "RC2": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534"
+      },
+      "rc10_sha256": "0270cd49ed33ddbfd0deb92fed1fb16a6da19e88a6bae172f90f66884856809d",
+      "decision": "Keep exact bounded scan preallocation from same immutable read transaction. All journal tests pass; empty/sparse allocation gains, full page benchmark evidence retained; no changes to write/proof/quota behavior."
+    },
+    {
       "path": "core/mailbox/idle_ahead_test.go",
       "category": "tests",
       "sha256": {

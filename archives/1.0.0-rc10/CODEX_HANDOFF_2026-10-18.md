@@ -160,3 +160,14 @@ New short_recovery.py keeps ORIGINAL RC2 windows, seeds, bulk batching, receive 
 New datapath test confirms timer-only cannot copy, NACK-before250ms stays deferred, bulk grace stays1750ms, logical36KiB remains charged, and rapid polling stops after4s. Tunnel tests cover alternate STATUS routing, last-resort fallback, no credit changes and bulk floor isolation. Existing unknown-write, reply-affinity, delayed BODY/reader restart and independent-stream checks pass: datapath0.018s,tunnel14.745s. Main datapathed implementation is unchanged; added test only.
 
 Local short-recovery early10 active at checkpoint (/workspace/work/rc10/short-recovery-lab/archives/1.0.0-rc10/source/core; logshort-recovery-low.log). New short-recovery workflow compares retained32/early10 plus matched fixed8control. All strict checks unchanged, logs only. FETCH-floor experiment trigger retired. Candidate SOURCE still exactly05383c2; no APK/binary built. Signing-secret-name clarification remains pending; don't print credentials. Keep working from pushed branch, do not promote any failed test.
+
+
+## Selected allocation checkpoint and rejected latest cohorts
+
+See audit/CURRENT_SELECTION.md for current selection, and experiment-39207637183,39208362158,39208684384,39209203584.json for completed results. Short recovery, full/prefix quantum and honest-floor controller are NOT integrated. The narrowed quantum also failed long-blackout TCP continuity, so no further tuning of that bundle is selected.
+
+Actual candidate source now contains exact bounded ScanAttempts/ScanGrants preallocation in one immutable existing read transaction. All journal tests pass0.110s on actual source; all prior write/proof/quota/schema behavior remains. Empty/sparse allocations improve; full-page attempt/grant benchmarks plus interleaved noisy grant repeats are retained without a universal CPU-speed claim. Durable counter-hint alternative has no advantage and is not selected; its deliberate malformed-counter tests never filter rows.
+
+Selected source tree is `8deb4a90d94b535e1383be8f4a01bf4533d4f21c`. Protected equivalence now records ledger.go as an explicit allocation-only reviewed exception; other protected files retain exact baseline hashes. Source inventory and selected patch are updated. Source controls remain RC2, with previously reviewed fixes. The unchanged full qualification auto-runs from this source checkpoint; don't build or package on failed gates. All experimental workflows now manual-only to avoid repeating rejected cohorts.
+
+Signing-secret-name question remains unanswered. No RC10 APK or binary built. Continue comparing isolated changes; do not restore rejected framing/controller bundles. Local performance sessions all finished. Exact benchmark binary /workspace/work/rc10/scan-full-exact.test; original /workspace/work/rc10/scan-full-baseline.test. Avoid local test/compile overlap during measurements.

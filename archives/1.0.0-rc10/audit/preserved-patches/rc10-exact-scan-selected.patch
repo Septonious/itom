@@ -1,0 +1,48 @@
+diff --git a/archives/1.0.0-rc10/source/core/journal/ledger.go b/archives/1.0.0-rc10/source/core/journal/ledger.go
+index 91978f7..58f7953 100644
+--- a/archives/1.0.0-rc10/source/core/journal/ledger.go
++++ b/archives/1.0.0-rc10/source/core/journal/ledger.go
+@@ -580,12 +580,20 @@ func (s *Store) ScanAttempts(after uint64, limit int) ([]Attempt, error) {
+ 	if limit < 1 || limit > 256 {
+ 		return nil, ErrLimit
+ 	}
+-	out := make([]Attempt, 0, limit)
++	out := make([]Attempt, 0)
+ 	err := s.read(func(tx *bolt.Tx) error {
+ 		if after == ^uint64(0) {
+ 			return nil
+ 		}
+ 		c := tx.Bucket(attemptBucket).Cursor()
++		// Both passes share one immutable read transaction and the original
++		// 256-row bound. Empty/sparse journals need not allocate 256 rows on
++		// every health or cleanup scan; full inventories still return owned data.
++		count := 0
++		for k, _ := c.Seek(key(after + 1)); k != nil && count < limit; k, _ = c.Next() {
++			count++
++		}
++		out = make([]Attempt, 0, count)
+ 		for k, v := c.Seek(key(after + 1)); k != nil && len(out) < limit; k, v = c.Next() {
+ 			var a Attempt
+ 			if e := decode(v, &a); e != nil {
+@@ -604,12 +612,20 @@ func (s *Store) ScanGrants(after uint64, limit int) ([]Grant, error) {
+ 	if limit < 1 || limit > 256 {
+ 		return nil, ErrLimit
+ 	}
+-	out := make([]Grant, 0, limit)
++	out := make([]Grant, 0)
+ 	err := s.read(func(tx *bolt.Tx) error {
+ 		if after == ^uint64(0) {
+ 			return nil
+ 		}
+ 		c := tx.Bucket(grantBucket).Cursor()
++		// Both passes share one immutable read transaction and the original
++		// 256-row bound. Empty/sparse journals need not allocate 256 rows on
++		// every health or cleanup scan; full inventories still return owned data.
++		count := 0
++		for k, _ := c.Seek(key(after + 1)); k != nil && count < limit; k, _ = c.Next() {
++			count++
++		}
++		out = make([]Grant, 0, count)
+ 		for k, v := c.Seek(key(after + 1)); k != nil && len(out) < limit; k, v = c.Next() {
+ 			var g Grant
+ 			if e := decode(v, &g); e != nil {
