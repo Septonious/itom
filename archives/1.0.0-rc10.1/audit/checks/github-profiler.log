@@ -1,0 +1,16 @@
+=== RUN   TestRC101ProfileQuantilesAndBoundedClasses
+--- PASS: TestRC101ProfileQuantilesAndBoundedClasses (0.00s)
+=== RUN   TestRC101ProfileDisabledAndConcurrentExport
+--- PASS: TestRC101ProfileDisabledAndConcurrentExport (0.00s)
+=== RUN   TestRC101ProfileACKObservesOnlyAuthenticatedProgress
+--- PASS: TestRC101ProfileACKObservesOnlyAuthenticatedProgress (0.00s)
+=== RUN   TestRC101ProfileSummaryBound
+--- PASS: TestRC101ProfileSummaryBound (0.00s)
+=== RUN   TestObservedReaderDoesNotHideStreamingBehindDiagnostics
+--- PASS: TestObservedReaderDoesNotHideStreamingBehindDiagnostics (0.00s)
+=== RUN   TestTraceCompactPacketMetadataAndBoundedRotation
+--- PASS: TestTraceCompactPacketMetadataAndBoundedRotation (0.00s)
+=== RUN   TestTraceOverflowAndConcurrentClose
+--- PASS: TestTraceOverflowAndConcurrentClose (0.00s)
+PASS
+ok  	itom.local/core/tunnel	0.020s
