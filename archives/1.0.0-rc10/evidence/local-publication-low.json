@@ -1,0 +1,13 @@
+{
+  "qualified": false,
+  "diagnostics": false,
+  "notes": "RC2 BODY/C2S policy, fixed8 + exact scan + corrected skip + early pressure128/256. Local focused delayed/independent recovery and mobile seed invariants passed30.415s. Low profile failed: no integration.",
+  "evidence": [
+    "supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=498 timeouts=0 missed=0 failure=<nil>",
+    "supervised_load_test.go:341: supervised_result round=1 measured_ms=8501 upload_mbps=1.912 download_mbps=2.467 rtt_samples=3 p50_ms=764 p95_ms=929 max_ms=929 timeouts=1 missed=0 overlap=3 failure=probe user=1 index=4 status=timeout: read pipe: i/o timeout",
+    "supervised_load_test.go:365: supervised_delivery side=client state={Mode:CONGESTED BaselineMS:1 TargetMS:800 ObservedRTTMS:2573 OldestBulkRangeAgeMS:3735 AcknowledgementFloorMS:0 LastFastACKAgeMS:535 FastPressureRemainingMS:1933 FastPathBaselineMS:0 FastTargetMS:650 LastBulkACKAgeMS:1990 LastBulkACKSinceMS:5 FastPressureDecisions:23 ProbeAttempts:2 ProbeAccepted:0 ProbeRejected:2 RecoveryAttempts:0 RecoveryAccepted:0 RecoveryRejected:0 FastRampIncreases:0 FastRampRollbacks:0 FastRampActive:false ProbeActive:false BulkLimit:0 BulkInFlight:0 FeedbackSamples:0 MaxCarrierRTTMS:0 FloorBypass:false RateMbps:2.3373868201881867 BulkRateMbps:2.3373868201881867 RateEWMA:3.1051890152655335 RateLimitMbps:0 DecisionCount:118 EmergencyDecisionCount:0 DownloadWindowBytes:65536 DownloadBacklogBytes:753664 DownloadPendingBytes:0 FastFlightBytes:9 FlightRanges:24 AdmissionWaiters:0 PendingShortRangesByAccount:map[a10:1]}",
+    "supervised_load_test.go:374: supervised_delivery side=server state={Mode:CONGESTED BaselineMS:254 TargetMS:800 ObservedRTTMS:2704 OldestBulkRangeAgeMS:2704 AcknowledgementFloorMS:0 LastFastACKAgeMS:993 FastPressureRemainingMS:1934 FastPathBaselineMS:0 FastTargetMS:650 LastBulkACKAgeMS:685 LastBulkACKSinceMS:605 FastPressureDecisions:18 ProbeAttempts:5 ProbeAccepted:3 ProbeRejected:2 RecoveryAttempts:0 RecoveryAccepted:0 RecoveryRejected:0 FastRampIncreases:0 FastRampRollbacks:0 FastRampActive:false ProbeActive:false BulkLimit:0 BulkInFlight:0 FeedbackSamples:0 MaxCarrierRTTMS:0 FloorBypass:false RateMbps:1.936480309457186 BulkRateMbps:1.936480309457186 RateEWMA:3.2746917832402094 RateLimitMbps:0 DecisionCount:128 EmergencyDecisionCount:0 DownloadWindowBytes:65536 DownloadBacklogBytes:196608 DownloadPendingBytes:0 FastFlightBytes:9 FlightRanges:7 AdmissionWaiters:0 PendingShortRangesByAccount:map[a10:1]}",
+    "supervised_load_test.go:410: probe user=1 index=4 status=timeout: read pipe: i/o timeout",
+    "--- FAIL: TestTransportReworkQualification (40.65s)"
+  ]
+}
