@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  actions: read
+  actions: write
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -14,23 +14,38 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      BUILD_RUN: "39242364068"
-      BUILD_SHA: "fe59b071a6ec2bf44a5380c782038de2fbfb7653"
+      BUILD_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: fe59b071a6ec2bf44a5380c782038de2fbfb7653
-      - name: Require successful exact-source testing build
+      - name: Supersede only the obsolete unshipped experiment builds
         run: |
           set -euo pipefail
-          actual="$(gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" --jq .head_sha)"
-          test "$actual" = "$BUILD_SHA"
-          gh run watch "$BUILD_RUN" --exit-status --interval 30
+          for obsolete in 39242364068 39242703161; do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$obsolete" --jq .status)"
+            if [ "$state" != completed ]; then
+              gh api -X POST "repos/$GH_REPO/actions/runs/$obsolete/cancel"
+            fi
+          done
+      - name: Require successful exact-source testing build
+        id: require
+        run: |
+          set -euo pipefail
+          build_run=""
+          for attempt in $(seq 1 24); do
+            build_run="$(gh api "repos/$GH_REPO/actions/workflows/itom-rc10-field-test-build.yml/runs?head_sha=$BUILD_SHA&per_page=5" --jq '.workflow_runs[] | select(.head_sha == env.BUILD_SHA) | .id' | head -n 1)"
+            if [ -n "$build_run" ]; then break; fi
+            sleep 5
+          done
+          test -n "$build_run"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$build_run" --jq .head_sha)" = "$BUILD_SHA"
+          echo "run_id=$build_run" >> "$GITHUB_OUTPUT"
+          gh run watch "$build_run" --exit-status --interval 30
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
-          run-id: 39242364068
+          run-id: ${{ steps.require.outputs.run_id }}
           name: ITOM-1.0.0-RC10-field-testing-package
           path: download
       - name: Verify and prepare matched source and binaries
@@ -55,7 +70,7 @@ jobs:
                   assert b'itom-1-0-0-rc10' in z.read(f'lib/{abi}/libgojni.so')
           notes=Path('TESTING_NOTES.txt').read_text()
           assert 'NOT RELEASE QUALIFIED' in notes
-          assert 'Build commit: fe59b071a6ec2bf44a5380c782038de2fbfb7653' in notes
+          assert 'Build commit: ${{ github.sha }}' in notes
           PY
           cd ..
           cp download/ITOM-1.0.0-RC10-field-testing-package.zip release/
@@ -68,7 +83,7 @@ jobs:
 
           - RC2 transport windows, framing, polling and recovery policy retained.
           - Reviewed descriptor/reclaim correctness, metadata allocation, admin UI and identity updates retained.
-          - Bounded feedback quartiles now avoid six allocations per pair of reads; exact RC2 output-equivalence and sample-ring tests pass. No claim that this alone fixes RTT spikes.
+          - Production core exactly matches the checkpoint used in the paired RC2 comparison. The later feedback-allocation experiment is excluded; no new controller tuning is introduced.
           - Core safety/recovery/proof/race, Android tests/lint and JNI/APK identity checks passed for this exact build.
           - Previous paired normal-load cases passed for RC2 and RC10. Low-capacity ramps and100ms-client upload/tail qualification remain unresolved; numerical thresholds are unchanged.
 
@@ -76,7 +91,7 @@ jobs:
 
           APK includes arm64-v8a and armeabi-v7a. Linux binaries include amd64 and arm64. Sources, full development handoff, checksums and testing notes are attached. Real Android/Rambler performance still needs field testing.
 
-          Build source: fe59b071a6ec2bf44a5380c782038de2fbfb7653
+          Build source: ${{ github.sha }}
           NOTES
       - name: Publish testing prerelease without replacing any existing tag or asset
         run: |

@@ -15,7 +15,7 @@
         "RC8": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734",
         "RC9": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734"
       },
-      "rc10_sha256": "8954b2d79d7d77c8f3684b30b6a981791fe5749a10a6bf10cb441460d07e4515",
+      "rc10_sha256": "bfa2ca0afd372640d810588eee3c2fbeeebefb9a6b894847860eededef5b07b1",
       "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
@@ -31,7 +31,7 @@
         "RC8": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e",
         "RC9": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e"
       },
-      "rc10_sha256": "68170b5e0da21cdde165a4d40de47a210e7a2134bfd8aca4ce83132e176cb31f",
+      "rc10_sha256": "72e811d6847e264c966f490240baf4c599d409d649ce758ab4d74e25fc06f2e7",
       "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
@@ -248,8 +248,8 @@
         "RC8": "32b6e7414b379f4a96dcff608fd7b41541428121d11019aa8798d62491959b97",
         "RC9": "dc4824c9d54bedfe54e9205ead81aff005c13a6813fb2ea0696b19af2a782968"
       },
-      "rc10_sha256": "6e2ef28241204120d0df209fad83fa2f22dbc5be6c6c75a0e53243aefb881d0f",
-      "decision": "RC2 policy and outputs retained; bounded feedback sample copies remove allocation, with equivalence tests. Existing additive diagnostics retained."
+      "rc10_sha256": "554c35d7751859981a0a9fd98d3a0c55627e1f4cca20cbc73f9f47fcdb2bc2b2",
+      "decision": "Exact RC2 policy and paired-comparison checkpoint522d7cf. Later feedback-allocation experiment is not selected."
     },
     {
       "path": "core/tunnel/delivery_policy.go",
@@ -792,7 +792,7 @@
         "RC8": "8eb89df19893d0fb80e9c49af4aaf9c2d1084d61499d8e0db188f38c200f59ea",
         "RC9": "7ff79b5fcc73b8933d69773a3058ff18146be11dafd35233e025b5b4487fe2a7"
       },
-      "rc10_sha256": "c5900b0b5faf8b49c8efbff85d69443d3f470b64c65fee10d62b2b9f27e53ec1",
+      "rc10_sha256": "1268ed2ff2608d32d644c0ca1a8ce77d4ac93244b8c848981cf7252485b3a41c",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -808,7 +808,7 @@
         "RC8": "bb838674b3ff60e2b5068ecc6177d4565177dba5a8a0467a754a1135a7fb7a0c",
         "RC9": "45cfbdfecfaa69c4b43588cea73798762e4236fd51035536150afdbabb2f10f8"
       },
-      "rc10_sha256": "182ea1686b21efcec2fa68f58c4b07acb2bae5edc063ff683d2d0e2e13ad6ed1",
+      "rc10_sha256": "f256c5bc5dce55301c8075b21e3fc38bbdb84dff472e69a1798c9a752b9f9218",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -824,7 +824,7 @@
         "RC8": "e48fb987482a2602c8eb71e66441437ac2ce04869dd2b8df8e3cb74d090a6a44",
         "RC9": "ec16df44e61b6368fa19909e244de9e0099856522fe763464efe72b1196f8906"
       },
-      "rc10_sha256": "33a929f687a9d2c8e49c9ef321ec25037a6513c6fce7f64e5ee83fe8af4174ba",
+      "rc10_sha256": "f307d4c26a10cd39583870862bcde53a0d7b1698f994ae5b53b472d778ad2b06",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -1366,12 +1366,6 @@
       "category": "documentation-or-fixture",
       "rc10_sha256": "558de4eff904cbae5ece61d42354a6c6863097452ebcba1356b76944d10b66a3",
       "decision": "Healthy-server endpoint reference only; no production transport policy change."
-    },
-    {
-      "path": "core/tunnel/rc10_feedback_allocation_test.go",
-      "category": "documentation-or-fixture",
-      "rc10_sha256": "a01cff56b08006f59d9a4eda50520c2b135ccadab1f7f26856c1884e406741ff",
-      "decision": "Exact RC2 feedback equivalence, immutable sample rings, zero allocation and isolated microbenchmark."
     }
   ]
 }

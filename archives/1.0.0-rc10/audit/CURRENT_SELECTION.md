@@ -1,6 +1,6 @@
 # RC10 selection status
 
-User explicitly requested a field-test package after reviewing the failures. Testing workflow builds after safety and Android gates; strict release qualification stays unchanged. Bounded feedback quartiles now remove allocations with exact RC2-equivalence tests; no controller policy changes. Packaging is authorized for testing, not certified performance.
+User explicitly requested a field-test package after reviewing the failures. Testing workflow builds after safety and Android gates; strict release qualification stays unchanged. The packaged core is exactly checkpoint522d7cf from the paired comparison. A later feedback-allocation experiment is archived, not selected; no controller policy changes. Packaging is authorized for testing, not certified performance.
 
 Latest paired comparison39239603639: both original RC2 and current RC10 pass all six normal load cases (12 rounds each), while both fail10/20Mbps client ramps and100ms-client upload/tail. Performance differences are mixed, not universal improvement. See `RC2_HEALTHY_COMPARISON.md` and `paired-rc2-rc10-39239603639.json`. The corrected common core rerun39240291399 passes on both versions. No production change is selected from this comparison; packaging stays blocked.
 
