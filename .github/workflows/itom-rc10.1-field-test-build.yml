@@ -1,4 +1,5 @@
 name: RC10.1 requested field-test APK and server binaries
+# Profiler grouping: control APPEND is distinct from GC/inventory operations.
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]

@@ -285,11 +285,12 @@ func (m *observedMail) operation(name string, fn func(uint64) error) error {
 	m.d.trace(traceEvent{Event: "imap_begin", Name: name, Operation: id})
 	start := time.Now()
 	e := fn(id)
-	stage := profileControl
-	if name == "append_data" {
+	stage := profileMaintenance
+	switch name {
+	case "append", "append_control":
+		stage = profileControl
+	case "append_data":
 		stage = profileAppend
-	} else if name == "ensure" {
-		stage = profileMaintenance
 	}
 	// DATA APPEND is measured with its true traffic class by the batch writer.
 	if name != "append_data" {
