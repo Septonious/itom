@@ -1,0 +1,232 @@
+{
+  "revision": "transport-s1-perf5-field18",
+  "source_archive": "ITOM_TRANSPORT_FIELD39_SOURCE.zip",
+  "field_performance_qualified": false,
+  "physical_closure_root_cause_proven": false,
+  "core_gate": {
+    "source_revision": "transport-s1-perf5-field18",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": true,
+    "stage": "complete",
+    "started_utc": "2026-10-06T18:31:33Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "03b927d0c3cc73b793fe1a6dcef561397b254f10bc8850ce78c91190669b7fa8",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 444,
+      "failed": 0,
+      "skipped": 4,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestFieldHTTPSColdStartAndDuplex130"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        }
+      ]
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "race_tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 444,
+      "failed": 0,
+      "skipped": 4,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestFieldHTTPSColdStartAndDuplex130"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        }
+      ]
+    },
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "offline": {
+    "launcher_python_tests_passed": 34,
+    "core_tools_python_tests_passed": 30,
+    "python_files_checked": 8,
+    "xml_files_checked": 11,
+    "kotlin_tests_present_not_executed": 57,
+    "android_compilation_lint_device_executed": false
+  },
+  "native": {
+    "normal": "passed",
+    "race": "passed"
+  },
+  "windows": {
+    "tunnel_test_binary_crosscompiled": true,
+    "runtime_executed": false
+  },
+  "functional_burst": {
+    "https_verified": 65,
+    "canceled_open_sockets": 64,
+    "provider_accounts": 4,
+    "carrier_rebuilds": 0,
+    "status": "passed"
+  },
+  "counterexamples": {
+    "old_FIFO_and_reset_retirement": "expected failure of both regression tests",
+    "old_reattach": "expected failure on late probe"
+  },
+  "model": {
+    "description": "real HTTPS/TCP over production Go supervisors and local TLS/IMAP provider; modeled client access 130Mbps, recorded command latency; installed 8MiB profile; 3 lost startup publications; no real provider or Android TUN",
+    "seconds_per_phase": 30,
+    "tail_seconds": 10,
+    "floor_mbps": 75,
+    "strict_rtt_limit_ms": 1000,
+    "FIELD38": {
+      "phases": {
+        "download": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 0.0,
+          "download_mbps": 71.277,
+          "tail_upload_mbps": 0.0,
+          "tail_download_mbps": 65.326,
+          "max_rtt_ms": 586.0,
+          "failure": "<nil>"
+        },
+        "upload": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 81.814,
+          "download_mbps": 0.0,
+          "tail_upload_mbps": 84.963,
+          "tail_download_mbps": 0.0,
+          "max_rtt_ms": 619.0,
+          "failure": "<nil>"
+        },
+        "duplex": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 76.939,
+          "download_mbps": 81.466,
+          "tail_upload_mbps": 75.865,
+          "tail_download_mbps": 85.486,
+          "max_rtt_ms": 549.0,
+          "failure": "<nil>"
+        }
+      },
+      "passed": false,
+      "provider": "accepted=120 dropped=0 unexpected_carrier_exits=0"
+    },
+    "FIELD39": {
+      "phases": {
+        "download": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 0.0,
+          "download_mbps": 84.531,
+          "tail_upload_mbps": 0.0,
+          "tail_download_mbps": 88.033,
+          "max_rtt_ms": 666.0,
+          "failure": "<nil>"
+        },
+        "upload": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 82.715,
+          "download_mbps": 0.0,
+          "tail_upload_mbps": 83.73,
+          "tail_download_mbps": 0.0,
+          "max_rtt_ms": 480.0,
+          "failure": "<nil>"
+        },
+        "duplex": {
+          "measured_ms": 30000.0,
+          "upload_mbps": 79.629,
+          "download_mbps": 83.587,
+          "tail_upload_mbps": 82.394,
+          "tail_download_mbps": 91.727,
+          "max_rtt_ms": 627.0,
+          "failure": "<nil>"
+        }
+      },
+      "passed": true,
+      "provider": "accepted=120 dropped=0 unexpected_carrier_exits=0"
+    },
+    "speed_tolerance_percent": 10,
+    "floor_reduced_by_tolerance": false,
+    "interpretation": "One sequential run per source; no joint throughput/RTT degradation, but phase RTT varies. Not statistical stability proof or field acceptance."
+  },
+  "not_executed": [
+    "Android compilation, lint and Kotlin tests",
+    "Windows test execution",
+    "real Mail.ru/Rambler or device speedtest",
+    "timed fuzz campaign",
+    "three pre-existing optional production harness/rejoin/survival scenarios"
+  ],
+  "input_trace_analysis": [
+    "field-analysis.json",
+    "client-analysis.json"
+  ]
+}

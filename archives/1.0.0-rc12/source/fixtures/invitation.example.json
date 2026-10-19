@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "profile": {
+    "schema_version": 2,
+    "profile_id": "example",
+    "name": "TEST ONLY - invalid endpoint",
+    "server_id": "11111111111111111111111111111111",
+    "user_id": "12345678",
+    "provider_id": "example",
+    "encryption_key_ref": "keystore:test_pair",
+    "mailbox_namespace": "ITOM/12345678/test_only",
+    "accounts": [
+      {
+        "id": "test_mail",
+        "name": "TEST ONLY",
+        "host": "imap.example.invalid",
+        "port": 993,
+        "tls": "imaps",
+        "verify_certificate": true,
+        "credential_ref": "keystore:test_mail",
+        "enabled": true,
+        "provider_id": "example"
+      }
+    ],
+    "transport_profile": "balanced-lab-v1"
+  },
+  "pair_id": "22222222222222222222222222222222",
+  "psk_base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "credentials": {
+    "keystore:test_mail": {
+      "username": "test@example.invalid",
+      "password": "PUBLIC_TEST_VALUE_DO_NOT_USE"
+    }
+  },
+  "expires_unix_seconds": 2145916800,
+  "wire_version": 1
+}
