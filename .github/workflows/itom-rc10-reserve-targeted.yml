@@ -1,8 +1,5 @@
 name: RC10 aligned quiet reserve with RC2 policy; no artifacts
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: ["archives/1.0.0-rc10/experiments/aligned_reserve.py", ".github/workflows/itom-rc10-reserve-targeted.yml"]
   workflow_dispatch:
 permissions:
   contents: read

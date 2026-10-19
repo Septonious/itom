@@ -1,8 +1,5 @@
 name: RC10 dynamic cleanup service comparison; unchanged gates
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-adaptive-cleanup.yml", "archives/1.0.0-rc10/experiments/adaptive_cleanup.py"]
   workflow_dispatch:
 permissions:
   contents: read

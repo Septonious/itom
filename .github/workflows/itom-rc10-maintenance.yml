@@ -1,8 +1,5 @@
 name: RC10 useful maintenance and short-demand adaptation
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-maintenance.yml", "archives/1.0.0-rc10/experiments/skip_data_scan.py", "archives/1.0.0-rc10/experiments/fast_cleanup.py"]
   workflow_dispatch:
 permissions:
   contents: read

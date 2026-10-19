@@ -1,8 +1,5 @@
 name: RC10 measured service adaptation and allocation comparison
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-dynamic-service.yml", "archives/1.0.0-rc10/experiments/dynamic_service.py", "archives/1.0.0-rc10/experiments/exact_scan.py"]
   workflow_dispatch:
 permissions:
   contents: read

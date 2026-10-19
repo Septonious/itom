@@ -1,8 +1,5 @@
 name: RC10 command-cost and cold-feedback comparison
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-command-cost.yml", "archives/1.0.0-rc10/experiments/selection_cleanup.py", "archives/1.0.0-rc10/experiments/cold_feedback.py"]
   workflow_dispatch:
 permissions:
   contents: read

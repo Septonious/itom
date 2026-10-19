@@ -1,8 +1,5 @@
 name: RC10 pressure drain hysteresis comparison
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-pressure-drain.yml", "archives/1.0.0-rc10/experiments/pressure_hysteresis.py"]
   workflow_dispatch:
 permissions:
   contents: read
