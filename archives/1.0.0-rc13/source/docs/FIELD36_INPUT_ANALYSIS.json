@@ -1,0 +1,167 @@
+{
+  "ITOM_diagnostics_full(20261006-112336)": {
+    "runs": {
+      "1791285555178377544": {
+        "first": "2026-10-06T11:19:15.178401972Z",
+        "last": "2026-10-06T11:20:15.375793251Z",
+        "records": 4144,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {
+          "recovery": 10,
+          "handshake_wait": 10
+        },
+        "reconnect_codes": {},
+        "imap_connected": 10,
+        "packet_rx": 10,
+        "packet_tx_attempt": 189,
+        "initial_failure_seconds": []
+      },
+      "1791285666392104690": {
+        "first": "2026-10-06T11:21:06.392125523Z",
+        "last": "2026-10-06T11:21:30.461708743Z",
+        "records": 1790,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {
+          "recovery": 10,
+          "handshake_wait": 10
+        },
+        "reconnect_codes": {
+          "IMAP_AUTH_OR_GREETING_FAILED": 2
+        },
+        "imap_connected": 10,
+        "packet_rx": 10,
+        "packet_tx_attempt": 66,
+        "initial_failure_seconds": []
+      },
+      "1791285707563409570": {
+        "first": "2026-10-06T11:21:47.563448632Z",
+        "last": "2026-10-06T11:22:16.850937996Z",
+        "records": 1216,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {
+          "recovery": 10,
+          "handshake_wait": 10
+        },
+        "reconnect_codes": {},
+        "imap_connected": 10,
+        "packet_rx": 10,
+        "packet_tx_attempt": 127,
+        "initial_failure_seconds": []
+      }
+    }
+  },
+  "ITOM_server_20261006T112234.079803816Z": {
+    "runs": {
+      "1791217537566675358": {
+        "first": "2026-10-06T00:00:01.840140571Z",
+        "last": "2026-10-06T11:15:48.380195968Z",
+        "records": 22716,
+        "revision": [],
+        "stages": {},
+        "reconnect_codes": {},
+        "imap_connected": 0,
+        "packet_rx": 0,
+        "packet_tx_attempt": 0,
+        "initial_failure_seconds": []
+      },
+      "1791285348412589857": {
+        "first": "2026-10-06T11:15:48.412619358Z",
+        "last": "2026-10-06T11:15:54.717923568Z",
+        "records": 22,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {},
+        "reconnect_codes": {},
+        "imap_connected": 0,
+        "packet_rx": 0,
+        "packet_tx_attempt": 0,
+        "initial_failure_seconds": []
+      },
+      "1791285354740541750": {
+        "first": "2026-10-06T11:15:54.74059308Z",
+        "last": "2026-10-06T11:20:52.634704065Z",
+        "records": 224,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {},
+        "reconnect_codes": {
+          "IMAP_CONNECT_FAILED": 202
+        },
+        "imap_connected": 0,
+        "packet_rx": 0,
+        "packet_tx_attempt": 0,
+        "initial_failure_seconds": [
+          15.000297,
+          15.00008,
+          15.00075,
+          15.000818,
+          15.000777,
+          15.001183,
+          15.00099,
+          15.000874,
+          15.000863,
+          15.000862,
+          15.00093,
+          15.000951,
+          15.000883,
+          15.001041,
+          15.001046,
+          15.001038,
+          15.001117,
+          15.001135,
+          15.001038,
+          15.001052
+        ]
+      },
+      "1791285652669155921": {
+        "first": "2026-10-06T11:20:52.669198132Z",
+        "last": "2026-10-06T11:22:28.205228644Z",
+        "records": 121,
+        "revision": [
+          "transport-s1-perf5-field14"
+        ],
+        "stages": {},
+        "reconnect_codes": {
+          "IMAP_CONNECT_FAILED": 100
+        },
+        "imap_connected": 0,
+        "packet_rx": 0,
+        "packet_tx_attempt": 0,
+        "initial_failure_seconds": [
+          15.000713,
+          15.000251,
+          15.000433,
+          15.000853,
+          15.001224,
+          15.000558,
+          15.000768,
+          15.000671,
+          15.00079,
+          15.000658,
+          15.000692,
+          15.000669,
+          15.000635,
+          15.000947,
+          15.000833,
+          15.000608,
+          15.000933,
+          15.000843,
+          15.000708,
+          15.000869
+        ]
+      }
+    }
+  },
+  "input_sha256": {
+    "ITOM_diagnostics_full(20261006-112336).zip": "f00ea76bf522b34f1a5a7f5e2c59d87bfe97e103d0930d7bc6e8d90b088be613",
+    "ITOM_server_20261006T112234.079803816Z.zip": "0f30ea12e8ecb26b0667078a47d8d567d7a765386ea19a94e302893354c604d9"
+  }
+}

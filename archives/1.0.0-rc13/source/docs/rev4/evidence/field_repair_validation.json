@@ -1,0 +1,368 @@
+{
+  "schema": 1,
+  "classification": "UNSTABLE_FIELD_REPAIR",
+  "all_internal_gates_passed": true,
+  "release_eligible": false,
+  "release_blocker": "Whole-app mobile startup crash has no fatal stack; field cause remains unconfirmed.",
+  "generated_utc": "2026-10-15T03:29:19.778799+00:00",
+  "qualification_source_sha256": "ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8",
+  "first_party_core_runtime_sha256": "dbb3b132068ae47b75c0d45f8a895555785a65b3c7e372c21abccc4b4ee37fe4",
+  "go": "go version go1.27.1 linux/amd64",
+  "core": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 834,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_optional": []
+  },
+  "imap_fork_tests": "passed",
+  "vet": "passed",
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "field_repetitions": [
+    {
+      "repetitions": 3,
+      "cases_per_repetition": 14,
+      "server_commit_delay_ms": 0,
+      "all_passed": true,
+      "required_cases": [
+        "TestRev4FieldSparseUIDHistoryCannotStarveNewDATA",
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue"
+      ],
+      "log_sha256": [
+        "a3b95e8936dbd01d90c2b953c54d121f6e0cac4245799eb38c3dd3a6e83b9507",
+        "6de70418aaa954e82808ee46dd0cf023d76f4ff49eae7b5e4d5c60961fdc951e",
+        "7bbe36079181f5df2d090759edd0e56164957bd4f23612b99e5ab2fef2e03dd4"
+      ]
+    },
+    {
+      "repetitions": 1,
+      "cases_per_repetition": 14,
+      "server_commit_delay_ms": 12,
+      "all_passed": true,
+      "required_cases": [
+        "TestRev4FieldSparseUIDHistoryCannotStarveNewDATA",
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue"
+      ],
+      "log_sha256": [
+        "e1304c439a9a003b26dea8eb3f9123cd15ea938788f821231fc034df56b84b02"
+      ]
+    }
+  ],
+  "race_checks": {
+    "candidate-race-accounting": {
+      "passed_test_events": 314,
+      "failed": 0,
+      "skipped": 0
+    },
+    "candidate-race-recovery": {
+      "passed_test_events": 9,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "android_domain_tests": {
+    "tests": 71,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_callback_adapter_tests": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "errors": 0,
+    "warnings": 1
+  },
+  "android_native_abis": [
+    "android/arm64",
+    "android/arm"
+  ],
+  "speed_criteria": {
+    "nominal_upload_mbps": 100,
+    "nominal_download_mbps": 100,
+    "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+    "tolerance_percent": 10,
+    "useful_upload_mbps_min": 90,
+    "useful_download_mbps_min": 90,
+    "all_loaded_rtt_ns_strictly_below": 1100000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30
+  },
+  "speed_scenario": {
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10,
+    "uid_history": 64
+  },
+  "speed_cases": [
+    {
+      "name": "single-1",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "53a379cb3e2bc5b0785200db2dfb79714bf9bad5553af721043eacf93346eb51",
+      "supervised_result": {
+        "upload_mbps": "148.081",
+        "download_mbps": "96.084",
+        "rtt_samples": "30",
+        "max_ms": "508",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "142.038",
+        "download_mbps": "97.325"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "96.083992",
+        "max_rtt_ns": "508659576",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "single-2",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "02e7c77647c4f2a60cacfe9039949721d0af739f81ee8defde71773f57d5ad86",
+      "supervised_result": {
+        "upload_mbps": "153.529",
+        "download_mbps": "93.821",
+        "rtt_samples": "30",
+        "max_ms": "424",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "158.580",
+        "download_mbps": "91.506"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "91.505732",
+        "max_rtt_ns": "424199884",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "single-3",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "980628d1dc1271e56be4095ffa70b6dd1570d6defdc3b2f8398d843dd2345449",
+      "supervised_result": {
+        "upload_mbps": "151.301",
+        "download_mbps": "96.272",
+        "rtt_samples": "30",
+        "max_ms": "454",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "156.456",
+        "download_mbps": "93.149"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "93.148501",
+        "max_rtt_ns": "454869087",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-1",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "0f9f695d9a61cef11e963bed0737bc1a920d8e036762b6b6278f02a9321bae3b",
+      "supervised_result": {
+        "upload_mbps": "104.277",
+        "download_mbps": "94.896",
+        "rtt_samples": "30",
+        "max_ms": "440",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "104.438",
+        "download_mbps": "94.363"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "94.363102",
+        "max_rtt_ns": "440549651",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-2",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "9f2f6f60b050b62ab79b10e54d5f2c38666ca9726660cac5a939761166e9952d",
+      "supervised_result": {
+        "upload_mbps": "109.782",
+        "download_mbps": "93.599",
+        "rtt_samples": "30",
+        "max_ms": "490",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "107.103",
+        "download_mbps": "95.945"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "93.598515",
+        "max_rtt_ns": "490479323",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-3",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "03d4bfeb3037d0b33f5821f17ebf1db96aeaf3880745dde3a2b27fc8029f23b7",
+      "supervised_result": {
+        "upload_mbps": "105.115",
+        "download_mbps": "97.815",
+        "rtt_samples": "30",
+        "max_ms": "492",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "102.839",
+        "download_mbps": "100.585"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "97.814665",
+        "max_rtt_ns": "492408306",
+        "accepted": "true"
+      }
+    }
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "new_release_published": false,
+  "replacement_assets_published": false,
+  "pipeline_steps": [
+    {
+      "name": "candidate-speed",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 548.276
+    },
+    {
+      "name": "candidate-core-server",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 583.176
+    },
+    {
+      "name": "candidate-field-repeated",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 394.697
+    },
+    {
+      "name": "candidate-field-commit-delay",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 140.934
+    },
+    {
+      "name": "candidate-race-accounting",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 13.848
+    },
+    {
+      "name": "candidate-race-recovery",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 9.258
+    },
+    {
+      "name": "candidate-native-vet",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 2.038
+    },
+    {
+      "name": "candidate-android",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 81.695
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# RC12 follow-up: 20 October 2026 Moscow
+
+Client trace 00:58:02–01:00:06 Moscow; server 00:58:12–01:00:42. The client build is RC12. Accounts a04/a06/a10 repeatedly authenticate but time out in grants, while the other seven carriers stay ready without new reconnects. This matches 14/20 active lanes. Server waiting reason is DATA_BYTE_HEADROOM. Before new fast leases, these accounts retain 10,915,159/154, 10,832,733/161 and 10,813,503/149 bytes/message slots respectively. One fast lease is published but no bulk lease can be issued. Exact-state regressions reproduce all three failures on unmodified RC12 allocation.
+
+A separate regression reproduces delayed bulk refill after a durable cumulative report spends the final message permission but before its separate fence arrives. The spent grant remains counted usable, unlike RC12 fast grants. Tests require that any replacement use genuinely free quota and that the original grant remains open and fully charged.
+
+The candidate will scale only recovery reserves under severe historical byte pressure, preserving a full bulk BODY in each direction and bounded short-traffic capacity. It will also pipeline fully message-spent bulk replacements without refunding unknown debt. Existing physical profiles, journal/proof authority, normal grant shapes, Android application ID and qualification thresholds must remain unchanged. These hypotheses are not yet a field-success claim. Source at this checkpoint is RC12 production with two new failing tests; release metadata remains RC12 until a candidate is selected.

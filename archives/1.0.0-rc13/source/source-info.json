@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "release": "RC12",
+  "revision": "itom-1-0-0-rc12",
+  "archive_name": "ITOM-1.0.0-RC12-sources.zip",
+  "baseline": "Packaged RC11 source 4de97a77ed5d0c2ff89e25212e78f5b840cfcade",
+  "qualification": "Field-testing candidate; existing qualification thresholds unchanged",
+  "android_version_name": "1.0.0-rc12",
+  "android_version_code": 10012,
+  "android_application_id": "org.itom.client"
+}
