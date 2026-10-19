@@ -1,0 +1,19 @@
+{
+  "source_commit": "76d08dc80a23f9322350ccdc570bad86b5768df6",
+  "runtime_revision": "itom-1-0-0-rc10-1",
+  "unchanged_production_files_verified": 208,
+  "qualification_thresholds": "unchanged, not rerun or waived",
+  "profiler_and_streaming_tests": "passed",
+  "profiler_race_check": "passed",
+  "targeted_delivery_and_HTTPS_lifecycle": "passed, 8.814s",
+  "source_and_python": "91 tests passed",
+  "observation_benchmark_ns_per_op": [
+    62.66,
+    63.73
+  ],
+  "observation_benchmark_bytes_per_op": 0,
+  "observation_benchmark_allocations_per_op": 0,
+  "benchmark_scope": "single fixed-histogram observation only; not full diagnostic or transport overhead",
+  "android": "GitHub build pending",
+  "linux": "GitHub build pending"
+}
