@@ -60,6 +60,7 @@ def main():
         'rc10': files_at(candidate, 'archives/1.0.0-rc10/source/core/'),
     }
     common = {f'tunnel/{name}': sources['rc10'][f'tunnel/{name}'] for name in FIXTURES}
+    common['mailbox/idle_ahead_test.go'] = sources['rc10']['mailbox/idle_ahead_test.go']
     # RC10 added optional diagnostic fields. Access them reflectively in BOTH
     # copies of the common harness, returning -1 when RC2 has no such metric.
     # No byte clocks, gates, workload, probes or assertions are changed.

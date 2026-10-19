@@ -1,0 +1,59 @@
+name: RC2 vs RC10 corrected common core fixtures
+on:
+  push:
+    branches: ["codex/v1.0.0-rc10-development"]
+    paths: [".github/workflows/itom-rc10-rc2-core-comparison.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOTOOLCHAIN: local
+  GOWORK: off
+  GOFLAGS: -mod=readonly
+jobs:
+  paired-core:
+    name: Paired endpoint calibration, recovery and protected-state checks
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc10/source/core/go.mod
+          cache: false
+      - name: Prepare shared fixtures and verify immutable production hashes
+        run: python3 archives/1.0.0-rc10/experiments/prepare_baseline_comparison.py "$RUNNER_TEMP/paired"
+      - name: Same calibration, recovery, accounting and race checks on both sides
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          for variant in rc2 rc10; do
+            if bash -euo pipefail -c '
+              cd "$1"
+              go vet ./...
+              go test -p 2 -count=1 -timeout=120s ./tunnel -run "TestHealthyEndpoint|TestHealthyServerClient|TestScenarioMobileNetworkRegression|TestProviderAccess20Calibration" -v
+              go test -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath ./mailbox
+              go test -p 2 -count=1 -timeout=150s ./tunnel -run "TestRC2|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestLoadedOnlyCarriersUseUnloadedPoolEstimate|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4RetainedStateMixedTrafficAndNextTransfer" -v
+              go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./datapath ./tunnel -run "TestRC2|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|Test.*(Quota|Unknown|Reclaim|Recovery|Proof)"
+            ' -- "$RUNNER_TEMP/paired/$variant" > "$RUNNER_TEMP/paired/$variant-core.log" 2>&1; then
+              echo "$variant PASS" >> "$RUNNER_TEMP/paired/status.txt"
+            else
+              result=$?
+              echo "$variant FAIL exit=$result" >> "$RUNNER_TEMP/paired/status.txt"
+              failed=1
+            fi
+          done
+          cat "$RUNNER_TEMP/paired/status.txt"
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: paired-core
+          path: |
+            ${{ runner.temp }}/paired/*-core.log
+            ${{ runner.temp }}/paired/*.json
+            ${{ runner.temp }}/paired/*.txt
+          retention-days: 30

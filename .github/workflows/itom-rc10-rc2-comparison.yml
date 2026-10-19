@@ -1,8 +1,5 @@
 name: RC2 vs RC10 identical healthy-server qualification
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-rc2-comparison.yml", "archives/1.0.0-rc10/experiments/prepare_baseline_comparison.py"]
   workflow_dispatch:
 permissions:
   contents: read
