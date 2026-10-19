@@ -1,0 +1,17 @@
+=== RUN   TestRC13FieldBytePressureBootstrap
+=== RUN   TestRC13FieldBytePressureBootstrap/10915159
+    rc13_retained_test.go:54: field account stranded: ready=false fast=1 bulk=0 debt={Bytes:10915159 Messages:154}
+=== RUN   TestRC13FieldBytePressureBootstrap/10832733
+    rc13_retained_test.go:54: field account stranded: ready=false fast=1 bulk=0 debt={Bytes:10832733 Messages:161}
+=== RUN   TestRC13FieldBytePressureBootstrap/10813503
+    rc13_retained_test.go:54: field account stranded: ready=false fast=1 bulk=0 debt={Bytes:10813503 Messages:149}
+--- FAIL: TestRC13FieldBytePressureBootstrap (0.01s)
+    --- FAIL: TestRC13FieldBytePressureBootstrap/10915159 (0.00s)
+    --- FAIL: TestRC13FieldBytePressureBootstrap/10832733 (0.00s)
+    --- FAIL: TestRC13FieldBytePressureBootstrap/10813503 (0.00s)
+=== RUN   TestRC13SpentBulkRefillBeforeFence
+    rc13_retained_test.go:125: spent bulk grant still counted usable before fence
+--- FAIL: TestRC13SpentBulkRefillBeforeFence (0.02s)
+FAIL
+FAIL	itom.local/core/tunnel	0.036s
+FAIL

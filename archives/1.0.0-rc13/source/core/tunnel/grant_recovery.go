@@ -39,7 +39,8 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		return pool.Amount{}, journal.ErrLimit
 	}
 	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
-	reserveBytes := uint64(localFastReserveBytes + dataBatchMIMEHardCap)
+	localFastBytes, fastBytes := recoveryFastReserves(profile, usage)
+	reserveBytes := localFastBytes + dataBatchMIMEHardCap
 	if historicalMessages > profile.Messages {
 		return pool.Amount{}, journal.ErrLimit
 	}
@@ -59,14 +60,14 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	fastMessages := min(uint64(fastLeaseMessages), max(uint64(1), (remoteShare.Messages-usage.HistoricalRemote.Messages)/5))
 	if fast {
 		available := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
-		if available == 0 || remoteFree.Bytes < recoveryFastLeaseBytes {
+		if available == 0 || remoteFree.Bytes < fastBytes {
 			return pool.Amount{}, journal.ErrLimit
 		}
 		// Existing bulk leases already provide their ordinals. At bootstrap keep
 		// at least one slot for each remaining class whenever capacity permits.
 		bulkReserve := min(uint64(max(0, remoteBulkLeases-bulkActive)), available-1)
 		messages := min(fastMessages, available-bulkReserve)
-		return pool.Amount{Bytes: recoveryFastLeaseBytes, Messages: messages}, nil
+		return pool.Amount{Bytes: fastBytes, Messages: messages}, nil
 	}
 	if fastActive == 0 {
 		return pool.Amount{}, journal.ErrLimit
@@ -84,7 +85,7 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		availableMessages -= min(uint64(2), availableMessages-remaining)
 	}
 	if availableBytes > remaining*dataBatchMIMEHardCap {
-		availableBytes -= min(uint64(recoveryFastLeaseBytes), availableBytes-remaining*dataBatchMIMEHardCap)
+		availableBytes -= min(fastBytes, availableBytes-remaining*dataBatchMIMEHardCap)
 	}
 	remaining = min(remaining, availableMessages, availableBytes/dataBatchMIMEHardCap)
 	if remaining == 0 {

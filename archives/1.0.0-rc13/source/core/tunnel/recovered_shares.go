@@ -5,6 +5,20 @@ import (
 	"itom.local/core/pool"
 )
 
+// Only severely byte-constrained retained accounts need smaller reserves.
+// 128 KiB holds two maximum fast batches, including authenticated MIME. Keep
+// the usual sizes everywhere else, and never alter historical charges.
+func recoveryFastReserves(profile pool.Amount, u journal.OriginUsage) (local, remote uint64) {
+	local, remote = localFastReserveBytes, recoveryFastLeaseBytes
+	if u.HistoricalRemote.Bytes == 0 || u.HistoricalLocal.Bytes > profile.Bytes || u.HistoricalRemote.Bytes > profile.Bytes-u.HistoricalLocal.Bytes {
+		return
+	}
+	if profile.Bytes-u.HistoricalLocal.Bytes-u.HistoricalRemote.Bytes < 4*dataBatchMIMEHardCap {
+		return 128 << 10, 128 << 10
+	}
+	return
+}
+
 // Preserve every historical charge, then divide only the genuinely remaining
 // capacity between the two directions using complete lease units. A static
 // local share let download take space returned by an old incoming lease before

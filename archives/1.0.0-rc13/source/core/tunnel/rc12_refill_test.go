@@ -236,7 +236,7 @@ func TestRC12ReducedFastGrantFitsMaximumFastBatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(raw) > recoveryFastLeaseBytes/2 {
+	if len(raw) > (128<<10)/2 {
 		t.Fatal("two maximum fast batches no longer fit recovery grant", len(raw))
 	}
 	offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: recoveryFastLeaseBytes, Messages: 32}}

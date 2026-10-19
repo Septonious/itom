@@ -682,7 +682,8 @@ func (l *lane) tryLocalGrant(bytes uint64, fast bool) (journal.Grant, error) {
 				l.localGrantMu.Unlock()
 				return journal.Grant{}, err
 			}
-			originBlocked = localShare.Bytes < localFastReserveBytes || localShare.Messages < 1 || usage.Local.Bytes+bytes > localShare.Bytes-localFastReserveBytes || usage.Local.Messages+1 > localShare.Messages-1
+			reserveBytes, _ = recoveryFastReserves(profile, usage)
+			originBlocked = localShare.Bytes < reserveBytes || localShare.Messages < 1 || usage.Local.Bytes+bytes > localShare.Bytes-reserveBytes || usage.Local.Messages+1 > localShare.Messages-1
 			reserveMessages = 1
 		}
 		if originBlocked || held.Bytes+bytes > profile.Bytes-reserveBytes || held.Messages+1 > profile.Messages-reserveMessages {
