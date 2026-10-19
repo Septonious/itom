@@ -1,8 +1,5 @@
 name: RC10 measured DATA page and cleanup service on original RC2 transport
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-adaptive-data-cleanup.yml", "archives/1.0.0-rc10/experiments/adaptive_data_cleanup.py", "archives/1.0.0-rc10/experiments/data_page_service.py"]
   workflow_dispatch:
 permissions:
   contents: read
