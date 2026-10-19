@@ -1,0 +1,12 @@
+$ /home/runner/.cache/itom-build/go-1.27.1-linux-amd64/go/bin/go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+go: downloading golang.org/x/mobile v0.0.0-20260908204917-8b95e45f8d3e
+go: downloading golang.org/x/mod v0.41.0
+go: downloading golang.org/x/sync v0.23.0
+go: downloading golang.org/x/tools v0.50.0
+$ /home/runner/.cache/itom-build/go-1.27.1-linux-amd64/go/bin/go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+$ /home/runner/.cache/itom-build/go-1.27.1-linux-amd64/go/bin/go mod download
+$ /home/runner/.cache/itom-build/go-1.27.1-linux-amd64/go/bin/go mod verify
+all modules verified
+$ /home/runner/.cache/itom-build/go-1.27.1-linux-amd64/go/bin/go test -mod=readonly -tags=itomtest -count=1 -timeout=100s ./...
+ok  	itom.local/mobile	25.892s
+$ /home/runner/.cache/itom-build/mobile-v0.0.0-20260908204917-8b95e45f8d3e/gomobile bind -trimpath -target=android/arm64,android/arm -androidapi=29 -javapkg=org.itom.nativecore -o /home/runner/work/itom/itom/archives/1.0.0-rc10.1/source/android/app/libs/itom.aar .

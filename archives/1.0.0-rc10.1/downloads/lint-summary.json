@@ -1,0 +1,11 @@
+{
+  "available": true,
+  "errors": 0,
+  "warnings": 0,
+  "issues": [],
+  "report_errors": [],
+  "saved_reports": [
+    "lint-results.xml",
+    "lint-results.txt"
+  ]
+}

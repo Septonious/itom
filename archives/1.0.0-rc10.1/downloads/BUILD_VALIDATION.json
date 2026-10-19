@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "version": "1.0.0-rc10.1",
+  "classification": "USER_REQUESTED_DIAGNOSTIC_FIELD_TEST_BUILD",
+  "release_qualified": false,
+  "build_commit": "76d08dc80a23f9322350ccdc570bad86b5768df6",
+  "baseline_build_commit": "bfde1250bce0788a55ed99cdd5cb2ecdc5bcade0",
+  "build_run": "https://github.com/Septonious/itom/actions/runs/39255057487",
+  "checks": {
+    "source_checks": "passed",
+    "python_tests": 91,
+    "go_vet": "passed",
+    "profiler_targeted_tests": "passed",
+    "profiler_race_check": "passed",
+    "journal_wallet_flow_datapath": "passed",
+    "delivery_and_HTTPS_lifecycle": "passed",
+    "android_domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "android_app_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "android_lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 0,
+      "issues": [],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "android_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10010,
+      "version_name": "1.0.0-rc10.1-debug"
+    },
+    "android_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "d2f8e14a2daff51754cf18d2a1e13c65f460f8bbe18bf8c31b5643ddb6cb4e6d",
+      "lib/armeabi-v7a/libgojni.so": "e555e0148d85b6902f930ab08d89fb6a97be1bd5b4193179c90e6b26cbf5217c"
+    },
+    "linux_amd64_version": "ITOM itom-1-0-0-rc10-1 linux amd64",
+    "linux_arm64_architecture": "ELF aarch64; built and marker-verified in GitHub Actions",
+    "artifact_archives_sha256": "verified against GitHub artifact metadata",
+    "source_archive": "identity and profiler bytes verified against selected source"
+  },
+  "transport_policy": "unchanged from packaged RC10",
+  "qualification_thresholds": "unchanged; performance qualification not rerun or waived",
+  "signing": {
+    "type": "Android debug",
+    "sha256": "b87a5cad78c9417c515fdb8476cfd95d29b0765f9f8a4b43eccf554322485204",
+    "matches_packaged_rc10_certificate": false
+  },
+  "files": {
+    "ITOM-1.0.0-RC10.1-debug.apk": {
+      "bytes": 72226334,
+      "sha256": "ef7a174294fbe03eb2169027387db865b6aaec7f79f19a8275be793d01eb1b57"
+    },
+    "ITOM-1.0.0-RC10.1-linux-amd64.bin": {
+      "bytes": 14504160,
+      "sha256": "87efcb5a518065dc5aaaadab2051b36e4adf0376015816c0d08a092064939386"
+    },
+    "ITOM-1.0.0-RC10.1-linux-arm64.bin": {
+      "bytes": 13375112,
+      "sha256": "23939150e04343a12a26762b41da84f7e4fdf31022cac8d89b16d006719a30ad"
+    },
+    "ITOM-1.0.0-RC10.1-sources.zip": {
+      "bytes": 2499574,
+      "sha256": "8c24537a3b8a124b60e8d316e05a9c17aec2ffa16f0345473b1995ad11248c44"
+    }
+  }
+}

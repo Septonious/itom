@@ -13,4 +13,4 @@ The existing diagnostic exports now contain bounded per-account stage distributi
 
 RC10's unresolved qualification limits are retained and not waived. This package is for field testing and observation; it does not claim a new RTT/throughput result. All original performance qualification tools and thresholds remain byte-identical. Update both endpoints to obtain complete profiling; retain identity, configuration, wallets and journals.
 
-Build artifacts and final checksums will be placed under `downloads/` after GitHub compilation and artifact verification finish. No user diagnostics, credentials or private state are included in the handoff.
+Build artifacts, checksums and the full handoff are published under `downloads/`. All five final workflow jobs passed. The APK contains the selected revision in both ARM JNI libraries; 82 domain and 7 app JVM tests plus lint passed. See `audit/BUILD_VALIDATION.json`. No user diagnostics, credentials or private state are included in the handoff.

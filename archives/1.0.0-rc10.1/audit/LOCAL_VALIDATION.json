@@ -14,6 +14,6 @@
   "observation_benchmark_bytes_per_op": 0,
   "observation_benchmark_allocations_per_op": 0,
   "benchmark_scope": "single fixed-histogram observation only; not full diagnostic or transport overhead",
-  "android": "GitHub build pending",
-  "linux": "GitHub build pending"
+  "android": "passed; see BUILD_VALIDATION.json",
+  "linux": "passed; both architectures, amd64 version executed"
 }

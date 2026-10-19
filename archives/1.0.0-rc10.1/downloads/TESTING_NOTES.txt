@@ -1,0 +1,9 @@
+ITOM 1.0.0 RC10.1 — diagnostic field-test build
+Build source: 76d08dc80a23f9322350ccdc570bad86b5768df6
+Runtime: itom-1-0-0-rc10-1
+Android package: org.itom.client, versionCode 10010.
+Update both endpoints for complete profiling. Keep identities, configuration, wallet and quota journals.
+Debug signing certificate differs from the packaged RC10 certificate; Android will not accept this APK as a direct update over that specific signer. No private previous signing key was available. Do not uninstall or clear application data merely to bypass a signature mismatch without preserving your state.
+Adds bounded per-stage latency distributions and sampled batch timelines to existing diagnostic exports. Transport policy, batching, quota, journal schema and recovery are unchanged.
+Core safety checks, profiler/race checks, 82 domain + 7 app JVM tests, lint and matching JNI/package checks passed. No device or live Rambler throughput/RTT qualification was run for this observation-only build. RC10 incomplete performance qualification remains incomplete; no threshold is relaxed or claimed passed.
+See ../audit/PROFILER.md for stage definitions, percentile bounds and interpretation limits.
