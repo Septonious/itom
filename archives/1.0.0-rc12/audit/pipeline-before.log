@@ -1,0 +1,6 @@
+=== RUN   TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion
+    rc12_refill_test.go:97: fully spent fast grant still counted usable before fence
+--- FAIL: TestRC12RetainedFastRefillDoesNotWaitForPhysicalDeletion (0.00s)
+FAIL
+FAIL	itom.local/core/tunnel	0.012s
+FAIL
