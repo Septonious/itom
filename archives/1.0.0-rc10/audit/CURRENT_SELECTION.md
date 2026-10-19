@@ -1,6 +1,6 @@
 # RC10 selection status
 
-Latest comparison: the six normal healthy-profile RC10 load jobs pass, but sensitivity/startup gates still fail. User now requests untouched RC2 under identical fixtures before further selection. See `healthy-qualification-39238567647.json` and the paired comparison workflow; no new transport policy is selected.
+Latest paired comparison39239603639: both original RC2 and current RC10 pass all six normal load cases (12 rounds each), while both fail10/20Mbps client ramps and100ms-client upload/tail. Performance differences are mixed, not universal improvement. See `RC2_HEALTHY_COMPARISON.md` and `paired-rc2-rc10-39239603639.json`. The corrected common core rerun is pending. No production change is selected from this comparison; packaging stays blocked.
 
 ## Current primary model: healthy server (supersedes old benchmark assumptions)
 
