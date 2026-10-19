@@ -1,0 +1,59 @@
+=== RUN   TestDeliveryFlightEarlyPartialACKUnknownAndStop
+--- PASS: TestDeliveryFlightEarlyPartialACKUnknownAndStop (0.00s)
+=== RUN   TestDeliveryFullBulkLeavesFastReserveAndCancellation
+--- PASS: TestDeliveryFullBulkLeavesFastReserveAndCancellation (0.02s)
+=== RUN   TestDeliveryAbortedBeforePublicationReturnsOnlyItsLogicalFlight
+--- PASS: TestDeliveryAbortedBeforePublicationReturnsOnlyItsLogicalFlight (0.00s)
+=== RUN   TestDeliveryControllerVirtualClockIdleResetsProbeWithoutChangingFlight
+--- PASS: TestDeliveryControllerVirtualClockIdleResetsProbeWithoutChangingFlight (0.00s)
+=== RUN   TestDeliveryStoppedQueuedBatchDoesNotFailSiblingOwners
+--- PASS: TestDeliveryStoppedQueuedBatchDoesNotFailSiblingOwners (0.00s)
+=== RUN   TestDeliveryFutureBatchCannotPinWorkerAheadOfMissingPredecessor
+--- PASS: TestDeliveryFutureBatchCannotPinWorkerAheadOfMissingPredecessor (0.00s)
+=== RUN   TestDeliveryUnstartedRetryKeepsItsOffsetCredit
+--- PASS: TestDeliveryUnstartedRetryKeepsItsOffsetCredit (0.00s)
+=== RUN   TestDeliveryMixedStreamBatchYieldsFutureMembersBeforePublication
+--- PASS: TestDeliveryMixedStreamBatchYieldsFutureMembersBeforePublication (0.00s)
+=== RUN   TestDeliveryPublishesPrefixThatFitsRemainingBudget
+--- PASS: TestDeliveryPublishesPrefixThatFitsRemainingBudget (0.00s)
+=== RUN   TestDeliveryDeferredWaitGenerationWakesOnlyOnPredicateChange
+--- PASS: TestDeliveryDeferredWaitGenerationWakesOnlyOnPredicateChange (0.00s)
+=== RUN   TestDeliveryPartialRetryRechecksEarlyACKBeforeParking
+--- PASS: TestDeliveryPartialRetryRechecksEarlyACKBeforeParking (0.00s)
+=== RUN   TestDeliveryMaintenanceRemembersDemandForOneEpoch
+--- PASS: TestDeliveryMaintenanceRemembersDemandForOneEpoch (0.00s)
+=== RUN   TestDeliveryRememberedDemandCannotHideStall
+--- PASS: TestDeliveryRememberedDemandCannotHideStall (0.00s)
+=== RUN   TestDeliveryDemandExpiresAcrossInactiveEpoch
+--- PASS: TestDeliveryDemandExpiresAcrossInactiveEpoch (0.00s)
+=== RUN   TestDeliveryInteractiveWaiterDoesNotCreateBulkDemand
+--- PASS: TestDeliveryInteractiveWaiterDoesNotCreateBulkDemand (0.00s)
+=== RUN   TestDeliveryPendingFastPressureOverridesHealthyBulkGrowth
+--- PASS: TestDeliveryPendingFastPressureOverridesHealthyBulkGrowth (0.00s)
+=== RUN   TestDeliveryCompletedFastPressureBelongsToItsDrainedEpoch
+--- PASS: TestDeliveryCompletedFastPressureBelongsToItsDrainedEpoch (0.00s)
+=== RUN   TestDeliveryFastPressureHasQueueHeadroomAndKeepsDebt
+--- PASS: TestDeliveryFastPressureHasQueueHeadroomAndKeepsDebt (0.00s)
+=== RUN   TestDeliveryLowFlightACKFloorBoundsAdditionalQueueDelay
+--- PASS: TestDeliveryLowFlightACKFloorBoundsAdditionalQueueDelay (0.00s)
+=== RUN   TestDeliveryFloorCannotLearnStalledFullWindowOrRepair
+--- PASS: TestDeliveryFloorCannotLearnStalledFullWindowOrRepair (0.00s)
+=== RUN   TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    field_burst_test.go:114: verified_https=65 canceled_open_sockets=64 provider_accounts=4 carrier_rebuilds=0; functional workload, not a bandwidth measurement
+2026/10/19 15:55:42 failed to read command: in command: read tcp 127.0.0.1:38685->127.0.0.1:37278: read: connection reset by peer
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=383d5c95a182f10d726a73dc19835615 generation=14506380067616476965 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=383d5c95a182f10d726a73dc19835615 generation=14506380067616476965 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=383d5c95a182f10d726a73dc19835615 generation=14506380067616476965 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=383d5c95a182f10d726a73dc19835615 generation=14506380067616476965 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=4 dial_attempts=40 dial_denied=0 target_tcp_dials=64 provider={HealthyEndpoints:false ClientMbps:0 ServerMbps:0 ClientRTTMS:0 ServerRTTMS:0 Active:9 DownAccounts:0 Accepted:48 Dropped:0 UplinkBytes:1728025 DownlinkBytes:3077790 Mbps:0}
+2026/10/19 15:55:42 failed to read command: write tcp 127.0.0.1:38685->127.0.0.1:37308: write: broken pipe
+--- PASS: TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers (4.08s)
+=== RUN   TestFieldBulkLeavesTwoReadableAccountsForInteractiveData
+--- PASS: TestFieldBulkLeavesTwoReadableAccountsForInteractiveData (0.03s)
+=== RUN   TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline
+--- PASS: TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline (0.00s)
+=== RUN   TestRev4DelayedStreamCannotBlockHealthyStreamPrefix
+--- PASS: TestRev4DelayedStreamCannotBlockHealthyStreamPrefix (0.02s)
+PASS
+ok  	itom.local/core/tunnel	4.173s

@@ -1,0 +1,70 @@
+=== RUN   TestRC101ProfileQuantilesAndBoundedClasses
+--- PASS: TestRC101ProfileQuantilesAndBoundedClasses (0.00s)
+=== RUN   TestRC101ProfileDisabledAndConcurrentExport
+--- PASS: TestRC101ProfileDisabledAndConcurrentExport (0.00s)
+=== RUN   TestRC101ProfileACKObservesOnlyAuthenticatedProgress
+--- PASS: TestRC101ProfileACKObservesOnlyAuthenticatedProgress (0.00s)
+=== RUN   TestRC101ProfileSummaryBound
+--- PASS: TestRC101ProfileSummaryBound (0.00s)
+=== RUN   TestObservedReaderDoesNotHideStreamingBehindDiagnostics
+--- PASS: TestObservedReaderDoesNotHideStreamingBehindDiagnostics (0.00s)
+=== RUN   TestRC11HomeRetainedRepeatedMultiStartupAndTail
+    rc11_field_startup_test.go:28: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    rc11_field_startup_test.go:28: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=10 client_mbps=500.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=4 gomaxprocs=4 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    rc11_field_startup_test.go:73: round=0 interactive_ms=122
+    rc11_field_startup_test.go:73: round=0 interactive_ms=88
+    rc11_field_startup_test.go:73: round=0 interactive_ms=113
+    rc11_field_startup_test.go:73: round=0 interactive_ms=72
+    rc11_field_startup_test.go:73: round=1 interactive_ms=107
+    rc11_field_startup_test.go:73: round=1 interactive_ms=162
+    rc11_field_startup_test.go:73: round=1 interactive_ms=116
+    rc11_field_startup_test.go:73: round=1 interactive_ms=76
+    rc11_field_startup_test.go:73: round=2 interactive_ms=105
+    rc11_field_startup_test.go:73: round=2 interactive_ms=96
+    rc11_field_startup_test.go:73: round=2 interactive_ms=88
+    rc11_field_startup_test.go:73: round=2 interactive_ms=76
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 handling IDLE command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 handling IDLE command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 handling IDLE command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=87008e3dbf1424b8675323cb857508fe generation=13019770994973850392 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=87008e3dbf1424b8675323cb857508fe generation=13019770994973850392 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=87008e3dbf1424b8675323cb857508fe generation=13019770994973850392 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=87008e3dbf1424b8675323cb857508fe generation=13019770994973850392 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=4 dial_attempts=40 dial_denied=0 target_tcp_dials=73 provider={HealthyEndpoints:true ClientMbps:500 ServerMbps:1000 ClientRTTMS:10 ServerRTTMS:20 Active:30 DownAccounts:0 Accepted:48 Dropped:0 UplinkBytes:17506182 DownlinkBytes:23866434 Mbps:0}
+2026/10/19 15:55:35 handling UID SEARCH command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 handling SELECT command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 15:55:35 handling APPEND command: use of closed network connection
+--- PASS: TestRC11HomeRetainedRepeatedMultiStartupAndTail (21.08s)
+=== RUN   TestRC11HistoricalRecoveryBackoffResetsOnDurableProgress
+--- PASS: TestRC11HistoricalRecoveryBackoffResetsOnDurableProgress (0.00s)
+=== RUN   TestTraceCompactPacketMetadataAndBoundedRotation
+--- PASS: TestTraceCompactPacketMetadataAndBoundedRotation (0.00s)
+=== RUN   TestTraceOverflowAndConcurrentClose
+--- PASS: TestTraceOverflowAndConcurrentClose (0.00s)
+PASS
+ok  	itom.local/core/tunnel	21.100s

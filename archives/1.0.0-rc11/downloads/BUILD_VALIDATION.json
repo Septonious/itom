@@ -1,0 +1,32 @@
+{
+  "source_commit": "4de97a77ed5d0c2ff89e25212e78f5b840cfcade",
+  "workflow_run": 39281400579,
+  "qualification": "field-testing candidate; full thresholds unchanged and not declared passed",
+  "local": [
+    "source check",
+    "91 Python tests",
+    "Go vet",
+    "journal/wallet/flow/datapath suites",
+    "selected delivery/profiler regressions",
+    "focused race checks",
+    "72-stream paired home startup regression on RC10.1 and RC11"
+  ],
+  "ci_artifact_evidence": [
+    "focused startup/profiler and delivery tests passed",
+    "native Go JNI tests passed",
+    "82 domain and 7 app JVM tests passed",
+    "Android lint: 0 errors, 0 warnings",
+    "APK SHA and both JNI hashes/revisions verified locally",
+    "org.itom.client, version code 10011, 1.0.0-rc11-debug",
+    "both CI Linux binaries byte-identical to local builds",
+    "CI source archive byte-identical to local build-source archive"
+  ],
+  "sha256": {
+    "ITOM-1.0.0-RC11-debug.apk": "54cdf844509bc2a0dcd4b12a654a66651e91980b298d1e5d1daeac5636f3bee4",
+    "ITOM-1.0.0-RC11-linux-amd64.bin": "8e76559ba6d6065ff31e5383d096f923dcff50444bf528307fa89f0ebed1e449",
+    "ITOM-1.0.0-RC11-linux-arm64.bin": "3fa270bb48081449b815d882602d60bad3de2660a4cbcae94f6b59be6658baeb",
+    "ITOM-1.0.0-RC11-sources.zip": "5b47c21a2f884c52e47db0854d534dd3d1abcc0ea22fa2e820975892dace1984"
+  },
+  "artifact_expiration": "2026-11-18",
+  "package_artifact_id": 12201108026
+}

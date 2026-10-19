@@ -1,0 +1,76 @@
+{
+  "itom": "1.0.0",
+  "source_revision": "itom-1-0-0-rc11",
+  "gradle": "9.3.1",
+  "agp": "9.1.1",
+  "sdk": "37",
+  "build_tools": "36.0.0",
+  "host": "Linux",
+  "started_utc": "2026-10-19T15:56:51Z",
+  "jdk_source": "local JDK 17",
+  "cmdline_tools": {
+    "version": "22.0",
+    "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+    "algorithm": "sha1"
+  },
+  "stage": "completed",
+  "native": {
+    "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+    "ndk": "28.2.13676358",
+    "aar_sha256": "995435c0e0b0fc9c54cd222d0c389e9737abdcc41cfd9256fa5f0f844341191e",
+    "targets": [
+      "android/arm64",
+      "android/arm"
+    ],
+    "api": 29
+  },
+  "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true,
+    "task_failed_this_run": false
+  },
+  "app_unit_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true
+  },
+  "lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10011,
+    "version_name": "1.0.0-rc11-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "81688b3f5eeb148143b1228bf1b00bbbddde2e7c5194c663d7f82935bd12026f",
+    "lib/armeabi-v7a/libgojni.so": "0d6694a917e298de08afb8a2dde8fbff8f343ad9bb662eb6d4c9612dc5fe78a9"
+  },
+  "status": "passed",
+  "apk": "ITOM-1.0.0-RC11-debug.apk",
+  "sha256": "54cdf844509bc2a0dcd4b12a654a66651e91980b298d1e5d1daeac5636f3bee4",
+  "checks": [
+    "domain:test",
+    "app:lintDebug",
+    "app:compileReleaseKotlin",
+    "app:assembleDebug"
+  ]
+}
