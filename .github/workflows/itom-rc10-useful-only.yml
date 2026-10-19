@@ -1,8 +1,5 @@
 name: RC10 useful-only DATA cleanup on unchanged RC2 bounds
 on:
-  push:
-    branches: ["codex/v1.0.0-rc10-development"]
-    paths: [".github/workflows/itom-rc10-useful-only.yml"]
   workflow_dispatch:
 permissions:
   contents: read

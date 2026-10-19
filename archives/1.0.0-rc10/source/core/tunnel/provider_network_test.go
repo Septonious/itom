@@ -29,6 +29,9 @@ type providerTestNetwork struct {
 	debugWriter               io.Writer // optional test-only plaintext instrumentation; never emitted
 	visibility                providerVisibility
 	mobileEnabled             bool
+	healthyEndpoints          bool
+	clientDownUntil           atomic.Int64
+	serverPath                mobileLinkState
 	mobile                    mobileLinkState
 	mu                        sync.Mutex
 	nextID                    uint64
@@ -142,7 +145,7 @@ func (p *providerTestNetwork) wrap(account string, c net.Conn) net.Conn {
 	p.active[pc.id] = pc
 	p.accepted.Add(1)
 	p.mu.Unlock()
-	if p.mobileEnabled {
+	if p.mobileEnabled || p.healthyEndpoints {
 		pc.Conn = newMobileRelay(c, pc)
 	}
 	if p.idleTimeout > 0 {
@@ -257,10 +260,24 @@ func (p *providerTestNetwork) snapshot() providerNetworkSnapshot {
 	p.uplink.mu.Lock()
 	upMbps := p.uplink.mbps
 	p.uplink.mu.Unlock()
-	return providerNetworkSnapshot{Active: active, DownAccounts: down, Accepted: p.accepted.Load(), Dropped: p.dropped.Load(), UplinkBytes: p.upBytes.Load(), DownlinkBytes: p.downBytes.Load(), Mbps: upMbps}
+	snapshot := providerNetworkSnapshot{Active: active, DownAccounts: down, Accepted: p.accepted.Load(), Dropped: p.dropped.Load(), UplinkBytes: p.upBytes.Load(), DownlinkBytes: p.downBytes.Load(), Mbps: upMbps, HealthyEndpoints: p.healthyEndpoints}
+	if p.healthyEndpoints {
+		if profile := p.mobile.profile.Load(); profile != nil {
+			snapshot.ClientMbps = profile.Mbps
+			snapshot.ClientRTTMS = profile.RTT.Milliseconds()
+		}
+		if profile := p.serverPath.profile.Load(); profile != nil {
+			snapshot.ServerMbps = profile.Mbps
+			snapshot.ServerRTTMS = profile.RTT.Milliseconds()
+		}
+	}
+	return snapshot
 }
 
 type providerNetworkSnapshot struct {
+	HealthyEndpoints           bool
+	ClientMbps, ServerMbps     float64
+	ClientRTTMS, ServerRTTMS   int64
 	Active, DownAccounts       int
 	Accepted, Dropped          uint64
 	UplinkBytes, DownlinkBytes uint64

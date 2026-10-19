@@ -24,7 +24,9 @@ import (
 // byte generators remain active across outage, warmup and measurement phases.
 // Strictly test-fixture-only choice. No live transport config is touched.
 func initialProviderProfileMbps(steps []providerCapStep, fallback float64, early bool) float64 {
-	if early && len(steps) > 0 { return steps[0].Mbps }
+	if early && len(steps) > 0 {
+		return steps[0].Mbps
+	}
 	return fallback
 }
 
@@ -80,10 +82,16 @@ func testSupervisedProductionLoad(t *testing.T) {
 		retained = func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
 			for _, account := range cfg.Accounts {
 				dir := filepath.Join(serverDir, account.ID, u.ID)
-				if err := os.MkdirAll(dir, 0700); err != nil { t.Fatal(err) }
+				if err := os.MkdirAll(dir, 0700); err != nil {
+					t.Fatal(err)
+				}
 				store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(account, u, dataProfile16), time.Second)
-				if err != nil { t.Fatal(err) }
-				if err = store.Close(); err != nil { t.Fatal(err) }
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err = store.Close(); err != nil {
+					t.Fatal(err)
+				}
 			}
 		}
 	}
@@ -95,8 +103,11 @@ func testSupervisedProductionLoad(t *testing.T) {
 	// The old 150->10Mbps immediate downgrade is a separate failure mode.
 	profileEarly := os.Getenv("ITOM_LOAD_PROVIDER_PROFILE_EARLY") == "1"
 	providerStart := initialProviderProfileMbps(profiles, loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0), profileEarly)
-	f.network.setMbps(providerStart)
+	f.network.setApplicationPathMbps(providerStart)
 	t.Logf("supervised_provider_initial mbps=%.3f early_profile=%t", providerStart, profileEarly)
+	if f.network.healthyEndpoints {
+		t.Log("capacity_profile_scope=client_access_only server_path_unchanged=true")
+	}
 	mobile := os.Getenv("ITOM_LOAD_MOBILE") == "1"
 	mobileCap := loadEnvFloat(t, "ITOM_LOAD_MOBILE_MBPS", 600)
 	var baseline time.Duration
@@ -283,7 +294,7 @@ func testSupervisedProductionLoad(t *testing.T) {
 				defer profileWG.Done()
 				for i, step := range profiles {
 					if !profileEarly || i > 0 {
-						f.network.setMbps(step.Mbps)
+						f.network.setApplicationPathMbps(step.Mbps)
 					}
 					t.Logf("supervised_cap mbps=%.3f", step.Mbps)
 					if step.Duration <= 0 {
@@ -353,8 +364,12 @@ func testSupervisedProductionLoad(t *testing.T) {
 		// monopolize account LOGIN slots needed by the opposite endpoint.
 		f.network.mu.Lock()
 		providerPeak, providerCurrent := map[string]int{}, map[string]int{}
-		for id, n := range f.network.sessionPeak { providerPeak[id] = n }
-		for id, n := range f.network.sessions { providerCurrent[id] = n }
+		for id, n := range f.network.sessionPeak {
+			providerPeak[id] = n
+		}
+		for id, n := range f.network.sessions {
+			providerCurrent[id] = n
+		}
 		providerDenied := f.network.sessionDenied
 		f.network.mu.Unlock()
 		t.Logf("rc5_provider_sessions peak=%v current=%v denied=%d cap=%d", providerPeak, providerCurrent, providerDenied, f.network.sessionLimit)

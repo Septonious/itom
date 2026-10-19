@@ -1,80 +1,37 @@
-# ITOM 1.0.0 RC2 — targeted stabilization candidate
+# ITOM 1.0.0 RC10 — development candidate
 
-Steers new work and cumulative feedback away from an account with a stalled control writer while retaining its connection and durable accounting. See [handoff](HANDOFF.md), [analysis](docs/rc2/INVESTIGATION.md) and packaged validation for exact scope. Stable promotion and live throughput/jitter qualification remain pending. Older sections below describe historical baselines.
+RC10 starts from tagged RC2 and keeps separately reviewed corrections. Production transport windows, framing, polling and recovery policy remain RC2. Exact journal scan allocation reduces empty/sparse metadata allocation without changing durable quota or proof rules. Development and qualification are still in progress; this source is not a stable-release certification.
 
-# ITOM 0.9.2-Rev7
+The current reference assumes a healthy server with a 20 ms route to Rambler. Client paths use 40 ms normally, 20/50 ms boundary cases and a 100 ms sensitivity case. See [the test model and its limits](docs/rc10/HEALTHY_SERVER_REFERENCE.md) and [handoff](HANDOFF.md). Older field investigations describe their own versions.
 
-Rev7 repairs physical control sockets without restarting encrypted carriers, prioritizes critical socket repair, retries missing authenticated handshake replies, bounds missed-IDLE audit delay, and reworks retained-state duplex admission and ordered multiplexed batching. See [the paired-capture investigation](docs/rev7/REV7_ANALYSIS_2026-10-16.md) and [exact qualification evidence](docs/rev7/evidence/rev7_validation.json). Final release validation was explicitly reduced to targeted checks at the user’s request; see [the complete handoff](HANDOFF.md) for exact scope and remaining validation.
+## Identity and upgrades
 
-Rev6 bounds optional startup sockets, keeps idle IMAP sockets alive without blocking active commands, adds a CLI-only full accounts reset, exposes safe LOGIN response categories and removes the settings introduction banner. See [startup and idle analysis](docs/rev6/REV6_ANALYSIS_2026-10-16.md).
+Runtime revision: `itom-1-0-0-rc10`. Android application ID: `org.itom.client`; version code `10009`, version name `1.0.0-rc10`. Update both endpoints together. Preserve accounts, profiles, quota journals, wallet state and logical identities. Check the APK signing certificate against the installed app before an in-place update; this source does not establish access to the previous signing key. Reinstallation can lose private profiles and wallets.
 
-Rev5 addresses the paired Wi-Fi/mobile field failures: recovery uses remaining ordinal capacity without dropping historical debt; paced DATA reads yield before long multi-BODY commands time out; downstream batch growth depends on authenticated BODY receipts rather than APPEND speed; provider mailbox-state setup errors reconnect with a bounded fresh retry. The mandatory application, recovery and RTT gates remain required; Rev7 explicitly waives the throughput floor at the user’s request. Real-provider speed is separate from laboratory qualification.
+## Verify and build
 
-Healthy TCP streams can advance a bounded charged frame beside delayed published flight. Short recovery uses authenticated NACKs with separate pacing, and the wallet accepts reordered unseen offers while retaining bounded retirement protection.
-
-Use matching Rev7 endpoints. Preserve server configuration, quota journals and wallet state. The Android package remains `org.itom.client.dev.rev7`, version code 9207. The build reuses the Rev3 testing signing certificate so profiles and wallet history can remain installed. Check the published `SIGNER.txt` before updating another APK.
-
-See [the Rev5 investigation and qualification](docs/rev5/REV5_ANALYSIS_2026-10-15.md), [the earlier field investigation](docs/rev4/REV4_FIELD_ANALYSIS.md), [the test design](docs/rev4/REV4_TEST_DESIGN.md) and [installation instructions](docs/rev4/REV4_BUILD_AND_INSTALL.md). Historical Rev2/Rev3 reports describe their own sources and builds.
-
-## Transport
-
-One logical TCP engine shares bounded memory/credit across the authenticated account pool. Accounts keep equal roles and independent physical carrier lifetimes. Self-describing authenticated DATA envelopes, durable spend, unknown APPEND debt and observed-body/deletion proof remain authoritative. No reconnect or congestion decision forgives physical quota debt.
-
-Each account/user uses control mailboxes plus one active DATA mailbox per direction when an independent receiver is available. Mixed fallback remains available under provider connection limits. Historical two/four-shard folders remain owned and inventoried/reclaimed. Multiple shards are not advertised for one selected receive socket; striping happens across actual independent account connections. DATA role repair preserves the logical TCP sockets.
-
-Configured account-count ceilings remain removed. Active provider sockets, login concurrency, serialized profile size and session memory stay bounded. Example transport settings:
-
-```json
-{"layout":"auto","data_shards":1,"account_sessions":10,"endpoint_connections":128,"login_parallelism":4}
-```
-
-`account_sessions` budgets both endpoints per account. Multiple users share that budget. Folder additions preserve existing journal identity/capacity. The queue controller separates the measured path floor from extra delay, with hard delay/memory bounds and outage detection. Application RTT and useful throughput are checked separately; controller calibration never constitutes a speed qualification.
-
-## Build and verify
-
-Python 3.10+ is required. The executable source ZIP verifies its manifest and extracts a fresh tree before the pinned build:
+Use Python 3.10+ and the bundled pinned tooling. Run from this source directory:
 
 ```bash
-python ITOM-0.9.2-Rev7-sources.zip server --expect-revision transport-rework3-rev7
-python ITOM-0.9.2-Rev7-sources.zip android --expect-revision transport-rework3-rev7 --accept-android-licenses
+python3 tools/build.py check --expect-revision itom-1-0-0-rc10
+python3 tools/transport_qualification.py --go /path/to/go --profile healthy-server --client-rtt-ms 40 --server-rtt-ms 20 --minimum-mbps 100 --repeats 2
 ```
 
-The normal Go build executes the new field-failure application cases and mandatory provider-outage cases. Repeat the application suite serially with Go 1.27.1:
+The CLI qualification target is strict 100 Mbps in both directions and tails, with zero speed margin. The existing CI minimum remains 75 Mbps and max loaded RTT 750 ms; no existing threshold was relaxed. Every scheduled probe, positive useful progress in every one-second window, original sockets and post-load integrity remain required. A deliberately 10/20 Mbps client profile checks continuity/latency and cannot certify 75/100 Mbps throughput.
+
+After all required checks pass, build the paired artifacts:
 
 ```bash
-python tools/field_qualification.py --go /path/to/go --results work/field-results --repeats 1
-python tools/field_qualification.py --go /path/to/go --results work/commit-delay-results --repeats 1 --commit-delay-ms 12
+python3 tools/build.py server --expect-revision itom-1-0-0-rc10
+python3 tools/build.py android --expect-revision itom-1-0-0-rc10 --accept-android-licenses
 ```
 
-The second command retains real fsync and adds a declared server commit delay through the test-only build tag. Every required case must execute, preserve source identity and pass. Missing/skipped cases and failures remain failures. Raw user diagnostic captures and private signing keys are excluded from all source and release archives.
+These builds verify source/runtime/native/APK identities and include their own checks. Successful compilation alone does not certify transport performance. CI packages only after its required gates pass. Real-device/provider measurements remain separate from synthetic qualification.
 
-Rev7 stability qualification requires every fresh and retained-state SINGLE/MULTI run to pass:
+## Server and admin
 
-```bash
-python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 1 --stability-only
-python tools/transport_qualification.py --go /path/to/go --streams both --accounts 15 --seconds 60 --warmup 10 --repeats 1 --retained-state --stability-only
-```
+The binary opens the manager menu without arguments. `version` prints its revision; `serve --state /var/lib/itom` runs the configured server. Persistent IMAP connections and hostname-verified IP pinning are retained; exported profiles carry configured pins.
 
-Laboratory tests do not certify the real phone/provider path. The user explicitly waived the 90 Mbps throughput floor for Rev7. Speeds remain recorded, but no speed threshold qualifies this release. Every one-second measured window must carry useful bytes in both directions, every loaded RTT must be <1,100 ms (the existing 10% tolerance), and all thirty loaded probes must overlap duplex traffic with no timeout or missed probe. Original TCP sockets, logical sessions and healthy carrier epochs must survive the load. Six same-socket exchanges after idle gaps, a fresh 256 KiB verified application transfer and another original-socket exchange must succeed after load. Each run must pass; averages across failed runs cannot qualify. Real-device SINGLE/MULTI and post-reconnect application checks remain independent. Omitting `--stability-only` runs the separate historical 90 Mbps performance policy.
+The app's authenticated admin UI retains categorized server management and a 60-second rollback for reversible actions. Destructive mailbox purges, uninstall and full account reset remain CLI-only. Individual client messages override the global message; updating the global message clears individual overrides. Minecraft-style color codes are supported. The dark UI and single diagnostics export progress indicator remain selected.
 
-## Server messages
-
-Manager menu 17 edits the global message or selects a specific client. Individual messages override the global one. Saving or clearing the global message clears all individual entries. Removing an individual override restores the global message. Updates reach connected clients automatically and persist across server restarts.
-
-```bash
-itom message --text "&eGlobal message"
-itom message --uid CLIENT_UID --text "&cHello &aWorld"
-itom message --uid CLIENT_UID --clear
-```
-
-The Android home card supports Minecraft-style `&0`–`&f` colors, `&l` bold, `&o` italic, `&n` underline, `&m` strikethrough and `&r` reset. Use `&&` for a literal ampersand. Each color code resets prior styles. Messages allow up to 2,048 UTF-8 bytes including codes. Configurations using individual messages require Rev5 or later (schema 5).
-
-## Android server administration
-
-The darker Android interface includes **Settings → Server admin** for an enabled server-side client named `admin`, verified using that client's key. It provides accounts, clients, invitations, formatted messages, live traffic/logs/trace, diagnostics export, resource settings and reversible service controls over encrypted IMAP.
-
-Every mutation arms an independent watchdog first. Sixty seconds without verified two-way recovery causes rollback; sixty continuous healthy seconds commits the change. Keep the VPN connected during the trial. Permanent purges, uninstall and journal migration stay CLI-only. See [admin controls and automatic recovery](docs/rev5/ADMIN.md) for setup, the complete control mapping and validation limits.
-
-## Reset the accounts database
-
-Stop the service, open server manager **3. Mail accounts → 6. Reset accounts database**, and type `RESET ACCOUNTS`. All active credentials and retired account definitions are removed. Server/client identities, provider messages and accounting files remain. A new account-ID namespace prevents old journal identities being assigned to new accounts. Re-add current provider credentials and export replacement profiles to **every client** before starting again. Reset configurations use server schema 6; older binaries cannot read them. The reset is CLI-only and is not a mailbox purge or forensic disk erase.
+Configuration, journals, keys and private diagnostic captures are not project-release assets. Historical evidence remains available in the repository archives; it is not evidence that the current candidate passed.

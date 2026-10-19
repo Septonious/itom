@@ -15,8 +15,8 @@
         "RC8": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734",
         "RC9": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734"
       },
-      "rc10_sha256": "ebdec9ac5fc400d7bf07095931af6fc3c131773c0e2f43fe758f280cedf4d734",
-      "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
+      "rc10_sha256": "3ddead4e75dc483d9ee3cbcaa3c40d2b77b5fef69f4798ecbd2f645897e3aad2",
+      "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
       "path": "README.md",
@@ -31,8 +31,8 @@
         "RC8": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e",
         "RC9": "7808ae3f4cc79b2b078ac8f2173b4cbcd6e47e13b3427b044bec7d7da983787e"
       },
-      "rc10_sha256": "d4ef20b84908059c2012bb76d302a5dc3e4d0cb4047dd1000744861636453e32",
-      "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
+      "rc10_sha256": "e5921ae5d0a65fab3218ed36d91db591ea68729723b1a054c17c3e8eeae17776",
+      "decision": "Current healthy-server RC10 scope and identity; historical documentation remains in original archives."
     },
     {
       "path": "android/app/build.gradle.kts",
@@ -744,7 +744,7 @@
         "RC8": "4a3f3cb0fff676939414afa6f4966cba7d65e4afdf14d1b285a09bfb44f6c944",
         "RC9": "4a3f3cb0fff676939414afa6f4966cba7d65e4afdf14d1b285a09bfb44f6c944"
       },
-      "rc10_sha256": "4a3f3cb0fff676939414afa6f4966cba7d65e4afdf14d1b285a09bfb44f6c944",
+      "rc10_sha256": "e895310fd7250c9957fb248c0f319a07ded7c1760877e94dfb418ea366db05d2",
       "decision": "Keep regression or stricter/corrected fixture"
     },
     {
@@ -792,7 +792,7 @@
         "RC8": "8eb89df19893d0fb80e9c49af4aaf9c2d1084d61499d8e0db188f38c200f59ea",
         "RC9": "7ff79b5fcc73b8933d69773a3058ff18146be11dafd35233e025b5b4487fe2a7"
       },
-      "rc10_sha256": "a0dd5623b6a7407f948347b83a8cb653b12a148eb0397e3af8dfded420472606",
+      "rc10_sha256": "c5900b0b5faf8b49c8efbff85d69443d3f470b64c65fee10d62b2b9f27e53ec1",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -808,7 +808,7 @@
         "RC8": "bb838674b3ff60e2b5068ecc6177d4565177dba5a8a0467a754a1135a7fb7a0c",
         "RC9": "45cfbdfecfaa69c4b43588cea73798762e4236fd51035536150afdbabb2f10f8"
       },
-      "rc10_sha256": "82ee433fa218f72cd018013ae0873c689c53873a058ea56e410618b671b7f62a",
+      "rc10_sha256": "182ea1686b21efcec2fa68f58c4b07acb2bae5edc063ff683d2d0e2e13ad6ed1",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -824,7 +824,7 @@
         "RC8": "e48fb987482a2602c8eb71e66441437ac2ce04869dd2b8df8e3cb74d090a6a44",
         "RC9": "ec16df44e61b6368fa19909e244de9e0099856522fe763464efe72b1196f8906"
       },
-      "rc10_sha256": "a1390acc158bb934db4dbbd69bbc15abd24d54a78fab91ea3b1682a472f72a77",
+      "rc10_sha256": "33a929f687a9d2c8e49c9ef321ec25037a6513c6fce7f64e5ee83fe8af4174ba",
       "decision": "Historical evidence retained in original archives; never treated as current passing qualification."
     },
     {
@@ -1352,8 +1352,20 @@
         "RC8": "180216a52a096cb9e64daceb76f661449fe8f852731c69a2f8084c08319ec445",
         "RC9": "180216a52a096cb9e64daceb76f661449fe8f852731c69a2f8084c08319ec445"
       },
-      "rc10_sha256": "47d80a6b02a95a5fc5a40a94e87f0a36bdb073da264972420e1e2b562a9550f2",
+      "rc10_sha256": "76f620ff950cef30c517ec56a7eb6bd67db0560acbdb5ab2125f4456d0f18a0d",
       "decision": "Keep RC2 tooling; defer forensic utilities and reject throughput-waiver release validators."
+    },
+    {
+      "path": "core/tunnel/healthy_endpoints_test.go",
+      "category": "documentation-or-fixture",
+      "rc10_sha256": "11efffc920094051fd18b370a4fec278716e67b729b4402520ca428781324a48",
+      "decision": "Healthy-server endpoint reference only; no production transport policy change."
+    },
+    {
+      "path": "docs/rc10/HEALTHY_SERVER_REFERENCE.md",
+      "category": "documentation-or-fixture",
+      "rc10_sha256": "558de4eff904cbae5ece61d42354a6c6863097452ebcba1356b76944d10b66a3",
+      "decision": "Healthy-server endpoint reference only; no production transport policy change."
     }
   ]
 }

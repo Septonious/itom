@@ -1,0 +1,89 @@
+=== RUN   TestHealthyServerClientInterruptionPreservesTCP
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:47: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=40 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=2 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+2026/10/19 10:25:26 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:26 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:29 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:29 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:29 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:29 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=fcaa4097bd34f2f7222402bf236dbe83 generation=411072086053071749 epoch=1
+2026/10/19 10:25:34 handling SELECT command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=fcaa4097bd34f2f7222402bf236dbe83 generation=411072086053071749 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=fcaa4097bd34f2f7222402bf236dbe83 generation=411072086053071749 epoch=3
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=fcaa4097bd34f2f7222402bf236dbe83 generation=411072086053071749 epoch=3
+    supervisor_fixture_test.go:254: supervisor_summary accounts=2 dial_attempts=38 dial_denied=0 target_tcp_dials=1 provider={Active:14 DownAccounts:0 Accepted:42 Dropped:0 UplinkBytes:580521 DownlinkBytes:806003 Mbps:0}
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:34 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestHealthyServerClientInterruptionPreservesTCP (13.66s)
+=== RUN   TestHealthyEndpointScopeAndCapacityTransitions
+    healthy_endpoints_test.go:130: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=40 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=2 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+--- PASS: TestHealthyEndpointScopeAndCapacityTransitions (0.00s)
+=== RUN   TestHealthyEndpointTLSNoopCalibration
+    healthy_endpoints_test.go:166: healthy_reference server_rtt_ms=20 server_mbps=1000.000 client_rtt_ms=100 client_mbps=600.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=2 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    healthy_endpoints_test.go:186: endpoint_calibration endpoint=server method=authenticated_TLS_NOOP median_ms=22.758
+    healthy_endpoints_test.go:186: endpoint_calibration endpoint=client method=authenticated_TLS_NOOP median_ms=104.022
+2026/10/19 10:25:35 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestHealthyEndpointTLSNoopCalibration (1.02s)
+2026/10/19 10:25:35 failed to read command: in command: io: read/write on closed pipe
+=== RUN   TestMobileRelayRetransmissionPreservesBytesAndCloses
+--- PASS: TestMobileRelayRetransmissionPreservesBytesAndCloses (0.03s)
+=== RUN   TestMobileUnmarkedProviderConnectionHasNoImpairment
+--- PASS: TestMobileUnmarkedProviderConnectionHasNoImpairment (0.00s)
+=== RUN   TestMobileBaselineNoopScopeAndCancellation
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+2026/10/19 10:25:40 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=7bc158857484b2624c5316d832ae5f73 generation=12681586328699433020 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=7bc158857484b2624c5316d832ae5f73 generation=12681586328699433020 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=2 dial_attempts=20 dial_denied=0 target_tcp_dials=0 provider={Active:9 DownAccounts:0 Accepted:25 Dropped:0 UplinkBytes:81347 DownlinkBytes:138366 Mbps:0}
+2026/10/19 10:25:40 handling IDLE command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+2026/10/19 10:25:40 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestMobileBaselineNoopScopeAndCancellation (4.62s)
+=== RUN   TestScenarioMobileNetworkRegression
+    mobile_network_regression_test.go:230: check=checkMobileScopeUsesBothSocketEndpoints
+    mobile_network_regression_test.go:232: check=checkMobileByteClockDoesNotChargeLateWakePerTLSRecord
+--- PASS: TestScenarioMobileNetworkRegression (0.00s)
+=== RUN   TestProviderAccess20Calibration
+    provider_calibration_test.go:77: access_calibration mode=full-duplex-account-shared connections=2 incompressible_bytes_per_direction=4194304 cap_mbps=20.000 path_rtt_ms=20 elapsed_ns=1687219176 ideal_ns=1687721600 verified=true
+--- PASS: TestProviderAccess20Calibration (1.70s)
+=== RUN   TestScenarioProviderNetwork
+    provider_network_test.go:551: check=checkParseProviderProfileVariableCaps
+    provider_network_test.go:553: check=checkProviderRateLaneActuallyPacesBytes
+--- PASS: TestScenarioProviderNetwork (0.26s)
+PASS
+ok  	itom.local/core/tunnel	21.387s

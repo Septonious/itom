@@ -81,6 +81,7 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
 	}
 	f.network.idleTimeout = time.Duration(loadEnvInt(t, "ITOM_LOAD_PROVIDER_IDLE_TIMEOUT_MS", 0, 0, 120000)) * time.Millisecond
 	f.network.sessionLimit = loadEnvInt(t, "ITOM_LOAD_PROVIDER_CONNECTION_LIMIT", 0, 0, 32)
+	configureHealthyEndpoints(t, f.network)
 	cfg, e := servercfg.New("supervisor-test")
 	if e != nil {
 		t.Fatal(e)
@@ -134,6 +135,9 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
 		return c, err
 	}
 	clientDial := func(ctx context.Context, cfg mailbox.Config, folders []string) (*mailbox.Client, error) {
+		if f.network.healthyEndpoints && time.Now().UnixNano() < f.network.clientDownUntil.Load() {
+			return nil, fmt.Errorf("TEST_CLIENT_ACCESS_INTERRUPTED")
+		}
 		c, err := dial(ctx, cfg, folders)
 		if err == nil && (f.network.mobileEnabled || f.network.fieldLatency != nil && f.network.fieldLatency.endpointScoped) && !f.network.markMobileClient(c.LocalAddr().String(), c.RemoteAddr().String()) {
 			c.Close()

@@ -70,6 +70,18 @@ func (r *mobileRelay) Close() error {
 	})
 	return nil
 }
+
+// Endpoint role selects a separate access link. Provider traffic is not
+// charged twice to one artificial phone/server shared bottleneck.
+func (r *mobileRelay) pathState() *mobileLinkState {
+	if r.owner.mobileClient.Load() {
+		return &r.owner.network.mobile
+	}
+	if r.owner.network.healthyEndpoints {
+		return &r.owner.network.serverPath
+	}
+	return nil
+}
 func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
 	queue := make(chan mobileChunk, 1024) // <=32MiB per direction; covers 600Mbps/300ms BDP and a full bounded FETCH page
 	r.wg.Add(2)
@@ -87,8 +99,9 @@ func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
 			n, err := src.Read(buf)
 			if n > 0 {
 				chunk := mobileChunk{body: append([]byte(nil), buf[:n]...), at: time.Now()}
-				m := &r.owner.network.mobile
-				if profile := m.profile.Load(); r.owner.mobileClient.Load() && profile != nil {
+				m := r.pathState()
+				if m != nil && m.profile.Load() != nil {
+					profile := m.profile.Load()
 					if appliedSeed != profile.Seed {
 						appliedSeed = profile.Seed
 						rng = rand.New(rand.NewSource(seed + profile.Seed))
@@ -132,13 +145,13 @@ func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
 				if delay := time.Until(chunk.at); delay > 0 && !mobileWait(delay, r.done) {
 					return
 				}
-				if r.owner.mobileClient.Load() && r.owner.network.mobile.profile.Load() != nil {
-					rate := &r.owner.network.mobile.downlink
+				if m := r.pathState(); m != nil && m.profile.Load() != nil {
+					rate := &m.downlink
 					if up {
-						rate = &r.owner.network.mobile.uplink
+						rate = &m.uplink
 					}
-					if profile := r.owner.network.mobile.profile.Load(); profile != nil && profile.SharedMedium {
-						rate = &r.owner.network.mobile.shared
+					if profile := m.profile.Load(); profile != nil && profile.SharedMedium {
+						rate = &m.shared
 					}
 					if !rate.waitUntilAt(len(chunk.body)+chunk.retryBytes, chunk.at, r.done) {
 						return

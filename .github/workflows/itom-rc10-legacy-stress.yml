@@ -1,0 +1,29 @@
+name: RC10 optional legacy server and provider fault stress
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  legacy-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc10/source/core/go.mod
+          cache: false
+      - name: Explicit fault injection, separate from healthy-server performance
+        working-directory: archives/1.0.0-rc10/source/core
+        shell: bash
+        env:
+          ITOM_HEALTHY_SERVER: "0"
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=240s -v ./tunnel -run 'TestRev4LongBlackoutPreservesInflightTCPAndMessages|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream' 2>&1 | tee "$RUNNER_TEMP/legacy-stress.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc10-optional-legacy-stress
+          path: ${{ runner.temp }}/legacy-stress.log
+          retention-days: 14

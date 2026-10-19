@@ -1,4 +1,4 @@
-name: RC10 latency and stability qualification; builds require green gates
+name: RC10 healthy-server reference; unchanged strict gates before builds
 on:
   push:
     branches: ["codex/v1.0.0-rc10-development"]
@@ -13,7 +13,7 @@ env:
 jobs:
   core:
     name: Go source integrity, latency selection and account recovery
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -43,8 +43,9 @@ jobs:
         run: |
           set -euo pipefail
           go vet ./...
+          go test -p 2 -count=1 -timeout=120s ./tunnel -run 'TestHealthyEndpoint|TestHealthyServerClient|TestScenarioMobileNetworkRegression|TestProviderAccess20Calibration' -v | tee "$RUNNER_TEMP/healthy-model.log"
           go test -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath ./mailbox
-          go test -p 2 -count=1 -timeout=150s ./tunnel -run 'TestRC10|TestRC8|TestRC7Speedup|TestRC5BulkACK|TestRC5LatestStatus|TestRC2|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestLoadedOnlyCarriersUseUnloadedPoolEstimate|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4RetainedStateMixedTrafficAndNextTransfer|TestRev4LongBlackoutPreservesInflightTCPAndMessages' -v | tee "$RUNNER_TEMP/rc10-focused.log"
+          go test -p 2 -count=1 -timeout=150s ./tunnel -run 'TestRC10|TestRC8|TestRC7Speedup|TestRC5BulkACK|TestRC5LatestStatus|TestRC2|TestLoadedEchoCannotRaiseIdleCarrierSelectionBaseline|TestLoadedOnlyCarriersUseUnloadedPoolEstimate|TestFieldBulkLeavesTwoReadableAccountsForInteractiveData|TestFieldHTTPSBurstAndCanceledSocketsKeepCarriers|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|TestRev4RetainedStateMixedTrafficAndNextTransfer' -v | tee "$RUNNER_TEMP/rc10-focused.log"
       - name: Race check proof accounting and cleanup cancellation
         working-directory: ${{ env.SOURCE }}/core
         run: go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./datapath ./tunnel -run 'TestRC10|TestRC8|TestRC5BulkACK|TestRC5LatestStatus|TestRC2|TestRev4DelayedStreamCannotBlockHealthyStreamPrefix|Test.*(Quota|Unknown|Reclaim|Recovery|Proof)'
@@ -57,7 +58,7 @@ jobs:
           retention-days: 14
   sustained:
     name: ${{ matrix.streams }} streams, retained=${{ matrix.retained }}, two 60s rounds
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 12
     strategy:
       fail-fast: false
@@ -87,13 +88,20 @@ jobs:
           ITOM_LOAD_PROVIDER_MBPS: "600"
           ITOM_LOAD_PROBE_CADENCE_MS: "2000"
           ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
-          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_CLIENT_MBPS: "600"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
           ITOM_LOAD_STARTUP_PROBES: "1"
           ITOM_LOAD_DIAGNOSTICS: "0"
           ITOM_LOAD_TRACE: "0"
           ITOM_LOAD_SNAPSHOTS: "0"
         run: |
           set -euo pipefail
+          python3 -c 'import os;from pathlib import Path; p=Path("/sys/fs/cgroup/cpu.max");print("test_host cpu_count=",os.cpu_count(),"affinity=",len(os.sched_getaffinity(0)),"cpu_quota=",p.read_text().strip() if p.exists() else "unreported","scope=shared_client_server_provider; not dedicated eight-core server")'
           go test -p 2 -count=1 -timeout=600s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/rc10-cleanup-load.log"
       - uses: actions/upload-artifact@v4
         if: always()
@@ -102,7 +110,7 @@ jobs:
           path: ${{ runner.temp }}/rc10-cleanup-load.log
           retention-days: 14
   startup-ramp:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 13
     strategy:
       fail-fast: false
@@ -152,7 +160,13 @@ jobs:
           ITOM_LOAD_PROVIDER_PROFILE_EARLY: "${{ matrix.early }}"
           ITOM_LOAD_PROBE_CADENCE_MS: "2000"
           ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
-          ITOM_LOAD_COMMAND_DELAY_MS: "80"
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_CLIENT_MBPS: "600"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
           ITOM_LOAD_STARTUP_PROBES: "1"
           ITOM_LOAD_DIAGNOSTICS: "0"
           ITOM_LOAD_TRACE: "0"
@@ -167,10 +181,61 @@ jobs:
           path: ${{ runner.temp }}/rc10-${{ matrix.title }}.log
           retention-days: 14
 
+  client-paths:
+    name: Healthy server, client RTT ${{ matrix.rtt }} ms
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        rtt: [20, 50, 100]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0-rc10/source/core/go.mod
+          cache: false
+      - name: Client-path sensitivity, original strict full and tail gates
+        working-directory: ${{ env.SOURCE }}/core
+        shell: bash
+        env:
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "${{ matrix.rtt }}"
+          ITOM_LOAD_CLIENT_MBPS: "600"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "1"
+          ITOM_LOAD_MIN_MBPS: "75"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "32"
+          ITOM_LOAD_RETAINED_STATE: "1"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "1"
+          ITOM_LOAD_PROVIDER_MBPS: "600"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -euo pipefail
+          go test -p 2 -count=1 -timeout=600s -run '^TestTransportReworkQualification$' -v ./tunnel 2>&1 | tee "$RUNNER_TEMP/rc10-client-${{ matrix.rtt }}ms.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc10-client-${{ matrix.rtt }}ms
+          path: ${{ runner.temp }}/rc10-client-${{ matrix.rtt }}ms.log
+          retention-days: 14
+
   linux:
-    needs: [core, sustained, startup-ramp, android]
+    needs: [core, sustained, startup-ramp, client-paths, android]
     name: Build Linux amd64 and arm64
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -198,9 +263,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   android:
-    needs: [core, sustained, startup-ramp]
+    needs: [core, sustained, startup-ramp, client-paths]
     name: Build Android APK, SDK tests, lint and JNI
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
@@ -236,9 +301,9 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   source:
-    needs: [core, sustained, startup-ramp]
+    needs: [core, sustained, startup-ramp, client-paths]
     name: Package executable RC10 source
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
       - name: Integrity check and source archive
@@ -257,7 +322,7 @@ jobs:
   package:
     name: Assemble verified files; testing only, no release tag
     needs: [linux, android, source]
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -280,7 +345,7 @@ jobs:
           test -s ITOM-1.0.0-RC10-linux-amd64.bin
           test -s ITOM-1.0.0-RC10-linux-arm64.bin
           test -s ITOM-1.0.0-RC10-sources.zip
-          printf '%s\n'             'ITOM 1.0.0 RC10 — LAB QUALIFICATION PASSED; FIELD VALIDATION REQUIRED'             'Build commit: ${{ github.sha }}'             'Update Android and server together. APK app ID org.itom.client.'             'Check installed APK signing certificate before in-place upgrade.'             'Do NOT reset accounts, IMAP quota journals, wallets or client identities.'             'Real-provider stability, Laboratory 75/75 Mbps tails and <=750ms RTT gates passed; real-provider performance is not certified.'             'See the parallel RC10 development CI for pass/fail results.' > TESTING_NOTES.txt
+          printf '%s\n'             'ITOM 1.0.0 RC10 — LAB QUALIFICATION PASSED; FIELD VALIDATION REQUIRED'             'Build commit: ${{ github.sha }}'             'Update Android and server together. APK app ID org.itom.client.'             'Check installed APK signing certificate before in-place upgrade.'             'Do NOT reset accounts, IMAP quota journals, wallets or client identities.'             'Healthy-endpoint laboratory 75/75 Mbps tails and <=750ms RTT gates passed; real-provider and dedicated eight-core hardware performance are not certified.'             'See the parallel RC10 development CI for pass/fail results.' > TESTING_NOTES.txt
           sha256sum ITOM-1.0.0-RC10-* SIGNER.txt TESTING_NOTES.txt > SHA256SUMS
           sha256sum -c SHA256SUMS
           zip -q ../ITOM-1.0.0-RC10-testing-package.zip ./*

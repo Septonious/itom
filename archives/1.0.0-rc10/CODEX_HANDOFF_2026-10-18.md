@@ -171,3 +171,15 @@ Actual candidate source now contains exact bounded ScanAttempts/ScanGrants preal
 Selected source tree is `8deb4a90d94b535e1383be8f4a01bf4533d4f21c`. Protected equivalence now records ledger.go as an explicit allocation-only reviewed exception; other protected files retain exact baseline hashes. Source inventory and selected patch are updated. Source controls remain RC2, with previously reviewed fixes. The unchanged full qualification auto-runs from this source checkpoint; don't build or package on failed gates. All experimental workflows now manual-only to avoid repeating rejected cohorts.
 
 Signing-secret-name question remains unanswered. No RC10 APK or binary built. Continue comparing isolated changes; do not restore rejected framing/controller bundles. Local performance sessions all finished. Exact benchmark binary /workspace/work/rc10/scan-full-exact.test; original /workspace/work/rc10/scan-full-baseline.test. Avoid local test/compile overlap during measurements.
+
+
+## Current primary model: healthy server (supersedes old benchmark assumptions)
+
+User reports an eight-core server with a 20 ms Rambler route and strong uplinks, and a phone route normally 20–50 ms, almost always <=100 ms. Primary qualification now applies independent below-TLS endpoint paths: server 20 ms / 1000 Mbps; phone 40 ms / 600 Mbps reference, with 20/50/100 ms client sensitivity and client-only capacity transitions. Backend service 2 ms and server capacity are configurable assumptions, not measurements. Actual CPU quota is recorded; local runs have two cores and do not certify eight-core hardware.
+
+This checkpoint changes fixtures, documentation and qualification orchestration only. Production controller/framing, original state/proof/accounting rules and all numerical acceptance gates remain unchanged. Historical all-account provider blackouts and replica delay remain explicitly available in the manual legacy-stress workflow. Required normal checks retain client interruption recovery against an independently reachable server.
+
+Focused endpoint isolation/capacity units, TLS NOOP calibration, client interruption/original-TCP recovery and legacy relay calibration passed. Offline source check and 91 Python tests passed. These are not full performance qualification. No RC10 package is authorized yet. Latest old-model failures remain historical evidence, not new-profile results. Useful-only cleanup, including the newly preserved fairness correction, remains NOT selected: broad recovery still failed.
+
+Reference details: `source/docs/rc10/HEALTHY_SERVER_REFERENCE.md`. Required full healthy-profile qualification is pending. No claim that the user's pure TCP RTT has been independently measured: historical FETCH median ~15 ms / p95 ~45 ms supports a fast route but includes command processing.
+
