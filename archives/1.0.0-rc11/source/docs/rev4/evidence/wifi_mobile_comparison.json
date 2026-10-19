@@ -1,0 +1,786 @@
+{
+  "schema": 1,
+  "classification": "FIELD_COMPARISON_NOT_RELEASE_QUALIFICATION",
+  "source_runtime_unchanged": true,
+  "qualification_source_sha256": "ec20fb8f08dd65552ffb2db9f328d306b90178e01d28e5a987c46dbbb7f74da8",
+  "production_changes": false,
+  "new_assets_published": false,
+  "captures": {
+    "wifi": {
+      "input_sha256": "8958b4810bb3f4f26682b2734118b080207d71edb1b215dac9dbc53367098f90",
+      "start_utc": "2026-10-15T08:24:53.989631226Z",
+      "end_utc": "2026-10-15T08:26:51.670386494Z",
+      "events": 124174,
+      "duplicate_events": 0,
+      "run_count": 1,
+      "ready_accounts": 14,
+      "observed_accounts": 15,
+      "a05": {
+        "health_samples": 8,
+        "stage": "grants",
+        "available_grants": 0,
+        "data_attempts": 0,
+        "control_messages_received": 154,
+        "rtt_ms": 531,
+        "last_error_empty": true
+      },
+      "bulk_body_fetches": 91,
+      "bulk_body_fetch_median_ms": 957.251,
+      "bulk_body_fetch_p95_ms": 3274.715,
+      "bulk_body_fetch_max_ms": 6035.596,
+      "wallet_history_missing_by_account": {
+        "a17": 48,
+        "a10": 44,
+        "a12": 48,
+        "a15": 44,
+        "a13": 48,
+        "a19": 44,
+        "a08": 44,
+        "a14": 44,
+        "a11": 44,
+        "a18": 48,
+        "a16": 48,
+        "a09": 44,
+        "a05": 67,
+        "a06": 67,
+        "a07": 42
+      },
+      "imap_errors": {
+        "CANCELED": 2
+      },
+      "session_stop_utc": [
+        "2026-10-15T08:26:51.667186806Z"
+      ],
+      "data_fetch_examples": [
+        {
+          "account": "a12",
+          "op": 76348,
+          "start_utc": "2026-10-15T08:25:54.753552+00:00",
+          "end_utc": "2026-10-15T08:26:00.789148128Z",
+          "duration_ms": 6035.596,
+          "packets": 4,
+          "body_bytes": 297404,
+          "first_body_ms": 1007.838,
+          "last_body_ms": 6035.574,
+          "completion_after_last_body_ms": 0.022,
+          "body_steps": [
+            {
+              "after_start_ms": 1007.838,
+              "bytes": 66114,
+              "uid": 14
+            },
+            {
+              "after_start_ms": 2648.45,
+              "bytes": 99062,
+              "uid": 15
+            },
+            {
+              "after_start_ms": 3957.039,
+              "bytes": 66114,
+              "uid": 16
+            },
+            {
+              "after_start_ms": 6035.574,
+              "bytes": 66114,
+              "uid": 17
+            }
+          ]
+        },
+        {
+          "account": "a15",
+          "op": 77849,
+          "start_utc": "2026-10-15T08:25:58.537213+00:00",
+          "end_utc": "2026-10-15T08:26:03.232765262Z",
+          "duration_ms": 4695.552,
+          "packets": 1,
+          "body_bytes": 197906,
+          "first_body_ms": 4695.496,
+          "last_body_ms": 4695.496,
+          "completion_after_last_body_ms": 0.056,
+          "body_steps": [
+            {
+              "after_start_ms": 4695.496,
+              "bytes": 197906,
+              "uid": 17
+            }
+          ]
+        }
+      ]
+    },
+    "mobile": {
+      "input_sha256": "2146f8cb62ef449a957b81f2a0636770c7764399902ed381ab61ce853a3c3f35",
+      "start_utc": "2026-10-15T08:27:50.235731627Z",
+      "end_utc": "2026-10-15T08:30:00.606327359Z",
+      "events": 126429,
+      "duplicate_events": 0,
+      "run_count": 1,
+      "ready_accounts": 14,
+      "observed_accounts": 15,
+      "a05": {
+        "health_samples": 8,
+        "stage": "grants",
+        "available_grants": 0,
+        "data_attempts": 0,
+        "control_messages_received": 100,
+        "rtt_ms": 618,
+        "last_error_empty": true
+      },
+      "bulk_body_fetches": 482,
+      "bulk_body_fetch_median_ms": 120.26,
+      "bulk_body_fetch_p95_ms": 333.241,
+      "bulk_body_fetch_max_ms": 585.21,
+      "wallet_history_missing_by_account": {
+        "a11": 50,
+        "a15": 50,
+        "a19": 50,
+        "a08": 50,
+        "a07": 54,
+        "a17": 50,
+        "a05": 81,
+        "a06": 77,
+        "a12": 54,
+        "a09": 48,
+        "a18": 48,
+        "a13": 48,
+        "a16": 48,
+        "a10": 48,
+        "a14": 48
+      },
+      "imap_errors": {
+        "CANCELED": 7,
+        "IMAP_APPEND_OUTCOME_UNKNOWN": 1
+      },
+      "session_stop_utc": [
+        "2026-10-15T08:30:00.600646786Z"
+      ],
+      "data_fetch_examples": [
+        {
+          "account": "a11",
+          "op": 38950,
+          "start_utc": "2026-10-15T08:29:21.400832+00:00",
+          "end_utc": "2026-10-15T08:29:21.986042582Z",
+          "duration_ms": 585.21,
+          "packets": 2,
+          "body_bytes": 231072,
+          "first_body_ms": 432.614,
+          "last_body_ms": 584.923,
+          "completion_after_last_body_ms": 0.287,
+          "body_steps": [
+            {
+              "after_start_ms": 432.614,
+              "bytes": 99062,
+              "uid": 71
+            },
+            {
+              "after_start_ms": 584.923,
+              "bytes": 132010,
+              "uid": 72
+            }
+          ]
+        },
+        {
+          "account": "a19",
+          "op": 37458,
+          "start_utc": "2026-10-15T08:29:17.699051+00:00",
+          "end_utc": "2026-10-15T08:29:18.283163104Z",
+          "duration_ms": 584.112,
+          "packets": 2,
+          "body_bytes": 165176,
+          "first_body_ms": 400.155,
+          "last_body_ms": 584.099,
+          "completion_after_last_body_ms": 0.013,
+          "body_steps": [
+            {
+              "after_start_ms": 400.155,
+              "bytes": 99062,
+              "uid": 70
+            },
+            {
+              "after_start_ms": 584.099,
+              "bytes": 66114,
+              "uid": 71
+            }
+          ]
+        }
+      ]
+    },
+    "wifi2": {
+      "input_sha256": "3baa92f519a8bbe96d27789ca43c6ab37932bfa994eeba06bfc56698649dcddf",
+      "start_utc": "2026-10-15T08:58:59.218870029Z",
+      "end_utc": "2026-10-15T09:00:23.435744007Z",
+      "events": 98137,
+      "duplicate_events": 0,
+      "run_count": 1,
+      "ready_accounts": 14,
+      "observed_accounts": 15,
+      "a05": {
+        "health_samples": 5,
+        "stage": "grants",
+        "available_grants": 0,
+        "data_attempts": 0,
+        "control_messages_received": 197,
+        "rtt_ms": 920,
+        "last_error_empty": true
+      },
+      "bulk_body_fetches": 85,
+      "bulk_body_fetch_median_ms": 2287.953,
+      "bulk_body_fetch_p95_ms": 8121.545,
+      "bulk_body_fetch_max_ms": 16127.759,
+      "wallet_history_missing_by_account": {
+        "a07": 32,
+        "a06": 54,
+        "a05": 54,
+        "a12": 30,
+        "a09": 30,
+        "a18": 30,
+        "a15": 30,
+        "a11": 30,
+        "a10": 30,
+        "a16": 30,
+        "a19": 30,
+        "a08": 30,
+        "a13": 30,
+        "a14": 30,
+        "a17": 30
+      },
+      "imap_errors": {
+        "CANCELED": 1
+      },
+      "session_stop_utc": [
+        "2026-10-15T09:00:23.431563695Z"
+      ],
+      "data_fetch_examples": [
+        {
+          "account": "a15",
+          "op": 97568,
+          "start_utc": "2026-10-15T08:59:29.051419+00:00",
+          "end_utc": "2026-10-15T08:59:45.179178032Z",
+          "duration_ms": 16127.759,
+          "packets": 2,
+          "body_bytes": 428760,
+          "first_body_ms": 2538.82,
+          "last_body_ms": 16127.71,
+          "completion_after_last_body_ms": 0.049,
+          "body_steps": [
+            {
+              "after_start_ms": 2538.82,
+              "bytes": 66114,
+              "uid": 84
+            },
+            {
+              "after_start_ms": 16127.71,
+              "bytes": 362646,
+              "uid": 85
+            }
+          ]
+        },
+        {
+          "account": "a14",
+          "op": 97563,
+          "start_utc": "2026-10-15T08:59:29.040695+00:00",
+          "end_utc": "2026-10-15T08:59:43.020062617Z",
+          "duration_ms": 13979.367,
+          "packets": 1,
+          "body_bytes": 362646,
+          "first_body_ms": 13979.333,
+          "last_body_ms": 13979.333,
+          "completion_after_last_body_ms": 0.034,
+          "body_steps": [
+            {
+              "after_start_ms": 13979.333,
+              "bytes": 362646,
+              "uid": 99
+            }
+          ]
+        }
+      ]
+    },
+    "mobile2": {
+      "input_sha256": "9048b443bf6d1b1c6347063f9cf9ff7e6b0c91cd8a9796b39acf3836dfadc374",
+      "start_utc": "2026-10-15T09:02:11.554482039Z",
+      "end_utc": "2026-10-15T09:04:00.981807414Z",
+      "events": 124101,
+      "duplicate_events": 0,
+      "run_count": 1,
+      "ready_accounts": 14,
+      "observed_accounts": 15,
+      "a05": {
+        "health_samples": 7,
+        "stage": "grants",
+        "available_grants": 0,
+        "data_attempts": 0,
+        "control_messages_received": 91,
+        "rtt_ms": 766,
+        "last_error_empty": true
+      },
+      "bulk_body_fetches": 170,
+      "bulk_body_fetch_median_ms": 165.32049999999998,
+      "bulk_body_fetch_p95_ms": 544.585,
+      "bulk_body_fetch_max_ms": 721.366,
+      "wallet_history_missing_by_account": {
+        "a11": 42,
+        "a09": 42,
+        "a08": 42,
+        "a19": 42,
+        "a10": 42,
+        "a16": 42,
+        "a12": 42,
+        "a18": 42,
+        "a17": 42,
+        "a07": 42,
+        "a06": 63,
+        "a05": 63,
+        "a14": 42,
+        "a15": 42,
+        "a13": 42
+      },
+      "imap_errors": {
+        "IMAP_APPEND_OUTCOME_UNKNOWN": 6,
+        "CANCELED": 15
+      },
+      "session_stop_utc": [
+        "2026-10-15T09:04:00.973605331Z"
+      ],
+      "data_fetch_examples": [
+        {
+          "account": "a17",
+          "op": 42405,
+          "start_utc": "2026-10-15T09:03:16.240497+00:00",
+          "end_utc": "2026-10-15T09:03:16.961863108Z",
+          "duration_ms": 721.366,
+          "packets": 1,
+          "body_bytes": 362646,
+          "first_body_ms": 721.342,
+          "last_body_ms": 721.342,
+          "completion_after_last_body_ms": 0.024,
+          "body_steps": [
+            {
+              "after_start_ms": 721.342,
+              "bytes": 362646,
+              "uid": 106
+            }
+          ]
+        },
+        {
+          "account": "a16",
+          "op": 42414,
+          "start_utc": "2026-10-15T09:03:16.256675+00:00",
+          "end_utc": "2026-10-15T09:03:16.928514514Z",
+          "duration_ms": 671.839,
+          "packets": 2,
+          "body_bytes": 231072,
+          "first_body_ms": 645.845,
+          "last_body_ms": 671.813,
+          "completion_after_last_body_ms": 0.026,
+          "body_steps": [
+            {
+              "after_start_ms": 645.845,
+              "bytes": 197906,
+              "uid": 86
+            },
+            {
+              "after_start_ms": 671.813,
+              "bytes": 33166,
+              "uid": 87
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "wifi2_receive_socket_sample": [
+    {
+      "account": "a05",
+      "socket": 19,
+      "seconds": 2.8,
+      "read_bytes": 2308,
+      "write_bytes": 1764,
+      "kbps": 6.59,
+      "first_state": "ready",
+      "last_state": "ready"
+    },
+    {
+      "account": "a06",
+      "socket": 17,
+      "seconds": 15.201,
+      "read_bytes": 10328,
+      "write_bytes": 8408,
+      "kbps": 5.44,
+      "first_state": "ready",
+      "last_state": "ready"
+    },
+    {
+      "account": "a07",
+      "socket": 18,
+      "seconds": 16.022,
+      "read_bytes": 551860,
+      "write_bytes": 1388,
+      "kbps": 275.54,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a08",
+      "socket": 16,
+      "seconds": 15.838,
+      "read_bytes": 558375,
+      "write_bytes": 661,
+      "kbps": 282.04,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a09",
+      "socket": 22,
+      "seconds": 15.996,
+      "read_bytes": 578064,
+      "write_bytes": 377,
+      "kbps": 289.1,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a10",
+      "socket": 21,
+      "seconds": 15.936,
+      "read_bytes": 460593,
+      "write_bytes": 2349,
+      "kbps": 231.22,
+      "first_state": "busy",
+      "last_state": "ready"
+    },
+    {
+      "account": "a11",
+      "socket": 20,
+      "seconds": 15.826,
+      "read_bytes": 581448,
+      "write_bytes": 323,
+      "kbps": 293.92,
+      "first_state": "ready",
+      "last_state": "busy"
+    },
+    {
+      "account": "a12",
+      "socket": 23,
+      "seconds": 16.166,
+      "read_bytes": 573557,
+      "write_bytes": 972,
+      "kbps": 283.84,
+      "first_state": "ready",
+      "last_state": "busy"
+    },
+    {
+      "account": "a13",
+      "socket": 25,
+      "seconds": 16.097,
+      "read_bytes": 532293,
+      "write_bytes": 1991,
+      "kbps": 264.54,
+      "first_state": "busy",
+      "last_state": "ready"
+    },
+    {
+      "account": "a14",
+      "socket": 24,
+      "seconds": 16.037,
+      "read_bytes": 589248,
+      "write_bytes": 193,
+      "kbps": 293.94,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a15",
+      "socket": 30,
+      "seconds": 16.076,
+      "read_bytes": 590565,
+      "write_bytes": 0,
+      "kbps": 293.88,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a16",
+      "socket": 26,
+      "seconds": 16.179,
+      "read_bytes": 592656,
+      "write_bytes": 191,
+      "kbps": 293.04,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a17",
+      "socket": 27,
+      "seconds": 16.169,
+      "read_bytes": 385660,
+      "write_bytes": 3201,
+      "kbps": 190.82,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a18",
+      "socket": 29,
+      "seconds": 16.041,
+      "read_bytes": 479885,
+      "write_bytes": 1849,
+      "kbps": 239.33,
+      "first_state": "busy",
+      "last_state": "busy"
+    },
+    {
+      "account": "a19",
+      "socket": 28,
+      "seconds": 16.077,
+      "read_bytes": 65815,
+      "write_bytes": 7374,
+      "kbps": 32.75,
+      "first_state": "busy",
+      "last_state": "busy"
+    }
+  ],
+  "wifi2_slow_body_socket_progress": [
+    {
+      "time_utc": "2026-10-15T08:59:28.120828508Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 32,
+      "read_bytes": 2177484,
+      "write_bytes": 181862
+    },
+    {
+      "time_utc": "2026-10-15T08:59:29.094734653Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 43,
+      "read_bytes": 2216590,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:30.077606476Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 27,
+      "read_bytes": 2245331,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:31.107332569Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 83,
+      "read_bytes": 2290219,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:32.00406835Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 91,
+      "read_bytes": 2320627,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:33.132218297Z",
+      "op": "append_data",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 1,
+      "read_bytes": 2372755,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:34.055651057Z",
+      "op": "presence",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 5,
+      "read_bytes": 2407507,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:35.038149286Z",
+      "op": "presence",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 0,
+      "read_bytes": 2442259,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:36.11402663Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 155,
+      "read_bytes": 2484251,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:37.002864963Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 103,
+      "read_bytes": 2519003,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:38.094183608Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 45,
+      "read_bytes": 2546515,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:39.168571368Z",
+      "op": "presence",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 5,
+      "read_bytes": 2572579,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:40.079386055Z",
+      "op": "presence",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 75,
+      "read_bytes": 2605883,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:41.063538242Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 73,
+      "read_bytes": 2644979,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:42.175533294Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 35,
+      "read_bytes": 2686971,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:43.059464648Z",
+      "op": "presence",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 57,
+      "read_bytes": 2717379,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:44.024652929Z",
+      "op": "append_control",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 10,
+      "read_bytes": 2757923,
+      "write_bytes": 182048
+    },
+    {
+      "time_utc": "2026-10-15T08:59:45.170878189Z",
+      "op": "cleanup_fetch_exact",
+      "id": 30,
+      "generation": 30,
+      "worker_id": 0,
+      "role": "data_receive",
+      "state": "busy",
+      "idle_ms": 59,
+      "read_bytes": 2807155,
+      "write_bytes": 182048
+    }
+  ],
+  "focused_checks": {
+    "exit_code": 0,
+    "passed_test_events": 10,
+    "failed": 0,
+    "skipped": 0,
+    "tests": [
+      "TestRecoveryPreservesSpentDebtAndRejectsForeignWalletHistory",
+      "TestTLSIMAPAppendFetchVerifiedDelete/tlstrue",
+      "TestTLSIMAPAppendFetchVerifiedDelete/tlsfalse",
+      "TestTLSIMAPAppendFetchVerifiedDelete/starttlstrue",
+      "TestTLSIMAPAppendFetchVerifiedDelete/starttlsfalse",
+      "TestTLSIMAPAppendFetchVerifiedDelete",
+      "TestReceiveWorkerRepairsNoProgressAndKeepsApplicationOwner",
+      "TestRetainedPartlySpentGrantReconcilesWithoutRefundingDATA",
+      "TestRetainedQuotaCannotManufactureFullJournalCapacity",
+      "TestServicePolicyBoundsSlowLiteralsWithoutChangingRTT"
+    ]
+  },
+  "limitations": [
+    "Client-only rolling trace tails; no matching server journal/quota snapshot.",
+    "Speedtest screenshot-to-run/server/mode mapping is unconfirmed.",
+    "No live provider or physical phone was accessed.",
+    "Missing historical wallet offers occur on every account, so they do not alone prove why a05 has no new grants.",
+    "The four traces do not identify the ISP as the cause of Wi-Fi path pacing."
+  ]
+}
