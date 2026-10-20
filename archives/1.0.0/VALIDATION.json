@@ -1,0 +1,142 @@
+{
+  "version": "1.0.0",
+  "baseline": "v1.0.0-rc2",
+  "baseline_commit": "a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
+  "source_build_commit": "eca768e1a6f2fcd34bc0e57637b7912ce57e1430",
+  "source_tree": "30eb6f2423e9c01e6c6810d5398f54a9b30c3623",
+  "build_run": 39430001782,
+  "publish_run": 39433803819,
+  "source_integrity": {
+    "core_non_test_files": 238,
+    "all_checked_files": 307,
+    "runtime_differences": "Three revision strings only",
+    "android_runtime": "RC2",
+    "android_application_id": "org.itom.client",
+    "android_version_code": 10014,
+    "android_version_name": "1.0.0-debug",
+    "qualification_script": "Byte-identical to RC2"
+  },
+  "checks": [
+    {
+      "job_id": 118652261253,
+      "name": "preservation",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 118652261549,
+      "name": "RC2 identity, full Go correctness and race",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 118659349714,
+      "name": "Package executable V1 source",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 118659349830,
+      "name": "Build Linux amd64 and arm64",
+      "conclusion": "success"
+    },
+    {
+      "job_id": 118659350069,
+      "name": "Build Android APK, SDK tests, lint and JNI",
+      "conclusion": "success"
+    }
+  ],
+  "publication": {
+    "release_id": 418451281,
+    "draft": false,
+    "prerelease": false,
+    "conclusion": "success",
+    "initial_publisher_failure": "Draft release cannot be looked up by tag before publication. Resolved by release-ID lookup; artifacts were reused, not rebuilt.",
+    "retry_failure": "Release ID was initially exported only to later workflow steps; corrected current-shell assignment."
+  },
+  "signing": {
+    "mode": "temporary_debug",
+    "persistent_signing_secrets_present": false,
+    "compatible_update_from_previous_apks": "Not assured; do not uninstall or clear state to bypass mismatch"
+  },
+  "performance": {
+    "new_timing_prototypes": 5,
+    "accepted_transport_changes": 0,
+    "new_100mbps_qualification": "FAILED locally on both RC2 and prototype; incomplete rounds are not sustained rate evidence",
+    "local_idle_light_results": "Mixed; timeouts and tails retained in docs/1.1.0/experiments",
+    "qualification_thresholds_relaxed": false,
+    "field_qualified": false,
+    "release_decision": "User selected RC2 as final based on prior field usability"
+  },
+  "assets": [
+    {
+      "name": "ITOM-1.0.0-debug.apk",
+      "bytes": 72128018,
+      "digest": "sha256:7eef05aec9172f2d8d85005fd87c866d1a6cbefbf99e0a020c6f294e67884402",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/ITOM-1.0.0-debug.apk"
+    },
+    {
+      "name": "ITOM-1.0.0-full.zip",
+      "bytes": 47409111,
+      "digest": "sha256:d6db847bb11186b4203b76ff5dfc34bc450f404a60570dcfad6d0d1e6f72cf78",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/ITOM-1.0.0-full.zip"
+    },
+    {
+      "name": "ITOM-1.0.0-linux-amd64.bin",
+      "bytes": 14468586,
+      "digest": "sha256:c2cad47c8fc64a7ff78cb09704517be4b99d469dd56881d52973efe9f438cb8f",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/ITOM-1.0.0-linux-amd64.bin"
+    },
+    {
+      "name": "ITOM-1.0.0-linux-arm64.bin",
+      "bytes": 13299802,
+      "digest": "sha256:be72b590563168a672c23450dd2a34d603fe7f5b867dc382f14484cf40389663",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/ITOM-1.0.0-linux-arm64.bin"
+    },
+    {
+      "name": "ITOM-1.0.0-sources.zip",
+      "bytes": 2475021,
+      "digest": "sha256:5bc58c770848d0f3e58d6fcb580d787ba246614c108d10ded07c386017d23497",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/ITOM-1.0.0-sources.zip"
+    },
+    {
+      "name": "lint-summary.json",
+      "bytes": 568,
+      "digest": "sha256:7090c7e800e67cd4e185e0dc4135a60aa1dd2eab69e63d8579e7d719ed1d243f",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/lint-summary.json"
+    },
+    {
+      "name": "POST_RC2_CHANGES.zip",
+      "bytes": 1416478,
+      "digest": "sha256:2911451b357457bf96743945a8956541cf48cc0736fcb7db9ef9c03e9b3d4db7",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/POST_RC2_CHANGES.zip"
+    },
+    {
+      "name": "RELEASE_NOTES.md",
+      "bytes": 2377,
+      "digest": "sha256:894863c163dc90851b1ec081114b29ace2947b138849e7710deb0f4fc925a482",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/RELEASE_NOTES.md"
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 693,
+      "digest": "sha256:97007df70c4fc3f446bc40d0b9865682ca2cba39c9bbafc525f12d35974f7fe7",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/SHA256SUMS"
+    },
+    {
+      "name": "SIGNER.txt",
+      "bytes": 307,
+      "digest": "sha256:5fdea5c7e9f41524949a48a71fdae5ac079e3118447f218f77d779a32d8163d3",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/SIGNER.txt"
+    },
+    {
+      "name": "test-summary.json",
+      "bytes": 165,
+      "digest": "sha256:df76bd1e8f6eb1e38ff897f5a24feb6e24c60a41396be9772aa9d1fb79218454",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/test-summary.json"
+    },
+    {
+      "name": "TESTING_NOTES.txt",
+      "bytes": 569,
+      "digest": "sha256:c039ab410379adb2269a47e6417744a5f22d2ce6a0fa61670a252fa7ab1635e5",
+      "url": "https://github.com/Septonious/itom/releases/download/v1.0.0/TESTING_NOTES.txt"
+    }
+  ]
+}
