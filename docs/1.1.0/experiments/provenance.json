@@ -1,0 +1,35 @@
+{
+  "baseline": "a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
+  "server_rtt_ms": 2,
+  "client_rtt_ms": [
+    5,
+    40
+  ],
+  "client_mbps": 500,
+  "server_mbps": 1000,
+  "provider_service_ms": 2,
+  "accounts": 10,
+  "runtime_cpus": 3,
+  "cpu_quota_cores": 2,
+  "actual_fsync": true,
+  "shared_fixture_files": [
+    "tunnel/supervisor_fixture_test.go",
+    "tunnel/mobile_network_test.go",
+    "tunnel/supervised_load_test.go",
+    "tunnel/rc7_speedup_profile_test.go",
+    "tunnel/rc8_release_gate_test.go",
+    "tunnel/rc12_pressure_itomtest_test.go",
+    "tunnel/v110_latency_itomtest_test.go",
+    "tunnel/comparison_compat_test.go",
+    "tunnel/rc6_stability_gate_test.go",
+    "tunnel/healthy_endpoints_test.go",
+    "tunnel/field_replay_test.go",
+    "tunnel/provider_network_test.go",
+    "tunnel/imap_test.go"
+  ],
+  "latency_request_bytes": 32,
+  "light_background": "4096-byte verified request/reply, 100ms think time, closed loop",
+  "samples_per_phase": 24,
+  "probe_deadline_s": 3,
+  "field_qualified": false
+}

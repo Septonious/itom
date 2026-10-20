@@ -1,0 +1,204 @@
+=== RUN   TestTransportReworkQualification
+    supervised_load_test.go:34: synthetic_measurement=true field_qualified=false
+    supervised_load_test.go:58: supervised_probe_schedule cadence_ms=2000 deadline_ms=2000 expected=30 loss_scoped=false bandwidth_cadence_ms=1000 hard_deadline=true
+    supervised_load_test.go:98: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervised_load_test.go:98: healthy_reference server_rtt_ms=2 server_mbps=1000.000 client_rtt_ms=40 client_mbps=500.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=3 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    supervised_load_test.go:107: supervised_provider_initial mbps=0.000 early_profile=false
+    supervised_load_test.go:109: capacity_profile_scope=client_access_only server_path_unchanged=true
+    supervised_load_test.go:133: application_open_path=Client.Open manually_assigned_owners=false mobile_profile_active_before_application_open=true
+    supervised_load_test.go:221: supervised_config accounts=10 minimum_working=5 streams=4 availability=all delay_ms=0 measurement_s=60 warmup_s=2
+    supervised_load_test.go:262: supervised_recovery round=1 rtt_ms=971
+    supervised_load_test.go:278: supervised_startup second=1 upload_mbps=0.000 download_mbps=1.311 cumulative_upload_mbps=0.000 cumulative_download_mbps=1.311 excludes_warmup=false
+    supervised_load_test.go:278: supervised_startup second=2 upload_mbps=8.389 download_mbps=3.932 cumulative_upload_mbps=4.194 cumulative_download_mbps=2.621 excludes_warmup=false
+    supervised_load_test.go:314: supervised_round_schedule round=1 cadence_ms=2000 phase_ms=1000 deadline_ms=2000 expected=30 survival=false bandwidth_clock_ms=1000
+    supervised_load_test.go:320: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=3 observed_ms=1000 upload_bytes=950272 download_bytes=557056 upload_mbps=7.602 download_mbps=4.456 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_probe index=1 user=1 scheduled_ms=1000 rtt_ms=992 status=ok overlap=true
+    supervised_load_test.go:320: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=15 observed_ms=1000 upload_bytes=1540096 download_bytes=1310720 upload_mbps=12.321 download_mbps=10.486 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=5 observed_ms=1000 upload_bytes=1572864 download_bytes=1146880 upload_mbps=12.583 download_mbps=9.175 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=19 observed_ms=1000 upload_bytes=1638400 download_bytes=393216 upload_mbps=13.107 download_mbps=3.146 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_probe index=2 user=1 scheduled_ms=3000 rtt_ms=1253 status=ok overlap=true
+    supervised_load_test.go:320: production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=34 observed_ms=1000 upload_bytes=2621440 download_bytes=983040 upload_mbps=20.972 download_mbps=7.864 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_window5 user=1 index=1 observed_ms=5034 upload_mbps=13.225 download_mbps=6.977
+    supervised_load_test.go:320: production_window user=1 index=6 period_ms=1000 boundary_ms=6000 scheduling_lag_ms=597 observed_ms=1000 upload_bytes=786432 download_bytes=1376256 upload_mbps=6.291 download_mbps=11.010 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_window user=1 index=7 period_ms=1000 boundary_ms=7000 scheduling_lag_ms=3 observed_ms=1000 upload_bytes=425984 download_bytes=65536 upload_mbps=3.408 download_mbps=0.524 upload_gap_ms=0 download_gap_ms=0
+    supervised_load_test.go:320: production_probe index=3 user=1 scheduled_ms=5000 rtt_ms=2011 status=timeout overlap=true
+    supervised_load_test.go:352: supervised_result round=1 measured_ms=7045 upload_mbps=11.161 download_mbps=6.622 rtt_samples=2 p50_ms=992 p95_ms=1253 max_ms=1253 timeouts=1 missed=0 overlap=2 failure=probe user=1 index=3 status=timeout: read pipe: i/o timeout
+    supervised_load_test.go:361: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=1 mean_ms=261.092 p95_ms=261.092 max_ms=261.092 target_ms=100 field_qualified=false
+    supervised_load_test.go:375: rc5_provider_sessions peak=map[a01:10 a02:10 a03:10 a04:10 a05:10 a06:10 a07:10 a08:10 a09:10 a10:10] current=map[a01:10 a02:10 a03:10 a04:10 a05:10 a06:10 a07:10 a08:10 a09:10 a10:10] denied=0 cap=0
+    supervised_load_test.go:380: supervised_delivery side=client state={Mode:CONGESTED BaselineMS:42 TargetMS:975 ObservedRTTMS:2036 OldestBulkRangeAgeMS:2197 AcknowledgementFloorMS:475 LastFastACKAgeMS:1112 FastPressureRemainingMS:1802 FastPathBaselineMS:0 FastTargetMS:1426 FastPressureDecisions:5 ProbeAttempts:7 ProbeAccepted:6 ProbeRejected:1 RecoveryAttempts:0 RecoveryAccepted:0 RecoveryRejected:0 FastRampIncreases:0 FastRampRollbacks:0 FastRampActive:false ProbeActive:false BulkLimit:0 BulkInFlight:0 FeedbackSamples:0 MaxCarrierRTTMS:0 FloorBypass:false RateMbps:11.562456493539347 BulkRateMbps:11.562456493539347 RateEWMA:16.41934516526834 RateLimitMbps:0 DecisionCount:47 EmergencyDecisionCount:0 DownloadWindowBytes:1409856 DownloadBacklogBytes:1409024 DownloadPendingBytes:0 FastFlightBytes:9 FlightRanges:44 AdmissionWaiters:0 PendingShortRangesByAccount:map[a10:1]}
+    supervised_load_test.go:381: supervised_scheduler side=client state={Streams:[{Stream:1 SendNext:3964928 SendReceipt:3375104 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:3 SendNext:0 SendReceipt:0 ReceiveReceipt:1867776 ReceiveDelivered:1867776} {Stream:5 SendNext:4816896 SendReceipt:3407872 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:7 SendNext:0 SendReceipt:0 ReceiveReceipt:1998848 ReceiveDelivered:1998848} {Stream:9 SendNext:3670016 SendReceipt:3112960 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:11 SendNext:0 SendReceipt:0 ReceiveReceipt:1736704 ReceiveDelivered:1736704} {Stream:13 SendNext:4358144 SendReceipt:3014656 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:15 SendNext:0 SendReceipt:0 ReceiveReceipt:2031616 ReceiveDelivered:2031616} {Stream:17 SendNext:37 SendReceipt:28 ReceiveReceipt:28 ReceiveDelivered:28}] LogicalBytes:3899401 Items:120 Attempts:476 Queued:0 Writing:83 RepairReady:0 WakeBlocked:0 BulkQueued:6 FastQueued:0 OldestItem:353 OldestStream:13 OldestOffset:3014656 OldestPhase:WAITING_ACK}
+    supervised_load_test.go:389: supervised_delivery side=server state={Mode:PROBE_UP BaselineMS:107 TargetMS:976 ObservedRTTMS:2779 OldestBulkRangeAgeMS:2340 AcknowledgementFloorMS:476 LastFastACKAgeMS:865 FastPressureRemainingMS:0 FastPathBaselineMS:0 FastTargetMS:1428 FastPressureDecisions:1 ProbeAttempts:8 ProbeAccepted:7 ProbeRejected:0 RecoveryAttempts:0 RecoveryAccepted:0 RecoveryRejected:0 FastRampIncreases:0 FastRampRollbacks:0 FastRampActive:false ProbeActive:true BulkLimit:0 BulkInFlight:0 FeedbackSamples:0 MaxCarrierRTTMS:0 FloorBypass:false RateMbps:2.5120840031369136 BulkRateMbps:2.5120840031369136 RateEWMA:7.616624284879433 RateLimitMbps:0 DecisionCount:47 EmergencyDecisionCount:0 DownloadWindowBytes:1572864 DownloadBacklogBytes:1572864 DownloadPendingBytes:0 FastFlightBytes:9 FlightRanges:49 AdmissionWaiters:0 PendingShortRangesByAccount:map[a01:1]}
+    supervised_load_test.go:390: supervised_scheduler side=server state={Streams:[{Stream:1 SendNext:0 SendReceipt:0 ReceiveReceipt:3375104 ReceiveDelivered:3112960} {Stream:3 SendNext:2686976 SendReceipt:1769472 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:5 SendNext:0 SendReceipt:0 ReceiveReceipt:3407872 ReceiveDelivered:3080192} {Stream:7 SendNext:2981888 SendReceipt:1933312 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:9 SendNext:0 SendReceipt:0 ReceiveReceipt:3604480 ReceiveDelivered:3244032} {Stream:11 SendNext:2785280 SendReceipt:1736704 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:13 SendNext:0 SendReceipt:0 ReceiveReceipt:3440640 ReceiveDelivered:3145728} {Stream:15 SendNext:2949120 SendReceipt:2031616 ReceiveReceipt:0 ReceiveDelivered:0} {Stream:17 SendNext:37 SendReceipt:28 ReceiveReceipt:37 ReceiveDelivered:37}] LogicalBytes:3932169 Items:121 Attempts:129 Queued:72 Writing:12 RepairReady:0 WakeBlocked:64 BulkQueued:0 FastQueued:0 OldestItem:223 OldestStream:15 OldestOffset:2031616 OldestPhase:WAITING_ACK}
+    supervised_load_test.go:413: supervised_service server=false account=a02 append_ms=0 encoded_bytes=0 samples=0 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a02 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a02 bodies=1 records=1 useful_bytes=10 local_gc=7 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a02 control_wait_ms=63 max_control_wait_ms=297 control_appends=40 control_bytes=28956 sent_window=0 received_window=1 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=7
+    supervised_load_test.go:413: supervised_service server=false account=a05 append_ms=252 encoded_bytes=313401 samples=11 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a05 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a05 bodies=12 records=62 useful_bytes=1998857 local_gc=21 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a05 control_wait_ms=23 max_control_wait_ms=893 control_appends=41 control_bytes=30997 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=21
+    supervised_load_test.go:413: supervised_service server=false account=a09 append_ms=226 encoded_bytes=259167 samples=15 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a09 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a09 bodies=15 records=71 useful_bytes=2326528 local_gc=22 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a09 control_wait_ms=179 max_control_wait_ms=912 control_appends=39 control_bytes=31831 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=22
+    supervised_load_test.go:413: supervised_service server=false account=a03 append_ms=243 encoded_bytes=133651 samples=9 batch_target=344064 active=1 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a03 physical_data_parallelism=1 physical_slots=1
+    supervised_load_test.go:417: supervised_batching server=false account=a03 bodies=10 records=40 useful_bytes=1310720 local_gc=21 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a03 control_wait_ms=64 max_control_wait_ms=619 control_appends=39 control_bytes=29993 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=21
+    supervised_load_test.go:413: supervised_service server=false account=a07 append_ms=261 encoded_bytes=221067 samples=9 batch_target=344064 active=1 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a07 physical_data_parallelism=1 physical_slots=1
+    supervised_load_test.go:417: supervised_batching server=false account=a07 bodies=10 records=53 useful_bytes=1736704 local_gc=22 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a07 control_wait_ms=54 max_control_wait_ms=128 control_appends=32 control_bytes=20810 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=22
+    supervised_load_test.go:413: supervised_service server=false account=a06 append_ms=352 encoded_bytes=299125 samples=9 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a06 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a06 bodies=10 records=44 useful_bytes=1409033 local_gc=19 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a06 control_wait_ms=209 max_control_wait_ms=991 control_appends=45 control_bytes=32459 sent_window=2 received_window=1 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=19
+    supervised_load_test.go:413: supervised_service server=false account=a10 append_ms=263 encoded_bytes=175404 samples=16 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a10 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a10 bodies=17 records=59 useful_bytes=1900553 local_gc=20 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a10 control_wait_ms=209 max_control_wait_ms=732 control_appends=31 control_bytes=26287 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=20
+    supervised_load_test.go:413: supervised_service server=false account=a04 append_ms=231 encoded_bytes=153151 samples=16 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a04 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a04 bodies=16 records=52 useful_bytes=1703936 local_gc=21 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a04 control_wait_ms=58 max_control_wait_ms=191 control_appends=29 control_bytes=21723 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=21
+    supervised_load_test.go:413: supervised_service server=false account=a08 append_ms=233 encoded_bytes=129509 samples=14 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a08 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a08 bodies=14 records=41 useful_bytes=1343488 local_gc=20 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a08 control_wait_ms=53 max_control_wait_ms=282 control_appends=34 control_bytes=28578 sent_window=0 received_window=0 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=20
+    supervised_load_test.go:413: supervised_service server=false account=a01 append_ms=454 encoded_bytes=189960 samples=5 batch_target=78333 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=false account=a01 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:417: supervised_batching server=false account=a01 bodies=5 records=18 useful_bytes=589824 local_gc=19 local_gc_messages=0 headroom_waits=0 deferred=0
+    supervised_load_test.go:419: rc5_duplex_feedback server=false account=a01 control_wait_ms=7 max_control_wait_ms=991 control_appends=46 control_bytes=36984 sent_window=7 received_window=7 sent_receipt=0 received_receipt=0 remote_grant_wait_ms=0 remote_grant_max_ms=0 data_fetch_bytes=-1 data_fetch_callback_max_ms=-1 remote_cleanup_runs=0 local_cleanup_runs=19
+    supervised_load_test.go:411: supervised_physical account=a04 server=true peer_samples=17 peer_target=0 peer_slow=0 peer_fast=0 peer_age_ms=429 pending_bodies=2 active=0 held_local_bytes=363045 held_local_messages=5 held_remote_bytes=2683160 held_remote_messages=82 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a04 append_ms=146 encoded_bytes=87709 samples=19 batch_target=344064 active=0 unread=163840
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a04 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a02 server=true peer_samples=10 peer_target=0 peer_slow=0 peer_fast=0 peer_age_ms=4643 pending_bodies=0 active=0 held_local_bytes=362568 held_local_messages=4 held_remote_bytes=4717877 held_remote_messages=95 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a02 append_ms=122 encoded_bytes=69340 samples=10 batch_target=344064 active=0 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a02 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a07 server=true peer_samples=14 peer_target=262144 peer_slow=0 peer_fast=0 peer_age_ms=337 pending_bodies=2 active=0 held_local_bytes=542916 held_local_messages=4 held_remote_bytes=3093133 held_remote_messages=91 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a07 append_ms=161 encoded_bytes=99350 samples=16 batch_target=262144 active=0 unread=196608
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a07 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a08 server=true peer_samples=15 peer_target=65536 peer_slow=0 peer_fast=0 peer_age_ms=203 pending_bodies=1 active=0 held_local_bytes=769286 held_local_messages=6 held_remote_bytes=2909059 held_remote_messages=83 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a08 append_ms=136 encoded_bytes=102564 samples=16 batch_target=65536 active=0 unread=131072
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a08 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a10 server=true peer_samples=13 peer_target=65536 peer_slow=1 peer_fast=0 peer_age_ms=364 pending_bodies=1 active=0 held_local_bytes=317261 held_local_messages=3 held_remote_bytes=2501620 held_remote_messages=80 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a10 append_ms=158 encoded_bytes=103131 samples=14 batch_target=65536 active=0 unread=131072
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a10 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a01 server=true peer_samples=13 peer_target=131072 peer_slow=0 peer_fast=1 peer_age_ms=1670 pending_bodies=2 active=0 held_local_bytes=499268 held_local_messages=6 held_remote_bytes=3995340 held_remote_messages=92 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a01 append_ms=128 encoded_bytes=87710 samples=15 batch_target=131072 active=0 unread=262153
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a01 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a03 server=true peer_samples=13 peer_target=65536 peer_slow=0 peer_fast=0 peer_age_ms=272 pending_bodies=1 active=0 held_local_bytes=769763 held_local_messages=7 held_remote_bytes=3136355 held_remote_messages=87 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a03 append_ms=178 encoded_bytes=90137 samples=14 batch_target=65536 active=0 unread=131072
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a03 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:411: supervised_physical account=a05 server=true peer_samples=15 peer_target=131072 peer_slow=1 peer_fast=0 peer_age_ms=396 pending_bodies=0 active=2 held_local_bytes=725507 held_local_messages=7 held_remote_bytes=4174504 held_remote_messages=90 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a05 append_ms=185 encoded_bytes=83581 samples=15 batch_target=131072 active=2 unread=0
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a05 physical_data_parallelism=1 physical_slots=1
+    supervised_load_test.go:411: supervised_physical account=a09 server=true peer_samples=15 peer_target=262144 peer_slow=0 peer_fast=1 peer_age_ms=1700 pending_bodies=1 active=1 held_local_bytes=588426 held_local_messages=4 held_remote_bytes=1510423 held_remote_messages=81 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a09 append_ms=169 encoded_bytes=84475 samples=16 batch_target=262144 active=1 unread=32768
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a09 physical_data_parallelism=1 physical_slots=1
+    supervised_load_test.go:411: supervised_physical account=a06 server=true peer_samples=14 peer_target=131072 peer_slow=0 peer_fast=0 peer_age_ms=260 pending_bodies=1 active=0 held_local_bytes=769286 held_local_messages=6 held_remote_bytes=3045933 held_remote_messages=87 hold_err=<nil>
+    supervised_load_test.go:413: supervised_service server=true account=a06 append_ms=136 encoded_bytes=95681 samples=15 batch_target=131072 active=0 unread=131072
+    supervised_load_test.go:414: rc5_endpoint_sessions server=true account=a06 physical_data_parallelism=1 physical_slots=0
+    supervised_load_test.go:423: supervised_carriers healthy=10 spontaneous_outages=0 epochs_preserved=true
+    supervised_load_test.go:425: probe user=1 index=3 status=timeout: read pipe: i/o timeout
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a07 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a05 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a08 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a09 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a06 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a10 session=704956112821f332bcd326cf43cd1bd4 generation=12140311685803961561 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=10 dial_attempts=100 dial_denied=0 target_tcp_dials=0 provider={HealthyEndpoints:true ClientMbps:0 ServerMbps:1000 ClientRTTMS:40 ServerRTTMS:2 Active:15 DownAccounts:0 Accepted:120 Dropped:0 UplinkBytes:25094244 DownlinkBytes:30676867 Mbps:0}
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:38:05 failed to read command: in command: io: read/write on closed pipe
+--- FAIL: TestTransportReworkQualification (15.96s)
+FAIL

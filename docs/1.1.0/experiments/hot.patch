@@ -1,0 +1,17 @@
+diff --git a/tunnel/io.go b/tunnel/io.go
+index 292c887..93718e3 100644
+--- a/tunnel/io.go
++++ b/tunnel/io.go
+@@ -1693,6 +1693,12 @@ func (l *lane) startReader() {
+ 				}
+ 			}
+ 			delay := readerPollDelay(active, hot, advanced, len(rows), &idle)
++            // Experimental demand-scoped pacing: use direct provider propagation,
++            // not loaded tunnel RTT. Keep RC2 idle/active policy outside hints.
++            if hot && delay > 0 && l.providerBaseline > 0 {
++                turn := min(20*time.Millisecond, max(2*time.Millisecond, l.providerBaseline/2))
++                delay = min(delay, turn)
++            }
+ 			if delay > 0 && readerPause(l.ctx, l.readWake, delay) != nil {
+ 				return
+ 			}

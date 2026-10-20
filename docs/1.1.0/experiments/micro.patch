@@ -1,0 +1,17 @@
+diff --git a/datapath/pump.go b/datapath/pump.go
+index 8d65136..3e2b37d 100644
+--- a/datapath/pump.go
++++ b/datapath/pump.go
+@@ -939,7 +939,11 @@ func (p *Pump) readSocket(id uint64, s Socket) {
+ 		b := make([]byte, wire.MaxData)
+ 		n, err := s.Read(b)
+ 		if n > 0 && n < len(b) && err == nil && p.cfg.ReadCoalesce > 0 {
+-			n, err = coalesceRead(s, b, n, p.cfg.ReadCoalesce)
++			budget := p.cfg.ReadCoalesce
++            // Preserve coalescing, but a tiny request cannot spend the entire
++            // bulk accumulation budget before its first publication.
++            if n <= dataTinyThreshold { budget = min(budget, time.Millisecond) }
++            n, err = coalesceRead(s, b, n, budget)
+ 		}
+ 		if n < 0 || n > len(b) {
+ 			p.emit(pumpEvent{err: io.ErrUnexpectedEOF})

@@ -1,0 +1,19 @@
+diff --git a/tunnel/io.go b/tunnel/io.go
+index 292c887..de5bf45 100644
+--- a/tunnel/io.go
++++ b/tunnel/io.go
+@@ -1654,7 +1654,13 @@ func (l *lane) startReader() {
+ 			// An open TCP flow is not evidence of new mail on every account.
+ 			// After two empty active polls, wait for the provider notification;
+ 			// retain a short audit for delayed visibility and missing notifications.
+-			if !hot && !advanced && len(rows) == 0 && (active == 0 || idle >= 2) {
++			// Experimental event-driven response: reliable notification precedes polling
++            // on a low-latency client-provider path. No changes to watchdogs.
++            if hot && !advanced && len(rows) == 0 && l.providerBaseline > 0 && l.providerBaseline <= 50*time.Millisecond {
++                hot = false
++                idle = 2
++            }
++            if !hot && !advanced && len(rows) == 0 && (active == 0 || idle >= 2) {
+ 				audit := readerIdleAuditDelay(active, l.readHotUntil.Load(), time.Now())
+ 				audit = notificationPolicy.delay(active, audit, time.Now())
+ 				if waiter, ok := l.mail.(interface {

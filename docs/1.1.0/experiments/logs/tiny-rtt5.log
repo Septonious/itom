@@ -1,0 +1,46 @@
+=== RUN   TestV110IdleLightReference
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:47: healthy_reference server_rtt_ms=2 server_mbps=1000.000 client_rtt_ms=5 client_mbps=500.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=3 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    v110_latency_itomtest_test.go:39: V110_RESULT {"accounts":10,"client_rtt_ms":"5","failures":0,"field_qualified":false,"max_ms":137.464931,"mean_ms":69.05346287500001,"p50_ms":65.7782,"p95_ms":126.048994,"phase":"idle","samples_ms":[137.464931,41.908194,66.462672,55.743976,42.346949,126.048994,71.90688,65.7782,44.473895,68.084543,64.061709,107.008085,113.715482,81.714126,37.453697,35.096911,64.326219,70.002723,68.851824,52.215373,54.011188,54.62721,40.561302,93.418026],"server_rtt_ms":2,"variant":"tiny"}
+    v110_latency_itomtest_test.go:39: V110_RESULT {"accounts":10,"client_rtt_ms":"5","failures":0,"field_qualified":false,"max_ms":2108.508293,"mean_ms":186.22424324999997,"p50_ms":78.906698,"p95_ms":641.61688,"phase":"light","samples_ms":[63.600958,58.85208,89.609061,123.608009,85.098036,74.096908,74.650234,40.703357,108.095453,105.24988,2108.508293,139.315958,69.407405,71.096702,71.386403,50.511123,641.61688,96.230223,32.331228,38.896885,80.024001,113.461945,78.906698,54.124118],"server_rtt_ms":2,"variant":"tiny"}
+    v110_latency_itomtest_test.go:45: read 4096 bytes: read pipe: i/o timeout
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:16:43 failed to read command: in command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a06 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a08 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a07 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a09 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a10 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a05 session=8aeefe07a6e7d8496ad65ae9eddd5164 generation=13222592850498429492 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=10 dial_attempts=100 dial_denied=0 target_tcp_dials=2 provider={HealthyEndpoints:true ClientMbps:500 ServerMbps:1000 ClientRTTMS:5 ServerRTTMS:2 Active:2 DownAccounts:0 Accepted:120 Dropped:0 UplinkBytes:1763139 DownlinkBytes:2860093 Mbps:0}
+--- FAIL: TestV110IdleLightReference (24.18s)
+FAIL

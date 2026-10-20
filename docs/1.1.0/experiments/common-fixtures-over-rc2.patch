@@ -1,0 +1,1048 @@
+diff --git a/tunnel/comparison_compat_test.go b/tunnel/comparison_compat_test.go
+new file mode 100644
+index 0000000..0c6e772
+--- /dev/null
++++ b/tunnel/comparison_compat_test.go
+@@ -0,0 +1,11 @@
++package tunnel
++import "reflect"
++// -1 means the historical production diagnostic did not expose this field.
++// This helper reads optional logs only, never workload or acceptance state.
++func comparisonDiagnosticInt(snapshot any, field string) int64 {
++ v := reflect.ValueOf(snapshot).FieldByName(field)
++ if !v.IsValid() { return -1 }
++ if v.CanInt() { return v.Int() }
++ if v.CanUint() { return int64(v.Uint()) }
++ panic("unsupported comparison diagnostic")
++}
+diff --git a/tunnel/field_replay_test.go b/tunnel/field_replay_test.go
+index 2575d76..0d35f10 100644
+--- a/tunnel/field_replay_test.go
++++ b/tunnel/field_replay_test.go
+@@ -75,8 +75,18 @@ func TestFieldLegacyGrantPublicationDoesNotStrandThreeAccounts(t *testing.T) {
+ 	f := newProductionSupervisorFixtureState(t, 10, fieldLegacyState(t))
+ 	for i := 1; i <= 10; i++ {
+ 		l := f.waitLane(t, fmt.Sprintf("a%02d", i), 0)
++		// Readiness proves grant publication, not that active DATA workers
++		// must leave both queues nonempty at one particular instant. Require
++		// bounded physical refill, then retain the live TCP echo assertion.
++		deadline := time.Now().Add(5 * time.Second)
++		for (len(l.grants) == 0 || len(l.fastGrants) == 0) && time.Now().Before(deadline) {
++			if err := l.ctx.Err(); err != nil {
++				t.Fatal("carrier lost during grant refill", err)
++			}
++			time.Sleep(25 * time.Millisecond)
++		}
+ 		if len(l.grants) == 0 || len(l.fastGrants) == 0 {
+-			t.Fatalf("%s readiness concealed missing bulk/fast grants", l.account.ID)
++			t.Fatalf("%s refill stalled: bulk=%d fast=%d", l.account.ID, len(l.grants), len(l.fastGrants))
+ 		}
+ 		p := f.openOn(t, l.account.ID)
+ 		if err := supervisorEcho(p, i); err != nil {
+diff --git a/tunnel/healthy_endpoints_test.go b/tunnel/healthy_endpoints_test.go
+new file mode 100644
+index 0000000..4f47f1d
+--- /dev/null
++++ b/tunnel/healthy_endpoints_test.go
+@@ -0,0 +1,194 @@
++package tunnel
++
++import (
++	"context"
++	"os"
++	"runtime"
++	"sort"
++	"testing"
++	"time"
++)
++
++// Healthy-server reference: measured server route, configurable client route.
++// Only test fixtures read these settings. No live transport policy is changed.
++func configureHealthyEndpoints(t *testing.T, p *providerTestNetwork) {
++	t.Helper()
++	if os.Getenv("ITOM_HEALTHY_SERVER") != "1" {
++		return
++	}
++	for _, key := range []string{"ITOM_LOAD_MOBILE", "ITOM_FIELD_PROVIDER_MODEL", "ITOM_LOAD_DROP_HELLO_REPLY", "ITOM_LOAD_SUPPRESS_IDLE_NOTIFICATIONS"} {
++		if os.Getenv(key) == "1" {
++			t.Fatalf("healthy reference forbids injected server/provider fault: %s", key)
++		}
++	}
++	for _, key := range []string{"ITOM_LOAD_COMMAND_DELAY_MS", "ITOM_LOAD_VISIBILITY_DELAY_MS", "ITOM_LOAD_SERVER_COMMIT_US", "ITOM_LOAD_PROVIDER_IDLE_TIMEOUT_MS"} {
++		if value := os.Getenv(key); value != "" && value != "0" {
++			t.Fatalf("healthy reference forbids legacy artificial delay: %s=%s", key, value)
++		}
++	}
++	clientRTT := time.Duration(loadEnvInt(t, "ITOM_LOAD_CLIENT_RTT_MS", 40, 0, 1000)) * time.Millisecond
++	serverRTT := time.Duration(loadEnvInt(t, "ITOM_LOAD_SERVER_RTT_MS", 20, 0, 1000)) * time.Millisecond
++	clientMbps := loadEnvFloat(t, "ITOM_LOAD_CLIENT_MBPS", 600)
++	serverMbps := loadEnvFloat(t, "ITOM_LOAD_SERVER_MBPS", 1000)
++	if clientMbps <= 0 || serverMbps <= 0 {
++		t.Fatal("endpoint capacities must be positive")
++	}
++	p.healthyEndpoints = true
++	p.mobileEnabled = true
++	if !p.mobile.set(mobileLinkProfile{RTT: clientRTT, Mbps: clientMbps, Seed: 714}) || !p.serverPath.set(mobileLinkProfile{RTT: serverRTT, Mbps: serverMbps, Seed: 715}) {
++		t.Fatal("invalid healthy endpoint path")
++	}
++	// Old combined cap is deliberately absent: each endpoint pays its own
++	// actual TLS bytes once on its own independently shared full-duplex path.
++	p.setMbps(0)
++	t.Logf("healthy_reference server_rtt_ms=%d server_mbps=%.3f client_rtt_ms=%d client_mbps=%.3f provider_service_ms=%d injected_server_faults=false physical_paths=independent runtime_cpus=%d gomaxprocs=%d deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false", serverRTT.Milliseconds(), serverMbps, clientRTT.Milliseconds(), clientMbps, loadEnvInt(t, "ITOM_LOAD_PROVIDER_SERVICE_MS", 2, 0, 100), runtime.NumCPU(), runtime.GOMAXPROCS(0))
++}
++
++func (p *providerTestNetwork) setApplicationPathMbps(mbps float64) {
++	if p.healthyEndpoints {
++		profile := p.mobile.profile.Load()
++		if profile == nil {
++			panic("missing client path")
++		}
++		next := *profile
++		next.Mbps = mbps
++		if !p.mobile.set(next) {
++			panic("invalid client capacity")
++		}
++		return
++	}
++	p.setMbps(mbps)
++}
++
++// A phone/network interruption must not take the server's provider path down.
++func (p *providerTestNetwork) interruptClientPath(duration time.Duration) {
++	p.clientDownUntil.Store(time.Now().Add(duration).UnixNano())
++	p.mu.Lock()
++	var clients []*providerTestConn
++	for _, c := range p.active {
++		if c.mobileClient.Load() {
++			clients = append(clients, c)
++		}
++	}
++	p.mu.Unlock()
++	for _, c := range clients {
++		_ = c.Close()
++	}
++}
++
++func TestHealthyServerClientInterruptionPreservesTCP(t *testing.T) {
++	t.Setenv("ITOM_HEALTHY_SERVER", "1")
++	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
++	t.Setenv("ITOM_LOAD_CLIENT_RTT_MS", "40")
++	f := newProductionSupervisorFixtureAccounts(t, 2)
++	connection := rev4Open(t, f)
++	if err := rev4Exchange(connection, 1, 4096, 5*time.Second); err != nil {
++		t.Fatal(err)
++	}
++	logical, generation := f.client.logicalSession, f.client.generation
++	f.mu.Lock()
++	var serverLane *lane
++	for _, l := range f.serverLanes {
++		serverLane = l
++		break
++	}
++	f.mu.Unlock()
++	if serverLane == nil {
++		t.Fatal("missing healthy server carrier")
++	}
++	// Only the deliberately interrupted carrier lifetimes are expected.
++	// Healthy-server replacement accepts only the authenticated reattach code;
++	// any other server failure, or any later replacement failure, still fails.
++	f.client.mu.Lock()
++	for _, l := range f.client.lanes {
++		f.carrierExits.expect(l)
++	}
++	f.client.mu.Unlock()
++	f.mu.Lock()
++	for _, l := range f.serverLanes {
++		f.carrierExits.expectCode(l, "CARRIER_REATTACH")
++	}
++	f.mu.Unlock()
++	f.network.interruptClientPath(time.Second)
++	// Exercise an actual authenticated server/provider command while the
++	// phone is offline; this is not a provider-wide outage fixture.
++	if _, err := physicalMail(serverLane.mail).controlClient().Ping(f.ctx); err != nil {
++		t.Fatal("phone interruption took server route down", err)
++	}
++	if err := rev4Exchange(connection, 2, 128<<10, 12*time.Second); err != nil {
++		t.Fatal("original TCP did not recover after client interruption", err)
++	}
++	if f.client.logicalSession != logical || f.client.generation != generation || f.targetDials.Load() != 1 {
++		t.Fatal("client recovery replaced TCP identity")
++	}
++}
++
++func TestHealthyEndpointScopeAndCapacityTransitions(t *testing.T) {
++	t.Setenv("ITOM_HEALTHY_SERVER", "1")
++	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
++	p := newProviderTestNetwork(0)
++	configureHealthyEndpoints(t, p)
++	server := &providerTestConn{network: p}
++	client := &providerTestConn{network: p}
++	client.mobileClient.Store(true)
++	a, b := &mobileRelay{owner: server}, &mobileRelay{owner: client}
++	if a.pathState() != &p.serverPath || b.pathState() != &p.mobile {
++		t.Fatal("endpoint paths aliased")
++	}
++	original := *p.serverPath.profile.Load()
++	for _, rate := range []float64{10, 20, 50, 150, 600} {
++		p.setApplicationPathMbps(rate)
++		if *p.serverPath.profile.Load() != original || p.mobile.profile.Load().Mbps != rate {
++			t.Fatal("client speedup impaired server")
++		}
++	}
++	p.uplink.mu.Lock()
++	up := p.uplink.mbps
++	p.uplink.mu.Unlock()
++	p.downlink.mu.Lock()
++	down := p.downlink.mbps
++	p.downlink.mu.Unlock()
++	if up != 0 || down != 0 {
++		t.Fatal("combined artificial bottleneck retained")
++	}
++	legacy := newProviderTestNetwork(0)
++	if (&mobileRelay{owner: &providerTestConn{network: legacy}}).pathState() != nil {
++		t.Fatal("legacy unmarked path gained impairment")
++	}
++}
++
++func TestHealthyEndpointTLSNoopCalibration(t *testing.T) {
++	t.Setenv("ITOM_HEALTHY_SERVER", "1")
++	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
++	t.Setenv("ITOM_LOAD_CLIENT_RTT_MS", "100")
++	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "20")
++	p := newProviderTestNetwork(0)
++	configureHealthyEndpoints(t, p)
++	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
++	defer cancel()
++	c, s := tlsMailPairWithNetwork(t, ctx, []string{"up", "down"}, p, "calibration")
++	phone, server := physicalMail(c).Client, physicalMail(s).Client
++	defer phone.Close()
++	defer server.Close()
++	if !p.markMobileClient(phone.LocalAddr().String(), phone.RemoteAddr().String()) {
++		t.Fatal("client scope")
++	}
++	measure := func(name string, fn func(context.Context) (time.Duration, error)) time.Duration {
++		samples := make([]time.Duration, 5)
++		for i := range samples {
++			rtt, err := fn(ctx)
++			if err != nil {
++				t.Fatal(name, err)
++			}
++			samples[i] = rtt
++		}
++		sort.Slice(samples, func(i, j int) bool { return samples[i] < samples[j] })
++		t.Logf("endpoint_calibration endpoint=%s method=authenticated_TLS_NOOP median_ms=%.3f", name, float64(samples[2])/float64(time.Millisecond))
++		return samples[2]
++	}
++	srtt := measure("server", server.Ping)
++	crtt := measure("client", phone.Ping)
++	if !raceInstrumented && (srtt < 18*time.Millisecond || srtt > 100*time.Millisecond || crtt < 95*time.Millisecond || crtt > 220*time.Millisecond || crtt-srtt < 40*time.Millisecond) {
++		t.Fatal("uncalibrated endpoint propagation", srtt, crtt)
++	}
++}
+diff --git a/tunnel/imap_test.go b/tunnel/imap_test.go
+index b9ec4ad..fbe2aeb 100644
+--- a/tunnel/imap_test.go
++++ b/tunnel/imap_test.go
+@@ -68,6 +68,12 @@ func tlsMailPairWithNetwork(t *testing.T, ctx context.Context, folders []string,
+ 		if network != nil && network.visibility.delay > 0 {
+ 			session = &visibilitySession{Session: session, visibility: &network.visibility, account: account}
+ 		}
++		if network != nil && network.healthyEndpoints {
++			// TCP RTT is shaped below TLS, independently per endpoint.
++			// This is only provider processing, not another path RTT.
++			service := time.Duration(loadEnvInt(t, "ITOM_LOAD_PROVIDER_SERVICE_MS", 2, 0, 100)) * time.Millisecond
++			return delayedSession{Session: session, delay: service}, nil, nil
++		}
+ 		if os.Getenv("ITOM_FIELD_PROVIDER_MODEL") == "1" {
+ 			var replay *fieldLatencyReplay
+ 			if network != nil {
+diff --git a/tunnel/mobile_network_test.go b/tunnel/mobile_network_test.go
+index 71341cd..0030a52 100644
+--- a/tunnel/mobile_network_test.go
++++ b/tunnel/mobile_network_test.go
+@@ -70,6 +70,18 @@ func (r *mobileRelay) Close() error {
+ 	})
+ 	return nil
+ }
++
++// Endpoint role selects a separate access link. Provider traffic is not
++// charged twice to one artificial phone/server shared bottleneck.
++func (r *mobileRelay) pathState() *mobileLinkState {
++	if r.owner.mobileClient.Load() {
++		return &r.owner.network.mobile
++	}
++	if r.owner.network.healthyEndpoints {
++		return &r.owner.network.serverPath
++	}
++	return nil
++}
+ func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
+ 	queue := make(chan mobileChunk, 1024) // <=32MiB per direction; covers 600Mbps/300ms BDP and a full bounded FETCH page
+ 	r.wg.Add(2)
+@@ -87,8 +99,9 @@ func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
+ 			n, err := src.Read(buf)
+ 			if n > 0 {
+ 				chunk := mobileChunk{body: append([]byte(nil), buf[:n]...), at: time.Now()}
+-				m := &r.owner.network.mobile
+-				if profile := m.profile.Load(); r.owner.mobileClient.Load() && profile != nil {
++				m := r.pathState()
++				if m != nil && m.profile.Load() != nil {
++					profile := m.profile.Load()
+ 					if appliedSeed != profile.Seed {
+ 						appliedSeed = profile.Seed
+ 						rng = rand.New(rand.NewSource(seed + profile.Seed))
+@@ -132,13 +145,13 @@ func (r *mobileRelay) copyDirection(src, dst net.Conn, up bool) {
+ 				if delay := time.Until(chunk.at); delay > 0 && !mobileWait(delay, r.done) {
+ 					return
+ 				}
+-				if r.owner.mobileClient.Load() && r.owner.network.mobile.profile.Load() != nil {
+-					rate := &r.owner.network.mobile.downlink
++				if m := r.pathState(); m != nil && m.profile.Load() != nil {
++					rate := &m.downlink
+ 					if up {
+-						rate = &r.owner.network.mobile.uplink
++						rate = &m.uplink
+ 					}
+-					if profile := r.owner.network.mobile.profile.Load(); profile != nil && profile.SharedMedium {
+-						rate = &r.owner.network.mobile.shared
++					if profile := m.profile.Load(); profile != nil && profile.SharedMedium {
++						rate = &m.shared
+ 					}
+ 					if !rate.waitUntilAt(len(chunk.body)+chunk.retryBytes, chunk.at, r.done) {
+ 						return
+diff --git a/tunnel/provider_network_test.go b/tunnel/provider_network_test.go
+index c8a09fe..3916076 100644
+--- a/tunnel/provider_network_test.go
++++ b/tunnel/provider_network_test.go
+@@ -29,6 +29,9 @@ type providerTestNetwork struct {
+ 	debugWriter               io.Writer // optional test-only plaintext instrumentation; never emitted
+ 	visibility                providerVisibility
+ 	mobileEnabled             bool
++	healthyEndpoints          bool
++	clientDownUntil           atomic.Int64
++	serverPath                mobileLinkState
+ 	mobile                    mobileLinkState
+ 	mu                        sync.Mutex
+ 	nextID                    uint64
+@@ -142,7 +145,7 @@ func (p *providerTestNetwork) wrap(account string, c net.Conn) net.Conn {
+ 	p.active[pc.id] = pc
+ 	p.accepted.Add(1)
+ 	p.mu.Unlock()
+-	if p.mobileEnabled {
++	if p.mobileEnabled || p.healthyEndpoints {
+ 		pc.Conn = newMobileRelay(c, pc)
+ 	}
+ 	if p.idleTimeout > 0 {
+@@ -257,10 +260,24 @@ func (p *providerTestNetwork) snapshot() providerNetworkSnapshot {
+ 	p.uplink.mu.Lock()
+ 	upMbps := p.uplink.mbps
+ 	p.uplink.mu.Unlock()
+-	return providerNetworkSnapshot{Active: active, DownAccounts: down, Accepted: p.accepted.Load(), Dropped: p.dropped.Load(), UplinkBytes: p.upBytes.Load(), DownlinkBytes: p.downBytes.Load(), Mbps: upMbps}
++	snapshot := providerNetworkSnapshot{Active: active, DownAccounts: down, Accepted: p.accepted.Load(), Dropped: p.dropped.Load(), UplinkBytes: p.upBytes.Load(), DownlinkBytes: p.downBytes.Load(), Mbps: upMbps, HealthyEndpoints: p.healthyEndpoints}
++	if p.healthyEndpoints {
++		if profile := p.mobile.profile.Load(); profile != nil {
++			snapshot.ClientMbps = profile.Mbps
++			snapshot.ClientRTTMS = profile.RTT.Milliseconds()
++		}
++		if profile := p.serverPath.profile.Load(); profile != nil {
++			snapshot.ServerMbps = profile.Mbps
++			snapshot.ServerRTTMS = profile.RTT.Milliseconds()
++		}
++	}
++	return snapshot
+ }
+ 
+ type providerNetworkSnapshot struct {
++	HealthyEndpoints           bool
++	ClientMbps, ServerMbps     float64
++	ClientRTTMS, ServerRTTMS   int64
+ 	Active, DownAccounts       int
+ 	Accepted, Dropped          uint64
+ 	UplinkBytes, DownlinkBytes uint64
+diff --git a/tunnel/rc12_pressure_itomtest_test.go b/tunnel/rc12_pressure_itomtest_test.go
+new file mode 100644
+index 0000000..99cc88e
+--- /dev/null
++++ b/tunnel/rc12_pressure_itomtest_test.go
+@@ -0,0 +1,260 @@
++//go:build itomtest
++
++package tunnel
++
++import (
++	"bytes"
++	"context"
++	"fmt"
++	"io"
++	"itom.local/core/journal"
++	"itom.local/core/pool"
++	"itom.local/core/servercfg"
++	"itom.local/core/wire"
++	"net"
++	"os"
++	"path/filepath"
++	"sync"
++	"sync/atomic"
++	"testing"
++	"time"
++)
++
++// Independent download/upload streams and a persistent small request channel
++// exercise the phase shape missing from a short, symmetric echo test. Measured
++// journal cost is a service-time replay, not a server outage or a release gate.
++func TestRC12RetainedPhasedTransfersWithObservedJournalCost(t *testing.T) {
++	t.Setenv("ITOM_HEALTHY_SERVER", "1")
++	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
++	t.Setenv("ITOM_LOAD_CLIENT_RTT_MS", "10")
++	t.Setenv("ITOM_LOAD_CLIENT_MBPS", "500")
++	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "20")
++	t.Setenv("ITOM_LOAD_SERVER_MBPS", "1000")
++	t.Setenv("ITOM_LOAD_LITERAL_PLUS", "1")
++	t.Setenv("ITOM_LOAD_BINARY_FETCH", "1")
++	t.Setenv("ITOM_LOAD_UID_HISTORY", "64")
++	t.Setenv("ITOM_LOAD_DATA_SHARDS", "4")
++	f := newProductionSupervisorFixtureState(t, 10, func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
++		for _, a := range cfg.Accounts {
++			dir := filepath.Join(serverDir, a.ID, u.ID)
++			if err := os.MkdirAll(dir, 0700); err != nil {
++				t.Fatal(err)
++			}
++			store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(a, u, dataProfile12), time.Second)
++			if err != nil {
++				t.Fatal(err)
++			}
++			if err = store.EnableAfterInventory(a.ID, u.ID, store.Run()); err != nil {
++				t.Fatal(err)
++			}
++			if _, err = store.IssueRemote(journal.Scope{Account: a.ID, User: u.ID, Session: wire.ID{99}}, pool.Amount{Bytes: 15 << 19, Messages: 150}); err != nil {
++				t.Fatal(err)
++			}
++			if err = store.Close(); err != nil {
++				t.Fatal(err)
++			}
++		}
++	})
++	f.mu.Lock()
++	for _, l := range f.serverLanes {
++		applyTestCommitDelay(l, 20*time.Millisecond)
++	}
++	f.mu.Unlock()
++	t.Log("replay server durable-commit service=20ms plus real fsync; client route=10ms/500Mbps server route=20ms/1000Mbps; not field qualification")
++	listener, err := net.Listen("tcp4", "127.0.0.1:0")
++	if err != nil {
++		t.Fatal(err)
++	}
++	var received atomic.Uint64
++	readProgress := func(r io.Reader, b []byte) (int, error) {
++		off := 0
++		for off < len(b) {
++			n, err := io.ReadFull(r, b[off:min(off+(256<<10), len(b))])
++			off += n
++			received.Add(uint64(n))
++			if err != nil {
++				return off, err
++			}
++		}
++		return off, nil
++	}
++	var mu sync.Mutex
++	var accepted []net.Conn
++	t.Cleanup(func() {
++		listener.Close()
++		mu.Lock()
++		defer mu.Unlock()
++		for _, c := range accepted {
++			c.Close()
++		}
++	})
++	size := loadEnvInt(t, "ITOM_PHASE_BYTES_PER_STREAM", 4<<20, 4<<20, 16<<20)
++	pattern := func(seed byte) []byte {
++		b := make([]byte, size)
++		for i := range b {
++			b[i] = byte((i + int(seed)) % 251)
++		}
++		return b
++	}
++	go func() {
++		for {
++			c, err := listener.Accept()
++			if err != nil {
++				return
++			}
++			mu.Lock()
++			accepted = append(accepted, c)
++			mu.Unlock()
++			go func() {
++				defer c.Close()
++				var request [2]byte
++				if _, err := io.ReadFull(c, request[:]); err != nil {
++					return
++				}
++				switch request[0] {
++				case 'D':
++					productionWriteFull(c, pattern(request[1]))
++				case 'U':
++					got := make([]byte, size)
++					if _, err := readProgress(c, got); err == nil && bytes.Equal(got, pattern(request[1])) {
++						productionWriteFull(c, []byte("OK"))
++					}
++				case 'C':
++					io.Copy(c, c)
++				}
++			}()
++		}
++	}()
++	port := uint16(listener.Addr().(*net.TCPAddr).Port)
++	open := func() (net.Conn, error) {
++		ctx, cancel := context.WithTimeout(f.ctx, 8*time.Second)
++		defer cancel()
++		p, _, err := f.client.Open(ctx, wire.Connect{Host: "127.0.0.1", Port: port})
++		if err != nil {
++			return nil, err
++		}
++		c, ok := p.(net.Conn)
++		if !ok {
++			p.Close()
++			return nil, fmt.Errorf("missing deadline-capable stream")
++		}
++		return c, nil
++	}
++	chat, err := open()
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer chat.Close()
++	if err = productionWriteFull(chat, []byte{'C', 0}); err != nil {
++		t.Fatal(err)
++	}
++	var latencies []time.Duration
++	stop := make(chan struct{})
++	chatDone := make(chan error, 1)
++	go func() {
++		for {
++			select {
++			case <-stop:
++				chatDone <- nil
++				return
++			default:
++			}
++			begin := time.Now()
++			if err := rev4Exchange(chat, len(latencies), 32, 3*time.Second); err != nil {
++				chatDone <- err
++				return
++			}
++			latencies = append(latencies, time.Since(begin))
++			select {
++			case <-stop:
++				chatDone <- nil
++				return
++			case <-time.After(100 * time.Millisecond):
++			}
++		}
++	}()
++	for _, phase := range []byte{'D', 'U'} {
++		begin := time.Now()
++		pulseStop, pulseDone := make(chan struct{}), make(chan struct{})
++		go func(phase byte) {
++			defer close(pulseDone)
++			tick := time.NewTicker(5 * time.Second)
++			defer tick.Stop()
++			lastTime, lastBytes := time.Now(), received.Load()
++			for {
++				select {
++				case <-pulseStop:
++					return
++				case now := <-tick.C:
++					n := received.Load()
++					t.Logf("phase=%c sink_interval_mbps=%.3f elapsed_ms=%d", phase, float64((n-lastBytes)*8)/now.Sub(lastTime).Seconds()/1e6, now.Sub(begin).Milliseconds())
++					lastTime, lastBytes = now, n
++				}
++			}
++		}(phase)
++		var wg sync.WaitGroup
++		fail := make(chan error, 8)
++		for i := 0; i < 8; i++ {
++			wg.Add(1)
++			go func(i int) {
++				defer wg.Done()
++				c, err := open()
++				if err != nil {
++					fail <- err
++					return
++				}
++				defer c.Close()
++				c.SetDeadline(time.Now().Add(45 * time.Second))
++				seed := byte(i + 7)
++				if err = productionWriteFull(c, []byte{phase, seed}); err != nil {
++					fail <- err
++					return
++				}
++				b := pattern(seed)
++				if phase == 'D' {
++					got := make([]byte, size)
++					_, err = readProgress(c, got)
++					if err == nil && !bytes.Equal(b, got) {
++						err = fmt.Errorf("download bytes changed")
++					}
++				} else {
++					if err = productionWriteFull(c, b); err == nil {
++						ack := make([]byte, 2)
++						_, err = io.ReadFull(c, ack)
++						if err == nil && string(ack) != "OK" {
++							err = fmt.Errorf("upload tail changed")
++						}
++					}
++				}
++				if err != nil {
++					fail <- fmt.Errorf("phase %c stream %d: %w", phase, i, err)
++				}
++			}(i)
++		}
++		wg.Wait()
++		close(pulseStop)
++		<-pulseDone
++		close(fail)
++		for err := range fail {
++			t.Error(err)
++		}
++		t.Logf("phase=%c application_mbps=%.3f duration_ms=%d", phase, float64(8*size*8)/time.Since(begin).Seconds()/1e6, time.Since(begin).Milliseconds())
++		if t.Failed() {
++			break
++		}
++	}
++	close(stop)
++	if err := <-chatDone; err != nil {
++		t.Error("small request failed under phased load", err)
++	}
++	var sum, max time.Duration
++	for _, d := range latencies {
++		sum += d
++		if d > max {
++			max = d
++		}
++	}
++	if len(latencies) > 0 {
++		t.Logf("short_requests=%d mean_ms=%d max_ms=%d", len(latencies), (sum / time.Duration(len(latencies))).Milliseconds(), max.Milliseconds())
++	}
++}
+diff --git a/tunnel/rc6_stability_gate_test.go b/tunnel/rc6_stability_gate_test.go
+new file mode 100644
+index 0000000..b557ca6
+--- /dev/null
++++ b/tunnel/rc6_stability_gate_test.go
+@@ -0,0 +1,23 @@
++package tunnel
++
++import (
++	"testing"
++	"time"
++)
++
++const rc6StabilityRTTLimit = 750 * time.Millisecond
++
++func TestRC6StrictLoadedRTTGate(t *testing.T) {
++	for _, tc := range []struct {
++		rtt  time.Duration
++		pass bool
++	}{
++		{350 * time.Millisecond, true}, {rc6StabilityRTTLimit - time.Nanosecond, true},
++		{rc6StabilityRTTLimit, false}, {903 * time.Millisecond, false},
++		{1070 * time.Millisecond, false}, {0, false},
++	} {
++		if got := tc.rtt > 0 && tc.rtt < rc6StabilityRTTLimit; got != tc.pass {
++			t.Fatalf("RTT %v got %v", tc.rtt, got)
++		}
++	}
++}
+diff --git a/tunnel/rc7_speedup_profile_test.go b/tunnel/rc7_speedup_profile_test.go
+new file mode 100644
+index 0000000..7b8270c
+--- /dev/null
++++ b/tunnel/rc7_speedup_profile_test.go
+@@ -0,0 +1,16 @@
++package tunnel
++
++import "testing"
++
++func TestRC7SpeedupReallyStartsBeforeApplicationOpen(t *testing.T) {
++	steps := []providerCapStep{{Mbps: 10}, {Mbps: 20}, {Mbps: 50}, {Mbps: 150}}
++	if got := initialProviderProfileMbps(steps, 150, true); got != 10 {
++		t.Fatalf("false startup speedup, got %g", got)
++	}
++	if got := initialProviderProfileMbps(steps, 150, false); got != 150 {
++		t.Fatalf("downgrade control changed, got %g", got)
++	}
++	if got := initialProviderProfileMbps(nil, 150, true); got != 150 {
++		t.Fatalf("empty profile fallback changed, got %g", got)
++	}
++}
+diff --git a/tunnel/rc8_release_gate_test.go b/tunnel/rc8_release_gate_test.go
+new file mode 100644
+index 0000000..6a32c59
+--- /dev/null
++++ b/tunnel/rc8_release_gate_test.go
+@@ -0,0 +1,48 @@
++package tunnel
++
++import (
++	"math"
++	"testing"
++	"time"
++)
++
++const rc8MinimumDuplexMbps = 75.0
++const rc8MaximumLoadedRTT = 750 * time.Millisecond
++
++// RC8 speed numbers refer to an unconstrained >=150Mbps synthetic provider.
++// The verified rate also includes sustained 30s and final-10s tails, excluding
++// a transient peak that might mask an eventual stalled direction.
++func rc8ReleasePerformanceGate(upload, download, verified float64, rtt time.Duration, minimum float64) bool {
++	if math.IsNaN(minimum) || math.IsInf(minimum, 0) || minimum < rc8MinimumDuplexMbps {
++		return false
++	}
++	return strictSpeedGate(upload, minimum) && strictSpeedGate(download, minimum) &&
++		strictSpeedGate(verified, minimum) && rtt > 0 && rtt <= rc8MaximumLoadedRTT
++}
++
++func TestRC8NoThroughputWaiverAndStrictRTT(t *testing.T) {
++	cases := []struct {
++		up, down, verified float64
++		rtt                time.Duration
++		want               bool
++	}{
++		{75, 75, 75, 750 * time.Millisecond, true},
++		{90, 78, 76, 600 * time.Millisecond, true},
++		{74.999, 200, 74.999, 300 * time.Millisecond, false},
++		{125, 74.999, 74.999, 300 * time.Millisecond, false},
++		{100, 100, 74.999, 400 * time.Millisecond, false},
++		{100, 100, 100, 750*time.Millisecond + time.Nanosecond, false},
++		{100, 100, 100, 0, false},
++		{math.NaN(), 90, 90, 600 * time.Millisecond, false},
++	}
++	for _, tc := range cases {
++		if got := rc8ReleasePerformanceGate(tc.up, tc.down, tc.verified, tc.rtt, 75); got != tc.want {
++			t.Fatalf("RC8 gate up=%.4f down=%.4f tail=%.4f RTT=%v got=%v want=%v", tc.up, tc.down, tc.verified, tc.rtt, got, tc.want)
++		}
++	}
++	for _, min := range []float64{0, 74.999, math.NaN(), math.Inf(1)} {
++		if rc8ReleasePerformanceGate(100, 100, 100, 500*time.Millisecond, min) {
++			t.Fatalf("RC8 let release lower its floor to %g", min)
++		}
++	}
++}
+diff --git a/tunnel/supervised_load_test.go b/tunnel/supervised_load_test.go
+index fa296d9..3c38e12 100644
+--- a/tunnel/supervised_load_test.go
++++ b/tunnel/supervised_load_test.go
+@@ -4,11 +4,14 @@ import (
+ 	"context"
+ 	"encoding/json"
+ 	"fmt"
++	"itom.local/core/journal"
+ 	"itom.local/core/servercfg"
+ 	"itom.local/core/wire"
+ 	"net"
+ 	"os"
++	"path/filepath"
+ 	"sort"
++	"strings"
+ 	"sync"
+ 	"sync/atomic"
+ 	"testing"
+@@ -19,6 +22,14 @@ import (
+ // These are not validated against the field provider and cannot qualify a release.
+ // Half outages include stream owners; the same application sockets and verified
+ // byte generators remain active across outage, warmup and measurement phases.
++// Strictly test-fixture-only choice. No live transport config is touched.
++func initialProviderProfileMbps(steps []providerCapStep, fallback float64, early bool) float64 {
++	if early && len(steps) > 0 {
++		return steps[0].Mbps
++	}
++	return fallback
++}
++
+ func testSupervisedProductionLoad(t *testing.T) {
+ 	t.Log("synthetic_measurement=true field_qualified=false")
+ 	if raceInstrumented {
+@@ -62,11 +73,41 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 	if os.Getenv("ITOM_LOAD_RETAINED_STATE") == "1" {
+ 		retained = rev4RetainedState(t)
+ 	}
++	// Test-only, existing allowlisted 16 MiB server journal; no production
++	// default, profile migration, APPEND evidence, or client wallet changes.
++	if os.Getenv("ITOM_EXPERIMENT_SERVER_PROFILE") == "16" {
++		if retained != nil {
++			t.Fatal("cannot combine with retained-state qualification")
++		}
++		retained = func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
++			for _, account := range cfg.Accounts {
++				dir := filepath.Join(serverDir, account.ID, u.ID)
++				if err := os.MkdirAll(dir, 0700); err != nil {
++					t.Fatal(err)
++				}
++				store, err := journal.Open(filepath.Join(dir, "data.db"), ledgerConfig(account, u, dataProfile16), time.Second)
++				if err != nil {
++					t.Fatal(err)
++				}
++				if err = store.Close(); err != nil {
++					t.Fatal(err)
++				}
++			}
++		}
++	}
+ 	f := newProductionSupervisorFixtureState(t, n, retained)
+ 	logical, generation := f.client.logicalSession, f.client.generation
+ 	target := newProductionLoadTarget(t, fmt.Sprintf("%x/supervised", logical))
+-	f.network.setMbps(loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
+ 	profiles := parseProviderProfile(t, os.Getenv("ITOM_LOAD_PROVIDER_PROFILE"), loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0))
++	// True low-to-high speedup starts at the first profile cap BEFORE OPEN.
++	// The old 150->10Mbps immediate downgrade is a separate failure mode.
++	profileEarly := os.Getenv("ITOM_LOAD_PROVIDER_PROFILE_EARLY") == "1"
++	providerStart := initialProviderProfileMbps(profiles, loadEnvFloat(t, "ITOM_LOAD_PROVIDER_MBPS", 0), profileEarly)
++	f.network.setApplicationPathMbps(providerStart)
++	t.Logf("supervised_provider_initial mbps=%.3f early_profile=%t", providerStart, profileEarly)
++	if f.network.healthyEndpoints {
++		t.Log("capacity_profile_scope=client_access_only server_path_unchanged=true")
++	}
+ 	mobile := os.Getenv("ITOM_LOAD_MOBILE") == "1"
+ 	mobileCap := loadEnvFloat(t, "ITOM_LOAD_MOBILE_MBPS", 600)
+ 	var baseline time.Duration
+@@ -251,8 +292,10 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 			profileWG.Add(1)
+ 			go func() {
+ 				defer profileWG.Done()
+-				for _, step := range profiles {
+-					f.network.setMbps(step.Mbps)
++				for i, step := range profiles {
++					if !profileEarly || i > 0 {
++						f.network.setApplicationPathMbps(step.Mbps)
++					}
+ 					t.Logf("supervised_cap mbps=%.3f", step.Mbps)
+ 					if step.Duration <= 0 {
+ 						return
+@@ -270,7 +313,35 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 		// preceding full cadence. Keep every probe and the complete byte clock.
+ 		t.Logf("supervised_round_schedule round=%d cadence_ms=%d phase_ms=%d deadline_ms=%d expected=%d survival=%t bandwidth_clock_ms=1000", round+1, roundCadence.Milliseconds(), (roundCadence / 2).Milliseconds(), roundDeadline.Milliseconds(), roundExpected, false)
+ 		carriers := snapshotLoadCarriers(t, f, n, working)
+-		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, t.Logf)
++		// Bounded test-only five-second duplex samples. Observe the actual
++		// production load clock; no extra polling, socket, ACK or journal work.
++		traceDuplex := os.Getenv("ITOM_LOAD_DUPLEX_TIMELINE") == "1"
++		measureLog := func(format string, args ...any) {
++			t.Logf(format, args...)
++			if !traceDuplex || len(args) != 1 || format != "%s" {
++				return
++			}
++			event, ok := args[0].(string)
++			if !ok || !strings.HasPrefix(event, "production_window5 ") {
++				return
++			}
++			f.client.mu.Lock()
++			client := f.client.stripe
++			f.client.mu.Unlock()
++			f.mu.Lock()
++			var server *stripeGroup
++			for _, carrier := range f.serverLanes {
++				server = carrier.stripe
++				break
++			}
++			f.mu.Unlock()
++			if client == nil || server == nil {
++				return
++			}
++			c, ss := client.deliverySnapshot(), server.deliverySnapshot()
++			t.Logf("rc5_duplex_timeline client_mode=%s client_ack_age_ms=%d client_fast_ack_ms=%d client_window_bytes=%d client_rate_mbps=%.3f client_bulk_ack_age_ms=%d client_bulk_ack_since_ms=%d server_mode=%s server_ack_age_ms=%d server_fast_ack_ms=%d server_window_bytes=%d server_rate_mbps=%.3f server_bulk_ack_age_ms=%d server_bulk_ack_since_ms=%d", c.Mode, c.ObservedRTTMS, c.LastFastACKAgeMS, c.DownloadWindowBytes, c.RateMbps, comparisonDiagnosticInt(c, "LastBulkACKAgeMS"), comparisonDiagnosticInt(c, "LastBulkACKSinceMS"), ss.Mode, ss.ObservedRTTMS, ss.LastFastACKAgeMS, ss.DownloadWindowBytes, ss.RateMbps, comparisonDiagnosticInt(ss, "LastBulkACKAgeMS"), comparisonDiagnosticInt(ss, "LastBulkACKSinceMS"))
++		}
++		result, measureErr := productionMeasure(f.ctx, productionMeasureOptions{Duration: time.Duration(seconds) * time.Second, Cadence: roundCadence, ProbeOffset: roundCadence / 2, BandwidthCadence: time.Second, ProbeDeadline: roundDeadline, MaxGap: 5 * time.Second}, []*productionLoadTarget{target}, []net.Conn{probe}, f.carrierExits.failures, failures, measureLog)
+ 		cancelProfile()
+ 		profileWG.Wait()
+ 		rtts, overlap, timeouts, missed := productionSampleSummary(result.Samples, 0)
+@@ -289,6 +360,19 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 			}
+ 			t.Logf("supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=%d mean_ms=%.3f p95_ms=%.3f max_ms=%.3f target_ms=100 field_qualified=false", len(changes), float64(total)/float64(len(changes))/float64(time.Millisecond), float64(productionPercentile(changes, .95))/float64(time.Millisecond), float64(productionPercentile(changes, 1))/float64(time.Millisecond))
+ 		}
++		// Test-only provider-wide session budget: a heavy sender must not
++		// monopolize account LOGIN slots needed by the opposite endpoint.
++		f.network.mu.Lock()
++		providerPeak, providerCurrent := map[string]int{}, map[string]int{}
++		for id, n := range f.network.sessionPeak {
++			providerPeak[id] = n
++		}
++		for id, n := range f.network.sessions {
++			providerCurrent[id] = n
++		}
++		providerDenied := f.network.sessionDenied
++		f.network.mu.Unlock()
++		t.Logf("rc5_provider_sessions peak=%v current=%v denied=%d cap=%d", providerPeak, providerCurrent, providerDenied, f.network.sessionLimit)
+ 		// Snapshot actual shared delivery state only after the timed interval.
+ 		f.client.mu.Lock()
+ 		clientGroup := f.client.stripe
+@@ -314,11 +398,25 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 			for _, carrier := range live {
+ 				carrier.serviceMu.Lock()
+ 				ns, bytes, samples := carrier.serviceNS, carrier.serviceBytes, carrier.serviceSamples
++				peerSamples, peerTarget := carrier.peerReadSamples, carrier.peerReadBatchTarget
++				peerSlow, peerFast := carrier.peerReadSlowCount, carrier.peerReadFastCount
++				peerLast := carrier.peerReadAt
+ 				carrier.serviceMu.Unlock()
++				peerAgeMS := int64(-1)
++				if !peerLast.IsZero() {
++					peerAgeMS = time.Since(peerLast).Milliseconds()
++				}
++				if carrier.side {
++					local, remote, err := carrier.data.HeldByOrigin(carrier.account.ID, carrier.user.ID)
++					t.Logf("supervised_physical account=%s server=%t peer_samples=%d peer_target=%d peer_slow=%d peer_fast=%d peer_age_ms=%d pending_bodies=%d active=%d held_local_bytes=%d held_local_messages=%d held_remote_bytes=%d held_remote_messages=%d hold_err=%v", carrier.account.ID, carrier.side, peerSamples, peerTarget, peerSlow, peerFast, peerAgeMS, carrier.peerReadPendingBodies.Load(), carrier.physicalActive.Load(), local.Bytes, local.Messages, remote.Bytes, remote.Messages, err)
++				}
+ 				t.Logf("supervised_service server=%t account=%s append_ms=%d encoded_bytes=%d samples=%d batch_target=%d active=%d unread=%d", carrier.side, carrier.account.ID, time.Duration(ns).Milliseconds(), bytes, samples, carrier.serviceBatchTarget(), carrier.physicalActive.Load(), carrier.unreceivedLocalBytes.Load())
++				t.Logf("rc5_endpoint_sessions server=%t account=%s physical_data_parallelism=%d physical_slots=%d", carrier.side, carrier.account.ID, dataParallelism(carrier.mail), len(carrier.physicalSlots))
+ 				if carrier.diag != nil {
+ 					d := carrier.diag.snapshot()
+ 					t.Logf("supervised_batching server=%t account=%s bodies=%d records=%d useful_bytes=%d local_gc=%d local_gc_messages=%d headroom_waits=%d deferred=%d", carrier.side, carrier.account.ID, d.DataBatchCount, d.DataBatchRecords, d.DataPayloadBytes, d.CleanupLocalDataRuns, d.CleanupLocalDataMessages, d.LocalGrantHeadroomWaits, d.DeferredAdmissions)
++					// Development-only aggregate: do not trace plaintext, credentials or keys.
++					t.Logf("rc5_duplex_feedback server=%t account=%s control_wait_ms=%d max_control_wait_ms=%d control_appends=%d control_bytes=%d sent_window=%d received_window=%d sent_receipt=%d received_receipt=%d remote_grant_wait_ms=%d remote_grant_max_ms=%d data_fetch_bytes=%d data_fetch_callback_max_ms=%d remote_cleanup_runs=%d local_cleanup_runs=%d", carrier.side, carrier.account.ID, d.ControlWaitMS, d.MaxControlWaitMS, d.ControlAppendCount, d.ControlAppendBytes, d.WindowSent, d.WindowReceived, d.ReceiptSent, d.ReceiptReceived, d.RemoteGrantWaitMS, d.MaxRemoteGrantWaitMS, comparisonDiagnosticInt(d, "DataFetchPayloadBytes"), comparisonDiagnosticInt(d, "DataFetchCallbackMaxMS"), d.CleanupRemoteRuns, d.CleanupLocalDataRuns)
+ 				}
+ 			}
+ 		}
+@@ -377,7 +475,7 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 			accepted = strictSpeedGate(qualifiedMbps, minimumMbps) && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+ 			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
+ 				tier = TransportRevision + "-stability-throughput-floor-waived"
+-				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < speedtestAcceptedMaxRTT && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
++				accepted = qualifiedMbps > 0 && maxRTTDuration > 0 && maxRTTDuration < rc6StabilityRTTLimit && len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
+ 				if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
+ 					accepted = false
+ 					t.Error(err)
+@@ -396,6 +494,30 @@ func testSupervisedProductionLoad(t *testing.T) {
+ 				t.Error(err)
+ 			}
+ 		}
++		// RC8 hard release gate: never inherit RC6's throughput-floor waiver.
++		// Runs under a 150+ Mbps unconstrained provider; a deliberately 10/20
++		// Mbps profile uses a separate connection/RTT test (not a speed claim).
++		if os.Getenv("ITOM_RC8_RELEASE_GATE") == "1" {
++			if os.Getenv("ITOM_STABILITY_QUALIFICATION") == "1" {
++				t.Fatal("RC8 release qualification forbids the old throughput-floor waiver")
++			}
++			minimum := loadEnvFloat(t, "ITOM_LOAD_MIN_MBPS", 75)
++			if minimum < rc8MinimumDuplexMbps {
++				t.Fatalf("RC8 refuses throughput floor below 75/75: %.3f", minimum)
++			}
++			tier = "rc8-75-75mbps-max750ms-hard-release"
++			accepted = rc8ReleasePerformanceGate(up, down, qualifiedMbps, maxRTTDuration, minimum) &&
++				len(rtts) == roundExpected && timeouts == 0 && missed == 0 && overlap == roundExpected
++			if err := stabilityWindowQualification(result.Bandwidth, result.Elapsed, 1); err != nil {
++				accepted = false
++				t.Error(err)
++			}
++			if err := speedtestRTTQualification(rtts, timeouts, missed, overlap); err != nil {
++				accepted = false
++				t.Error(err)
++			}
++			t.Logf("rc8_hard_gate upload_mbps=%.3f download_mbps=%.3f verified_tail_mbps=%.3f rtt_ms=%.3f accepted=%t", up, down, qualifiedMbps, float64(maxRTTDuration)/float64(time.Millisecond), accepted)
++		}
+ 		t.Logf("supervised_acceptance round=%d tier=%s minimum_verified_mbps=%.6f max_rtt_ns=%d accepted=%t field_qualified=false", round+1, tier, qualifiedMbps, maxRTTDuration.Nanoseconds(), accepted)
+ 		target.mu.Lock()
+ 		targetTCP := len(target.connections)
+@@ -598,9 +720,27 @@ func supervisedSnapshots(ctx context.Context, t *testing.T, f *productionSupervi
+ 		raw, _ := json.Marshal(data)
+ 		t.Logf("supervised_debt index=%d lanes=%s", index, raw)
+ 		for _, l := range lanes {
++			// Diagnostic only: distinguish a saturated physical DATA receiver
++			// from queued account admission. Read each gate atomically under its
++			// own mutex; never hold it during logging or transport I/O.
++			if m := physicalMail(l.mail); m != nil && m.dialGate != nil {
++				b := &m.dialGate.work
++				b.mu.Lock()
++				var queued [workClassCount]int
++				for i := range queued {
++					queued[i] = len(b.queues[i])
++				}
++				busy, service := b.busy, b.service
++				b.mu.Unlock()
++				t.Logf("supervised_account_work index=%d account=%s server=%t queued=%v busy=%v service_ns=%v", index, l.account.ID, l.side, queued, busy, service)
++			}
+ 			if l.diag == nil {
+ 				continue
+ 			}
++			l.diag.mu.Lock()
++			diagRead := l.diag.line
++			l.diag.mu.Unlock()
++			t.Logf("rc5_receive_service index=%d account=%s server=%t polls=%d empty=%d bodies=%d latency_ms=%d callback_total_ms=%d callback_max_ms=%d physical_bytes=%d", index, l.account.ID, l.side, diagRead.DataFetchPolls, diagRead.DataEmptyFetchPolls, diagRead.DataFetchMessages, diagRead.DataReceiveLatencyMillis, comparisonDiagnosticInt(diagRead, "DataFetchCallbackTotalMS"), comparisonDiagnosticInt(diagRead, "DataFetchCallbackMaxMS"), comparisonDiagnosticInt(diagRead, "DataFetchPayloadBytes"))
+ 			d := l.diag.snapshot()
+ 			if l.stripe != nil {
+ 				rawGovernor, _ := json.Marshal(l.stripe.deliverySnapshot())
+diff --git a/tunnel/supervisor_fixture_test.go b/tunnel/supervisor_fixture_test.go
+index 9716c5d..3cfa19d 100644
+--- a/tunnel/supervisor_fixture_test.go
++++ b/tunnel/supervisor_fixture_test.go
+@@ -81,6 +81,7 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
+ 	}
+ 	f.network.idleTimeout = time.Duration(loadEnvInt(t, "ITOM_LOAD_PROVIDER_IDLE_TIMEOUT_MS", 0, 0, 120000)) * time.Millisecond
+ 	f.network.sessionLimit = loadEnvInt(t, "ITOM_LOAD_PROVIDER_CONNECTION_LIMIT", 0, 0, 32)
++	configureHealthyEndpoints(t, f.network)
+ 	cfg, e := servercfg.New("supervisor-test")
+ 	if e != nil {
+ 		t.Fatal(e)
+@@ -134,6 +135,9 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
+ 		return c, err
+ 	}
+ 	clientDial := func(ctx context.Context, cfg mailbox.Config, folders []string) (*mailbox.Client, error) {
++		if f.network.healthyEndpoints && time.Now().UnixNano() < f.network.clientDownUntil.Load() {
++			return nil, fmt.Errorf("TEST_CLIENT_ACCESS_INTERRUPTED")
++		}
+ 		c, err := dial(ctx, cfg, folders)
+ 		if err == nil && (f.network.mobileEnabled || f.network.fieldLatency != nil && f.network.fieldLatency.endpointScoped) && !f.network.markMobileClient(c.LocalAddr().String(), c.RemoteAddr().String()) {
+ 			c.Close()
+diff --git a/tunnel/v110_latency_itomtest_test.go b/tunnel/v110_latency_itomtest_test.go
+new file mode 100644
+index 0000000..364e98e
+--- /dev/null
++++ b/tunnel/v110_latency_itomtest_test.go
+@@ -0,0 +1,47 @@
++//go:build itomtest
++package tunnel
++
++import (
++ "encoding/json"
++ "os"
++ "sort"
++ "sync/atomic"
++ "testing"
++ "time"
++)
++
++// Real supervisors, TLS/IMAP, actual journals/fsync and persistent application
++// sockets. Routes are independent; no artificial outage or slow journal replay.
++func TestV110IdleLightReference(t *testing.T) {
++ t.Setenv("ITOM_HEALTHY_SERVER", "1")
++ t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
++ t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "2")
++ t.Setenv("ITOM_LOAD_CLIENT_MBPS", "500")
++ t.Setenv("ITOM_LOAD_SERVER_MBPS", "1000")
++ t.Setenv("ITOM_LOAD_LITERAL_PLUS", "1")
++ t.Setenv("ITOM_LOAD_BINARY_FETCH", "1")
++ f:=newProductionSupervisorFixtureAccounts(t,10)
++ c:=rev4Open(t,f);defer c.Close()
++ for i:=0;i<4;i++ {if err:=rev4Exchange(c,i,32,3*time.Second);err!=nil {t.Fatal(err)}}
++ var stop atomic.Bool
++ done:=make(chan error,1)
++ report:=func(phase string){
++  samples:=make([]float64,0,24)
++  for i:=0;i<24;i++ {
++   // A sparse request waits longer; normal cadence includes light interactive bursts.
++   pause:=150*time.Millisecond; if i%8==0 {pause=800*time.Millisecond};time.Sleep(pause)
++   started:=time.Now()
++   if err:=rev4Exchange(c,i,32,3*time.Second);err!=nil {t.Fatal(phase,err)}
++   samples=append(samples,float64(time.Since(started))/float64(time.Millisecond))
++  }
++  sorted:=append([]float64{},samples...);sort.Float64s(sorted);var mean float64;for _,v:=range samples{mean+=v};mean/=float64(len(samples))
++  b,_:=json.Marshal(map[string]any{"variant":os.Getenv("ITOM_EXPERIMENT_LABEL"),"phase":phase,"client_rtt_ms":os.Getenv("ITOM_LOAD_CLIENT_RTT_MS"),"server_rtt_ms":2,"samples_ms":samples,"mean_ms":mean,"p50_ms":sorted[len(sorted)/2],"p95_ms":sorted[len(sorted)*95/100],"max_ms":sorted[len(sorted)-1],"failures":0,"accounts":10,"field_qualified":false})
++  t.Log("V110_RESULT "+string(b))
++ }
++ report("idle")
++ b:=rev4Open(t,f);defer b.Close()
++ go func(){i:=0;for !stop.Load(){if err:=rev4Exchange(b,i,4096,3*time.Second);err!=nil {done<-err;return};i++;time.Sleep(100*time.Millisecond)};done<-nil}()
++ report("light")
++ stop.Store(true);if err:=<-done;err!=nil{t.Fatal(err)}
++ if f.targetDials.Load()!=2{t.Fatal("application sockets replaced",f.targetDials.Load())}
++}

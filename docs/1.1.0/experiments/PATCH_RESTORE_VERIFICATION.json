@@ -1,0 +1,11 @@
+{
+  "verified_variants": [
+    "control",
+    "tiny",
+    "hot",
+    "combined",
+    "event",
+    "micro"
+  ],
+  "comparison": "Entire source file set and SHA256 versus actually compiled test trees"
+}

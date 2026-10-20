@@ -36,6 +36,10 @@ Preserve the exact existing qualification scripts/thresholds: the historical75Mb
 
 Keep accounting/recovery/race tests even with an excellent server: phone interruptions, process crashes, cancellation, missing notifications and lost wallets remain possible. Label intentional server blackouts as optional legacy stress, separate from healthy deployment acceptance. Replay the user's worst raw4G case independently:1Mbps down/2.5Mbps up, ping sequence84,63,43,67,23,60,55,56,21,66ms; require at least0.1Mbps useful messaging connectivity and bounded completion, not an impossible100Mbps floor on that path.
 
+## Calibration finding from the first sweep
+
+Five isolated prototypes have been measured and preserved in [experiments/RESULTS.md](experiments/RESULTS.md). No change is accepted yet. The combined-host local reference also failed on unmodified RC2 and did not reproduce known field throughput. Diagnose that fidelity gap before using its numerical rates to select the new transport. No server-fault assumption or threshold waiver follows from a synthetic failure.
+
 ## Delivery milestones
 
 1. Instrument and calibrate the new2ms server plus original RC2; freeze a reproducible field baseline.

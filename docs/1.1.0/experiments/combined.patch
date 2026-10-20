@@ -1,0 +1,30 @@
+diff --git a/datapath/pump.go b/datapath/pump.go
+index 8d65136..d4c2a31 100644
+--- a/datapath/pump.go
++++ b/datapath/pump.go
+@@ -938,7 +938,7 @@ func (p *Pump) readSocket(id uint64, s Socket) {
+ 	for {
+ 		b := make([]byte, wire.MaxData)
+ 		n, err := s.Read(b)
+-		if n > 0 && n < len(b) && err == nil && p.cfg.ReadCoalesce > 0 {
++		if n > dataTinyThreshold && n < len(b) && err == nil && p.cfg.ReadCoalesce > 0 {
+ 			n, err = coalesceRead(s, b, n, p.cfg.ReadCoalesce)
+ 		}
+ 		if n < 0 || n > len(b) {
+diff --git a/tunnel/io.go b/tunnel/io.go
+index 292c887..93718e3 100644
+--- a/tunnel/io.go
++++ b/tunnel/io.go
+@@ -1693,6 +1693,12 @@ func (l *lane) startReader() {
+ 				}
+ 			}
+ 			delay := readerPollDelay(active, hot, advanced, len(rows), &idle)
++            // Experimental demand-scoped pacing: use direct provider propagation,
++            // not loaded tunnel RTT. Keep RC2 idle/active policy outside hints.
++            if hot && delay > 0 && l.providerBaseline > 0 {
++                turn := min(20*time.Millisecond, max(2*time.Millisecond, l.providerBaseline/2))
++                delay = min(delay, turn)
++            }
+ 			if delay > 0 && readerPause(l.ctx, l.readWake, delay) != nil {
+ 				return
+ 			}

@@ -1,0 +1,92 @@
+=== RUN   TestV110IdleLightReference
+    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true
+    supervisor_fixture_test.go:47: healthy_reference server_rtt_ms=2 server_mbps=1000.000 client_rtt_ms=40 client_mbps=500.000 provider_service_ms=2 injected_server_faults=false physical_paths=independent runtime_cpus=3 gomaxprocs=3 deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false
+    v110_latency_itomtest_test.go:39: V110_RESULT {"accounts":10,"client_rtt_ms":"40","failures":0,"field_qualified":false,"max_ms":1573.365132,"mean_ms":211.5633497916667,"p50_ms":138.200775,"p95_ms":317.674702,"phase":"idle","samples_ms":[125.526636,88.578868,95.828012,127.496304,102.148335,174.298478,147.443702,317.674702,167.316121,209.7096,292.337795,117.514529,141.003393,1573.365132,163.918328,180.995223,114.444763,115.785106,233.579814,118.997327,119.085204,138.200775,107.593339,104.678909],"server_rtt_ms":2,"variant":"micro"}
+    v110_latency_itomtest_test.go:39: V110_RESULT {"accounts":10,"client_rtt_ms":"40","failures":0,"field_qualified":false,"max_ms":173.877746,"mean_ms":111.13272829166668,"p50_ms":108.146062,"p95_ms":162.388816,"phase":"light","samples_ms":[101.940963,98.014814,105.512631,105.040675,162.388816,108.146062,96.173584,96.215022,109.884329,117.656976,122.317415,111.777508,83.598558,153.153479,113.349682,173.877746,77.043517,90.771678,94.998333,93.79075,124.746083,106.832151,110.02155,109.933157],"server_rtt_ms":2,"variant":"micro"}
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling APPEND command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling SELECT command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling UID FETCH command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: io: read/write on closed pipe
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a01 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a03 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a05 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a04 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a09 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a10 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a08 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a06 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a07 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:227: supervisor_timeline event=carrier_authenticated account=a02 session=9317cfd1c573eadbbfbf4371ef36484e generation=12570408594465650233 epoch=1
+    supervisor_fixture_test.go:254: supervisor_summary accounts=10 dial_attempts=100 dial_denied=0 target_tcp_dials=2 provider={HealthyEndpoints:true ClientMbps:500 ServerMbps:1000 ClientRTTMS:40 ServerRTTMS:2 Active:31 DownAccounts:0 Accepted:120 Dropped:0 UplinkBytes:2174080 DownlinkBytes:3582702 Mbps:0}
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 handling IDLE command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+2026/10/20 13:37:49 failed to read command: in command: io: read/write on closed pipe
+--- PASS: TestV110IdleLightReference (24.95s)
+PASS
