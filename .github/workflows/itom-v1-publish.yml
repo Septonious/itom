@@ -1,0 +1,107 @@
+name: Publish verified final 1.0.0 package
+on:
+  push:
+    branches: ["codex/v1.0.0-final-rc2"]
+    paths: [".github/workflows/itom-v1-publish.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUILD_RUN: '39430001782'
+      BUILD_COMMIT: eca768e1a6f2fcd34bc0e57637b7912ce57e1430
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39430001782
+          name: ITOM-1.0.0-full
+          path: verified
+      - name: Verify original build gates and exact packaged files
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN/jobs?per_page=100" > jobs.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('jobs.json'))
+          names=('preservation','RC2 identity, full Go correctness and race','Package executable V1 source','Build Linux amd64 and arm64','Build Android APK, SDK tests, lint and JNI')
+          jobs={x['name']:x for x in d['jobs']}
+          for n in names:
+              assert jobs[n]['conclusion']=='success', n
+          PY
+          mkdir package
+          unzip -q verified/ITOM-1.0.0-full.zip -d package
+          (cd package && sha256sum -c SHA256SUMS)
+          grep -Fx 'Build commit: eca768e1a6f2fcd34bc0e57637b7912ce57e1430' package/TESTING_NOTES.txt
+      - name: Resolve draft by release ID and verify uploaded digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
+          python3 - <<'PY'
+          import json,os
+          rows=[r for page in json.load(open('releases.json')) for r in page if r['tag_name']=='v1.0.0']
+          assert len(rows)==1, 'Expected one existing final draft; no release will be replaced'
+          r=rows[0]
+          assert r['target_commitish']==os.environ['BUILD_COMMIT'], r['target_commitish']
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f"RELEASE_ID={r['id']}\n")
+          PY
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release.json
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          d=json.load(open('release.json')); assets={a['name']:a for a in d['assets']}
+          for f in Path('package').iterdir():
+              a=assets[f.name]
+              assert a['size']==f.stat().st_size, f.name
+              assert a['digest']=='sha256:'+hashlib.sha256(f.read_bytes()).hexdigest(), f.name
+          PY
+      - name: Add full bundle without overwriting existing assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 - <<'PY'
+          import json,sys
+          sys.exit(0 if any(a['name']=='ITOM-1.0.0-full.zip' for a in json.load(open('release.json'))['assets']) else 1)
+          PY
+          then
+            echo 'Bundle already present; verifying its digest below.'
+          else
+            python3 - <<'PY_UPLOAD'
+          import json,os,urllib.request
+          from pathlib import Path
+          assert os.environ['GITHUB_REPOSITORY']=='Septonious/itom'
+          f=Path('verified/ITOM-1.0.0-full.zip')
+          url=f"https://uploads.github.com/repos/Septonious/itom/releases/{int(os.environ['RELEASE_ID'])}/assets?name={f.name}"
+          req=urllib.request.Request(url,data=f.read_bytes(),method='POST',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Content-Type':'application/zip','Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(req,timeout=120) as response:
+              Path('bundle-upload.json').write_bytes(response.read())
+          PY_UPLOAD
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release.json
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          f=Path('verified/ITOM-1.0.0-full.zip')
+          a=next(a for a in json.load(open('release.json'))['assets'] if a['name']==f.name)
+          assert a['size']==f.stat().st_size
+          assert a['digest']=='sha256:'+hashlib.sha256(f.read_bytes()).hexdigest()
+          Path('promotion.json').write_text(json.dumps({'draft':False,'prerelease':False,'make_latest':'true'}))
+          PY
+      - name: Publish only after every file matches
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --input promotion.json > published.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('published.json'))
+          assert d['tag_name']=='v1.0.0' and not d['draft'] and not d['prerelease']
+          print(d['html_url'])
+          PY
