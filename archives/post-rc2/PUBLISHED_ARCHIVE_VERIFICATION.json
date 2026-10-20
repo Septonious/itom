@@ -1,0 +1,19 @@
+{
+  "asset": "POST_RC2_CHANGES.zip",
+  "sha256": "2911451b357457bf96743945a8956541cf48cc0736fcb7db9ef9c03e9b3d4db7",
+  "verified_release_sources": [
+    "RC3",
+    "RC4",
+    "RC5",
+    "RC6",
+    "RC7",
+    "RC8",
+    "RC9",
+    "RC10",
+    "RC11",
+    "RC12",
+    "RC13",
+    "RC10.1"
+  ],
+  "method": "Downloaded actual published asset, verified public digest, applied all patches to pristine RC2 and matched entire source file sets/SHA256"
+}
