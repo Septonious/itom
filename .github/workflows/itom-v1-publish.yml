@@ -46,12 +46,15 @@ jobs:
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
           python3 - <<'PY'
           import json,os
+          from pathlib import Path
           rows=[r for page in json.load(open('releases.json')) for r in page if r['tag_name']=='v1.0.0']
           assert len(rows)==1, 'Expected one existing final draft; no release will be replaced'
           r=rows[0]
+          Path('release-id.txt').write_text(str(r['id']))
           assert r['target_commitish']==os.environ['BUILD_COMMIT'], r['target_commitish']
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f"RELEASE_ID={r['id']}\n")
           PY
+          RELEASE_ID="$(cat release-id.txt)"
           gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release.json
           python3 - <<'PY'
           import hashlib,json
