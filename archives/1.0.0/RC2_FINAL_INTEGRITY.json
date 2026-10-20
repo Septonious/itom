@@ -1,0 +1,1852 @@
+{
+  "baseline": "a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
+  "checked_files": 307,
+  "production_core_files": 238,
+  "transport_policy": "RC2 unchanged",
+  "android_runtime": "RC2 unchanged; current package identity retained",
+  "qualification_thresholds": "RC2 unchanged",
+  "files": [
+    {
+      "path": "android/app/src/debug/java/org/itom/client/NativeUiPreviews.kt",
+      "rc2_sha256": "db522396b4489d8f9378628fbb7c928d50cdb558958d5477002da821bae8e1ed",
+      "final_sha256": "db522396b4489d8f9378628fbb7c928d50cdb558958d5477002da821bae8e1ed",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/AndroidManifest.xml",
+      "rc2_sha256": "c5ababfd40f94ddbef5f9fee80a67ae432821da43245312592b4bd1fd8cfc078",
+      "final_sha256": "c5ababfd40f94ddbef5f9fee80a67ae432821da43245312592b4bd1fd8cfc078",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/AdminScreen.kt",
+      "rc2_sha256": "e5fb049db1ee3a535807669c08e60ee68f9105beaf2c3bb2daf6a237888333e8",
+      "final_sha256": "e5fb049db1ee3a535807669c08e60ee68f9105beaf2c3bb2daf6a237888333e8",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/AppGraph.kt",
+      "rc2_sha256": "7b4cacbf3fa2825b8869dc9b661ca9cdad05872e7b9fed267c4ba4c920e3a2e7",
+      "final_sha256": "7b4cacbf3fa2825b8869dc9b661ca9cdad05872e7b9fed267c4ba4c920e3a2e7",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/AppsScreen.kt",
+      "rc2_sha256": "009a66f45c24ad9843c8745c5bd7a67a5a479815a13e91e0fd69718cbb902ced",
+      "final_sha256": "009a66f45c24ad9843c8745c5bd7a67a5a479815a13e91e0fd69718cbb902ced",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/HomeScreens.kt",
+      "rc2_sha256": "4c12b1d0bd0cd82f3d7729837c440cedf4e2086fb34e17b6e5f206d79eb4f8fa",
+      "final_sha256": "4c12b1d0bd0cd82f3d7729837c440cedf4e2086fb34e17b6e5f206d79eb4f8fa",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/MainActivity.kt",
+      "rc2_sha256": "5c1db8914240345e24995890801e0dbdfc2bdabf995bf675832b087d48c2b9ce",
+      "final_sha256": "5c1db8914240345e24995890801e0dbdfc2bdabf995bf675832b087d48c2b9ce",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/ProfileEditorScreen.kt",
+      "rc2_sha256": "b693a856376814ce2d2f3647c59f492414621918e33480fb962082e8bf7096ad",
+      "final_sha256": "b693a856376814ce2d2f3647c59f492414621918e33480fb962082e8bf7096ad",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/ProfileJsonHighlight.kt",
+      "rc2_sha256": "d8653467b943ac6cde200ed45a11dd38d94666cd9c4178cf11ce7ecde430d0b5",
+      "final_sha256": "d8653467b943ac6cde200ed45a11dd38d94666cd9c4178cf11ce7ecde430d0b5",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/ProfileScreens.kt",
+      "rc2_sha256": "7571fc1b7e477fe51eecb891025d585cf9f02796273f648daefac652a9a189ff",
+      "final_sha256": "7571fc1b7e477fe51eecb891025d585cf9f02796273f648daefac652a9a189ff",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/RulesScreens.kt",
+      "rc2_sha256": "27473e02d0ac3abecd278071a4bdccd082a8a734351dfdda249328dd6cb5c6b1",
+      "final_sha256": "27473e02d0ac3abecd278071a4bdccd082a8a734351dfdda249328dd6cb5c6b1",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/ServerMessageText.kt",
+      "rc2_sha256": "d75bae9c9009a7a04f36b02fe7e449b460491b19b62415d08735079a337eb50e",
+      "final_sha256": "d75bae9c9009a7a04f36b02fe7e449b460491b19b62415d08735079a337eb50e",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/SettingsScreens.kt",
+      "rc2_sha256": "a66de0c1d6fe69ad4d41748ca6f17ca283374eb3aaad03145dee41e5e59f555a",
+      "final_sha256": "a66de0c1d6fe69ad4d41748ca6f17ca283374eb3aaad03145dee41e5e59f555a",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/SocksScreen.kt",
+      "rc2_sha256": "f9842c8caf799cc60cc32b75a5de112feb36fdf4f08920badb0dcfab78f02cc1",
+      "final_sha256": "f9842c8caf799cc60cc32b75a5de112feb36fdf4f08920badb0dcfab78f02cc1",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/Theme.kt",
+      "rc2_sha256": "dd972316072abd4b255b5a00fb73e291f092a27c7050e00218dc71cec3c127f1",
+      "final_sha256": "dd972316072abd4b255b5a00fb73e291f092a27c7050e00218dc71cec3c127f1",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/TraceExport.kt",
+      "rc2_sha256": "e4aa1cc97f47a89e3022da1ba3c4b3ac7e984511bc7c6ba1468fb8cfa20c142b",
+      "final_sha256": "e4aa1cc97f47a89e3022da1ba3c4b3ac7e984511bc7c6ba1468fb8cfa20c142b",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/TransportDiagnostics.kt",
+      "rc2_sha256": "b82b88f42fa67755dae38cb0fcdb7585af65306503909aa2619cd591dbe8535f",
+      "final_sha256": "b82b88f42fa67755dae38cb0fcdb7585af65306503909aa2619cd591dbe8535f",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/UiComponents.kt",
+      "rc2_sha256": "b6269d00d88737d389b8f65abaf986634409b24264673eebf13aa3bc64305c3b",
+      "final_sha256": "b6269d00d88737d389b8f65abaf986634409b24264673eebf13aa3bc64305c3b",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/VaultStore.kt",
+      "rc2_sha256": "58c62908572790f89c305a004629a2d63d638587499bb9ef99fb5011125f1369",
+      "final_sha256": "58c62908572790f89c305a004629a2d63d638587499bb9ef99fb5011125f1369",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/backend/BackendFactory.kt",
+      "rc2_sha256": "0ca4a279de2156692f81bc2cca60e51c666111dac99609d70805ca90eaa9b55f",
+      "final_sha256": "0ca4a279de2156692f81bc2cca60e51c666111dac99609d70805ca90eaa9b55f",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/backend/ItomTileService.kt",
+      "rc2_sha256": "5087ff91b703a5e6faacd89dbcf69665df06a7c5b55ad2c88d2263159630c376",
+      "final_sha256": "5087ff91b703a5e6faacd89dbcf69665df06a7c5b55ad2c88d2263159630c376",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt",
+      "rc2_sha256": "4a6906853cdfc34457dd0c498452feb59cf0e20ba33ec262de243574b91f9959",
+      "final_sha256": "4a6906853cdfc34457dd0c498452feb59cf0e20ba33ec262de243574b91f9959",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/backend/SessionCallbacks.kt",
+      "rc2_sha256": "d49b5f1cfd25e34ff37d51abeaa60638a7571327bfb067a8f19a8f01b83ffb9a",
+      "final_sha256": "d49b5f1cfd25e34ff37d51abeaa60638a7571327bfb067a8f19a8f01b83ffb9a",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/drawable/ic_itom.xml",
+      "rc2_sha256": "9877f1ee22bd65772c4f6fdf8992a06a520cd41cc09d40bc831d79fe87269a4c",
+      "final_sha256": "9877f1ee22bd65772c4f6fdf8992a06a520cd41cc09d40bc831d79fe87269a4c",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/drawable/ic_launcher_background.xml",
+      "rc2_sha256": "1feec248dd7991151d8a610a8a602412e404cb58359a35c9d97d1a4918b6ff62",
+      "final_sha256": "1feec248dd7991151d8a610a8a602412e404cb58359a35c9d97d1a4918b6ff62",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "rc2_sha256": "80c894b77c1d9d43ac8acba19ea57ecbc2b1dd7bbcbbf9314318c5690492f1dd",
+      "final_sha256": "80c894b77c1d9d43ac8acba19ea57ecbc2b1dd7bbcbbf9314318c5690492f1dd",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/drawable/ic_launcher_monochrome.xml",
+      "rc2_sha256": "0712e6723bcc33e2a8a8035f81eb5346a3d7076f82168ff46e30b556bfb32d6c",
+      "final_sha256": "0712e6723bcc33e2a8a8035f81eb5346a3d7076f82168ff46e30b556bfb32d6c",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml",
+      "rc2_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "final_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-anydpi-v33/ic_launcher_round.xml",
+      "rc2_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "final_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-anydpi/ic_launcher.xml",
+      "rc2_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "final_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml",
+      "rc2_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "final_sha256": "ee02dcf97e172881c05ebd817f0a7daa0fbe149d8c3282ba2d05241d12d1ab0e",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/values/styles.xml",
+      "rc2_sha256": "84f5463b87a1479abc3afbb4519bcd405cf607f024532bd4dfefd2b190b2f3ea",
+      "final_sha256": "84f5463b87a1479abc3afbb4519bcd405cf607f024532bd4dfefd2b190b2f3ea",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/main/res/xml/data_extraction_rules.xml",
+      "rc2_sha256": "eda9dddce1e895de1efd716fe75e244187bf8f91a3bb7444c6ea1731e51c74a8",
+      "final_sha256": "eda9dddce1e895de1efd716fe75e244187bf8f91a3bb7444c6ea1731e51c74a8",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/test/java/org/itom/client/ServerMessageTextTest.kt",
+      "rc2_sha256": "01612149ebb61ac317ecaf1225907a013524875c12dd911343199960b992a6ec",
+      "final_sha256": "01612149ebb61ac317ecaf1225907a013524875c12dd911343199960b992a6ec",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/test/java/org/itom/client/ThemeContrastTest.kt",
+      "rc2_sha256": "2d7b6c2819e861cc6fe4292f86f314f41006d0897e5f06d67d604128cc95ce44",
+      "final_sha256": "2d7b6c2819e861cc6fe4292f86f314f41006d0897e5f06d67d604128cc95ce44",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/app/src/test/java/org/itom/client/backend/SessionCallbacksTest.kt",
+      "rc2_sha256": "c3c2bfb088712bb76bdb7c2a3d4a1aa47293da67bed315d12739261360af3236",
+      "final_sha256": "c3c2bfb088712bb76bdb7c2a3d4a1aa47293da67bed315d12739261360af3236",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/build.gradle.kts",
+      "rc2_sha256": "d9aba1b51349fdbf37f42361484451ec9682cb1c15f652fe26e5d724e61df1df",
+      "final_sha256": "d9aba1b51349fdbf37f42361484451ec9682cb1c15f652fe26e5d724e61df1df",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Admin.kt",
+      "rc2_sha256": "e2ebd88752c3b0186131f95662b32d887c3898b4123354fc462274436875d270",
+      "final_sha256": "e2ebd88752c3b0186131f95662b32d887c3898b4123354fc462274436875d270",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Codec.kt",
+      "rc2_sha256": "9e7e670bc817f7c4c792df3bf0d5bb26f9651f3de0bc42ffd47755681bfdeea1",
+      "final_sha256": "9e7e670bc817f7c4c792df3bf0d5bb26f9651f3de0bc42ffd47755681bfdeea1",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Diagnostics.kt",
+      "rc2_sha256": "37e63d9ca9b250d6ba3c1609b5b1e404047718b16ad7ffb82350fecaaff53e80",
+      "final_sha256": "37e63d9ca9b250d6ba3c1609b5b1e404047718b16ad7ffb82350fecaaff53e80",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Models.kt",
+      "rc2_sha256": "004720d303f4e8a142c01b388d6c9c95f7ba4e6659147b06389e435507df8e2f",
+      "final_sha256": "004720d303f4e8a142c01b388d6c9c95f7ba4e6659147b06389e435507df8e2f",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/NetworkSelection.kt",
+      "rc2_sha256": "0d597dfed423236fcf61cee7069f5c49986f5ff34cddac2b41e473cc515a70b3",
+      "final_sha256": "0d597dfed423236fcf61cee7069f5c49986f5ff34cddac2b41e473cc515a70b3",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/ProfileEditing.kt",
+      "rc2_sha256": "94ae9f2bddafb62c03eb58fb1d71f481060b02a7d47ead1f8bdf6a7eb6346248",
+      "final_sha256": "94ae9f2bddafb62c03eb58fb1d71f481060b02a7d47ead1f8bdf6a7eb6346248",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Routing.kt",
+      "rc2_sha256": "900f47c279266c2ae1f07f31bd214e4a362e6ad9a2cf372300f9482de3567c93",
+      "final_sha256": "900f47c279266c2ae1f07f31bd214e4a362e6ad9a2cf372300f9482de3567c93",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/ServerMessageFormatting.kt",
+      "rc2_sha256": "aee39fd2dbf870b0e185cf3e589f953ec84a190ae09cd2c15cbaad23ceeea3e5",
+      "final_sha256": "aee39fd2dbf870b0e185cf3e589f953ec84a190ae09cd2c15cbaad23ceeea3e5",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Session.kt",
+      "rc2_sha256": "139a5c2bf0366f4408ae3e6632aa93e4d76d849cbfd5d2dbe7510266ea980a40",
+      "final_sha256": "139a5c2bf0366f4408ae3e6632aa93e4d76d849cbfd5d2dbe7510266ea980a40",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/SocksCredentials.kt",
+      "rc2_sha256": "655806a6e2a65c90390d309f162b739c8c2ad76a0a572e3dc9d8910b26a2bd1d",
+      "final_sha256": "655806a6e2a65c90390d309f162b739c8c2ad76a0a572e3dc9d8910b26a2bd1d",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/Validation.kt",
+      "rc2_sha256": "d783a5e20d3a6f127b6b1166eba070303efadd18a3f1cd61c635fee238880659",
+      "final_sha256": "d783a5e20d3a6f127b6b1166eba070303efadd18a3f1cd61c635fee238880659",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/main/kotlin/org/itom/domain/VaultMigration.kt",
+      "rc2_sha256": "c72ad63300ff60da5c318c0871f327ec38142ed8e2226df92a1231f6d13267e5",
+      "final_sha256": "c72ad63300ff60da5c318c0871f327ec38142ed8e2226df92a1231f6d13267e5",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/AccountScaleTest.kt",
+      "rc2_sha256": "d2020cea36456267b0101c44a73a763ca76ad0493bb49d49812bc0ac9dd2fe75",
+      "final_sha256": "d2020cea36456267b0101c44a73a763ca76ad0493bb49d49812bc0ac9dd2fe75",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/AdminTest.kt",
+      "rc2_sha256": "110e3eb49ab29910de3a4a0a89b72251139368e72b6f6ccab102ea1e7757b0fe",
+      "final_sha256": "110e3eb49ab29910de3a4a0a89b72251139368e72b6f6ccab102ea1e7757b0fe",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/DiagnosticsTest.kt",
+      "rc2_sha256": "276d7d7ee551a7d999fc59c38cf579109aef7fcca417ae867445f9025c83b111",
+      "final_sha256": "276d7d7ee551a7d999fc59c38cf579109aef7fcca417ae867445f9025c83b111",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/DomainTest.kt",
+      "rc2_sha256": "8d223857aabcbc0bd67c7164bf04cd9922de6f3a6f99f5c35dc09c6412291ac3",
+      "final_sha256": "8d223857aabcbc0bd67c7164bf04cd9922de6f3a6f99f5c35dc09c6412291ac3",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/NetworkPolicyTest.kt",
+      "rc2_sha256": "19d2b14c5734299cd5ecf56bcfcfc384a245e2b21b6655a3d3322866b371544d",
+      "final_sha256": "19d2b14c5734299cd5ecf56bcfcfc384a245e2b21b6655a3d3322866b371544d",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/ServerMessageFormattingTest.kt",
+      "rc2_sha256": "4d49435b732106f379960fdafa6e6e2010a64e05b489837a51770921f1444c1f",
+      "final_sha256": "4d49435b732106f379960fdafa6e6e2010a64e05b489837a51770921f1444c1f",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/SocksCredentialsTest.kt",
+      "rc2_sha256": "a86bdf5e27f1c6fadbbd9be2573c55e25e261b27fe15b85ab4f449bc1c4ea22c",
+      "final_sha256": "a86bdf5e27f1c6fadbbd9be2573c55e25e261b27fe15b85ab4f449bc1c4ea22c",
+      "identity_string_only": false
+    },
+    {
+      "path": "android/domain/src/test/kotlin/org/itom/domain/VaultMigrationTest.kt",
+      "rc2_sha256": "27fde4a80a74e20bdfe02030656daa5b9876763dd34857dd57f30ff2eaf077ba",
+      "final_sha256": "27fde4a80a74e20bdfe02030656daa5b9876763dd34857dd57f30ff2eaf077ba",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/adminapi/api.go",
+      "rc2_sha256": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
+      "final_sha256": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/adminserver/server.go",
+      "rc2_sha256": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
+      "final_sha256": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/adminserver/watchdog.go",
+      "rc2_sha256": "d3ef6f9932d23c8c5be84d9c111d42b639b3527da697a2ded4a6ad5b5571b6ea",
+      "final_sha256": "d3ef6f9932d23c8c5be84d9c111d42b639b3527da697a2ded4a6ad5b5571b6ea",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/cmd/itom/main.go",
+      "rc2_sha256": "2a5ddd9e389c0481d8d6ee78028e0107e8b8906dfe4926c07385ecedab9bc8ae",
+      "final_sha256": "79205e16c8d53b3aaad3cbf419623966d0f62fd37ee89f8204e856e0acb73e9a",
+      "identity_string_only": true
+    },
+    {
+      "path": "core/cmd/itom/signal_unix.go",
+      "rc2_sha256": "662047d7de67955e1adceb6a577ab1db27e24f2e7dc5b33df55aa337064a86f5",
+      "final_sha256": "662047d7de67955e1adceb6a577ab1db27e24f2e7dc5b33df55aa337064a86f5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/cmd/itom/signal_windows.go",
+      "rc2_sha256": "63f4d6416f02bce6759d933d5d169d96d15aa792fed0f178e752c52f0de5583e",
+      "final_sha256": "63f4d6416f02bce6759d933d5d169d96d15aa792fed0f178e752c52f0de5583e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/control_queue.go",
+      "rc2_sha256": "b9756ed11e05a85bf8ad08bc739c761c2980083dbaa9cb7b6a9a183a0893f2aa",
+      "final_sha256": "b9756ed11e05a85bf8ad08bc739c761c2980083dbaa9cb7b6a9a183a0893f2aa",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/engine.go",
+      "rc2_sha256": "c817c49be995b35e0c8ad9441934f0806c4467bdd212d346a3c3e6c0bca1a962",
+      "final_sha256": "c817c49be995b35e0c8ad9441934f0806c4467bdd212d346a3c3e6c0bca1a962",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/pump.go",
+      "rc2_sha256": "fc7263d24caf4f26a8258286f40f79b5068f15fd91af43cf9383fd1395c1a922",
+      "final_sha256": "fc7263d24caf4f26a8258286f40f79b5068f15fd91af43cf9383fd1395c1a922",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/scheduler_snapshot.go",
+      "rc2_sha256": "a2a267c4af1f0fd471534629cc9293c960463fbc48f59aeea0e03e74cd14824f",
+      "final_sha256": "a2a267c4af1f0fd471534629cc9293c960463fbc48f59aeea0e03e74cd14824f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/socket_copy.go",
+      "rc2_sha256": "db8dd6f9ba0baacb0435ae42368ef08d1e53bf3af62554f5e71c8a351ad680fc",
+      "final_sha256": "db8dd6f9ba0baacb0435ae42368ef08d1e53bf3af62554f5e71c8a351ad680fc",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/tcp.go",
+      "rc2_sha256": "99fb05a727f2dcf03a4d0bf2bd959a676fb96e2d276f691aae745f73300e76d9",
+      "final_sha256": "99fb05a727f2dcf03a4d0bf2bd959a676fb96e2d276f691aae745f73300e76d9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/datapath/writer.go",
+      "rc2_sha256": "b700590a54456ed3bfca877e7c0b932837da82c21d706a1e5bf5e98cb7f34f06",
+      "final_sha256": "b700590a54456ed3bfca877e7c0b932837da82c21d706a1e5bf5e98cb7f34f06",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/flow/rx.go",
+      "rc2_sha256": "c74f7a0650b7fed2035cdc8fc3870574d8e98da523d148977350a9b31a14c56f",
+      "final_sha256": "c74f7a0650b7fed2035cdc8fc3870574d8e98da523d148977350a9b31a14c56f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/flow/tx.go",
+      "rc2_sha256": "be30c5a040c4be6752679e0d50286810fea6550c377531efa9589f39e492f370",
+      "final_sha256": "be30c5a040c4be6752679e0d50286810fea6550c377531efa9589f39e492f370",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/go.mod",
+      "rc2_sha256": "2193ef1dca8560a22817ce6c403e1e5f9785694b6c44f2d79a50bf0f6e222d80",
+      "final_sha256": "2193ef1dca8560a22817ce6c403e1e5f9785694b6c44f2d79a50bf0f6e222d80",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/go.sum",
+      "rc2_sha256": "ffcd0a958ada22e730daf5f672019eda05aa7e67fae0f940959e6e472283c2f6",
+      "final_sha256": "ffcd0a958ada22e730daf5f672019eda05aa7e67fae0f940959e6e472283c2f6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/audit.go",
+      "rc2_sha256": "5a7abcc95038cf294e8b39fbc05cabce86a8d87639420367010e5455c6197e7b",
+      "final_sha256": "5a7abcc95038cf294e8b39fbc05cabce86a8d87639420367010e5455c6197e7b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/commit_metrics.go",
+      "rc2_sha256": "dde60fb66269cd67fb96e8089af611a002a7af5607e5f30d869e1651b7eb5dbb",
+      "final_sha256": "dde60fb66269cd67fb96e8089af611a002a7af5607e5f30d869e1651b7eb5dbb",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/latency_itomtest.go",
+      "rc2_sha256": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50",
+      "final_sha256": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/ledger.go",
+      "rc2_sha256": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534",
+      "final_sha256": "e13bd632365527739eedeaf6cac17cd2d6489a7a9b076182b3fcaee16091a534",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/model.go",
+      "rc2_sha256": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532",
+      "final_sha256": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/origin_view.go",
+      "rc2_sha256": "097656fcef7d3db609a3b62d6b8296a4c1c96761775d39efa17e077f0fc2033a",
+      "final_sha256": "097656fcef7d3db609a3b62d6b8296a4c1c96761775d39efa17e077f0fc2033a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/profile.go",
+      "rc2_sha256": "2a546b9559e11267cd8a5e5db365c9e0ae104bfdbdac906021b30c710e4724e9",
+      "final_sha256": "2a546b9559e11267cd8a5e5db365c9e0ae104bfdbdac906021b30c710e4724e9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/remote.go",
+      "rc2_sha256": "16f39d5dfc47f8c1c67c6d0d623bc6ddbf0eb19dde9dd66266858ac8e94625ad",
+      "final_sha256": "16f39d5dfc47f8c1c67c6d0d623bc6ddbf0eb19dde9dd66266858ac8e94625ad",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/remote_index.go",
+      "rc2_sha256": "60ddfc25b941524f27f1251b5587871a5f7c3ba2796c55c94cd5af2d5236f230",
+      "final_sha256": "60ddfc25b941524f27f1251b5587871a5f7c3ba2796c55c94cd5af2d5236f230",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/journal/store.go",
+      "rc2_sha256": "f45833b8b06e2de8b0f658b5459ef40ff69966e9e5285694155dc9d974905148",
+      "final_sha256": "f45833b8b06e2de8b0f658b5459ef40ff69966e9e5285694155dc9d974905148",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/admin.go",
+      "rc2_sha256": "d3a2b069b2eb1d4117724e03cf4ba736041ffe4317db2565f8eda5594297cc25",
+      "final_sha256": "d3a2b069b2eb1d4117724e03cf4ba736041ffe4317db2565f8eda5594297cc25",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/append_hints.go",
+      "rc2_sha256": "7231ba9c73bda9018e079d2988cf2732847705b061b77523804a1a5ad60b6a82",
+      "final_sha256": "7231ba9c73bda9018e079d2988cf2732847705b061b77523804a1a5ad60b6a82",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/batch.go",
+      "rc2_sha256": "e960e684ef155c991fecde10b25c96910eb0ad4c8e54ead60f1feedf44056c3e",
+      "final_sha256": "e960e684ef155c991fecde10b25c96910eb0ad4c8e54ead60f1feedf44056c3e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/binary_policy.go",
+      "rc2_sha256": "5fd51cb3b7aaf18c3ea698ebad355e7a45ea2b43484a9973f709e8ada7919587",
+      "final_sha256": "5fd51cb3b7aaf18c3ea698ebad355e7a45ea2b43484a9973f709e8ada7919587",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/check.go",
+      "rc2_sha256": "dad4df454c586c7dc025ed8727a196f6e2ec187d40b408f2c95a8784023e3966",
+      "final_sha256": "dad4df454c586c7dc025ed8727a196f6e2ec187d40b408f2c95a8784023e3966",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/connection_error.go",
+      "rc2_sha256": "e7f7709d642cc1e627d2b8c2122caaded58a043d93c265fa766ee2c2e1933916",
+      "final_sha256": "e7f7709d642cc1e627d2b8c2122caaded58a043d93c265fa766ee2c2e1933916",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/dispatcher.go",
+      "rc2_sha256": "52f9e36e3070df5b1b8efe24f8258a7096473320f182f4e993f13cb9f32820db",
+      "final_sha256": "52f9e36e3070df5b1b8efe24f8258a7096473320f182f4e993f13cb9f32820db",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/inbox.go",
+      "rc2_sha256": "a96864d8ff299a73afb47461555da45ce14e3f4786f09b54ad7cb1fda342dacf",
+      "final_sha256": "a96864d8ff299a73afb47461555da45ce14e3f4786f09b54ad7cb1fda342dacf",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/keepalive.go",
+      "rc2_sha256": "d53aa0f4f8b5c6d86352c1734c6f0f68c89300b9f9014239491c921a1a4071a6",
+      "final_sha256": "d53aa0f4f8b5c6d86352c1734c6f0f68c89300b9f9014239491c921a1a4071a6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/mailbox.go",
+      "rc2_sha256": "058e1e980f9a227d03b83ea561718a57a7bc58c73e7018b7a65a0a2e1642d5e7",
+      "final_sha256": "058e1e980f9a227d03b83ea561718a57a7bc58c73e7018b7a65a0a2e1642d5e7",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/purge.go",
+      "rc2_sha256": "7063023bfb0c9ebfdf421b1aa54ee23a61494be049cf6acf01ce7acd3372e644",
+      "final_sha256": "7063023bfb0c9ebfdf421b1aa54ee23a61494be049cf6acf01ce7acd3372e644",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/receive_interrupt.go",
+      "rc2_sha256": "25c69bb3928137a4cfdd7b7a156d3fc9ed79cfaed67db2d2b791d5731c05fe83",
+      "final_sha256": "25c69bb3928137a4cfdd7b7a156d3fc9ed79cfaed67db2d2b791d5731c05fe83",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/socket_lifecycle.go",
+      "rc2_sha256": "92337b11775ae2113d0a874d341979785d615f9cb8611564e0fbae6fee56b2ee",
+      "final_sha256": "92337b11775ae2113d0a874d341979785d615f9cb8611564e0fbae6fee56b2ee",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/tail_gaps.go",
+      "rc2_sha256": "37385485165d17bcb972722566efe6594339f6c4384249192740ea19480333ff",
+      "final_sha256": "37385485165d17bcb972722566efe6594339f6c4384249192740ea19480333ff",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailbox/tail_sparse.go",
+      "rc2_sha256": "27a3110e2dfbb3aa04ba3ef179bb39f4015f8f651c8034a008250c44f5337d19",
+      "final_sha256": "27a3110e2dfbb3aa04ba3ef179bb39f4015f8f651c8034a008250c44f5337d19",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/mailcontrol/control.go",
+      "rc2_sha256": "d8b459d0e0f9cfdb7494a15fb00d078eeec05f06caf11c3193597fef37ce2674",
+      "final_sha256": "d8b459d0e0f9cfdb7494a15fb00d078eeec05f06caf11c3193597fef37ce2674",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/accounts.go",
+      "rc2_sha256": "0c8ce3b57500625453b0ac9896e630692f5c5a4f310395dcd404219470d4e517",
+      "final_sha256": "0c8ce3b57500625453b0ac9896e630692f5c5a4f310395dcd404219470d4e517",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/logs.go",
+      "rc2_sha256": "3113f40ce986bf78182572b4914b2cfc1610c0dbf8cfadb0c3b9674273954946",
+      "final_sha256": "3113f40ce986bf78182572b4914b2cfc1610c0dbf8cfadb0c3b9674273954946",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/manager.go",
+      "rc2_sha256": "42d59bb9e06b2f8665165cbe16497a5220abf694b8d4cf9160ae76d729501afe",
+      "final_sha256": "42d59bb9e06b2f8665165cbe16497a5220abf694b8d4cf9160ae76d729501afe",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/notices.go",
+      "rc2_sha256": "0b281f6dd859d917920152e5d39496a51a2c4a21bacac8342e88ade540effc80",
+      "final_sha256": "0b281f6dd859d917920152e5d39496a51a2c4a21bacac8342e88ade540effc80",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/selections.go",
+      "rc2_sha256": "95fb737f4dd273f7235d47cd294d742d24998d941313df3770a0da6c53a93db6",
+      "final_sha256": "95fb737f4dd273f7235d47cd294d742d24998d941313df3770a0da6c53a93db6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/trace.go",
+      "rc2_sha256": "67d33c0a3d5630417bcaa1d0fda7e1fc8aaa28b17d32feab35d026e06e0330bb",
+      "final_sha256": "dc928a3610a7507eb990fb82bc4f189c0a2244fc2c19668547200cafb3a31001",
+      "identity_string_only": true
+    },
+    {
+      "path": "core/manager/traffic.go",
+      "rc2_sha256": "1e1b699bb3619c3b2376b234e21a1c7992577419b30e6e8976256a8db308853d",
+      "final_sha256": "1e1b699bb3619c3b2376b234e21a1c7992577419b30e6e8976256a8db308853d",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/manager/uninstall.go",
+      "rc2_sha256": "ef694ff08e15637bd7ae5a0ce213e2e7192c9c1fa1ce0812ffc460fbd7496e25",
+      "final_sha256": "ef694ff08e15637bd7ae5a0ce213e2e7192c9c1fa1ce0812ffc460fbd7496e25",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/netroute/dial.go",
+      "rc2_sha256": "676e9d9ea750bdd5a5a31be5031c100003b69e804200593056946c0b30fa75f5",
+      "final_sha256": "676e9d9ea750bdd5a5a31be5031c100003b69e804200593056946c0b30fa75f5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/pool/fair.go",
+      "rc2_sha256": "89c0507ed84a911f8dc60550edd73692c92946a11698eef0e3a176dc698b3174",
+      "final_sha256": "89c0507ed84a911f8dc60550edd73692c92946a11698eef0e3a176dc698b3174",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/pool/governor.go",
+      "rc2_sha256": "7d4d24d33ef02988135ef83c30238098e0c619c4fe1e4c9702022ff34ff1fcd2",
+      "final_sha256": "7d4d24d33ef02988135ef83c30238098e0c619c4fe1e4c9702022ff34ff1fcd2",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/probe/imap.go",
+      "rc2_sha256": "1c02722ede53795275d9ff11e5f1cee4d82b21caa3044706f68d528d4b062b14",
+      "final_sha256": "1c02722ede53795275d9ff11e5f1cee4d82b21caa3044706f68d528d4b062b14",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/probe/probe.go",
+      "rc2_sha256": "1ebe9db0be61966bfa344181cc369268e1c1b71bc75488dc5bcd6f8d9d08e42c",
+      "final_sha256": "1ebe9db0be61966bfa344181cc369268e1c1b71bc75488dc5bcd6f8d9d08e42c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/recovery/recovery.go",
+      "rc2_sha256": "984c115b361eb13b6ada0a69c1419961201ae973006919a6a0c16e29eaedb9da",
+      "final_sha256": "984c115b361eb13b6ada0a69c1419961201ae973006919a6a0c16e29eaedb9da",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/secure/replay.go",
+      "rc2_sha256": "2888fbf1048293aecbbe5d02eb1f390d4e9a4024afacb0369545aa248a09d905",
+      "final_sha256": "2888fbf1048293aecbbe5d02eb1f390d4e9a4024afacb0369545aa248a09d905",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/secure/secure.go",
+      "rc2_sha256": "97c0d7e4865b1dbac5286c63388b5c6e497a608cc0e459523c84c8da4567ba55",
+      "final_sha256": "97c0d7e4865b1dbac5286c63388b5c6e497a608cc0e459523c84c8da4567ba55",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/accounts.go",
+      "rc2_sha256": "0fcc35a6f00f684cc194b4d9be2c6b5e702b092050918af7bbc68ca8960a280c",
+      "final_sha256": "0fcc35a6f00f684cc194b4d9be2c6b5e702b092050918af7bbc68ca8960a280c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/android.go",
+      "rc2_sha256": "ed5e4223a08f6ef18313052d2525303c6c66a6190c113df21f6594f9cfb005c9",
+      "final_sha256": "ed5e4223a08f6ef18313052d2525303c6c66a6190c113df21f6594f9cfb005c9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/config.go",
+      "rc2_sha256": "cd1334ce59d18ea36d6bc44b518f9a66284c4e07df933ee1667b6dc3e1ee02ec",
+      "final_sha256": "cd1334ce59d18ea36d6bc44b518f9a66284c4e07df933ee1667b6dc3e1ee02ec",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/guard.go",
+      "rc2_sha256": "7092998ed538d0e00396285736a24c225c3f3d082ee3e1bd96034b1afba165f3",
+      "final_sha256": "7092998ed538d0e00396285736a24c225c3f3d082ee3e1bd96034b1afba165f3",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/notice.go",
+      "rc2_sha256": "57fd9bd3dea3de3cae98cdd1793053ec65ffaba98686223fb4e5789d06fee7f6",
+      "final_sha256": "57fd9bd3dea3de3cae98cdd1793053ec65ffaba98686223fb4e5789d06fee7f6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/transport.go",
+      "rc2_sha256": "d2c8c53b6165808097c3c6a8ee2674996539b78769dc72735024944c832a9d8c",
+      "final_sha256": "d2c8c53b6165808097c3c6a8ee2674996539b78769dc72735024944c832a9d8c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/servercfg/users.go",
+      "rc2_sha256": "5cd15ae975124385122d1d211b056b79b8f50d1ba25776ef90a70d752e57aab0",
+      "final_sha256": "5cd15ae975124385122d1d211b056b79b8f50d1ba25776ef90a70d752e57aab0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/session/activation.go",
+      "rc2_sha256": "28166b041ed8fbf2e81b9b9a3b04974e2fd31ba29202c12df1d4bd10b48a14dd",
+      "final_sha256": "28166b041ed8fbf2e81b9b9a3b04974e2fd31ba29202c12df1d4bd10b48a14dd",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/session/bootstrap.go",
+      "rc2_sha256": "4be03408c102315bc73d2fd4c62f9331972d3e380bfd64385f73108d73290992",
+      "final_sha256": "4be03408c102315bc73d2fd4c62f9331972d3e380bfd64385f73108d73290992",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/session/open.go",
+      "rc2_sha256": "e2afa1d807a002b5b6b75059b9c76ff9bbc512e9c6cdc58886399e74651a9be7",
+      "final_sha256": "e2afa1d807a002b5b6b75059b9c76ff9bbc512e9c6cdc58886399e74651a9be7",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/session/registry.go",
+      "rc2_sha256": "c0993b06af1d210621357b54231e50d30a40c5e53d66d57ab5e4316178c4bc7b",
+      "final_sha256": "c0993b06af1d210621357b54231e50d30a40c5e53d66d57ab5e4316178c4bc7b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/session/request.go",
+      "rc2_sha256": "a0604475537737964d32025f8cb870c06fdc9699a13b298ad88f00fd17f780f3",
+      "final_sha256": "a0604475537737964d32025f8cb870c06fdc9699a13b298ad88f00fd17f780f3",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/socks/server.go",
+      "rc2_sha256": "86054b083643c4fd7e1e45099eca7c4086483bde28493051464c3060ebabf2b3",
+      "final_sha256": "86054b083643c4fd7e1e45099eca7c4086483bde28493051464c3060ebabf2b3",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/GO_IMAP_SHA256.json",
+      "rc2_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+      "final_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/.build.yml",
+      "rc2_sha256": "92324426476aed37abc7eba17eb601d4d81b3ade09ed4e4ebaea5347457cffc0",
+      "final_sha256": "92324426476aed37abc7eba17eb601d4d81b3ade09ed4e4ebaea5347457cffc0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/.github/ISSUE_TEMPLATE/config.yml",
+      "rc2_sha256": "1862a3a03d992ba1d95d2b3b253d027082d50c00647eacbc4211d172a4f8d708",
+      "final_sha256": "1862a3a03d992ba1d95d2b3b253d027082d50c00647eacbc4211d172a4f8d708",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/.github/ISSUE_TEMPLATE/issue.md",
+      "rc2_sha256": "93bd659699d2a06f3b35b0302cc80ddc8e1b153c62d80f93d6a0bda92cb9779e",
+      "final_sha256": "93bd659699d2a06f3b35b0302cc80ddc8e1b153c62d80f93d6a0bda92cb9779e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/LICENSE",
+      "rc2_sha256": "04c033c1515257f99b853e72b19ba7b0f589a9a8e690388120524a5190a03137",
+      "final_sha256": "04c033c1515257f99b853e72b19ba7b0f589a9a8e690388120524a5190a03137",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/README.md",
+      "rc2_sha256": "4cb0e2ad5d18411379404c82cfa6082ff4015b2cc6f173736cbe2d62a7d40a4c",
+      "final_sha256": "4cb0e2ad5d18411379404c82cfa6082ff4015b2cc6f173736cbe2d62a7d40a4c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/acl.go",
+      "rc2_sha256": "f59c01be17f793137016eb822d22699c7ce52699e47eeb8b5b6492f6c66e5cbc",
+      "final_sha256": "f59c01be17f793137016eb822d22699c7ce52699e47eeb8b5b6492f6c66e5cbc",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/append.go",
+      "rc2_sha256": "ec5fd00ed5f46c54b4b8707dfd98a4c05ef41772cd4cd454f10bc818f2287f73",
+      "final_sha256": "ec5fd00ed5f46c54b4b8707dfd98a4c05ef41772cd4cd454f10bc818f2287f73",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/capability.go",
+      "rc2_sha256": "65637f7368afa8544512a6be1b552d9060e077bf8d6a5ee9ea630410a8181dbe",
+      "final_sha256": "65637f7368afa8544512a6be1b552d9060e077bf8d6a5ee9ea630410a8181dbe",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/cmd/imapmemserver/main.go",
+      "rc2_sha256": "ddc760af2daff3f1918af2f46f739b8edf40f1319b7764fbdb25efab4f9ca11a",
+      "final_sha256": "ddc760af2daff3f1918af2f46f739b8edf40f1319b7764fbdb25efab4f9ca11a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/copy.go",
+      "rc2_sha256": "e2f27eaa857afc0e39b3e035861877e10355dcde7cc97990457a210302b02a27",
+      "final_sha256": "e2f27eaa857afc0e39b3e035861877e10355dcde7cc97990457a210302b02a27",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/create.go",
+      "rc2_sha256": "74ea550ff49337ee07e01c60f5fa36b676d0894a5a9f11feb8ce9f81844464e1",
+      "final_sha256": "74ea550ff49337ee07e01c60f5fa36b676d0894a5a9f11feb8ce9f81844464e1",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/fetch.go",
+      "rc2_sha256": "31e2b5e701b5d80b78b4067ae77bfc23c13850fd602300fc315134a01c22a723",
+      "final_sha256": "31e2b5e701b5d80b78b4067ae77bfc23c13850fd602300fc315134a01c22a723",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/go.mod",
+      "rc2_sha256": "646c63bd35a064f19b092a3a766232d46af7a2d085f086aee0934714ed5784a9",
+      "final_sha256": "646c63bd35a064f19b092a3a766232d46af7a2d085f086aee0934714ed5784a9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/go.sum",
+      "rc2_sha256": "1acb000fe875dcccfbffea8817c0d2be7cc5789af1d04c523b8182df921ef1a9",
+      "final_sha256": "1acb000fe875dcccfbffea8817c0d2be7cc5789af1d04c523b8182df921ef1a9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/id.go",
+      "rc2_sha256": "6c4ab834635d867c14745266b4d0ba5b60b6346c726f394ec353c6a08bdfef10",
+      "final_sha256": "6c4ab834635d867c14745266b4d0ba5b60b6346c726f394ec353c6a08bdfef10",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imap.go",
+      "rc2_sha256": "32cf3dc57723ee383864364502dab75cea80c5f14abec52a07566677e6102124",
+      "final_sha256": "32cf3dc57723ee383864364502dab75cea80c5f14abec52a07566677e6102124",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/acl.go",
+      "rc2_sha256": "e67401eb13e1c4055ae12d40f8c848e5b8b8493257dc0b9746d934fd9e4e70b8",
+      "final_sha256": "e67401eb13e1c4055ae12d40f8c848e5b8b8493257dc0b9746d934fd9e4e70b8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/append.go",
+      "rc2_sha256": "eaa2da775bf05c40d829987dbe5f2636ba3b059c9afcb39175daf1bf9c92bc3e",
+      "final_sha256": "eaa2da775bf05c40d829987dbe5f2636ba3b059c9afcb39175daf1bf9c92bc3e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/authenticate.go",
+      "rc2_sha256": "f518613a826087fa00312f680111542392eb26f55c54530de67ecc86e41e7ac6",
+      "final_sha256": "f518613a826087fa00312f680111542392eb26f55c54530de67ecc86e41e7ac6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/capability.go",
+      "rc2_sha256": "0ec5f3d8c3de9fa60f0373572e8900d43eb3bd230f406f07d69c54035f7d9758",
+      "final_sha256": "0ec5f3d8c3de9fa60f0373572e8900d43eb3bd230f406f07d69c54035f7d9758",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/client.go",
+      "rc2_sha256": "ecdffef3a162e494216938539bd0b87c0cbfbd36c8d857dbe9807ac84e4b8a78",
+      "final_sha256": "ecdffef3a162e494216938539bd0b87c0cbfbd36c8d857dbe9807ac84e4b8a78",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/copy.go",
+      "rc2_sha256": "312276710a9f2d1ae4aa3da20d25e2985f879c4255f2ddaec7925002eb7ebfe1",
+      "final_sha256": "312276710a9f2d1ae4aa3da20d25e2985f879c4255f2ddaec7925002eb7ebfe1",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/create.go",
+      "rc2_sha256": "76a59c8cbf67d6a6732984cd74e20c5c3919a99bc0c21dd990995e1cc87840b8",
+      "final_sha256": "76a59c8cbf67d6a6732984cd74e20c5c3919a99bc0c21dd990995e1cc87840b8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/enable.go",
+      "rc2_sha256": "a3cb7a5ba534708fe0a9ba8c239d03d2a2a591a958f32560efc61a33f856a592",
+      "final_sha256": "a3cb7a5ba534708fe0a9ba8c239d03d2a2a591a958f32560efc61a33f856a592",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/expunge.go",
+      "rc2_sha256": "aefa8cea8fa6183821247c89743fdf16066b2f4998f4fcde6f3b1df9b6fc37c9",
+      "final_sha256": "aefa8cea8fa6183821247c89743fdf16066b2f4998f4fcde6f3b1df9b6fc37c9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/fetch.go",
+      "rc2_sha256": "0d83d821d2a581e3f855fa9a3eae19c4c9dd34de8e98f2b0bebcfb66440ff959",
+      "final_sha256": "0d83d821d2a581e3f855fa9a3eae19c4c9dd34de8e98f2b0bebcfb66440ff959",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/id.go",
+      "rc2_sha256": "3187d4bb7c4eb2dd5694617255295acae279356563ac515706aa67cf413b73ca",
+      "final_sha256": "3187d4bb7c4eb2dd5694617255295acae279356563ac515706aa67cf413b73ca",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/idle.go",
+      "rc2_sha256": "835682df1f91d4496cbd0bedb26448f4e37ce4d0c9c9e2124f5d3f1974256763",
+      "final_sha256": "835682df1f91d4496cbd0bedb26448f4e37ce4d0c9c9e2124f5d3f1974256763",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/list.go",
+      "rc2_sha256": "ad934b67fcc74250443be003cccd0b63801dbe3695b29df00eddfad6362d576f",
+      "final_sha256": "ad934b67fcc74250443be003cccd0b63801dbe3695b29df00eddfad6362d576f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/metadata.go",
+      "rc2_sha256": "a1531c9287a46d5d733c143f2bf373e8b5558860fef4ecaeb7cf4f639e92b6f3",
+      "final_sha256": "a1531c9287a46d5d733c143f2bf373e8b5558860fef4ecaeb7cf4f639e92b6f3",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/move.go",
+      "rc2_sha256": "851d2bb701a2cd41116e898b8c5d33f3264879726c73d05f179b93b8e7cd8bea",
+      "final_sha256": "851d2bb701a2cd41116e898b8c5d33f3264879726c73d05f179b93b8e7cd8bea",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/namespace.go",
+      "rc2_sha256": "c75e258205154041aed5dda65d365341237e954aac51b555e62f766f973e4ee8",
+      "final_sha256": "c75e258205154041aed5dda65d365341237e954aac51b555e62f766f973e4ee8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/quota.go",
+      "rc2_sha256": "31ae95e8d51dfcd8168b19ac5a16a20caa5998ede93457b1d2c5bf9cea663885",
+      "final_sha256": "31ae95e8d51dfcd8168b19ac5a16a20caa5998ede93457b1d2c5bf9cea663885",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/search.go",
+      "rc2_sha256": "ae93cdbfb2f53f185d0e16b7c994731d9e1dd169393eb0a46f81719d3344cd93",
+      "final_sha256": "ae93cdbfb2f53f185d0e16b7c994731d9e1dd169393eb0a46f81719d3344cd93",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/select.go",
+      "rc2_sha256": "87e37eb5f6ed7602f5fcadb58d7c6d2630855e90e17a26ae9edfd1ecc310f6d2",
+      "final_sha256": "87e37eb5f6ed7602f5fcadb58d7c6d2630855e90e17a26ae9edfd1ecc310f6d2",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/sort.go",
+      "rc2_sha256": "979dcd3cb530902dffc4cd20b676f82376d03a68cd08bbb0b1b82966ed0cccff",
+      "final_sha256": "979dcd3cb530902dffc4cd20b676f82376d03a68cd08bbb0b1b82966ed0cccff",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/starttls.go",
+      "rc2_sha256": "5904a84983dd4b394623b1314ec9db290303ee1e661ad09fc6f7bfa38ffe4419",
+      "final_sha256": "5904a84983dd4b394623b1314ec9db290303ee1e661ad09fc6f7bfa38ffe4419",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/status.go",
+      "rc2_sha256": "94e5b7d316016d3dbd8e5f2747b09b1c9cdaebf0072c8a5014fbfe0f06bed58f",
+      "final_sha256": "94e5b7d316016d3dbd8e5f2747b09b1c9cdaebf0072c8a5014fbfe0f06bed58f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/store.go",
+      "rc2_sha256": "ad7a116f6ca4e0b70e5fc89f84eea26fdc76cf30e8cde846aa0d197e58ad93ab",
+      "final_sha256": "ad7a116f6ca4e0b70e5fc89f84eea26fdc76cf30e8cde846aa0d197e58ad93ab",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapclient/thread.go",
+      "rc2_sha256": "2ba8e0268b3668f04f1b1da0187bd67c56cee9bc964645b0ca63199e1e1ff008",
+      "final_sha256": "2ba8e0268b3668f04f1b1da0187bd67c56cee9bc964645b0ca63199e1e1ff008",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/append.go",
+      "rc2_sha256": "8334e6744443f2b852be4b4ff87092bf11b5238c69915c8b2cabe43d4da4c2ea",
+      "final_sha256": "8334e6744443f2b852be4b4ff87092bf11b5238c69915c8b2cabe43d4da4c2ea",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/authenticate.go",
+      "rc2_sha256": "51c03449f2763ef5fcd30565f1637b77428075ce53b9f22c2f1a4e27b3e4dc9e",
+      "final_sha256": "51c03449f2763ef5fcd30565f1637b77428075ce53b9f22c2f1a4e27b3e4dc9e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/capability.go",
+      "rc2_sha256": "3a05816d2c71f98d8937741bc77fd1e333eae316bd6c251a9f0bd983e6ecc5e6",
+      "final_sha256": "3a05816d2c71f98d8937741bc77fd1e333eae316bd6c251a9f0bd983e6ecc5e6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/conn.go",
+      "rc2_sha256": "14b29626ba9f5f44fe62c27f63061bd67219fd298200f24ebcdc5bf1c80323d5",
+      "final_sha256": "14b29626ba9f5f44fe62c27f63061bd67219fd298200f24ebcdc5bf1c80323d5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/copy.go",
+      "rc2_sha256": "c192437e1d7e8e32f3f985f4bab2922574fa0e50bc1dd64790bfe8c2f5e41f32",
+      "final_sha256": "c192437e1d7e8e32f3f985f4bab2922574fa0e50bc1dd64790bfe8c2f5e41f32",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/create.go",
+      "rc2_sha256": "33425020630984d54072136be35e082a07e98d2c9e2d2eba4669f56dfb74092b",
+      "final_sha256": "33425020630984d54072136be35e082a07e98d2c9e2d2eba4669f56dfb74092b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/enable.go",
+      "rc2_sha256": "9cda48a14940a0ef817e39259f46edb125314c85e204ed5a7a1315ad5ca6c16e",
+      "final_sha256": "9cda48a14940a0ef817e39259f46edb125314c85e204ed5a7a1315ad5ca6c16e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/expunge.go",
+      "rc2_sha256": "4292bbe08a133ef6fdb61a79e355b5ad2e892d3719d2eefcbe40e49032197802",
+      "final_sha256": "4292bbe08a133ef6fdb61a79e355b5ad2e892d3719d2eefcbe40e49032197802",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/fetch.go",
+      "rc2_sha256": "5dc06224defb50d046aba97a62a4998bfc765ade4bb70268e7d2fdb9385d211a",
+      "final_sha256": "5dc06224defb50d046aba97a62a4998bfc765ade4bb70268e7d2fdb9385d211a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/idle.go",
+      "rc2_sha256": "30c8dc257353ce1d001d4f1611d9e5bdbe8868695234f5a204ffbb5af31881e2",
+      "final_sha256": "30c8dc257353ce1d001d4f1611d9e5bdbe8868695234f5a204ffbb5af31881e2",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/imapmemserver/mailbox.go",
+      "rc2_sha256": "ec1268ca732cbaa651991b044b80808c6f513d02c5880cd367262781bfe3ebb8",
+      "final_sha256": "ec1268ca732cbaa651991b044b80808c6f513d02c5880cd367262781bfe3ebb8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/imapmemserver/message.go",
+      "rc2_sha256": "1ec3ed1173ec2115097feedeb8578728d2b84c37141b8d902639e482e60a1418",
+      "final_sha256": "1ec3ed1173ec2115097feedeb8578728d2b84c37141b8d902639e482e60a1418",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/imapmemserver/server.go",
+      "rc2_sha256": "9c3d93f00ba02ef79c0f5b741aa989b0bfb4cac50aa0719cf1d7c0a22a509672",
+      "final_sha256": "9c3d93f00ba02ef79c0f5b741aa989b0bfb4cac50aa0719cf1d7c0a22a509672",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/imapmemserver/session.go",
+      "rc2_sha256": "8cd1eb35d605773cdc8f199735f9908dc264b87c129083ecc97d5b4020686a45",
+      "final_sha256": "8cd1eb35d605773cdc8f199735f9908dc264b87c129083ecc97d5b4020686a45",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/imapmemserver/user.go",
+      "rc2_sha256": "f615f717ac8c099024a9279c1bf6fb29027638892b8fc3088d7928ef808eb3b4",
+      "final_sha256": "f615f717ac8c099024a9279c1bf6fb29027638892b8fc3088d7928ef808eb3b4",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/list.go",
+      "rc2_sha256": "77067bf1cf6c014ce2677458f5b4d5f397c78a361e0cb50c249369eb49fb33f6",
+      "final_sha256": "77067bf1cf6c014ce2677458f5b4d5f397c78a361e0cb50c249369eb49fb33f6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/login.go",
+      "rc2_sha256": "a377653a2c88cfe5fdf0fa1bbffe61df89c91b5bdba639075a9b3c8e4ddf2d2b",
+      "final_sha256": "a377653a2c88cfe5fdf0fa1bbffe61df89c91b5bdba639075a9b3c8e4ddf2d2b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/message.go",
+      "rc2_sha256": "0b904a01e98ed5ea02fb93b52e57e792945c8c823f07cc95e2a28a500e09fc97",
+      "final_sha256": "0b904a01e98ed5ea02fb93b52e57e792945c8c823f07cc95e2a28a500e09fc97",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/move.go",
+      "rc2_sha256": "9eb22b9026a02ce98d1370436f67f5de374eaf03c1c9f94040e3344cbb1585c4",
+      "final_sha256": "9eb22b9026a02ce98d1370436f67f5de374eaf03c1c9f94040e3344cbb1585c4",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/namespace.go",
+      "rc2_sha256": "aa9eea9b083cd3f13df4f02bfc630c149b22ad97dd41187f5e58da118712ed9a",
+      "final_sha256": "aa9eea9b083cd3f13df4f02bfc630c149b22ad97dd41187f5e58da118712ed9a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/search.go",
+      "rc2_sha256": "aa76848fbc313989a14b9b505f798ff490c00c96a54181fe02905638749c3932",
+      "final_sha256": "aa76848fbc313989a14b9b505f798ff490c00c96a54181fe02905638749c3932",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/select.go",
+      "rc2_sha256": "e0db4793b232062ea4147a0d0612566b99131eee5495b8474cef1c5b66062c65",
+      "final_sha256": "e0db4793b232062ea4147a0d0612566b99131eee5495b8474cef1c5b66062c65",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/server.go",
+      "rc2_sha256": "aae5f25a814b3620f5bc70bb91a60b0d683e81471a8a1bf12c7985182dc6f934",
+      "final_sha256": "aae5f25a814b3620f5bc70bb91a60b0d683e81471a8a1bf12c7985182dc6f934",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/session.go",
+      "rc2_sha256": "5cf94b1764f8aa6529d74caaae70cf43997b29ce29af377c6d5276d9895965c5",
+      "final_sha256": "5cf94b1764f8aa6529d74caaae70cf43997b29ce29af377c6d5276d9895965c5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/starttls.go",
+      "rc2_sha256": "a49bfb5a9e701aff77e05a3ca861b3450d58c2f46e84d3c48ccbc9b0fbb58ba2",
+      "final_sha256": "a49bfb5a9e701aff77e05a3ca861b3450d58c2f46e84d3c48ccbc9b0fbb58ba2",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/status.go",
+      "rc2_sha256": "31bb11d1b8184840f2e57198410dc8ca85d6b82b0c48512cb6a90d793b42f260",
+      "final_sha256": "31bb11d1b8184840f2e57198410dc8ca85d6b82b0c48512cb6a90d793b42f260",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/store.go",
+      "rc2_sha256": "1da56cfb20047c0c287f7d287be990e4405f91643404bea5f9c4777b93d56bec",
+      "final_sha256": "1da56cfb20047c0c287f7d287be990e4405f91643404bea5f9c4777b93d56bec",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/imapserver/tracker.go",
+      "rc2_sha256": "7fe138447cf97bc4f4e83a0164842b4110305c8e0b8ba8cbf0bed9535775df33",
+      "final_sha256": "7fe138447cf97bc4f4e83a0164842b4110305c8e0b8ba8cbf0bed9535775df33",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/acl.go",
+      "rc2_sha256": "ad37cf68c24e300df7d9bbd780fd77bbc91bb59a9a435085fdc05c76ca99dcc6",
+      "final_sha256": "ad37cf68c24e300df7d9bbd780fd77bbc91bb59a9a435085fdc05c76ca99dcc6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/imapnum/numset.go",
+      "rc2_sha256": "91529970f9853d2893cd0ecc5c19248db05f2b45a3009623426215cf9701d943",
+      "final_sha256": "91529970f9853d2893cd0ecc5c19248db05f2b45a3009623426215cf9701d943",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/imapwire/decoder.go",
+      "rc2_sha256": "3b64ee4011a59f24bcec9467ca3bd20da2bdda715e9af046bc365c3eeda7b8d0",
+      "final_sha256": "3b64ee4011a59f24bcec9467ca3bd20da2bdda715e9af046bc365c3eeda7b8d0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/imapwire/encoder.go",
+      "rc2_sha256": "f5c4a676ea2cb7445af0ff905debc017c63f694457f78b5557d930c1123be760",
+      "final_sha256": "f5c4a676ea2cb7445af0ff905debc017c63f694457f78b5557d930c1123be760",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/imapwire/imapwire.go",
+      "rc2_sha256": "69e33b9238acfb926367c44057edd95b74ee37dbc2641e904db4105f995a84f0",
+      "final_sha256": "69e33b9238acfb926367c44057edd95b74ee37dbc2641e904db4105f995a84f0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/imapwire/num.go",
+      "rc2_sha256": "3aaffc332108edd98110946a450720ddc3a93f04e197ddb3457c87760220a5f5",
+      "final_sha256": "3aaffc332108edd98110946a450720ddc3a93f04e197ddb3457c87760220a5f5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/internal.go",
+      "rc2_sha256": "c83d6cf6ce80b495df42f4a9f4260bbf342b0c56b3e071a42899dfb5bac90312",
+      "final_sha256": "c83d6cf6ce80b495df42f4a9f4260bbf342b0c56b3e071a42899dfb5bac90312",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/sasl.go",
+      "rc2_sha256": "fdb0f05a59b42f715690a404f6709029e91f1d64917f4543bbfb91cf9b97be1e",
+      "final_sha256": "fdb0f05a59b42f715690a404f6709029e91f1d64917f4543bbfb91cf9b97be1e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/utf7/decoder.go",
+      "rc2_sha256": "64334b84c2a56b4a96eed21513d22a9254bba2128da3529c57d4992dafdb046b",
+      "final_sha256": "64334b84c2a56b4a96eed21513d22a9254bba2128da3529c57d4992dafdb046b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/utf7/encoder.go",
+      "rc2_sha256": "34ea2af0ad5e622e81e301cc3bc3972384e134584b9031b6c72d251dbc62f40a",
+      "final_sha256": "34ea2af0ad5e622e81e301cc3bc3972384e134584b9031b6c72d251dbc62f40a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/internal/utf7/utf7.go",
+      "rc2_sha256": "710d793e51e4ab8dd37f27c79e323d1666cccf122695b94fff82ec2a3f82730c",
+      "final_sha256": "710d793e51e4ab8dd37f27c79e323d1666cccf122695b94fff82ec2a3f82730c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/list.go",
+      "rc2_sha256": "23f2f44fa0b5481c7e2c5c89f0e62b8328e18a0ce175cd3c0588265515ced20b",
+      "final_sha256": "23f2f44fa0b5481c7e2c5c89f0e62b8328e18a0ce175cd3c0588265515ced20b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/namespace.go",
+      "rc2_sha256": "bd5207e1d46fffc6f8481fec0d84e33d954014d5d8de80839d9e0bdabddcb3e1",
+      "final_sha256": "bd5207e1d46fffc6f8481fec0d84e33d954014d5d8de80839d9e0bdabddcb3e1",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/numset.go",
+      "rc2_sha256": "85f7ad4fbf7e694b44994e7afd86330f817a1f3dd0ddfcc28a3e5541e2625d56",
+      "final_sha256": "85f7ad4fbf7e694b44994e7afd86330f817a1f3dd0ddfcc28a3e5541e2625d56",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/quota.go",
+      "rc2_sha256": "59162cf2bde7c3e2a50a58a6069b9e9f6724f14a62549b171dd9fb6fbe3271c0",
+      "final_sha256": "59162cf2bde7c3e2a50a58a6069b9e9f6724f14a62549b171dd9fb6fbe3271c0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/rename.go",
+      "rc2_sha256": "a124dae8e1087f24d9d5ca7b6ecaab8771fa1f65ec2dd4a1e7e31dd3e153ebf8",
+      "final_sha256": "a124dae8e1087f24d9d5ca7b6ecaab8771fa1f65ec2dd4a1e7e31dd3e153ebf8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/response.go",
+      "rc2_sha256": "3ec5aa9191eee3f655b0d02e8a17b26454685a1e940c2506aa13b6e22cefc47b",
+      "final_sha256": "3ec5aa9191eee3f655b0d02e8a17b26454685a1e940c2506aa13b6e22cefc47b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/search.go",
+      "rc2_sha256": "0f67c0c7aa97b6688fd0cc775777f9c5a91ecf36886ea75bb8cc5b18bef9cad8",
+      "final_sha256": "0f67c0c7aa97b6688fd0cc775777f9c5a91ecf36886ea75bb8cc5b18bef9cad8",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/select.go",
+      "rc2_sha256": "cf8fc04646a4665a9737ec95432221a6cef5aa792fa3ef895d7bbfbf44da5973",
+      "final_sha256": "cf8fc04646a4665a9737ec95432221a6cef5aa792fa3ef895d7bbfbf44da5973",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/status.go",
+      "rc2_sha256": "c5f03abc11dc61d2355f0d38c25bef0c1e3524d5b35b5ae307c63dfd90370206",
+      "final_sha256": "c5f03abc11dc61d2355f0d38c25bef0c1e3524d5b35b5ae307c63dfd90370206",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/store.go",
+      "rc2_sha256": "22289dfb3b19dbab1d89a8ca9475debdb627c0c7b697f09cce98f46c65548bec",
+      "final_sha256": "22289dfb3b19dbab1d89a8ca9475debdb627c0c7b697f09cce98f46c65548bec",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/third_party/go-imap/thread.go",
+      "rc2_sha256": "532029d2b9fa6f725c3ac68b888fb6af133d608858fbc374df1a4e5ab0166696",
+      "final_sha256": "532029d2b9fa6f725c3ac68b888fb6af133d608858fbc374df1a4e5ab0166696",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/account_placement.go",
+      "rc2_sha256": "259cff47ab2ed65115aac57e7dace665b00d5a8c913aee4e0363150d7f05a091",
+      "final_sha256": "259cff47ab2ed65115aac57e7dace665b00d5a8c913aee4e0363150d7f05a091",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/account_scheduler.go",
+      "rc2_sha256": "02c6b3ec2ae6f891ae2959523ab6c88ad467132a2583b3ba8ebb955d1198352a",
+      "final_sha256": "02c6b3ec2ae6f891ae2959523ab6c88ad467132a2583b3ba8ebb955d1198352a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/account_view.go",
+      "rc2_sha256": "0986fe4da827e9fb3c974cb95fb8b4770898af5ebc2efaa665244b9ecf92082e",
+      "final_sha256": "0986fe4da827e9fb3c974cb95fb8b4770898af5ebc2efaa665244b9ecf92082e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/account_work.go",
+      "rc2_sha256": "6f896a124f5375abbab03c06b1c2d0bd62d46f4609dfd128449de1239de5e7da",
+      "final_sha256": "6f896a124f5375abbab03c06b1c2d0bd62d46f4609dfd128449de1239de5e7da",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/bulk_admission.go",
+      "rc2_sha256": "a50cd9e7eee6d1d2bf7d949cf2e137367b6b8447ad46aaec0fbfc28c02fd1d5f",
+      "final_sha256": "a50cd9e7eee6d1d2bf7d949cf2e137367b6b8447ad46aaec0fbfc28c02fd1d5f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/capacity_notify.go",
+      "rc2_sha256": "8b83e3ad1236237731408f9f409123575861dcc1ae419a85eae5a65f5ef50775",
+      "final_sha256": "8b83e3ad1236237731408f9f409123575861dcc1ae419a85eae5a65f5ef50775",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/carrier_feedback.go",
+      "rc2_sha256": "5d90c93e81c981e586c196f15bb503fad64a1e925904c500bd3b282a88be928b",
+      "final_sha256": "5d90c93e81c981e586c196f15bb503fad64a1e925904c500bd3b282a88be928b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/carrier_retry.go",
+      "rc2_sha256": "ecf5e1dbb5f3c67c57fcdba7b86f89d18c296708229cf027394e5e87a68b9f37",
+      "final_sha256": "ecf5e1dbb5f3c67c57fcdba7b86f89d18c296708229cf027394e5e87a68b9f37",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/cleanup.go",
+      "rc2_sha256": "a8f6e521c8b199bf6c7c0a89715f51a6c71f0c7296806f2699d6005a4f0ec6b9",
+      "final_sha256": "a8f6e521c8b199bf6c7c0a89715f51a6c71f0c7296806f2699d6005a4f0ec6b9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/cleanup_proof.go",
+      "rc2_sha256": "38bbee28a314620bf6cb2632ca194a2471577b6e76b3f8b4a2d5471a52d149a0",
+      "final_sha256": "38bbee28a314620bf6cb2632ca194a2471577b6e76b3f8b4a2d5471a52d149a0",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/cleanup_service.go",
+      "rc2_sha256": "1ecad607d8436e631bb433ca1808d258969eb95f979f04d8cbe472f356d49a1f",
+      "final_sha256": "1ecad607d8436e631bb433ca1808d258969eb95f979f04d8cbe472f356d49a1f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/control.go",
+      "rc2_sha256": "d5075059efa0530a97cc4d8aac2a0d4bd9f61e1812319633d5e565be5c35cf57",
+      "final_sha256": "d5075059efa0530a97cc4d8aac2a0d4bd9f61e1812319633d5e565be5c35cf57",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/control_repair.go",
+      "rc2_sha256": "2ecfa9f045e356b94e6df78252f3b85d1ab80ac2da2e5361405ae57fe80d8e40",
+      "final_sha256": "2ecfa9f045e356b94e6df78252f3b85d1ab80ac2da2e5361405ae57fe80d8e40",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/control_repeat.go",
+      "rc2_sha256": "c93c8250dbeb862f6e460b9affae5582a057014ff6df4b9f7d91749b5ca23776",
+      "final_sha256": "c93c8250dbeb862f6e460b9affae5582a057014ff6df4b9f7d91749b5ca23776",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/control_stall.go",
+      "rc2_sha256": "625485c7c7b4cc791fb63cc51d583b10f1f4d212031db79e2d65275ed89d1dfd",
+      "final_sha256": "625485c7c7b4cc791fb63cc51d583b10f1f4d212031db79e2d65275ed89d1dfd",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/data_envelope.go",
+      "rc2_sha256": "3bbe631032916d60d31243a190d30628f8d4588dcc0794acd2cf936babe715f6",
+      "final_sha256": "3bbe631032916d60d31243a190d30628f8d4588dcc0794acd2cf936babe715f6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/data_worker_lifecycle.go",
+      "rc2_sha256": "c11142a15ed438fc9e164efe9e3529de819c3ba0b5854fa98070db2ca9b1fb1f",
+      "final_sha256": "c11142a15ed438fc9e164efe9e3529de819c3ba0b5854fa98070db2ca9b1fb1f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/delivery_control.go",
+      "rc2_sha256": "9bd00140efacd23d4fbe147790ee5740be2dc34233bb79db5f49c0327e80f13b",
+      "final_sha256": "9bd00140efacd23d4fbe147790ee5740be2dc34233bb79db5f49c0327e80f13b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/delivery_policy.go",
+      "rc2_sha256": "3a005ca64f2d3a2b160c6431aea232ba3f7e682dda7cc160c2c579578becb987",
+      "final_sha256": "3a005ca64f2d3a2b160c6431aea232ba3f7e682dda7cc160c2c579578becb987",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/descriptor_repair.go",
+      "rc2_sha256": "5fb42000b0202602f8df558cf54d7fe0052b6d52daf54201c7131a72658d4363",
+      "final_sha256": "5fb42000b0202602f8df558cf54d7fe0052b6d52daf54201c7131a72658d4363",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/diagnostics.go",
+      "rc2_sha256": "d7a4a0e3746a8374f499e4524ce6fa78d3f7cfbd0eb01cd87a1e3220ae878364",
+      "final_sha256": "d7a4a0e3746a8374f499e4524ce6fa78d3f7cfbd0eb01cd87a1e3220ae878364",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/feedback_routing.go",
+      "rc2_sha256": "ba70f3ffba209387f4def3e7ee82e1de850c3f4080b0f893cecd944ef60cf3ab",
+      "final_sha256": "ba70f3ffba209387f4def3e7ee82e1de850c3f4080b0f893cecd944ef60cf3ab",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/flow_control.go",
+      "rc2_sha256": "35770d664f508f177fbe03eadfd5dca0764c551e8f3249383921d56239b0e552",
+      "final_sha256": "35770d664f508f177fbe03eadfd5dca0764c551e8f3249383921d56239b0e552",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/grant_recovery.go",
+      "rc2_sha256": "10451f5490162760c5a53d850240d0e31eaf8311ba42b7405451a3d004a9fa6c",
+      "final_sha256": "10451f5490162760c5a53d850240d0e31eaf8311ba42b7405451a3d004a9fa6c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/integration_fixture.go",
+      "rc2_sha256": "3bf8f3b65a01bb926c531e1308add58efff4a443d6a8b2a52a59f92ad1153a3b",
+      "final_sha256": "3bf8f3b65a01bb926c531e1308add58efff4a443d6a8b2a52a59f92ad1153a3b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/io.go",
+      "rc2_sha256": "f51bd5f53e8c1e747610e8756e15a22c9e9f7ab95cbf364990cacf54f39a356f",
+      "final_sha256": "f51bd5f53e8c1e747610e8756e15a22c9e9f7ab95cbf364990cacf54f39a356f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/lane.go",
+      "rc2_sha256": "db11b63ff77681a53c73e1faadb2f936f217af7a4acacf88eb7415289a42b115",
+      "final_sha256": "db11b63ff77681a53c73e1faadb2f936f217af7a4acacf88eb7415289a42b115",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/local_selection.go",
+      "rc2_sha256": "393c21c38257ba2cdaeeb65a74cbcb140e1e917e794a8bc86df6fae61123306a",
+      "final_sha256": "393c21c38257ba2cdaeeb65a74cbcb140e1e917e794a8bc86df6fae61123306a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/login_admission.go",
+      "rc2_sha256": "d9d532d8835354fb261a8d115ec843b27d5b9222c5a9a5d42c562e0a97076633",
+      "final_sha256": "d9d532d8835354fb261a8d115ec843b27d5b9222c5a9a5d42c562e0a97076633",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/mail_socket_diagnostics.go",
+      "rc2_sha256": "2a2e52e3d0ef8e41afc73a9424512a613f192e78623e1396bf24ec0e1aa4cd1e",
+      "final_sha256": "2a2e52e3d0ef8e41afc73a9424512a613f192e78623e1396bf24ec0e1aa4cd1e",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/notices.go",
+      "rc2_sha256": "ac30b69eaefa79be64a51c857cb133836a64586da2e88a235f83453f87668097",
+      "final_sha256": "ac30b69eaefa79be64a51c857cb133836a64586da2e88a235f83453f87668097",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/notification_audit.go",
+      "rc2_sha256": "7493615518a590124cbec3de63d8663db3b07eb7102e1be2a9d94af68996c316",
+      "final_sha256": "7493615518a590124cbec3de63d8663db3b07eb7102e1be2a9d94af68996c316",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/owner.go",
+      "rc2_sha256": "8fe9b378ad7a8191f9ee2305769d89131343068a219351b95b032dd0a2288951",
+      "final_sha256": "8fe9b378ad7a8191f9ee2305769d89131343068a219351b95b032dd0a2288951",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/pipe.go",
+      "rc2_sha256": "4181488f4f2e641f8ccf37e798ae7b131821b8af785201346c4303293bfcbb3f",
+      "final_sha256": "4181488f4f2e641f8ccf37e798ae7b131821b8af785201346c4303293bfcbb3f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/pool.go",
+      "rc2_sha256": "9bd753d40d81c9a2fc6e3b3dc2725d5be86285698aa1b1f1563b72ba07b97455",
+      "final_sha256": "9bd753d40d81c9a2fc6e3b3dc2725d5be86285698aa1b1f1563b72ba07b97455",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/preparation.go",
+      "rc2_sha256": "01ab3474ecdcc27b4c44e409eb98cd29c5c792175ebc6867259a08aee1980423",
+      "final_sha256": "01ab3474ecdcc27b4c44e409eb98cd29c5c792175ebc6867259a08aee1980423",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/progress.go",
+      "rc2_sha256": "191e7e27284a913575f10c3bcf2d39f3ddce70ac470528ec79ef0e28c0899c18",
+      "final_sha256": "191e7e27284a913575f10c3bcf2d39f3ddce70ac470528ec79ef0e28c0899c18",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/reader_reserve.go",
+      "rc2_sha256": "e451bcaba7d5ec108d15f7fb0381e8aaf66c4b4d2a10f8f04ae052aa549e243b",
+      "final_sha256": "e451bcaba7d5ec108d15f7fb0381e8aaf66c4b4d2a10f8f04ae052aa549e243b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/receive_page_policy.go",
+      "rc2_sha256": "e971ce379ab46632ea4cff566dfd5daaa2447b8d0d949472090a4e2ad1db0510",
+      "final_sha256": "e971ce379ab46632ea4cff566dfd5daaa2447b8d0d949472090a4e2ad1db0510",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/receive_worker.go",
+      "rc2_sha256": "63751c2dff018d8add24d6d257f86a5b25259c2fa07daf4b7ef956960e736f14",
+      "final_sha256": "63751c2dff018d8add24d6d257f86a5b25259c2fa07daf4b7ef956960e736f14",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/recovered_remote.go",
+      "rc2_sha256": "1d5e586f615aa9904e406af2504d68373cf28e66e84a8f9d6f827d3d59f8e529",
+      "final_sha256": "1d5e586f615aa9904e406af2504d68373cf28e66e84a8f9d6f827d3d59f8e529",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/recovered_shares.go",
+      "rc2_sha256": "dbd011b69ece5a7e643ac2d5a7f2ee9095f58c8ca318f36eacc083a990e973ac",
+      "final_sha256": "dbd011b69ece5a7e643ac2d5a7f2ee9095f58c8ca318f36eacc083a990e973ac",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/rekey.go",
+      "rc2_sha256": "f854063d73c017700d04fb415b6cce15d61630e88d6ad4d355febeebbfe774ef",
+      "final_sha256": "f854063d73c017700d04fb415b6cce15d61630e88d6ad4d355febeebbfe774ef",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/resources.go",
+      "rc2_sha256": "30ac44013b578699c964d2c13bbc357daed1b06314bf74ba7bab80d1d012717f",
+      "final_sha256": "30ac44013b578699c964d2c13bbc357daed1b06314bf74ba7bab80d1d012717f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/service_policy.go",
+      "rc2_sha256": "268f751394c82e81f5e13fc853212c6fe710911abc58d860750279c8e2c4c94d",
+      "final_sha256": "268f751394c82e81f5e13fc853212c6fe710911abc58d860750279c8e2c4c94d",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/session_cleanup.go",
+      "rc2_sha256": "e028322535ebb0653948ca843f596dbcfaa447cfe911c6061b83a6867706ddce",
+      "final_sha256": "e028322535ebb0653948ca843f596dbcfaa447cfe911c6061b83a6867706ddce",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/socket_diagnostics.go",
+      "rc2_sha256": "8e2bd93af692d35347a7937c254a5bcb7e24525d9f05242066fb1f7b2d57e6b9",
+      "final_sha256": "8e2bd93af692d35347a7937c254a5bcb7e24525d9f05242066fb1f7b2d57e6b9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/storage.go",
+      "rc2_sha256": "340f8cc96fca7a4b0b6948eae51c12dee04cdaeead7008666b7edb3cffd21ba4",
+      "final_sha256": "340f8cc96fca7a4b0b6948eae51c12dee04cdaeead7008666b7edb3cffd21ba4",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/stripe.go",
+      "rc2_sha256": "bfbe02dd6ada52cc44cbc51f66c4b78f879ab085a2fb42e15abac80f6d77c9d5",
+      "final_sha256": "bfbe02dd6ada52cc44cbc51f66c4b78f879ab085a2fb42e15abac80f6d77c9d5",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/field12-latencies.json",
+      "rc2_sha256": "9371e651b46973494c27620177aaed975670bb10b019cf397668d135933feb59",
+      "final_sha256": "9371e651b46973494c27620177aaed975670bb10b019cf397668d135933feb59",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/field46-replay-inputs.json",
+      "rc2_sha256": "5daad8adefe8d88c8392eecfa196d2f4bf6d8811899c81da0809bcae333cf7cd",
+      "final_sha256": "5daad8adefe8d88c8392eecfa196d2f4bf6d8811899c81da0809bcae333cf7cd",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/README.md",
+      "rc2_sha256": "624e2fa29e04b3d9e2a3491658f8f9b8a8094bab37775b8a9bd146cb8ab67737",
+      "final_sha256": "624e2fa29e04b3d9e2a3491658f8f9b8a8094bab37775b8a9bd146cb8ab67737",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/dirty.db",
+      "rc2_sha256": "bc2dafd5917e540c2eb459dca4bcf5b3758599ed19117bce15b183b5ff1f5296",
+      "final_sha256": "bc2dafd5917e540c2eb459dca4bcf5b3758599ed19117bce15b183b5ff1f5296",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/dirty.json",
+      "rc2_sha256": "b0f1dac1dcce7034a526a60f9099a2f34c099e254a3a3030c4762142dc65836c",
+      "final_sha256": "b0f1dac1dcce7034a526a60f9099a2f34c099e254a3a3030c4762142dc65836c",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/empty.db",
+      "rc2_sha256": "0aebf2ddbb042f12d45bf053077d70450f939ad20feaf1e06d11bda5108fe418",
+      "final_sha256": "0aebf2ddbb042f12d45bf053077d70450f939ad20feaf1e06d11bda5108fe418",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/empty.json",
+      "rc2_sha256": "37317b12f44641629e0ae3d5315f7e5dce3d83a5e95733a6d80c7b664e845eb7",
+      "final_sha256": "37317b12f44641629e0ae3d5315f7e5dce3d83a5e95733a6d80c7b664e845eb7",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/gate19/generate.go.txt",
+      "rc2_sha256": "e6636235a0f6ebdf2557cd56a61214e1312155718d83ca80a206e91b773d12a9",
+      "final_sha256": "e6636235a0f6ebdf2557cd56a61214e1312155718d83ca80a206e91b773d12a9",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/testdata/rev1-field-wrapper-stress.json",
+      "rc2_sha256": "834b858ee8c2fe80541acad5ed218ba0b402da9d12b5584eddc8e9b547b05db7",
+      "final_sha256": "834b858ee8c2fe80541acad5ed218ba0b402da9d12b5584eddc8e9b547b05db7",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/topology.go",
+      "rc2_sha256": "d5e671480246eda39e837dcd77a6e740fcf38bf16576e1fe276cf66d99e3f160",
+      "final_sha256": "d5e671480246eda39e837dcd77a6e740fcf38bf16576e1fe276cf66d99e3f160",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/trace.go",
+      "rc2_sha256": "b9d4e7ed421d43dfdd2dbf7df85ab183f94e13eff3b599c576dd5190e12a5476",
+      "final_sha256": "b9d4e7ed421d43dfdd2dbf7df85ab183f94e13eff3b599c576dd5190e12a5476",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/trace_admission_sampler.go",
+      "rc2_sha256": "7cfa75e46daa4c7ab63415efcafebc45f04200676dda8787e79385a48bf8c51d",
+      "final_sha256": "7cfa75e46daa4c7ab63415efcafebc45f04200676dda8787e79385a48bf8c51d",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/traffic.go",
+      "rc2_sha256": "9883bd1c213506dd3e33af10b692539bbc7b0143dbc6350c5e8c37d46c7dcc59",
+      "final_sha256": "9883bd1c213506dd3e33af10b692539bbc7b0143dbc6350c5e8c37d46c7dcc59",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/tunnel/version.go",
+      "rc2_sha256": "eab513514ab4a03ebbab8642d73d4851e33fee143dd99d37b64c9686a8e9cc08",
+      "final_sha256": "e09fc44eb43794a3195b7ad1c20e131520f8853babb68783e8db0e21d7693eba",
+      "identity_string_only": true
+    },
+    {
+      "path": "core/wallet/reconcile.go",
+      "rc2_sha256": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165",
+      "final_sha256": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wallet/wallet.go",
+      "rc2_sha256": "5cef740ff3e8c2174007b38e6e091890f13ce1026b68eb3ee91ade1f4d7bde0b",
+      "final_sha256": "5cef740ff3e8c2174007b38e6e091890f13ce1026b68eb3ee91ade1f4d7bde0b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/control.go",
+      "rc2_sha256": "5894116a1ca18a868acadcb3fdbbad26985cc814ce6b41bc1642b113d4897bb4",
+      "final_sha256": "5894116a1ca18a868acadcb3fdbbad26985cc814ce6b41bc1642b113d4897bb4",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/data_batch.go",
+      "rc2_sha256": "5ac27b71179202301ed71f8b6eeba3f0a21903f3b19b14a50fadf0d3312f5ef6",
+      "final_sha256": "5ac27b71179202301ed71f8b6eeba3f0a21903f3b19b14a50fadf0d3312f5ef6",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/data_envelope.go",
+      "rc2_sha256": "badbb41b877cc80ac38c8ce720d937e5c39bf6faa41311af99c32814bef2f542",
+      "final_sha256": "badbb41b877cc80ac38c8ce720d937e5c39bf6faa41311af99c32814bef2f542",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/grants.go",
+      "rc2_sha256": "381a1b57f2c0478d8b52ec07daa504588e28039a2392fa509a864ecd70dfe53f",
+      "final_sha256": "381a1b57f2c0478d8b52ec07daa504588e28039a2392fa509a864ecd70dfe53f",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/notice.go",
+      "rc2_sha256": "25071db0cd469f237149bb57a03ac4cd83b1b37dea5a1d4c18d0e5a520da9b9a",
+      "final_sha256": "25071db0cd469f237149bb57a03ac4cd83b1b37dea5a1d4c18d0e5a520da9b9a",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/progress_merge.go",
+      "rc2_sha256": "aae9201e28fe441b489dcdf6002a95982ed192b75f00800766f70b33e11a65bc",
+      "final_sha256": "aae9201e28fe441b489dcdf6002a95982ed192b75f00800766f70b33e11a65bc",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/testdata/control2.json",
+      "rc2_sha256": "e840c3758a21c57f7e1b53bb2144a7656de3a96a9ea8200a9076877993d82b9b",
+      "final_sha256": "e840c3758a21c57f7e1b53bb2144a7656de3a96a9ea8200a9076877993d82b9b",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/testdata/grants2.json",
+      "rc2_sha256": "16cfa522644ce88c0ab47e54956b380daef308f04080b1e12ec6a857eb6e5248",
+      "final_sha256": "16cfa522644ce88c0ab47e54956b380daef308f04080b1e12ec6a857eb6e5248",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/testdata/wire2.json",
+      "rc2_sha256": "793eb22f279d837727dcde656e288a86a4ae5e8a8492404b12f0c2a86e2581ca",
+      "final_sha256": "793eb22f279d837727dcde656e288a86a4ae5e8a8492404b12f0c2a86e2581ca",
+      "identity_string_only": false
+    },
+    {
+      "path": "core/wire/wire.go",
+      "rc2_sha256": "0e0cd8c39030e4fe8440ea4467d20454490beb123440bb41cd1007f07353423a",
+      "final_sha256": "0e0cd8c39030e4fe8440ea4467d20454490beb123440bb41cd1007f07353423a",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/admin.go",
+      "rc2_sha256": "181cfd4fb11407a5a3f95e88b5fb8a8be2ea8a3ac60ddbaaf9b05ad9bdf2c80d",
+      "final_sha256": "181cfd4fb11407a5a3f95e88b5fb8a8be2ea8a3ac60ddbaaf9b05ad9bdf2c80d",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/admin_integration_test.go",
+      "rc2_sha256": "40e1261f791a4c1f19acc751ec6b3dc384703c069e6fa9f0fb1f0e008a453dcd",
+      "final_sha256": "40e1261f791a4c1f19acc751ec6b3dc384703c069e6fa9f0fb1f0e008a453dcd",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/dns.go",
+      "rc2_sha256": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912",
+      "final_sha256": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/dns_test.go",
+      "rc2_sha256": "2251e05cf21013ab25f5e5ace9b8426e4ff1d7b911f03f865fab110a7c7712b8",
+      "final_sha256": "2251e05cf21013ab25f5e5ace9b8426e4ff1d7b911f03f865fab110a7c7712b8",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/go.mod",
+      "rc2_sha256": "0c1e3f707eb4c289eddc48139c437710cfaa8daf2b0c0e5389f31d1f0d2e6679",
+      "final_sha256": "0c1e3f707eb4c289eddc48139c437710cfaa8daf2b0c0e5389f31d1f0d2e6679",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/go.sum",
+      "rc2_sha256": "3b2bf006809fa32acb3b302e26a1ea3ddd499a346347d2bb0041be66ddfc1f53",
+      "final_sha256": "3b2bf006809fa32acb3b302e26a1ea3ddd499a346347d2bb0041be66ddfc1f53",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/imap_tcp_bridge_test.go",
+      "rc2_sha256": "c77d94e4cf39bbb8c855322a7b186eeb1eeac601cb7562247e373894d534eadb",
+      "final_sha256": "c77d94e4cf39bbb8c855322a7b186eeb1eeac601cb7562247e373894d534eadb",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/mobile.go",
+      "rc2_sha256": "232c3958b68a66b86651bd01ac68e9ce0ce0012607907f091dc0aac4baf734a7",
+      "final_sha256": "232c3958b68a66b86651bd01ac68e9ce0ce0012607907f091dc0aac4baf734a7",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/tcp_bridge_test.go",
+      "rc2_sha256": "71aaf77135a174aa4158dd15561f5ef5a3632182630596d3a303fa3c93b19806",
+      "final_sha256": "71aaf77135a174aa4158dd15561f5ef5a3632182630596d3a303fa3c93b19806",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/tools.go",
+      "rc2_sha256": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f",
+      "final_sha256": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f",
+      "identity_string_only": false
+    },
+    {
+      "path": "native/version.go",
+      "rc2_sha256": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee",
+      "final_sha256": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee",
+      "identity_string_only": false
+    },
+    {
+      "path": "tools/transport_qualification.py",
+      "rc2_sha256": "47d80a6b02a95a5fc5a40a94e87f0a36bdb073da264972420e1e2b562a9550f2",
+      "final_sha256": "47d80a6b02a95a5fc5a40a94e87f0a36bdb073da264972420e1e2b562a9550f2",
+      "identity_string_only": false
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 plugins { id("com.android.application"); kotlin("plugin.serialization"); id("org.jetbrains.kotlin.plugin.compose") }
+val itomSigningStore = providers.environmentVariable("ITOM_ANDROID_SIGNING_STORE_FILE").orNull
 android {
     namespace = "org.itom.client"
     compileSdk = 37
@@ -6,12 +7,25 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10000; versionName = "1.0.0-rc1"
+        versionCode = 10014; versionName = "1.0.0"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev12-startup\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
+    signingConfigs {
+        if (itomSigningStore != null) {
+            create("itomField") {
+                storeFile = file(itomSigningStore)
+                storePassword = providers.environmentVariable("ITOM_ANDROID_STORE_PASSWORD").get()
+                keyAlias = providers.environmentVariable("ITOM_ANDROID_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("ITOM_ANDROID_KEY_PASSWORD").get()
+            }
+        }
+    }
     buildTypes {
-        debug { applicationIdSuffix = ".dev.rev7"; versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM") }
+        debug {
+            versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM")
+            if (itomSigningStore != null) signingConfig = signingConfigs.getByName("itomField")
+        }
         release { isMinifyEnabled = true; resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

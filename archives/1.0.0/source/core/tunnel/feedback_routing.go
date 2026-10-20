@@ -3,13 +3,14 @@ package tunnel
 import (
 	"itom.local/core/wire"
 	"sort"
+	"time"
 )
 
 // DATA on independent sockets is not control queue debt. Keep bulk snapshots
 // on responsive services so receipt and credit updates coalesce before sealing.
 // No account has a permanent role: detached/full paths fall back immediately.
 func controlCarrierScore(l *lane) int {
-	n := len(l.urgentQueue)*80 + len(l.controlQueue)*15 + len(l.maintenanceQueue)*5 + int(l.controlDebt.Load())*4
+	n := int(l.controlStallPenalty(time.Now())) + len(l.urgentQueue)*80 + len(l.controlQueue)*15 + len(l.maintenanceQueue)*5 + int(l.controlDebt.Load())*4
 	if l.controlWriting.Load() > 0 {
 		n += 64
 	}
@@ -37,7 +38,7 @@ func (g *stripeGroup) orderBulkFeedbackLocked(candidates []*lane, f wire.Frame) 
 		return candidates
 	}
 	eligible := func(l *lane) bool {
-		return l.controlDebt.Load() < 64 && len(l.urgentQueue) < 16 && len(l.controlQueue) < 32
+		return l.controlStallPenalty(time.Now()) == 0 && l.controlDebt.Load() < 64 && len(l.urgentQueue) < 16 && len(l.controlQueue) < 32
 	}
 	best := int64(1 << 62)
 	for _, l := range candidates {

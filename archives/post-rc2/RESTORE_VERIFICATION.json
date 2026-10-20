@@ -1,0 +1,17 @@
+{
+  "verified_release_sources": [
+    "RC3",
+    "RC4",
+    "RC5",
+    "RC6",
+    "RC7",
+    "RC8",
+    "RC9",
+    "RC10",
+    "RC11",
+    "RC12",
+    "RC13",
+    "RC10.1"
+  ],
+  "method": "Apply exact patches to original RC2, verify entire resulting tree file set and SHA256"
+}

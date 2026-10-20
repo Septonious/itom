@@ -1217,7 +1217,7 @@ func (g *stripeGroup) sendStreamControl(ctx context.Context, preferred *lane, f 
 				}
 				for i, c := range candidates {
 					initialCredit := f.Type == wire.Window && f.Offset == runtimeStreamWindow
-					provenInitial := initialCredit && c.account.ID == affinity && c.controlDebt.Load() < 80 && len(c.urgentQueue) < 48 && (c.independentDataMaintenance() || len(c.physicalSlots) == 0)
+					provenInitial := initialCredit && c.controlStallPenalty(time.Now()) == 0 && c.account.ID == affinity && c.controlDebt.Load() < 80 && len(c.urgentQueue) < 48 && (c.independentDataMaintenance() || len(c.physicalSlots) == 0)
 					if provenInitial {
 						for _, r := range g.delivery.ranges {
 							if !r.fast && r.carrier == c.account.ID {

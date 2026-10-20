@@ -71,7 +71,7 @@ func openLaneScoreWithEstimate(l *lane, now time.Time, estimate int64) int64 {
 		}
 	}
 	active := max(owner.active.Load(), owner.admitted.Load()) * 30
-	return rtt + age/2 + queue + active
+	return rtt + age/2 + queue + active + l.controlStallPenalty(now)
 }
 
 type ClientOptions struct {

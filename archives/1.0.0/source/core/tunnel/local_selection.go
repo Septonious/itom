@@ -264,7 +264,7 @@ func duplexDataShares(profileBytes uint64) (local, remote uint64) {
 // Keep that preference while any effective DATA slot is free, even when another
 // short APPEND already occupies this reader's first slot.
 func interactiveCarrierScore(l *lane, quiet [2]*lane) int {
-	n := len(l.urgentQueue)*80 + len(l.controlQueue)*15 + len(l.maintenanceQueue)*5 + int(l.controlDebt.Load())*4
+	n := int(l.controlStallPenalty(time.Now())) + len(l.urgentQueue)*80 + len(l.controlQueue)*15 + len(l.maintenanceQueue)*5 + int(l.controlDebt.Load())*4
 	if l.dataShards == 0 {
 		// Mixed mail shares its BODY reader with short traffic. Split DATA
 		// has its own mailbox/receiver and physical slot; its unread bulk

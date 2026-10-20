@@ -1,0 +1,1178 @@
+{
+  "baseline": "a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
+  "files": [
+    {
+      "path": "HANDOFF.md",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Replace release labels/docs with explicit RC2 final provenance, state-preservation and qualification scope."
+    },
+    {
+      "path": "README.md",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Replace release labels/docs with explicit RC2 final provenance, state-preservation and qualification scope."
+    },
+    {
+      "path": "android/app/build.gradle.kts",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2 UI/runtime. Retain only current package ID org.itom.client, monotonic versionCode10014 and optional persistent signing configuration in Gradle."
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/AdminScreen.kt",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2 UI/runtime. Retain only current package ID org.itom.client, monotonic versionCode10014 and optional persistent signing configuration in Gradle."
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/Theme.kt",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2 UI/runtime. Retain only current package ID org.itom.client, monotonic versionCode10014 and optional persistent signing configuration in Gradle."
+    },
+    {
+      "path": "android/app/src/main/java/org/itom/client/UiComponents.kt",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2 UI/runtime. Retain only current package ID org.itom.client, monotonic versionCode10014 and optional persistent signing configuration in Gradle."
+    },
+    {
+      "path": "core/cmd/itom/main.go",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Release identity string only, retargeted to itom-1-0-0-final."
+    },
+    {
+      "path": "core/journal/commit_metrics.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Defer no-op transaction telemetry to 1.1; counters are useful but are not an RTT improvement by themselves."
+    },
+    {
+      "path": "core/journal/ledger.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Defer validated duplicate-proof no-op and sparse allocation changes. Potential fsync/GC benefit, but re-prove exact authorization and transaction/cache rollback boundaries first."
+    },
+    {
+      "path": "core/journal/rc11_noop_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/journal/remote.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Defer duplicate-report no-op; correctness tests show preserved validation, not a field performance win."
+    },
+    {
+      "path": "core/journal/store.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Defer errNoChange transaction handling. No changes to RC2 durable storage semantics in final."
+    },
+    {
+      "path": "core/mailbox/idle_ahead_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Retain fixture-only parent deadline correction: 4s parent could not test the production 8s watchdog. Production mailbox code and all throughput/latency qualification thresholds unchanged."
+    },
+    {
+      "path": "core/manager/trace.go",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Release identity string only, retargeted to itom-1-0-0-final."
+    },
+    {
+      "path": "core/servercfg/rc5_session_budget_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/carrier_feedback.go",
+      "changed_in": [
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Defer quiet/spike scoring: no repeated matched evidence, high risk of chasing noisy measurements."
+    },
+    {
+      "path": "core/tunnel/cleanup.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Defer first-useful-page reclaim. Red/green proof tests support a specific correction, but no uniform field RTT benefit."
+    },
+    {
+      "path": "core/tunnel/cleanup_service.go",
+      "changed_in": [
+        "RC9"
+      ],
+      "decision": "Restore RC2. Defer global cleanup gating; no proved cross-workload advantage."
+    },
+    {
+      "path": "core/tunnel/control.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2. Defer latest-STATUS telemetry and recovery reserve hookup. No control-delay/window changes in final."
+    },
+    {
+      "path": "core/tunnel/delivery_control.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Defer ACK residence/profiler changes. Earlier 8/4MiB admission caps and asymmetric experiments are rejected as universal policies: lower lab RTT came with major rate losses. Final uses RC2 window/growth unchanged."
+    },
+    {
+      "path": "core/tunnel/delivery_policy.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Reject unconditional small-window growth doubling and reduced/asymmetric ceilings without repeated non-regression evidence."
+    },
+    {
+      "path": "core/tunnel/diagnostics.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2. Preserve newer observation schemas in archive for a bounded, opt-in 1.1 profiler."
+    },
+    {
+      "path": "core/tunnel/field_replay_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/flow_control.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2 cumulative coalescing; defer extra timestamp only."
+    },
+    {
+      "path": "core/tunnel/grant_recovery.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Defer smaller fast leases, refill cushion and adaptive historical reconciliation retry. Missing-wallet tests support availability; they do not prove lower idle RTT, and altered recovery proportions must not consume bulk headroom."
+    },
+    {
+      "path": "core/tunnel/healthy_endpoints_test.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/imap_test.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/io.go",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Reject global read semaphore, larger cleanup read budget and prior polling changes: they coupled maintenance to useful reads or lacked paired evidence."
+    },
+    {
+      "path": "core/tunnel/io_test.go",
+      "changed_in": [
+        "RC3"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/lane.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Defer reclaimed-ordinal cache exclusion, descriptor headroom, bounded profiler and fast-grant refill. These repair specific replay cases but change hot-path work/lease concurrency. Reintroduce individually only after RC2-controlled performance and retained-state tests."
+    },
+    {
+      "path": "core/tunnel/latency_profile.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Defer bounded per-stage profiler. Useful for causal attribution, but requires enabled/disabled overhead and allocation measurements."
+    },
+    {
+      "path": "core/tunnel/latency_profile_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/local_selection.go",
+      "changed_in": [
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Keep account-stall routing; defer additional spike scores until placement is measured at batch granularity."
+    },
+    {
+      "path": "core/tunnel/mobile_network_test.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/provider_network_test.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc11_field_startup_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc11_recovery_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc12_pressure_itomtest_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc12_refill_test.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc13_field_itomtest_test.go",
+      "changed_in": [
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc13_retained_test.go",
+      "changed_in": [
+        "RC13"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc3_latency_test.go",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc4_poll_pressure_test.go",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc5_bulk_ack_observability_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc5_cold_ramp_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc5_latest_status_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc5_warm_start_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc6_stability_gate_test.go",
+      "changed_in": [
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc7_asymmetric_window_test.go",
+      "changed_in": [
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc7_release_gate_test.go",
+      "changed_in": [
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc7_speedup_profile_test.go",
+      "changed_in": [
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_cleanup_batch_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_cleanup_discovery_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_descriptor_burst_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_latency_spike_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_quiet_rtt_selection_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_reclaimed_descriptor_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc8_release_gate_test.go",
+      "changed_in": [
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc9_cleanup_reads_test.go",
+      "changed_in": [
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/rc9_startup_discovery_test.go",
+      "changed_in": [
+        "RC9"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/reader_reserve.go",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Restore RC2. Reject indiscriminate accelerated polling/expanded hot windows; demand-scoped adaptive scheduling remains a new experiment, not a cherry-pick."
+    },
+    {
+      "path": "core/tunnel/recovered_shares.go",
+      "changed_in": [
+        "RC13"
+      ],
+      "decision": "Defer severe-debt 128KiB reserve policy. RC13 reproduces/restores exact 14/20-lane case; that is a narrow bootstrap fix. It is not a general throughput/RTT optimization."
+    },
+    {
+      "path": "core/tunnel/service_policy.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Reject accelerated first-receipt/warm-resume batching as default; no repeatable field advantage and burst-pressure risk."
+    },
+    {
+      "path": "core/tunnel/stripe.go",
+      "changed_in": [
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Restore RC2. Reject role-window overrides and global read gating; protect per-stream independence and useful throughput."
+    },
+    {
+      "path": "core/tunnel/supervised_load_test.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/supervisor_fixture_test.go",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates."
+    },
+    {
+      "path": "core/tunnel/topology.go",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2. Defer FETCH payload/callback histograms pending overhead controls."
+    },
+    {
+      "path": "core/tunnel/trace.go",
+      "changed_in": [
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Restore RC2. Monotonic timing is worth redesigning into 1.1 observability, not evidence of a transport gain."
+    },
+    {
+      "path": "core/tunnel/version.go",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Release identity string only, retargeted to itom-1-0-0-final."
+    },
+    {
+      "path": "docs/STATE_AND_SIGNING.md",
+      "changed_in": [
+        "RC13"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc10/HEALTHY_SERVER_REFERENCE.md",
+      "changed_in": [
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/INVESTIGATION.md",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/evidence/RC3_VALIDATION.json",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/evidence/before-fix.jsonl",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/evidence/final-correctness.jsonl",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/evidence/final-recovery.jsonl",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc3/evidence/launcher-check.log",
+      "changed_in": [
+        "RC3",
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/INVESTIGATION.md",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/evidence/RC4_VALIDATION.json",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/evidence/before-fix.jsonl",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/evidence/final-correctness.jsonl",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/evidence/final-recovery.jsonl",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc4/evidence/launcher-check.log",
+      "changed_in": [
+        "RC4"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/ACK_RECOVERY_ANALYSIS_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/ASYMMETRIC_PROFILES_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/CAPACITY_EXPERIMENTS_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/FAST_ACK_EPISODE_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/IMAP_SESSION_BUDGET_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/RELEASE_SELECTION.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/ROUNDTRIP_EXPERIMENTS_2026-10-17.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc5/STATUS.md",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "docs/rc6/STATUS.md",
+      "changed_in": [
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve historical documentation/evidence; do not infer current passing qualification from an archived report."
+    },
+    {
+      "path": "source-info.json",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Replace release labels/docs with explicit RC2 final provenance, state-preservation and qualification scope."
+    },
+    {
+      "path": "tools/archive_main.py",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/build.py",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/build_core.py",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/check_sources.py",
+      "changed_in": [
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/rc5_ack_path.py",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/rc5_gate.py",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/rc5_release_validate.py",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/rc6_release_validate.py",
+      "changed_in": [
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/test_launcher.py",
+      "changed_in": [
+        "RC3",
+        "RC4",
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/test_rc5_ack_path.py",
+      "changed_in": [
+        "RC5",
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    },
+    {
+      "path": "tools/transport_qualification.py",
+      "changed_in": [
+        "RC6",
+        "RC7",
+        "RC8",
+        "RC9",
+        "RC10",
+        "RC11",
+        "RC12",
+        "RC13",
+        "RC10.1"
+      ],
+      "decision": "Preserve in archive. Final retains build identity/export guards and validates exact final names; qualification transport scripts and thresholds remain RC2."
+    }
+  ]
+}

@@ -45,13 +45,13 @@ def read_source_info(root: Path = ROOT) -> dict:
         fail("Invalid source version or revision")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
-    if info.get("release") == "RC1":
-        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-rc1"
-                or info["archive_name"] != "ITOM-1.0.0-RC1-sources.zip"
-                or info.get("android_version_name") != "1.0.0-rc1"
-                or info.get("android_version_code") != 10000
-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
-            fail("Inconsistent ITOM 1.0.0 RC1 identity")
+    if info.get("release") in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
+        if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-" + info["release"].lower().replace(".", "-")
+                or info["archive_name"] != ("ITOM-1.0.0-sources.zip" if info["release"] == "Final" else f"ITOM-1.0.0-{info['release']}-sources.zip")
+                or info.get("android_version_name") != ("1.0.0" if info["release"] == "Final" else "1.0.0-" + info["release"].lower())
+                or info.get("android_version_code") != {"RC2":10001,"RC5":10004,"RC6":10005,"RC7":10006,"RC8":10007,"RC9":10008,"RC10":10009,"RC10.1":10010,"RC11":10011,"RC12":10012,"Final":10014}[info["release"]]
+                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10", "RC10.1","RC11","RC12","Final") else "org.itom.client.dev.rev7")):
+            fail("Inconsistent ITOM 1.0.0 release identity")
         return info
     if info["version"] == "0.9.2" and info.get("release") in ("Rev1", "Rev2", "Rev3", "Rev4", "Rev5", "Rev6", "Rev7", "Rev8", "Rev9", "Rev10", "Rev11"):
         release = info["release"]
@@ -60,7 +60,7 @@ def read_source_info(root: Path = ROOT) -> dict:
                 or info["archive_name"] != f"ITOM-0.9.2-{release}-sources.zip"
                 or info.get("android_version_name") != f"0.9.2-{release}"
                 or info.get("android_version_code") != 9200 + number
-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
+                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10", "RC10.1","RC11","RC12","Final") else "org.itom.client.dev.rev7")):
             fail(f"Inconsistent ITOM-0.9.2-{release} release identity")
         return info
     if info.get("release") == "Rev10":
@@ -68,7 +68,7 @@ def read_source_info(root: Path = ROOT) -> dict:
                 or info["archive_name"] != "ITOM-0.9.1-Rev10-sources.zip"
                 or info.get("android_version_name") != "0.9.1-Rev10"
                 or info.get("android_version_code") != 9089
-                or info.get("android_application_id") != "org.itom.client.dev.rev7"):
+                or info.get("android_application_id") != ("org.itom.client" if info.get("release") in ("RC7", "RC8", "RC9", "RC10", "RC10.1","RC11","RC12","Final") else "org.itom.client.dev.rev7")):
             fail("Inconsistent ITOM-0.9.1-Rev10 release identity")
         return info
     if not re.fullmatch(r"FIELD[1-9][0-9]*", info.get("release", "")):
@@ -82,13 +82,15 @@ def read_source_info(root: Path = ROOT) -> dict:
 
 
 def android_identity(info):
-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC1"):
+    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
         return info["android_version_name"], info["android_version_code"]
     return f"{info['version']}-field{info['release'][5:]}", 9000 + int(info["release"][5:])
 
 
 def public_apk_name(info):
-    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC1"):
+    if info.get("release") == "Final":
+        return "ITOM-1.0.0-debug.apk"
+    if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
         return f"ITOM-{info['version']}-{info['release']}-debug.apk"
     return f"ITOM_{info['release']}_debug.apk"
 
@@ -102,12 +104,12 @@ def verify_apk_identity(apk: Path, sdk: Path, info: dict):
     metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
     expected_name, expected_code = android_identity(info)
     expected_name += "-debug"
-    if (metadata.get("applicationId") != "org.itom.client.dev.rev7" or
+    if (metadata.get("applicationId") != info["android_application_id"] or
         not any(isinstance(e, dict) and e.get("versionName") == expected_name and e.get("versionCode") == expected_code and
                 e.get("outputFile") == apk.name for e in metadata.get("elements", []))):
         fail("Gradle finished but APK output-metadata identity differs from " + info['release'] +
              ". Expected " + expected_name + " (" + str(expected_code) +
-             ", org.itom.client.dev.rev7) at " + str(metadata_file))
+             ", " + info["android_application_id"] + ") at " + str(metadata_file))
     aapt2 = sdk / "build-tools" / BUILD_TOOLS / ("aapt2.exe" if os.name == "nt" else "aapt2")
     if not aapt2.is_file():
         fail("Gradle finished, but Android build-tools aapt2 is missing: " + str(aapt2))
@@ -120,7 +122,7 @@ def verify_apk_identity(apk: Path, sdk: Path, info: dict):
     # Match *whole* aapt2 attribute names: compileSdkVersionCodename='17'
     # contains a suffix "name='17'" that must never shadow package name.
     found = dict(re.findall(r"(?<!\S)(name|versionCode|versionName)='([^']*)'", line))
-    if found != {"name":"org.itom.client.dev.rev7", "versionCode":str(expected_code), "versionName":expected_name}:
+    if found != {"name":info["android_application_id"], "versionCode":str(expected_code), "versionName":expected_name}:
         fail("Compiled APK identity differs from " + info['release'] + ": " + str(found))
     return {"application_id": found["name"], "version_code": expected_code, "version_name": expected_name}
 

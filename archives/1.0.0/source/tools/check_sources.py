@@ -57,6 +57,10 @@ def validate_release_identity(root: Path):
     info = read_source_info(root)
     name, code = android_identity(info)
     app = (root / "android/app/build.gradle.kts").read_text(encoding="utf-8")
+    if info.get("release") in ("RC7", "RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
+        check(info.get("android_application_id") == "org.itom.client", "RC7/RC8 APK ID must equal org.itom.client")
+        check('applicationId = "org.itom.client"' in app, "RC7 Gradle applicationId changed")
+        check("applicationIdSuffix" not in app, "RC7 debug build must NEVER add an application ID suffix")
     if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9"):
         check('applicationIdSuffix = ".dev.rev7"' in app,
               "Rev10 test APK package differs from its separate-install identity")
@@ -68,6 +72,9 @@ def validate_release_identity(root: Path):
         source = (root / relative).read_text(encoding="utf-8")
         check('"' + info["revision"] + '"' in source,
               "Server revision mismatch in " + relative)
+    runtime = (root / "core/tunnel/version.go").read_text(encoding="utf-8")
+    check('"' + info["revision"] + '"' in runtime,
+          "Transport revision mismatch in core/tunnel/version.go")
     return info
 
 

@@ -52,9 +52,9 @@ class LauncherTests(unittest.TestCase):
 
     def test_public_release_consistent_across_gradle_server_and_archive(self):
         info = check_sources.validate_release_identity(check_sources.ROOT)
-        self.assertEqual("RC1", info["release"])
-        self.assertEqual("ITOM-1.0.0-RC1-debug.apk", build.public_apk_name(info))
-        self.assertEqual("ITOM-1.0.0-RC1-sources.zip", info["archive_name"])
+        self.assertEqual("Final", info["release"])
+        self.assertEqual("ITOM-1.0.0-debug.apk", build.public_apk_name(info))
+        self.assertEqual("ITOM-1.0.0-sources.zip", info["archive_name"])
 
     def test_public_release_mismatch_is_fatal(self):
         info = build.read_source_info()
@@ -70,7 +70,7 @@ class LauncherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             for rel in ("source-info.json", "android/app/build.gradle.kts",
-                        "core/cmd/itom/main.go", "core/manager/trace.go"):
+                        "core/cmd/itom/main.go", "core/manager/trace.go", "core/tunnel/version.go"):
                 target = root / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((source / rel).read_bytes())
@@ -83,6 +83,11 @@ class LauncherTests(unittest.TestCase):
             main.write_text(main.read_text().replace(build.read_source_info()["revision"], "old-revision"))
             with self.assertRaisesRegex(RuntimeError, "Server revision mismatch"):
                 check_sources.validate_release_identity(root)
+            main.write_bytes((source / "core/cmd/itom/main.go").read_bytes())
+            runtime = root / "core/tunnel/version.go"
+            runtime.write_text(runtime.read_text().replace(build.read_source_info()["revision"], "old-revision"))
+            with self.assertRaisesRegex(RuntimeError, "Transport revision mismatch"):
+                check_sources.validate_release_identity(root)
 
     def test_compiled_apk_identity_validation(self):
         info = build.read_source_info()
@@ -92,13 +97,13 @@ class LauncherTests(unittest.TestCase):
             apk.write_bytes(b"fake fixture")
             version, code = build.android_identity(info)
             version += "-debug"
-            metadata = {"applicationId":"org.itom.client.dev.rev7", "elements":[{"versionCode":code,
+            metadata = {"applicationId":"org.itom.client", "elements":[{"versionCode":code,
                          "versionName":version, "outputFile":"app-debug.apk"}]}
             (root / "output-metadata.json").write_text(json.dumps(metadata))
             aapt2 = root / "build-tools" / build.BUILD_TOOLS / ("aapt2.exe" if build.os.name == "nt" else "aapt2")
             aapt2.parent.mkdir(parents=True, exist_ok=True)
             aapt2.touch()
-            aapt_stdout = f"package: name='org.itom.client.dev.rev7' versionCode='{code}' versionName='{version}'\n"
+            aapt_stdout = f"package: name='org.itom.client' versionCode='{code}' versionName='{version}'\n"
             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess([], 0, aapt_stdout, "")):
                 self.assertEqual(version, build.verify_apk_identity(apk, root, info)["version_name"])
                 bad = dict(metadata, elements=[dict(metadata["elements"][0], versionName="old-version")])
@@ -107,7 +112,7 @@ class LauncherTests(unittest.TestCase):
                     build.verify_apk_identity(apk, root, info)
                 (root / "output-metadata.json").write_text(json.dumps(metadata))
                 with patch("build.subprocess.run", return_value=subprocess.CompletedProcess([],0,
-                    "package: name='org.itom.client.dev.rev7' versionCode='9037' versionName='old'", "")):
+                    "package: name='org.itom.client' versionCode='9037' versionName='old'", "")):
                     with self.assertRaisesRegex(RuntimeError, "Compiled APK identity differs"):
                         build.verify_apk_identity(apk, root, info)
 
@@ -122,7 +127,7 @@ class LauncherTests(unittest.TestCase):
             version, code = build.android_identity(info)
             version += "-debug"
             (root / "output-metadata.json").write_text(json.dumps({
-                "applicationId": "org.itom.client.dev.rev7",
+                "applicationId": "org.itom.client",
                 "elements": [{"versionCode": code, "versionName": version,
                               "outputFile": apk.name}]
             }), encoding="utf-8")
@@ -130,18 +135,18 @@ class LauncherTests(unittest.TestCase):
                 "aapt2.exe" if build.os.name == "nt" else "aapt2")
             aapt2.parent.mkdir(parents=True)
             aapt2.touch()
-            badging = (f"package: name='org.itom.client.dev.rev7' versionCode='{code}' "
+            badging = (f"package: name='org.itom.client' versionCode='{code}' "
                        f"versionName='{version}' compileSdkVersion='37' "
                        "compileSdkVersionCodename='17'\n")
             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess(
                 [], 0, badging, "")):
                 identity = build.verify_apk_identity(apk, root, info)
-                self.assertEqual(identity["application_id"], "org.itom.client.dev.rev7")
+                self.assertEqual(identity["application_id"], "org.itom.client")
                 self.assertEqual(identity["version_name"], version)
                 self.assertEqual(identity["version_code"], code)
 
             # A misleading suffixed key must not be accepted as package name.
-            spoofed = (f"package: fakename='org.itom.client.dev.rev7' versionCode='{code}' "
+            spoofed = (f"package: fakename='org.itom.client' versionCode='{code}' "
                        f"versionName='{version}' compileSdkVersionCodename='17'\n")
             with patch("build.subprocess.run", return_value=subprocess.CompletedProcess(
                 [], 0, spoofed, "")):
@@ -165,7 +170,7 @@ class LauncherTests(unittest.TestCase):
             version, code = build.android_identity(info)
             version += "-debug"
             (root / "output-metadata.json").write_text(json.dumps({
-                "applicationId": "org.itom.client.dev.rev7", "elements": [{
+                "applicationId": "org.itom.client", "elements": [{
                     "versionCode": code, "versionName": version,
                     "outputFile": "app-debug.apk"}]}))
             aapt2 = root / "build-tools" / build.BUILD_TOOLS / ("aapt2.exe" if build.os.name == "nt" else "aapt2")
@@ -224,7 +229,7 @@ class LauncherTests(unittest.TestCase):
         (source / "build-report.json").write_text(json.dumps({"status":"passed", "source_revision":info["revision"], "sha256":sha}))
         sums = []
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-1.0.0-RC1-linux-{arch}"
+            name = f"ITOM-1.0.0-linux-{arch}"
             data = b"fixture-" + arch.encode()
             (source / name).write_bytes(data)
             sums.append(hashlib.sha256(data).hexdigest() + "  " + name)
@@ -233,7 +238,7 @@ class LauncherTests(unittest.TestCase):
         result = archive_main.export_verified_artifacts(self.root / "ITOM_FIELD77_tmp", archive, info, "all")
         self.assertEqual(7, len(result))
         self.assertEqual(b"verified-test-apk", (self.root / "dist" / apk_name).read_bytes())
-        self.assertTrue((self.root / "dist" / "ITOM-1.0.0-RC1-linux-arm64").is_file())
+        self.assertTrue((self.root / "dist" / "ITOM-1.0.0-linux-arm64").is_file())
         # Failed gate and tampered APK must NEVER overwrite the public dist.
         apk.write_bytes(b"tampered")
         with self.assertRaisesRegex(RuntimeError, "APK checksum mismatch"):
@@ -486,7 +491,7 @@ class LauncherTests(unittest.TestCase):
                     for abi in ("arm64-v8a", "armeabi-v7a"):
                         native_fixture.writestr(f"lib/{abi}/libgojni.so", info["revision"].encode("ascii"))
                 version, code = build.android_identity(info)
-                (apk.parent / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client.dev.rev7",
+                (apk.parent / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client",
                     "elements":[{"versionCode": code,
                     "versionName": version + "-debug", "outputFile": "app-debug.apk"}]}))
                 return self
@@ -505,7 +510,7 @@ class LauncherTests(unittest.TestCase):
              patch("build.ensure_sdk", return_value=root / "sdk"), \
              patch("build_android_core.run"), \
              patch("build.subprocess.run", return_value=subprocess.CompletedProcess([], 0,
-                   stdout=f"package: name='org.itom.client.dev.rev7' versionCode='{build.android_identity(info)[1]}' versionName='{build.android_identity(info)[0]}-debug'\n",
+                   stdout=f"package: name='org.itom.client' versionCode='{build.android_identity(info)[1]}' versionName='{build.android_identity(info)[0]}-debug'\n",
                    stderr="test JDK fixture")), \
              patch("build.subprocess.Popen", return_value=Process()) as process, redirect_stdout(output):
             try: result = build.main(["android", "--cache", str(root / "cache")])

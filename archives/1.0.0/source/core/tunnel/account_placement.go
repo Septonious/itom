@@ -32,7 +32,7 @@ func (g *stripeGroup) prioritizeBulkTargetsLocked(keys []string) {
 			return 1 << 60
 		}
 		unread := max(uint64(max(int64(0), l.unreceivedLocalBytes.Load())), g.delivery.carrierBytes[l.account.ID])
-		n := l.predictedServiceMS(false) + int64(len(l.physicalSlots))*65 + int64(unread/(32<<10)) + int64(l.controlDebt.Load()) + ageCost[l.account.ID] + g.carrierLatencyLocked(l)/4
+		n := l.controlStallPenalty(now) + l.predictedServiceMS(false) + int64(len(l.physicalSlots))*65 + int64(unread/(32<<10)) + int64(l.controlDebt.Load()) + ageCost[l.account.ID] + g.carrierLatencyLocked(l)/4
 		if ack := g.delivery.carrierACK[l.account.ID]; ack > 0 {
 			if now.Sub(g.delivery.carrierACKAt[l.account.ID]) <= 15*time.Second {
 				n += min(int64(1000), ack.Milliseconds()/4)

@@ -1,7 +1,9 @@
 # ITOM
 
-[Rev7 APK, Linux binaries and full project bundle](https://github.com/Septonious/itom/releases/tag/v0.9.2-Rev7)
+[ITOM1.0.0 — final RC2 transport baseline](https://github.com/Septonious/itom/releases/tag/v1.0.0) · [Release notes](archives/1.0.0/RELEASE_NOTES.md) · [Executable source](archives/1.0.0/source)
 
-[Full project handoff](archives/rev7/source/HANDOFF.md) · [Editable Rev7 source](archives/rev7/source) · [Exact validation scope](archives/rev7/source/docs/rev7/evidence/rev7_validation.json)
+Final1.0.0 uses RC2 transport, selected by the user after later builds failed to establish a field advantage. Runtime policy is unchanged; current Android package identity and release packaging are retained. The release notes specify validation and rollback/state limits.
 
-Rev7 repairs transport recovery and multiplexing. At the user's request, finalization used targeted recovery/race, Android and retained-load checks after the last fix. The earlier full-suite pass is recorded separately; a complete final-runtime rerun and live-device/provider validation are not claimed. The 90 Mbps floor was waived. Update app and server together and preserve profiles and accounting state. GitHub Actions assembles and verifies exact artifacts and remote digests. Historical archives remain unchanged.
+[All later changes and evaluation](archives/post-rc2/POST_RC2_EVALUATION.md) · [ITOM1.1.0 transport rework plan](docs/1.1.0/TRANSPORT_REWORK_PLAN.md) · [Related protocol research](docs/1.1.0/RELATED_PROTOCOL_RESEARCH.md)
+
+1.1.0 development targets the lowest practical idle/light-load RTT on the planned2ms server route, without sacrificing RC2 throughput or stability. Experiments and their failures remain separate from final1.0.0. Historical archives/tags are preserved.

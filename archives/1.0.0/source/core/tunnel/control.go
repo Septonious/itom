@@ -297,8 +297,14 @@ func (l *lane) refreshReaderAfterPingAppend(frames []queuedControl) {
 func (l *lane) writeControls(frames []queuedControl) error {
 	// Backpressure may recursively send a receipt or urgent control. A nested
 	// completion must not advertise the outer writer as idle to fast selection.
-	l.controlWriting.Add(1)
-	defer l.controlWriting.Add(-1)
+	if l.controlWriting.Add(1) == 1 {
+		l.controlWriteStarted.Store(time.Now().UnixNano())
+	}
+	defer func() {
+		if l.controlWriting.Add(-1) == 0 {
+			l.controlWriteStarted.Store(0)
+		}
+	}()
 	repairs := 0
 	for {
 		l.mu.Lock()

@@ -1,0 +1,256 @@
+name: ITOM 1.0.0 final — exact RC2 transport
+# Final release identity and packaging only; RC2 transport/qualification policies unchanged.
+on:
+  push:
+    branches: ["codex/v1.0.0-final-rc2"]
+    paths: [".github/workflows/itom-v1-final.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  SOURCE: archives/1.0.0/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  core:
+    name: RC2 identity, full Go correctness and race
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: archives/1.0.0/source/core/go.mod
+          cache: false
+      - name: Exact RC2 runtime, source identity and packaging checks
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 tools/verify_rc2_final.py --output "$RUNNER_TEMP/RC2_FINAL_INTEGRITY.json"
+          python3 archives/1.0.0/source/tools/build.py check --expect-revision itom-1-0-0-final
+      - name: Complete Go correctness and vet
+        working-directory: ${{ env.SOURCE }}/core
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=900s ./... | tee "$RUNNER_TEMP/core.log"
+      - name: Race quota, wallet and delivery invariants
+        working-directory: ${{ env.SOURCE }}/core
+        run: go test -race -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v1-final-core-evidence
+          path: |
+            ${{ runner.temp }}/core.log
+            ${{ runner.temp }}/RC2_FINAL_INTEGRITY.json
+          retention-days: 90
+  linux:
+    needs: [core]
+    name: Build Linux amd64 and arm64
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-final
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.0.0-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.0.0-linux-$arch.bin" | grep -q 'itom-1-0-0-final'
+            test "$(stat -c %s "dist/ITOM-1.0.0-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.0.0-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v1-final-field-test-linux
+          path: ${{ env.SOURCE }}/dist/ITOM-1.0.0-linux-*.bin
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [core]
+    name: Build Android APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact V1 application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py android --expect-revision itom-1-0-0-final --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10014 and x['versionName']=='1.0.0-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.0.0-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-0-0-final' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.0.0-debug.apk > dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v1-final-field-test-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.0.0-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v1-final-field-test-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30
+  source:
+    needs: [core]
+    name: Package executable V1 source
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integrity check and source archive
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build.py check --expect-revision itom-1-0-0-final
+          python3 tools/package_sources.py --output "$GITHUB_WORKSPACE/ITOM-1.0.0-sources.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v1-final-field-test-source
+          path: ITOM-1.0.0-sources.zip
+          if-no-files-found: error
+          retention-days: 30
+  preservation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 tools/preserve_post_rc2.py --output preserved
+      - uses: actions/upload-artifact@v4
+        with:
+          name: post-rc2-preserved-changes
+          path: preserved/POST_RC2_CHANGES.zip
+          retention-days: 90
+  package:
+    name: Assemble and publish final 1.0.0
+    needs: [linux, android, source, preservation]
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: v1-final-field-test-linux
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: v1-final-field-test-android
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: v1-final-field-test-source
+          path: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: post-rc2-preserved-changes
+          path: package
+      - uses: actions/checkout@v4
+        with:
+          path: repository
+      - run: cp repository/archives/1.0.0/RELEASE_NOTES.md package/RELEASE_NOTES.md
+      - name: Archive matched outputs and source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd package
+          test -s ITOM-1.0.0-debug.apk
+          test -s ITOM-1.0.0-linux-amd64.bin
+          test -s ITOM-1.0.0-linux-arm64.bin
+          test -s ITOM-1.0.0-sources.zip
+          printf '%s\n' \
+            'ITOM 1.0.0 — final RC2 transport baseline selected by the user.' \
+            'Build commit: ${{ github.sha }}' \
+            'Transport is RC2; release identity and current Android package identity are updated. New RTT work is isolated under docs/1.1.0.' \
+            'Preserve wallets, profiles and server journals. Signing compatibility with older temporary debug keys is not assured; do not uninstall or clear data to bypass a mismatch.' \
+            'Original qualification thresholds are unchanged. Selecting RC2 as final does not claim every historical synthetic gate passed. See RELEASE_NOTES.md.' > TESTING_NOTES.txt
+          sha256sum ITOM-1.0.0-* POST_RC2_CHANGES.zip RELEASE_NOTES.md SIGNER.txt TESTING_NOTES.txt > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          zip -q ../ITOM-1.0.0-full.zip ./*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.0.0-full
+          path: ITOM-1.0.0-full.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish final 1.0.0 and verify remote file digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=v1.0.0
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Final tag already exists; refusing to replace published artifacts.' >&2
+            exit 1
+          fi
+          gh release create "$tag" package/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title 'ITOM 1.0.0 — RC2 transport baseline' --notes-file package/RELEASE_NOTES.md
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" > release.json
+          python3 - <<'PY_VERIFY'
+          import hashlib,json
+          from pathlib import Path
+          d=json.loads(Path('release.json').read_text());assets={x['name']:x for x in d['assets']}
+          for f in Path('package').iterdir():
+              a=assets[f.name]
+              assert a['size']==f.stat().st_size
+              assert a['digest']=='sha256:'+hashlib.sha256(f.read_bytes()).hexdigest(), f.name
+          PY_VERIFY
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest

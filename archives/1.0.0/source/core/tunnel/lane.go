@@ -189,7 +189,7 @@ type lane struct {
 	started                                             time.Time
 	ready                                               atomic.Bool
 	deferredAdmissionTrace                              admissionTraceSampler
-	grantRolloverTrace                                 admissionTraceSampler
+	grantRolloverTrace                                  admissionTraceSampler
 	// Monotonic evidence that this physical carrier completed bootstrap.
 	everReady atomic.Bool
 	// Actor-owned startup evidence, retained while grants are leased by workers.
@@ -274,6 +274,7 @@ type lane struct {
 	bulkControlBlocked                          atomic.Bool
 	controlDebt                                 atomic.Uint64
 	controlWriting                              atomic.Int64
+	controlWriteStarted                         atomic.Int64
 	peerReadNewestPendingAt                     atomic.Int64
 	peerReadPendingBodies                       atomic.Int64
 	unreceivedLocalRecords                      atomic.Int64
