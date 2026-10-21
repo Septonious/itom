@@ -4,6 +4,7 @@ package tunnel
 
 import (
 	"math"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -13,7 +14,8 @@ import (
 func TestV110WorstRaw4GConnectivity(t *testing.T) {
 	t.Setenv("ITOM_HEALTHY_SERVER", "1")
 	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
-	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "2")
+	serverRTT := loadEnvInt(t, "ITOM_LOAD_SERVER_RTT_MS", 20, 0, 1000)
+	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", strconv.Itoa(serverRTT))
 	t.Setenv("ITOM_LOAD_SERVER_MBPS", "1000")
 	t.Setenv("ITOM_LOAD_CLIENT_RTT_MS", "84")
 	t.Setenv("ITOM_LOAD_CLIENT_MBPS", "1")
@@ -47,7 +49,7 @@ func TestV110WorstRaw4GConnectivity(t *testing.T) {
 	if f.targetDials.Load() != 1 || f.carrierExits.unexpected.Load() != 0 {
 		t.Fatal("connectivity replaced its application or carrier")
 	}
-	t.Logf("worst_raw4g useful_mbps_each_direction=%.6f seconds=%.3f completed=%d failed=0 client_down_mbps=1 client_up_mbps=2.5 server_rtt_ms=2 direct_ping_trace_ms=84,63,43,67,23,60,55,56,21,66 field_qualified=false", mbps, seconds, completed)
+	t.Logf("worst_raw4g useful_mbps_each_direction=%.6f seconds=%.3f completed=%d failed=0 client_down_mbps=1 client_up_mbps=2.5 server_rtt_ms=%d direct_ping_trace_ms=84,63,43,67,23,60,55,56,21,66 field_qualified=false", mbps, seconds, completed, serverRTT)
 }
 
 func TestV110AsymmetricFixtureRetainsWireClock(t *testing.T) {

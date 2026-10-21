@@ -43,11 +43,15 @@ def main():
         t=out/variant/'tunnel'
         shutil.copyfile(HERE/'mobile_trace_test.go',t/'model_mobile_trace_test.go')
         shutil.copyfile(HERE/'transitions_test.go',t/'model_transitions_test.go')
+        shutil.copyfile(HERE/'idle_reference_test.go',t/'v110_latency_itomtest_test.go')
+        shutil.copyfile(HERE/'connectivity_reference_test.go',t/'v110_connectivity_itomtest_test.go')
         replace(t/'healthy_endpoints_test.go','p.setMbps(0)','p.setMbps(0)\n\tstartModelMobileTrace(t, p)')
     prov=json.loads((out/'provenance.json').read_text())
     prov['experiment']='useful-delivery model; no production source changed'
     prov['model_revision']=os.environ.get('ITOM_MODEL_REVISION','1')
     prov['model_production']={str(f.relative_to(out/'model')):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted((out/'model').rglob('*.go')) if not f.name.endswith('_test.go')}
     prov['shared_mobile_trace_sha256']=hashlib.sha256((HERE/'mobile_trace_test.go').read_bytes()).hexdigest()
+    prov['shared_fixture_overrides']={name:hashlib.sha256((out/'model/tunnel'/name).read_bytes()).hexdigest() for name in ('model_mobile_trace_test.go','model_transitions_test.go','v110_latency_itomtest_test.go','v110_connectivity_itomtest_test.go')}
+    prov['server_rtt_default_ms']=20
     (out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')
 if __name__=='__main__':main()

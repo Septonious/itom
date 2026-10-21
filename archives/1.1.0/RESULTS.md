@@ -1,5 +1,7 @@
 # Workload-aware delivery model: laboratory decisions
 
+Current deployment correction (2026-10-21): primary tests now use configurable server network RTT, default20ms. The measurements below used2ms unless explicitly noted. They remain historical, not20ms measurements. See [current server-path comparison](experiments/delivery-model/SERVER_PATH_RESULTS.md). Production controller timing is measured; no server propagation constant changed.
+
 Current testing source is staged by stage.py as ITOM1.1.0 DEV3, package org.itom.client/versionCode10103. It is experimental and not a stable/field-qualified release. Final1.0.0 remains RC2. No historical qualification threshold or physical accounting rule is reduced.
 
 ## Design implemented

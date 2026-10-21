@@ -14,4 +14,6 @@ The new controller separates sparse scheduling from sustained bulk admission. Bu
 
 The APK uses a temporary debug signer because persistent Actions signing secrets were absent. In-place update compatibility is not assured; do not clear wallet data to work around it.
 
-The source files match the staged DEV3 build recipe at922545c0fe3860693fc9a4c95e9cee73145cef69; Linux amd64 was independently reproduced bit-for-bit. The frozen [DEV2 checkpoint](checkpoints/DEV2/README.md) supplies immutable inputs to the experiment recipes, avoiding recursive application of the model. [Development history](DEVELOPMENT_HISTORY.md), earlier results and rejected patches remain available.
+The production source files match the staged DEV3 build recipe at922545c0fe3860693fc9a4c95e9cee73145cef69; subsequent test-only corrections make the server path configurable with a20ms default. The original build manifest remains the record of the actual built snapshot; Linux amd64 was independently reproduced bit-for-bit. The frozen [DEV2 checkpoint](checkpoints/DEV2/README.md) supplies immutable inputs to the experiment recipes, avoiding recursive application of the model. [Development history](DEVELOPMENT_HISTORY.md), earlier results and rejected patches remain available.
+
+Current primary comparisons use a20ms server-to-IMAP network RTT, independent of client propagation and provider processing. Earlier2ms measurements remain historical and cannot establish performance on this deployment. The controller learns measured feedback; neither2ms nor20ms is a production latency constant.

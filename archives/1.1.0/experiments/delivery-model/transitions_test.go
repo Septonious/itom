@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"sort"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -17,7 +18,8 @@ import (
 func TestModelBulkToQuiet(t *testing.T) {
 	t.Setenv("ITOM_HEALTHY_SERVER", "1")
 	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
-	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "2")
+	serverRTT := loadEnvInt(t, "ITOM_LOAD_SERVER_RTT_MS", 20, 0, 1000)
+	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", strconv.Itoa(serverRTT))
 	t.Setenv("ITOM_LOAD_SERVER_MBPS", "1000")
 	t.Setenv("ITOM_LOAD_CLIENT_MBPS", "500")
 	f := newProductionSupervisorFixtureAccounts(t, 10)
@@ -44,7 +46,7 @@ func TestModelBulkToQuiet(t *testing.T) {
 			mean += v
 		}
 		mean /= float64(count)
-		b, _ := json.Marshal(map[string]any{"variant": os.Getenv("ITOM_EXPERIMENT_LABEL"), "phase": phase, "samples_ms": samples, "client_rtt_start_ms": directStart, "client_rtt_end_ms": directEnd, "mean_ms": mean, "p95_ms": ordered[len(ordered)*95/100], "max_ms": ordered[len(ordered)-1], "failed": 0, "field_qualified": false})
+		b, _ := json.Marshal(map[string]any{"variant": os.Getenv("ITOM_EXPERIMENT_LABEL"), "phase": phase, "samples_ms": samples, "server_rtt_ms": serverRTT, "client_rtt_start_ms": directStart, "client_rtt_end_ms": directEnd, "mean_ms": mean, "p95_ms": ordered[len(ordered)*95/100], "max_ms": ordered[len(ordered)-1], "failed": 0, "field_qualified": false})
 		t.Log("MODEL_TRANSITION " + string(b))
 	}
 	report("before-bulk", 12)

@@ -892,5 +892,6 @@
     "tools/test_transport_qualification.py": "7f3d57dcb6cf110410e19271202b464ad263538dd7085e33f4cb1539e81c3373",
     "tools/transport_qualification.py": "47d80a6b02a95a5fc5a40a94e87f0a36bdb073da264972420e1e2b562a9550f2",
     "MODEL_BUILD_PROVENANCE.json": "f4638d4a4fa84fd1b6dcb7dbaeab0c01846be68f65f5260ff8529ffc9b579bd9"
-  }
+  },
+  "scope": "Historical built snapshot from922545; subsequent test-only server20ms fixture overlay is recorded separately. Native production source unchanged."
 }

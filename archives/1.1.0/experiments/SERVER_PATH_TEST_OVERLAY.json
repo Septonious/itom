@@ -1,0 +1,10 @@
+{
+  "built_source_manifest": "SOURCE_INTEGRITY_DEV3.json",
+  "native_production_unchanged": true,
+  "default_server_rtt_ms": 20,
+  "test_files": {
+    "core/tunnel/model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+    "core/tunnel/v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+    "core/tunnel/v110_latency_itomtest_test.go": "8d31aca58ef4631a6d1b48c1627021e5390ee8e7fd0c2cb91756ef36bd7fe7fa"
+  }
+}

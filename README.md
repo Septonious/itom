@@ -6,4 +6,4 @@ Final1.0.0 uses RC2 transport, selected by the user after later builds failed to
 
 [All later changes and evaluation](archives/post-rc2/POST_RC2_EVALUATION.md) · [ITOM1.1.0 transport rework plan](docs/1.1.0/TRANSPORT_REWORK_PLAN.md) · [Related protocol research](docs/1.1.0/RELATED_PROTOCOL_RESEARCH.md)
 
-1.1.0 development targets the lowest practical idle/light-load RTT on the planned2ms server route, without sacrificing RC2 throughput or stability. Experiments and their failures remain separate from final1.0.0. Historical archives/tags are preserved.
+1.1.0 development targets the lowest practical idle/light-load RTT on the current20ms server route, using measured timings, without sacrificing RC2 throughput or stability. Experiments and their failures remain separate from final1.0.0. Historical archives/tags are preserved.

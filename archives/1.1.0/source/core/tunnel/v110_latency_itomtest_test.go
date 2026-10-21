@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"sort"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -16,7 +17,8 @@ import (
 func TestV110IdleLightReference(t *testing.T) {
 	t.Setenv("ITOM_HEALTHY_SERVER", "1")
 	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
-	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", "2")
+	serverRTT := loadEnvInt(t, "ITOM_LOAD_SERVER_RTT_MS", 20, 0, 1000)
+	t.Setenv("ITOM_LOAD_SERVER_RTT_MS", strconv.Itoa(serverRTT))
 	t.Setenv("ITOM_LOAD_CLIENT_MBPS", "500")
 	t.Setenv("ITOM_LOAD_SERVER_MBPS", "1000")
 	t.Setenv("ITOM_LOAD_LITERAL_PLUS", "1")
@@ -53,7 +55,7 @@ func TestV110IdleLightReference(t *testing.T) {
 			mean += v
 		}
 		mean /= float64(len(samples))
-		b, _ := json.Marshal(map[string]any{"variant": os.Getenv("ITOM_EXPERIMENT_LABEL"), "phase": phase, "client_rtt_ms": os.Getenv("ITOM_LOAD_CLIENT_RTT_MS"), "server_rtt_ms": 2, "samples_ms": samples, "mean_ms": mean, "p50_ms": sorted[len(sorted)/2], "p95_ms": sorted[len(sorted)*95/100], "max_ms": sorted[len(sorted)-1], "failures": 0, "accounts": 10, "request_pause_ms": loadEnvInt(t, "ITOM_V110_IDLE_PAUSE_MS", 150, 1, 10000), "field_qualified": false})
+		b, _ := json.Marshal(map[string]any{"variant": os.Getenv("ITOM_EXPERIMENT_LABEL"), "phase": phase, "client_rtt_ms": os.Getenv("ITOM_LOAD_CLIENT_RTT_MS"), "server_rtt_ms": serverRTT, "samples_ms": samples, "mean_ms": mean, "p50_ms": sorted[len(sorted)/2], "p95_ms": sorted[len(sorted)*95/100], "max_ms": sorted[len(sorted)-1], "failures": 0, "accounts": 10, "request_pause_ms": loadEnvInt(t, "ITOM_V110_IDLE_PAUSE_MS", 150, 1, 10000), "field_qualified": false})
 		t.Log("V110_RESULT " + string(b))
 	}
 	report("idle")

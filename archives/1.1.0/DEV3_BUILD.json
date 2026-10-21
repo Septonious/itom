@@ -16,7 +16,8 @@
       "useful_mbps_each_direction": 0.324402,
       "seconds": 30.303,
       "completed": 75,
-      "failed": 0
+      "failed": 0,
+      "server_rtt_ms": 2
     }
   },
   "android": {
@@ -97,5 +98,6 @@
   "downloads": {
     "apk": "https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12360365671",
     "linux": "https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12358599228"
-  }
+  },
+  "post_build_changes": "Test-only configurable20ms server path; original APK/native source and hashes unchanged. New performance results are separate."
 }
