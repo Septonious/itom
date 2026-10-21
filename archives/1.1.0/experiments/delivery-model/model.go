@@ -39,6 +39,19 @@ type modelFeedback struct {
 	SupplyLimited bool          // original bulk is waiting for physical publication
 }
 
+// Placement is set only after the existing grant selection succeeds. An
+// in-flight APPEND may be network-limited even before its completion is known;
+// it must not be confused with a range still waiting for physical permission.
+func (d *deliveryController) modelSupplyLimited() bool {
+	var waiting uint64
+	for _, r := range d.ranges {
+		if !r.fast && !r.published && r.carrier == "" {
+			waiting += r.end - r.start
+		}
+	}
+	return d.bulk > 0 && waiting > d.bulk/4
+}
+
 func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 	window := min(uint64(deliveryMaxWindow), max(uint64(deliveryMinWindow), f.Window))
 	progress := f.Delivered > m.delivered

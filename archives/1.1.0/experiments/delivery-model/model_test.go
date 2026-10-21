@@ -190,3 +190,28 @@ func TestThroughputModelHighWaterDoesNotSurviveDrainedBulk(t *testing.T) {
 		t.Fatal("bulk high-water leaked into the quiet phase", got, m.mode)
 	}
 }
+
+func TestThroughputModelSupplyWaitExcludesAdmittedAPPENDs(t *testing.T) {
+	d := newDeliveryController()
+	r := &deliveryRange{key: deliveryKey{1, 0}, end: 1 << 20, carrier: "a01"}
+	d.ranges[r.key] = r
+	d.bulk = 1 << 20
+	if d.modelSupplyLimited() {
+		t.Fatal("unfinished but physically admitted APPEND was labeled quota-limited")
+	}
+	r.carrier = ""
+	r.published = true
+	if d.modelSupplyLimited() {
+		t.Fatal("unknown published debt was labeled unstarted quota wait")
+	}
+	r.published = false
+	if !d.modelSupplyLimited() {
+		t.Fatal("range awaiting grant was missed")
+	}
+	r.carrier = "a01"
+	fast := &deliveryRange{key: deliveryKey{3, 0}, end: 128 << 10, fast: true}
+	d.ranges[fast.key] = fast
+	if d.modelSupplyLimited() {
+		t.Fatal("short reservation became bulk supply pressure")
+	}
+}

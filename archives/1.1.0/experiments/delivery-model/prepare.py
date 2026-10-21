@@ -22,8 +22,7 @@ def main():
     replace(path,old,'FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)}, RateAt: d.lastRateAt, RTTAt: now, RTT: minACK})\n\td.policy.mode, d.policy.capacityMbps = d.model.mode, d.model.bandwidth\n\td.policy.delivered, d.policy.lastProgress = d.model.delivered, d.model.lastProgress\n\td.policy.probes = d.model.probes')
     if os.environ.get('ITOM_MODEL_REVISION','1')=='2':
         replace(path,'wake: make(chan struct{}), window: deliveryInitialWindow','model: throughputModel{retainWindow:true}, wake: make(chan struct{}), window: deliveryInitialWindow')
-        replace(path,'var minACK time.Duration','var minACK time.Duration\n\tvar unpublished uint64\n\tfor _, r := range d.ranges { if !r.fast && !r.published { unpublished += r.end-r.start } }')
-        replace(path,'RTT: minACK})','RTT: minACK, SupplyLimited: unpublished > d.bulk/4})')
+        replace(path,'RTT: minACK})','RTT: minACK, SupplyLimited: d.modelSupplyLimited()})')
     # All variants get byte-identical dynamic mobile fixture code, not a
     # candidate-only workload or a reset of the shared serialization clock.
     for variant in ('rc2','v110','model'):
