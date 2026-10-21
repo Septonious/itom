@@ -1,0 +1,11 @@
+# ITOM 1.1.0 development
+
+Isolated baseline: the frozen final 1.0.0 / original RC2 transport. Development source: `source/`; Android remains `org.itom.client`, version code10101. This is DEV1, **not a qualified release**. No 1.0.0 source or acceptance threshold is changed.
+
+First experiments replace the interaction of exponential hot polling with a demand-scoped notification search, and introduce per-socket quiet/burst accumulation timing. Bulk batch, stream credit, physical quota, journal, wallet, recovery and liveness policies remain the reference policies. The observed transport forwards optional scheduling capabilities so diagnostics do not silently change the controller.
+
+Local first-stage demand-only screening: three AB/BA/AB pairs, ten accounts, independent 2ms server route and 5/40ms client routes, actual supervisors/TLS/IMAP/journals. All12 invocations completed their original sockets. At5ms pooled idle mean60.2→50.9ms and light133.0→64.1ms; at40ms idle124.9→171.3ms worsened while light133.5→121.3ms improved. The40ms tradeoff blocks acceptance of this prototype; it is retained for investigation, not called a universal improvement. Full logs will accompany the experiment report.
+
+Calibration found that the shared load fixture replaced its configured phone bandwidth with unlimited when the legacy aggregate cap was absent. The new shared fixture preserves the explicit path in that case; explicit client speed changes still affect only the client route. Both reference and candidate receive the exact same fixture correction. The existing local host has two CPU cores of quota and runs both endpoints plus the provider; earlier comparisons used four-core CI. CPU profiles show substantial carrier/cleanup parsing and hashing, but do not establish CPU as the only cause of timeouts.
+
+The workflow performs full correctness/race checks and matched fresh/retained SINGLE/4/MULTI, binary capabilities and20ms server-route sensitivity. It keeps the original loaded probes/tails/sockets and requires100Mbps in each direction. Results include reference failures; no partial rate is called sustained throughput. Stable publication and field-qualified claims are blocked pending evidence and real Android/Rambler confirmation.

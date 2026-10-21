@@ -1,0 +1,52 @@
+{"Time":"2026-10-17T00:09:03.038764887Z","Action":"start","Package":"itom.local/core/datapath"}
+{"Time":"2026-10-17T00:09:03.059450762Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace"}
+{"Time":"2026-10-17T00:09:03.059678184Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"=== RUN   TestV1EarlyNackSurvivesWriterAndVisibilityGrace\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.059801735Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Output":"--- PASS: TestV1EarlyNackSurvivesWriterAndVisibilityGrace (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.059831023Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackSurvivesWriterAndVisibilityGrace","Elapsed":0}
+{"Time":"2026-10-17T00:09:03.059852453Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe"}
+{"Time":"2026-10-17T00:09:03.05987874Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"=== RUN   TestV1NackDuringVisibilityGraceNeedsNoSecondProbe\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.059929219Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Output":"--- PASS: TestV1NackDuringVisibilityGraceNeedsNoSecondProbe (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.059938359Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1NackDuringVisibilityGraceNeedsNoSecondProbe","Elapsed":0}
+{"Time":"2026-10-17T00:09:03.059970476Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal"}
+{"Time":"2026-10-17T00:09:03.0599944Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"=== RUN   TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.060591686Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Output":"--- PASS: TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.06064892Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1EarlyNackDoesNotConvertDefinitivelyUnsentOriginal","Elapsed":0}
+{"Time":"2026-10-17T00:09:03.060661849Z","Action":"run","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt"}
+{"Time":"2026-10-17T00:09:03.060832982Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Output":"=== RUN   TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.061009193Z","Action":"output","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Output":"--- PASS: TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:03.061017264Z","Action":"pass","Package":"itom.local/core/datapath","Test":"TestV1ReceiptCancelsRetainedNackWithoutRefundingPhysicalDebt","Elapsed":0}
+{"Time":"2026-10-17T00:09:03.061255606Z","Action":"output","Package":"itom.local/core/datapath","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.063618912Z","Action":"output","Package":"itom.local/core/datapath","Output":"ok  \titom.local/core/datapath\t1.024s\n"}
+{"Time":"2026-10-17T00:09:04.063677422Z","Action":"pass","Package":"itom.local/core/datapath","Elapsed":1.025}
+{"Time":"2026-10-17T00:09:04.803260767Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-17T00:09:04.82332525Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity"}
+{"Time":"2026-10-17T00:09:04.823407118Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"=== RUN   TestRC2BulkFeedbackEscapesStalledAffinity\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.823839576Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"--- PASS: TestRC2BulkFeedbackEscapesStalledAffinity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.823846252Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Elapsed":0}
+{"Time":"2026-10-17T00:09:04.823943771Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion"}
+{"Time":"2026-10-17T00:09:04.823948135Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"=== RUN   TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.824017185Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"--- PASS: TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.824021784Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Elapsed":0}
+{"Time":"2026-10-17T00:09:04.82404763Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt"}
+{"Time":"2026-10-17T00:09:04.824051111Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"=== RUN   TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.824157662Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"--- PASS: TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.824161837Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Elapsed":0}
+{"Time":"2026-10-17T00:09:04.824739703Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries"}
+{"Time":"2026-10-17T00:09:04.824743889Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries","Output":"=== RUN   TestRev10ControlReplacementRetryBoundaries\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.824793914Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success"}
+{"Time":"2026-10-17T00:09:04.82479762Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success","Output":"=== RUN   TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.90664213Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success","Output":"--- PASS: TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success (0.08s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.90670685Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/temporary_EOF_then_success","Elapsed":0.08}
+{"Time":"2026-10-17T00:09:04.906720435Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried"}
+{"Time":"2026-10-17T00:09:04.906726745Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried","Output":"=== RUN   TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.907011167Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried","Output":"--- PASS: TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.907023632Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/permanent_failure_is_not_retried","Elapsed":0}
+{"Time":"2026-10-17T00:09:04.907118407Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff"}
+{"Time":"2026-10-17T00:09:04.907123568Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff","Output":"=== RUN   TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.927753016Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff","Output":"--- PASS: TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.927794691Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries/budget_cancels_backoff","Elapsed":0.02}
+{"Time":"2026-10-17T00:09:04.927805385Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries","Output":"--- PASS: TestRev10ControlReplacementRetryBoundaries (0.10s)\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:04.927809442Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRev10ControlReplacementRetryBoundaries","Elapsed":0.1}
+{"Time":"2026-10-17T00:09:04.932801286Z","Action":"output","Package":"itom.local/core/tunnel","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-17T00:09:05.935658783Z","Action":"output","Package":"itom.local/core/tunnel","Output":"ok  \titom.local/core/tunnel\t1.132s\n"}
+{"Time":"2026-10-17T00:09:05.935725159Z","Action":"pass","Package":"itom.local/core/tunnel","Elapsed":1.1320000000000001}

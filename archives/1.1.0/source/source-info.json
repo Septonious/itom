@@ -1,0 +1,11 @@
+{
+  "version": "1.1.0",
+  "release": "DEV1",
+  "revision": "itom-1-1-0-dev1",
+  "archive_name": "ITOM-1.1.0-DEV1-sources.zip",
+  "baseline": "v1.0.0-rc2 @ a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
+  "qualification": "Experimental development; performance and field qualification pending",
+  "android_version_name": "1.1.0-dev1",
+  "android_version_code": 10101,
+  "android_application_id": "org.itom.client"
+}

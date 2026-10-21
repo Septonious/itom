@@ -1,0 +1,866 @@
+{
+  "release_ready": true,
+  "all_required_tests_passed": true,
+  "revision": "transport-rework3-rev4",
+  "core_runtime_sha256": "e3d7a1e73123913e0971676fc4de6c3b2bc3d68da2a7f7dffe93cb5dd5ecc8af",
+  "qualification_source_sha256": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+  "core": {
+    "source_revision": "transport-rework3-rev4",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": false,
+    "stage": "complete",
+    "started_utc": "2026-10-15T00:41:21Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "core_runtime_sha256": "e3d7a1e73123913e0971676fc4de6c3b2bc3d68da2a7f7dffe93cb5dd5ecc8af",
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+    "unstable_survival_tests": "enabled (mandatory; SKIP fails the Go gate)",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 821,
+      "failed": 0,
+      "skipped": 0,
+      "skipped_optional": []
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "android": {
+    "itom": "0.9.2",
+    "source_revision": "transport-rework3-rev4",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-15T01:14:11Z",
+    "jdk_source": "local JDK 17",
+    "android_sdk": "existing SDK 37",
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "9cba9668d880c68dfa569b4c336ecdd265ca95210c63a9ea894418b7a2e232d4",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "openjdk version \"17.0.16\" 2025-07-15\nOpenJDK Runtime Environment Temurin-17.0.16+8 (build 17.0.16+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.16+8 (build 17.0.16+8, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 71,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter",
+          "locations": [
+            {
+              "file": "/workspace/work/rev4/source/itom/android/app/src/main/java/org/itom/client/Theme.kt",
+              "line": "111",
+              "column": "63"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client.dev.rev7",
+      "version_code": 9204,
+      "version_name": "0.9.2-Rev4-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "9a0fd635a4e1f1662df17078562744677348b9cfeb32f59338172f70d59f273e",
+      "lib/armeabi-v7a/libgojni.so": "95f9479999b951b39146cdf8cec9af378c7e2c2f20f180955b7dcab9f0ed134e"
+    },
+    "status": "passed",
+    "apk": "ITOM-0.9.2-Rev4-debug.apk",
+    "sha256": "23a6e7272ec51d31dedf2ef66f182bbecc5527e303acc33af9c448adfb63345a",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "field_suites": [
+    {
+      "schema": 1,
+      "classification": "FIELD_FAILURE_LABORATORY_REPRODUCTION",
+      "runtime_sha256": "0c346937cb91797dbf5e3cb852489bfb621d1647379023d95bcd98514fb5d031",
+      "source_sha256": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+      "go": "go version go1.27.1 linux/amd64",
+      "release": {
+        "version": "0.9.2",
+        "release": "Rev4",
+        "revision": "transport-rework3-rev4",
+        "archive_name": "ITOM-0.9.2-Rev4-sources.zip",
+        "baseline": "0.9.2-Rev3",
+        "qualification": "transport recovery rework; field-failure regression suite required; real-provider qualification remains separate",
+        "android_version_name": "0.9.2-Rev4",
+        "android_version_code": 9204,
+        "android_application_id": "org.itom.client.dev.rev7"
+      },
+      "real_provider_tested": false,
+      "android_device_tested": false,
+      "tests_required": [
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue"
+      ],
+      "server_added_commit_delay_ms": 0,
+      "criteria": "All cases execute and pass; verified application payloads, bounded startup/recovery, no unexpected carrier exits.",
+      "runs": [
+        {
+          "repeat": 1,
+          "exit_code": 0,
+          "elapsed_seconds": 137.202,
+          "source_before": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "source_after": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "log": "repeat-1.jsonl",
+          "log_sha256": "a3b5b48b4db1c0f3a3c7030bd9614c60c6d5cf81566229bd8cbf5020f41ebe8d",
+          "summary": {
+            "passed": [
+              "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+              "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+              "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+              "TestRev4HTTPPhasesKeepMessagesUsable",
+              "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+              "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+              "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+              "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+              "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+              "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+              "TestRev4ParallelApplicationStartupOnMobilePath",
+              "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+              "TestRev4RetainedStateMixedTrafficAndNextTransfer"
+            ],
+            "failed": [],
+            "skipped": [],
+            "missing_required": []
+          },
+          "passed": true
+        },
+        {
+          "repeat": 2,
+          "exit_code": 0,
+          "elapsed_seconds": 138.23,
+          "source_before": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "source_after": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "log": "repeat-2.jsonl",
+          "log_sha256": "838c1064a6d5b7a364471f56000ab2118131abed0928d8199589ae44ef230ed1",
+          "summary": {
+            "passed": [
+              "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+              "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+              "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+              "TestRev4HTTPPhasesKeepMessagesUsable",
+              "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+              "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+              "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+              "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+              "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+              "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+              "TestRev4ParallelApplicationStartupOnMobilePath",
+              "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+              "TestRev4RetainedStateMixedTrafficAndNextTransfer"
+            ],
+            "failed": [],
+            "skipped": [],
+            "missing_required": []
+          },
+          "passed": true
+        },
+        {
+          "repeat": 3,
+          "exit_code": 0,
+          "elapsed_seconds": 136.181,
+          "source_before": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "source_after": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "log": "repeat-3.jsonl",
+          "log_sha256": "1d9c1b07f8d5a463bcb7366c5f621b8df9913e1905379cbe0a238eaf5343b15e",
+          "summary": {
+            "passed": [
+              "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+              "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+              "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+              "TestRev4HTTPPhasesKeepMessagesUsable",
+              "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+              "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+              "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+              "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+              "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+              "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+              "TestRev4ParallelApplicationStartupOnMobilePath",
+              "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+              "TestRev4RetainedStateMixedTrafficAndNextTransfer"
+            ],
+            "failed": [],
+            "skipped": [],
+            "missing_required": []
+          },
+          "passed": true
+        }
+      ],
+      "all_cases_passed": true
+    },
+    {
+      "schema": 1,
+      "classification": "FIELD_FAILURE_LABORATORY_REPRODUCTION",
+      "runtime_sha256": "0c346937cb91797dbf5e3cb852489bfb621d1647379023d95bcd98514fb5d031",
+      "source_sha256": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+      "go": "go version go1.27.1 linux/amd64",
+      "release": {
+        "version": "0.9.2",
+        "release": "Rev4",
+        "revision": "transport-rework3-rev4",
+        "archive_name": "ITOM-0.9.2-Rev4-sources.zip",
+        "baseline": "0.9.2-Rev3",
+        "qualification": "transport recovery rework; field-failure regression suite required; real-provider qualification remains separate",
+        "android_version_name": "0.9.2-Rev4",
+        "android_version_code": 9204,
+        "android_application_id": "org.itom.client.dev.rev7"
+      },
+      "real_provider_tested": false,
+      "android_device_tested": false,
+      "tests_required": [
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue"
+      ],
+      "server_added_commit_delay_ms": 12,
+      "criteria": "All cases execute and pass; verified application payloads, bounded startup/recovery, no unexpected carrier exits.",
+      "runs": [
+        {
+          "repeat": 1,
+          "exit_code": 0,
+          "elapsed_seconds": 156.074,
+          "source_before": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "source_after": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+          "log": "repeat-1.jsonl",
+          "log_sha256": "bac79d2f683727e4b627be57ba8eba1ed6c82f1a8ae09d6a99b082c3497d7d19",
+          "summary": {
+            "passed": [
+              "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+              "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+              "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+              "TestRev4HTTPPhasesKeepMessagesUsable",
+              "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+              "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+              "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+              "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+              "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+              "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+              "TestRev4ParallelApplicationStartupOnMobilePath",
+              "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+              "TestRev4RetainedStateMixedTrafficAndNextTransfer"
+            ],
+            "failed": [],
+            "skipped": [],
+            "missing_required": []
+          },
+          "passed": true
+        }
+      ],
+      "all_cases_passed": true
+    }
+  ],
+  "correctness": {
+    "native-tests": {
+      "passed": [
+        "TestDNSPersistsMappingsAndBlocksBeforeAllocation",
+        "TestNativeTCPBridgeConcurrentHalfCloseAndCancellation"
+      ],
+      "failed": [],
+      "skipped": [],
+      "missing_required": [],
+      "log_sha256": "be4aa098bdd89a1388124f3826c628aecbdbf9b0b15728b270615d0890873272"
+    },
+    "native-imap-bridge": {
+      "passed": [
+        "TestNativeIMAPTCPBridgeSingleMultiConsecutive"
+      ],
+      "failed": [],
+      "skipped": [],
+      "missing_required": [],
+      "log_sha256": "582d8e2da27cfc7c886a068d19545019a7abeeb976f3f215e38ff32fac712efc"
+    },
+    "race-accounting": {
+      "passed": [
+        "TestAcknowledgeDistinguishesMissingGrantFromStateDivergence",
+        "TestAdaptiveCreditGrowsSingleStreamWithoutAllocatingPerStreamBudgets",
+        "TestAdmissionUsesExactOddCredit",
+        "TestAtomicLocalWriterLifecycleKeepsUnknownDebtAndUsesTwoCommits",
+        "TestAtomicLocalWriterLifecycleKeepsUnknownDebtAndUsesTwoCommits/0",
+        "TestAtomicLocalWriterLifecycleKeepsUnknownDebtAndUsesTwoCommits/1",
+        "TestAtomicLocalWriterLifecycleKeepsUnknownDebtAndUsesTwoCommits/2",
+        "TestAtomicOutcomeAndGrantCloseRecoverTogether",
+        "TestAtomicOutcomeAndGrantCloseRecoverTogether/false",
+        "TestAtomicOutcomeAndGrantCloseRecoverTogether/true",
+        "TestAtomicWriterLostStartReplyNeverAuthorizesOrRefunds",
+        "TestAtomicWriterLostStartReplyNeverAuthorizesOrRefunds/false",
+        "TestAtomicWriterLostStartReplyNeverAuthorizesOrRefunds/true",
+        "TestAutonomousPumpsCarryTCPBothWaysOverTLSIMAP",
+        "TestBatchResidenceIncludesExistingQueueAge",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/empty",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/forged_body",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/oversized",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/reused_attempt",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/reused_locator",
+        "TestBatchedObservationRejectsForgedAndAliasedEvidenceAtomically/stale_run",
+        "TestBatchedProofsShareCommitsAndRollbackInvalidRefund",
+        "TestBatchedRefundCommitFailureAndLostAcknowledgementRecoverAtomically",
+        "TestBatchedRefundCommitFailureAndLostAcknowledgementRecoverAtomically/before_commit",
+        "TestBatchedRefundCommitFailureAndLostAcknowledgementRecoverAtomically/lost_acknowledgement",
+        "TestBoundedAdmissionAndCursorCopies",
+        "TestCombinedReceiveProgressReordersAndRetainsPhysicalDebt",
+        "TestCommitFailurePoisonsAndLostAcknowledgementRetainsIntent",
+        "TestCommitFailurePoisonsAndLostAcknowledgementRetainsIntent/false",
+        "TestCommitFailurePoisonsAndLostAcknowledgementRetainsIntent/true",
+        "TestCompatibleProfileRetainsDirtyDebtAndRejectsForeignScope",
+        "TestCompleteInventoryAbsenceReleasesOnlyLocalPhysicalAttempt",
+        "TestConcurrentReservationsCannotOversubscribe",
+        "TestConcurrentTinyCollectorsOwnEveryJobExactlyOnce",
+        "TestDATAOverTLSIMAPToRealTCPAndBack",
+        "TestDataFolderExtensionPreservesDirtyDebtAndLegacyIdentity",
+        "TestDefaultExitRejectsLoopbackBeforeDial",
+        "TestDuplicateDialCannotTerminalizeOriginalOrCloseAdoptedSocket",
+        "TestDurableGrantRestartAndPerOwnerAdmission",
+        "TestEnvelopeSpendPreservesUncertainDebtAndRestartDescriptor",
+        "TestExclusiveLockAndChangedConfiguration",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:0.0.0.0",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:127.0.0.1",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:169.254.169.254",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:192.168.1.1",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:198.18.0.1",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/::ffff:224.0.0.1",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/localhost",
+        "TestExitResolverMappedIPv4DialsAndPreservesPolicy/mapped.example",
+        "TestField68BatchBodyMatchesCanonicalVerification",
+        "TestField68BatchBodyMatchesCanonicalVerification/altered_DATA_rejected_by_digest",
+        "TestField68BatchBodyMatchesCanonicalVerification/binary",
+        "TestField68BatchBodyMatchesCanonicalVerification/canonical",
+        "TestField68BatchBodyMatchesCanonicalVerification/incorrect_encoded_size_rejected",
+        "TestField68BatchBodyMatchesCanonicalVerification/legacy_canonical_path_remains_valid",
+        "TestField68BatchBodyMatchesCanonicalVerification/rewritten",
+        "TestField68BatchBodyMatchesCanonicalVerification/wrong_grant_rejected",
+        "TestField77ProviderAppendedCRLFDoesNotRejectAuthenticatedData",
+        "TestField77RewriteDoesNotBypassAuthenticatedDigest",
+        "TestFieldControlSnapshotsBoundBurstAndPreserveLatest",
+        "TestFieldExpiredStreamKeepsSiblingAndPhysicalDebt",
+        "TestFieldResetRouteSurvivesSocketCloseUntilPeerAck",
+        "TestFieldStatusOvertakingDataDoesNotAmplifyPendingAppend",
+        "TestFieldUnsentGrantHandoffsDoNotConsumePhysicalAttempts",
+        "TestFinalRev3LostCreditRecoversAtInteractiveReserveBoundary",
+        "TestFinalRev3UnpublishedWorkDoesNotSolicitRepairOrPeerCredit",
+        "TestFinalRev3WriterIndexSurvivesEarlyReceiptAndDuplicateCompletion",
+        "TestFrameInfoDoesNotCopyOrExposePayload",
+        "TestHeldByOriginKeepsUnprovedRemoteDebt",
+        "TestIdleReceiverRecoversLostInitialCreditOnDemand",
+        "TestIdleStreamEmitsNoPeriodicStatus",
+        "TestIntentStartOnceAndReleaseOnlyAfterConcreteCleanup",
+        "TestJournalCrashChild",
+        "TestJournalSchemaOneUpgradePreservesLocalDebt",
+        "TestLocalUnknownRetainsJournalCharge",
+        "TestLostOnlyDataNACKAndBoundedRepairs",
+        "TestLostStartAcknowledgementNeverReauthorizes",
+        "TestMTUStreamsBecomeBulkEvenWhenEveryFragmentIsAcknowledged",
+        "TestMetadataContainsNoPayloadAndRejectsCorruptBalance",
+        "TestMetadataSharesProtectOtherUser",
+        "TestNackAfterDefinitiveYieldKeepsQueuedOriginalSend",
+        "TestNoAppendWithoutBudgetMatchingBindingAndLiveGeneration",
+        "TestNoAppendWithoutBudgetMatchingBindingAndLiveGeneration/binding",
+        "TestNoAppendWithoutBudgetMatchingBindingAndLiveGeneration/cancelled",
+        "TestNoAppendWithoutBudgetMatchingBindingAndLiveGeneration/local-budget",
+        "TestNoAppendWithoutBudgetMatchingBindingAndLiveGeneration/remote-budget",
+        "TestPendingProgressMergesNewReceiptWithOlderSenderFrontier",
+        "TestPreparedCancelAndDefinitiveNoCommit",
+        "TestProcessDeathPreservesPreparedAndStarted",
+        "TestProcessDeathPreservesPreparedAndStarted/prepared",
+        "TestProcessDeathPreservesPreparedAndStarted/started",
+        "TestProfileDowngradeDeniesByteMessageAndForeignConfigurations",
+        "TestProfileDowngradeDeniesByteMessageAndForeignConfigurations/debt",
+        "TestProfileDowngradeDeniesByteMessageAndForeignConfigurations/debt#01",
+        "TestProfileMigrationAtomicAuditedIdempotentAndBounded",
+        "TestProfileMigrationCrashChild",
+        "TestProfileMigrationProcessDeathAndLostAcknowledgement",
+        "TestProfileMigrationProcessDeathAndLostAcknowledgement/after",
+        "TestProfileMigrationProcessDeathAndLostAcknowledgement/before",
+        "TestProfileMigrationProcessDeathAndLostAcknowledgement/lost-ack",
+        "TestProfileMigrationRejectsCorruptDebt",
+        "TestPumpBatchNonFatalUnknownKeepsLogicalOwnerAlive",
+        "TestPumpBatchesMultipleStreamsWithFixedDeadline",
+        "TestPumpBlockedUploadDoesNotBlockDownload",
+        "TestPumpCumulativeControlSaturationPreservesDataAndOwner",
+        "TestPumpDeferredAdmissionCancellationJoinsWithoutWake",
+        "TestPumpDeferredAdmissionParksUntilWakeAndKeepsSiblingLive",
+        "TestPumpDeferredInitialReturnsWindowWithoutPublishing",
+        "TestPumpFastDataInterruptsBulkCoalescing",
+        "TestPumpNonFatalUnknownKeepsLogicalOwnerAlive",
+        "TestPumpParallelCollectorsDoNotFragmentOneBulkBurst",
+        "TestPumpPartialSocketWritePreservesPrefixAndResetsOnlyStream",
+        "TestPumpRejectsStaleGeneration",
+        "TestPumpReservedFastWorkerBypassesAllBusyBulkWorkers",
+        "TestPumpReservedFastWorkerDoesNotFragmentBulkCoalescing",
+        "TestPumpRetriesDefinitiveCarrierCancellation",
+        "TestPumpSharedCreditLeavesRoomForShortRead",
+        "TestPumpSharedCreditLeavesRoomForShortRead/0",
+        "TestPumpSharedCreditLeavesRoomForShortRead/8192",
+        "TestPumpShortRecordBypassesQueuedBulk",
+        "TestPumpUnknownWriterOutcomeEndsEpochAndJoins",
+        "TestRecoveryPreservesSpentDebtAndRejectsForeignWalletHistory",
+        "TestRemoteBatchInvalidProofNeverBecomesGenericIOError",
+        "TestRemoteConcurrentMixedReservation",
+        "TestRemoteCounterAndAuthorityValidation",
+        "TestRemoteCrashChild",
+        "TestRemoteDescriptorMustMatchSessionBeforeDecrypt",
+        "TestRemoteIndexExactOwnershipRestartAndDeletion",
+        "TestRemoteLocalWriterAPIsCannotReleaseOrAuthorize",
+        "TestRemoteLostCommitAcknowledgement",
+        "TestRemoteLostCommitAcknowledgement/delete",
+        "TestRemoteLostCommitAcknowledgement/descriptor",
+        "TestRemoteLostCommitAcknowledgement/issue",
+        "TestRemoteLostCommitAcknowledgement/release",
+        "TestRemoteMetadataLimitRollbackAndUserIsolation",
+        "TestRemoteObservedSizeAndFailedTransaction",
+        "TestRemoteOpenGrantCleanupDoesNotRenewSpend",
+        "TestRemotePhysicalBindingPreventsDoubleCleanup",
+        "TestRemoteProcessDeathPreservesQuotaAndCleanupPrefix",
+        "TestRemoteProcessDeathPreservesQuotaAndCleanupPrefix/cleaned",
+        "TestRemoteProcessDeathPreservesQuotaAndCleanupPrefix/issued",
+        "TestRemoteReleaseBeforeUsageAndDescriptors",
+        "TestRemoteRestartKeepsUnreportedFullExposure",
+        "TestRemoteUnknownRetainsQuotaAndOnePhysicalAttempt",
+        "TestReorderingShortDeliveryFINAndReceiptBeforeCompletion",
+        "TestResetPreservesPhysicalDebtAndOtherStream",
+        "TestRestartRetainsDescriptorsAndFencesOldSession",
+        "TestRev3BulkAttemptReserveAdmitsShortSibling",
+        "TestRev3ExhaustedRepairDoesNotStopSiblingScheduling",
+        "TestRev3PendingFairInterleavesStreamPrefixes",
+        "TestRev3SpeculationBoundsBulkWithoutFragmentingOrBlockingShort",
+        "TestRev3UnknownPublicationStillAdvertisesAndRetainsDebt",
+        "TestRev3UnpublishedHandoffCannotAdvertiseMissingBytes",
+        "TestRev3UnpublishedRepairDoesNotConsumePhysicalRetryBudget",
+        "TestRev4AuthenticatedNACKRechecksParkedDelivery",
+        "TestRev4ReorderedOfferDoesNotRenewRetiredAuthority",
+        "TestRev4RetiredOfferBoundKeepsReplayFencedAfterPruning",
+        "TestRev4RunnableTurnPreservesDebtAndAuthenticatedRepair",
+        "TestRev4ShortRecoveryNeedsNACKAndDoesNotAccelerateBulk",
+        "TestScenarioEngine",
+        "TestScenarioFlow",
+        "TestScenarioPump",
+        "TestScenarioStatus",
+        "TestScopeDigestAndUIDValidityRejectForeignCleanup",
+        "TestSizeMatchesPhysicalEncoding",
+        "TestSocketCopyIdentifiesReadWriteEOFAndPartialBytes",
+        "TestSpendDedupFenceRestartAndFinalAck",
+        "TestStartLocalAttemptLostReplyKeepsExposureWithoutLeakingPermission",
+        "TestStartLocalAttemptLostReplyKeepsExposureWithoutLeakingPermission/false",
+        "TestStartLocalAttemptLostReplyKeepsExposureWithoutLeakingPermission/true",
+        "TestStartLocalAttemptScopeRollbackAndExactClosedGrant",
+        "TestStoppedExitClosesUnadoptedSuccess",
+        "TestTenAccountsSharedByBothUsers",
+        "TestTerminalRetriesAreBoundedAndLateAckPreservesDebt",
+        "TestTinySetupPriorityStillServesTLSAndBulk",
+        "TestTrafficClassFragmentedBurstAndAuthenticatedDrain",
+        "TestUnifiedLocalAndRemoteBudgetsOnTenAccounts",
+        "TestUnknownCompletionProbesWithoutRefundOrBlindRetry",
+        "TestUnknownRestartRetainsDebtAndRejectsOldWriter",
+        "TestWalletRejectsCrossScopeAndConflictingGrant"
+      ],
+      "failed": [],
+      "skipped": [],
+      "missing_required": [],
+      "log_sha256": "7c7d80d1a63a1dccaed4638f3f6584f5a14658fb1dc8d158ae5f5d455cae28bd"
+    },
+    "race-recovery": {
+      "passed": [
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestStreamDispatchCannotBypassCarrierActivation"
+      ],
+      "failed": [],
+      "skipped": [],
+      "missing_required": [],
+      "log_sha256": "ba64463a31701bc8be68b4ccc59880a7cc51f0466bb5c2cdcc1f7ee75fa04fcb"
+    }
+  },
+  "qualification": {
+    "all_lab_cases_passed": true,
+    "classification": "LABORATORY",
+    "field_qualified": false,
+    "criteria": {
+      "nominal_upload_mbps": 100,
+      "nominal_download_mbps": 100,
+      "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+      "tolerance_percent": 10,
+      "useful_upload_mbps_min": 90,
+      "useful_download_mbps_min": 90,
+      "all_loaded_rtt_ns_strictly_below": 1100000000,
+      "probe_timeouts": 0,
+      "missed_probes": 0,
+      "tail_seconds": 30
+    },
+    "source_sha256": "566fc336bf911f914ac737443c5660c11fdaca02d04132abe4a450162ede7a9c",
+    "cases": [
+      {
+        "name": "single-1",
+        "ok": true,
+        "log_sha256": "dafe313a0b6b0205b08b1e39b9e39a7bcf3b5fed6d5604959f448c011c0ac010",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "147.666",
+          "download_mbps": "97.810",
+          "rtt_samples": "30",
+          "p50_ms": "319",
+          "p95_ms": "434",
+          "max_ms": "466",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "137.564",
+          "download_mbps": "99.580"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "97.810295",
+          "max_rtt_ns": "466251483",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      },
+      {
+        "name": "single-2",
+        "ok": true,
+        "log_sha256": "360256a87ead41d2311fdd6013333372c6924fa99c0e910453454ad235ebf36a",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "154.285",
+          "download_mbps": "90.116",
+          "rtt_samples": "30",
+          "p50_ms": "322",
+          "p95_ms": "454",
+          "max_ms": "513",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "154.560",
+          "download_mbps": "90.064"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "90.063940",
+          "max_rtt_ns": "513191104",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      },
+      {
+        "name": "single-3",
+        "ok": true,
+        "log_sha256": "a6e174b012ba75146344a97dfdf49bfd1d899bfe2b30e37d827ca455f63dccad",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "139.701",
+          "download_mbps": "100.152",
+          "rtt_samples": "30",
+          "p50_ms": "307",
+          "p95_ms": "399",
+          "max_ms": "412",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "155.757",
+          "download_mbps": "91.969"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "91.968853",
+          "max_rtt_ns": "412329131",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      },
+      {
+        "name": "multi-1",
+        "ok": true,
+        "log_sha256": "a7b2b4a3b95883d57a10e20425905b7435bcc48288f02f48ad6f674fa945a6eb",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "104.858",
+          "download_mbps": "98.169",
+          "rtt_samples": "30",
+          "p50_ms": "298",
+          "p95_ms": "431",
+          "max_ms": "436",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "104.552",
+          "download_mbps": "97.124"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "97.124352",
+          "max_rtt_ns": "436170772",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      },
+      {
+        "name": "multi-2",
+        "ok": true,
+        "log_sha256": "739001f3b3315c855ad8fb70074e1f99c3aff1e5e8461f2288833cb07a7dee77",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "109.939",
+          "download_mbps": "96.023",
+          "rtt_samples": "30",
+          "p50_ms": "322",
+          "p95_ms": "463",
+          "max_ms": "493",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "111.761",
+          "download_mbps": "97.255"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "96.023347",
+          "max_rtt_ns": "493409613",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      },
+      {
+        "name": "multi-3",
+        "ok": true,
+        "log_sha256": "5c91894be458bff8c696b08329cd1261c549556bf5da06e45af32ee3a32f9d7b",
+        "supervised_result": {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "110.467",
+          "download_mbps": "96.736",
+          "rtt_samples": "30",
+          "p50_ms": "335",
+          "p95_ms": "432",
+          "max_ms": "462",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        "supervised_tail": {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "109.515",
+          "download_mbps": "95.884"
+        },
+        "supervised_acceptance": {
+          "round": "1",
+          "tier": "transport-rework3-rev4-100/100-lt1000ms-10pct-tolerance",
+          "minimum_verified_mbps": "95.883537",
+          "max_rtt_ns": "462582987",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      }
+    ],
+    "scenario": {
+      "streams": "both",
+      "accounts": 15,
+      "seconds": 60,
+      "repeats": 3,
+      "warmup": 10,
+      "command_delay_ms": 80,
+      "provider_mbps": 600,
+      "layout": "auto",
+      "shards": 1,
+      "visibility_delay_ms": 0,
+      "provider_sessions": 10
+    }
+  },
+  "pipeline": {
+    "runtime_sha256": "e3d7a1e73123913e0971676fc4de6c3b2bc3d68da2a7f7dffe93cb5dd5ecc8af",
+    "steps": [
+      {
+        "name": "field-repeated",
+        "exit_code": 0,
+        "elapsed_seconds": 411.86,
+        "log": "field-repeated.log",
+        "required": true
+      },
+      {
+        "name": "field-commit-delay",
+        "exit_code": 0,
+        "elapsed_seconds": 156.232,
+        "log": "field-commit-delay.log",
+        "required": true
+      },
+      {
+        "name": "native-tests",
+        "exit_code": 0,
+        "elapsed_seconds": 2.361,
+        "log": "native-tests.log",
+        "required": true
+      },
+      {
+        "name": "native-imap-bridge",
+        "exit_code": 0,
+        "elapsed_seconds": 4.245,
+        "log": "native-imap-bridge.log",
+        "required": true
+      },
+      {
+        "name": "native-vet",
+        "exit_code": 0,
+        "elapsed_seconds": 0.458,
+        "log": "native-vet.log",
+        "required": true
+      },
+      {
+        "name": "race-accounting",
+        "exit_code": 0,
+        "elapsed_seconds": 9.144,
+        "log": "race-accounting.log",
+        "required": true
+      },
+      {
+        "name": "race-recovery",
+        "exit_code": 0,
+        "elapsed_seconds": 8.242,
+        "log": "race-recovery.log",
+        "required": true
+      },
+      {
+        "name": "speed-qualification",
+        "exit_code": 0,
+        "elapsed_seconds": 796.469,
+        "log": "speed-qualification.log",
+        "required": true
+      },
+      {
+        "name": "android-build",
+        "exit_code": 0,
+        "elapsed_seconds": 24.817,
+        "log": "android-build.log",
+        "required": true
+      }
+    ],
+    "complete": true
+  },
+  "android_device_tested": false,
+  "real_provider_tested": false
+}
