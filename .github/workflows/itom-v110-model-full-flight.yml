@@ -1,0 +1,54 @@
+name: ITOM 1.1 full-flight demand transitions
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-model-full-flight.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env: {GOTOOLCHAIN: local, GOWORK: off, ITOM_MODEL_REVISION: "2"}
+jobs:
+  transition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: {trace: [0, 1]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile three isolated variants before measurement
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/delivery-model/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Preserve probe socket across demand changes
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_MODEL_MOBILE_TRACE: "${{ matrix.trace }}"
+          ITOM_MODEL_TRANSITION_BYTES: "4194304"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestModelBulkToQuiet$' -test.v -test.timeout 180s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-full-flight-transitions-${{ matrix.trace }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90

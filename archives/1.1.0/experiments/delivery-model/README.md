@@ -39,3 +39,5 @@ The first revision2 run used all uncompleted publication as its supply proxy. Co
 ## Command-service sensitivity
 
 The main reference keeps provider command processing at2ms. A separate matched20/80ms provider-service sensitivity keeps the server's network route at2ms and does not inject a server outage. An excellent server or low ICMP/NOOP does not establish an equally fast APPEND/FETCH/indexing/cleanup turn at the mailbox provider. This test distinguishes command service from access-link propagation; it does not assert that Rambler currently has either service time. Existing thresholds and all failures remain unchanged.
+
+The first transition screen used four closed-loop256KiB echoes and achieved roughly20–40Mbps. It does not prove recovery from a fully saturated100Mbps transfer. The full-flight follow-up uses four4MiB verified concurrent exchanges, starts their measurement on one barrier, and retains the same3s request deadlines. Per-probe client RTT at start/end is recorded to expose sampling/phase differences on the variable trace. No transport reset or serialization-clock reset occurs between phases.
