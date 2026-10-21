@@ -6,6 +6,8 @@ HERE=Path(__file__).resolve().parent
 def main():
  p=argparse.ArgumentParser();p.add_argument('output',type=Path);a=p.parse_args();out=a.output.resolve()
  subprocess.run(['python3',str(HERE.parent/'light-response/prepare.py'),str(out)],check=True)
+ for variant in ('rc2','model','previous','v110'):
+  shutil.copyfile(HERE/'directional_test.go',out/variant/'tunnel/directional_capacity_test.go')
  t=out/'model/tunnel';lane=t/'lane.go';s=lane.read_text()
  old='l.nextRemoteCleanup = advancePeriodic(l.nextRemoteCleanup, runtimeRemoteCleanupInterval, now)';assert s.count(old)==1
  lane.write_text(s.replace(old,'l.nextRemoteCleanup = advancePeriodic(l.nextRemoteCleanup, l.remoteCleanupPeriod(), now)'))

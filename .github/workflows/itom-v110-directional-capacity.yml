@@ -1,0 +1,73 @@
+name: ITOM 1.1 independent directional capacity checks
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-directional-capacity.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: off
+  ITOM_LOAD_SERVER_RTT_MS: "20"
+  ITOM_LOAD_CLIENT_RTT_MS: "40"
+  ITOM_LOAD_CLIENT_MBPS: "500"
+  ITOM_LOAD_SERVER_MBPS: "1000"
+  ITOM_LOAD_LITERAL_PLUS: "0"
+  ITOM_LOAD_BINARY_FETCH: "0"
+jobs:
+  capacity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: gc900-retained-upload, floor: 900, retained: 1, direction: upload}
+          - {name: gc900-retained-download, floor: 900, retained: 1, direction: download}
+          - {name: gc1100-retained-upload, floor: 1100, retained: 1, direction: upload}
+          - {name: gc1100-retained-download, floor: 1100, retained: 1, direction: download}
+          - {name: gc1250-retained-upload, floor: 1250, retained: 1, direction: upload}
+          - {name: gc1250-retained-download, floor: 1250, retained: 1, direction: download}
+          - {name: gc1350-retained-upload, floor: 1350, retained: 1, direction: upload}
+          - {name: gc1350-retained-download, floor: 1350, retained: 1, direction: download}
+          - {name: fresh-upload, floor: 1350, retained: 0, direction: upload}
+          - {name: fresh-download, floor: 1350, retained: 0, direction: download}
+    env:
+      ITOM_RETAINED_GC_FLOOR_MS: "${{ matrix.floor }}"
+      ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+      ITOM_DIRECTION: "${{ matrix.direction }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile unchanged RC2 and candidate with identical additional workload
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/retained-response/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Full60s active direction with30s and10s tails; additional to duplex gates
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestRetainedDirectionalCapacity$' -test.v -test.timeout 180s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: directional-capacity-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90
