@@ -6,7 +6,8 @@ HERE=Path(__file__).resolve().parent
 
 def main():
  p=argparse.ArgumentParser();p.add_argument('output',type=Path);a=p.parse_args();out=a.output.resolve()
- env=dict(os.environ,ITOM_REFILL_TRIGGER='empty',ITOM_RETAINED_GC_FLOOR_MS='1100',ITOM_LOCAL_CLEANUP_DIVISOR='16')
+ mode=os.environ.get('ITOM_REFILL_TRIGGER','empty');assert mode in ('empty','low')
+ env=dict(os.environ,ITOM_REFILL_TRIGGER=mode,ITOM_RETAINED_GC_FLOOR_MS='1100',ITOM_LOCAL_CLEANUP_DIVISOR='16')
  subprocess.run(['python3',str(HERE.parent/'refill-trigger/prepare.py'),str(out)],env=env,check=True)
  t=out/'model/tunnel';p=t/'lane.go';s=p.read_text()
  old='l.nextRemoteCleanup = advancePeriodic(l.nextRemoteCleanup, l.remoteCleanupPeriod(), now)';assert s.count(old)==1

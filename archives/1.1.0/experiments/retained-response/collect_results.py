@@ -94,6 +94,9 @@ def main():
             "authority_modules_identical_to_dev3": True,
             "remote_cleanup_floor_ms": provenance.get("remote_cleanup_floor_ms"),
             "local_cleanup_divisor": provenance.get("local_cleanup_divisor", 4),
+            "refill_trigger": provenance.get("refill_trigger"),
+            "periodic_remote_cleanup_ms": provenance.get("periodic_remote_cleanup_ms"),
+            "headroom_hint_used_as_periodic_timer": provenance.get("headroom_hint_used_as_periodic_timer", True),
             "shared_fixture_overrides": provenance.get("shared_fixture_overrides", {})}
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     describe(logs)
