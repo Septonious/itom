@@ -53,7 +53,10 @@ func (d *deliveryController) modelSupplyLimited() bool {
 }
 
 func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
-	window := min(uint64(deliveryMaxWindow), max(uint64(deliveryMinWindow), f.Window))
+	window := min(uint64(deliveryMaxWindow), f.Window)
+	if window == 0 {
+		window = deliveryInitialWindow
+	}
 	progress := f.Delivered > m.delivered
 	if m.lastProgress.IsZero() || progress {
 		m.lastProgress = now
