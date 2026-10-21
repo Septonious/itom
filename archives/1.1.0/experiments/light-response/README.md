@@ -15,3 +15,5 @@ python3 archives/1.1.0/experiments/light-response/prepare.py /tmp/itom-light-res
 ```
 
 The workflow `itom-v110-light-response.yml` runs the same five sustained scenarios, two reversed invocations and two complete60s rounds per invocation (20 rounds per version), plus matched idle/light paths, bulk-to-quiet transitions, worst4G and targeted correctness/race checks. Loaded SINGLE RTT spikes remain reported under the original750ms gate. The optimization objective is idle/light latency and bulk bandwidth; the candidate must not reduce speed to mask a loaded-RTT failure.
+
+First completed run39641704294:14/20 performance rounds passed for both RC2 and candidate. Fresh SINGLE improved from3/4 to4/4 accepted rounds and its mean useful rates increased, but all retained SINGLE rounds missed100Mbps for both variants. Idle means improved overall; light means/tails were mixed across paths and host variability was substantial. [All samples and failures](results.json) remain recorded. This is not the requested17/20 result and is not promoted.
