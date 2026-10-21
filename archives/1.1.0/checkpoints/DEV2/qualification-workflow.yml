@@ -1,0 +1,272 @@
+name: ITOM 1.1.0 isolated transport qualification
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  SOURCE: archives/1.1.0/checkpoints/DEV2/source
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Identity, packaging and Python checks
+        run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-dev2
+      - name: Full correctness and vet
+        working-directory: ${{ env.SOURCE }}/core
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=900s ./...
+          go test -race -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath
+          go test -p 2 -tags itomtest -count=1 -timeout=180s ./tunnel -run 'TestV110WorstRaw4GConnectivity|TestV110AsymmetricFixture' -v
+  latency:
+    name: Paired idle/light client ${{ matrix.rtt }}ms
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        rtt: [5, 40, 100]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Immutable RC2 and same fixtures; compile before measurement
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/prepare_pair.py "$RUNNER_TEMP/paired"
+          for variant in rc2 v110; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Three alternating pairs; preserve failures
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "${{ matrix.rtt }}"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2 3; do
+            order='rc2 v110'; if [ "$trial" = 2 ]; then order='v110 rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestV110IdleLightReference$' -test.v -test.timeout 150s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-latency-${{ matrix.rtt }}
+          path: ${{ runner.temp }}/paired/*.log
+          retention-days: 90
+  throughput:
+    name: Paired ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: single, streams: 1, retained: 0, binary: 0, server_rtt: 2}
+          - {name: four, streams: 4, retained: 0, binary: 0, server_rtt: 2}
+          - {name: multi, streams: 32, retained: 0, binary: 0, server_rtt: 2}
+          - {name: retained-single, streams: 1, retained: 1, binary: 0, server_rtt: 2}
+          - {name: retained-multi, streams: 32, retained: 1, binary: 0, server_rtt: 2}
+          - {name: binary-four, streams: 4, retained: 0, binary: 1, server_rtt: 2}
+          - {name: historical-route, streams: 4, retained: 0, binary: 0, server_rtt: 20}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Reconstruct reference and compile both
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/prepare_pair.py "$RUNNER_TEMP/paired"
+          python3 -c 'import os,pathlib; p=pathlib.Path("/sys/fs/cgroup/cpu.max"); print("cpus",os.cpu_count(),"quota",p.read_text() if p.exists() else "unreported")' > "$RUNNER_TEMP/paired/host.txt"
+          for variant in rc2 v110; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Original probes, tails, sockets and thresholds; strict 100 Mbps target
+        env:
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_RTT_MS: "${{ matrix.server_rtt }}"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_CLIENT_MBPS: "500"
+          ITOM_LOAD_PROVIDER_MBPS: "500"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
+          ITOM_LOAD_LITERAL_PLUS: "${{ matrix.binary }}"
+          ITOM_LOAD_BINARY_FETCH: "${{ matrix.binary }}"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "${{ matrix.streams }}"
+          ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "2"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "1"
+          ITOM_LOAD_MIN_MBPS: "100"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          order='rc2 v110'; if [ '${{ matrix.retained }}' = 1 ]; then order='v110 rc2'; fi
+          for variant in $order; do
+            if "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestTransportReworkQualification$' -test.v -test.timeout 600s > "$RUNNER_TEMP/paired/$variant.log" 2>&1; then
+              echo "$variant PASS"
+            else
+              echo "$variant FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-throughput-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+            ${{ runner.temp }}/paired/host.txt
+          retention-days: 90
+
+# Iteration4: preserve RC2 timing when DATA/maintenance share constrained sockets.
+  linux:
+    needs: [core, latency, throughput]
+    if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
+    name: Compile experimental Linux artifacts (not a qualified release)
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV2; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py check --expect-revision itom-1-1-0-dev2
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV2-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.1.0-DEV2-linux-$arch.bin" | grep -q 'itom-1-1-0-dev2'
+            test "$(stat -c %s "dist/ITOM-1.1.0-DEV2-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.1.0-DEV2-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-development-linux
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV2-linux-*.bin
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [core, latency, throughput]
+    if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
+    name: Compile experimental APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact 1.1 development application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV2; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py android --expect-revision itom-1-1-0-dev2 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10102 and x['versionName']=='1.1.0-dev2-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.1.0-DEV2-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-1-0-dev2' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV2-debug.apk > dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-development-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV2-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-development-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30

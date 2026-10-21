@@ -1,11 +1,11 @@
-# ITOM 1.1.0 DEV2 — experimental transport development
+# ITOM 1.1.0 DEV3 — experimental transport development
 
 This source starts from frozen RC2/1.0.0. It adds demand-scoped receive timing,
 per-socket quiet/burst coalescing. The fast-lease rollover experiment is
 deferred separately and is not applied in this source. It is not stable or field qualified. The first matched
 comparison improved idle/light RTT; retained-state100Mbps and a SINGLE loaded
 RTT tail failed unchanged gates. Consult the sibling1.1.0 experiment report.
-Android stays org.itom.client with version code10102. Preserve app data,
+Android stays org.itom.client with version code10103. Preserve app data,
 wallets, server identity and journals. Build artifacts record their commit and
 qualification status. Existing operational documentation follows as reference.
 

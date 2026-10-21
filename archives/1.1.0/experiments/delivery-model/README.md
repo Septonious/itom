@@ -1,4 +1,6 @@
-# Useful-delivery controller: isolated 1.1.0 experiment
+# Useful-delivery controller: ITOM1.1.0 DEV3
+
+The tested controller is now in ../../source/ as experimental DEV3. All recipes use the frozen ../../checkpoints/DEV2/source/ input; final1.0.0 is unchanged. See RESULTS.md for exact builds, measurements and outstanding gates.
 
 The user updated the objective on 2026-10-21: keep idle/light application RTT as close to the carrier's real latency as practical; favor useful bandwidth during sustained bulk, accepting that loaded RTT may rise. Direct mobile IMAP turns can range from 40 to 180ms. A fixed fast-ACK age must not repeatedly halve bulk on that evidence alone.
 

@@ -1,0 +1,88 @@
+{
+  "classification": "local checks; exact CI outcomes separate",
+  "first_full_source": "9de16a6200af2dbbb76233d63783a82284d14782, all-model constructor",
+  "first_full_exit": "FAIL",
+  "first_full_failures": [
+    {
+      "test": "--- FAIL: TestDeliveryControllerVirtualClockIdleResetsProbeWithoutChangingFlight (0.00s)",
+      "detail": "    delivery_control_test.go:163: stalled delivery did not bound pressure"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryPublishesPrefixThatFitsRemainingBudget (0.00s)",
+      "detail": "    delivery_control_test.go:300: batch crossed window or required empty capacity"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryMaintenanceRemembersDemandForOneEpoch (0.00s)",
+      "detail": "    delivery_demand_test.go:24: maintenance lost preceding bulk demand: window=1048576"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryRememberedDemandCannotHideStall (0.00s)",
+      "detail": "    delivery_demand_test.go:49: remembered demand overrode late ACK shrink 16777216"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryPendingFastPressureOverridesHealthyBulkGrowth (0.00s)",
+      "detail": "    delivery_fast_pressure_test.go:22: healthy bulk grew while short DATA was stalled 2097152"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryCompletedFastPressureBelongsToItsDrainedEpoch (0.00s)",
+      "detail": "    delivery_fast_pressure_test.go:61: a drained epoch's historical stall throttled fresh useful progress 1048576"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryFastPressureHasQueueHeadroomAndKeepsDebt (0.00s)",
+      "detail": "    delivery_fast_pressure_test.go:84: late short DATA cannot reduce the initial queue budget 1048576"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryLowFlightACKFloorBoundsAdditionalQueueDelay (0.00s)",
+      "detail": "    delivery_floor_test.go:42: queue above the calibrated path was not reduced"
+    },
+    {
+      "test": "--- FAIL: TestDeliveryFloorCannotLearnStalledFullWindowOrRepair (0.00s)",
+      "detail": "    delivery_floor_test.go:85: late acknowledgement expanded the admission ceiling"
+    },
+    {
+      "test": "--- FAIL: TestMobileACKFloorKeepsServiceAndExcessDelayRecovers (0.00s)",
+      "detail": "    repair_delivery_age_test.go:100: real short-DATA queue pressure was ignored"
+    },
+    {
+      "test": "--- FAIL: TestRev2ActuallyBulkExposedShortDelayStillReducesAdmission (0.00s)",
+      "detail": "    rev2_epoch_test.go:98: actual loaded short-delay objective no longer protects admission"
+    },
+    {
+      "test": "--- FAIL: TestMobilePressureQuicklyBoundsNewFlightWithoutRefund (0.00s)",
+      "detail": "    rev3_mobile_test.go:29: congestion was not bounded promptly 1048576"
+    },
+    {
+      "test": "--- FAIL: TestNarrowMobileTenAccountsCommonOutageAndIndependentTracing (22.84s)",
+      "detail": "    supervisor_fixture_test.go:47: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true"
+    },
+    {
+      "test": "--- FAIL: TestRev5RampAbortAndRestartKeepOriginalChatUsable (11.95s)",
+      "detail": "    rev5_ramp_application_test.go:30: commit_delay_model server_us=0 client_control_us=0 actual_fsync_retained=true"
+    }
+  ],
+  "current_candidate": "922545c0fe3860693fc9a4c95e9cee73145cef69",
+  "local_paired_cases": {
+    "rc2": {
+      "narrow_mobile": "PASS",
+      "ramp_cancel_chat": "FAIL: HTTP client15s timeout during fanout4"
+    },
+    "model": {
+      "narrow_mobile": "PASS",
+      "ramp_cancel_chat": "PASS"
+    }
+  },
+  "log_sha256": {
+    "model-v2-full.log": "a159a263cd3a4114904fe6429281c376b0b4ec6b6deeb4c23f2fad7fb09a76b6",
+    "model-integrated-contracts.log": "3ba8291847839a4df9d5b02d1d792b5d19a7439a80cd5996cae0af7da0d4dde2",
+    "model-lifecycle.log": "4760b35c8839384026f75ecd7eedd9753c6379f2ed55036610c9520b2553264b",
+    "lifecycle-pair-rc2.log": "b746e13cf0c9d2ecede2a0e669a9d71a9ac2ea62cc6afda9f185b5f1f79572fa",
+    "lifecycle-pair-model.log": "97604358e36200e1402a970be2f16d4ade10ef0381ee298cabc96a0346dde80d",
+    "dev3-source-check.log": "b217b60a8c2bc4f055fd6b56e428ddfcced0ba85989f374262b2d15fdbd66db3"
+  },
+  "promotion_identity_check": {
+    "early_check": "started before the staged copy completed; found the still-current DEV2 identity",
+    "final_check": "PASS after copy completed",
+    "early_log_sha256": "f39b96b2312aca2768e4a3607907773bb69cdd7397bdb4b5079c04ad54adfe37",
+    "final_log_sha256": "b217b60a8c2bc4f055fd6b56e428ddfcced0ba85989f374262b2d15fdbd66db3"
+  }
+}

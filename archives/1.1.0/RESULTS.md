@@ -1,52 +1,69 @@
-# ITOM 1.1.0 DEV2: measured checkpoint
+# Workload-aware delivery model: laboratory decisions
 
-Source/build commit: [37d3fae](https://github.com/Septonious/itom/commit/37d3fae1b56213a8c6541e85ad64fa294155142e). [Complete run](https://github.com/Septonious/itom/actions/runs/39602535979). **Experimental; performance qualification failed.** Full correctness, race checks and Android/Linux builds passed. Final 1.0.0/RC2 is unchanged. The new useful-delivery controller is a separate experiment and is not included in these APK/binaries.
+Current testing source is staged by stage.py as ITOM1.1.0 DEV3, package org.itom.client/versionCode10103. It is experimental and not a stable/field-qualified release. Final1.0.0 remains RC2. No historical qualification threshold or physical accounting rule is reduced.
 
-## Idle/light application RTT
+## Design implemented
 
-Ten actual supervisors and account pairs, TLS/IMAP, journals and persistent verified 32-byte application exchanges. Server route 2ms/1Gbps; client 500Mbps. Three alternating runs per variant, 72 requests per phase. Light traffic is a closed-loop 4KiB echo with think time. These are shared-host laboratory results, not Android/Rambler measurements. Mean / p95 / max, milliseconds:
+Each endpoint/direction models authenticated useful delivery independently. Sparse traffic keeps its separate short reservation and demand-scoped receive/coalescing policy. Sustained demand grows flight on useful ACKs; absolute short-ACK/RTT age alone no longer halves bulk. A bandwidth/feedback model guides bounded startup and exploration; the refined policy preserves established bulk flight through mailbox supply cycles. Confirmed published-flight capacity decline or a collective stall can reduce admission; a fully drained epoch returns to its bounded startup seed. The16MiB hard cap, authenticated receiver credit, journal/wallet/proof and unknown-outcome charges are unchanged.
 
-| Client route | RC2 idle | DEV2 idle | RC2 light | DEV2 light |
-| --- | ---: | ---: | ---: | ---: |
-| 5ms | 48.9 / 76.0 / 117.3 | 36.3 / 63.4 / 71.0 | 52.7 / 112.1 / 150.3 | 36.0 / 62.7 / 87.8 |
-| 40ms | 126.1 / 254.9 / 482.3 | 138.6 / 312.1 / 740.7 | 137.4 / 301.6 / 404.6 | 124.3 / 279.7 / 405.4 |
-| 100ms | 196.2 / 268.4 / 400.5 | 191.5 / 226.0 / 268.8 | 197.0 / 277.0 / 363.1 | 179.3 / 257.1 / 388.5 |
+This is a mailbox-specific admission model informed by BBR, not a full BBR/BRUTAL implementation. It has no newly implemented publisher pacing stage or raw packet loss compensation. Lower RTT still requires receive scheduling/provider command work; congestion control alone cannot eliminate the IMAP command turns.
 
-The 5ms benefit repeats. The 40ms idle mean and tail worsened in this run; it is not a universal latency improvement. Restricting the new receive search to measured <=20ms independent DATA/maintenance paths prevents the prior capped-socket recovery failure, but does not establish tail equivalence on all mobile paths.
+## Trials retained and rejected
 
-## Complete sustained measurements
+- First model, commit5be0d740bc9e7ac68d28e907e292a87707a1f4a5, [run39621414070](https://github.com/Septonious/itom/actions/runs/39621414070): all fresh and changing-route rounds completed, but no useful throughput win and weaker MULTI/retained tails. Not selected. [Raw rounds and samples](experiments/delivery-model/results-v1.json).
+- First supply proxy, commit9de16a6200af2dbbb76233d63783a82284d14782, [run39624632542](https://github.com/Septonious/itom/actions/runs/39624632542): superseded because uncompleted APPENDs are not necessarily waiting for quota. It also recorded changing-route tail/RTT failures. No result is hidden. [Raw evidence](experiments/delivery-model/results-v2-supply-proxy.json).
+- Grant-aware refinement, commit923b23ade85318239b807d1641f56bf3451aa7c8: waits for grant-backed carrier placement are distinct from admitted network/service work. Low supply-limited samples cannot erase the network estimate. Targeted logic/authority/race/recovery tests passed; matched performance follows below.
+- Runtime integration, commit922545c0fe3860693fc9a4c95e9cee73145cef69: real client/server/rotation factories select the model; legacy direct factories preserve the unchanged RC2 contract tests. Added explicit new-model factory, real-supervisor, small-budget and partial/duplicate ACK/retirement checks. Full correctness and testing builds are [run39628803015](https://github.com/Septonious/itom/actions/runs/39628803015). Do not substitute prior source results for this exact build.
 
-Two complete 60s rounds per side and scenario. Existing full/30s-tail/10s-tail, complete probe schedule, application/carrier identity, strict 100Mbps and 750ms gates are unchanged. Table rates average complete rounds, upload / download Mbps. Every missed target remains a failure.
+## Sustained grant-aware comparisons
 
-| Scenario | RC2 | DEV2 | Historical gate |
+[Run39625447401](https://github.com/Septonious/itom/actions/runs/39625447401). Immutable RC2 production plus identical fixture code, compiled before measurement and run serially in reversed orders on each four-core shared runner. Four complete60s rounds per variant/scenario; original full/30s/10s tails, complete probes, socket identities and100Mbps/750ms checks retained. Rates are mean upload/download Mbps of complete rounds; small differences do not establish statistical equivalence.
+
+| Scenario | RC2 up/down | Model up/down | Historical gate |
 | --- | ---: | ---: | --- |
-| single | 177.0 / 345.6 | 180.0 / 352.9 | Both PASS |
-| four | 160.8 / 297.2 | 158.4 / 299.7 | Both PASS |
-| multi | 154.6 / 268.3 | 153.1 / 269.4 | Both PASS |
-| binary-four | 238.6 / 256.7 | 241.5 / 256.8 | Both PASS |
-| retained-single | 76.3 / 309.1 | 76.9 / 306.7 | Both FAIL 100Mbps upload/tails |
-| retained-multi | 76.7 / 313.5 | 76.9 / 311.6 | Both FAIL 100Mbps upload/tails |
-| historical-route | 132.0 / 164.6 | 133.2 / 164.2 | Both FAIL; loaded tail / RTT |
+| single | 163.0 / 310.7 | 162.0 / 310.3 | Both PASS |
+| multi | 165.3 / 323.3 | 165.8 / 326.0 | Both PASS |
+| mobile-variable | 109.6 / 276.2 | 109.7 / 277.4 | Both PASS |
+| retained-single | 76.6 / 322.4 | 76.8 / 327.0 | Both FAIL100Mbps upload/tail target |
+| retained-multi | 76.7 / 312.3 | 76.7 / 314.2 | Both FAIL100Mbps upload/tail target |
 
-The 20ms-server sensitivity produced RC2 max 938ms and DEV2 max 809ms; DEV2 also had an 88.159Mbps minimum verified tail. All 28 measurement rounds completed, with zero probe timeouts/misses in the recorded rounds. Complete rounds and successful sockets do not convert failed rate/RTT gates into passes.
+Changing mobile RTT is40/80/180/60/140/45/120/180/70/40ms every1.5s. The server path stays2ms/1Gbps. All40 sustained rounds completed, with zero missed/timed-out scheduled probes in recorded rounds and unchanged socket/carrier identities. Retained-state upload remains about77Mbps for both; the controller does not claim to repair that physical-credit/cleanup ceiling.
 
-## Correctness and builds
+A separate [provider-service sensitivity](https://github.com/Septonious/itom/actions/runs/39625798028) keeps network routes unchanged and varies IMAP command processing. At20ms service: RC2 about173.97/231.93, model173.91/233.18Mbps; both pass. At80ms service: RC2 about148.98/91.23, model149.18/93.87Mbps; both fail the unchanged100Mbps download/tail goal. An excellent server/ICMP path does not establish equally fast mailbox service. These are sensitivity inputs, not measured Rambler backend delays.
 
-DEV2 full Go suite/vet, required journal/wallet/flow/datapath race checks and worst-4G check passed in CI. The guard also passed five repeated capped/shared-socket repair/controller checks locally without changing their deadlines. The extra local HTTPS race-instrumented 5s timeout recorded in the DEV1 report remains a failure, not a passed check.
+## Full-flight and return to short requests
 
-Android: 82 domain tests and 7 app tests passed. Lint: zero errors, one dependency-version warning. JNI identities/ABIs and package org.itom.client, versionCode 10102, versionName 1.1.0-dev2-debug were verified. Linux amd64 ran its version command; both Linux files are normal CGO-disabled ELF builds without test-fixture APIs.
+[Run39626376349](https://github.com/Septonious/itom/actions/runs/39626376349), controller source923b23a with test-only changes in d9ae655806e1c23c28a7a4797b29c2f0bc31bee7. Four concurrent verified4MiB exchanges exercise up to16MiB demand and retain the same probe TCP before/during/after. Original3s exchange deadlines remain. No controller/transport reset is inserted.
 
-Downloads (experimental DEV2 only):
+- Fixed40ms route: all four invocations pass. RC2 bulk158.46/159.32Mbps; model165.33/164.25Mbps each direction. Post-bulk mean/p95: RC2100.2/136.1ms; model102.7/140.3ms. Bandwidth improved in this screen; short tails did not uniformly improve.
+- Varying40–180ms route: both model invocations pass at102.26/110.27Mbps. RC2 times out in its first4MiB exchange; its second invocation passes at103.77Mbps. There is no complete control bulk/post-bulk distribution for the failed invocation and no rate is invented for it. Model post-bulk mean/p95 is165.7/346.1ms over48 requests; RC2 has only24 completed post-bulk samples. Phase timing samples different positions in the dynamic trace, so pooled means are not a controlled proof of lower propagation overhead.
 
-- [APK artifact](https://github.com/Septonious/itom/actions/runs/39602535979/artifacts/12347109176): ITOM-1.1.0-DEV2-debug.apk; SHA256 `82b89db715fc34281b995605267e4a6f28a15df82bbb1c5d2e5f4c90a24cb700`.
-- [Linux artifact, amd64 and arm64](https://github.com/Septonious/itom/actions/runs/39602535979/artifacts/12347912728). amd64 SHA256 `ad499b359dbaf46c7cb8dbfd4b7cb00abbf4ff95544b58b00379a5bd1d95d21e`; arm64 `c5abe46dfd75c32d448e0b5c2989df70a7e5be735fbddbdc1279316aa80d4e83`.
+The earlier256KiB closed-loop screen reached only20–40Mbps. Its passes remain recorded, but it is not used as proof of recovery after saturation.
 
-**Signing:** the completed build used a temporary debug signer because persistent Actions signing secrets were absent. In-place update compatibility is not assured. Preserve wallet data and server state; see [MIGRATION.md](MIGRATION.md).
+## Exact DEV3 idle/light requests
 
-Exact raw samples, rounds and log hashes: [ci4-dev2-results.json](experiments/ci4-dev2-results.json). Source file hashes: [SOURCE_INTEGRITY_DEV2.json](experiments/SOURCE_INTEGRITY_DEV2.json). Prior checkpoint failures: [RESULTS-DEV1.md](RESULTS-DEV1.md).
+Two reversed pairs,48 requests per phase/variant, original3s deadlines and sockets. Mean/p95/max in milliseconds. This is the final staged runtime/identity rather than a substituted prototype:
 
-## Follow-up experiments and current priority
+| Client path | RC2 idle | DEV3 idle | RC2 light | DEV3 light |
+| --- | ---: | ---: | ---: | ---: |
+| 5ms | 53.4/92.2/119.0 | 35.1/57.7/83.6 | 53.3/106.2/231.0 | 36.7/73.6/96.1 |
+| 40ms | 102.4/115.2/210.7 | 94.1/141.5/168.7 | 104.5/141.6/204.8 | 100.3/164.4/196.2 |
+| 180ms | 333.7/401.0/465.3 | 322.4/401.5/824.2 | 302.6/389.9/658.4 | 293.3/381.6/401.2 |
+| 40–180ms | 198.8/385.5/729.9 | 182.8/340.2/380.3 | 168.1/293.5/362.4 | 167.9/327.5/698.2 |
 
-Faster quota-aware reclamation raised retained upload but also reduced download. Conservative 900/1000/1100ms floor trials each included four full rounds per variant in reversed orders. Upload averaged 120.4/111.8/103.8Mbps versus controls near 77; download fell approximately 5.7/3.6/2.6%. The earlier faster trial lost substantially more SINGLE download. These changes are preserved separately and **not promoted**. [Exact conservative trials](experiments/reclamation-floor-results.json). The fresh sparse fast-fence comparison did not demonstrate a mean RTT benefit.
+All invocations completed, but some tails worsened:40ms light p95 and variable light p95/max, and180ms idle max824ms. The strongest repeated mean benefit is on the5ms route and includes the independent DEV2 receive/coalescing changes. The results do not demonstrate elimination of idle/light spikes, a universal sub200ms application RTT, or a field bandwidth fix.
 
-The user then revised the controller objective: lowest practical idle/light RTT, bandwidth-first sustained bulk, dynamic 40–180ms mobile turns. The new independent useful-delivery model, invariants, phase transitions and paired RC2/DEV2/model trials are documented in [delivery-model/README.md](experiments/delivery-model/README.md). No DEV2 artifact contains that model.
+## Correctness provenance and remaining work
+
+The first local all-model-constructor full run failed14 tests. Eleven asserted the retained legacy controller contract; a real bug also rounded an explicit48KiB budget upward and was fixed with a model admission regression test. Two functional mobile/restart failures remain recorded. The integrated suite keeps every legacy assertion on its actual controller, adds explicit new-model tests, and uses the model in real supervisors. No test is removed/skipped or given a larger deadline.
+
+A separately compiled, serial local replay on the two-core host passed narrow-mobile recovery for both; RC2 then failed the ramp HTTP deadline, while the current model passed all ramp/cancel/chat phases. One replay does not prove deterministic superiority. The previous failed full run is not called passed. The complete exact DEV3 CI suite now passes: model tunnel738.233s and RC2 reference742.622s, plus vet, required races, controller/supervisor race checks and the worst4G replay at0.324402Mbps each direction (75 verified exchanges, zero failures). Android82 domain and7 app tests pass; lint has zero errors/one dependency-version notice; both JNI ABI identities pass. Linux amd64 was independently rebuilt and is bit-identical to the CI binary. Exact metadata and hashes are in DEV3_BUILD.json.
+
+Full/tail100Mbps retained-state failures and real Android/Rambler validation remain unresolved. Sparse tail variance also prevents an all-situations latency claim. Temporary debug signing does not assure in-place updates; preserve wallet data. Stable1.0.0 remains unchanged.
+
+## Testing downloads
+
+- [DEV3 APK](https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12360365671), org.itom.client/versionCode10103; SHA256 `bb392c1a38108adc4e8ce0c85868051fe55863fcb0c7ff592f6650db6af51d91`.
+- [DEV3 Linux amd64 and arm64](https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12358599228).
+
+These are unqualified testing artifacts, not a stable1.1.0 release. Persistent signing secrets were absent, so the APK has a temporary debug signer; do not erase wallet data to bypass an update signature mismatch.

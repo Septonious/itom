@@ -41,6 +41,7 @@ func configureHealthyEndpoints(t *testing.T, p *providerTestNetwork) {
 	// Old combined cap is deliberately absent: each endpoint pays its own
 	// actual TLS bytes once on its own independently shared full-duplex path.
 	p.setMbps(0)
+	startModelMobileTrace(t, p)
 	t.Logf("healthy_reference server_rtt_ms=%d server_mbps=%.3f client_rtt_ms=%d client_mbps=%.3f provider_service_ms=%d injected_server_faults=false physical_paths=independent runtime_cpus=%d gomaxprocs=%d deployment_server_cpus=8 cpu_model=shared_test_process field_qualified=false", serverRTT.Milliseconds(), serverMbps, clientRTT.Milliseconds(), clientMbps, loadEnvInt(t, "ITOM_LOAD_PROVIDER_SERVICE_MS", 2, 0, 100), runtime.NumCPU(), runtime.GOMAXPROCS(0))
 }
 

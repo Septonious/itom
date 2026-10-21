@@ -1,0 +1,2666 @@
+{
+  "schema": 1,
+  "classification": "REV3_FIELD_FAILURE_EVIDENCE",
+  "sides": {
+    "client": {
+      "events": 132482,
+      "account_count": 15,
+      "start_utc": "2026-10-14T18:00:04.747978+00:00",
+      "end_utc": "2026-10-14T18:02:47.286798+00:00",
+      "event_counts": {
+        "imap_end": 24324,
+        "gc_candidate_read": 6939,
+        "imap_begin": 24317,
+        "gc_candidate_observed": 7086,
+        "gc_proven": 7023,
+        "gc_finished": 12173,
+        "packet_rx": 8083,
+        "packet_tx_attempt": 8485,
+        "gc_presence": 3003,
+        "control_batch_append": 7053,
+        "frame_rx": 4518,
+        "frame_queued": 2225,
+        "frame_sealed": 2451,
+        "control_wait": 1610,
+        "lifecycle": 867,
+        "application_copy_end": 266,
+        "health": 154,
+        "delivery_admission_wait": 1507,
+        "stripe_select_wait": 1421,
+        "stripe_select": 1421,
+        "data_writer_member": 1385,
+        "data_batch_grant": 1421,
+        "data_batch_spend": 1437,
+        "data_batch_append": 1417,
+        "data_batch_completion": 1422,
+        "socket_failure": 27,
+        "underlying_network": 10,
+        "data_batch_physical_slot": 107,
+        "trace_stop": 1,
+        "recovery_rx": 280,
+        "gc_candidate": 34,
+        "reader_wake_to_fetch": 15
+      },
+      "error_counts": {
+        "application_copy_end/RESET": 54,
+        "application_copy_end/CLOSED": 59,
+        "socket_failure/CLOSED": 27,
+        "application_copy_end/IO_ERROR": 10,
+        "imap_end/IMAP_APPEND_OUTCOME_UNKNOWN": 10,
+        "imap_end/CANCELED": 18,
+        "control_batch_append/IMAP_APPEND_OUTCOME_UNKNOWN": 7,
+        "delivery_admission_wait/DELIVERY_MEMBER_DEFERRED": 86,
+        "data_batch_append/CANCELED": 3,
+        "data_batch_completion/CANCELED": 3,
+        "data_batch_append/IMAP_APPEND_OUTCOME_UNKNOWN": 3,
+        "data_batch_completion/IMAP_APPEND_OUTCOME_UNKNOWN": 3,
+        "control_batch_append/CANCELED": 1,
+        "imap_end/TIMEOUT": 16,
+        "gc_finished/TIMEOUT": 3,
+        "data_batch_spend/WALLET_EXHAUSTED": 21,
+        "data_batch_completion/WALLET_EXHAUSTED": 5,
+        "imap_end/IO_OR_PROTOCOL_ERROR": 1,
+        "control_batch_append/IO_OR_PROTOCOL_ERROR": 1,
+        "imap_end/IMAP_TLS_FAILED": 15
+      },
+      "lifecycle_counts": {
+        "grant_recovery_deferred/WALLET_HISTORY_MISSING": 351,
+        "reconnect/CONTROL_QUEUE_LIMIT": 1,
+        "reconnect/CARRIER_REATTACH": 5,
+        "reconnect/IO_OR_PROTOCOL_ERROR": 1,
+        "data_reader_repair/TIMEOUT": 13,
+        "data_reader_repair/IMAP_TLS_FAILED": 15
+      },
+      "failure_timeline": {
+        "2026-10-14T18:00:05Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:12Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 15
+        },
+        "2026-10-14T18:00:13Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:00:14Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:15Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:16Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:17Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:00:21Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:27Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:28Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 12
+        },
+        "2026-10-14T18:00:29Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:31Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:00:33Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:00:36Z": {
+          "data_reader_repair/TIMEOUT": 13
+        },
+        "2026-10-14T18:00:37Z": {
+          "data_reader_repair/IMAP_TLS_FAILED": 15
+        },
+        "2026-10-14T18:00:42Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:43Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 12
+        },
+        "2026-10-14T18:00:44Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:45Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:46Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:47Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:48Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:49Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:52Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:00:57Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3,
+          "reconnect/CONTROL_QUEUE_LIMIT": 1
+        },
+        "2026-10-14T18:00:58Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:00:59Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:01:00Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:01:02Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:03Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3,
+          "reconnect/CARRIER_REATTACH": 4
+        },
+        "2026-10-14T18:01:04Z": {
+          "reconnect/CARRIER_REATTACH": 1
+        },
+        "2026-10-14T18:01:05Z": {
+          "reconnect/IO_OR_PROTOCOL_ERROR": 1
+        },
+        "2026-10-14T18:01:07Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:08Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 15
+        },
+        "2026-10-14T18:01:10Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:13Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:01:14Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:01:16Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:17Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:18Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:19Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:22Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:53Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:01:54Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:01:56Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:58Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:01:59Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:02:01Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:02:03Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:02:04Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:02:07Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 3
+        },
+        "2026-10-14T18:02:26Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 39
+        },
+        "2026-10-14T18:02:27Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 6
+        },
+        "2026-10-14T18:02:43Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 9
+        },
+        "2026-10-14T18:02:44Z": {
+          "grant_recovery_deferred/WALLET_HISTORY_MISSING": 36
+        }
+      },
+      "health_numeric": {
+        "line/RTTSampleAgeMS": {
+          "count": 154,
+          "p50": 2658,
+          "p90": 4896,
+          "p99": 24905,
+          "max": 25747
+        },
+        "line/RTTSmoothedMillis": {
+          "count": 154,
+          "p50": 485,
+          "p90": 663,
+          "p99": 916,
+          "max": 1026
+        },
+        "line/RTTIdleMillis": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 896,
+          "max": 896
+        },
+        "line/UploadBytes": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/DownloadBytes": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/TCPStreams": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/IMAPLatencyMillis": {
+          "count": 154,
+          "p50": 15,
+          "p90": 26,
+          "p99": 67,
+          "max": 106
+        },
+        "line/ControlSuppressed": {
+          "count": 154,
+          "p50": 24,
+          "p90": 48,
+          "p99": 181,
+          "max": 181
+        },
+        "line/ReaderRepairs": {
+          "count": 154,
+          "p50": 1,
+          "p90": 2,
+          "p99": 3,
+          "max": 3
+        },
+        "line/DataFetchPolls": {
+          "count": 154,
+          "p50": 1237,
+          "p90": 1486,
+          "p99": 1561,
+          "max": 1592
+        },
+        "line/DataEmptyFetchPolls": {
+          "count": 154,
+          "p50": 1221,
+          "p90": 1455,
+          "p99": 1540,
+          "max": 1560
+        },
+        "line/DataFetchMessages": {
+          "count": 154,
+          "p50": 36,
+          "p90": 52,
+          "p99": 55,
+          "max": 57
+        },
+        "line/DataIdleWaits": {
+          "count": 154,
+          "p50": 1170,
+          "p90": 1405,
+          "p99": 1465,
+          "max": 1486
+        },
+        "line/DataIdleNotifies": {
+          "count": 154,
+          "p50": 30,
+          "p90": 41,
+          "p99": 43,
+          "max": 43
+        },
+        "line/DataReceiveLatencyMillis": {
+          "count": 154,
+          "p50": 53,
+          "p90": 67,
+          "p99": 70,
+          "max": 157
+        },
+        "line/DeferredAdmissions": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 9063,
+          "max": 10830
+        },
+        "line/InitialReadyMS": {
+          "count": 154,
+          "p50": 18654,
+          "p90": 20083,
+          "p99": 20678,
+          "max": 20678
+        },
+        "line/ActiveLines": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/TotalLines": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/ReaderHandoffs": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PendingRetirements": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 1
+        },
+        "line/AvailableGrants": {
+          "count": 154,
+          "p50": 2,
+          "p90": 2,
+          "p99": 2,
+          "max": 2
+        },
+        "line/IssuedGrants": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PendingDescriptors": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/RemoteGC": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/Obsolete": {
+          "count": 154,
+          "p50": 2,
+          "p90": 7,
+          "p99": 43,
+          "max": 47
+        },
+        "line/Known": {
+          "count": 154,
+          "p50": 7,
+          "p90": 51,
+          "p99": 168,
+          "max": 200
+        },
+        "line/IOConnections": {
+          "count": 154,
+          "p50": 5,
+          "p90": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "line/ControlWaitMS": {
+          "count": 154,
+          "p50": 10,
+          "p90": 11,
+          "p99": 41,
+          "max": 55
+        },
+        "line/MaxControlWaitMS": {
+          "count": 154,
+          "p50": 251,
+          "p90": 3645,
+          "p99": 5159,
+          "max": 5159
+        },
+        "line/AppendCount": {
+          "count": 154,
+          "p50": 1340,
+          "p90": 1585,
+          "p99": 1713,
+          "max": 1751
+        },
+        "line/AppendBytes": {
+          "count": 154,
+          "p50": 3243215,
+          "p90": 12345381,
+          "p99": 14449274,
+          "max": 14495497
+        },
+        "line/ControlAppendCount": {
+          "count": 154,
+          "p50": 1101,
+          "p90": 1315,
+          "p99": 1416,
+          "max": 1467
+        },
+        "line/ControlAppendBytes": {
+          "count": 154,
+          "p50": 660659,
+          "p90": 794709,
+          "p99": 1739338,
+          "max": 1868173
+        },
+        "line/DataAppendCount": {
+          "count": 154,
+          "p50": 240,
+          "p90": 304,
+          "p99": 345,
+          "max": 346
+        },
+        "line/DataAppendBytes": {
+          "count": 154,
+          "p50": 2492978,
+          "p90": 11730454,
+          "p99": 13688215,
+          "max": 13689456
+        },
+        "line/FetchPolls": {
+          "count": 154,
+          "p50": 5794,
+          "p90": 6832,
+          "p99": 10441,
+          "max": 10873
+        },
+        "line/EmptyFetchPolls": {
+          "count": 154,
+          "p50": 4607,
+          "p90": 5420,
+          "p99": 9210,
+          "max": 9579
+        },
+        "line/FetchMessages": {
+          "count": 154,
+          "p50": 1294,
+          "p90": 1530,
+          "p99": 1645,
+          "max": 1678
+        },
+        "line/IdleWaits": {
+          "count": 154,
+          "p50": 609,
+          "p90": 752,
+          "p99": 803,
+          "max": 818
+        },
+        "line/IdleNotifies": {
+          "count": 154,
+          "p50": 214,
+          "p90": 272,
+          "p99": 301,
+          "max": 309
+        },
+        "line/IdleAudits": {
+          "count": 154,
+          "p50": 337,
+          "p90": 419,
+          "p99": 453,
+          "max": 464
+        },
+        "line/IdleKicks": {
+          "count": 154,
+          "p50": 54,
+          "p90": 68,
+          "p99": 76,
+          "max": 79
+        },
+        "line/WindowSent": {
+          "count": 154,
+          "p50": 15,
+          "p90": 31,
+          "p99": 80,
+          "max": 80
+        },
+        "line/WindowReceived": {
+          "count": 154,
+          "p50": 2,
+          "p90": 9,
+          "p99": 298,
+          "max": 321
+        },
+        "line/ReceiptSent": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/ReceiptReceived": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxWindowSent": {
+          "count": 154,
+          "p50": 1048576,
+          "p90": 1048576,
+          "p99": 1048576,
+          "max": 1048576
+        },
+        "line/MaxWindowReceived": {
+          "count": 154,
+          "p50": 1048576,
+          "p90": 1048576,
+          "p99": 1048576,
+          "max": 1048576
+        },
+        "line/DataWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxDataWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/FastDataWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxFastDataWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxLocalGrantWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/RemoteGrantWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxRemoteGrantWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantHeadroomWaits": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantLimitWaits": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PumpQueueWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 20
+        },
+        "line/MaxPumpQueueWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 3434,
+          "max": 3434
+        },
+        "line/FastPumpQueueWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 1
+        },
+        "line/MaxFastPumpQueueWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 3434,
+          "max": 3434
+        },
+        "line/StripeWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 1
+        },
+        "line/MaxStripeWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 78,
+          "p99": 102,
+          "max": 102
+        },
+        "line/FastStripeWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxFastStripeWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/GrantSelectWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxGrantSelectWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 84,
+          "max": 84
+        },
+        "line/FastGrantSelectWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxFastGrantSelectWaitMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 84,
+          "max": 84
+        },
+        "line/BulkReplacementGrants": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/DataAttempts": {
+          "count": 154,
+          "p50": 241,
+          "p90": 304,
+          "p99": 348,
+          "max": 349
+        },
+        "line/DataRecords": {
+          "count": 154,
+          "p50": 290,
+          "p90": 481,
+          "p99": 562,
+          "max": 572
+        },
+        "line/DataPayloadBytes": {
+          "count": 154,
+          "p50": 2045136,
+          "p90": 9356771,
+          "p99": 11163997,
+          "max": 11166056
+        },
+        "line/DataBatchCount": {
+          "count": 154,
+          "p50": 241,
+          "p90": 304,
+          "p99": 348,
+          "max": 349
+        },
+        "line/DataBatchRecords": {
+          "count": 154,
+          "p50": 290,
+          "p90": 481,
+          "p99": 562,
+          "max": 572
+        },
+        "line/DataBatchBodyBytes": {
+          "count": 154,
+          "p50": 2106132,
+          "p90": 9450287,
+          "p99": 11272645,
+          "max": 11277152
+        },
+        "line/ControlRecords": {
+          "count": 154,
+          "p50": 1314,
+          "p90": 1573,
+          "p99": 1712,
+          "max": 1792
+        },
+        "line/ReceivedRecords": {
+          "count": 154,
+          "p50": 1883,
+          "p90": 2209,
+          "p99": 2383,
+          "max": 2441
+        },
+        "line/CleanupMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 44,
+          "p99": 327,
+          "max": 439
+        },
+        "line/CleanupMessages": {
+          "count": 154,
+          "p50": 1088,
+          "p90": 1301,
+          "p99": 1406,
+          "max": 1461
+        },
+        "line/CleanupRemoteRuns": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/CleanupRemoteMessages": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/CleanupLocalDataRuns": {
+          "count": 154,
+          "p50": 964,
+          "p90": 1180,
+          "p99": 1282,
+          "max": 1330
+        },
+        "line/CleanupLocalDataMessages": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/CleanupLocalControlRuns": {
+          "count": 154,
+          "p50": 480,
+          "p90": 589,
+          "p99": 640,
+          "max": 665
+        },
+        "line/CleanupLocalControlMessages": {
+          "count": 154,
+          "p50": 1088,
+          "p90": 1301,
+          "p99": 1406,
+          "max": 1461
+        },
+        "line/CleanupPresenceRuns": {
+          "count": 154,
+          "p50": 422,
+          "p90": 514,
+          "p99": 610,
+          "max": 663
+        },
+        "line/Reconnects": {
+          "count": 154,
+          "p50": 0,
+          "p90": 1,
+          "p99": 1,
+          "max": 1
+        },
+        "line/Queue": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 17,
+          "max": 40
+        },
+        "line/Outbox": {
+          "count": 154,
+          "p50": 3,
+          "p90": 9,
+          "p99": 43,
+          "max": 48
+        },
+        "line/ControlMessages": {
+          "count": 154,
+          "p50": 4,
+          "p90": 10,
+          "p99": 43,
+          "max": 48
+        },
+        "line/DataMessages": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/DataBytes": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PeakDataHeldBytes": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PeakDataHeldMessages": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LastOperationMS": {
+          "count": 154,
+          "p50": 11,
+          "p90": 59,
+          "p99": 210,
+          "max": 3596
+        },
+        "line/MaxOperationMS": {
+          "count": 154,
+          "p50": 7633,
+          "p90": 30001,
+          "p99": 30001,
+          "max": 30001
+        },
+        "line/Operations": {
+          "count": 154,
+          "p50": 8445,
+          "p90": 9885,
+          "p99": 11738,
+          "max": 12250
+        },
+        "line/RXAgeMS": {
+          "count": 154,
+          "p50": 282,
+          "p90": 1380,
+          "p99": 5376,
+          "max": 6868
+        },
+        "line/RTTMillis": {
+          "count": 154,
+          "p50": 391,
+          "p90": 649,
+          "p99": 785,
+          "max": 4095
+        },
+        "governor/BaselineMS": {
+          "count": 154,
+          "p50": 6,
+          "p90": 6,
+          "p99": 6,
+          "max": 6
+        },
+        "governor/TargetMS": {
+          "count": 154,
+          "p50": 800,
+          "p90": 800,
+          "p99": 800,
+          "max": 800
+        },
+        "governor/ObservedRTTMS": {
+          "count": 154,
+          "p50": 5560,
+          "p90": 40658,
+          "p99": 55277,
+          "max": 57054
+        },
+        "governor/OldestBulkRangeAgeMS": {
+          "count": 154,
+          "p50": 5560,
+          "p90": 40658,
+          "p99": 55277,
+          "max": 57054
+        },
+        "governor/AcknowledgementFloorMS": {
+          "count": 154,
+          "p50": 623,
+          "p90": 744,
+          "p99": 2000,
+          "max": 2000
+        },
+        "governor/LastFastACKAgeMS": {
+          "count": 154,
+          "p50": 453,
+          "p90": 716,
+          "p99": 816,
+          "max": 900
+        },
+        "governor/FastPressureRemainingMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 1609,
+          "p99": 1972,
+          "max": 1988
+        },
+        "governor/FastPathBaselineMS": {
+          "count": 154,
+          "p50": 643,
+          "p90": 643,
+          "p99": 654,
+          "max": 654
+        },
+        "governor/FastTargetMS": {
+          "count": 154,
+          "p50": 650,
+          "p90": 650,
+          "p99": 650,
+          "max": 650
+        },
+        "governor/FastPressureDecisions": {
+          "count": 154,
+          "p50": 537,
+          "p90": 777,
+          "p99": 839,
+          "max": 840
+        },
+        "governor/ProbeAttempts": {
+          "count": 154,
+          "p50": 38,
+          "p90": 38,
+          "p99": 38,
+          "max": 38
+        },
+        "governor/ProbeAccepted": {
+          "count": 154,
+          "p50": 21,
+          "p90": 21,
+          "p99": 21,
+          "max": 21
+        },
+        "governor/ProbeRejected": {
+          "count": 154,
+          "p50": 13,
+          "p90": 13,
+          "p99": 13,
+          "max": 13
+        },
+        "governor/RecoveryAttempts": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RecoveryAccepted": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RecoveryRejected": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastRampIncreases": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastRampRollbacks": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/BulkLimit": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/BulkInFlight": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FeedbackSamples": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/MaxCarrierRTTMS": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RateMbps": {
+          "count": 154,
+          "p50": 0.0033096277581118184,
+          "p90": 2.099754649316352,
+          "p99": 4.196520824398552,
+          "max": 4.196904557506423
+        },
+        "governor/BulkRateMbps": {
+          "count": 154,
+          "p50": 0,
+          "p90": 2.0968271029308823,
+          "p99": 4.193497405934953,
+          "max": 4.193976785931162
+        },
+        "governor/RateEWMA": {
+          "count": 154,
+          "p50": 0,
+          "p90": 6.000511646845824,
+          "p99": 8.351170836897422,
+          "max": 8.351170836897422
+        },
+        "governor/RateLimitMbps": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/DecisionCount": {
+          "count": 154,
+          "p50": 1312,
+          "p90": 1555,
+          "p99": 1617,
+          "max": 1618
+        },
+        "governor/EmergencyDecisionCount": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/DownloadWindowBytes": {
+          "count": 154,
+          "p50": 65536,
+          "p90": 1048576,
+          "p99": 1114112,
+          "max": 1114112
+        },
+        "governor/DownloadBacklogBytes": {
+          "count": 154,
+          "p50": 8484,
+          "p90": 163840,
+          "p99": 688128,
+          "max": 1114112
+        },
+        "governor/DownloadPendingBytes": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastFlightBytes": {
+          "count": 154,
+          "p50": 108,
+          "p90": 787,
+          "p99": 4584,
+          "max": 5316
+        },
+        "governor/FlightRanges": {
+          "count": 154,
+          "p50": 4,
+          "p90": 16,
+          "p99": 65,
+          "max": 65
+        },
+        "governor/AdmissionWaiters": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "scheduler/LogicalBytes": {
+          "count": 154,
+          "p50": 45334,
+          "p90": 1901012,
+          "p99": 2097278,
+          "max": 2293946
+        },
+        "scheduler/Items": {
+          "count": 154,
+          "p50": 8,
+          "p90": 65,
+          "p99": 138,
+          "max": 138
+        },
+        "scheduler/Attempts": {
+          "count": 154,
+          "p50": 510,
+          "p90": 634,
+          "p99": 671,
+          "max": 678
+        },
+        "scheduler/Queued": {
+          "count": 154,
+          "p50": 0,
+          "p90": 49,
+          "p99": 53,
+          "max": 54
+        },
+        "scheduler/Writing": {
+          "count": 154,
+          "p50": 1,
+          "p90": 7,
+          "p99": 89,
+          "max": 89
+        },
+        "scheduler/RepairReady": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "scheduler/WakeBlocked": {
+          "count": 154,
+          "p50": 0,
+          "p90": 49,
+          "p99": 53,
+          "max": 54
+        },
+        "scheduler/BulkQueued": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 45,
+          "max": 45
+        },
+        "scheduler/FastQueued": {
+          "count": 154,
+          "p50": 0,
+          "p90": 0,
+          "p99": 16,
+          "max": 16
+        },
+        "scheduler/OldestItem": {
+          "count": 154,
+          "p50": 4465,
+          "p90": 4859,
+          "p99": 4859,
+          "max": 4859
+        },
+        "scheduler/OldestStream": {
+          "count": 154,
+          "p50": 491,
+          "p90": 819,
+          "p99": 819,
+          "max": 819
+        },
+        "scheduler/OldestOffset": {
+          "count": 154,
+          "p50": 102440,
+          "p90": 7209000,
+          "p99": 7209000,
+          "max": 7209000
+        }
+      },
+      "imap_duration_ms": {
+        "cleanup_fetch_exact/OK": {
+          "count": 2471,
+          "p50": 40.736,
+          "p90": 80.12,
+          "p99": 219.527,
+          "max": 22764.809
+        },
+        "delete_observed_batch/OK": {
+          "count": 2505,
+          "p50": 104.994,
+          "p90": 176.676,
+          "p99": 294.847,
+          "max": 795.503
+        },
+        "fetch_page/OK": {
+          "count": 7350,
+          "p50": 14.721,
+          "p90": 35.139,
+          "p99": 222.122,
+          "max": 7719.032
+        },
+        "presence/OK": {
+          "count": 3003,
+          "p50": 24.674,
+          "p90": 38.775,
+          "p99": 171.186,
+          "max": 7101.617
+        },
+        "append_control/OK": {
+          "count": 7064,
+          "p50": 45.66,
+          "p90": 65.89,
+          "p99": 170.792,
+          "max": 6984.789
+        },
+        "append_data/OK": {
+          "count": 1411,
+          "p50": 45.894,
+          "p90": 66.922,
+          "p99": 245.947,
+          "max": 6850.684
+        },
+        "fetch_data_page/OK": {
+          "count": 282,
+          "p50": 80.681,
+          "p90": 181.324,
+          "p99": 4789.169,
+          "max": 4974.983
+        },
+        "append_control/IMAP_APPEND_OUTCOME_UNKNOWN": {
+          "count": 7,
+          "p50": 28434.469,
+          "p90": 28830.158,
+          "p99": 28830.158,
+          "max": 29698.481
+        },
+        "delete_observed_batch/CANCELED": {
+          "count": 1,
+          "p50": 15.037,
+          "p90": 15.037,
+          "p99": 15.037,
+          "max": 15.037
+        },
+        "fetch_page/CANCELED": {
+          "count": 7,
+          "p50": 0.44,
+          "p90": 3.45,
+          "p99": 3.45,
+          "max": 11.791
+        },
+        "ensure/OK": {
+          "count": 84,
+          "p50": 15.099,
+          "p90": 22.071,
+          "p99": 28.416,
+          "max": 29.081
+        },
+        "recovery_page/OK": {
+          "count": 65,
+          "p50": 25.189,
+          "p90": 96.5,
+          "p99": 121.028,
+          "max": 126.268
+        },
+        "delete_batch/OK": {
+          "count": 7,
+          "p50": 143.016,
+          "p90": 164.799,
+          "p99": 164.799,
+          "max": 236.052
+        },
+        "tail/OK": {
+          "count": 7,
+          "p50": 14.869,
+          "p90": 18.695,
+          "p99": 18.695,
+          "max": 19.987
+        },
+        "recent/OK": {
+          "count": 8,
+          "p50": 35.632,
+          "p90": 152.82,
+          "p99": 152.82,
+          "max": 177.326
+        },
+        "append_data/CANCELED": {
+          "count": 3,
+          "p50": 24821.577,
+          "p90": 24821.577,
+          "p99": 24821.577,
+          "max": 29441.34
+        },
+        "cleanup_fetch_exact/CANCELED": {
+          "count": 6,
+          "p50": 25827.303,
+          "p90": 28596.216,
+          "p99": 28596.216,
+          "max": 28799.615
+        },
+        "append_data/IMAP_APPEND_OUTCOME_UNKNOWN": {
+          "count": 3,
+          "p50": 30000.726,
+          "p90": 30000.726,
+          "p99": 30000.726,
+          "max": 30001.866
+        },
+        "append_control/CANCELED": {
+          "count": 1,
+          "p50": 28782.59,
+          "p90": 28782.59,
+          "p99": 28782.59,
+          "max": 28782.59
+        },
+        "delete_observed_batch/TIMEOUT": {
+          "count": 3,
+          "p50": 30001.021,
+          "p90": 30001.021,
+          "p99": 30001.021,
+          "max": 30001.253
+        },
+        "append_control/IO_OR_PROTOCOL_ERROR": {
+          "count": 1,
+          "p50": 29285.589,
+          "p90": 29285.589,
+          "p99": 29285.589,
+          "max": 29285.589
+        },
+        "activate_io/OK": {
+          "count": 7,
+          "p50": 361.904,
+          "p90": 375.133,
+          "p99": 375.133,
+          "max": 439.845
+        },
+        "fetch_data_page/TIMEOUT": {
+          "count": 13,
+          "p50": 1500.875,
+          "p90": 1501.23,
+          "p99": 1501.475,
+          "max": 1501.565
+        },
+        "fetch_data_page/IMAP_TLS_FAILED": {
+          "count": 15,
+          "p50": 881.96,
+          "p90": 944.998,
+          "p99": 964.293,
+          "max": 972.027
+        }
+      }
+    },
+    "server": {
+      "events": 100182,
+      "account_count": 15,
+      "start_utc": "2026-10-14T18:00:33.087602+00:00",
+      "end_utc": "2026-10-14T18:03:01.601030+00:00",
+      "event_counts": {
+        "imap_begin": 16956,
+        "packet_tx_attempt": 5561,
+        "control_batch_append": 4843,
+        "imap_end": 16979,
+        "gc_finished": 11239,
+        "gc_presence": 1787,
+        "gc_proven": 6314,
+        "packet_rx": 5693,
+        "gc_candidate_read": 5404,
+        "gc_candidate_observed": 6459,
+        "frame_rx": 2816,
+        "delivery_admission_wait": 874,
+        "frame_queued": 2147,
+        "stripe_select_wait": 704,
+        "stripe_select": 704,
+        "data_batch_grant": 704,
+        "data_batch_physical_slot": 38,
+        "frame_sealed": 2435,
+        "control_wait": 1828,
+        "data_journal_prepare_start": 705,
+        "data_batch_append": 709,
+        "data_journal_complete_close": 709,
+        "data_batch_completion": 709,
+        "data_envelope_delivery": 837,
+        "data_envelope_receive": 840,
+        "data_writer_member": 795,
+        "health": 134,
+        "lifecycle": 492,
+        "target_dial": 117,
+        "socket_failure": 9,
+        "recovery_rx": 619,
+        "gc_candidate": 22
+      },
+      "error_counts": {
+        "delivery_admission_wait/DELIVERY_MEMBER_DEFERRED": 174,
+        "data_envelope_receive/REGISTERED_BODY": 837,
+        "socket_failure/IO_ERROR": 2,
+        "socket_failure/RESET": 6,
+        "socket_failure/TIMEOUT": 1,
+        "imap_end/IMAP_APPEND_OUTCOME_UNKNOWN": 1,
+        "imap_end/CANCELED": 3,
+        "control_batch_append/IMAP_APPEND_OUTCOME_UNKNOWN": 1,
+        "data_envelope_receive/OLD_SESSION_CLEANUP_ONLY": 3
+      },
+      "lifecycle_counts": {
+        "reconnect/TRANSPORT_TIMEOUT": 7,
+        "data_reader_repair/CANCELED": 2
+      },
+      "failure_timeline": {
+        "2026-10-14T18:01:00Z": {
+          "reconnect/TRANSPORT_TIMEOUT": 7,
+          "data_reader_repair/CANCELED": 2
+        }
+      },
+      "health_numeric": {
+        "line/RTTSampleAgeMS": {
+          "count": 134,
+          "p50": 2890,
+          "p90": 7238,
+          "p99": 25952,
+          "max": 27437
+        },
+        "line/RTTSmoothedMillis": {
+          "count": 134,
+          "p50": 391,
+          "p90": 556,
+          "p99": 812,
+          "max": 987
+        },
+        "line/RTTIdleMillis": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 420,
+          "max": 420
+        },
+        "line/UploadBytes": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/DownloadBytes": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/TCPStreams": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/IMAPLatencyMillis": {
+          "count": 134,
+          "p50": 32,
+          "p90": 47,
+          "p99": 56,
+          "max": 64
+        },
+        "line/ControlSuppressed": {
+          "count": 134,
+          "p50": 13,
+          "p90": 50,
+          "p99": 55,
+          "max": 55
+        },
+        "line/ReaderRepairs": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 1
+        },
+        "line/DataFetchPolls": {
+          "count": 134,
+          "p50": 1237,
+          "p90": 1479,
+          "p99": 1579,
+          "max": 1630
+        },
+        "line/DataEmptyFetchPolls": {
+          "count": 134,
+          "p50": 1218,
+          "p90": 1444,
+          "p99": 1524,
+          "max": 1556
+        },
+        "line/DataFetchMessages": {
+          "count": 134,
+          "p50": 20,
+          "p90": 104,
+          "p99": 110,
+          "max": 110
+        },
+        "line/DataIdleWaits": {
+          "count": 134,
+          "p50": 1139,
+          "p90": 1360,
+          "p99": 1435,
+          "max": 1487
+        },
+        "line/DataIdleNotifies": {
+          "count": 134,
+          "p50": 13,
+          "p90": 72,
+          "p99": 73,
+          "max": 73
+        },
+        "line/DataReceiveLatencyMillis": {
+          "count": 134,
+          "p50": 128,
+          "p90": 229,
+          "p99": 365,
+          "max": 365
+        },
+        "line/DeferredAdmissions": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 12959,
+          "max": 13865
+        },
+        "line/InitialReadyMS": {
+          "count": 134,
+          "p50": 6847,
+          "p90": 8167,
+          "p99": 18898,
+          "max": 18898
+        },
+        "line/ActiveLines": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/TotalLines": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/ReaderHandoffs": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PendingRetirements": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/AvailableGrants": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/IssuedGrants": {
+          "count": 134,
+          "p50": 3,
+          "p90": 3,
+          "p99": 3,
+          "max": 4
+        },
+        "line/PendingDescriptors": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/RemoteGC": {
+          "count": 134,
+          "p50": 0,
+          "p90": 1,
+          "p99": 7,
+          "max": 13
+        },
+        "line/Obsolete": {
+          "count": 134,
+          "p50": 1,
+          "p90": 8,
+          "p99": 46,
+          "max": 49
+        },
+        "line/Known": {
+          "count": 134,
+          "p50": 2,
+          "p90": 20,
+          "p99": 218,
+          "max": 251
+        },
+        "line/IOConnections": {
+          "count": 134,
+          "p50": 5,
+          "p90": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "line/ControlWaitMS": {
+          "count": 134,
+          "p50": 10,
+          "p90": 55,
+          "p99": 105,
+          "max": 149
+        },
+        "line/MaxControlWaitMS": {
+          "count": 134,
+          "p50": 2097,
+          "p90": 2984,
+          "p99": 3174,
+          "max": 3174
+        },
+        "line/AppendCount": {
+          "count": 134,
+          "p50": 1376,
+          "p90": 1578,
+          "p99": 1701,
+          "max": 1740
+        },
+        "line/AppendBytes": {
+          "count": 134,
+          "p50": 6545228,
+          "p90": 8865848,
+          "p99": 9939389,
+          "max": 10128680
+        },
+        "line/ControlAppendCount": {
+          "count": 134,
+          "p50": 1085,
+          "p90": 1267,
+          "p99": 1367,
+          "max": 1400
+        },
+        "line/ControlAppendBytes": {
+          "count": 134,
+          "p50": 718440,
+          "p90": 853538,
+          "p99": 1591903,
+          "max": 1658103
+        },
+        "line/DataAppendCount": {
+          "count": 134,
+          "p50": 286,
+          "p90": 328,
+          "p99": 340,
+          "max": 346
+        },
+        "line/DataAppendBytes": {
+          "count": 134,
+          "p50": 5852964,
+          "p90": 8214637,
+          "p99": 9218715,
+          "max": 9362192
+        },
+        "line/FetchPolls": {
+          "count": 134,
+          "p50": 4607,
+          "p90": 5190,
+          "p99": 5460,
+          "max": 5506
+        },
+        "line/EmptyFetchPolls": {
+          "count": 134,
+          "p50": 3434,
+          "p90": 3896,
+          "p99": 4107,
+          "max": 4142
+        },
+        "line/FetchMessages": {
+          "count": 134,
+          "p50": 1470,
+          "p90": 1667,
+          "p99": 1756,
+          "max": 1792
+        },
+        "line/IdleWaits": {
+          "count": 134,
+          "p50": 867,
+          "p90": 1016,
+          "p99": 1068,
+          "max": 1096
+        },
+        "line/IdleNotifies": {
+          "count": 134,
+          "p50": 377,
+          "p90": 455,
+          "p99": 491,
+          "max": 506
+        },
+        "line/IdleAudits": {
+          "count": 134,
+          "p50": 458,
+          "p90": 528,
+          "p99": 556,
+          "max": 567
+        },
+        "line/IdleKicks": {
+          "count": 134,
+          "p50": 35,
+          "p90": 42,
+          "p99": 56,
+          "max": 61
+        },
+        "line/WindowSent": {
+          "count": 134,
+          "p50": 2,
+          "p90": 9,
+          "p99": 303,
+          "max": 325
+        },
+        "line/WindowReceived": {
+          "count": 134,
+          "p50": 16,
+          "p90": 38,
+          "p99": 80,
+          "max": 80
+        },
+        "line/ReceiptSent": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/ReceiptReceived": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxWindowSent": {
+          "count": 134,
+          "p50": 1048576,
+          "p90": 1048576,
+          "p99": 1048576,
+          "max": 1048576
+        },
+        "line/MaxWindowReceived": {
+          "count": 134,
+          "p50": 1048576,
+          "p90": 1048576,
+          "p99": 1048576,
+          "max": 1048576
+        },
+        "line/DataWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxDataWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/FastDataWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxFastDataWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxLocalGrantWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/RemoteGrantWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxRemoteGrantWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantHeadroomWaits": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/LocalGrantLimitWaits": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/PumpQueueWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 1
+        },
+        "line/MaxPumpQueueWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 1,
+          "p99": 256,
+          "max": 256
+        },
+        "line/FastPumpQueueWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1,
+          "max": 1
+        },
+        "line/MaxFastPumpQueueWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 1,
+          "p99": 256,
+          "max": 256
+        },
+        "line/StripeWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 40,
+          "max": 40
+        },
+        "line/MaxStripeWaitMS": {
+          "count": 134,
+          "p50": 78,
+          "p90": 148,
+          "p99": 217,
+          "max": 217
+        },
+        "line/FastStripeWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/MaxFastStripeWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/GrantSelectWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 5,
+          "p99": 11,
+          "max": 11
+        },
+        "line/MaxGrantSelectWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 13,
+          "p99": 3131,
+          "max": 3131
+        },
+        "line/FastGrantSelectWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 5,
+          "p99": 11,
+          "max": 11
+        },
+        "line/MaxFastGrantSelectWaitMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 13,
+          "p99": 801,
+          "max": 801
+        },
+        "line/BulkReplacementGrants": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "line/DataAttempts": {
+          "count": 134,
+          "p50": 286,
+          "p90": 328,
+          "p99": 340,
+          "max": 346
+        },
+        "line/DataRecords": {
+          "count": 134,
+          "p50": 449,
+          "p90": 514,
+          "p99": 594,
+          "max": 601
+        },
+        "line/DataPayloadBytes": {
+          "count": 134,
+          "p50": 4085715,
+          "p90": 5825727,
+          "p99": 6515734,
+          "max": 6616950
+        },
+        "line/DataBatchCount": {
+          "count": 134,
+          "p50": 286,
+          "p90": 328,
+          "p99": 340,
+          "max": 346
+        },
+        "line/DataBatchRecords": {
+          "count": 134,
+          "p50": 449,
+          "p90": 514,
+          "p99": 594,
+          "max": 601
+        },
+        "line/DataBatchBodyBytes": {
+          "count": 134,
+          "p50": 4179783,
+          "p90": 5919615,
+          "p99": 6630790,
+          "max": 6733434
+        },
+        "line/ControlRecords": {
+          "count": 134,
+          "p50": 1575,
+          "p90": 1839,
+          "p99": 1983,
+          "max": 2020
+        },
+        "line/ReceivedRecords": {
+          "count": 134,
+          "p50": 1730,
+          "p90": 2030,
+          "p99": 2214,
+          "max": 2313
+        },
+        "line/CleanupMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 162,
+          "p99": 557,
+          "max": 602
+        },
+        "line/CleanupMessages": {
+          "count": 134,
+          "p50": 1578,
+          "p90": 1856,
+          "p99": 1994,
+          "max": 2075
+        },
+        "line/CleanupRemoteRuns": {
+          "count": 134,
+          "p50": 136,
+          "p90": 157,
+          "p99": 189,
+          "max": 199
+        },
+        "line/CleanupRemoteMessages": {
+          "count": 134,
+          "p50": 249,
+          "p90": 313,
+          "p99": 345,
+          "max": 347
+        },
+        "line/CleanupLocalDataRuns": {
+          "count": 134,
+          "p50": 970,
+          "p90": 1182,
+          "p99": 1260,
+          "max": 1323
+        },
+        "line/CleanupLocalDataMessages": {
+          "count": 134,
+          "p50": 280,
+          "p90": 322,
+          "p99": 336,
+          "max": 340
+        },
+        "line/CleanupLocalControlRuns": {
+          "count": 134,
+          "p50": 436,
+          "p90": 543,
+          "p99": 584,
+          "max": 595
+        },
+        "line/CleanupLocalControlMessages": {
+          "count": 134,
+          "p50": 1054,
+          "p90": 1249,
+          "p99": 1354,
+          "max": 1388
+        },
+        "line/CleanupPresenceRuns": {
+          "count": 134,
+          "p50": 302,
+          "p90": 390,
+          "p99": 504,
+          "max": 552
+        },
+        "line/Reconnects": {
+          "count": 134,
+          "p50": 1,
+          "p90": 2,
+          "p99": 2,
+          "max": 2
+        },
+        "line/Queue": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 2,
+          "max": 4
+        },
+        "line/Outbox": {
+          "count": 134,
+          "p50": 4,
+          "p90": 25,
+          "p99": 47,
+          "max": 49
+        },
+        "line/ControlMessages": {
+          "count": 134,
+          "p50": 3,
+          "p90": 14,
+          "p99": 43,
+          "max": 44
+        },
+        "line/DataMessages": {
+          "count": 134,
+          "p50": 117,
+          "p90": 142,
+          "p99": 161,
+          "max": 164
+        },
+        "line/DataBytes": {
+          "count": 134,
+          "p50": 4863865,
+          "p90": 5893990,
+          "p99": 6387356,
+          "max": 6447689
+        },
+        "line/PeakDataHeldBytes": {
+          "count": 134,
+          "p50": 5743952,
+          "p90": 6929409,
+          "p99": 7081253,
+          "max": 7081253
+        },
+        "line/PeakDataHeldMessages": {
+          "count": 134,
+          "p50": 132,
+          "p90": 151,
+          "p99": 161,
+          "max": 161
+        },
+        "line/LastOperationMS": {
+          "count": 134,
+          "p50": 40,
+          "p90": 139,
+          "p99": 347,
+          "max": 471
+        },
+        "line/MaxOperationMS": {
+          "count": 134,
+          "p50": 2201,
+          "p90": 3895,
+          "p99": 10620,
+          "max": 10620
+        },
+        "line/Operations": {
+          "count": 134,
+          "p50": 7304,
+          "p90": 8399,
+          "p99": 8773,
+          "max": 9007
+        },
+        "line/RXAgeMS": {
+          "count": 134,
+          "p50": 367,
+          "p90": 4743,
+          "p99": 23974,
+          "max": 25063
+        },
+        "line/RTTMillis": {
+          "count": 134,
+          "p50": 357,
+          "p90": 486,
+          "p99": 1890,
+          "max": 3973
+        },
+        "governor/BaselineMS": {
+          "count": 134,
+          "p50": 420,
+          "p90": 420,
+          "p99": 420,
+          "max": 420
+        },
+        "governor/TargetMS": {
+          "count": 134,
+          "p50": 800,
+          "p90": 800,
+          "p99": 800,
+          "max": 800
+        },
+        "governor/ObservedRTTMS": {
+          "count": 134,
+          "p50": 6142,
+          "p90": 48896,
+          "p99": 58395,
+          "max": 61227
+        },
+        "governor/OldestBulkRangeAgeMS": {
+          "count": 134,
+          "p50": 6142,
+          "p90": 48896,
+          "p99": 58395,
+          "max": 61227
+        },
+        "governor/AcknowledgementFloorMS": {
+          "count": 134,
+          "p50": 521,
+          "p90": 521,
+          "p99": 521,
+          "max": 521
+        },
+        "governor/LastFastACKAgeMS": {
+          "count": 134,
+          "p50": 425,
+          "p90": 830,
+          "p99": 1198,
+          "max": 7213
+        },
+        "governor/FastPressureRemainingMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 1330,
+          "p99": 1994,
+          "max": 1999
+        },
+        "governor/FastPathBaselineMS": {
+          "count": 134,
+          "p50": 675,
+          "p90": 675,
+          "p99": 681,
+          "max": 681
+        },
+        "governor/FastTargetMS": {
+          "count": 134,
+          "p50": 650,
+          "p90": 650,
+          "p99": 650,
+          "max": 650
+        },
+        "governor/FastPressureDecisions": {
+          "count": 134,
+          "p50": 307,
+          "p90": 511,
+          "p99": 511,
+          "max": 511
+        },
+        "governor/ProbeAttempts": {
+          "count": 134,
+          "p50": 37,
+          "p90": 39,
+          "p99": 39,
+          "max": 39
+        },
+        "governor/ProbeAccepted": {
+          "count": 134,
+          "p50": 22,
+          "p90": 22,
+          "p99": 22,
+          "max": 22
+        },
+        "governor/ProbeRejected": {
+          "count": 134,
+          "p50": 14,
+          "p90": 15,
+          "p99": 15,
+          "max": 15
+        },
+        "governor/RecoveryAttempts": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RecoveryAccepted": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RecoveryRejected": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastRampIncreases": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastRampRollbacks": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/BulkLimit": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/BulkInFlight": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FeedbackSamples": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/MaxCarrierRTTMS": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/RateMbps": {
+          "count": 134,
+          "p50": 0.003076499126392307,
+          "p90": 0.03849869769492441,
+          "p99": 1.0572494255275515,
+          "max": 1.8415721899975457
+        },
+        "governor/BulkRateMbps": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 1.0572494255275515,
+          "max": 1.834996232169163
+        },
+        "governor/RateEWMA": {
+          "count": 134,
+          "p50": 0,
+          "p90": 1.834996232169163,
+          "p99": 1.834996232169163,
+          "max": 1.834996232169163
+        },
+        "governor/RateLimitMbps": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/DecisionCount": {
+          "count": 134,
+          "p50": 1371,
+          "p90": 1601,
+          "p99": 1622,
+          "max": 1646
+        },
+        "governor/EmergencyDecisionCount": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/DownloadWindowBytes": {
+          "count": 134,
+          "p50": 65536,
+          "p90": 262144,
+          "p99": 262144,
+          "max": 262144
+        },
+        "governor/DownloadBacklogBytes": {
+          "count": 134,
+          "p50": 65536,
+          "p90": 262144,
+          "p99": 262144,
+          "max": 262144
+        },
+        "governor/DownloadPendingBytes": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "governor/FastFlightBytes": {
+          "count": 134,
+          "p50": 38,
+          "p90": 1588,
+          "p99": 8259,
+          "max": 8909
+        },
+        "governor/FlightRanges": {
+          "count": 134,
+          "p50": 5,
+          "p90": 13,
+          "p99": 16,
+          "max": 205
+        },
+        "governor/AdmissionWaiters": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 6
+        },
+        "scheduler/LogicalBytes": {
+          "count": 134,
+          "p50": 1048576,
+          "p90": 2818200,
+          "p99": 2822470,
+          "max": 2881868
+        },
+        "scheduler/Items": {
+          "count": 134,
+          "p50": 32,
+          "p90": 89,
+          "p99": 94,
+          "max": 205
+        },
+        "scheduler/Attempts": {
+          "count": 134,
+          "p50": 31,
+          "p90": 110,
+          "p99": 218,
+          "max": 312
+        },
+        "scheduler/Queued": {
+          "count": 134,
+          "p50": 24,
+          "p90": 78,
+          "p99": 84,
+          "max": 84
+        },
+        "scheduler/Writing": {
+          "count": 134,
+          "p50": 0,
+          "p90": 2,
+          "p99": 13,
+          "max": 103
+        },
+        "scheduler/RepairReady": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 8
+        },
+        "scheduler/WakeBlocked": {
+          "count": 134,
+          "p50": 22,
+          "p90": 78,
+          "p99": 84,
+          "max": 84
+        },
+        "scheduler/BulkQueued": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "scheduler/FastQueued": {
+          "count": 134,
+          "p50": 0,
+          "p90": 0,
+          "p99": 0,
+          "max": 11
+        },
+        "scheduler/OldestItem": {
+          "count": 134,
+          "p50": 6677,
+          "p90": 6856,
+          "p99": 7231,
+          "max": 7232
+        },
+        "scheduler/OldestStream": {
+          "count": 134,
+          "p50": 703,
+          "p90": 729,
+          "p99": 851,
+          "max": 869
+        },
+        "scheduler/OldestOffset": {
+          "count": 134,
+          "p50": 44,
+          "p90": 804,
+          "p99": 12339,
+          "max": 28807
+        }
+      },
+      "imap_duration_ms": {
+        "append_control/OK": {
+          "count": 4863,
+          "p50": 61.228,
+          "p90": 80.459,
+          "p99": 147.854,
+          "max": 886.868
+        },
+        "presence/OK": {
+          "count": 1787,
+          "p50": 53.573,
+          "p90": 96.011,
+          "p99": 126.206,
+          "max": 352.015
+        },
+        "delete_observed_batch/OK": {
+          "count": 2403,
+          "p50": 150.926,
+          "p90": 239.933,
+          "p99": 396.019,
+          "max": 561.235
+        },
+        "fetch_page/OK": {
+          "count": 4709,
+          "p50": 30.684,
+          "p90": 78.566,
+          "p99": 128.301,
+          "max": 1395.747
+        },
+        "cleanup_fetch_exact/OK": {
+          "count": 1982,
+          "p50": 79.661,
+          "p90": 154.17,
+          "p99": 266.033,
+          "max": 1532.352
+        },
+        "append_data/OK": {
+          "count": 709,
+          "p50": 70.145,
+          "p90": 127.476,
+          "p99": 183.788,
+          "max": 415.251
+        },
+        "recovery_page/OK": {
+          "count": 357,
+          "p50": 84.78,
+          "p90": 420.26,
+          "p99": 587.108,
+          "max": 696.233
+        },
+        "fetch_data_page/OK": {
+          "count": 60,
+          "p50": 118.749,
+          "p90": 203.974,
+          "p99": 371.035,
+          "max": 452.342
+        },
+        "append_control/IMAP_APPEND_OUTCOME_UNKNOWN": {
+          "count": 1,
+          "p50": 40.767,
+          "p90": 40.767,
+          "p99": 40.767,
+          "max": 40.767
+        },
+        "fetch_data_page/CANCELED": {
+          "count": 2,
+          "p50": 23.472,
+          "p90": 23.472,
+          "p99": 23.472,
+          "max": 72.462
+        },
+        "fetch_page/CANCELED": {
+          "count": 1,
+          "p50": 8.378,
+          "p90": 8.378,
+          "p99": 8.378,
+          "max": 8.378
+        },
+        "ensure/OK": {
+          "count": 84,
+          "p50": 30.575,
+          "p90": 51.329,
+          "p99": 54.414,
+          "max": 88.578
+        },
+        "delete_batch/OK": {
+          "count": 7,
+          "p50": 209.626,
+          "p90": 287.048,
+          "p99": 287.048,
+          "max": 297.118
+        },
+        "tail/OK": {
+          "count": 7,
+          "p50": 29.881,
+          "p90": 45.434,
+          "p99": 45.434,
+          "max": 53.832
+        },
+        "activate_io/OK": {
+          "count": 7,
+          "p50": 471.021,
+          "p90": 536.887,
+          "p99": 536.887,
+          "max": 570.283
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Rotating tails do not cover the entire test session.",
+    "Screenshots do not identify mode or UTC timing; exact test-to-trace association is unknown.",
+    "No synchronized cross-host clock calibration or real-provider wire-delay decomposition is available.",
+    "Retained journal debt is visible, but raw grant history is unavailable; tests exercise conservative retained-state scenarios.",
+    "Socket EOF/reset alone cannot establish a carrier crash; reconnect and lifecycle evidence are reported separately."
+  ]
+}

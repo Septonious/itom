@@ -95,6 +95,8 @@ type deliveryController struct {
 	fastPressureUntil                   time.Time
 	lastFastACKAgeMS                    int64
 	lastFastACKAt                       time.Time
+	modelEnabled                        bool
+	model                               throughputModel
 	policy                              deliveryPolicy
 	fastPressureDecisions               uint64
 	decisions                           uint64
@@ -329,6 +331,8 @@ func (d *deliveryController) maintain(now time.Time, demand bool) {
 		d.bulkDemandAt = time.Time{}
 	}
 	var age, fastAge time.Duration
+	var minACK time.Duration
+	for _, sample := range d.ages[:d.ageCount] { if sample > 0 && (minACK == 0 || sample < minACK) { minACK = sample } }
 	type agedFlight struct {
 		age   time.Duration
 		bytes uint64
@@ -387,9 +391,18 @@ func (d *deliveryController) maintain(now time.Time, demand bool) {
 		d.fastPressureUntil = time.Time{}
 	}
 	before := d.window
+	if d.modelEnabled {
+	d.window = d.model.next(now, modelFeedback{deliveryFeedback: deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
+		Delivered: d.bulkDelivered, RateMbps: d.bulkRateMbps, Age: age, FastAge: fastAge,
+		Samples: d.ageCount, Target: d.targetAge(), FastTarget: d.fastAgeBudget(), FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)}, RateAt: d.lastRateAt, RTTAt: now, RTT: minACK, SupplyLimited: d.modelSupplyLimited()})
+	d.policy.mode, d.policy.capacityMbps = d.model.mode, d.model.bandwidth
+	d.policy.delivered, d.policy.lastProgress = d.model.delivered, d.model.lastProgress
+	d.policy.probes = d.model.probes
+	} else {
 	d.window = d.policy.next(now, deliveryFeedback{Window: d.window, InitialWindow: d.initialWindow, Flight: d.bulk, ACKFlight: d.ackFlight, Demand: demand,
 		Delivered: d.bulkDelivered, RateMbps: d.bulkRateMbps, Age: age, FastAge: fastAge,
 		Samples: d.ageCount, Target: d.targetAge(), FastTarget: d.fastAgeBudget(), FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)})
+	}
 	if d.policy.mode == deliveryCongested || d.policy.mode == deliveryOutage {
 		d.fastPressureDecisions++
 	}

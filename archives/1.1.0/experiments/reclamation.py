@@ -7,7 +7,7 @@ def digest(root):
  return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*.go') if not p.name.endswith('_test.go')}
 def main():
  p=argparse.ArgumentParser();p.add_argument('output',type=Path);a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=False)
- source=ROOT/'archives/1.1.0/source/core'
+ source=ROOT/'archives/1.1.0/checkpoints/DEV2/source/core'
  for label in ('control','adaptive'):shutil.copytree(source,out/label,ignore=shutil.ignore_patterns('__pycache__','*.test'))
  core=out/'adaptive';lane=core/'tunnel/lane.go';s=lane.read_text()
  old='l.nextRemoteCleanup = advancePeriodic(l.nextRemoteCleanup, runtimeRemoteCleanupInterval, now)'

@@ -11,7 +11,7 @@ def main():
     pair=out.parent/(out.name+'-paired')
     env=dict(os.environ,ITOM_MODEL_REVISION='2')
     subprocess.run(['python3',str(HERE/'prepare.py'),str(pair)],env=env,check=True)
-    shutil.copytree(ROOT/'archives/1.1.0/source',out,ignore=shutil.ignore_patterns('dist','build','.gradle','__pycache__','*.test'))
+    shutil.copytree(ROOT/'archives/1.1.0/checkpoints/DEV2/source',out,ignore=shutil.ignore_patterns('dist','build','.gradle','__pycache__','*.test'))
     shutil.rmtree(out/'core');shutil.copytree(pair/'model',out/'core')
     paths=['README.md','source-info.json','android/app/build.gradle.kts',
            'core/cmd/itom/main.go','core/manager/trace.go','core/tunnel/version.go',

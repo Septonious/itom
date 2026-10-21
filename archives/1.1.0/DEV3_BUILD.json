@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "revision": "itom-1-1-0-dev3",
+  "build_commit": "922545c0fe3860693fc9a4c95e9cee73145cef69",
+  "run_id": 39628803015,
+  "classification": "experimental testing build; not stable/field qualified",
+  "core": {
+    "model_full_suite": "PASS",
+    "model_tunnel_seconds": 738.233,
+    "rc2_full_suite": "PASS",
+    "rc2_tunnel_seconds": 742.622,
+    "vet": "PASS",
+    "required_races": "PASS",
+    "controller_race_seconds": 1.346,
+    "worst4g": {
+      "useful_mbps_each_direction": 0.324402,
+      "seconds": 30.303,
+      "completed": 75,
+      "failed": 0
+    }
+  },
+  "android": {
+    "status": "passed",
+    "apk": "ITOM-1.1.0-DEV3-debug.apk",
+    "sha256": "bb392c1a38108adc4e8ce0c85868051fe55863fcb0c7ff592f6650db6af51d91",
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10103,
+      "version_name": "1.1.0-dev3-debug"
+    },
+    "domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "app_unit_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+          "locations": [
+            {
+              "file": "/home/runner/work/_temp/dev3/android/app/build.gradle.kts",
+              "line": "60",
+              "column": "20"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "78c7cdb3139284abc90be49267c7cd1ac226c096f6e9f4ca317dd1717a0144e8",
+      "lib/armeabi-v7a/libgojni.so": "9e6ab67db60e7564e82dfd4976e90a08ed4765da99ad62bca6fd633271efbbac"
+    },
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "android_signing": "temporary debug signer; persistent Actions secrets absent; no in-place update assurance",
+  "linux": {
+    "ITOM-1.1.0-DEV3-linux-arm64.bin": {
+      "bytes": 13305776,
+      "sha256": "59a62e2d7b7ef5d37625537d7b3b4550454d7689cff18b94ab1a84a0ccd6be16"
+    },
+    "ITOM-1.1.0-DEV3-linux-amd64.bin": {
+      "bytes": 14486880,
+      "sha256": "ed05826e7f6c9f016ca0c76ccae5117e3f53f7fd2a006606221e79e7362991d6"
+    }
+  },
+  "reproduced_linux_amd64_bit_identical": true,
+  "downloads": {
+    "apk": "https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12360365671",
+    "linux": "https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12358599228"
+  }
+}

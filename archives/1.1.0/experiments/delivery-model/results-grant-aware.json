@@ -1,0 +1,4393 @@
+{
+  "schema": 1,
+  "classification": "laboratory experiment; not field qualified",
+  "logs": {
+    "delivery-model-grant-aware-mobile-variable/1-model.log": {
+      "sha256": "475fa5011c5b20b55bed68504fc700b5c9aa58800639ef1b72a281a98541c905",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "108.231",
+          "download_mbps": "274.976",
+          "rtt_samples": "30",
+          "p50_ms": "225",
+          "p95_ms": "484",
+          "max_ms": "507",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "111.018",
+          "download_mbps": "277.187",
+          "rtt_samples": "30",
+          "p50_ms": "254",
+          "p95_ms": "389",
+          "max_ms": "430",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "107.846",
+          "download_mbps": "277.663"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "112.556",
+          "download_mbps": "273.539"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "115.055",
+          "download_mbps": "281.123"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "123.129",
+          "download_mbps": "277.715"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "107.846042",
+          "max_rtt_ns": "507605779",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "111.017984",
+          "max_rtt_ns": "430634623",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-mobile-variable/1-rc2.log": {
+      "sha256": "7671747a043714ac1fa12325d63be78bb0e91e4a608c1296a1ef7edffe9811b6",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "108.567",
+          "download_mbps": "275.513",
+          "rtt_samples": "30",
+          "p50_ms": "214",
+          "p95_ms": "396",
+          "max_ms": "508",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "110.389",
+          "download_mbps": "276.317",
+          "rtt_samples": "30",
+          "p50_ms": "217",
+          "p95_ms": "416",
+          "max_ms": "475",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "108.327",
+          "download_mbps": "276.142"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "110.433",
+          "download_mbps": "274.972"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "115.343",
+          "download_mbps": "279.183"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "118.437",
+          "download_mbps": "278.109"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "108.326639",
+          "max_rtt_ns": "508352689",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "110.388838",
+          "max_rtt_ns": "475890743",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-mobile-variable/2-model.log": {
+      "sha256": "328cf67fa334a63f8649eb470dc75b5de3a50eab6caea5184fc1d169b70400bc",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "108.663",
+          "download_mbps": "278.082",
+          "rtt_samples": "30",
+          "p50_ms": "202",
+          "p95_ms": "388",
+          "max_ms": "421",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "110.730",
+          "download_mbps": "279.476",
+          "rtt_samples": "30",
+          "p50_ms": "195",
+          "p95_ms": "319",
+          "max_ms": "366",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "108.999",
+          "download_mbps": "279.524"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "111.210",
+          "download_mbps": "280.328"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "115.632",
+          "download_mbps": "286.943"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "119.957",
+          "download_mbps": "287.021"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "108.663057",
+          "max_rtt_ns": "421095398",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "110.729626",
+          "max_rtt_ns": "366960217",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-mobile-variable/2-rc2.log": {
+      "sha256": "5f459d9ae90b2cd75739140dbfa5611fbb58e24ce7aa235ed62f054bc68ed6b0",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "110.009",
+          "download_mbps": "275.092",
+          "rtt_samples": "30",
+          "p50_ms": "217",
+          "p95_ms": "434",
+          "max_ms": "514",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "109.266",
+          "download_mbps": "277.746",
+          "rtt_samples": "30",
+          "p50_ms": "238",
+          "p95_ms": "426",
+          "max_ms": "447",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "109.576",
+          "download_mbps": "279.122"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "110.153",
+          "download_mbps": "281.281"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "114.767",
+          "download_mbps": "282.565"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "116.811",
+          "download_mbps": "286.995"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "109.576192",
+          "max_rtt_ns": "514169779",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "109.265988",
+          "max_rtt_ns": "447704064",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-multi/1-model.log": {
+      "sha256": "aedcba8bbc2df6c9bafc02f27942b548e0298bfaddb02051ffe3617879e30792",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "164.513",
+          "download_mbps": "325.000",
+          "rtt_samples": "30",
+          "p50_ms": "165",
+          "p95_ms": "249",
+          "max_ms": "348",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "166.156",
+          "download_mbps": "324.399",
+          "rtt_samples": "30",
+          "p50_ms": "169",
+          "p95_ms": "227",
+          "max_ms": "264",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "165.238",
+          "download_mbps": "323.154"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "165.107",
+          "download_mbps": "324.456"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "163.840",
+          "download_mbps": "324.613"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "162.162",
+          "download_mbps": "326.527"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "163.840000",
+          "max_rtt_ns": "348027557",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "162.162278",
+          "max_rtt_ns": "264978065",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-multi/1-rc2.log": {
+      "sha256": "6a06485eb3eea53ed14fb6a20a4a448ec7d1ab80e16479d9f813733250c77182",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "161.843",
+          "download_mbps": "315.997",
+          "rtt_samples": "30",
+          "p50_ms": "189",
+          "p95_ms": "291",
+          "max_ms": "297",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "164.871",
+          "download_mbps": "324.041",
+          "rtt_samples": "30",
+          "p50_ms": "191",
+          "p95_ms": "275",
+          "max_ms": "283",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "163.648",
+          "download_mbps": "322.778"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "164.583",
+          "download_mbps": "323.704"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "170.131",
+          "download_mbps": "322.909"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "166.173",
+          "download_mbps": "322.725"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.843337",
+          "max_rtt_ns": "297775965",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "164.582741",
+          "max_rtt_ns": "283412197",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-multi/2-model.log": {
+      "sha256": "9d2475279d48981a14e00055a415a4ceee33760f8275b7d533769f3b3ae3ae21",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "166.278",
+          "download_mbps": "328.497",
+          "rtt_samples": "30",
+          "p50_ms": "158",
+          "p95_ms": "261",
+          "max_ms": "286",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "166.138",
+          "download_mbps": "326.007",
+          "rtt_samples": "30",
+          "p50_ms": "168",
+          "p95_ms": "228",
+          "max_ms": "277",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "166.994",
+          "download_mbps": "327.479"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "165.387",
+          "download_mbps": "326.998"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "165.177",
+          "download_mbps": "326.055"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "165.492",
+          "download_mbps": "326.291"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "165.176934",
+          "max_rtt_ns": "286395749",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "165.386650",
+          "max_rtt_ns": "277432793",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-multi/2-rc2.log": {
+      "sha256": "30505550d4bc43980cd80235f19cc05aa2659e9c389692912c5b27a476a60d7d",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "167.051",
+          "download_mbps": "327.820",
+          "rtt_samples": "30",
+          "p50_ms": "183",
+          "p95_ms": "273",
+          "max_ms": "298",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "167.493",
+          "download_mbps": "325.535",
+          "rtt_samples": "30",
+          "p50_ms": "193",
+          "p95_ms": "293",
+          "max_ms": "340",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "167.554",
+          "download_mbps": "327.129"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "167.021",
+          "download_mbps": "325.967"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "167.248",
+          "download_mbps": "332.268"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "165.492",
+          "download_mbps": "323.931"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "167.051264",
+          "max_rtt_ns": "298982990",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "165.491507",
+          "max_rtt_ns": "340364420",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-retained-multi/1-model.log": {
+      "sha256": "476ef28b33be357de6530a6957e0a37236f8e00fbefbbea7b0c71e0798c9a1bf",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.791",
+          "download_mbps": "316.486",
+          "rtt_samples": "30",
+          "p50_ms": "113",
+          "p95_ms": "167",
+          "max_ms": "174",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.716",
+          "download_mbps": "312.170",
+          "rtt_samples": "30",
+          "p50_ms": "105",
+          "p95_ms": "178",
+          "max_ms": "197",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.249",
+          "download_mbps": "316.076"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "76.633",
+          "download_mbps": "312.371"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "77.437",
+          "download_mbps": "319.501"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "75.340",
+          "download_mbps": "313.419"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.248951",
+          "max_rtt_ns": "174746653",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.340186",
+          "max_rtt_ns": "197737431",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.24895146666667 174.746653ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.3401856 197.737431ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (140.09s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-multi/1-rc2.log": {
+      "sha256": "daabdcbd6cf9b07e641f0fc65002bb6a5f875be9adf3dab54fb0be19809083be",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.747",
+          "download_mbps": "302.492",
+          "rtt_samples": "30",
+          "p50_ms": "123",
+          "p95_ms": "221",
+          "max_ms": "225",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "77.118",
+          "download_mbps": "314.717",
+          "rtt_samples": "30",
+          "p50_ms": "114",
+          "p95_ms": "154",
+          "max_ms": "156",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.668",
+          "download_mbps": "310.352"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "77.044",
+          "download_mbps": "314.433"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "75.891",
+          "download_mbps": "314.783"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "76.939",
+          "download_mbps": "315.543"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.890688",
+          "max_rtt_ns": "225993114",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.939264",
+          "max_rtt_ns": "156308849",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.890688 225.993114ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.939264 156.308849ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (140.84s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-multi/2-model.log": {
+      "sha256": "fa3a83e80aaa623e71b43d90bd76434aee9478d33d462635de213937c9549cdd",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.546",
+          "download_mbps": "314.319",
+          "rtt_samples": "30",
+          "p50_ms": "108",
+          "p95_ms": "152",
+          "max_ms": "158",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.904",
+          "download_mbps": "313.751",
+          "rtt_samples": "30",
+          "p50_ms": "103",
+          "p95_ms": "158",
+          "max_ms": "158",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.354",
+          "download_mbps": "312.135"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "76.590",
+          "download_mbps": "315.586"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "78.066",
+          "download_mbps": "310.195"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "75.943",
+          "download_mbps": "315.700"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.353809",
+          "max_rtt_ns": "158587588",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.943117",
+          "max_rtt_ns": "158925769",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.35380906666666 158.587588ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.9431168 158.925769ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (141.76s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-multi/2-rc2.log": {
+      "sha256": "0e3c8ee8395d7d7fa7b22428a61c745d2b728f1d0dd2d7b567e7f22f80eb1a08",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.293",
+          "download_mbps": "317.085",
+          "rtt_samples": "30",
+          "p50_ms": "110",
+          "p95_ms": "175",
+          "max_ms": "176",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.708",
+          "download_mbps": "314.800",
+          "rtt_samples": "30",
+          "p50_ms": "117",
+          "p95_ms": "145",
+          "max_ms": "147",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.581",
+          "download_mbps": "316.242"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "77.603",
+          "download_mbps": "315.849"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "75.393",
+          "download_mbps": "317.666"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "77.359",
+          "download_mbps": "314.337"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.392614",
+          "max_rtt_ns": "176411227",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.707703",
+          "max_rtt_ns": "147442112",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.3926144 176.411227ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.70770346666667 147.442112ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (140.53s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-single/1-model.log": {
+      "sha256": "a60e64ef0b94a57fd2d943772071b303ff58988f60b56050404ea82d03b136b0",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.585",
+          "download_mbps": "326.352",
+          "rtt_samples": "30",
+          "p50_ms": "98",
+          "p95_ms": "117",
+          "max_ms": "117",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "77.883",
+          "download_mbps": "327.501",
+          "rtt_samples": "30",
+          "p50_ms": "100",
+          "p95_ms": "122",
+          "max_ms": "141",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "77.140",
+          "download_mbps": "325.985"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "78.049",
+          "download_mbps": "332.530"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "76.703",
+          "download_mbps": "326.867"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "76.703",
+          "download_mbps": "335.204"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.585370",
+          "max_rtt_ns": "117608381",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.703334",
+          "max_rtt_ns": "141150326",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.58536959999999 117.608381ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.7033344 141.150326ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (134.33s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-single/1-rc2.log": {
+      "sha256": "7f31c78093c25847ea880c22edbf0f18db89c36e033ae39c95bfaa0c802310cd",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.738",
+          "download_mbps": "315.761",
+          "rtt_samples": "30",
+          "p50_ms": "106",
+          "p95_ms": "139",
+          "max_ms": "183",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.957",
+          "download_mbps": "320.095",
+          "rtt_samples": "30",
+          "p50_ms": "106",
+          "p95_ms": "184",
+          "max_ms": "196",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.677",
+          "download_mbps": "322.053"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "77.568",
+          "download_mbps": "319.283"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "75.838",
+          "download_mbps": "321.729"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "75.262",
+          "download_mbps": "328.755"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.838259",
+          "max_rtt_ns": "183797890",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "75.261542",
+          "max_rtt_ns": "196376680",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.8382592 183.79789ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 75.26154240000001 196.37668ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (134.85s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-single/2-model.log": {
+      "sha256": "7f8d0fb6b0f781d438e8b210cf5cf6d2d6b5ecb23ccbb1cdb4da196013db80b1",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "76.607",
+          "download_mbps": "327.929",
+          "rtt_samples": "30",
+          "p50_ms": "100",
+          "p95_ms": "127",
+          "max_ms": "216",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.030",
+          "download_mbps": "326.138",
+          "rtt_samples": "30",
+          "p50_ms": "90",
+          "p95_ms": "122",
+          "max_ms": "202",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "76.607",
+          "download_mbps": "325.050"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "76.607",
+          "download_mbps": "328.152"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "81.029",
+          "download_mbps": "323.774"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "73.820",
+          "download_mbps": "321.179"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "76.607215",
+          "max_rtt_ns": "216796451",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "73.819750",
+          "max_rtt_ns": "202300852",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 76.60721493333334 216.796451ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 73.8197504 202.300852ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (134.28s)"
+      ]
+    },
+    "delivery-model-grant-aware-retained-single/2-rc2.log": {
+      "sha256": "740f9f66d54595293f15755cb175049e3b62597c62d86d33fb62264eb7e87217",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "75.934",
+          "download_mbps": "327.829",
+          "rtt_samples": "30",
+          "p50_ms": "105",
+          "p95_ms": "171",
+          "max_ms": "180",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "76.756",
+          "download_mbps": "325.814",
+          "rtt_samples": "30",
+          "p50_ms": "103",
+          "p95_ms": "149",
+          "max_ms": "175",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "75.646",
+          "download_mbps": "329.454"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "77.062",
+          "download_mbps": "324.386"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "73.243",
+          "download_mbps": "329.751"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "74.816",
+          "download_mbps": "330.773"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "73.243034",
+          "max_rtt_ns": "180020964",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "74.815898",
+          "max_rtt_ns": "175212852",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 73.24303359999999 180.020964ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 74.8158976 175.212852ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (134.04s)"
+      ]
+    },
+    "delivery-model-grant-aware-single/1-model.log": {
+      "sha256": "fc133f12a0354f7b5461389f61f98dd5ab81698e48b3e485cd3110290f3b682c",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "161.817",
+          "download_mbps": "310.440",
+          "rtt_samples": "30",
+          "p50_ms": "154",
+          "p95_ms": "223",
+          "max_ms": "252",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "161.843",
+          "download_mbps": "310.815",
+          "rtt_samples": "30",
+          "p50_ms": "180",
+          "p95_ms": "237",
+          "max_ms": "261",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "161.000",
+          "download_mbps": "314.442"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "160.187",
+          "download_mbps": "309.566"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "162.922",
+          "download_mbps": "317.850"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "158.309",
+          "download_mbps": "309.959"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.000107",
+          "max_rtt_ns": "252587361",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "158.308762",
+          "max_rtt_ns": "261848191",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-single/1-rc2.log": {
+      "sha256": "663a71b83d63b898a26df512073f56c0d5679b840ba13858f8a964513eb1ff2a",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "161.961",
+          "download_mbps": "307.667",
+          "rtt_samples": "30",
+          "p50_ms": "175",
+          "p95_ms": "215",
+          "max_ms": "217",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "164.635",
+          "download_mbps": "312.532",
+          "rtt_samples": "30",
+          "p50_ms": "168",
+          "p95_ms": "243",
+          "max_ms": "247",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "162.346",
+          "download_mbps": "312.004"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "164.924",
+          "download_mbps": "312.135"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "163.788",
+          "download_mbps": "308.308"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "164.600",
+          "download_mbps": "314.573"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.961301",
+          "max_rtt_ns": "217632046",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "164.600218",
+          "max_rtt_ns": "247273832",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-single/2-model.log": {
+      "sha256": "04e597d2e123f142a7474bc1cddf61020835486fe37eafa7ed6d0d358eddbd67",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "162.005",
+          "download_mbps": "311.773",
+          "rtt_samples": "30",
+          "p50_ms": "160",
+          "p95_ms": "235",
+          "max_ms": "245",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "162.451",
+          "download_mbps": "308.133",
+          "rtt_samples": "30",
+          "p50_ms": "156",
+          "p95_ms": "246",
+          "max_ms": "261",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "161.804",
+          "download_mbps": "312.863"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "162.634",
+          "download_mbps": "308.474"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "162.162",
+          "download_mbps": "312.528"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "161.664",
+          "download_mbps": "308.963"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.804015",
+          "max_rtt_ns": "245539644",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.664205",
+          "max_rtt_ns": "261092432",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-grant-aware-single/2-rc2.log": {
+      "sha256": "88c61585ee3b378496002bc8f72b058dabe23eeef87f5a8896e7889279e61f73",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "162.634",
+          "download_mbps": "310.761",
+          "rtt_samples": "30",
+          "p50_ms": "171",
+          "p95_ms": "281",
+          "max_ms": "334",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "162.586",
+          "download_mbps": "311.729",
+          "rtt_samples": "30",
+          "p50_ms": "178",
+          "p95_ms": "235",
+          "max_ms": "247",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "161.577",
+          "download_mbps": "312.685"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "162.285",
+          "download_mbps": "309.942"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "162.634",
+          "download_mbps": "312.712"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "159.174",
+          "download_mbps": "303.405"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.576823",
+          "max_rtt_ns": "334489284",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "159.173837",
+          "max_rtt_ns": "247995197",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-service-service20/1-model.log": {
+      "sha256": "38dd757b825dab24d881c5c521597c4f5cdfa838596b15bc12736336f1280208",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "173.159",
+          "download_mbps": "235.794",
+          "rtt_samples": "30",
+          "p50_ms": "193",
+          "p95_ms": "271",
+          "max_ms": "278",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "173.954",
+          "download_mbps": "232.171",
+          "rtt_samples": "30",
+          "p50_ms": "189",
+          "p95_ms": "266",
+          "max_ms": "290",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "174.168",
+          "download_mbps": "235.737"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "174.457",
+          "download_mbps": "228.799"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "175.899",
+          "download_mbps": "238.341"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "172.727",
+          "download_mbps": "227.620"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "173.159219",
+          "max_rtt_ns": "278101001",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "172.726682",
+          "max_rtt_ns": "290311730",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-service-service20/1-rc2.log": {
+      "sha256": "46209025c687e644fdfd100bd2c8f6b0b2b2a4f445a2df72f0fd411929028d2f",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "175.130",
+          "download_mbps": "234.986",
+          "rtt_samples": "30",
+          "p50_ms": "200",
+          "p95_ms": "282",
+          "max_ms": "282",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "175.562",
+          "download_mbps": "232.343",
+          "rtt_samples": "30",
+          "p50_ms": "200",
+          "p95_ms": "257",
+          "max_ms": "266",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "177.148",
+          "download_mbps": "232.994"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "175.654",
+          "download_mbps": "231.683"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "175.322",
+          "download_mbps": "230.241"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "175.034",
+          "download_mbps": "229.953"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "175.129668",
+          "max_rtt_ns": "282516960",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "175.033549",
+          "max_rtt_ns": "266162860",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-service-service20/2-model.log": {
+      "sha256": "a336e1b8041bcacec97f8c134a57320c3f60bf7039910e9f4965c02cc364d92d",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "173.111",
+          "download_mbps": "231.936",
+          "rtt_samples": "30",
+          "p50_ms": "190",
+          "p95_ms": "254",
+          "max_ms": "273",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "175.418",
+          "download_mbps": "232.806",
+          "rtt_samples": "30",
+          "p50_ms": "189",
+          "p95_ms": "282",
+          "max_ms": "284",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "175.514",
+          "download_mbps": "230.503"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "176.091",
+          "download_mbps": "230.503"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "173.775",
+          "download_mbps": "230.267"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "174.352",
+          "download_mbps": "231.997"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "173.111159",
+          "max_rtt_ns": "273590132",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "174.351974",
+          "max_rtt_ns": "284757710",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-service-service20/2-rc2.log": {
+      "sha256": "84048a36732c7a981b44a5dbe0b2bab7f4dce55afaee0b6433ceee69d1962939",
+      "passed": true,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "172.102",
+          "download_mbps": "231.329",
+          "rtt_samples": "30",
+          "p50_ms": "204",
+          "p95_ms": "280",
+          "max_ms": "304",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "173.098",
+          "download_mbps": "229.079",
+          "rtt_samples": "30",
+          "p50_ms": "206",
+          "p95_ms": "265",
+          "max_ms": "282",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "173.207",
+          "download_mbps": "227.707"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "172.115",
+          "download_mbps": "229.813"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "175.610",
+          "download_mbps": "227.462"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "171.468",
+          "download_mbps": "230.084"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "172.101905",
+          "max_rtt_ns": "304312746",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "171.468390",
+          "max_rtt_ns": "282362480",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": []
+    },
+    "delivery-model-service-service80/1-model.log": {
+      "sha256": "17c48e5acb9daa3130000c1684d850160bc23043bd4279e150cfa0a869c6deea",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "148.339",
+          "download_mbps": "94.485",
+          "rtt_samples": "30",
+          "p50_ms": "331",
+          "p95_ms": "479",
+          "max_ms": "492",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "148.963",
+          "download_mbps": "92.637",
+          "rtt_samples": "30",
+          "p50_ms": "312",
+          "p95_ms": "435",
+          "max_ms": "479",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "146.390",
+          "download_mbps": "94.774"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "148.076",
+          "download_mbps": "91.698"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "143.602",
+          "download_mbps": "95.158"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "149.868",
+          "download_mbps": "93.140"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "94.485436",
+          "max_rtt_ns": "492378961",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "91.697971",
+          "max_rtt_ns": "479876367",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 94.48543573333333 492.378961ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 91.6979712 479.876367ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (146.85s)"
+      ]
+    },
+    "delivery-model-service-service80/1-rc2.log": {
+      "sha256": "6bd37e29d9ef9c9a879f811e8b770801dcf320b469240b70f5c4ada5f9adca25",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "147.950",
+          "download_mbps": "90.558",
+          "rtt_samples": "30",
+          "p50_ms": "349",
+          "p95_ms": "474",
+          "max_ms": "514",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "147.504",
+          "download_mbps": "91.698",
+          "rtt_samples": "30",
+          "p50_ms": "341",
+          "p95_ms": "411",
+          "max_ms": "423",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "148.408",
+          "download_mbps": "90.448"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "146.407",
+          "download_mbps": "91.410"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "149.658",
+          "download_mbps": "87.949"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "147.928",
+          "download_mbps": "91.698"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "87.949312",
+          "max_rtt_ns": "514980756",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "91.409613",
+          "max_rtt_ns": "423138366",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 87.949312 514.980756ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 91.40961279999999 423.138366ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (148.34s)"
+      ]
+    },
+    "delivery-model-service-service80/2-model.log": {
+      "sha256": "ebba2aee4a75901c1f87d67ec0a8c3db558e5a480b5d51e209e1a3f6af031a84",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "148.911",
+          "download_mbps": "93.878",
+          "rtt_samples": "30",
+          "p50_ms": "337",
+          "p95_ms": "434",
+          "max_ms": "484",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "150.523",
+          "download_mbps": "94.485",
+          "rtt_samples": "30",
+          "p50_ms": "343",
+          "p95_ms": "460",
+          "max_ms": "514",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "147.832",
+          "download_mbps": "94.389"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "151.196",
+          "download_mbps": "94.582"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "148.505",
+          "download_mbps": "94.582"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "149.370",
+          "download_mbps": "94.582"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "93.878135",
+          "max_rtt_ns": "484230242",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "94.485436",
+          "max_rtt_ns": "514901580",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 93.87813546666666 484.230242ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 94.48543573333333 514.90158ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (148.80s)"
+      ]
+    },
+    "delivery-model-service-service80/2-rc2.log": {
+      "sha256": "b89d45c9135b39784cd8c5be21b3309217678c077d14c923de070bc3807c4604",
+      "passed": false,
+      "latency": [],
+      "transitions": [],
+      "bulk": [],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "148.880",
+          "download_mbps": "90.488",
+          "rtt_samples": "30",
+          "p50_ms": "325",
+          "p95_ms": "443",
+          "max_ms": "541",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "151.580",
+          "download_mbps": "92.179",
+          "rtt_samples": "30",
+          "p50_ms": "337",
+          "p95_ms": "402",
+          "max_ms": "440",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "tails30": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "150.619",
+          "download_mbps": "91.410"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "152.253",
+          "download_mbps": "92.371"
+        }
+      ],
+      "tails10": [
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "147.351",
+          "download_mbps": "91.121"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "152.542",
+          "download_mbps": "94.005"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "90.487740",
+          "max_rtt_ns": "541286774",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "92.178569",
+          "max_rtt_ns": "440584162",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "identity": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "failures": [
+        "    supervised_load_test.go:535: duplex performance/cadence gate 90.48773973333333 541.286774ms 30 0 0",
+        "    supervised_load_test.go:535: duplex performance/cadence gate 92.17856853333333 440.584162ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (146.65s)"
+      ]
+    },
+    "model-full-flight-transitions-0/1-model.log": {
+      "sha256": "80439abd3d255f347a6d93c917744efa93c8b0e4dbf34b59cd377cdf65918f9c",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 108.514705,
+          "mean_ms": 90.87616008333333,
+          "p95_ms": 108.514705,
+          "phase": "before-bulk",
+          "samples_ms": [
+            86.458716,
+            100.733123,
+            108.514705,
+            99.291592,
+            101.123107,
+            79.768559,
+            86.471959,
+            88.194502,
+            87.052906,
+            71.36217,
+            99.862578,
+            81.680004
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 160.551993,
+          "mean_ms": 114.99966475000001,
+          "p95_ms": 160.551993,
+          "phase": "during-bulk",
+          "samples_ms": [
+            86.888537,
+            138.4634,
+            143.813952,
+            137.478452,
+            72.27738,
+            128.29118,
+            160.551993,
+            112.660537,
+            93.727863,
+            114.32445,
+            94.795309,
+            96.722924
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 195.876786,
+          "mean_ms": 104.97012145833332,
+          "p95_ms": 140.301801,
+          "phase": "after-bulk",
+          "samples_ms": [
+            100.892859,
+            102.561867,
+            90.0469,
+            69.720166,
+            128.676577,
+            110.244025,
+            98.315741,
+            73.858809,
+            89.875868,
+            87.825183,
+            89.832408,
+            87.377213,
+            195.876786,
+            140.301801,
+            108.3758,
+            105.793001,
+            109.061238,
+            101.046409,
+            101.533291,
+            107.874306,
+            110.289232,
+            83.704011,
+            135.778948,
+            90.420476
+          ],
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "165.331007",
+          "seconds": "15.627",
+          "bytes": "322961408",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-0/1-rc2.log": {
+      "sha256": "e120e4f4393858403ed31adc765db74e921ad2fa6a555278db586be0c273828d",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 111.472288,
+          "mean_ms": 91.78203583333334,
+          "p95_ms": 111.472288,
+          "phase": "before-bulk",
+          "samples_ms": [
+            86.026946,
+            75.911949,
+            109.810735,
+            111.472288,
+            109.300794,
+            78.803096,
+            89.845051,
+            90.348373,
+            87.505808,
+            88.678635,
+            86.287552,
+            87.393203
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 119.366749,
+          "mean_ms": 102.02933708333335,
+          "p95_ms": 119.366749,
+          "phase": "during-bulk",
+          "samples_ms": [
+            74.515273,
+            112.366862,
+            102.781983,
+            102.421551,
+            97.286955,
+            89.716709,
+            119.168792,
+            119.366749,
+            99.931349,
+            119.270524,
+            73.96154,
+            113.563758
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 207.708926,
+          "mean_ms": 107.72996887499998,
+          "p95_ms": 136.149166,
+          "phase": "after-bulk",
+          "samples_ms": [
+            75.569441,
+            104.558187,
+            104.118344,
+            76.649619,
+            136.149166,
+            107.541541,
+            108.990233,
+            107.462375,
+            107.530489,
+            105.183348,
+            81.802408,
+            88.268181,
+            207.708926,
+            130.029831,
+            109.12736,
+            87.285342,
+            106.301349,
+            106.02518,
+            113.925954,
+            103.474605,
+            76.775663,
+            135.160708,
+            109.195829,
+            96.685174
+          ],
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "158.456308",
+          "seconds": "15.670",
+          "bytes": "310378496",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-0/2-model.log": {
+      "sha256": "0fd5f03f53384e8045b4f80c32f1247b9133b7c26af56cef76fa1669441d5c0a",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 109.496492,
+          "mean_ms": 92.76496266666668,
+          "p95_ms": 109.496492,
+          "phase": "before-bulk",
+          "samples_ms": [
+            78.704348,
+            88.518539,
+            90.683122,
+            89.821996,
+            91.085908,
+            77.809177,
+            88.673165,
+            100.991707,
+            107.76871,
+            109.496492,
+            100.299989,
+            89.326399
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 135.683891,
+          "mean_ms": 100.65788016666666,
+          "p95_ms": 135.683891,
+          "phase": "during-bulk",
+          "samples_ms": [
+            115.762594,
+            109.07997,
+            88.502616,
+            88.920945,
+            92.227202,
+            77.707471,
+            91.97343,
+            82.887693,
+            100.217643,
+            126.757208,
+            135.683891,
+            98.173899
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 197.9795,
+          "mean_ms": 100.52655366666669,
+          "p95_ms": 138.282653,
+          "phase": "after-bulk",
+          "samples_ms": [
+            92.517691,
+            90.033587,
+            76.601206,
+            82.275138,
+            87.632775,
+            77.490534,
+            85.222961,
+            100.976485,
+            108.875918,
+            107.727798,
+            197.9795,
+            107.981583,
+            100.542437,
+            110.063351,
+            99.795622,
+            138.282653,
+            87.29802,
+            77.90948,
+            109.421029,
+            89.650748,
+            98.681404,
+            100.989542,
+            107.301272,
+            77.386554
+          ],
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "164.249536",
+          "seconds": "15.526",
+          "bytes": "318767104",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-0/2-rc2.log": {
+      "sha256": "9d2bfafe849eaa493de8b1cb5e5ded9b95eeceecb8679c7ef9b483a1768010ac",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 112.014023,
+          "mean_ms": 90.18298333333333,
+          "p95_ms": 112.014023,
+          "phase": "before-bulk",
+          "samples_ms": [
+            78.453094,
+            94.79168,
+            87.658892,
+            112.014023,
+            107.702431,
+            76.944028,
+            86.571327,
+            76.773816,
+            88.959921,
+            76.347295,
+            88.221628,
+            107.757665
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 148.296812,
+          "mean_ms": 112.97463716666665,
+          "p95_ms": 148.296812,
+          "phase": "during-bulk",
+          "samples_ms": [
+            109.115109,
+            111.980512,
+            78.34393,
+            114.586551,
+            121.001218,
+            108.994693,
+            107.462385,
+            89.243362,
+            131.963028,
+            123.320191,
+            148.296812,
+            111.387855
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 149.735778,
+          "mean_ms": 92.63473825,
+          "p95_ms": 131.56781,
+          "phase": "after-bulk",
+          "samples_ms": [
+            77.595588,
+            92.072302,
+            149.735778,
+            97.274739,
+            99.652851,
+            77.63969,
+            98.328604,
+            131.56781,
+            87.442914,
+            87.939395,
+            78.184705,
+            79.590809,
+            87.236625,
+            90.791464,
+            85.47667,
+            104.507952,
+            110.511025,
+            70.126854,
+            76.479158,
+            71.965152,
+            78.709977,
+            88.589997,
+            88.948677,
+            112.864982
+          ],
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "159.319435",
+          "seconds": "15.585",
+          "bytes": "310378496",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-1/1-model.log": {
+      "sha256": "820ba1e3d9f13824f9f693616e7c7b9dde1b702ad38489394285df1ee9204191",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "client_rtt_start_ms": [
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 304.971107,
+          "mean_ms": 168.26679000000001,
+          "p95_ms": 304.971107,
+          "phase": "before-bulk",
+          "samples_ms": [
+            181.676768,
+            112.233534,
+            180.208108,
+            304.971107,
+            237.067235,
+            236.48222,
+            212.200066,
+            86.259203,
+            123.738788,
+            115.008971,
+            124.525076,
+            104.830404
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            140,
+            45,
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180
+          ],
+          "client_rtt_start_ms": [
+            140,
+            140,
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            120
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 349.986137,
+          "mean_ms": 193.56167816666667,
+          "p95_ms": 349.986137,
+          "phase": "during-bulk",
+          "samples_ms": [
+            306.911657,
+            305.619655,
+            142.684745,
+            110.521948,
+            110.251476,
+            76.382549,
+            101.485073,
+            260.709769,
+            144.648442,
+            225.054441,
+            188.484246,
+            349.986137
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 346.107594,
+          "mean_ms": 163.83158741666668,
+          "p95_ms": 290.498297,
+          "phase": "after-bulk",
+          "samples_ms": [
+            110.361821,
+            97.696102,
+            110.847116,
+            81.107461,
+            124.440807,
+            219.83855,
+            232.901768,
+            240.221804,
+            240.301407,
+            237.450181,
+            216.956489,
+            257.433693,
+            290.498297,
+            346.107594,
+            159.615603,
+            143.401119,
+            119.403023,
+            102.814294,
+            77.91618,
+            100.55048,
+            76.031968,
+            129.713188,
+            109.045684,
+            107.303469
+          ],
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "102.256509",
+          "seconds": "16.079",
+          "bytes": "205520896",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-1/1-rc2.log": {
+      "sha256": "7e70e1f925f96332cb360363e5b6a61159e91723c484d7e97b1f14b5e08c9c4d",
+      "passed": false,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "client_rtt_start_ms": [
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 336.157843,
+          "mean_ms": 205.5187655,
+          "p95_ms": 336.157843,
+          "phase": "before-bulk",
+          "samples_ms": [
+            183.269447,
+            194.628311,
+            296.480348,
+            217.960066,
+            320.56596,
+            336.157843,
+            112.199155,
+            113.684905,
+            145.847928,
+            115.126749,
+            114.53242,
+            315.772054
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 342.659833,
+          "mean_ms": 202.32797725,
+          "p95_ms": 342.659833,
+          "phase": "during-bulk",
+          "samples_ms": [
+            139.938438,
+            104.971494,
+            88.440125,
+            94.060971,
+            131.126715,
+            264.418272,
+            286.3535,
+            233.02058,
+            246.115933,
+            273.489782,
+            342.659833,
+            223.340084
+          ],
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": [
+        "--- FAIL: TestModelBulkToQuiet (12.91s)"
+      ]
+    },
+    "model-full-flight-transitions-1/2-model.log": {
+      "sha256": "adac59b4cbb68c172c7481e86e6a05e7fb0729f068fa614e1080895d77f00db3",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "client_rtt_start_ms": [
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 382.570047,
+          "mean_ms": 182.18260491666663,
+          "p95_ms": 382.570047,
+          "phase": "before-bulk",
+          "samples_ms": [
+            184.122156,
+            100.032094,
+            353.130798,
+            382.570047,
+            215.847017,
+            96.075734,
+            114.941097,
+            128.802049,
+            120.116699,
+            140.701434,
+            129.685763,
+            220.166371
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 286.422791,
+          "mean_ms": 172.72644533333332,
+          "p95_ms": 286.422791,
+          "phase": "during-bulk",
+          "samples_ms": [
+            93.15429,
+            96.409825,
+            104.99101,
+            115.940605,
+            101.673536,
+            151.531358,
+            238.413881,
+            226.296095,
+            223.190851,
+            286.422791,
+            210.747254,
+            223.945848
+          ],
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 379.93424,
+          "mean_ms": 167.503536375,
+          "p95_ms": 369.105394,
+          "phase": "after-bulk",
+          "samples_ms": [
+            110.621853,
+            112.723938,
+            113.604935,
+            179.493039,
+            218.484707,
+            257.851424,
+            228.515328,
+            379.93424,
+            369.105394,
+            237.572999,
+            233.27183,
+            231.200966,
+            144.144199,
+            160.946392,
+            159.726662,
+            99.302384,
+            90.76522,
+            99.806355,
+            99.76285,
+            89.613418,
+            106.527748,
+            108.910752,
+            101.101549,
+            87.096691
+          ],
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "110.270767",
+          "seconds": "15.519",
+          "bytes": "213909504",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    },
+    "model-full-flight-transitions-1/2-rc2.log": {
+      "sha256": "e217643b6e27dc04a1f9fd0743e43be276539b523ab4b14f318e35908c03eb26",
+      "passed": true,
+      "latency": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            80,
+            180,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "client_rtt_start_ms": [
+            80,
+            80,
+            180,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 243.946321,
+          "mean_ms": 172.57921199999998,
+          "p95_ms": 243.946321,
+          "phase": "before-bulk",
+          "samples_ms": [
+            181.606307,
+            243.946321,
+            219.933669,
+            216.278593,
+            243.7674,
+            157.91246,
+            126.046012,
+            102.776508,
+            134.989465,
+            114.351856,
+            95.004805,
+            234.337148
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 374.418512,
+          "mean_ms": 176.66880133333333,
+          "p95_ms": 374.418512,
+          "phase": "during-bulk",
+          "samples_ms": [
+            102.92732,
+            125.186981,
+            109.911706,
+            145.717126,
+            112.837926,
+            203.487079,
+            157.801167,
+            161.788904,
+            179.411738,
+            225.33317,
+            374.418512,
+            221.203987
+          ],
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 345.175752,
+          "mean_ms": 158.00769487499994,
+          "p95_ms": 321.897725,
+          "phase": "after-bulk",
+          "samples_ms": [
+            89.226501,
+            122.48553,
+            103.820584,
+            104.871158,
+            184.791284,
+            263.809093,
+            226.259649,
+            183.590306,
+            273.231693,
+            345.175752,
+            321.897725,
+            247.33124,
+            183.006235,
+            154.335389,
+            120.623687,
+            155.406698,
+            103.827218,
+            87.89992,
+            90.971347,
+            89.490951,
+            88.767464,
+            78.195784,
+            87.017636,
+            86.151833
+          ],
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "103.771992",
+          "seconds": "15.521",
+          "bytes": "201326592",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "rounds": [],
+      "tails30": [],
+      "tails10": [],
+      "acceptance": [],
+      "identity": [],
+      "failures": []
+    }
+  }
+}

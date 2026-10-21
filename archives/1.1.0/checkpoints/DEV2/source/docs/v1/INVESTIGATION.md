@@ -1,0 +1,7 @@
+# 1.0.0 stabilization investigation
+
+The user moved back to the old server and reports the broad disconnect behavior resolved. The new Rev10 captures end with 20/20 client lines ready; residual MULTI failures therefore require stream-level investigation rather than attributing every application error to lane restart. The supplied SINGLE screenshot shows 101 Mbps download / 77.9 Mbps upload, idle ping 302 ms and jitter 73 ms; this is user field evidence, not a sustained duplex 100 Mbps certificate.
+
+A server/client stream trace shows a 32 KiB receive gap while later offsets arrive, followed by an authenticated NACK and application cancellation before the next repair probe completes. The engine currently discards NACKs during original write ownership and the 1750 ms bulk BODY visibility grace. Retain bounded authenticated repair intent, activate only after the physical writer finishes and grace expires, and clear an obsolete admission wake exactly once when that retained authorization becomes schedulable. Definite unpublished originals must remain ordinary queued originals. Duplicate requests, receipts and retry limits retain their existing authority.
+
+Checkpointed Rev11 work includes a bounded receive-silence floor and failed DATA reader diagnostic history. Its brief-stall and persistent-blackhole regressions passed; its race-instrumented 12-stream ramp timed out while receivers remained healthy. Keep that failure visible and investigate before claiming readiness. Raw user captures remain private.

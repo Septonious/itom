@@ -30,6 +30,7 @@ type stripeSessionKey struct {
 // stripeHub owns server-side logical sessions for one user. Carriers are keyed
 // by the authenticated ITH9 logical session/generation, never merely by account.
 type stripeHub struct {
+	modelEnabled bool
 	mu           sync.Mutex
 	groups       map[stripeSessionKey]*stripeGroup
 	cleaning     bool
@@ -61,6 +62,7 @@ func (h *stripeHub) group(logical wire.ID, generation uint64) *stripeGroup {
 		return nil
 	}
 	g := newStripeGroup(logical, generation)
+	h.configureModel(g)
 	h.idleSince = time.Time{}
 	g.hub = h
 	g.hubKey = key
@@ -88,6 +90,7 @@ func (h *stripeHub) attach(l *lane) error {
 			return errStripeUnavailable
 		}
 		g = newStripeGroup(l.logicalSession, l.generation)
+		h.configureModel(g)
 		h.idleSince = time.Time{}
 		g.hub = h
 		g.hubKey = key

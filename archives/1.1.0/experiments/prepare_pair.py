@@ -3,7 +3,7 @@
 import argparse,hashlib,io,json,shutil,subprocess,tarfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[3]
-SOURCE=ROOT/'archives/1.1.0/source/core'
+SOURCE=ROOT/'archives/1.1.0/checkpoints/DEV2/source/core'
 EXCLUDE={'tunnel/response_wait_test.go','datapath/socket_read_policy_test.go'}
 def hashes(root):
  return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file() and not p.name.endswith('_test.go')}

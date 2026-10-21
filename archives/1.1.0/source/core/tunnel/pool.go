@@ -106,7 +106,7 @@ func StartClientWithOptions(parent context.Context, p servercfg.Profile, dir str
 		cancel()
 		return nil, attachErr
 	}
-	c := &Client{ctx: ctx, cancel: cancel, lanes: map[string]*lane{}, total: len(p.Accounts) * 2, diagnostics: map[string]*diagnostic{}, stripe: newStripeGroup(logicalSession, generation), logicalSession: logicalSession, generation: generation}
+	c := &Client{ctx: ctx, cancel: cancel, lanes: map[string]*lane{}, total: len(p.Accounts) * 2, diagnostics: map[string]*diagnostic{}, stripe: newModelStripeGroup(logicalSession, generation), logicalSession: logicalSession, generation: generation}
 	c.accountViews = map[string]*accountView{}
 	for _, a := range p.Accounts {
 		c.accountViews[a.ID] = &accountView{}
@@ -269,7 +269,7 @@ func (c *Client) rotateAttachment(expected *stripeGroup) error {
 	oldGroup := c.stripe
 	c.logicalSession = logical
 	c.generation = generation
-	c.stripe = newStripeGroup(logical, generation)
+	c.stripe = newModelStripeGroup(logical, generation)
 	c.stripe.configuredAccounts = c.total / 2
 	c.lanes = map[string]*lane{}
 	c.events = append(c.events, time.Now().UTC().Format(time.RFC3339)+" event=logical_session_rotate reason=STREAM_ID_EXHAUSTED")
@@ -552,7 +552,7 @@ func serveWithOptions(ctx context.Context, cfg servercfg.Config, dir string, log
 	cleanupGate <- struct{}{}
 	for _, u := range cfg.Users {
 		if u.Enabled {
-			hubs[u.ID] = newStripeHub()
+			hubs[u.ID] = newModelStripeHub()
 		}
 	}
 	readNotice := options.readNotice

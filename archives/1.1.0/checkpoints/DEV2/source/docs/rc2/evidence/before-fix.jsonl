@@ -1,0 +1,18 @@
+{"Time":"2026-10-16T23:57:48.691912867Z","Action":"start","Package":"itom.local/core/tunnel"}
+{"Time":"2026-10-16T23:57:48.696513725Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity"}
+{"Time":"2026-10-16T23:57:48.696647387Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"=== RUN   TestRC2BulkFeedbackEscapesStalledAffinity\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696682401Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"    rc2_stall_routing_test.go:30: bulk feedback stayed pinned behind stalled APPEND\n","OutputType":"error"}
+{"Time":"2026-10-16T23:57:48.696697917Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Output":"--- FAIL: TestRC2BulkFeedbackEscapesStalledAffinity (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696702296Z","Action":"fail","Package":"itom.local/core/tunnel","Test":"TestRC2BulkFeedbackEscapesStalledAffinity","Elapsed":0}
+{"Time":"2026-10-16T23:57:48.696720924Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion"}
+{"Time":"2026-10-16T23:57:48.696743038Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"=== RUN   TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696750312Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Output":"--- PASS: TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696753949Z","Action":"pass","Package":"itom.local/core/tunnel","Test":"TestRC2StallPenaltyNeedsElapsedWorkAndClearsOnCompletion","Elapsed":0}
+{"Time":"2026-10-16T23:57:48.69675778Z","Action":"run","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt"}
+{"Time":"2026-10-16T23:57:48.696760662Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"=== RUN   TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696766697Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"    rc2_stall_routing_test.go:57: new OPEN selected stalled control writer 2\n","OutputType":"error"}
+{"Time":"2026-10-16T23:57:48.696775521Z","Action":"output","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Output":"--- FAIL: TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.696780512Z","Action":"fail","Package":"itom.local/core/tunnel","Test":"TestRC2StalledFeedbackStillHasLastResortAndOpenAvoidsIt","Elapsed":0}
+{"Time":"2026-10-16T23:57:48.69678488Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.697397319Z","Action":"output","Package":"itom.local/core/tunnel","Output":"FAIL\titom.local/core/tunnel\t0.005s\n","OutputType":"frame"}
+{"Time":"2026-10-16T23:57:48.697441295Z","Action":"fail","Package":"itom.local/core/tunnel","Elapsed":0.006}
