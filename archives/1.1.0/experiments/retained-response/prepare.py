@@ -32,6 +32,7 @@ func (l *lane) remoteCleanupPeriod() time.Duration {
 }
 '''.replace('FLOOR_MS',str(floor))
  (t/'reclamation_policy.go').write_text(policy)
+ shutil.copyfile(HERE/'quota_test.go',t/'reclamation_quota_test.go')
  (t/'reclamation_policy_test.go').write_text('''package tunnel
 import "testing"
 func TestRetainedCadenceMissingAuthorityKeepsOriginalTiming(t *testing.T) {

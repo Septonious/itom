@@ -5203,5 +5203,14 @@
       "passed": 14,
       "total": 20
     }
+  },
+  "full_correctness": {
+    "status": "passed",
+    "run_id": 39642091926,
+    "commit": "ff9933f004595736c21e6591c71b18932b49e9a6",
+    "tunnel_seconds": 733.963,
+    "targeted_tunnel_race_seconds": 2.541,
+    "vet": "passed",
+    "journal_wallet_flow_datapath_races": "passed"
   }
 }
