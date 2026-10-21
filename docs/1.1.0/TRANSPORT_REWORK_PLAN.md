@@ -42,7 +42,7 @@ Five isolated prototypes have been measured and preserved in [experiments/RESULT
 
 ## Delivery milestones
 
-1. Instrument and calibrate the new2ms server plus original RC2; freeze a reproducible field baseline.
+1. Instrument and calibrate the current20ms server plus original RC2; freeze a reproducible field baseline.
 2. Screen isolated timing/coalescing experiments, then repeat promising pairs with full throughput/tail and overhead controls. Initial local results and exact patches are in experiments/; none changes final1.0.0.
 3. Build the event-driven carrier/queue scheduler behind an explicit experimental flag; compare each component to RC2, retaining only measured non-regressions.
 4. Introduce independent dynamic pacing/window/batching controllers, with deterministic unit traces and adversarial recovery tests. Avoid coupling many knobs in one candidate.
