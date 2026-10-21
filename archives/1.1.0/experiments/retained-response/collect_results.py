@@ -21,14 +21,16 @@ def collect(root):
                   "passed": bool(re.search(r"^--- PASS: Test", text, re.M)) and not bool(re.search(r"^--- FAIL:|^panic:", text, re.M)),
                   "server_rtt_headers_ms": headers, "rounds": [], "acceptance": [],
                   "tails": [], "identities": [], "latency": [], "directional": [],
-                  "directional_tails": [], "failures": []}
+                  "directional_tails": [], "transitions": [], "bulk": [], "worst4g": [], "failures": []}
         for line in text.splitlines():
             for label, key in [("supervised_result ", "rounds"), ("supervised_acceptance ", "acceptance"),
                                ("supervised_tail ", "tails"), ("supervised_tail10 ", "tails"),
                                ("supervised_identity ", "identities"), ("directional_result ", "directional"),
-                               ("directional_tail ", "directional_tails")]:
+                               ("directional_tail ", "directional_tails"), ("model_transition_bulk ", "bulk"), ("worst_raw4g ", "worst4g")]:
                 if label in line:
                     record[key].append(fields(line, label))
+            if "MODEL_TRANSITION " in line:
+                record["transitions"].append(json.loads(line.split("MODEL_TRANSITION ", 1)[1]))
             if "V110_RESULT " in line:
                 record["latency"].append(json.loads(line.split("V110_RESULT ", 1)[1]))
             if any(x in line for x in ["FAIL:", "stalled stability window", "gate failed", "performance/cadence gate", "i/o timeout", "panic:"]):
