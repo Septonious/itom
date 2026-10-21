@@ -35,7 +35,7 @@ func configureHealthyEndpoints(t *testing.T, p *providerTestNetwork) {
 	}
 	p.healthyEndpoints = true
 	p.mobileEnabled = true
-	if !p.mobile.set(mobileLinkProfile{RTT: clientRTT, Mbps: clientMbps, Seed: 714}) || !p.serverPath.set(mobileLinkProfile{RTT: serverRTT, Mbps: serverMbps, Seed: 715}) {
+	if !p.mobile.set(mobileLinkProfile{RTT: clientRTT, Mbps: clientMbps, UplinkMbps: loadEnvFloat(t, "ITOM_LOAD_CLIENT_UPLINK_MBPS", 0), Seed: 714}) || !p.serverPath.set(mobileLinkProfile{RTT: serverRTT, Mbps: serverMbps, Seed: 715}) {
 		t.Fatal("invalid healthy endpoint path")
 	}
 	// Old combined cap is deliberately absent: each endpoint pays its own

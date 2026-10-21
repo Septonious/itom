@@ -29,6 +29,7 @@ jobs:
           go vet ./...
           go test -p 2 -count=1 -timeout=900s ./...
           go test -race -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath
+          go test -p 2 -tags itomtest -count=1 -timeout=180s ./tunnel -run 'TestV110WorstRaw4GConnectivity|TestV110AsymmetricFixture' -v
   latency:
     name: Paired idle/light client ${{ matrix.rtt }}ms
     runs-on: ubuntu-latest
@@ -152,3 +153,120 @@ jobs:
             ${{ runner.temp }}/paired/provenance.json
             ${{ runner.temp }}/paired/host.txt
           retention-days: 90
+
+# Iteration2: narrow fast permission rollover, asymmetric raw4G trace, corrected mailbox fixture.
+  linux:
+    needs: [core, latency, throughput]
+    if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
+    name: Compile experimental Linux artifacts (not a qualified release)
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV1; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py check --expect-revision itom-1-1-0-dev1
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV1-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.1.0-DEV1-linux-$arch.bin" | grep -q 'itom-1-1-0-dev1'
+            test "$(stat -c %s "dist/ITOM-1.1.0-DEV1-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.1.0-DEV1-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-development-linux
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV1-linux-*.bin
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [core, latency, throughput]
+    if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
+    name: Compile experimental APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact V1 application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV1; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py android --expect-revision itom-1-1-0-dev1 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10101 and x['versionName']=='1.1.0-dev1-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.1.0-DEV1-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-1-0-dev1' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV1-debug.apk > dist/SIGNER.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-development-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV1-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-development-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30

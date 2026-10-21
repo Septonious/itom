@@ -201,7 +201,10 @@ func TestIdleDoneStallInterruptsAndJoinsBeforeNextCommand(t *testing.T) {
 	cfg, tc := testServerWithSession(t, "tls", true, func(s imapserver.Session) imapserver.Session {
 		return &idleCompletionBarrier{s, entered, doneSeen, release}
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	// The receive no-progress watchdog intentionally requires at least eight
+	// seconds. The old four-second parent deadline raced the guard instead
+	// of exercising its bounded interruption and join.
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 	c, err := dial(ctx, cfg, []string{"done-stall"}, tc)
 	if err != nil {
@@ -245,7 +248,7 @@ drainedStall:
 	case <-ctx.Done():
 		t.Fatal("DONE not joined")
 	}
-	if time.Since(begin) > 2*time.Second || c.Ready() {
+	if time.Since(begin) > 11*time.Second || c.Ready() {
 		t.Fatal("stalled receive still live", time.Since(begin))
 	}
 	if _, err = c.Tail(ctx, "done-stall"); err == nil {

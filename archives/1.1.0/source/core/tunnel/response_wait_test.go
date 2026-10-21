@@ -1,6 +1,7 @@
 package tunnel
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -36,5 +37,35 @@ func TestResponseSearchDrainsThenUsesBoundedNotificationWait(t *testing.T) {
 	}
 	if p.audit(5*time.Millisecond) >= p.audit(40*time.Millisecond) {
 		t.Fatal("audit does not track unloaded route")
+	}
+}
+
+type noPushResponseMailbox struct{ fieldEmptyMailbox }
+
+func (*noPushResponseMailbox) ReaderIdleCapable() bool        { return false }
+func (*noPushResponseMailbox) ReaderDirectRTT() time.Duration { return 2 * time.Millisecond }
+func (*noPushResponseMailbox) WaitReadWake(context.Context, string, time.Duration, <-chan struct{}) (bool, bool, bool, error) {
+	return false, false, false, nil
+}
+
+func TestResponseSearchWithoutIdleKeepsLegacyEmptyPollBound(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	m := &noPushResponseMailbox{}
+	l := &lane{ctx: ctx, mail: m, pages: make(chan pageResult, 224), readWake: make(chan struct{}, 1)}
+	l.active.Store(1)
+	l.armReaderHot(time.Second)
+	l.startReader()
+	defer func() { cancel(); l.workers.Wait() }()
+	time.Sleep(600 * time.Millisecond)
+	if polls := m.polls.Load(); polls > 14 {
+		t.Fatal("unsupported IDLE caused a hot FETCH storm", polls)
+	}
+}
+
+func TestObservedResponseSearchKeepsProviderCapabilities(t *testing.T) {
+	provider := &noPushResponseMailbox{}
+	observed := &observedMail{Transport: provider}
+	if observed.ReaderIdleCapable() || observed.ReaderDirectRTT() != 2*time.Millisecond {
+		t.Fatal("diagnostics changed adapter timing capabilities")
 	}
 }

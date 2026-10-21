@@ -16,6 +16,7 @@ import (
 type mobileLinkProfile struct {
 	RTT               time.Duration
 	LossPercent, Mbps float64
+	UplinkMbps        float64 // zero uses Mbps; optional asymmetric client upload
 	Seed              int64
 	SharedMedium      bool
 }
@@ -26,10 +27,14 @@ type mobileLinkState struct {
 }
 
 func (m *mobileLinkState) set(profile mobileLinkProfile) bool {
-	if profile.RTT < 0 || profile.RTT > time.Second || profile.Mbps < 0 || math.IsNaN(profile.Mbps) || math.IsInf(profile.Mbps, 0) || profile.LossPercent < 0 || profile.LossPercent > 5 || math.IsNaN(profile.LossPercent) {
+	if profile.RTT < 0 || profile.RTT > time.Second || profile.UplinkMbps < 0 || math.IsNaN(profile.UplinkMbps) || math.IsInf(profile.UplinkMbps, 0) || profile.Mbps < 0 || math.IsNaN(profile.Mbps) || math.IsInf(profile.Mbps, 0) || profile.LossPercent < 0 || profile.LossPercent > 5 || math.IsNaN(profile.LossPercent) {
 		return false
 	}
-	m.uplink.setMbps(profile.Mbps)
+	uplink := profile.Mbps
+	if profile.UplinkMbps > 0 {
+		uplink = profile.UplinkMbps
+	}
+	m.uplink.setMbps(uplink)
 	m.downlink.setMbps(profile.Mbps)
 	m.shared.setMbps(profile.Mbps)
 	m.profile.Store(&profile)

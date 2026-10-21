@@ -1,3 +1,14 @@
+# ITOM 1.1.0 DEV1 — experimental transport development
+
+This source starts from frozen RC2/1.0.0. It adds demand-scoped receive timing,
+per-socket quiet/burst coalescing and a separately tested exhausted-fast-lease
+rollover correction. It is not stable or field qualified. The first matched
+comparison improved idle/light RTT; retained-state100Mbps and a SINGLE loaded
+RTT tail failed unchanged gates. Consult the sibling1.1.0 experiment report.
+Android stays org.itom.client with version code10101. Preserve app data,
+wallets, server identity and journals. Build artifacts record their commit and
+qualification status. Existing operational documentation follows as reference.
+
 # ITOM 1.0.0
 
 The user-selected final release restores the RC2 transport. No post-RC2 transport or quota/journal/wallet policy is applied. Release identity strings and Android packaging/signing safeguards are updated. Android application ID remains org.itom.client; versionCode 10014.
