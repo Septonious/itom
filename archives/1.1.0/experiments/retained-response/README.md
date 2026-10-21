@@ -9,3 +9,5 @@ Compare900ms and1100ms minimum periods on matched RC2 hosts. Both use the same f
 Server propagation is configurable and defaults to20ms. This timing policy is derived from retained byte headroom, not a hardcoded server network RTT or benchmark speed target.
 
 Current DEV3 source/build artifacts and final1.0.0 remain unchanged until the candidate is accepted. Production deltas against DEV3 are limited to the three bounded-response files, the existing cleanup scheduling call in `lane.go`, and `reclamation_policy.go`; physical authority modules are byte-identical. Full correctness runs on the900ms variant while both timings receive complete matched performance comparisons.
+
+[Measured results and rejected timings](RESULTS.md) include both independent900/1100ms cohorts, gentler1250/1350ms candidates and the additional one-way capacity comparisons. The numerical17/20 goal alone is insufficient to promote a candidate with a serious directional regression.
