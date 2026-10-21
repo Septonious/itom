@@ -1,0 +1,136 @@
+name: ITOM 1.1 isolated reclamation cadence experiment
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-reclamation.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  latency:
+    name: Reclamation sparse idle/light client ${{ matrix.rtt }}ms
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        rtt: [40]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Immutable RC2 and same fixtures; compile before measurement
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/experiments/reclamation.py "$RUNNER_TEMP/paired"
+          for variant in control adaptive; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Two alternating pairs; preserve failures
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "${{ matrix.rtt }}"
+          ITOM_V110_IDLE_PAUSE_MS: "3000"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='control adaptive'; if [ "$trial" = 2 ]; then order='adaptive control'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestV110IdleLightReference$' -test.v -test.timeout 240s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reclamation-sparse-${{ matrix.rtt }}
+          path: ${{ runner.temp }}/paired/*.log
+          retention-days: 90
+  throughput:
+    name: Reclamation ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: retained-single, streams: 1, retained: 1, binary: 0, server_rtt: 2}
+          - {name: retained-multi, streams: 32, retained: 1, binary: 0, server_rtt: 2}
+          - {name: fresh-four, streams: 4, retained: 0, binary: 0, server_rtt: 2}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Reconstruct reference and compile both
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/experiments/reclamation.py "$RUNNER_TEMP/paired"
+          python3 -c 'import os,pathlib; p=pathlib.Path("/sys/fs/cgroup/cpu.max"); print("cpus",os.cpu_count(),"quota",p.read_text() if p.exists() else "unreported")' > "$RUNNER_TEMP/paired/host.txt"
+          for variant in control adaptive; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Unchanged proof and recovery invariants
+        run: |
+          set -euo pipefail
+          for variant in control adaptive; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -count=1 -timeout=180s ./journal ./wallet ./tunnel -run 'TestRemote|Test.*Grant|Test.*Release|TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream|TestRev5Retained')
+          done
+      - name: Original probes, tails, sockets and thresholds; strict 100 Mbps target
+        env:
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_RTT_MS: "${{ matrix.server_rtt }}"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_CLIENT_MBPS: "500"
+          ITOM_LOAD_PROVIDER_MBPS: "500"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
+          ITOM_LOAD_LITERAL_PLUS: "${{ matrix.binary }}"
+          ITOM_LOAD_BINARY_FETCH: "${{ matrix.binary }}"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "${{ matrix.streams }}"
+          ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "2"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "1"
+          ITOM_LOAD_MIN_MBPS: "100"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          order='control adaptive'; if [ '${{ matrix.retained }}' = 1 ]; then order='adaptive control'; fi
+          for variant in $order; do
+            if "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestTransportReworkQualification$' -test.v -test.timeout 600s > "$RUNNER_TEMP/paired/$variant.log" 2>&1; then
+              echo "$variant PASS"
+            else
+              echo "$variant FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reclamation-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+            ${{ runner.temp }}/paired/host.txt
+          retention-days: 90
