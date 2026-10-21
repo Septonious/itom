@@ -1,0 +1,346 @@
+name: ITOM 1.1 selected reclamation confirmation
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-selected-confirmation.yml"]
+  workflow_dispatch:
+    inputs:
+      server_rtt_ms:
+        description: "Server-to-IMAP network RTT in ms (current deployment 20)"
+        required: true
+        default: "20"
+        type: string
+permissions: {contents: read}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: off
+  ITOM_MODEL_REVISION: "2"
+  ITOM_LOCAL_CLEANUP_DIVISOR: "16"
+  ITOM_RETAINED_GC_FLOOR_MS: "1100"
+  ITOM_LOAD_SERVER_RTT_MS: "${{ inputs.server_rtt_ms || '20' }}"
+jobs:
+  throughput:
+    name: Model versus controls ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: local16-single, divisor: 16, streams: 1, retained: 0, trace: 0}
+          - {name: local16-multi, divisor: 16, streams: 32, retained: 0, trace: 0}
+          - {name: local16-retained-single, divisor: 16, streams: 1, retained: 1, trace: 0}
+          - {name: local16-retained-multi, divisor: 16, streams: 32, retained: 1, trace: 0}
+          - {name: local16-mobile-variable, divisor: 16, streams: 4, retained: 0, trace: 1}
+    env:
+      ITOM_LOCAL_CLEANUP_DIVISOR: "${{ matrix.divisor }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Three variants, identical fixtures, no compilation during measurements
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          python3 -c 'import os,pathlib; p=pathlib.Path("/sys/fs/cgroup/cpu.max"); print("cpus",os.cpu_count(),"quota",p.read_text() if p.exists() else "unreported")' > "$RUNNER_TEMP/paired/host.txt"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Complete rounds; unchanged historical gates, including failures
+        env:
+          ITOM_HEALTHY_SERVER: "1"
+          ITOM_LOAD_COMMAND_DELAY_MS: "0"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_CLIENT_MBPS: "500"
+          ITOM_LOAD_PROVIDER_MBPS: "500"
+          ITOM_LOAD_PROVIDER_SERVICE_MS: "2"
+          ITOM_LOAD_LITERAL_PLUS: "0"
+          ITOM_LOAD_BINARY_FETCH: "0"
+          ITOM_LOAD_ACCOUNTS: "10"
+          ITOM_LOAD_STREAMS: "${{ matrix.streams }}"
+          ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+          ITOM_MODEL_MOBILE_TRACE: "${{ matrix.trace }}"
+          ITOM_LOAD_SECONDS: "60"
+          ITOM_LOAD_WARMUP_SECONDS: "2"
+          ITOM_LOAD_REPEATS: "2"
+          ITOM_LOAD_STARTUP_PROBES: "1"
+          ITOM_LOAD_PROBE_CADENCE_MS: "2000"
+          ITOM_LOAD_PROBE_DEADLINE_MS: "1500"
+          ITOM_REWORK_QUALIFICATION: "1"
+          ITOM_RC8_RELEASE_GATE: "1"
+          ITOM_LOAD_MIN_MBPS: "100"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+          ITOM_LOAD_TRACE: "0"
+          ITOM_LOAD_SNAPSHOTS: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestTransportReworkQualification$' -test.v -test.timeout 600s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-confirmation-throughput-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+            ${{ runner.temp }}/paired/host.txt
+          retention-days: 90
+  latency:
+    name: Candidate light/idle ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: fast5, rtt: 5, trace: 0}
+          - {name: mobile40, rtt: 40, trace: 0}
+          - {name: mobile180, rtt: 180, trace: 0}
+          - {name: variable40-180, rtt: 40, trace: 1}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile both exact variants before measurement
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/$variant.test" ./tunnel)
+          done
+      - name: Paired requests with original deadlines and sockets
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "${{ matrix.rtt }}"
+          ITOM_MODEL_MOBILE_TRACE: "${{ matrix.trace }}"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/$variant.test" -test.run '^TestV110IdleLightReference$' -test.v -test.timeout 240s > "$RUNNER_TEMP/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-confirmation-latency-${{ matrix.name }}
+          path: ${{ runner.temp }}/*.log
+          retention-days: 90
+  transition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: {trace: [0, 1]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile three isolated variants before measurement
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Preserve probe socket across demand changes
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_MODEL_MOBILE_TRACE: "${{ matrix.trace }}"
+          ITOM_MODEL_TRANSITION_BYTES: "4194304"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestModelBulkToQuiet$' -test.v -test.timeout 180s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-confirmation-transition-${{ matrix.trace }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90
+  worst4g:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Same fixtures and immutable RC2 before measurement
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Preserve minimum text connectivity and all failures
+        run: |
+          set -uo pipefail
+          failed=0
+          for variant in rc2 model; do
+            if "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestV110WorstRaw4GConnectivity$' -test.v -test.timeout 120s > "$RUNNER_TEMP/paired/$variant.log" 2>&1; then
+              echo "$variant PASS"
+            else
+              echo "$variant FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-confirmation-worst4g
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90
+  capacity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: local16-retained-upload, divisor: 16, retained: 1, direction: upload}
+          - {name: local16-retained-download, divisor: 16, retained: 1, direction: download}
+    env:
+      ITOM_LOCAL_CLEANUP_DIVISOR: "${{ matrix.divisor }}"
+      ITOM_LOAD_RETAINED_STATE: "${{ matrix.retained }}"
+      ITOM_DIRECTION: "${{ matrix.direction }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile unchanged RC2 and candidate with identical additional workload
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Full60s active direction with30s and10s tails; additional to duplex gates
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestRetainedDirectionalCapacity$' -test.v -test.timeout 180s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-capacity-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90
+  interactive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: local16-mobile40, divisor: 16, rtt: 40, trace: 0}
+          - {name: local16-variable40-180, divisor: 16, rtt: 40, trace: 1}
+    env:
+      ITOM_LOCAL_CLEANUP_DIVISOR: "${{ matrix.divisor }}"
+      ITOM_MODEL_MOBILE_TRACE: "${{ matrix.trace }}"
+      ITOM_LOAD_CLIENT_RTT_MS: "${{ matrix.rtt }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile unchanged RC2 and candidate with identical additional workload
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Retained idle and light probes with exact original deadlines and sockets
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='rc2 model'; if [ "$trial" = 2 ]; then order='model rc2'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestRetainedIdleLightReference$' -test.v -test.timeout 180s > "$RUNNER_TEMP/paired/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selected-interactive-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/paired/*.log
+            ${{ runner.temp }}/paired/provenance.json
+          retention-days: 90
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix: {divisor: [16]}
+    env:
+      ITOM_LOCAL_CLEANUP_DIVISOR: "${{ matrix.divisor }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/duplex-reclamation/prepare.py "$RUNNER_TEMP/paired"
+      - working-directory: ${{ runner.temp }}/paired/model
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=900s ./...
+          go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./flow ./datapath
+          go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestBoundedResponse|TestResponseSearch|TestThroughputModel|TestDuplexProof|TestRetainedCadence' -v

@@ -1,0 +1,772 @@
+{
+  "schema": 2,
+  "classification": "laboratory experiment; not promoted or field qualified",
+  "commit": "b84065e70714d3acddccb9388d0839954806c562",
+  "run_id": 39680884499,
+  "server_network_rtt_ms": 20,
+  "original_duplex_gates_changed": false,
+  "logs": {
+    "duplex-directional-local16-retained-download/1-model.log": {
+      "sha256": "d4d8fb3bdc7a219ffbde4104d40c80a3d79612721fa11f80664309865cffcae5",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "270.191821",
+          "minimum_full_tail_mbps": "266.600448",
+          "p95_ms": "174.520",
+          "max_ms": "254.280",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "269.816081"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "266.600448"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-download/1-rc2.log": {
+      "sha256": "00f6cb8cc25158e01c9894fcafd5ee2d30ec1e32ac6211da47e5112bc163ce40",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "263.651328",
+          "minimum_full_tail_mbps": "263.651328",
+          "p95_ms": "205.310",
+          "max_ms": "364.196",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "265.918874"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "271.345254"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-download/2-model.log": {
+      "sha256": "d0adf31467cae66ba2368153018c4c2fd00b8642af2327f925b4a5a16eda86d7",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "271.345254",
+          "minimum_full_tail_mbps": "271.345254",
+          "p95_ms": "208.045",
+          "max_ms": "231.926",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "271.651089"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "275.696845"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-download/2-rc2.log": {
+      "sha256": "daf2d2e83c533b7933a9cc8b6138d7118abe19739a6eb3bb8ad6f849a3ecd6e2",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "271.520017",
+          "minimum_full_tail_mbps": "268.618957",
+          "p95_ms": "177.322",
+          "max_ms": "202.371",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "272.070519"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "268.618957"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-upload/1-model.log": {
+      "sha256": "b1cb77b9e2d2b10d923b034db775c5f0faa9774cfeeed4b20c744490cb99b98b",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "104.691575",
+          "minimum_full_tail_mbps": "104.691575",
+          "p95_ms": "174.393",
+          "max_ms": "179.823",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "105.058577"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "105.827533"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-upload/1-rc2.log": {
+      "sha256": "de88ec6a3c14a223e00855faf78a3ced92164531507b06cea937afa42c888e08",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "76.646537",
+          "minimum_full_tail_mbps": "76.126618",
+          "p95_ms": "217.259",
+          "max_ms": "258.453",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "76.799454"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "76.126618"
+        }
+      ],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (69.90s)"
+      ]
+    },
+    "duplex-directional-local16-retained-upload/2-model.log": {
+      "sha256": "55531243c75131d31899270d70ee43f8f02231e4159fc011bfc5bb07cd1ef000",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "104.049323",
+          "minimum_full_tail_mbps": "103.809024",
+          "p95_ms": "194.183",
+          "max_ms": "200.450",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "104.577980"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "103.809024"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local16-retained-upload/2-rc2.log": {
+      "sha256": "2e3ad922bc5952f0f3ecad4f59d9b4b4f208cba45fa494d8d57ea2f5e400137d",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "76.607215",
+          "minimum_full_tail_mbps": "76.414976",
+          "p95_ms": "203.770",
+          "max_ms": "204.317",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "76.703334"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "76.414976"
+        }
+      ],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (69.88s)"
+      ]
+    },
+    "duplex-directional-local8-retained-download/1-model.log": {
+      "sha256": "5b87bdccbca91ba3bdc431b3fdb6d1a6cfe0d014bf35941099a8dd21775ca331",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "266.255292",
+          "minimum_full_tail_mbps": "265.866445",
+          "p95_ms": "197.869",
+          "max_ms": "242.742",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "266.058684"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "265.866445"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-download/1-rc2.log": {
+      "sha256": "76179986dcad9f78a4b948cdd3767987b1bc2f30ee6eb22be2902aa12a1d6e61",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "265.862076",
+          "minimum_full_tail_mbps": "263.847936",
+          "p95_ms": "192.511",
+          "max_ms": "212.921",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "267.212117"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "263.847936"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-download/2-model.log": {
+      "sha256": "f39256ea20cbdfc536658391e052453ad306d935d1889044e5cdc870f9f10538",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "266.596079",
+          "minimum_full_tail_mbps": "265.866445",
+          "p95_ms": "194.392",
+          "max_ms": "196.923",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "265.866445"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "267.019878"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-download/2-rc2.log": {
+      "sha256": "8f55a558461141468808a71f9a65d5369f06fb711f3c1755c3aa0830ebfd44a1",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "263.275588",
+          "minimum_full_tail_mbps": "263.275588",
+          "p95_ms": "178.072",
+          "max_ms": "179.721",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "264.328533"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "265.289728"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-upload/1-model.log": {
+      "sha256": "c2b5d69aa932f3d8aa9a42b18fd3a5449cb01e5806afeb9ffee50740bdc48582",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "104.722159",
+          "minimum_full_tail_mbps": "103.232307",
+          "p95_ms": "174.996",
+          "max_ms": "201.239",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "104.289621"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "103.232307"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-upload/1-rc2.log": {
+      "sha256": "f557b6364add31f03cc2be6885282d8d9bf2e6cde998eaf1d66653172d39d511",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "76.948002",
+          "minimum_full_tail_mbps": "76.895573",
+          "p95_ms": "204.168",
+          "max_ms": "268.136",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "76.895573"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "79.010202"
+        }
+      ],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (70.23s)"
+      ]
+    },
+    "duplex-directional-local8-retained-upload/2-model.log": {
+      "sha256": "09530619c8e7b0ef25a346018ccbd766acfe7d42b24721293bc15042cb6d5926",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "105.587234",
+          "minimum_full_tail_mbps": "105.587234",
+          "p95_ms": "172.209",
+          "max_ms": "202.249",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "106.115891"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "107.269325"
+        }
+      ],
+      "failures": []
+    },
+    "duplex-directional-local8-retained-upload/2-rc2.log": {
+      "sha256": "2924cc7d9b2a5cd6c74be42c47772ae2e0b9532ed495a92e0d575bc466626feb",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "77.507243",
+          "minimum_full_tail_mbps": "77.183932",
+          "p95_ms": "180.831",
+          "max_ms": "189.022",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "77.183932"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "79.586918"
+        }
+      ],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (70.14s)"
+      ]
+    }
+  },
+  "source_inputs": {
+    "duplex-directional-local16-retained-download/provenance.json": {
+      "artifact_provenance_sha256": "fafc0b8fa04c7d8fda73d4197f8afe99c4906304c2e74a649400fb22382dd0e7",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "255eebda7a93aae6af0a2ef34db0f43cffb1071f9076372af160cb748ea44ced",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "8d31aca58ef4631a6d1b48c1627021e5390ee8e7fd0c2cb91756ef36bd7fe7fa",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d"
+      }
+    },
+    "duplex-directional-local16-retained-upload/provenance.json": {
+      "artifact_provenance_sha256": "fafc0b8fa04c7d8fda73d4197f8afe99c4906304c2e74a649400fb22382dd0e7",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "255eebda7a93aae6af0a2ef34db0f43cffb1071f9076372af160cb748ea44ced",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "8d31aca58ef4631a6d1b48c1627021e5390ee8e7fd0c2cb91756ef36bd7fe7fa",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d"
+      }
+    },
+    "duplex-directional-local8-retained-download/provenance.json": {
+      "artifact_provenance_sha256": "28d70717bdab6bcbd477a20477af7eeaede6b884675d0403587c63648886c022",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "3398d5cc676bd2ca0d87b72d51dc1121259ba05280024a696729626d92adaab8",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 8,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "8d31aca58ef4631a6d1b48c1627021e5390ee8e7fd0c2cb91756ef36bd7fe7fa",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d"
+      }
+    },
+    "duplex-directional-local8-retained-upload/provenance.json": {
+      "artifact_provenance_sha256": "28d70717bdab6bcbd477a20477af7eeaede6b884675d0403587c63648886c022",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "3398d5cc676bd2ca0d87b72d51dc1121259ba05280024a696729626d92adaab8",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 8,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "8d31aca58ef4631a6d1b48c1627021e5390ee8e7fd0c2cb91756ef36bd7fe7fa",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d"
+      }
+    }
+  }
+}

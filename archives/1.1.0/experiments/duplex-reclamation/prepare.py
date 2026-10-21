@@ -17,10 +17,14 @@ def main():
   s=s.replace('os.environ_PLACEHOLDER','os.Getenv("ITOM_V110_RETAINED_IDLE")')
   fixture.write_text(s)
   shutil.copyfile(HERE/'retained_interactive_test.go',t/'retained_interactive_test.go')
+  shutil.copyfile(HERE/'idle_observation_test.go',t/'idle_observation_test.go')
   subprocess.run(['gofmt','-w',str(fixture),str(t/'retained_interactive_test.go')],check=True)
  t=out/'model/tunnel';path=t/'cleanup.go';s=path.read_text()
  old='(window-localFastReserveBytes)/4';assert s.count(old)==1
- path.write_text(s.replace(old,f'(window-localFastReserveBytes)/{divisor}'))
+ s=s.replace(old,'(window-localFastReserveBytes)/divisor')
+ old='window := share.Bytes - u.HistoricalLocal.Bytes';assert s.count(old)==1
+ s=s.replace(old,f'divisor := uint64(4)\n if l.stripe.delivery.modelEnabled {{ divisor = {divisor} }}\n '+old)
+ path.write_text(s)
  shutil.copyfile(HERE/'headroom_test.go',t/'duplex_reclamation_test.go')
  # The test receives the exact experimental policy, without a production env knob.
  test=t/'duplex_reclamation_test.go';test.write_text(test.read_text().replace('EXPERIMENT_DIVISOR',str(divisor)))
@@ -31,6 +35,8 @@ def main():
  prov['experiment']+='; earlier local outbound proof eligibility derived from recovered byte window'
  prov['shared_fixture_overrides']['v110_latency_itomtest_test.go']=hashlib.sha256((t/'v110_latency_itomtest_test.go').read_bytes()).hexdigest()
  prov['shared_fixture_overrides']['retained_interactive_test.go']=hashlib.sha256((t/'retained_interactive_test.go').read_bytes()).hexdigest()
+ prov['local_cleanup_legacy_divisor']=4
+ prov['local_cleanup_model_only']=True
  prov['local_cleanup_divisor']=divisor
  prov['production_delta']=[r for r,h in prov['model_production'].items() if prov['previous_production'].get(r)!=h]
  (out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')

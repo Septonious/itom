@@ -72,6 +72,27 @@ def main():
     report = {"schema": 2, "classification": "laboratory experiment; not promoted or field qualified",
               "commit": args.commit, "run_id": args.run_id, "server_network_rtt_ms": 20,
               "original_duplex_gates_changed": False, "logs": logs}
+    report["source_inputs"] = {}
+    for path in sorted(args.root.rglob("provenance.json")):
+        provenance = json.loads(path.read_text())
+        if not provenance.get("production_reference_unchanged"):
+            raise ValueError(f"Mutated RC2 reference: {path}")
+        previous = provenance.get("previous_production", {})
+        model = provenance["model_production"]
+        authority = ("journal/", "wallet/", "pool/", "wire/", "secure/", "recovery/", "session/", "flow/", "datapath/")
+        changed = [name for name in set(previous) | set(model) if name.startswith(authority) and previous.get(name) != model.get(name)]
+        if changed:
+            raise ValueError(f"Physical/flow authority changed since DEV3: {changed}")
+        canonical = lambda value: hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+        report["source_inputs"][str(path.relative_to(args.root))] = {
+            "artifact_provenance_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "baseline": provenance["baseline"], "reference_production_unchanged": True,
+            "rc2_production_manifest_sha256": canonical(provenance["baseline_production"]),
+            "model_production_manifest_sha256": canonical(model),
+            "authority_modules_identical_to_dev3": True,
+            "remote_cleanup_floor_ms": provenance.get("remote_cleanup_floor_ms"),
+            "local_cleanup_divisor": provenance.get("local_cleanup_divisor", 4),
+            "shared_fixture_overrides": provenance.get("shared_fixture_overrides", {})}
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     describe(logs)
 
