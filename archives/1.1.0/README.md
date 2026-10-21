@@ -1,6 +1,6 @@
 # ITOM 1.1.0 development
 
-Isolated baseline: the frozen final 1.0.0 / original RC2 transport. Development source: `source/`; Android remains `org.itom.client`, version code10101. This is DEV1, **not a qualified release**. No 1.0.0 source or acceptance threshold is changed.
+Isolated baseline: the frozen final 1.0.0 / original RC2 transport. Development source: `source/`; Android remains `org.itom.client`, version code10102. This is DEV1, **not a qualified release**. No 1.0.0 source or acceptance threshold is changed.
 
 First experiments replace the interaction of exponential hot polling with a demand-scoped notification search, and introduce per-socket quiet/burst accumulation timing. Bulk batch, stream credit, physical quota, journal, wallet, recovery and liveness policies remain the reference policies. The observed transport forwards optional scheduling capabilities so diagnostics do not silently change the controller.
 
@@ -29,3 +29,9 @@ The second independent matched run, [39598387014](https://github.com/Septonious/
 The current candidate therefore retains the new notification search only when a measured unloaded provider command turn is positive and at most20ms. That bounds its extra IDLE/DONE turn relative to the old hot polling interval. Unknown or slower routes keep the RC2 receive policy. Quiet/burst socket coalescing remains separate. The normal journal/wallet/grant code is restored exactly, and the rollover implementation/tests are preserved in experiments/deferred-fast-rollover.patch for an isolated later comparison. No unproved debt is released and no quota configuration is increased.
 
 This is an iteration of the1.1 transport work, not a declaration that the entire rework or release qualification is complete. The current source must pass its own comparisons; earlier checkpoint results are not substituted for it.
+
+## DEV2 recovery guard
+
+The complete DEV1 run803d1fa failed TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream after its original12s transfer deadline, despite passing every fresh high-speed case. Packaging was automatically skipped. DEV2 restricts adaptive response waits to providers with independent DATA/maintenance capacity as well as a measured<=20ms route and working IDLE. Capped shared services retain RC2 timing. Five consecutive targeted capped-repair and controller checks passed16.807s locally without changing the deadline. Full correctness and matched qualification are repeated for DEV2 before its test artifacts are exported. The fast-rollover patch remains deferred; grant/journal/wallet policies are unchanged.
+
+The long-idle harness now accepts a test-only pause parameter; ordinary runs keep their previous exact150ms/800ms cadence. A first3000ms comparison was stopped and marked contaminated because a compile overlapped it. It is not used as evidence. The rerun compiles both binaries before measurement and runs them serially without competing work.

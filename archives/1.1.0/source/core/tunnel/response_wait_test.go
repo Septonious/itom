@@ -73,13 +73,22 @@ func TestObservedResponseSearchKeepsProviderCapabilities(t *testing.T) {
 func TestResponseSearchRetainsBaselineOnUnknownAndSlowerRoutes(t *testing.T) {
 	var p responseWaitPolicy
 	for _, d := range []time.Duration{-time.Millisecond, 0, 21 * time.Millisecond, 40 * time.Millisecond, 100 * time.Millisecond} {
-		if p.enabled(d) {
+		if p.enabled(d, true) {
 			t.Fatal("new search enabled on an unqualified route", d)
 		}
 	}
 	for _, d := range []time.Duration{time.Millisecond, 5 * time.Millisecond, 20 * time.Millisecond} {
-		if !p.enabled(d) {
+		if !p.enabled(d, true) {
 			t.Fatal("qualified low-latency route omitted", d)
+		}
+	}
+}
+
+func TestResponseSearchLeavesCappedSharedServicesOnBaseline(t *testing.T) {
+	var p responseWaitPolicy
+	for _, d := range []time.Duration{time.Microsecond, time.Millisecond, 5 * time.Millisecond, 20 * time.Millisecond} {
+		if p.enabled(d, false) {
+			t.Fatal("shared DATA/maintenance acquired new polling policy", d)
 		}
 	}
 }

@@ -35,6 +35,6 @@ func (*responseWaitPolicy) audit(direct time.Duration) time.Duration {
 // search to unloaded routes where that turn is at most twice the normal hot
 // polling cap. Slower or unknown paths keep the RC2 receive policy; loaded
 // tunnel echoes are not propagation evidence for enabling this optimization.
-func (*responseWaitPolicy) enabled(direct time.Duration) bool {
-	return direct > 0 && direct <= 20*time.Millisecond
+func (*responseWaitPolicy) enabled(direct time.Duration, isolated bool) bool {
+	return isolated && direct > 0 && direct <= 20*time.Millisecond
 }

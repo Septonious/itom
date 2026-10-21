@@ -1651,7 +1651,7 @@ func (l *lane) startReader() {
 			if provider, ok := l.mail.(interface{ ReaderIdleCapable() bool }); ok {
 				idleCapable = provider.ReaderIdleCapable()
 			}
-			adaptive := idleCapable && demand.enabled(directRTT)
+			adaptive := idleCapable && demand.enabled(directRTT, l.independentDataMaintenance())
 			useDemandIdle := adaptive && demand.empty(hot, advanced, len(rows))
 			active := l.active.Load()
 			if l.stripe != nil && l.stripe.activeStreams() > active {

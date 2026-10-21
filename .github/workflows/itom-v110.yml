@@ -21,7 +21,7 @@ jobs:
           go-version: "1.27.1"
           cache: false
       - name: Identity, packaging and Python checks
-        run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-dev1
+        run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-dev2
       - name: Full correctness and vet
         working-directory: ${{ env.SOURCE }}/core
         run: |
@@ -154,7 +154,7 @@ jobs:
             ${{ runner.temp }}/paired/host.txt
           retention-days: 90
 
-# Iteration3: retain the low-path search only; defer unproven fast rollover.
+# Iteration4: preserve RC2 timing when DATA/maintenance share constrained sockets.
   linux:
     needs: [core, latency, throughput]
     if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
@@ -173,20 +173,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV1; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
-          python3 tools/build.py check --expect-revision itom-1-1-0-dev1
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV2; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py check --expect-revision itom-1-1-0-dev2
           mkdir -p dist
           for arch in amd64 arm64; do
-            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV1-linux-$arch.bin" ./cmd/itom)
-            strings "dist/ITOM-1.1.0-DEV1-linux-$arch.bin" | grep -q 'itom-1-1-0-dev1'
-            test "$(stat -c %s "dist/ITOM-1.1.0-DEV1-linux-$arch.bin")" -gt 1000000
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV2-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.1.0-DEV2-linux-$arch.bin" | grep -q 'itom-1-1-0-dev2'
+            test "$(stat -c %s "dist/ITOM-1.1.0-DEV2-linux-$arch.bin")" -gt 1000000
           done
-          (cd dist && sha256sum ITOM-1.1.0-DEV1-linux-*.bin > NATIVE_SHA256SUMS)
+          (cd dist && sha256sum ITOM-1.1.0-DEV2-linux-*.bin > NATIVE_SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: v110-development-linux
           path: |
-            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV1-linux-*.bin
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV2-linux-*.bin
             ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
           if-no-files-found: error
           retention-days: 30
@@ -224,34 +224,34 @@ jobs:
           else:
               print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
           PY_SIGNING
-      - name: Pin SDK/JDK/NDK and build exact V1 application
+      - name: Pin SDK/JDK/NDK and build exact 1.1 development application
         working-directory: ${{ env.SOURCE }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
-          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV1; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
-          python3 tools/build.py android --expect-revision itom-1-1-0-dev1 --accept-android-licenses
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV2; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: ${{ needs.throughput.result }}.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py android --expect-revision itom-1-1-0-dev2 --accept-android-licenses
           python3 - <<'PY'
           import json, zipfile
           from pathlib import Path
           meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
           assert meta['applicationId']=='org.itom.client', meta
-          assert any(x['versionCode']==10101 and x['versionName']=='1.1.0-dev1-debug' for x in meta['elements'])
-          apk=Path('dist/ITOM-1.1.0-DEV1-debug.apk')
+          assert any(x['versionCode']==10102 and x['versionName']=='1.1.0-dev2-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.1.0-DEV2-debug.apk')
           assert apk.stat().st_size > 1000000
           with zipfile.ZipFile(apk) as z:
               for abi in ('arm64-v8a','armeabi-v7a'):
-                  assert b'itom-1-1-0-dev1' in z.read(f'lib/{abi}/libgojni.so')
+                  assert b'itom-1-1-0-dev2' in z.read(f'lib/{abi}/libgojni.so')
           PY
           signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
           test -x "$signer"
-          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV1-debug.apk > dist/SIGNER.txt
+          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV2-debug.apk > dist/SIGNER.txt
       - uses: actions/upload-artifact@v4
         with:
           name: v110-development-android
           path: |
-            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV1-debug.apk
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV2-debug.apk
             ${{ env.SOURCE }}/dist/SIGNER.txt
             ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
             ${{ env.SOURCE }}/dist/test-summary.json
