@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Isolate quota-aware cleanup timing; never modify source/ or storage authority."""
 from pathlib import Path
-import argparse,shutil,json,hashlib
+import argparse,shutil,json,hashlib,os
 ROOT=Path(__file__).resolve().parents[3]
 def digest(root):
  return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*.go') if not p.name.endswith('_test.go')}
@@ -44,6 +44,10 @@ func (l *lane) remoteCleanupPeriod() time.Duration {
  return max(150*time.Millisecond,normal*time.Duration(bulk)/time.Duration(remoteBulkLeases*dataLeaseBytes))
 }
 ''')
+ floor=int(os.environ.get("ITOM_EXPERIMENT_GC_FLOOR_MS","150"))
+ assert 150<=floor<=1500
+ policy=core/"tunnel/reclamation_policy.go"
+ policy.write_text(policy.read_text().replace("150*time.Millisecond",str(floor)+"*time.Millisecond"))
  (out/'provenance.json').write_text(json.dumps(dict(control=digest(out/'control'),adaptive=digest(core),classification='experiment',physical_quota_changed=False),indent=2)+'\n')
  print('Isolated cadence experiment; production source untouched')
 if __name__=='__main__':main()
