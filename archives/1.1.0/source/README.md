@@ -1,8 +1,8 @@
 # ITOM 1.1.0 DEV1 — experimental transport development
 
 This source starts from frozen RC2/1.0.0. It adds demand-scoped receive timing,
-per-socket quiet/burst coalescing and a separately tested exhausted-fast-lease
-rollover correction. It is not stable or field qualified. The first matched
+per-socket quiet/burst coalescing. The fast-lease rollover experiment is
+deferred separately and is not applied in this source. It is not stable or field qualified. The first matched
 comparison improved idle/light RTT; retained-state100Mbps and a SINGLE loaded
 RTT tail failed unchanged gates. Consult the sibling1.1.0 experiment report.
 Android stays org.itom.client with version code10101. Preserve app data,

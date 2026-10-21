@@ -21,3 +21,11 @@ The next isolated change pipelines a replacement fast lease only after its durab
 A separate worst4G replay uses the exact supplied ping sequence, asymmetric1Mbps down/2.5Mbps up and2ms server path. It completed78 verified16KiB request/replies over30.276s,0.338Mbps each direction with no connection replacement. That0.1Mbps connectivity objective does not replace the high-capacity100Mbps gate.
 
 Development build jobs may export clearly marked unqualified DEV1 APK/binaries only after correctness and latency checks succeed. Failed performance gates remain failed and no stable release is published. Build notes include the exact commit and qualification result.
+
+## Current selection: low-path notification search only
+
+The second independent matched run, [39598387014](https://github.com/Septonious/itom/actions/runs/39598387014), retained the5ms mean benefit (idle57.2→34.3ms, light57.5→36.2ms) but worsened40ms idle99.7→103.2ms and light120.2→137.0ms, with worse tails. SINGLE candidate passed both complete100Mbps/750ms rounds this time, while RC2 failed its RTT gate; that does not isolate the effect of fast rollover. Retained upload remained~76Mbps and failed100Mbps for both. Exact results remain in experiments/ci2-results.json.
+
+The current candidate therefore retains the new notification search only when a measured unloaded provider command turn is positive and at most20ms. That bounds its extra IDLE/DONE turn relative to the old hot polling interval. Unknown or slower routes keep the RC2 receive policy. Quiet/burst socket coalescing remains separate. The normal journal/wallet/grant code is restored exactly, and the rollover implementation/tests are preserved in experiments/deferred-fast-rollover.patch for an isolated later comparison. No unproved debt is released and no quota configuration is increased.
+
+This is an iteration of the1.1 transport work, not a declaration that the entire rework or release qualification is complete. The current source must pass its own comparisons; earlier checkpoint results are not substituted for it.

@@ -238,7 +238,6 @@ type lane struct {
 	nextID                                      uint64
 	issued                                      map[wire.QuotaKey]bool
 	issuedFast                                  map[wire.QuotaKey]bool
-	issuedLimits                                map[wire.QuotaKey]wire.Quota
 	queued                                      map[wire.QuotaKey]bool
 	outCursor, recvCursor                       mailbox.Cursor
 	outCache                                    []mailbox.Message
@@ -2563,10 +2562,6 @@ func (l *lane) issueRemoteGrantBounded(limit pool.Amount, fast, recovery bool) e
 	}
 	l.issued[offer.Key] = true
 	l.issuedFast[offer.Key] = fast
-	if l.issuedLimits == nil {
-		l.issuedLimits = make(map[wire.QuotaKey]wire.Quota)
-	}
-	l.issuedLimits[offer.Key] = offer.Limit
 	if recovery && l.diag != nil {
 		l.diag.event(fmt.Sprintf("event=grant_recovery_capacity bytes=%d messages=%d held_bytes=%d held_messages=%d", limit.Bytes, limit.Messages, held.Bytes, held.Messages))
 	}
@@ -2906,7 +2901,6 @@ func (l *lane) process(f wire.Frame) error {
 			}
 			delete(l.issued, m.Key)
 			delete(l.issuedFast, m.Key)
-			delete(l.issuedLimits, m.Key)
 			if e = l.controlSend(ack); e != nil {
 				return e
 			}
@@ -3723,7 +3717,6 @@ func (l *lane) publishCleanup(status wire.CleanupStatus) error {
 	if grantFullyReleased(status) {
 		delete(l.issued, status.Key)
 		delete(l.issuedFast, status.Key)
-		delete(l.issuedLimits, status.Key)
 	}
 	// Once a peer has fenced a grant, any later physical release can create
 	// headroom for its replacement. Retry the normal baseline window immediately
@@ -3733,7 +3726,7 @@ func (l *lane) publishCleanup(status wire.CleanupStatus) error {
 	if status.Closed {
 		return l.offer()
 	}
-	return l.refillExhaustedFast(status)
+	return nil
 }
 
 // Repeat only on the retry timer, not on duplicate/intermediate GC_STATUS.
@@ -3864,24 +3857,4 @@ func (l *lane) completeEchoReply(token uint64) {
 		l.stripe.signal()
 		l.stripe.wakeReaders()
 	}
-}
-
-// A durable cumulative report exhausting all message permissions makes a fast
-// lease unusable before its separate fence arrives. Pipeline only through the
-// unchanged journal allocator. Keep the open lease and every physical byte
-// charged; this is admission scheduling, never deletion/refund evidence.
-func (l *lane) refillExhaustedFast(status wire.CleanupStatus) error {
-	if !l.side || status.Closed || !l.issuedFast[status.Key] {
-		return nil
-	}
-	limit, ok := l.issuedLimits[status.Key]
-	if !ok || limit.Messages == 0 || status.Used.Messages != limit.Messages {
-		return nil
-	}
-	l.issued[status.Key] = false
-	fast, _ := l.issuedGrantCounts()
-	if fast >= fastGrantReserve {
-		return nil
-	}
-	return l.offer()
 }

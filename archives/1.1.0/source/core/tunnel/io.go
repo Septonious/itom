@@ -1651,7 +1651,8 @@ func (l *lane) startReader() {
 			if provider, ok := l.mail.(interface{ ReaderIdleCapable() bool }); ok {
 				idleCapable = provider.ReaderIdleCapable()
 			}
-			useDemandIdle := idleCapable && demand.empty(hot, advanced, len(rows))
+			adaptive := idleCapable && demand.enabled(directRTT)
+			useDemandIdle := adaptive && demand.empty(hot, advanced, len(rows))
 			active := l.active.Load()
 			if l.stripe != nil && l.stripe.activeStreams() > active {
 				active = l.stripe.activeStreams()
@@ -1707,7 +1708,7 @@ func (l *lane) startReader() {
 				}
 			}
 			delay := readerPollDelay(active, hot, advanced, len(rows), &idle)
-			if idleCapable && hot && !advanced && len(rows) == 0 {
+			if adaptive && hot && !advanced && len(rows) == 0 {
 				delay = min(delay, demand.poll(directRTT))
 			}
 			if delay > 0 && readerPause(l.ctx, l.readWake, delay) != nil {

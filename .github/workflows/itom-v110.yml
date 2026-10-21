@@ -154,7 +154,7 @@ jobs:
             ${{ runner.temp }}/paired/host.txt
           retention-days: 90
 
-# Iteration2: narrow fast permission rollover, asymmetric raw4G trace, corrected mailbox fixture.
+# Iteration3: retain the low-path search only; defer unproven fast rollover.
   linux:
     needs: [core, latency, throughput]
     if: ${{ always() && needs.core.result == 'success' && needs.latency.result == 'success' }}
