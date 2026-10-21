@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "revision": "itom-1-1-0-dev4",
+  "classification": "testing candidate; field qualification pending; known retained duplex and sparse-tail regressions",
+  "build_commit": "057ed93b0f4b08abec6a76a8fc4531eba527a360",
+  "run_id": 39687896641,
+  "performance_run_id": 39685864723,
+  "performance_commit": "4c8de0ee2177aed84eaac1929e7bb168d171f56b",
+  "performance_gates": {
+    "candidate": 20,
+    "rc2": 16,
+    "planned_each": 20,
+    "thresholds_changed": false,
+    "server_network_rtt_ms": 20
+  },
+  "selected_full_checks": {
+    "job_id": 119519621717,
+    "conclusion": "success",
+    "go_full_suite": "passed",
+    "vet": "passed",
+    "required_races": "passed"
+  },
+  "packaging_jobs": {
+    "core": 119526511090,
+    "linux": 119527433032,
+    "android": 119527433052,
+    "all_conclusions": "success"
+  },
+  "android": {
+    "itom": "1.1.0",
+    "source_revision": "itom-1-1-0-dev4",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-21T22:41:07Z",
+    "jdk_source": "local JDK 17",
+    "cmdline_tools": {
+      "version": "22.0",
+      "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+      "algorithm": "sha1"
+    },
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "a72520a32a3355fbc1e2101fcabd1238961973f145ceafe7423a6c8b84eba036",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "app_unit_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+          "locations": [
+            {
+              "file": "/home/runner/work/_temp/dev4/android/app/build.gradle.kts",
+              "line": "60",
+              "column": "20"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10104,
+      "version_name": "1.1.0-dev4-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "3732d522a3f31ddac91aa3fc62bf04023e0c879af28af6586d9988de2ef9512e",
+      "lib/armeabi-v7a/libgojni.so": "1ad5dae233a266e98ccc29a2ac8c0ed25418ddb4f419a64a66a0c4f366fdcceb"
+    },
+    "status": "passed",
+    "apk": "ITOM-1.1.0-DEV4-debug.apk",
+    "sha256": "84d3f77be862b97e5121b1942f12633d9931bb57562de973af404ccef027ddac",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "android_signing": "temporary debug key; persistent Actions secrets absent; do not erase wallet data to resolve signature mismatch",
+  "linux": {
+    "commit": "057ed93b0f4b08abec6a76a8fc4531eba527a360",
+    "artifact_id": 12387765301,
+    "sha256sums": "e586d4addc5c0f5877339ce34cf00b61d49d0ddd180c2585cdfedd5722938984  ITOM-1.1.0-DEV4-linux-amd64.bin\necd2bbe32210c0bad399c4b869e17862143a50b7a5ca963a4f9fd7b3766cdbd5  ITOM-1.1.0-DEV4-linux-arm64.bin\n",
+    "embedded_revision_verified": true
+  },
+  "downloads": {
+    "apk": "https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12388210238",
+    "linux_amd64_arm64": "https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12387765301",
+    "android_evidence": "https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12387342987"
+  }
+}

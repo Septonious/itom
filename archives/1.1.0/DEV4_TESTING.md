@@ -17,3 +17,7 @@ Retained upload-only: 158.2 vs RC2 76.9 Mbps. Download-only capacity remains abo
 Retained simultaneous-duplex download is 8.4% lower in MULTI and 13.0% lower in SINGLE; upload improves. Some idle/light tails still regress, including a fixed-40 ms fresh idle maximum of 522.5 vs 228.6 ms. This build does not meet a universal no-regression or spike-free claim. It is selected for field testing because it has the strongest completed gate result and full correctness proof, not because every original development goal is met.
 
 Preserve server private state, journals, wallets and app data. Android package remains org.itom.client, versionCode 10104, versionName 1.1.0-dev4-debug. Actions uses persistent signing secrets if all four are configured, otherwise a temporary debug signer. Do not erase wallet data to work around a signature mismatch. Client and server should both use this candidate. Previous DEV3 build metadata remains historical.
+
+## Downloads and build verification
+
+[APK](https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12388210238) | [Linux amd64/arm64](https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12387765301) | [Build manifest and hashes](DEV4_BUILD.json). Packaging run 39687896641 passed all three jobs. Android: 82 domain and 7 adapter tests passed, none skipped, lint zero errors (one dependency-version notice), both JNI architectures and package identity verified. No persistent signing secrets were configured; this APK uses a temporary debug signer.
