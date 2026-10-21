@@ -153,3 +153,40 @@ func TestThroughputModelPlateauDoesNotGrowUnboundedQueue(t *testing.T) {
 		}
 	}
 }
+
+func TestThroughputModelPublishedSupplyCannotEraseNetworkCapacity(t *testing.T) {
+	m := throughputModel{retainWindow: true}
+	now := time.Unix(100, 0)
+	f := modelFeedback{deliveryFeedback: deliveryFeedback{Window: 16 << 20, Flight: 16 << 20, ACKFlight: 16 << 20, Demand: true, Delivered: 1, RateMbps: 100}, RateAt: now, RTT: 200 * time.Millisecond, RTTAt: now}
+	m.next(now, f)
+	f.SupplyLimited = true
+	f.RateMbps = 10
+	for i := 1; i < 10; i++ {
+		f.Delivered++
+		f.RateAt = now.Add(time.Duration(i) * time.Second)
+		f.RTTAt = f.RateAt
+		f.Window = m.next(f.RateAt, f)
+	}
+	if m.bandwidth != 100 || f.Window != 16<<20 || m.lowRates != 0 {
+		t.Fatal("physical supply was misclassified as network congestion", m, f.Window)
+	}
+	f.SupplyLimited = false
+	for i := 10; i < 13; i++ {
+		f.Delivered++
+		f.RateAt = now.Add(time.Duration(i) * time.Second)
+		f.RTTAt = f.RateAt
+		f.Window = m.next(f.RateAt, f)
+	}
+	if m.bandwidth != 10 || f.Window >= 16<<20 {
+		t.Fatal("high-water hid a confirmed published-flight capacity drop", m, f.Window)
+	}
+}
+
+func TestThroughputModelHighWaterDoesNotSurviveDrainedBulk(t *testing.T) {
+	m := throughputModel{retainWindow: true}
+	now := time.Unix(100, 0)
+	got := m.next(now, modelFeedback{deliveryFeedback: deliveryFeedback{Window: 16 << 20}})
+	if got != deliveryInitialWindow || m.mode != deliveryIdle {
+		t.Fatal("bulk high-water leaked into the quiet phase", got, m.mode)
+	}
+}

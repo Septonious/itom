@@ -10,6 +10,7 @@ import (
 // refund debt, acknowledge bytes, change receiver credit, or reconnect carriers.
 // Each direction owns its own instance under the existing stripe mutex.
 type throughputModel struct {
+	retainWindow                                               bool // experiment2: bulk high-water, not an RTT queue target
 	mode                                                       deliveryMode
 	delivered                                                  uint64
 	lastProgress, lastGrowth, lastReduction, lastRate, lastRTT time.Time
@@ -18,6 +19,7 @@ type throughputModel struct {
 	rates                                                      [10]modelRate
 	nextRate                                                   int
 	lowRates                                                   int
+	dropReference                                              float64
 	minRTT, feedbackRTT                                        time.Duration
 	minRTTAt                                                   time.Time
 	startup                                                    bool
@@ -34,6 +36,7 @@ type modelFeedback struct {
 	deliveryFeedback
 	RateAt, RTTAt time.Time
 	RTT           time.Duration // original authenticated DATA ACK, never a repair/timer
+	SupplyLimited bool          // original bulk is waiting for physical publication
 }
 
 func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
@@ -61,19 +64,30 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 	// application-limited samples cannot erase known capacity. ACK compression
 	// is damped by the caller's >=1s useful-byte interval, not APPEND wire rate.
 	utilized := max(f.Flight, f.ACKFlight) >= window/2
+	rateUtilized := utilized && !f.SupplyLimited
 	validRate := f.RateAt.After(m.lastRate) && f.RateMbps > 0 && f.RateMbps <= 10000 && !math.IsNaN(f.RateMbps) && !math.IsInf(f.RateMbps, 0)
 	if validRate {
 		m.lastRate = f.RateAt
-		if utilized || f.RateMbps >= m.bandwidth {
+		if !rateUtilized {
+			m.lowRates, m.dropReference = 0, 0
+		}
+		if rateUtilized || f.RateMbps >= m.bandwidth {
 			old := m.bandwidth
+			if m.lowRates > 0 {
+				old = m.dropReference
+			}
 			m.rates[m.nextRate] = modelRate{now, f.RateMbps}
 			m.nextRate = (m.nextRate + 1) % len(m.rates)
 			// Three independent full-window feedback intervals establish a drop;
 			// a noisy RTT or one quiet interval does not.
-			if utilized && old > 0 && f.RateMbps < .7*old {
+			if rateUtilized && old > 0 && f.RateMbps < .7*old {
+				if m.lowRates == 0 {
+					m.dropReference = old
+				}
 				m.lowRates++
 			} else {
 				m.lowRates = 0
+				m.dropReference = 0
 			}
 			if m.lowRates >= 3 {
 				for i := range m.rates {
@@ -91,7 +105,7 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 					m.bandwidth = max(m.bandwidth, r.mbps)
 				}
 			}
-			if utilized {
+			if rateUtilized {
 				if f.RateMbps >= m.fullRate*1.15 {
 					m.fullRate, m.plateau = f.RateMbps, 0
 				} else {
@@ -160,6 +174,13 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 		}
 		if now.Before(m.probeUntil) {
 			target = min(uint64(deliveryMaxWindow), target+target/4)
+		}
+		if m.retainWindow && (m.lastDrop.IsZero() || now.Sub(m.lastDrop) >= 3*turn) {
+			// Mailbox supply is quantized by grants, batch size and cleanup.
+			// A smaller modeled RTT/BDP is not proof that reducing bulk flight
+			// can preserve goodput. Retain the demonstrated high-water while
+			// useful progress continues; drained epochs still return the seed.
+			target = max(target, window)
 		}
 		if m.lastDrop.Equal(now) && target < window {
 			window = target

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build an isolated model candidate beside immutable RC2 and DEV2 controls."""
-import argparse,hashlib,json,shutil,subprocess
+import argparse,hashlib,json,shutil,subprocess,os
 from pathlib import Path
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[3]
@@ -20,6 +20,10 @@ def main():
     replace(path,old,'d.window = d.model.next(now, modelFeedback{deliveryFeedback: deliveryFeedback{')
     old='FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)})'
     replace(path,old,'FastBaseline: d.fastPathBaseline(), Pressure: now.Before(d.fastPressureUntil)}, RateAt: d.lastRateAt, RTTAt: now, RTT: minACK})\n\td.policy.mode, d.policy.capacityMbps = d.model.mode, d.model.bandwidth\n\td.policy.delivered, d.policy.lastProgress = d.model.delivered, d.model.lastProgress\n\td.policy.probes = d.model.probes')
+    if os.environ.get('ITOM_MODEL_REVISION','1')=='2':
+        replace(path,'wake: make(chan struct{}), window: deliveryInitialWindow','model: throughputModel{retainWindow:true}, wake: make(chan struct{}), window: deliveryInitialWindow')
+        replace(path,'var minACK time.Duration','var minACK time.Duration\n\tvar unpublished uint64\n\tfor _, r := range d.ranges { if !r.fast && !r.published { unpublished += r.end-r.start } }')
+        replace(path,'RTT: minACK})','RTT: minACK, SupplyLimited: unpublished > d.bulk/4})')
     # All variants get byte-identical dynamic mobile fixture code, not a
     # candidate-only workload or a reset of the shared serialization clock.
     for variant in ('rc2','v110','model'):
@@ -29,6 +33,7 @@ def main():
         replace(t/'healthy_endpoints_test.go','p.setMbps(0)','p.setMbps(0)\n\tstartModelMobileTrace(t, p)')
     prov=json.loads((out/'provenance.json').read_text())
     prov['experiment']='useful-delivery model; no production source changed'
+    prov['model_revision']=os.environ.get('ITOM_MODEL_REVISION','1')
     prov['model_production']={str(f.relative_to(out/'model')):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted((out/'model').rglob('*.go')) if not f.name.endswith('_test.go')}
     prov['shared_mobile_trace_sha256']=hashlib.sha256((HERE/'mobile_trace_test.go').read_bytes()).hexdigest()
     (out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')
