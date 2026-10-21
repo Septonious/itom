@@ -99,11 +99,15 @@ func (l *lane) localCleanupThreshold() uint64 {
 	if err != nil {
 		return threshold
 	}
+	divisor := uint64(4)
+	if l.stripe.delivery.modelEnabled {
+		divisor = 16
+	}
 	window := share.Bytes - u.HistoricalLocal.Bytes
 	if window <= localFastReserveBytes {
 		return 64 << 10
 	}
-	return min(threshold, max(uint64(64<<10), (window-localFastReserveBytes)/4))
+	return min(threshold, max(uint64(64<<10), (window-localFastReserveBytes)/divisor))
 }
 
 // pressuredLocalCleanup returns the local maintenance class that must be

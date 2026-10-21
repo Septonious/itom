@@ -1,0 +1,6629 @@
+{
+  "schema": 2,
+  "classification": "laboratory experiment; not promoted or field qualified",
+  "commit": "4c8de0ee2177aed84eaac1929e7bb168d171f56b",
+  "run_id": 39685864723,
+  "server_network_rtt_ms": 20,
+  "original_duplex_gates_changed": false,
+  "logs": {
+    "refill-baseline-capacity-local16-retained-download/1-model.log": {
+      "sha256": "325935f6314349a755aea17730a543182927b809ecc8eff9dc52187ab7ef7947",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "267.024247",
+          "minimum_full_tail_mbps": "266.154803",
+          "p95_ms": "179.389",
+          "max_ms": "222.126",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "266.783949"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "266.154803"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-download/1-rc2.log": {
+      "sha256": "8c5865ded4925a2c2abb2b321caad8e4cc669d77dc7443b6c37f4df2315d2043",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "265.748480",
+          "minimum_full_tail_mbps": "264.713011",
+          "p95_ms": "193.865",
+          "max_ms": "212.756",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "267.884954"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "264.713011"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-download/2-model.log": {
+      "sha256": "2f8fcb581948fa85d421db3d4b3f2565773030817e36b802908fbf4d70148392",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "270.720478",
+          "minimum_full_tail_mbps": "270.191821",
+          "p95_ms": "173.069",
+          "max_ms": "194.135",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "271.205444"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "270.191821"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-download/2-rc2.log": {
+      "sha256": "f9b4e0b25f1db2bd5df385f86fdaf3e22926223b255ee69982f7791f6d6caea6",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "download",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "265.643622",
+          "minimum_full_tail_mbps": "264.870298",
+          "p95_ms": "267.232",
+          "max_ms": "323.404",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "download",
+          "duration_ms": "30000",
+          "useful_mbps": "266.783949"
+        },
+        {
+          "direction": "download",
+          "duration_ms": "10000",
+          "useful_mbps": "264.870298"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-upload/1-model.log": {
+      "sha256": "350cba3b500f84a7b29f006ef381f98ecdd819bfc9af6bdc6f6cff8a4e3c9643",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "158.068463",
+          "minimum_full_tail_mbps": "158.020403",
+          "p95_ms": "164.375",
+          "max_ms": "166.864",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "158.020403"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "158.597120"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-upload/1-rc2.log": {
+      "sha256": "ac736897e526205fe1819e50c72d618a68dc3b8e0584b4f4a6bc2ca464406103",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "76.961109",
+          "minimum_full_tail_mbps": "75.838259",
+          "p95_ms": "203.509",
+          "max_ms": "251.618",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "76.799454"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "75.838259"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (69.99s)"
+      ]
+    },
+    "refill-baseline-capacity-local16-retained-upload/2-model.log": {
+      "sha256": "6ac2e59f90689c0f35dc856ec6c104832f71c56210ab5e0719df8f8ccb130017",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "model",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "158.260702",
+          "minimum_full_tail_mbps": "155.713536",
+          "p95_ms": "196.335",
+          "max_ms": "198.346",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "158.789359"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "155.713536"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-capacity-local16-retained-upload/2-rc2.log": {
+      "sha256": "7f1c96c0f1aab70b16f56cc3561bba29460c077cb4cf4c773cc4daf61d95c7a6",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [
+        {
+          "variant": "rc2",
+          "direction": "upload",
+          "retained": "1",
+          "server_rtt_ms": "20",
+          "useful_mbps": "76.830037",
+          "minimum_full_tail_mbps": "76.830037",
+          "p95_ms": "215.775",
+          "max_ms": "217.805",
+          "probes": "30",
+          "timeouts": "0",
+          "missed": "0",
+          "socket_identity": "true",
+          "field_qualified": "false",
+          "original_duplex_gates_unchanged": "true"
+        }
+      ],
+      "directional_tails": [
+        {
+          "direction": "upload",
+          "duration_ms": "30000",
+          "useful_mbps": "77.280051"
+        },
+        {
+          "direction": "upload",
+          "duration_ms": "10000",
+          "useful_mbps": "79.010202"
+        }
+      ],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "--- FAIL: TestRetainedDirectionalCapacity (70.04s)"
+      ]
+    },
+    "refill-baseline-interactive-local16-mobile40/1-model.log": {
+      "sha256": "9249cb6caa81d333f3be31ab364cadf4a250fc05ca788d7780c4b3a1fab651fc",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 209.317792,
+          "mean_ms": 134.105015125,
+          "p50_ms": 131.492273,
+          "p95_ms": 205.932292,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            155.994023,
+            130.050938,
+            151.809399,
+            89.485093,
+            131.030511,
+            99.795361,
+            119.697267,
+            134.776079,
+            107.571425,
+            90.274397,
+            205.932292,
+            131.57315,
+            87.784088,
+            186.94158,
+            186.368656,
+            77.653816,
+            209.317792,
+            133.742948,
+            100.167405,
+            117.657897,
+            131.492273,
+            89.598538,
+            187.127739,
+            162.677696
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 203.165905,
+          "mean_ms": 140.54378575,
+          "p50_ms": 130.902265,
+          "p95_ms": 198.728457,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            130.057681,
+            159.062161,
+            121.733601,
+            123.606409,
+            130.902265,
+            189.166752,
+            89.13044,
+            185.299536,
+            132.156483,
+            130.04994,
+            99.852412,
+            85.252818,
+            109.411801,
+            131.950058,
+            101.547969,
+            125.292294,
+            175.72724,
+            203.165905,
+            198.728457,
+            193.927102,
+            125.283885,
+            143.473072,
+            182.377327,
+            105.89525
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-mobile40/1-rc2.log": {
+      "sha256": "c9be8ca5904fcd40837f8edf676061cc1da0fee34ad53fcbd5f10f0a9e2c8d06",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 432.239321,
+          "mean_ms": 157.81936208333335,
+          "p50_ms": 131.970512,
+          "p95_ms": 256.07774,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            145.464723,
+            130.233518,
+            89.277863,
+            120.088145,
+            432.239321,
+            181.718195,
+            256.07774,
+            88.884904,
+            148.689952,
+            106.024982,
+            195.633903,
+            196.67761,
+            97.61863,
+            150.156781,
+            123.98601,
+            117.664879,
+            131.970512,
+            123.511571,
+            119.485802,
+            128.301637,
+            209.172476,
+            218.306111,
+            145.700317,
+            130.779108
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 290.350371,
+          "mean_ms": 153.31213908333334,
+          "p50_ms": 143.195645,
+          "p95_ms": 226.472543,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            147.817832,
+            107.192269,
+            126.379608,
+            163.697139,
+            132.859652,
+            199.39937,
+            163.077156,
+            134.395004,
+            290.350371,
+            180.600244,
+            182.429618,
+            204.985337,
+            144.250879,
+            195.128771,
+            120.015276,
+            132.027466,
+            94.941908,
+            121.376981,
+            131.867491,
+            118.935115,
+            131.022125,
+            226.472543,
+            143.195645,
+            87.073538
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-mobile40/2-model.log": {
+      "sha256": "3a7fcf505802a7d6604255811d0ed3c5662435b5fce64c1bd84d974c283cf4dc",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 392.279233,
+          "mean_ms": 158.81899729166665,
+          "p50_ms": 129.650642,
+          "p95_ms": 347.558053,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            172.737563,
+            307.884891,
+            347.558053,
+            195.309567,
+            90.749738,
+            122.432912,
+            143.742508,
+            103.729826,
+            127.082068,
+            88.219357,
+            151.3961,
+            85.365794,
+            121.736034,
+            120.832352,
+            100.648324,
+            129.650642,
+            392.279233,
+            90.154427,
+            120.713317,
+            181.563313,
+            130.337664,
+            158.300409,
+            228.91009,
+            100.321753
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 236.744759,
+          "mean_ms": 128.85226008333333,
+          "p50_ms": 124.42479,
+          "p95_ms": 192.801355,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            192.801355,
+            236.744759,
+            87.132777,
+            159.263858,
+            122.175778,
+            76.671379,
+            173.333214,
+            131.724663,
+            133.716817,
+            124.42479,
+            109.447058,
+            100.280595,
+            113.269559,
+            119.017755,
+            87.917144,
+            100.60964,
+            128.564168,
+            89.538673,
+            173.146679,
+            131.544277,
+            131.283814,
+            120.688857,
+            121.108385,
+            128.048248
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-mobile40/2-rc2.log": {
+      "sha256": "fdd3ece5c9b55e8175618bac04484c1dc0db32d66639f5f42ce5602f1dda8a9f",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 441.08308,
+          "mean_ms": 179.236124375,
+          "p50_ms": 149.483331,
+          "p95_ms": 395.673643,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            167.826791,
+            105.822527,
+            124.010528,
+            169.86306,
+            169.697046,
+            149.483331,
+            130.368374,
+            131.472851,
+            133.507197,
+            110.27116,
+            151.949533,
+            133.183451,
+            120.512106,
+            197.674517,
+            151.547632,
+            141.449226,
+            174.958426,
+            441.08308,
+            337.59406,
+            395.673643,
+            134.607947,
+            136.833275,
+            103.565544,
+            288.71168
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 401.483662,
+          "mean_ms": 184.01980370833337,
+          "p50_ms": 165.698641,
+          "p95_ms": 386.351823,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            134.553456,
+            135.634739,
+            108.467424,
+            169.37759,
+            147.036874,
+            193.451839,
+            161.888699,
+            165.698641,
+            114.423577,
+            129.969535,
+            264.231071,
+            184.838392,
+            113.109342,
+            177.187073,
+            110.116994,
+            118.100523,
+            167.716601,
+            255.746065,
+            401.483662,
+            386.351823,
+            356.322531,
+            170.502765,
+            120.986219,
+            129.279854
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-variable40-180/1-model.log": {
+      "sha256": "3c86b1307848abb6c7d568f04ce51985e2be317969f452ae0bfe32939aba65a4",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 370.883285,
+          "mean_ms": 211.567415625,
+          "p50_ms": 184.064738,
+          "p95_ms": 350.679245,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            293.062947,
+            280.415728,
+            288.311883,
+            370.883285,
+            246.050611,
+            293.820191,
+            164.615861,
+            131.317745,
+            101.289129,
+            111.627392,
+            134.760257,
+            194.452302,
+            144.16527,
+            132.360437,
+            162.051405,
+            100.852025,
+            184.064738,
+            151.847079,
+            182.897472,
+            298.184647,
+            141.066106,
+            350.679245,
+            287.011184,
+            331.831036
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 357.29293,
+          "mean_ms": 217.52735341666673,
+          "p50_ms": 234.133581,
+          "p95_ms": 346.918208,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            151.612031,
+            256.106967,
+            331.680238,
+            325.298696,
+            234.133581,
+            184.779708,
+            137.451005,
+            152.333885,
+            357.29293,
+            235.802301,
+            284.453221,
+            346.918208,
+            344.06615,
+            293.78413,
+            289.794648,
+            145.58255,
+            242.064795,
+            187.752869,
+            87.403368,
+            184.824478,
+            91.847594,
+            132.487879,
+            100.867363,
+            122.317887
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-variable40-180/1-rc2.log": {
+      "sha256": "23c0c3ae4b87fb2cef301ffc8e107cf1a79329e171da4f257538f98a775a16a7",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 401.419443,
+          "mean_ms": 232.53882324999998,
+          "p50_ms": 220.439771,
+          "p95_ms": 398.485234,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            256.909505,
+            220.439771,
+            255.313589,
+            304.557439,
+            384.723068,
+            384.402627,
+            401.419443,
+            164.147715,
+            398.485234,
+            129.197298,
+            143.321352,
+            104.105913,
+            127.898801,
+            140.006614,
+            142.322293,
+            167.862601,
+            107.85334,
+            166.789106,
+            183.398128,
+            227.913204,
+            194.092978,
+            370.850093,
+            352.915211,
+            252.006435
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 436.079303,
+          "mean_ms": 211.3942650833333,
+          "p50_ms": 212.187684,
+          "p95_ms": 400.011442,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            184.391929,
+            220.739695,
+            280.720532,
+            253.908725,
+            266.868185,
+            149.90276,
+            126.441423,
+            116.181659,
+            240.276966,
+            234.413348,
+            239.473415,
+            217.464861,
+            310.011507,
+            436.079303,
+            400.011442,
+            172.353612,
+            114.614647,
+            175.459219,
+            165.0134,
+            168.481252,
+            136.921466,
+            212.187684,
+            105.381927,
+            146.163405
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-variable40-180/2-model.log": {
+      "sha256": "daf8f265e16a02a9158e63650dce11fc02829b479e5f806cb8c8bb6b3b519d6d",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 612.709351,
+          "mean_ms": 216.46957883333334,
+          "p50_ms": 181.39093,
+          "p95_ms": 586.017884,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            212.078676,
+            221.750372,
+            291.908587,
+            220.082473,
+            356.171471,
+            586.017884,
+            364.491442,
+            194.103585,
+            146.744606,
+            100.416582,
+            145.032225,
+            101.826013,
+            100.613572,
+            120.581322,
+            133.494818,
+            100.716306,
+            100.809484,
+            124.2743,
+            180.167038,
+            181.39093,
+            171.661234,
+            194.484567,
+            233.743054,
+            612.709351
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 289.156024,
+          "mean_ms": 180.4575997916667,
+          "p50_ms": 177.120514,
+          "p95_ms": 287.337143,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            140.314582,
+            177.901464,
+            123.230353,
+            147.201903,
+            264.915882,
+            289.156024,
+            194.263884,
+            177.120514,
+            130.903554,
+            112.381219,
+            250.315916,
+            220.66625,
+            192.406595,
+            223.840608,
+            226.78411,
+            287.337143,
+            166.386519,
+            185.043976,
+            160.02199,
+            144.535813,
+            147.533229,
+            171.426315,
+            108.724503,
+            88.570049
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-interactive-local16-variable40-180/2-rc2.log": {
+      "sha256": "7fb332694bd82b59edac699bc0aad9ca398ede0564dc4e39b45ceb6fb2fdb6b3",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 403.36515,
+          "mean_ms": 209.92566166666666,
+          "p50_ms": 192.759213,
+          "p95_ms": 334.207497,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            142.195926,
+            306.220524,
+            240.723922,
+            218.962261,
+            326.085666,
+            264.49091,
+            248.089349,
+            334.207497,
+            192.759213,
+            154.784821,
+            122.478465,
+            121.474373,
+            168.100337,
+            120.149621,
+            148.184608,
+            123.646662,
+            168.909392,
+            139.088765,
+            174.159847,
+            182.952682,
+            207.38028,
+            286.3196,
+            243.486009,
+            403.36515
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 494.463521,
+          "mean_ms": 222.09603270833335,
+          "p50_ms": 218.016113,
+          "p95_ms": 370.274182,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "1",
+          "samples_ms": [
+            162.712014,
+            190.949607,
+            178.903218,
+            218.016113,
+            297.058422,
+            307.020786,
+            288.495446,
+            152.356154,
+            114.071722,
+            165.228554,
+            269.875922,
+            230.910594,
+            230.668788,
+            253.759395,
+            494.463521,
+            370.274182,
+            290.555566,
+            154.025039,
+            226.392806,
+            125.644925,
+            123.915495,
+            167.802782,
+            147.173189,
+            170.030545
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-fast5/1-model.log": {
+      "sha256": "f31ccf651911a97f7bbcee614acadeda79f4847a3ae3158e04f4cd8561f902c0",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 107.780781,
+          "mean_ms": 56.30571170833333,
+          "p50_ms": 53.167036,
+          "p95_ms": 69.145317,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            66.58442,
+            51.25445,
+            65.358781,
+            51.222508,
+            42.427025,
+            66.95701,
+            54.802479,
+            45.656183,
+            69.145317,
+            43.169364,
+            47.485775,
+            68.756122,
+            53.810376,
+            42.057845,
+            57.481872,
+            107.780781,
+            45.737436,
+            52.003709,
+            53.167036,
+            54.268491,
+            50.034525,
+            51.814664,
+            59.075134,
+            51.285778
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 79.98172,
+          "mean_ms": 57.92716204166666,
+          "p50_ms": 55.032593,
+          "p95_ms": 76.13061,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            68.785528,
+            53.243615,
+            42.311527,
+            47.87178,
+            50.376502,
+            79.98172,
+            49.939524,
+            60.651277,
+            68.485328,
+            49.259915,
+            48.167323,
+            72.750301,
+            51.481522,
+            55.272997,
+            47.772738,
+            58.336616,
+            67.41851,
+            76.13061,
+            68.071575,
+            55.032593,
+            45.992857,
+            54.561692,
+            51.258509,
+            67.09733
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-fast5/1-rc2.log": {
+      "sha256": "6761536475bcecf55a610d26d21402f6a27c24c391da386b5359b6ad64158250",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 122.693988,
+          "mean_ms": 92.68467183333335,
+          "p50_ms": 101.416774,
+          "p95_ms": 118.007689,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            115.664464,
+            72.700266,
+            65.026456,
+            71.009111,
+            115.516667,
+            114.003202,
+            117.241084,
+            101.416774,
+            117.245014,
+            71.319051,
+            70.248186,
+            73.876876,
+            73.84606,
+            111.711371,
+            113.800998,
+            66.499307,
+            114.096606,
+            118.007689,
+            73.790418,
+            113.715156,
+            72.98784,
+            65.404377,
+            122.693988,
+            72.611163
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 118.580682,
+          "mean_ms": 84.67255541666668,
+          "p50_ms": 76.102888,
+          "p95_ms": 116.657956,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            115.288419,
+            66.11272,
+            65.026828,
+            60.131396,
+            116.489758,
+            65.112082,
+            118.580682,
+            112.95762,
+            114.559241,
+            116.657956,
+            71.621219,
+            91.526037,
+            64.234403,
+            66.353299,
+            70.125517,
+            78.542519,
+            113.847292,
+            64.044172,
+            76.102888,
+            111.362675,
+            64.749851,
+            63.70153,
+            65.759726,
+            79.2535
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-fast5/2-model.log": {
+      "sha256": "3350fe35d9c886107d5293bdd61aa7c08be765215d6cf3ae84dc7c1cb1ee47a3",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 190.369078,
+          "mean_ms": 62.27013925,
+          "p50_ms": 53.525273,
+          "p95_ms": 75.183504,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            190.369078,
+            72.60227,
+            70.656601,
+            48.392521,
+            51.332357,
+            63.602715,
+            54.661608,
+            43.795997,
+            67.548003,
+            75.183504,
+            44.812164,
+            51.310475,
+            44.011084,
+            53.525273,
+            49.4474,
+            64.538353,
+            68.069804,
+            47.731103,
+            53.287157,
+            63.099021,
+            52.499211,
+            48.08116,
+            71.102928,
+            44.823555
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 113.944476,
+          "mean_ms": 60.061085124999984,
+          "p50_ms": 60.77837,
+          "p95_ms": 73.153097,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            67.420234,
+            52.47853,
+            68.642362,
+            45.998846,
+            51.008239,
+            62.204986,
+            50.501834,
+            55.157958,
+            65.300185,
+            46.754346,
+            49.75148,
+            60.77837,
+            73.153097,
+            50.980965,
+            51.739477,
+            70.962727,
+            67.297243,
+            45.757722,
+            49.292292,
+            63.371741,
+            52.602408,
+            62.699682,
+            113.944476,
+            63.666843
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-fast5/2-rc2.log": {
+      "sha256": "081cfd4ebbd664bfdfaf09f7eb22d11a34b474507d069e7bd6b916a8cf5889ad",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 169.207471,
+          "mean_ms": 86.68087404166666,
+          "p50_ms": 73.310931,
+          "p95_ms": 122.796726,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            113.652544,
+            122.796726,
+            71.042141,
+            66.656734,
+            65.123106,
+            67.584977,
+            66.290953,
+            65.270303,
+            115.028104,
+            70.960345,
+            70.725739,
+            75.195275,
+            114.542745,
+            169.207471,
+            113.016633,
+            64.908198,
+            118.009405,
+            73.310931,
+            63.682744,
+            114.590085,
+            74.272123,
+            73.531642,
+            65.669268,
+            65.272785
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "5",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 559.805013,
+          "mean_ms": 114.64285962499999,
+          "p50_ms": 110.116924,
+          "p95_ms": 201.933418,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            113.590392,
+            72.509741,
+            80.132101,
+            201.933418,
+            74.115195,
+            119.976859,
+            113.333122,
+            72.72167,
+            113.897637,
+            118.585065,
+            73.474222,
+            110.116924,
+            115.559425,
+            67.580449,
+            64.578644,
+            67.117705,
+            112.407736,
+            64.687825,
+            115.367724,
+            70.088918,
+            110.338385,
+            71.163478,
+            559.805013,
+            68.346983
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile180/1-model.log": {
+      "sha256": "a513c5c36b8d3812cd0b3f2b120b8b1575f2ae36038a4d5e5588bb59f883c1c7",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 437.2579,
+          "mean_ms": 362.3973314583333,
+          "p50_ms": 366.596924,
+          "p95_ms": 427.722538,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            358.807606,
+            400.758936,
+            313.89965,
+            365.563452,
+            248.74875,
+            401.767113,
+            340.686216,
+            396.377783,
+            362.98157,
+            360.354173,
+            419.882951,
+            427.722538,
+            363.190423,
+            400.842054,
+            286.521129,
+            329.844158,
+            380.44952,
+            380.74876,
+            380.176997,
+            257.477715,
+            401.331124,
+            366.596924,
+            437.2579,
+            315.548513
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 427.685745,
+          "mean_ms": 325.93229125,
+          "p50_ms": 330.061386,
+          "p95_ms": 400.35507,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            387.063726,
+            381.59004,
+            261.306876,
+            271.028177,
+            306.337747,
+            400.35507,
+            285.398951,
+            358.126891,
+            369.323944,
+            354.37689,
+            343.947507,
+            264.013446,
+            269.165235,
+            244.002337,
+            330.061386,
+            261.998672,
+            383.182549,
+            303.57076,
+            427.685745,
+            322.982315,
+            367.634618,
+            380.702042,
+            299.952125,
+            248.567941
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile180/1-rc2.log": {
+      "sha256": "49a44bdb5f01dfa7d068eb600d73efbf83c5c00b20d1b4a6d0142635c453fc80",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 443.859082,
+          "mean_ms": 362.3737692083334,
+          "p50_ms": 361.620818,
+          "p95_ms": 423.794628,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            333.434997,
+            328.487352,
+            399.58086,
+            264.23037,
+            423.794628,
+            320.858441,
+            384.550464,
+            443.859082,
+            361.620818,
+            413.597225,
+            325.971557,
+            402.001919,
+            402.018404,
+            388.048314,
+            377.076694,
+            336.015797,
+            362.624106,
+            330.643195,
+            349.178399,
+            336.603607,
+            402.302167,
+            306.1234,
+            360.495489,
+            343.853176
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 582.271586,
+          "mean_ms": 352.5680570416666,
+          "p50_ms": 351.813022,
+          "p95_ms": 422.012353,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            387.726962,
+            405.236694,
+            303.040309,
+            314.39307,
+            400.367535,
+            273.283124,
+            381.776269,
+            406.203861,
+            376.32477,
+            247.35561,
+            311.922325,
+            582.271586,
+            316.225906,
+            257.001082,
+            288.397002,
+            286.324624,
+            360.848746,
+            310.66825,
+            421.055598,
+            351.813022,
+            400.915212,
+            422.012353,
+            334.734906,
+            321.734553
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile180/2-model.log": {
+      "sha256": "d0b4fc5117413abe9075fde11fe7aaec64932274b76be2d41a8a05eca1849833",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 486.669287,
+          "mean_ms": 366.55314795833334,
+          "p50_ms": 383.018658,
+          "p95_ms": 440.965991,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            238.779233,
+            380.472429,
+            295.36873,
+            429.827128,
+            409.256822,
+            379.501912,
+            401.20292,
+            383.018658,
+            362.615734,
+            486.669287,
+            383.03291,
+            307.449772,
+            419.784565,
+            399.780266,
+            296.555223,
+            421.807489,
+            380.943128,
+            338.936897,
+            383.852403,
+            275.640598,
+            440.965991,
+            316.682033,
+            262.688994,
+            402.442429
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 484.89224,
+          "mean_ms": 356.43070308333336,
+          "p50_ms": 367.781389,
+          "p95_ms": 424.007841,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            381.595602,
+            306.075162,
+            484.89224,
+            401.964267,
+            398.529556,
+            352.482041,
+            367.781389,
+            369.237786,
+            337.639265,
+            370.924517,
+            381.252279,
+            307.436546,
+            397.751903,
+            424.007841,
+            327.905103,
+            364.971492,
+            363.184263,
+            279.632459,
+            380.513018,
+            303.246569,
+            260.132083,
+            403.303844,
+            249.839986,
+            340.037663
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile180/2-rc2.log": {
+      "sha256": "68b13c8a1737e1c840b4d8ac1d19a1ff3616115ef19418737e25cda1c91539fb",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 471.762627,
+          "mean_ms": 369.9421370416666,
+          "p50_ms": 383.568777,
+          "p95_ms": 430.185679,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            385.03408,
+            279.330542,
+            263.089755,
+            386.648315,
+            471.762627,
+            380.224103,
+            325.123943,
+            421.27974,
+            372.918036,
+            385.892172,
+            384.95643,
+            376.095932,
+            430.185679,
+            294.695056,
+            383.568777,
+            384.629941,
+            370.651032,
+            385.904433,
+            403.253317,
+            373.996153,
+            368.436077,
+            293.839289,
+            401.038293,
+            356.057567
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "180",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 435.708917,
+          "mean_ms": 349.4941144166666,
+          "p50_ms": 340.167643,
+          "p95_ms": 424.010931,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            339.474786,
+            294.760367,
+            389.239604,
+            372.166808,
+            340.167643,
+            326.09734,
+            435.708917,
+            300.049169,
+            308.666929,
+            399.500131,
+            424.010931,
+            372.699031,
+            380.170851,
+            306.778188,
+            309.313936,
+            327.695405,
+            250.251303,
+            414.443553,
+            383.220702,
+            302.790585,
+            247.27339,
+            423.300942,
+            339.872216,
+            400.206019
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile40/1-model.log": {
+      "sha256": "c284cca347c933a1cf8ef8a9e7972b5e4913418d5c30a74f5f2ead5cc7f6281c",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 187.930091,
+          "mean_ms": 130.3130846666667,
+          "p50_ms": 131.251347,
+          "p95_ms": 186.679281,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            100.673926,
+            135.411731,
+            140.317483,
+            138.667051,
+            101.312398,
+            175.629687,
+            102.161702,
+            119.442282,
+            99.991017,
+            174.998692,
+            97.836391,
+            174.820662,
+            123.757141,
+            104.958598,
+            186.679281,
+            131.212493,
+            134.621286,
+            88.590819,
+            121.498967,
+            187.930091,
+            88.509074,
+            131.251347,
+            134.320618,
+            132.921295
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 257.186974,
+          "mean_ms": 134.521057875,
+          "p50_ms": 132.438107,
+          "p95_ms": 184.605362,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            144.555014,
+            134.364301,
+            174.039365,
+            144.63068,
+            140.966364,
+            88.518434,
+            177.939931,
+            99.750081,
+            257.186974,
+            100.965671,
+            131.394031,
+            184.605362,
+            91.591554,
+            122.783404,
+            112.754001,
+            120.008228,
+            122.808595,
+            91.784826,
+            132.438107,
+            145.243437,
+            154.149442,
+            127.134627,
+            140.89388,
+            87.99908
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile40/1-rc2.log": {
+      "sha256": "5b458f98d4e6c25c546384edfbaae12edfda778e28ad4da6af4c11228693e75b",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 171.044275,
+          "mean_ms": 138.28383058333333,
+          "p50_ms": 138.636451,
+          "p95_ms": 170.812706,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            170.656319,
+            142.290324,
+            148.149873,
+            170.512341,
+            149.45448,
+            126.803015,
+            133.393665,
+            106.225334,
+            101.526656,
+            171.044275,
+            163.634172,
+            169.810722,
+            134.665745,
+            113.255115,
+            106.418222,
+            132.34416,
+            170.812706,
+            164.762306,
+            96.658688,
+            165.028903,
+            107.323288,
+            130.223459,
+            105.181715,
+            138.636451
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 175.716004,
+          "mean_ms": 135.16220145833333,
+          "p50_ms": 131.724211,
+          "p95_ms": 172.698762,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            142.257691,
+            160.114718,
+            130.321016,
+            108.51636,
+            120.200775,
+            122.464296,
+            105.166031,
+            169.744275,
+            169.997504,
+            163.140972,
+            122.752057,
+            123.486208,
+            175.716004,
+            122.963171,
+            134.923775,
+            94.75673,
+            128.129847,
+            99.263465,
+            172.698762,
+            164.436634,
+            141.859295,
+            133.295867,
+            105.963171,
+            131.724211
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile40/2-model.log": {
+      "sha256": "aab4dec79793db4772d5b4588490f7d32d7dc0b16a69269a6c2cd624e8310502",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 522.542135,
+          "mean_ms": 144.63486495833334,
+          "p50_ms": 134.053648,
+          "p95_ms": 190.208972,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            156.780317,
+            142.189722,
+            88.118633,
+            141.002908,
+            101.055244,
+            120.139298,
+            190.208972,
+            102.422471,
+            100.647692,
+            122.145935,
+            109.404046,
+            144.288704,
+            134.053648,
+            153.558085,
+            143.685509,
+            133.415612,
+            142.165653,
+            132.932515,
+            142.311577,
+            522.542135,
+            88.14864,
+            144.236046,
+            99.691835,
+            116.091562
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 195.352552,
+          "mean_ms": 120.80509324999998,
+          "p50_ms": 120.490984,
+          "p95_ms": 145.266717,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            145.266717,
+            99.115752,
+            119.701858,
+            100.307086,
+            133.627544,
+            100.16927,
+            132.43078,
+            134.227057,
+            136.929299,
+            90.032451,
+            113.476138,
+            143.763937,
+            108.856699,
+            110.684201,
+            78.155498,
+            131.416184,
+            126.954141,
+            142.778097,
+            100.088712,
+            104.267226,
+            120.490984,
+            195.352552,
+            109.460907,
+            121.769148
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-mobile40/2-rc2.log": {
+      "sha256": "a4e53d3ca22bd69549d3e12e718eee29a20489fe59f192d7aec7f9aeefff1a8e",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 228.556039,
+          "mean_ms": 135.9875058333333,
+          "p50_ms": 133.634508,
+          "p95_ms": 187.282602,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            115.103908,
+            131.506676,
+            138.470888,
+            169.02487,
+            98.462958,
+            187.282602,
+            141.09629,
+            123.385342,
+            170.927408,
+            144.472885,
+            151.082509,
+            98.31716,
+            106.875844,
+            122.851467,
+            99.757328,
+            104.217115,
+            133.634508,
+            99.62544,
+            228.556039,
+            127.923203,
+            162.869899,
+            170.433905,
+            143.49726,
+            94.324636
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 171.440851,
+          "mean_ms": 142.85246299999997,
+          "p50_ms": 142.203549,
+          "p95_ms": 168.253254,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            143.810412,
+            163.606107,
+            147.300452,
+            142.203549,
+            131.455282,
+            132.116998,
+            171.440851,
+            133.638043,
+            168.253254,
+            149.812568,
+            132.565619,
+            167.580485,
+            162.879886,
+            121.241344,
+            129.63833,
+            114.922744,
+            141.050835,
+            153.850748,
+            122.505048,
+            109.325988,
+            168.026349,
+            131.641164,
+            122.339544,
+            167.253512
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-variable40-180/1-model.log": {
+      "sha256": "2f0c59eb2f8e3c76e9f22f319a8cf5be66001002d8787f8be6275534dbf6bb56",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 498.487621,
+          "mean_ms": 218.45585175,
+          "p50_ms": 183.464689,
+          "p95_ms": 405.693342,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            159.422447,
+            219.820168,
+            261.439296,
+            220.342899,
+            321.537528,
+            405.693342,
+            381.058902,
+            191.175305,
+            233.974251,
+            183.464689,
+            97.191483,
+            132.270057,
+            100.667844,
+            99.347994,
+            132.767278,
+            129.022554,
+            103.892853,
+            134.991075,
+            172.239357,
+            169.229629,
+            498.487621,
+            182.601196,
+            312.592582,
+            399.710092
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 529.326536,
+          "mean_ms": 199.5734345,
+          "p50_ms": 186.91796,
+          "p95_ms": 291.858276,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            127.458305,
+            167.554717,
+            241.804354,
+            222.177363,
+            529.326536,
+            280.902789,
+            189.024612,
+            173.400881,
+            133.124184,
+            193.647878,
+            186.91796,
+            248.284591,
+            222.531502,
+            253.296291,
+            268.52055,
+            291.858276,
+            114.882615,
+            146.056428,
+            159.944547,
+            133.110199,
+            95.024924,
+            132.509076,
+            121.381707,
+            157.022143
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-variable40-180/1-rc2.log": {
+      "sha256": "7cd411753458cda1e0e3f2873db9ac3197886800a787d0598e1fb597cab382f5",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 418.65654,
+          "mean_ms": 230.25673025000003,
+          "p50_ms": 219.293329,
+          "p95_ms": 388.711865,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            254.901455,
+            219.293329,
+            255.081426,
+            254.219507,
+            388.711865,
+            332.008137,
+            418.65654,
+            185.686979,
+            194.977219,
+            126.38681,
+            132.619238,
+            196.320729,
+            143.05097,
+            105.464108,
+            139.994895,
+            129.001482,
+            168.731935,
+            144.685485,
+            164.785464,
+            289.346131,
+            252.93271,
+            296.385723,
+            345.604018,
+            387.315371
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 402.314278,
+          "mean_ms": 210.18545250000003,
+          "p50_ms": 195.851392,
+          "p95_ms": 384.192081,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            151.268875,
+            167.778281,
+            298.549667,
+            292.704037,
+            229.253221,
+            333.772608,
+            123.373833,
+            103.534452,
+            258.951156,
+            263.84569,
+            219.808402,
+            284.635653,
+            310.025675,
+            402.314278,
+            384.192081,
+            156.029449,
+            195.851392,
+            146.584603,
+            90.429895,
+            133.587542,
+            130.009497,
+            129.008941,
+            130.063391,
+            108.878241
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-variable40-180/2-model.log": {
+      "sha256": "0b9a35570f0e4142b8b9ce14609cf806cee932c03ca322f1d39097e1b825e29c",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 382.291883,
+          "mean_ms": 206.2017694583334,
+          "p50_ms": 220.385328,
+          "p95_ms": 380.594159,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            182.56901,
+            221.830285,
+            259.534597,
+            220.88583,
+            227.99901,
+            382.291883,
+            380.594159,
+            289.021212,
+            280.65323,
+            153.956357,
+            107.647281,
+            135.031768,
+            97.56898,
+            130.678334,
+            100.939143,
+            132.329349,
+            229.810854,
+            98.759833,
+            208.601904,
+            202.716788,
+            182.979594,
+            253.000922,
+            220.385328,
+            249.056816
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 359.404817,
+          "mean_ms": 200.96203695833336,
+          "p50_ms": 190.109374,
+          "p95_ms": 354.200312,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            141.449462,
+            180.463384,
+            190.109374,
+            113.639471,
+            278.822256,
+            251.9067,
+            294.160152,
+            185.930661,
+            145.406892,
+            122.051183,
+            225.949548,
+            231.905838,
+            221.394887,
+            196.855439,
+            359.404817,
+            354.200312,
+            152.074863,
+            228.758059,
+            143.092654,
+            159.413502,
+            148.359327,
+            135.182492,
+            107.274317,
+            255.283297
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-latency-variable40-180/2-rc2.log": {
+      "sha256": "03a3ebad24d03c19ba5e9fa70dc7bfd8fd589f03cd1253d03b2d79f3278d35f2",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 572.693714,
+          "mean_ms": 234.35381512500007,
+          "p50_ms": 220.616348,
+          "p95_ms": 400.268017,
+          "phase": "idle",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            226.971858,
+            221.474786,
+            254.713701,
+            220.616348,
+            325.169207,
+            400.052108,
+            572.693714,
+            139.841088,
+            173.532662,
+            112.485966,
+            187.982173,
+            142.808229,
+            132.635895,
+            171.818685,
+            142.057863,
+            107.059849,
+            170.128318,
+            148.987174,
+            193.275728,
+            227.29668,
+            267.989184,
+            299.457671,
+            400.268017,
+            385.174659
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "accounts": 10,
+          "client_rtt_ms": "40",
+          "failures": 0,
+          "field_qualified": false,
+          "max_ms": 430.346715,
+          "mean_ms": 211.7087475,
+          "p50_ms": 219.474893,
+          "p95_ms": 362.454552,
+          "phase": "light",
+          "request_pause_ms": 150,
+          "retained_state": "",
+          "samples_ms": [
+            163.045218,
+            135.184071,
+            225.236519,
+            325.332588,
+            293.96015,
+            232.435639,
+            135.619947,
+            162.579679,
+            140.718917,
+            220.279476,
+            219.474893,
+            362.454552,
+            310.710115,
+            312.692067,
+            430.346715,
+            251.613105,
+            219.495499,
+            140.703821,
+            99.900064,
+            132.960194,
+            171.359116,
+            120.318891,
+            106.029703,
+            168.559001
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-mobile-variable/1-model.log": {
+      "sha256": "bd4ba9e14f3c656bf84cb238e444921215468d6e78863ad4131d6bd39876b5d3",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "120.975",
+          "download_mbps": "274.246",
+          "rtt_samples": "30",
+          "p50_ms": "171",
+          "p95_ms": "409",
+          "max_ms": "430",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "123.177",
+          "download_mbps": "277.558",
+          "rtt_samples": "30",
+          "p50_ms": "209",
+          "p95_ms": "389",
+          "max_ms": "417",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "114.189926",
+          "max_rtt_ns": "430179251",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "102.943949",
+          "max_rtt_ns": "417623245",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "120.918",
+          "download_mbps": "278.755"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "114.190",
+          "download_mbps": "269.274"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "122.264",
+          "download_mbps": "277.628"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "102.944",
+          "download_mbps": "271.896"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-mobile-variable/1-rc2.log": {
+      "sha256": "ffe203a0b64775ca8e2189a9428280fbfd5b16b9ed6f039c1727de1b81ab14a8",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "121.486",
+          "download_mbps": "264.774",
+          "rtt_samples": "30",
+          "p50_ms": "225",
+          "p95_ms": "428",
+          "max_ms": "547",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "121.303",
+          "download_mbps": "281.831",
+          "rtt_samples": "30",
+          "p50_ms": "234",
+          "p95_ms": "458",
+          "max_ms": "480",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "102.078874",
+          "max_rtt_ns": "547595004",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "116.785152",
+          "max_rtt_ns": "480195116",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "124.282",
+          "download_mbps": "278.642"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "102.079",
+          "download_mbps": "264.031"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "121.207",
+          "download_mbps": "282.049"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "116.785",
+          "download_mbps": "279.314"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-mobile-variable/2-model.log": {
+      "sha256": "1042d00dc9855bc9f11101be171ba1173a3cc5b71ea0f49a5b68b9ac3ccfad5a",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "123.299",
+          "download_mbps": "276.828",
+          "rtt_samples": "30",
+          "p50_ms": "179",
+          "p95_ms": "401",
+          "max_ms": "576",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "122.216",
+          "download_mbps": "279.603",
+          "rtt_samples": "30",
+          "p50_ms": "255",
+          "p95_ms": "376",
+          "max_ms": "397",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "106.980966",
+          "max_rtt_ns": "576527110",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "113.324851",
+          "max_rtt_ns": "397771248",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "122.841",
+          "download_mbps": "279.175"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "106.981",
+          "download_mbps": "265.185"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "121.687",
+          "download_mbps": "280.354"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "113.325",
+          "download_mbps": "279.131"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-mobile-variable/2-rc2.log": {
+      "sha256": "1be58cf16dabaf34850add119ed9c9f71127a9283a607da8d20632916ab98caa",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "123.160",
+          "download_mbps": "273.879",
+          "rtt_samples": "30",
+          "p50_ms": "184",
+          "p95_ms": "445",
+          "max_ms": "553",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "122.268",
+          "download_mbps": "281.080",
+          "rtt_samples": "30",
+          "p50_ms": "209",
+          "p95_ms": "383",
+          "max_ms": "413",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "110.729626",
+          "max_rtt_ns": "553973736",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "113.351066",
+          "max_rtt_ns": "413578476",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "125.148",
+          "download_mbps": "278.275"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "110.730",
+          "download_mbps": "265.971"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "121.600",
+          "download_mbps": "279.376"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "113.351",
+          "download_mbps": "276.405"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "9",
+          "target_tcp_dials": "9",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-multi/1-model.log": {
+      "sha256": "f84e492a961cac5b3b8dee5341d4f199db4590a89db7664edd99c3dbfe7efd26",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "168.056",
+          "download_mbps": "231.595",
+          "rtt_samples": "30",
+          "p50_ms": "165",
+          "p95_ms": "295",
+          "max_ms": "533",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "176.139",
+          "download_mbps": "246.511",
+          "rtt_samples": "30",
+          "p50_ms": "145",
+          "p95_ms": "209",
+          "max_ms": "434",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "168.056149",
+          "max_rtt_ns": "533342394",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "176.138923",
+          "max_rtt_ns": "434126797",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "173.854",
+          "download_mbps": "245.087"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "188.927",
+          "download_mbps": "264.110"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "179.140",
+          "download_mbps": "250.496"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "180.329",
+          "download_mbps": "259.103"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-multi/1-rc2.log": {
+      "sha256": "9d16db77a4ae57259c8f96adc5c079062f38a2553cc65ea47058f3af28db1b26",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "175.186",
+          "download_mbps": "242.728",
+          "rtt_samples": "30",
+          "p50_ms": "176",
+          "p95_ms": "365",
+          "max_ms": "383",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "152.983",
+          "download_mbps": "206.775",
+          "rtt_samples": "30",
+          "p50_ms": "180",
+          "p95_ms": "478",
+          "max_ms": "689",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "175.186466",
+          "max_rtt_ns": "383970938",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "129.446707",
+          "max_rtt_ns": "689486355",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "175.899",
+          "download_mbps": "249.185"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "185.624",
+          "download_mbps": "248.906"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "136.734",
+          "download_mbps": "182.452"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "129.447",
+          "download_mbps": "177.131"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-multi/2-model.log": {
+      "sha256": "2ee79088165fda75979488a293f6ad5b9037c8613709f08f4992f04bbe74915f",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "187.935",
+          "download_mbps": "268.047",
+          "rtt_samples": "30",
+          "p50_ms": "139",
+          "p95_ms": "187",
+          "max_ms": "188",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "184.248",
+          "download_mbps": "252.768",
+          "rtt_samples": "30",
+          "p50_ms": "142",
+          "p95_ms": "222",
+          "max_ms": "254",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "187.935403",
+          "max_rtt_ns": "188535011",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "184.247910",
+          "max_rtt_ns": "254644117",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "189.259",
+          "download_mbps": "265.875"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "190.579",
+          "download_mbps": "270.375"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "188.149",
+          "download_mbps": "259.147"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "191.103",
+          "download_mbps": "258.343"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-multi/2-rc2.log": {
+      "sha256": "7c3d7ae3fc7063d4e03907e3e03357b5e9de32b0d4a73562ffb2495f5d0d6f19",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "185.611",
+          "download_mbps": "258.356",
+          "rtt_samples": "30",
+          "p50_ms": "150",
+          "p95_ms": "199",
+          "max_ms": "230",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "185.716",
+          "download_mbps": "255.459",
+          "rtt_samples": "30",
+          "p50_ms": "146",
+          "p95_ms": "246",
+          "max_ms": "274",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "181.849293",
+          "max_rtt_ns": "230908264",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "185.073664",
+          "max_rtt_ns": "274328106",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "181.849",
+          "download_mbps": "250.610"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "187.590",
+          "download_mbps": "260.597"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "185.074",
+          "download_mbps": "255.748"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "186.437",
+          "download_mbps": "255.328"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-multi/1-model.log": {
+      "sha256": "4c93fa2f77b27fb199e62814094209289e1ef982965529238437e0c8b38a04d8",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "159.065",
+          "download_mbps": "191.387",
+          "rtt_samples": "30",
+          "p50_ms": "149",
+          "p95_ms": "197",
+          "max_ms": "208",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "158.907",
+          "download_mbps": "192.580",
+          "rtt_samples": "30",
+          "p50_ms": "140",
+          "p95_ms": "173",
+          "max_ms": "196",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "159.064610",
+          "max_rtt_ns": "208451751",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "157.836902",
+          "max_rtt_ns": "196433541",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "161.865",
+          "download_mbps": "191.374"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "164.102",
+          "download_mbps": "191.260"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "157.837",
+          "download_mbps": "193.759"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "161.271",
+          "download_mbps": "190.395"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-multi/1-rc2.log": {
+      "sha256": "f05cdc1f61f84b18b511dd000a74588737c2bd0a1ab21e45c97389dc20915c44",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "132.300",
+          "download_mbps": "208.758",
+          "rtt_samples": "30",
+          "p50_ms": "147",
+          "p95_ms": "209",
+          "max_ms": "219",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "132.872",
+          "download_mbps": "208.758",
+          "rtt_samples": "30",
+          "p50_ms": "147",
+          "p95_ms": "195",
+          "max_ms": "221",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "109.523763",
+          "max_rtt_ns": "219570836",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "104.202240",
+          "max_rtt_ns": "221399944",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "120.560",
+          "download_mbps": "217.920"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "109.524",
+          "download_mbps": "227.357"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "132.636",
+          "download_mbps": "208.448"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "104.202",
+          "download_mbps": "224.815"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-multi/2-model.log": {
+      "sha256": "c2b7bc83a49b1fd4bdf0af78164f4d04c2410c19b5035889b10bb2dff3898060",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "159.995",
+          "download_mbps": "193.685",
+          "rtt_samples": "30",
+          "p50_ms": "139",
+          "p95_ms": "201",
+          "max_ms": "221",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "157.985",
+          "download_mbps": "191.789",
+          "rtt_samples": "30",
+          "p50_ms": "133",
+          "p95_ms": "172",
+          "max_ms": "198",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "159.995221",
+          "max_rtt_ns": "221071135",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "157.985451",
+          "max_rtt_ns": "198449057",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "160.930",
+          "download_mbps": "192.099"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "162.188",
+          "download_mbps": "188.639"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "158.449",
+          "download_mbps": "191.610"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "158.047",
+          "download_mbps": "192.414"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-multi/2-rc2.log": {
+      "sha256": "33a99eac264bd0dcd0f1d6fdb5376541b5866273134eadb496f8f041ec38eac3",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "132.405",
+          "download_mbps": "210.253",
+          "rtt_samples": "30",
+          "p50_ms": "141",
+          "p95_ms": "195",
+          "max_ms": "198",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "127.131",
+          "download_mbps": "212.005",
+          "rtt_samples": "30",
+          "p50_ms": "154",
+          "p95_ms": "195",
+          "max_ms": "204",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "132.404565",
+          "max_rtt_ns": "198122911",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "127.131102",
+          "max_rtt_ns": "204899634",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "138.578",
+          "download_mbps": "206.150"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "147.325",
+          "download_mbps": "197.709"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "136.280",
+          "download_mbps": "206.403"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "155.976",
+          "download_mbps": "190.605"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "65",
+          "target_tcp_dials": "65",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-single/1-model.log": {
+      "sha256": "87be812bb39c3d2eb42bb74eb8769520316824e629664fd0b8134964ae1a7e18",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "171.477",
+          "download_mbps": "229.101",
+          "rtt_samples": "30",
+          "p50_ms": "124",
+          "p95_ms": "165",
+          "max_ms": "181",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "167.392",
+          "download_mbps": "230.997",
+          "rtt_samples": "30",
+          "p50_ms": "129",
+          "p95_ms": "157",
+          "max_ms": "167",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "171.477129",
+          "max_rtt_ns": "181534876",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "167.392051",
+          "max_rtt_ns": "167163313",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "174.361",
+          "download_mbps": "224.151"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "173.303",
+          "download_mbps": "221.748"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "168.882",
+          "download_mbps": "230.626"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "172.438",
+          "download_mbps": "225.889"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-single/1-rc2.log": {
+      "sha256": "be3aa04aea49a8a366cb67c6fa5bfff87b1b764dbfc2858a524361dcbf22dfd9",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "84.524",
+          "download_mbps": "260.894",
+          "rtt_samples": "30",
+          "p50_ms": "124",
+          "p95_ms": "195",
+          "max_ms": "196",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "80.212",
+          "download_mbps": "266.006",
+          "rtt_samples": "30",
+          "p50_ms": "145",
+          "p95_ms": "211",
+          "max_ms": "216",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "84.200653",
+          "max_rtt_ns": "196950418",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "80.211695",
+          "max_rtt_ns": "216528447",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "84.201",
+          "download_mbps": "265.631"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "85.642",
+          "download_mbps": "264.582"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "80.522",
+          "download_mbps": "268.077"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "84.410",
+          "download_mbps": "266.732"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "supervised_load_test.go:535: duplex performance/cadence gate 84.2006528 196.950418ms 30 0 0",
+        "supervised_load_test.go:535: duplex performance/cadence gate 80.21169493333333 216.528447ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (140.65s)"
+      ]
+    },
+    "refill-baseline-throughput-local16-retained-single/2-model.log": {
+      "sha256": "0489a89a769a990694f9b66e5548a8f9107f4c4404c5e6d399a098f8a00e4664",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "170.948",
+          "download_mbps": "228.476",
+          "rtt_samples": "30",
+          "p50_ms": "130",
+          "p95_ms": "176",
+          "max_ms": "179",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "171.141",
+          "download_mbps": "228.428",
+          "rtt_samples": "30",
+          "p50_ms": "128",
+          "p95_ms": "174",
+          "max_ms": "193",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "170.948471",
+          "max_rtt_ns": "179883887",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "171.140710",
+          "max_rtt_ns": "193546496",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "171.783",
+          "download_mbps": "227.515"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "172.150",
+          "download_mbps": "224.631"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "173.784",
+          "download_mbps": "227.226"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "173.880",
+          "download_mbps": "229.533"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-retained-single/2-rc2.log": {
+      "sha256": "4cb664ddc9f604de72465731740f9b4e795b213de6f11ee4b78d759032330d45",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "82.034",
+          "download_mbps": "262.970",
+          "rtt_samples": "30",
+          "p50_ms": "141",
+          "p95_ms": "225",
+          "max_ms": "246",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "82.230",
+          "download_mbps": "264.363",
+          "rtt_samples": "30",
+          "p50_ms": "133",
+          "p95_ms": "214",
+          "max_ms": "221",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "81.815142",
+          "max_rtt_ns": "246724467",
+          "accepted": "false",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "81.605427",
+          "max_rtt_ns": "221769056",
+          "accepted": "false",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "82.444",
+          "download_mbps": "263.761"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "81.815",
+          "download_mbps": "264.425"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "81.702",
+          "download_mbps": "262.992"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "81.605",
+          "download_mbps": "264.713"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "supervised_load_test.go:535: duplex performance/cadence gate 81.8151424 246.724467ms 30 0 0",
+        "supervised_load_test.go:535: duplex performance/cadence gate 81.60542720000001 221.769056ms 30 0 0",
+        "--- FAIL: TestTransportReworkQualification (140.76s)"
+      ]
+    },
+    "refill-baseline-throughput-local16-single/1-model.log": {
+      "sha256": "efbfb4f6482af7bb0b81b8fff55c60b3754a185eca20d6870f41216ce089a067",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "184.934",
+          "download_mbps": "264.224",
+          "rtt_samples": "30",
+          "p50_ms": "146",
+          "p95_ms": "225",
+          "max_ms": "254",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "187.398",
+          "download_mbps": "260.335",
+          "rtt_samples": "30",
+          "p50_ms": "140",
+          "p95_ms": "184",
+          "max_ms": "268",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "184.933854",
+          "max_rtt_ns": "254363880",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "187.398007",
+          "max_rtt_ns": "268571474",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "187.817",
+          "download_mbps": "261.515"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "188.010",
+          "download_mbps": "257.294"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "188.324",
+          "download_mbps": "261.078"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "193.069",
+          "download_mbps": "257.871"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-single/1-rc2.log": {
+      "sha256": "45a669833bf7f227f2672db6ccd5e37c78fcc18094fd1da3518cc7f8ed9c2a2c",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "186.979",
+          "download_mbps": "260.833",
+          "rtt_samples": "30",
+          "p50_ms": "145",
+          "p95_ms": "206",
+          "max_ms": "227",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "187.914",
+          "download_mbps": "262.878",
+          "rtt_samples": "30",
+          "p50_ms": "156",
+          "p95_ms": "214",
+          "max_ms": "247",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "185.991168",
+          "max_rtt_ns": "227116496",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "186.856243",
+          "max_rtt_ns": "247290390",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "189.259",
+          "download_mbps": "262.127"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "185.991",
+          "download_mbps": "265.001"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "189.163",
+          "download_mbps": "261.751"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "186.856",
+          "download_mbps": "264.320"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-single/2-model.log": {
+      "sha256": "6720283ba5c1b3dfed2106cb3f0bd8e8770ba95fac7f295a0a67bcbb49be9618",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "186.568",
+          "download_mbps": "265.880",
+          "rtt_samples": "30",
+          "p50_ms": "153",
+          "p95_ms": "206",
+          "max_ms": "206",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "186.424",
+          "download_mbps": "260.589",
+          "rtt_samples": "30",
+          "p50_ms": "143",
+          "p95_ms": "189",
+          "max_ms": "191",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "186.567885",
+          "max_rtt_ns": "206707030",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "186.279526",
+          "max_rtt_ns": "191489117",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "189.451",
+          "download_mbps": "265.255"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "189.163",
+          "download_mbps": "260.178"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "186.280",
+          "download_mbps": "261.891"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "188.010",
+          "download_mbps": "258.789"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-throughput-local16-single/2-rc2.log": {
+      "sha256": "a1ce87446a2989979b6f22006de5ac851a110d13a988496a518cfdc7d555697b",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [
+        {
+          "round": "1",
+          "measured_ms": "60000",
+          "upload_mbps": "188.613",
+          "download_mbps": "259.422",
+          "rtt_samples": "30",
+          "p50_ms": "149",
+          "p95_ms": "225",
+          "max_ms": "232",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        },
+        {
+          "round": "2",
+          "measured_ms": "60000",
+          "upload_mbps": "185.987",
+          "download_mbps": "262.061",
+          "rtt_samples": "30",
+          "p50_ms": "150",
+          "p95_ms": "221",
+          "max_ms": "282",
+          "timeouts": "0",
+          "missed": "0",
+          "overlap": "30",
+          "failure": "<nil>"
+        }
+      ],
+      "acceptance": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "188.612608",
+          "max_rtt_ns": "232184410",
+          "accepted": "true",
+          "field_qualified": "false"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "185.986799",
+          "max_rtt_ns": "282096924",
+          "accepted": "true",
+          "field_qualified": "false"
+        }
+      ],
+      "tails": [
+        {
+          "round": "1",
+          "duration_ms": "30000",
+          "upload_mbps": "190.317",
+          "download_mbps": "259.959"
+        },
+        {
+          "round": "1",
+          "duration_ms": "10000",
+          "upload_mbps": "195.219",
+          "download_mbps": "262.983"
+        },
+        {
+          "round": "2",
+          "duration_ms": "30000",
+          "upload_mbps": "186.280",
+          "download_mbps": "261.917"
+        },
+        {
+          "round": "2",
+          "duration_ms": "10000",
+          "upload_mbps": "187.066",
+          "download_mbps": "262.039"
+        }
+      ],
+      "identities": [
+        {
+          "round": "1",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        },
+        {
+          "round": "2",
+          "application_sockets": "3",
+          "target_tcp_dials": "3",
+          "preserved": "true"
+        }
+      ],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-0/1-model.log": {
+      "sha256": "1d2978ba93f03631c200c93c3ea55094fdda1debe79926f2edeed31e5544791b",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 827.481481,
+          "mean_ms": 218.47498458333337,
+          "p95_ms": 827.481481,
+          "phase": "before-bulk",
+          "samples_ms": [
+            99.294998,
+            120.114022,
+            239.083403,
+            142.179833,
+            827.481481,
+            340.211043,
+            139.034771,
+            131.97247,
+            199.257501,
+            86.027208,
+            120.514324,
+            176.528761
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 245.592006,
+          "mean_ms": 154.329802,
+          "p95_ms": 245.592006,
+          "phase": "during-bulk",
+          "samples_ms": [
+            178.702858,
+            182.300039,
+            95.308537,
+            130.384105,
+            155.343642,
+            109.925996,
+            128.217324,
+            245.592006,
+            121.518375,
+            169.921683,
+            188.503329,
+            146.23973
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 305.108591,
+          "mean_ms": 156.50223779166666,
+          "p95_ms": 263.587478,
+          "phase": "after-bulk",
+          "samples_ms": [
+            180.928372,
+            134.332383,
+            100.152262,
+            231.413335,
+            197.239089,
+            98.922272,
+            305.108591,
+            86.892856,
+            119.097468,
+            129.960651,
+            144.474977,
+            198.198004,
+            173.223326,
+            131.711302,
+            144.214357,
+            139.585663,
+            188.399051,
+            263.587478,
+            120.399661,
+            141.581942,
+            100.247781,
+            107.607801,
+            175.575618,
+            143.199467
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "136.190750",
+          "seconds": "15.522",
+          "bytes": "264241152",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-0/1-rc2.log": {
+      "sha256": "7a6bf650c3dc2e83f005bd2d2b23a100d60b2f8fde6a8e46d76eca742cae8a8d",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 300.605031,
+          "mean_ms": 174.15849908333334,
+          "p95_ms": 300.605031,
+          "phase": "before-bulk",
+          "samples_ms": [
+            211.51669,
+            300.605031,
+            170.37215,
+            128.177018,
+            106.335265,
+            132.536064,
+            132.342437,
+            153.042138,
+            145.794871,
+            218.410465,
+            261.669673,
+            129.100187
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 303.128141,
+          "mean_ms": 183.988414,
+          "p95_ms": 303.128141,
+          "phase": "during-bulk",
+          "samples_ms": [
+            162.720857,
+            190.609724,
+            182.62369,
+            104.469068,
+            144.999696,
+            273.822585,
+            293.58052,
+            106.459502,
+            154.171,
+            148.851144,
+            142.425041,
+            303.128141
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "model_transitions_test.go:86: bulk read 4194304 bytes: read pipe: i/o timeout",
+        "--- FAIL: TestModelBulkToQuiet (17.84s)"
+      ]
+    },
+    "refill-baseline-transition-0/2-model.log": {
+      "sha256": "30519f9ef33ec1065a714f776e9f1c40c3b7f485b6c50112613f21b07d9e2465",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 229.202426,
+          "mean_ms": 132.89460991666667,
+          "p95_ms": 229.202426,
+          "phase": "before-bulk",
+          "samples_ms": [
+            129.776316,
+            106.026502,
+            131.299056,
+            127.866173,
+            85.714738,
+            229.202426,
+            99.438926,
+            102.164939,
+            174.386169,
+            99.360927,
+            131.732964,
+            177.766183
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 183.963555,
+          "mean_ms": 137.61854991666664,
+          "p95_ms": 183.963555,
+          "phase": "during-bulk",
+          "samples_ms": [
+            102.74713,
+            95.019716,
+            164.808006,
+            144.689184,
+            183.963555,
+            95.2082,
+            146.817918,
+            126.239276,
+            149.752394,
+            126.139039,
+            153.351594,
+            162.686587
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 449.659654,
+          "mean_ms": 194.9986325,
+          "p95_ms": 367.547993,
+          "phase": "after-bulk",
+          "samples_ms": [
+            136.301482,
+            250.852619,
+            184.672988,
+            100.352592,
+            273.62745,
+            127.549895,
+            296.044481,
+            332.778121,
+            142.5669,
+            196.785726,
+            295.570201,
+            125.412065,
+            143.243384,
+            99.686683,
+            194.394924,
+            131.926887,
+            198.30708,
+            449.659654,
+            367.547993,
+            131.941082,
+            129.644104,
+            138.025434,
+            105.658117,
+            127.417318
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "150.011997",
+          "seconds": "15.657",
+          "bytes": "293601280",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-0/2-rc2.log": {
+      "sha256": "2f6d316491ab330f542560c3352e135cec6c1b5000d13947d119b98c0ff8dae7",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 397.632935,
+          "mean_ms": 198.13070733333333,
+          "p95_ms": 397.632935,
+          "phase": "before-bulk",
+          "samples_ms": [
+            141.142703,
+            141.152228,
+            168.268054,
+            202.204153,
+            236.527956,
+            397.632935,
+            151.658382,
+            167.36766,
+            121.438933,
+            320.014701,
+            161.041922,
+            169.118861
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 311.365871,
+          "mean_ms": 176.82805658333334,
+          "p95_ms": 311.365871,
+          "phase": "during-bulk",
+          "samples_ms": [
+            217.169792,
+            149.919843,
+            311.365871,
+            137.797783,
+            188.602881,
+            180.927384,
+            238.860199,
+            160.083198,
+            111.627763,
+            173.646465,
+            102.371911,
+            149.563589
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "model_transitions_test.go:86: bulk read 4194304 bytes: read pipe: i/o timeout",
+        "--- FAIL: TestModelBulkToQuiet (16.76s)"
+      ]
+    },
+    "refill-baseline-transition-1/1-model.log": {
+      "sha256": "9a2dbea3e579dc1970f34e0959a0846bd71407ccabda735c004c3b3634ca5946",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 395.281369,
+          "mean_ms": 240.959026,
+          "p95_ms": 395.281369,
+          "phase": "before-bulk",
+          "samples_ms": [
+            180.461143,
+            162.287219,
+            182.714489,
+            112.967252,
+            187.510612,
+            231.52053,
+            309.025027,
+            220.378086,
+            370.854003,
+            395.281369,
+            384.981221,
+            153.527361
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 172.45023,
+          "mean_ms": 126.60359583333332,
+          "p95_ms": 172.45023,
+          "phase": "during-bulk",
+          "samples_ms": [
+            172.45023,
+            151.876382,
+            122.231235,
+            123.02149,
+            129.039021,
+            97.353852,
+            124.401534,
+            162.88624,
+            132.801676,
+            102.273932,
+            109.170113,
+            91.737445
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140,
+            140,
+            140
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140,
+            140
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 451.139412,
+          "mean_ms": 196.557997375,
+          "p95_ms": 401.493319,
+          "phase": "after-bulk",
+          "samples_ms": [
+            109.342338,
+            131.273963,
+            193.723754,
+            143.503741,
+            100.335141,
+            133.621597,
+            109.185139,
+            100.979507,
+            128.987638,
+            184.626986,
+            177.598644,
+            184.843463,
+            184.114219,
+            235.637471,
+            350.999232,
+            401.493319,
+            451.139412,
+            129.987699,
+            139.378264,
+            178.840094,
+            161.909804,
+            161.802714,
+            320.653128,
+            303.41467
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "95.766070",
+          "seconds": "15.767",
+          "bytes": "188743680",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-1/1-rc2.log": {
+      "sha256": "cc682a662d8679e213dcf0d031e9301c94ea62f4dfcb5433d9f92ba7375c602e",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70,
+            70,
+            70
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            70,
+            70,
+            70
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 402.251877,
+          "mean_ms": 246.0127825833334,
+          "p95_ms": 402.251877,
+          "phase": "before-bulk",
+          "samples_ms": [
+            116.105543,
+            185.360046,
+            187.320263,
+            272.469424,
+            190.628535,
+            300.557014,
+            385.867671,
+            335.940204,
+            402.251877,
+            253.699879,
+            166.115987,
+            155.836948
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 249.233731,
+          "mean_ms": 146.5806709166667,
+          "p95_ms": 249.233731,
+          "phase": "during-bulk",
+          "samples_ms": [
+            157.325738,
+            136.195694,
+            130.931683,
+            168.350165,
+            129.75317,
+            129.560515,
+            112.11781,
+            104.897571,
+            172.173551,
+            107.52314,
+            249.233731,
+            160.905283
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            140,
+            140,
+            140,
+            45,
+            45,
+            45
+          ],
+          "client_rtt_start_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            140,
+            140,
+            140,
+            140,
+            45,
+            45
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 719.886796,
+          "mean_ms": 223.8502093333334,
+          "p95_ms": 404.246137,
+          "phase": "after-bulk",
+          "samples_ms": [
+            201.234861,
+            103.7744,
+            167.090007,
+            130.799442,
+            177.479996,
+            107.98539,
+            172.552423,
+            237.310754,
+            195.141558,
+            171.597015,
+            168.739209,
+            180.389642,
+            339.005184,
+            404.246137,
+            324.074555,
+            146.003497,
+            719.886796,
+            144.712784,
+            250.180273,
+            248.242605,
+            311.619671,
+            185.913923,
+            116.014757,
+            168.410145
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "96.849860",
+          "seconds": "15.591",
+          "bytes": "188743680",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-1/2-model.log": {
+      "sha256": "2bd8a67a545990d4ffb8b783b2de8fa86eb89d3758519f36adadcd6925bcc98b",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 370.712962,
+          "mean_ms": 210.76233324999998,
+          "p95_ms": 370.712962,
+          "phase": "before-bulk",
+          "samples_ms": [
+            111.133823,
+            102.78765,
+            113.48738,
+            109.88153,
+            137.132546,
+            256.653975,
+            260.591366,
+            221.324976,
+            210.605009,
+            370.712962,
+            358.625845,
+            276.210937
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "client_rtt_start_ms": [
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 179.15684,
+          "mean_ms": 130.22244983333334,
+          "p95_ms": 179.15684,
+          "phase": "during-bulk",
+          "samples_ms": [
+            179.15684,
+            155.706138,
+            130.17055,
+            177.780149,
+            135.777713,
+            98.946619,
+            139.140069,
+            102.995785,
+            120.599636,
+            104.982023,
+            103.514868,
+            113.899008
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "client_rtt_end_ms": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140,
+            140
+          ],
+          "client_rtt_start_ms": [
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80,
+            80,
+            80,
+            80,
+            180,
+            180,
+            180,
+            60,
+            60,
+            60,
+            60,
+            60,
+            140
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 487.112474,
+          "mean_ms": 195.1079891666667,
+          "p95_ms": 420.403651,
+          "phase": "after-bulk",
+          "samples_ms": [
+            156.682125,
+            98.16564,
+            112.485826,
+            163.894639,
+            99.577578,
+            144.408996,
+            98.333975,
+            101.002852,
+            124.858935,
+            129.123439,
+            420.403651,
+            184.768202,
+            184.678266,
+            147.079162,
+            183.896467,
+            487.112474,
+            370.100183,
+            333.351748,
+            179.8073,
+            176.412986,
+            177.788146,
+            107.201008,
+            184.924573,
+            316.533569
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "bulk": [
+        {
+          "useful_mbps_each_direction": "101.248366",
+          "seconds": "15.576",
+          "bytes": "197132288",
+          "chunk_bytes": "4194304",
+          "field_qualified": "false"
+        }
+      ],
+      "worst4g": [],
+      "failures": []
+    },
+    "refill-baseline-transition-1/2-rc2.log": {
+      "sha256": "0a11e2fbae5edfd925ffea6b97ab7dce21f64236f6549e4a471ab68cb7b3fc84",
+      "passed": false,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [
+        {
+          "client_rtt_end_ms": [
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70
+          ],
+          "client_rtt_start_ms": [
+            45,
+            45,
+            45,
+            45,
+            45,
+            120,
+            120,
+            120,
+            180,
+            180,
+            180,
+            70
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 386.726809,
+          "mean_ms": 245.10245175,
+          "p95_ms": 386.726809,
+          "phase": "before-bulk",
+          "samples_ms": [
+            189.029332,
+            163.59448,
+            121.598509,
+            194.532344,
+            218.193943,
+            264.749486,
+            265.775251,
+            265.243672,
+            338.383878,
+            324.219875,
+            386.726809,
+            209.181842
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        },
+        {
+          "client_rtt_end_ms": [
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80
+          ],
+          "client_rtt_start_ms": [
+            70,
+            70,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            40,
+            80
+          ],
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 219.302853,
+          "mean_ms": 163.63901591666666,
+          "p95_ms": 219.302853,
+          "phase": "during-bulk",
+          "samples_ms": [
+            141.085825,
+            210.794612,
+            116.489631,
+            137.132059,
+            154.758178,
+            141.579842,
+            140.726295,
+            201.656982,
+            149.909989,
+            179.277479,
+            170.954446,
+            219.302853
+          ],
+          "server_rtt_ms": 20,
+          "variant": "rc2"
+        }
+      ],
+      "bulk": [],
+      "worst4g": [],
+      "failures": [
+        "model_transitions_test.go:86: bulk read 4194304 bytes: read pipe: i/o timeout",
+        "--- FAIL: TestModelBulkToQuiet (16.84s)"
+      ]
+    },
+    "refill-baseline-worst4g/model.log": {
+      "sha256": "826236e159e34645153ef3510c4856a7c779124ca362cae8ad35517abb80713f",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [
+        {
+          "useful_mbps_each_direction": "0.281923",
+          "seconds": "30.220",
+          "completed": "65",
+          "failed": "0",
+          "client_down_mbps": "1",
+          "client_up_mbps": "2.5",
+          "server_rtt_ms": "20",
+          "direct_ping_trace_ms": "84,63,43,67,23,60,55,56,21,66",
+          "field_qualified": "false"
+        }
+      ],
+      "failures": []
+    },
+    "refill-baseline-worst4g/rc2.log": {
+      "sha256": "9580bdaa28e810733d257f538edc4863720d3b074f97fa24baf3d7ab1fcd6dee",
+      "passed": true,
+      "server_rtt_headers_ms": [
+        20
+      ],
+      "rounds": [],
+      "acceptance": [],
+      "tails": [],
+      "identities": [],
+      "latency": [],
+      "directional": [],
+      "directional_tails": [],
+      "transitions": [],
+      "bulk": [],
+      "worst4g": [
+        {
+          "useful_mbps_each_direction": "0.277073",
+          "seconds": "30.276",
+          "completed": "64",
+          "failed": "0",
+          "client_down_mbps": "1",
+          "client_up_mbps": "2.5",
+          "server_rtt_ms": "20",
+          "direct_ping_trace_ms": "84,63,43,67,23,60,55,56,21,66",
+          "field_qualified": "false"
+        }
+      ],
+      "failures": []
+    }
+  },
+  "source_inputs": {
+    "refill-baseline-capacity-local16-retained-download/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-capacity-local16-retained-upload/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-interactive-local16-mobile40/provenance.json": {
+      "artifact_provenance_sha256": "61448a498e0af581dfc84e2fb372581c253941d43a0bf45edc898239608ec71d",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-interactive-local16-variable40-180/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-throughput-local16-mobile-variable/provenance.json": {
+      "artifact_provenance_sha256": "61448a498e0af581dfc84e2fb372581c253941d43a0bf45edc898239608ec71d",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-throughput-local16-multi/provenance.json": {
+      "artifact_provenance_sha256": "61448a498e0af581dfc84e2fb372581c253941d43a0bf45edc898239608ec71d",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-throughput-local16-retained-multi/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-throughput-local16-retained-single/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-throughput-local16-single/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-transition-0/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-transition-1/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    },
+    "refill-baseline-worst4g/provenance.json": {
+      "artifact_provenance_sha256": "52c24d054b9813c639238d9f53974fa569164287cc83b51de0e027070c924834",
+      "baseline": "v1.0.0-rc2",
+      "reference_production_unchanged": true,
+      "rc2_production_manifest_sha256": "c4da106d49fceb7c517d88cb047ae9948138157523c663b3f4b6781ad3519929",
+      "model_production_manifest_sha256": "314716b0417b6ee19a96a48ffb3dc8d12675d83b6502882bc2505caabcee1386",
+      "authority_modules_identical_to_dev3": true,
+      "remote_cleanup_floor_ms": 1100,
+      "local_cleanup_divisor": 16,
+      "refill_trigger": "empty",
+      "periodic_remote_cleanup_ms": 1500,
+      "headroom_hint_used_as_periodic_timer": false,
+      "shared_fixture_overrides": {
+        "model_mobile_trace_test.go": "b68c9614ea2f7cabde830bcf7f5ba6f82ec67b7adf3e8fa21e25e4e09349af20",
+        "model_transitions_test.go": "05b31fa0563e631c7fbfb73168cf1696385c05f91a2c166f089866146e4cf6b5",
+        "v110_latency_itomtest_test.go": "e38d2dba0c73eb8921a50f6a23d8c80b46557d10ae467de27cadb95eb644c398",
+        "v110_connectivity_itomtest_test.go": "caa7bcec1f656b9f585f43a3e4a6b201b7321309480af9dca02b7a7e1e00561d",
+        "retained_interactive_test.go": "758318628e91da53a65db68f2fdccdc5b887919e515ff63eab995cdde40319d9"
+      }
+    }
+  }
+}

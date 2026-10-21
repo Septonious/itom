@@ -1587,7 +1587,7 @@ func (l *lane) startReader() {
 		cur := l.recvCursor
 		idle := 0
 		var notificationPolicy notificationAuditPolicy
-		var demand responseWaitPolicy
+		demand := responseWaitPolicy{boundedPoll: true}
 		var hotGeneration uint64
 		for l.ctx.Err() == nil {
 			// A fresh request starts a new bounded response search. Bulk/GC

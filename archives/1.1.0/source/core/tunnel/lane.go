@@ -271,6 +271,7 @@ type lane struct {
 	cleanupWanted                               atomic.Bool
 	cleanupQueued                               bool
 	cleanupQueuedKind                           cleanupKind
+	refillCleanupRequested                      bool // actor-owned proof-service request
 	bulkControlBlocked                          atomic.Bool
 	controlDebt                                 atomic.Uint64
 	controlWriting                              atomic.Int64
@@ -2874,6 +2875,7 @@ func (l *lane) process(f wire.Frame) error {
 			return errors.New("GRANT_DIRECTION")
 		}
 		wasUsable := l.issued[m.Key]
+		wasBulk := wasUsable && !l.issuedFast[m.Key]
 		status, e := l.data.ApplyRemote(l.user.ID, l.data.Run(), m)
 		if errors.Is(e, journal.ErrMissing) {
 			return nil
@@ -2888,7 +2890,13 @@ func (l *lane) process(f wire.Frame) error {
 		if wasUsable && status.Closed {
 			l.issued[m.Key] = false
 		}
-		return l.publishCleanup(status)
+		if err := l.publishCleanup(status); err != nil {
+			return err
+		}
+		if wasBulk && status.Closed {
+			l.requestRefillCleanup(time.Now())
+		}
+		return nil
 	case wire.CleanupStatus:
 		return l.handleCleanupStatus(m)
 	case wire.DescriptorRequest:
@@ -3467,9 +3475,10 @@ func (l *lane) run() error {
 				return fmt.Errorf("receive: %w", e)
 			}
 		case <-l.cleanupWake:
-			// Only a retained FIFO request may use this wake; periodic due work
+			// FIFO admission or an authenticated bulk-refill request may use this wake; periodic due work
 			// stays on its normal cadence. Admission is rechecked under g.mu.
-			if l.cleanupQueued {
+			if l.cleanupQueued || l.refillCleanupRequested {
+				l.refillCleanupRequested = false
 				l.startDueCleanup(time.Now())
 			}
 		case done := <-l.gcDone:

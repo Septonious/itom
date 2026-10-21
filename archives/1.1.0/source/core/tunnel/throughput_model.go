@@ -96,7 +96,7 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 			m.nextRate = (m.nextRate + 1) % len(m.rates)
 			// Three independent full-window feedback intervals establish a drop;
 			// a noisy RTT or one quiet interval does not.
-			if rateUtilized && old > 0 && f.RateMbps < .7*old {
+			if rateUtilized && old > 0 && f.RateMbps < .7*old && (!m.startup || window == deliveryMaxWindow || float64(window) >= old*1e6/8*max(100*time.Millisecond, m.feedbackRTT).Seconds()*2+128*1024) {
 				if m.lowRates == 0 {
 					m.dropReference = old
 				}
@@ -139,6 +139,8 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 		m.lastProbe, m.probeUntil = time.Time{}, time.Time{}
 		m.lastProgress = time.Time{}
 		m.startup, m.plateau = true, 0
+		m.fullRate = 0
+		m.lowRates, m.dropReference = 0, 0
 		// Drained bulk never delays a short request. Keep bounded capacity
 		// history for the next download; do not retain a full bulk flight.
 		seed := f.InitialWindow

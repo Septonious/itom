@@ -1,0 +1,160 @@
+name: ITOM 1.1 DEV4 selected controller correctness and testing builds
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev4.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: off
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Identifiable source, unchanged RC2 comparator and test contracts
+        run: |
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/refill-baseline-cadence/stage.py "$RUNNER_TEMP/dev4"
+          python3 "$RUNNER_TEMP/dev4/tools/build.py" check --expect-revision itom-1-1-0-dev4
+      - name: Package source vet and focused controller, authority and legacy contracts
+        working-directory: ${{ runner.temp }}/dev4/core
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=180s ./cmd/itom ./manager ./journal ./wallet ./flow ./datapath
+          go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestThroughputModel|TestBoundedResponse|TestResponseSearch|TestDuplexProof|TestRetainedCadence|TestRefillTrigger|TestRev7RetainedOutboundCleanup|TestRev5RampAbortAndRestartKeepOriginalChatUsable' -v
+  linux:
+    needs: [core]
+    if: ${{ needs.core.result == 'success' }}
+    name: Compile experimental Linux artifacts (not a qualified release)
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the exact grant-aware DEV4 source
+        run: |
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/refill-baseline-cadence/stage.py "$RUNNER_TEMP/dev4"
+          echo "SOURCE=$RUNNER_TEMP/dev4" >> "$GITHUB_ENV"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV4; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: see DEV4 qualification record; individual failed rounds and mixed tails retained; no field qualification.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py check --expect-revision itom-1-1-0-dev4
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV4-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.1.0-DEV4-linux-$arch.bin" | grep -q 'itom-1-1-0-dev4'
+            test "$(stat -c %s "dist/ITOM-1.1.0-DEV4-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.1.0-DEV4-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev4-model-linux
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV4-linux-*.bin
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/NATIVE_SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [core]
+    if: ${{ needs.core.result == 'success' }}
+    name: Compile experimental APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the exact grant-aware DEV4 source
+        run: |
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/refill-baseline-cadence/stage.py "$RUNNER_TEMP/dev4"
+          echo "SOURCE=$RUNNER_TEMP/dev4" >> "$GITHUB_ENV"
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact 1.1 development application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV4; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: see DEV4 qualification record; individual failed rounds and mixed tails retained; no field qualification.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py android --expect-revision itom-1-1-0-dev4 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10104 and x['versionName']=='1.1.0-dev4-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.1.0-DEV4-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-1-0-dev4' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV4-debug.apk > dist/SIGNER.txt
+      - name: Hash APK
+        working-directory: ${{ env.SOURCE }}/dist
+        run: sha256sum ITOM-1.1.0-DEV4-debug.apk > APK_SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev4-model-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV4-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/APK_SHA256SUMS
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-dev4-model-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30

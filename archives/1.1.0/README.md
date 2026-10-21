@@ -1,21 +1,7 @@
-# ITOM1.1.0 DEV3 development
+# ITOM 1.1.0 DEV4 testing candidate
 
-The current source/ is the tested experimental grant-aware delivery model. Final1.0.0/RC2 is unchanged. This is a field-testing build, not a stable or fully performance-qualified1.1.0 release. Android remains org.itom.client, versionCode10103.
+The current source/ contains the conservative, delivery-clocked DEV4 controller selected for the next field test. Stable 1.0.0/RC2 is unchanged. Android retains org.itom.client and uses versionCode 10104.
 
-The new controller separates sparse scheduling from sustained bulk admission. Bulk flight grows from authenticated useful delivery and is not repeatedly halved on RTT/short-ACK age alone. Physical supply waits are distinct from admitted network/service work. Confirmed capacity decline and genuine stalls remain bounded; drained bulk returns to its startup seed. Journal, wallet, pool, wire, quota and unknown-outcome proof authority remain the RC2 contracts.
+[Testing notes, measurements and limitations](DEV4_TESTING.md) document 20/20 original performance rounds versus RC2 16/20, passing full correctness checks, improved retained light-load means and upload supply, and the remaining 8–13% retained simultaneous-duplex download loss and mixed sparse tails. No thresholds were relaxed. Real Rambler/Android qualification is pending.
 
-[Results, failures and downloads](RESULTS.md) include matched RC2 comparisons, changing40–180ms mobile paths, retained state, provider-service sensitivity and full-flight demand transitions. Complete Go/vet/race suites, worst4G and Android SDK checks pass. Some sparse RTT tails still worsen, the historical2ms retained upload missed100Mbps for both RC2 and the model, and real Android/Rambler qualification remains outstanding. No threshold is relaxed.
-
-- [APK testing artifact](https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12360365671)
-- [Linux amd64/arm64 testing artifact](https://github.com/Septonious/itom/actions/runs/39628803015/artifacts/12358599228)
-- [Build metadata and hashes](DEV3_BUILD.json)
-- [Controller design and reproducible experiments](experiments/delivery-model/README.md)
-- [Migration/data preservation](MIGRATION.md)
-
-The APK uses a temporary debug signer because persistent Actions signing secrets were absent. In-place update compatibility is not assured; do not clear wallet data to work around it.
-
-The production source files match the staged DEV3 build recipe at922545c0fe3860693fc9a4c95e9cee73145cef69; subsequent test-only corrections make the server path configurable with a20ms default. The original build manifest remains the record of the actual built snapshot; Linux amd64 was independently reproduced bit-for-bit. The frozen [DEV2 checkpoint](checkpoints/DEV2/README.md) supplies immutable inputs to the experiment recipes, avoiding recursive application of the model. [Development history](DEVELOPMENT_HISTORY.md), earlier results and rejected patches remain available.
-
-Current primary comparisons use a20ms server-to-IMAP network RTT, independent of client propagation and provider processing. Earlier2ms measurements remain historical and cannot establish performance on this deployment. The [matched20ms comparison](experiments/delivery-model/SERVER_PATH_RESULTS.md) completed: all sustained rounds retained sockets/probes, but the model passed14/20 performance rounds versus17/20 for RC2. SINGLE spikes, a retained upload stall and some tails still fail; the candidate does not qualify as matching or improving all RC2 performance. The controller learns measured feedback; neither2ms nor20ms is a production latency constant.
-
-Subsequent [bounded-response and retained-capacity experiments](experiments/retained-response/RESULTS.md) repeatedly reach17/20 or18/20 against matched RC2 at14–15/20, with improved short-request means. They remain isolated because retained simultaneous-duplex download regresses. Additional one-way checks preserve download capacity and identify the remote cleanup supply limit for upload. [Paired local/remote reclamation](experiments/duplex-reclamation/README.md) is under test; these experiments are not present in the existing DEV3 APK/binaries.
+Build using [the DEV4 workflow](../../.github/workflows/itom-v110-dev4.yml). The [selected immutable comparison](experiments/refill-baseline-cadence/results.json), [reproduction recipe](experiments/refill-baseline-cadence/stage.py), [migration guidance](MIGRATION.md), [DEV2 checkpoint](checkpoints/DEV2/README.md), historical DEV3_BUILD.json and earlier experiment reports remain available. DEV3 source is frozen in checkpoints/DEV3/source.
