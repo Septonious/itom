@@ -25,6 +25,7 @@ def main():
     for variant in ('rc2','v110','model'):
         t=out/variant/'tunnel'
         shutil.copyfile(HERE/'mobile_trace_test.go',t/'model_mobile_trace_test.go')
+        shutil.copyfile(HERE/'transitions_test.go',t/'model_transitions_test.go')
         replace(t/'healthy_endpoints_test.go','p.setMbps(0)','p.setMbps(0)\n\tstartModelMobileTrace(t, p)')
     prov=json.loads((out/'provenance.json').read_text())
     prov['experiment']='useful-delivery model; no production source changed'
