@@ -1,6 +1,6 @@
 # ITOM 1.1.0 development
 
-Isolated baseline: the frozen final 1.0.0 / original RC2 transport. Development source: `source/`; Android remains `org.itom.client`, version code10102. This is DEV1, **not a qualified release**. No 1.0.0 source or acceptance threshold is changed.
+Isolated baseline: the frozen final 1.0.0 / original RC2 transport. Development source: `source/`; Android remains `org.itom.client`, version code10102. The packaged checkpoint is DEV2, **not a qualified release**. No 1.0.0 source or acceptance threshold is changed.
 
 First experiments replace the interaction of exponential hot polling with a demand-scoped notification search, and introduce per-socket quiet/burst accumulation timing. Bulk batch, stream credit, physical quota, journal, wallet, recovery and liveness policies remain the reference policies. The observed transport forwards optional scheduling capabilities so diagnostics do not silently change the controller.
 
@@ -20,7 +20,7 @@ The next isolated change pipelines a replacement fast lease only after its durab
 
 A separate worst4G replay uses the exact supplied ping sequence, asymmetric1Mbps down/2.5Mbps up and2ms server path. It completed78 verified16KiB request/replies over30.276s,0.338Mbps each direction with no connection replacement. That0.1Mbps connectivity objective does not replace the high-capacity100Mbps gate.
 
-Development build jobs may export clearly marked unqualified DEV1 APK/binaries only after correctness and latency checks succeed. Failed performance gates remain failed and no stable release is published. Build notes include the exact commit and qualification result.
+Development build jobs may export clearly marked unqualified development APK/binaries only after correctness and latency checks succeed. Failed performance gates remain failed and no stable release is published. Build notes include the exact commit and qualification result.
 
 ## Current selection: low-path notification search only
 
@@ -35,3 +35,7 @@ This is an iteration of the1.1 transport work, not a declaration that the entire
 The complete DEV1 run803d1fa failed TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream after its original12s transfer deadline, despite passing every fresh high-speed case. Packaging was automatically skipped. DEV2 restricts adaptive response waits to providers with independent DATA/maintenance capacity as well as a measured<=20ms route and working IDLE. Capped shared services retain RC2 timing. Five consecutive targeted capped-repair and controller checks passed16.807s locally without changing the deadline. Full correctness and matched qualification are repeated for DEV2 before its test artifacts are exported. The fast-rollover patch remains deferred; grant/journal/wallet policies are unchanged.
 
 The long-idle harness now accepts a test-only pause parameter; ordinary runs keep their previous exact150ms/800ms cadence. A first3000ms comparison was stopped and marked contaminated because a compile overlapped it. It is not used as evidence. The rerun compiles both binaries before measurement and runs them serially without competing work.
+
+## Current workload-aware controller work
+
+The user revised the objective to prioritize idle/light responsiveness and sustained bulk bandwidth separately, including varying 40–180ms mobile provider turns. A new useful-delivery model is implemented and tested in [experiments/delivery-model](experiments/delivery-model/README.md), with independent RC2 and DEV2 controls. It replaces RTT-only bulk halving with authenticated rate/feedback modeling and bounded probing. It is not applied to the packaged DEV2 source. [Current DEV2 results and downloads](RESULTS.md) include every failed performance gate and the temporary-signing limitation.

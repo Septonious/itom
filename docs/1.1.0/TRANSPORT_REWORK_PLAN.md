@@ -48,3 +48,9 @@ Five isolated prototypes have been measured and preserved in [experiments/RESULT
 4. Introduce independent dynamic pacing/window/batching controllers, with deterministic unit traces and adversarial recovery tests. Avoid coupling many knobs in one candidate.
 5. Run full matched fresh/retained matrix and crash/recovery/signing migration checks. Only then build a1.1 prerelease for the new server.
 6. Validate repeated real Android/Rambler SINGLE/MULTI, idle and light probes with diagnostics enabled/disabled. Local synthetic results are a selection tool; field failures block promotion.
+
+## Workload objective revision, 2026-10-21
+
+The user now explicitly prioritizes different operating points: minimize baseline/light-load waiting, and maximize useful bulk bandwidth when demand is sustained, accepting higher loaded RTT. Mobile IMAP latency can vary from40 to180ms even on a good connection. Do not infer congestion from that RTT movement alone or repeatedly shrink bulk because a concurrent short ACK crosses a fixed budget. Existing historical qualification outcomes remain recorded with unchanged thresholds; a changed workload objective is not permission to relabel failed checks.
+
+The first implementation is the isolated [useful-delivery model](../../archives/1.1.0/experiments/delivery-model/README.md): authenticated rate sampling, application-limited protection, direction-local BDP flight, bounded startup/probing, sustained-capacity-drop confirmation, and an independent collective-stall guard. Pair RC2, DEV2 and model variants, with a changing40–180ms path and bulk-to-quiet transitions on persistent probe sockets. Production1.0.0 and packagedDEV2 remain frozen while this model is evaluated. Future physical pacing must account for mailbox batching and quota service; copying QUIC packet pacing or BRUTAL loss compensation without those measurements is not part of this implementation.

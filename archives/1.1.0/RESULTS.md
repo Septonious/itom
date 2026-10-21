@@ -1,45 +1,52 @@
-# ITOM 1.1.0 DEV1: current laboratory result
+# ITOM 1.1.0 DEV2: measured checkpoint
 
-Candidate source: [803d1fa](https://github.com/Septonious/itom/commit/803d1fa63029c1b0eaf5f4ebca7f47bad0028b02). [Matched run39599718710](https://github.com/Septonious/itom/actions/runs/39599718710). This is development evidence, not a stable release or physical Android/Rambler qualification. No acceptance threshold is reduced.
+Source/build commit: [37d3fae](https://github.com/Septonious/itom/commit/37d3fae1b56213a8c6541e85ad64fa294155142e). [Complete run](https://github.com/Septonious/itom/actions/runs/39602535979). **Experimental; performance qualification failed.** Full correctness, race checks and Android/Linux builds passed. Final 1.0.0/RC2 is unchanged. The new useful-delivery controller is a separate experiment and is not included in these APK/binaries.
 
-Only the demonstrated low-route receive search and per-socket quiet/burst coalescing are applied. Slower/unknown direct provider paths retain RC2 receive timing. Grant/journal/wallet/wire/quota/recovery code remains the frozen RC2 contract; fast rollover is deferred as a separate patch. Final1.0.0 and preserved post-RC2 archives are unchanged.
+## Idle/light application RTT
 
-## Idle and light application RTT
+Ten actual supervisors and account pairs, TLS/IMAP, journals and persistent verified 32-byte application exchanges. Server route 2ms/1Gbps; client 500Mbps. Three alternating runs per variant, 72 requests per phase. Light traffic is a closed-loop 4KiB echo with think time. These are shared-host laboratory results, not Android/Rambler measurements. Mean / p95 / max, milliseconds:
 
-Ten accounts, independent2ms server/1000Mbps and client500Mbps routes, actual production supervisors, TLS/IMAP, journals and persistent verified TCP echoes. Each route uses three alternating AB/BA/AB pairs and72 verified32-byte requests per phase/version. Light load adds a4KiB echo stream; it is closed-loop, not a fixed offered-rate benchmark. Times below are pooled mean/p95 milliseconds; independent experimental units are the three runs, not72 unrelated machines.
-
-| Client route | RC2 idle | DEV1 idle | RC2 light | DEV1 light |
+| Client route | RC2 idle | DEV2 idle | RC2 light | DEV2 light |
 | --- | ---: | ---: | ---: | ---: |
-| 5ms | 49.7 /75.4 | 36.6 /66.9 | 51.2 /111.1 | 36.6 /62.9 |
-| 40ms | 96.7 /139.5 | 92.8 /109.8 | 103.5 /143.0 | 96.5 /133.0 |
-| 100ms | 189.1 /262.1 | 189.0 /243.7 | 195.8 /309.8 | 175.7 /223.3 |
+| 5ms | 48.9 / 76.0 / 117.3 | 36.3 / 63.4 / 71.0 | 52.7 / 112.1 / 150.3 | 36.0 / 62.7 / 87.8 |
+| 40ms | 126.1 / 254.9 / 482.3 | 138.6 / 312.1 / 740.7 | 137.4 / 301.6 / 404.6 | 124.3 / 279.7 / 405.4 |
+| 100ms | 196.2 / 268.4 / 400.5 | 191.5 / 226.0 / 268.8 | 197.0 / 277.0 / 363.1 | 179.3 / 257.1 / 388.5 |
 
-All latency invocations completed, keeping their original two application sockets and carrier identities. Not every extreme improved:40ms idle max195.5→198.0ms and light172.3→206.0ms. That small sample cannot establish universal tail non-regression. Earlier broader policies produced worse40ms distributions and were not accepted; both prior reports and failures remain recorded.
+The 5ms benefit repeats. The 40ms idle mean and tail worsened in this run; it is not a universal latency improvement. Restricting the new receive search to measured <=20ms independent DATA/maintenance paths prevents the prior capped-socket recovery failure, but does not establish tail equivalence on all mobile paths.
 
-## Sustained paired transfer
+## Complete sustained measurements
 
-Two complete60s rounds per side/scenario, client40ms/500Mbps, server2ms/1000Mbps except the explicit20ms sensitivity case. Same byte generators, complete scheduled probes, original full/30s/10s tails, all sockets and100Mbps/750ms gates. Each scenario runs both binaries serially on the same four-core shared runner. Rates below average only complete rounds, upload/download Mbps.
+Two complete 60s rounds per side and scenario. Existing full/30s-tail/10s-tail, complete probe schedule, application/carrier identity, strict 100Mbps and 750ms gates are unchanged. Table rates average complete rounds, upload / download Mbps. Every missed target remains a failure.
 
-| Scenario | RC2 | DEV1 | Result |
+| Scenario | RC2 | DEV2 | Historical gate |
 | --- | ---: | ---: | --- |
-| Fresh SINGLE | 160.8 /308.6 | 164.1 /315.9 | Both PASS |
-| Fresh four streams | 159.6 /301.6 | 160.4 /298.2 | Both PASS |
-| Fresh MULTI32 | 153.3 /269.3 | 153.2 /270.0 | Both PASS |
-| BINARY/LITERAL+ four | 240.0 /259.6 | 242.0 /251.9 | Both PASS |
-| Older20ms server route | 183.0 /241.8 | 181.4 /241.9 | Both PASS |
-| Retained SINGLE | 76.6 /308.2 | 76.8 /309.4 | Both FAIL100Mbps upload/tail target |
-| Retained MULTI32 | 76.8 /286.3 | 76.8 /282.6 | Both FAIL100Mbps upload/tail target |
+| single | 177.0 / 345.6 | 180.0 / 352.9 | Both PASS |
+| four | 160.8 / 297.2 | 158.4 / 299.7 | Both PASS |
+| multi | 154.6 / 268.3 | 153.1 / 269.4 | Both PASS |
+| binary-four | 238.6 / 256.7 | 241.5 / 256.8 | Both PASS |
+| retained-single | 76.3 / 309.1 | 76.9 / 306.7 | Both FAIL 100Mbps upload/tails |
+| retained-multi | 76.7 / 313.5 | 76.9 / 311.6 | Both FAIL 100Mbps upload/tails |
+| historical-route | 132.0 / 164.6 | 133.2 / 164.2 | Both FAIL; loaded tail / RTT |
 
-All28 measurement rounds completed,420 loaded probes per version, with no timeouts/missed probes or carrier/socket replacement. Candidate maximum loaded RTT was340ms; RC2344ms. The observed BINARY download difference is retained in the table; two rounds do not certify equivalence or a causal regression. Earlier matched runs varied in both directions. This evidence supports continued field evaluation, not an all-scenarios100Mbps claim. Retained-state failures still block stable qualification.
+The 20ms-server sensitivity produced RC2 max 938ms and DEV2 max 809ms; DEV2 also had an 88.159Mbps minimum verified tail. All 28 measurement rounds completed, with zero probe timeouts/misses in the recorded rounds. Complete rounds and successful sockets do not convert failed rate/RTT gates into passes.
 
-## Other checks
+## Correctness and builds
 
-The supplied worst4G trace,1Mbps down/2.5Mbps up and2ms server route completed78 verified16KiB request/replies in30.276s:0.338Mbps each direction, above the separate0.1Mbps connectivity objective. This does not waive any high-capacity target.
+DEV2 full Go suite/vet, required journal/wallet/flow/datapath race checks and worst-4G check passed in CI. The guard also passed five repeated capped/shared-socket repair/controller checks locally without changing their deadlines. The extra local HTTPS race-instrumented 5s timeout recorded in the DEV1 report remains a failure, not a passed check.
 
-Corrected mailbox watchdog checks and journal/wallet/flow/datapath race checks passed locally. An extra local race-instrumented HTTPS stress invocation missed its original5s HTTP deadline without a race detector report; the same functional workload passed in a normal matched local run for RC2 and the preceding equivalent low-route candidate. This extra failure is not hidden or called a pass. Full CI correctness, Android SDK tests/lint, native identity and artifact status are recorded by the linked workflow when completed.
+Android: 82 domain tests and 7 app tests passed. Lint: zero errors, one dependency-version warning. JNI identities/ABIs and package org.itom.client, versionCode 10102, versionName 1.1.0-dev2-debug were verified. Linux amd64 ran its version command; both Linux files are normal CGO-disabled ELF builds without test-fixture APIs.
 
-Exact rounds, raw latency samples, all acceptance decisions and raw-log SHA256 hashes are in [experiments/ci3-results.json](experiments/ci3-results.json). Runtime measurements are laboratory inputs; a2ms server ICMP ping does not establish provider APPEND/index/notification latency. Real Android/Rambler validation on the new server is still required.
+Downloads (experimental DEV2 only):
 
-## Full correctness outcome for this DEV1 checkpoint
+- [APK artifact](https://github.com/Septonious/itom/actions/runs/39602535979/artifacts/12347109176): ITOM-1.1.0-DEV2-debug.apk; SHA256 `82b89db715fc34281b995605267e4a6f28a15df82bbb1c5d2e5f4c90a24cb700`.
+- [Linux artifact, amd64 and arm64](https://github.com/Septonious/itom/actions/runs/39602535979/artifacts/12347912728). amd64 SHA256 `ad499b359dbaf46c7cb8dbfd4b7cb00abbf4ff95544b58b00379a5bd1d95d21e`; arm64 `c5abe46dfd75c32d448e0b5c2989df70a7e5be735fbddbdc1279316aa80d4e83`.
 
-The full suite later failed the original capped/shared-socket repair test (12s1MiB transfer after forced control EOF). APK/binary export for this checkpoint was skipped automatically. The next DEV2 candidate preserves RC2 wait timing whenever DATA/maintenance are not physically isolated, and repeats correctness/qualification. These DEV1 performance numbers do not certify that later candidate.
+**Signing:** the completed build used a temporary debug signer because persistent Actions signing secrets were absent. In-place update compatibility is not assured. Preserve wallet data and server state; see [MIGRATION.md](MIGRATION.md).
+
+Exact raw samples, rounds and log hashes: [ci4-dev2-results.json](experiments/ci4-dev2-results.json). Source file hashes: [SOURCE_INTEGRITY_DEV2.json](experiments/SOURCE_INTEGRITY_DEV2.json). Prior checkpoint failures: [RESULTS-DEV1.md](RESULTS-DEV1.md).
+
+## Follow-up experiments and current priority
+
+Faster quota-aware reclamation raised retained upload but also reduced download. Conservative 900/1000/1100ms floor trials each included four full rounds per variant in reversed orders. Upload averaged 120.4/111.8/103.8Mbps versus controls near 77; download fell approximately 5.7/3.6/2.6%. The earlier faster trial lost substantially more SINGLE download. These changes are preserved separately and **not promoted**. [Exact conservative trials](experiments/reclamation-floor-results.json). The fresh sparse fast-fence comparison did not demonstrate a mean RTT benefit.
+
+The user then revised the controller objective: lowest practical idle/light RTT, bandwidth-first sustained bulk, dynamic 40–180ms mobile turns. The new independent useful-delivery model, invariants, phase transitions and paired RC2/DEV2/model trials are documented in [delivery-model/README.md](experiments/delivery-model/README.md). No DEV2 artifact contains that model.

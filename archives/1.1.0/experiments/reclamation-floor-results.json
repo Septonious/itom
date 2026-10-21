@@ -1,0 +1,890 @@
+{
+  "run_id": 39605503976,
+  "results": {
+    "reclamation-floor1000-single": {
+      "control": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.511",
+            "download_mbps": "305.712",
+            "rtt_samples": "30",
+            "p50_ms": "112",
+            "p95_ms": "197",
+            "max_ms": "300",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "77.472",
+            "download_mbps": "311.139",
+            "rtt_samples": "30",
+            "p50_ms": "119",
+            "p95_ms": "185",
+            "max_ms": "252",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.848",
+            "download_mbps": "309.103",
+            "rtt_samples": "30",
+            "p50_ms": "114",
+            "p95_ms": "195",
+            "max_ms": "215",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "76.869",
+            "download_mbps": "311.021",
+            "rtt_samples": "30",
+            "p50_ms": "108",
+            "p95_ms": "148",
+            "max_ms": "167",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "75.410091",
+            "max_rtt_ns": "300434245",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "77.280051",
+            "max_rtt_ns": "252638345",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.847514",
+            "max_rtt_ns": "215259498",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "74.396467",
+            "max_rtt_ns": "167269443",
+            "accepted": "false",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "75.410",
+            "download_mbps": "306.307"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "77.568",
+            "download_mbps": "307.338"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "77.857",
+            "download_mbps": "310.850"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "77.280",
+            "download_mbps": "312.685"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "77.761",
+            "download_mbps": "308.963"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "79.010",
+            "download_mbps": "307.941"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "77.376",
+            "download_mbps": "311.646"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "74.396",
+            "download_mbps": "308.648"
+          }
+        ]
+      },
+      "adaptive": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "111.009",
+            "download_mbps": "296.411",
+            "rtt_samples": "30",
+            "p50_ms": "116",
+            "p95_ms": "152",
+            "max_ms": "204",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "112.700",
+            "download_mbps": "298.123",
+            "rtt_samples": "30",
+            "p50_ms": "118",
+            "p95_ms": "185",
+            "max_ms": "219",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "110.520",
+            "download_mbps": "298.980",
+            "rtt_samples": "30",
+            "p50_ms": "107",
+            "p95_ms": "140",
+            "max_ms": "163",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "112.892",
+            "download_mbps": "298.966",
+            "rtt_samples": "30",
+            "p50_ms": "112",
+            "p95_ms": "161",
+            "max_ms": "235",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "111.009246",
+            "max_rtt_ns": "204455400",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "111.979179",
+            "max_rtt_ns": "219594307",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "110.441267",
+            "max_rtt_ns": "163757532",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "112.459776",
+            "max_rtt_ns": "235054844",
+            "accepted": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "111.787",
+            "download_mbps": "297.158"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "111.018",
+            "download_mbps": "295.305"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "111.979",
+            "download_mbps": "297.359"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "112.040",
+            "download_mbps": "295.122"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "112.399",
+            "download_mbps": "298.905"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "110.441",
+            "download_mbps": "299.211"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "113.325",
+            "download_mbps": "298.573"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "112.460",
+            "download_mbps": "299.683"
+          }
+        ]
+      }
+    },
+    "reclamation-floor1100-single": {
+      "control": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.284",
+            "download_mbps": "327.068",
+            "rtt_samples": "30",
+            "p50_ms": "103",
+            "p95_ms": "163",
+            "max_ms": "168",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "76.655",
+            "download_mbps": "330.673",
+            "rtt_samples": "30",
+            "p50_ms": "89",
+            "p95_ms": "150",
+            "max_ms": "157",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.703",
+            "download_mbps": "326.636",
+            "rtt_samples": "30",
+            "p50_ms": "101",
+            "p95_ms": "167",
+            "max_ms": "167",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "76.957",
+            "download_mbps": "330.280",
+            "rtt_samples": "30",
+            "p50_ms": "95",
+            "p95_ms": "173",
+            "max_ms": "184",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "75.261542",
+            "max_rtt_ns": "168064890",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.655275",
+            "max_rtt_ns": "157658027",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.703334",
+            "max_rtt_ns": "167247762",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.441190",
+            "max_rtt_ns": "184462268",
+            "accepted": "false",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "76.703",
+            "download_mbps": "329.087"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "75.262",
+            "download_mbps": "336.881"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "77.088",
+            "download_mbps": "328.484"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "78.722",
+            "download_mbps": "324.010"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "77.761",
+            "download_mbps": "328.152"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "78.145",
+            "download_mbps": "335.151"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "76.441",
+            "download_mbps": "330.651"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "77.857",
+            "download_mbps": "325.871"
+          }
+        ]
+      },
+      "adaptive": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "103.468",
+            "download_mbps": "317.087",
+            "rtt_samples": "30",
+            "p50_ms": "100",
+            "p95_ms": "152",
+            "max_ms": "359",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "104.578",
+            "download_mbps": "315.910",
+            "rtt_samples": "30",
+            "p50_ms": "103",
+            "p95_ms": "175",
+            "max_ms": "177",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "103.376",
+            "download_mbps": "325.849",
+            "rtt_samples": "30",
+            "p50_ms": "102",
+            "p95_ms": "176",
+            "max_ms": "245",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "103.918",
+            "download_mbps": "322.022",
+            "rtt_samples": "30",
+            "p50_ms": "102",
+            "p95_ms": "150",
+            "max_ms": "187",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "102.943949",
+            "max_rtt_ns": "359957786",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "104.577980",
+            "max_rtt_ns": "177582195",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "103.376486",
+            "max_rtt_ns": "245692998",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "103.468237",
+            "max_rtt_ns": "187570380",
+            "accepted": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "103.425",
+            "download_mbps": "326.883"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "102.944",
+            "download_mbps": "328.489"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "105.539",
+            "download_mbps": "309.426"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "105.251",
+            "download_mbps": "309.723"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "105.347",
+            "download_mbps": "325.627"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "105.251",
+            "download_mbps": "326.081"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "104.604",
+            "download_mbps": "320.838"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "103.468",
+            "download_mbps": "317.456"
+          }
+        ]
+      }
+    },
+    "reclamation-floor900-single": {
+      "control": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.467",
+            "download_mbps": "301.774",
+            "rtt_samples": "30",
+            "p50_ms": "118",
+            "p95_ms": "162",
+            "max_ms": "183",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "77.424",
+            "download_mbps": "307.145",
+            "rtt_samples": "30",
+            "p50_ms": "116",
+            "p95_ms": "163",
+            "max_ms": "171",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "76.786",
+            "download_mbps": "306.376",
+            "rtt_samples": "30",
+            "p50_ms": "111",
+            "p95_ms": "185",
+            "max_ms": "194",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "77.376",
+            "download_mbps": "307.311",
+            "rtt_samples": "30",
+            "p50_ms": "110",
+            "p95_ms": "157",
+            "max_ms": "163",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.100403",
+            "max_rtt_ns": "183099308",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.126618",
+            "max_rtt_ns": "171863418",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "76.781978",
+            "max_rtt_ns": "194975483",
+            "accepted": "false",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "77.376171",
+            "max_rtt_ns": "163114561",
+            "accepted": "false",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "76.100",
+            "download_mbps": "305.922"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "77.857",
+            "download_mbps": "312.843"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "77.568",
+            "download_mbps": "306.001"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "76.127",
+            "download_mbps": "308.255"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "76.782",
+            "download_mbps": "306.394"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "76.939",
+            "download_mbps": "304.035"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "78.145",
+            "download_mbps": "307.670"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "79.010",
+            "download_mbps": "308.045"
+          }
+        ]
+      },
+      "adaptive": {
+        "rounds": [
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "119.734",
+            "download_mbps": "287.467",
+            "rtt_samples": "30",
+            "p50_ms": "116",
+            "p95_ms": "158",
+            "max_ms": "188",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "120.101",
+            "download_mbps": "288.389",
+            "rtt_samples": "30",
+            "p50_ms": "134",
+            "p95_ms": "211",
+            "max_ms": "224",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "1",
+            "measured_ms": "60000",
+            "upload_mbps": "120.451",
+            "download_mbps": "287.206",
+            "rtt_samples": "30",
+            "p50_ms": "143",
+            "p95_ms": "218",
+            "max_ms": "309",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          },
+          {
+            "round": "2",
+            "measured_ms": "60000",
+            "upload_mbps": "121.342",
+            "download_mbps": "287.952",
+            "rtt_samples": "30",
+            "p50_ms": "128",
+            "p95_ms": "188",
+            "max_ms": "190",
+            "timeouts": "0",
+            "missed": "0",
+            "overlap": "30",
+            "failure": "<nil>"
+          }
+        ],
+        "acceptance": [
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "119.734272",
+            "max_rtt_ns": "188447024",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "119.668736",
+            "max_rtt_ns": "224021997",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "1",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "120.450799",
+            "max_rtt_ns": "309424504",
+            "accepted": "true",
+            "field_qualified": "false"
+          },
+          {
+            "round": "2",
+            "tier": "rc8-75-75mbps-max750ms-hard-release",
+            "minimum_verified_mbps": "121.110528",
+            "max_rtt_ns": "190449785",
+            "accepted": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "tails": [
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "120.822",
+            "download_mbps": "288.621"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "121.687",
+            "download_mbps": "288.756"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "119.669",
+            "download_mbps": "289.267"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "121.556",
+            "download_mbps": "284.033"
+          },
+          {
+            "round": "1",
+            "duration_ms": "30000",
+            "upload_mbps": "120.901",
+            "download_mbps": "287.598"
+          },
+          {
+            "round": "1",
+            "duration_ms": "10000",
+            "upload_mbps": "120.481",
+            "download_mbps": "288.122"
+          },
+          {
+            "round": "2",
+            "duration_ms": "30000",
+            "upload_mbps": "121.111",
+            "download_mbps": "287.214"
+          },
+          {
+            "round": "2",
+            "duration_ms": "10000",
+            "upload_mbps": "123.417",
+            "download_mbps": "287.153"
+          }
+        ]
+      }
+    }
+  },
+  "decision": "not promoted; upload gains trade off download throughput",
+  "log_sha256": {
+    "reclamation-floor900-single/1-control.log": "225e02e7176bae7f2ce660e4c768abd168f4acdbece477bde915e0648c105552",
+    "reclamation-floor900-single/1-adaptive.log": "81d8a9647b35effe2e7b7ec14f932c75a06f8e0c07baecf6c295f101db9cada0",
+    "reclamation-floor900-single/2-adaptive.log": "053257a10b67acd423940d424dade397844a0b7387b581d11d5473a9b759c2ea",
+    "reclamation-floor900-single/2-control.log": "08a8caa8c082435eda15d29d933f38c2c1b101da89673186c4f06b53f89be346",
+    "reclamation-floor1100-single/1-control.log": "2381f5daf1b2861c51616609ab5ebc140cc2ab5f6c35c69ecf3ef77bd84294bd",
+    "reclamation-floor1100-single/1-adaptive.log": "7b06a91ebdebb7802e8a41e8c2b266e3e708a5885b1774ac6d4734d2aadfe55a",
+    "reclamation-floor1100-single/2-adaptive.log": "3f70ef4baf21b4d2d25946ea179ad1d3fece9f928b921dfd1486166c4a7de9f7",
+    "reclamation-floor1100-single/2-control.log": "5f4752921caeb85afd01bf89bc71a84c223e3645931c839656a29873bb004d92",
+    "reclamation-floor1000-single/1-control.log": "a5790284fbed739d400399ecbc13748dd94658efc0cd3f77d36fc6bb69a3b7db",
+    "reclamation-floor1000-single/1-adaptive.log": "f7b7809f1451c6eecc1cc50b333520da04089e2a9bad75e778443cedf36c5f16",
+    "reclamation-floor1000-single/2-adaptive.log": "4cb6e8ebbae3b33e8d603a2f3911a29c3e4d1e918b129573ad1b5fb173837f0d",
+    "reclamation-floor1000-single/2-control.log": "2bb93acb4be70e01cd98eab498d5e9e72114d858eca2ab0ab553a23cc3b0bcf5"
+  }
+}

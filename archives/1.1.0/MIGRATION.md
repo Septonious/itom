@@ -1,6 +1,6 @@
 # Development testing and migration
 
-1.0.0 remains the frozen RC2 release. 1.1.0 DEV2 is experimental. A successful compile, unit test or local latency comparison is not a passed release qualification. The retained-state100Mbps target remains unmet in the first comparison; one SINGLE loaded-RTT tail also exceeded750ms. Do not call those gates green.
+1.0.0 remains the frozen RC2 release. 1.1.0 DEV2 is experimental. A successful compile, unit test or local latency comparison is not a passed release qualification. The current DEV2 retained-state100Mbps target remains unmet; the20ms-server sensitivity also failed rate/RTT gates. Do not call those gates green.
 
 The APK retains `org.itom.client` and increases the version code to10102. Configure all four existing `ITOM_ANDROID_*` signing secrets for persistent signatures. Without those secrets, build notes and `SIGNER.txt` identify a temporary debug signer. Do not uninstall/clear the app to work around an update signature mismatch: its private wallet and stable profile identity are required for historical accounting.
 
