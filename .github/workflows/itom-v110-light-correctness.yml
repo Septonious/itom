@@ -1,0 +1,27 @@
+name: ITOM 1.1 light-response full correctness
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-light-correctness.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env: {GOTOOLCHAIN: local, GOWORK: off}
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/light-response/prepare.py "$RUNNER_TEMP/paired"
+      - working-directory: ${{ runner.temp }}/paired/model
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=900s ./...
+          go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./flow ./datapath
+          go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestBoundedResponse|TestResponseSearch|TestThroughputModel' -v
