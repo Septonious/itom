@@ -1,0 +1,63 @@
+name: DEV5 complete APK export from verified build
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev5-apk-export.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev5-model-android
+          run-id: 39843841636
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/ci-apk
+      - name: Verify entire APK, export all chunks and bound each archive
+        env:
+          APK_INPUT: ${{ runner.temp }}/ci-apk
+          APK_EXPORT: ${{ runner.temp }}/apk-export
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,hashlib,zipfile,json,shutil
+          source=next(Path(os.environ['APK_INPUT']).rglob('ITOM-1.1.0-DEV5-debug.apk'))
+          data=source.read_bytes();sha=hashlib.sha256(data).hexdigest()
+          assert sha=='7b485cfc755d5e60886284298a5c6e9868b456c2b7d48ee07d4cf2fcc3bfbe4b', 'CI APK identity mismatch'
+          root=Path(os.environ['APK_EXPORT']);root.mkdir()
+          chunks=[]
+          for index,offset in enumerate(range(0,len(data),4<<20)):
+              part=data[offset:offset+(4<<20)];name=f'apk.part-{index:03d}'
+              zpath=root/(name+'.zip')
+              with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:z.writestr(name,part)
+              chunks.append({'index':index,'name':name,'sha256':hashlib.sha256(part).hexdigest(),'size':len(part),'zip_size':zpath.stat().st_size})
+          sizes=[0,0,0]
+          for part in sorted(chunks,key=lambda x:x['zip_size'],reverse=True):
+              group=min(range(3),key=lambda i:sizes[i]);part['group']=group;sizes[group]+=part['zip_size']
+              target=root/f'group-{group}';target.mkdir(exist_ok=True);shutil.move(root/(part['name']+'.zip'),target/(part['name']+'.zip'))
+          assert max(sizes)<15<<20, sizes
+          manifest={'source_build_commit':'21cf237482f4e57c83c8a3f8841d6808c28e5ffe','source_run_id':39843841636,'apk_sha256':sha,'apk_bytes':len(data),'parts':sorted(chunks,key=lambda x:x['index']),'group_zip_bytes':sizes}
+          assert sum(p['size'] for p in chunks)==len(data)
+          for i in range(3):(root/f'group-{i}'/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print('Complete APK verified',len(data),'bytes;',len(chunks),'parts; group sizes',sizes)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev5-complete-apk-group-0
+          path: ${{ runner.temp }}/apk-export/group-0/*
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev5-complete-apk-group-1
+          path: ${{ runner.temp }}/apk-export/group-1/*
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev5-complete-apk-group-2
+          path: ${{ runner.temp }}/apk-export/group-2/*
+          compression-level: 0
+          if-no-files-found: error
