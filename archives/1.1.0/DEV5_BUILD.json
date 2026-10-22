@@ -168,7 +168,9 @@
     "persistent_apk_workspace": "/workspace/work/v110/dev5-release/ITOM-1.1.0-DEV5.apk",
     "ci_debug_apk": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12454844124",
     "linux": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12455052773",
-    "build_evidence": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12454509509"
+    "build_evidence": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12454509509",
+    "persistent_apk_github": "https://github.com/Septonious/itom/releases/download/v1.1.0-dev5/ITOM-1.1.0-DEV5.apk",
+    "release": "https://github.com/Septonious/itom/releases/tag/v1.1.0-dev5"
   },
   "apk_export_run_id": 39847331280,
   "signing_note": "Persistent workspace-signed APK differs from CI temporary debug signer and DEV4 temporary signer. Keep the persistent signer for future updates. Private key and passwords are not published."
