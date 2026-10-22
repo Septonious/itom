@@ -67,12 +67,18 @@ jobs:
         run: |
           set -euo pipefail
           tag=v1.1.0-dev5
-          gh release create "$tag" --draft --prerelease --latest=false \
-            --target 21cf237482f4e57c83c8a3f8841d6808c28e5ffe \
-            --title 'ITOM 1.1.0 DEV5 — experimental testing RC' \
-            --notes-file archives/1.1.0/DEV5_TESTING.md
-          gh release upload "$tag" release-assets/*
-          gh api "repos/$GH_REPO/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
+          if gh release view "$tag" --json isDraft > "$RUNNER_TEMP/existing-release.json"; then
+            python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing-release.json"))["isDraft"], "Refusing to replace a published release"'
+          else
+            gh release create "$tag" --draft --prerelease --latest=false \
+              --target 21cf237482f4e57c83c8a3f8841d6808c28e5ffe \
+              --title 'ITOM 1.1.0 DEV5 — experimental testing RC' \
+              --notes-file archives/1.1.0/DEV5_TESTING.md
+          fi
+          gh release upload "$tag" release-assets/* --clobber
+          # Draft releases with an unpublished tag are found through the collection.
+          gh api "repos/$GH_REPO/releases?per_page=100" \
+            --jq '.[] | select(.tag_name == "v1.1.0-dev5")' > "$RUNNER_TEMP/release.json"
           python3 - <<'PY'
           import json,hashlib,os
           from pathlib import Path
