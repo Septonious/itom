@@ -10,10 +10,11 @@ def main():
  subprocess.run(['python3',str(HERE.parent/'refill-baseline-cadence/prepare.py'),str(out)],check=True)
  shutil.rmtree(out/'model');shutil.copytree(ROOT/'archives/1.1.0/checkpoints/DEV4/source/core',out/'dev4')
  shutil.copytree(ROOT/'archives/1.1.0/source/core',out/'model',ignore=shutil.ignore_patterns('*.test','__pycache__'))
- shared=('imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go')
+ shared=('imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','field_idle_itomtest_test.go')
  before=hashes(out/'rc2')
  for variant in ('rc2','dev4','model'):
   for name in shared:shutil.copyfile(ROOT/'archives/1.1.0/source/core/tunnel'/name,out/variant/'tunnel'/name)
  assert hashes(out/'rc2')==before
+ prov=json.loads((out/'provenance.json').read_text());prov['model_production']=hashes(out/'model');prov['local_cleanup_divisor']=16;prov['refill_trigger']='empty';prov['periodic_remote_cleanup_ms']=1500;prov['field_comparison_source']='tracked active DEV5 source; previous model recipe is only RC2/fixture input';(out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')
  (out/'FIELD_PROVENANCE.json').write_text(json.dumps({'reference_production_unchanged':True,'model_production':hashes(out/'model'),'dev4_production':hashes(out/'dev4'),'rc2_production':before,'shared':{n:hashlib.sha256((out/'model/tunnel'/n).read_bytes()).hexdigest() for n in shared}},indent=2)+'\n')
 if __name__=='__main__':main()

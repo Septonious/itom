@@ -1,0 +1,53 @@
+name: DEV5 field topology idle and light comparison
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev5-idle.yml"]
+permissions: {contents: read}
+env: {GOTOOLCHAIN: local, GOWORK: off}
+jobs:
+  idle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: {sessions: [4, 10], service: [0, 1]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compile three exact sources with identical fixtures
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/field-feedback/prepare.py "$RUNNER_TEMP/paired"
+          for variant in rc2 dev4 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: All48 deadline-bound requests per variant, no bulk or timeout waiver
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "20"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "${{ matrix.sessions }}"
+          ITOM_FIELD_COMMAND_SERVICE: "${{ matrix.service }}"
+          ITOM_LOAD_LITERAL_PLUS: "0"
+          ITOM_LOAD_BINARY_FETCH: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          for variant in rc2 dev4 model; do
+            if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestFieldIdleLightReference$' -test.v -test.timeout 150s > "$RUNNER_TEMP/paired/$variant-idle.log" 2>&1; then
+              echo "$variant PASS"
+            else
+              echo "$variant FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev5-idle-sessions${{ matrix.sessions }}-service${{ matrix.service }}
+          path: |
+            ${{ runner.temp }}/paired/*-idle.log
+            ${{ runner.temp }}/paired/FIELD_PROVENANCE.json
+          retention-days: 90
