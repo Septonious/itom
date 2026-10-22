@@ -128,3 +128,49 @@ func TestProofCacheDeduplicatesOnlyActualPhysicalObservations(t *testing.T) {
 		t.Fatal("body substitution accepted", err)
 	}
 }
+
+func TestSharedControlCommandGivesUrgentNextTurnAndCannotStarveGCOrBulk(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	m := &laneMail{}
+	held := make(chan struct{})
+	entered := make(chan struct{})
+	order := make(chan accountWorkClass, 3)
+	done := make(chan error, 4)
+	go func() { done <- m.controlCommand(ctx, workData, func() error { close(entered); <-held; return nil }) }()
+	<-entered
+	for _, class := range []accountWorkClass{workData, workMaintenance, workUrgent} {
+		class := class
+		go func() { done <- m.controlCommand(ctx, class, func() error { order <- class; return nil }) }()
+	}
+	for {
+		m.baseWork.mu.Lock()
+		n := len(m.baseWork.queues[workData]) + len(m.baseWork.queues[workMaintenance]) + len(m.baseWork.queues[workUrgent])
+		m.baseWork.mu.Unlock()
+		if n == 3 {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("command waiters never queued")
+		default:
+			time.Sleep(time.Millisecond)
+		}
+	}
+	close(held)
+	for _, want := range []accountWorkClass{workUrgent, workMaintenance, workData} {
+		select {
+		case got := <-order:
+			if got != want {
+				t.Fatal("shared socket lost class fairness", got, want)
+			}
+		case <-ctx.Done():
+			t.Fatal("class starved")
+		}
+	}
+	for i := 0; i < 4; i++ {
+		if err := <-done; err != nil {
+			t.Fatal(err)
+		}
+	}
+}

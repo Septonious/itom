@@ -1,4 +1,4 @@
-name: ITOM 1.1 DEV5 selected controller correctness and testing builds
+name: ITOM 1.1 DEV5 shared-socket fairness, field regressions and testing builds
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
@@ -148,6 +148,35 @@ jobs:
             ${{ env.SOURCE }}/dist/lint-summary.json
           if-no-files-found: error
           retention-days: 30
+      - name: Export bounded APK parts and public verification tools
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/apk-parts dist/signing-tools
+          split -b 12M dist/ITOM-1.1.0-DEV5-debug.apk dist/apk-parts/apk.part-
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          cp "$(dirname "$signer")/lib/apksigner.jar" dist/signing-tools/apksigner.jar
+          cp dist/APK_SHA256SUMS dist/signing-tools/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev5-apk-part-aa
+          path: ${{ env.SOURCE }}/dist/apk-parts/apk.part-aa
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev5-apk-part-ab
+          path: ${{ env.SOURCE }}/dist/apk-parts/apk.part-ab
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev5-apk-part-ac
+          path: ${{ env.SOURCE }}/dist/apk-parts/apk.part-ac
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev5-public-signing-tools
+          path: ${{ env.SOURCE }}/dist/signing-tools/*
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -264,6 +293,7 @@ jobs:
           ITOM_LOAD_ACCOUNT_SESSIONS: "${{ matrix.sessions }}"
           ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
           ITOM_FIELD_COMMAND_SERVICE: "${{ matrix.service }}"
+          ITOM_FIELD_EARLY_START: "1"
           ITOM_LOAD_LITERAL_PLUS: "0"
           ITOM_LOAD_BINARY_FETCH: "0"
         run: |

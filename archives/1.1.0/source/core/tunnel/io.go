@@ -651,6 +651,7 @@ func (r *accountRuntime) Close() {
 // WINDOW, RECEIPT or liveness traffic. A second DATA writer is best-effort;
 // providers with a lower connection limit safely fall back to one writer.
 type laneMail struct {
+	baseWork      accountWorkBudget // one fair command turn on the shared control socket
 	dataCommandMu sync.Mutex
 	dataChecks    map[string]time.Time
 	dataReadLimit uint32 // command mutex; large-BODY evidence only, reset on replacement
@@ -905,10 +906,10 @@ func (m *laneMail) activateCleaner(ctx context.Context) error {
 
 // Append remains the conservative generic path used during handshake/recovery.
 func (m *laneMail) Append(ctx context.Context, f string, raw []byte) error {
-	return m.command(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
+	return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
 }
 func (m *laneMail) AppendControl(ctx context.Context, f string, raw []byte) error {
-	return m.command(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
+	return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
 }
 func (m *laneMail) reserveDataWriter() (index int, writer *mailbox.Client, reserved, base bool) {
 	m.writerMu.Lock()
@@ -962,7 +963,7 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 	if fast && m.topologyCaps&capSplitData != 0 && len(raw) <= 64<<10 {
 		// This is charged to DATA, including unknown outcomes. Only its physical
 		// service uses the control socket; large payloads cannot enter this slot.
-		return m.command(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
+		return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
 	}
 	if m.runtime != nil {
 		return m.runtime.AppendClass(ctx, m.runtimeUser, f, raw, fast)
@@ -994,7 +995,11 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 			return err
 		}
 		if base {
-			return m.command(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
+			class := workData
+			if fast {
+				class = workUrgent
+			}
+			return m.controlCommand(ctx, class, func() error { return m.controlClient().Append(ctx, f, raw) })
 		}
 		// Capacity repair owns replacement. Await it only while this lane is live;
 		// no raw bytes were APPENDed and no unknown publication is resent.
@@ -1307,7 +1312,7 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 	}
 	var rows []mailbox.Message
 	var next mailbox.Cursor
-	err := m.command(ctx, workMaintenance, func() error { var e error; rows, next, e = m.cleanupClient().Page(ctx, f, cur); return e })
+	err := m.maintenanceCommand(ctx, func() error { var e error; rows, next, e = m.cleanupClient().Page(ctx, f, cur); return e })
 	// With a provider socket cap, receive may share the control connection.
 	// Retry only this read, keeping its original cursor. APPEND and deletion
 	// outcomes never pass through this read-only retry path.
@@ -1315,7 +1320,7 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 		if repairErr := m.repairControl(ctx); repairErr != nil {
 			return nil, cur, repairErr
 		}
-		err = m.command(ctx, workMaintenance, func() error { var e error; rows, next, e = m.controlClient().Page(ctx, f, cur); return e })
+		err = m.maintenanceCommand(ctx, func() error { var e error; rows, next, e = m.controlClient().Page(ctx, f, cur); return e })
 	}
 	return rows, next, err
 }
@@ -1411,22 +1416,22 @@ func (m *laneMail) RepairCleanup(ctx context.Context) error {
 }
 
 func (m *laneMail) DeleteMany(ctx context.Context, messages []mailbox.Message) error {
-	return m.command(ctx, workMaintenance, func() error { return m.cleanupClient().DeleteMany(ctx, messages) })
+	return m.maintenanceCommand(ctx, func() error { return m.cleanupClient().DeleteMany(ctx, messages) })
 }
 func (m *laneMail) DeleteObservedMany(ctx context.Context, messages []mailbox.Message) error {
-	return m.command(ctx, workMaintenance, func() error { return m.cleanupClient().DeleteObservedMany(ctx, messages) })
+	return m.maintenanceCommand(ctx, func() error { return m.cleanupClient().DeleteObservedMany(ctx, messages) })
 }
 func (m *laneMail) Delete(ctx context.Context, message mailbox.Message) error {
-	return m.command(ctx, workMaintenance, func() error { return m.cleanupClient().Delete(ctx, message) })
+	return m.maintenanceCommand(ctx, func() error { return m.cleanupClient().Delete(ctx, message) })
 }
 func (m *laneMail) Absent(ctx context.Context, folder string, validity, uid uint32) (bool, error) {
 	var absent bool
-	err := m.command(ctx, workMaintenance, func() error { var e error; absent, e = m.cleanupClient().Absent(ctx, folder, validity, uid); return e })
+	err := m.maintenanceCommand(ctx, func() error { var e error; absent, e = m.cleanupClient().Absent(ctx, folder, validity, uid); return e })
 	return absent, err
 }
 func (m *laneMail) Present(ctx context.Context, folder string, validity uint32, ids []uint32) (map[uint32]bool, error) {
 	var present map[uint32]bool
-	err := m.command(ctx, workMaintenance, func() error {
+	err := m.maintenanceCommand(ctx, func() error {
 		var e error
 		present, e = m.cleanupClient().Present(ctx, folder, validity, ids)
 		return e
@@ -1856,7 +1861,7 @@ func (m *laneMail) FetchCleanupCandidates(ctx context.Context, folder string, wa
 		}
 	}
 	var rows []mailbox.Message
-	err := m.command(ctx, workMaintenance, func() error {
+	err := m.maintenanceCommand(ctx, func() error {
 		var e error
 		rows, e = m.cleanupClient().FetchExact(ctx, folder, validity, ids)
 		return e

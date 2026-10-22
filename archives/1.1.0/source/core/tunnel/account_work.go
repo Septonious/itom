@@ -154,3 +154,31 @@ func (m *laneMail) DataQueueCost() int64 {
 	}
 	return m.dialGate.work.dataCost()
 }
+
+// Client's internal mutex serializes bytes, but it cannot fairly schedule DATA,
+// control and multi-command cleanup that have already passed account admission.
+// Admit one turn on the actual shared socket before entering that mutex. The
+// existing round-robin class scheduler preserves both urgency and GC/bulk progress;
+// independent DATA workers/cleaners retain their original parallel service.
+func (m *laneMail) controlCommand(ctx context.Context, class accountWorkClass, fn func() error) error {
+	return m.command(ctx, class, func() error {
+		m.baseWork.mu.Lock()
+		m.baseWork.capacity = 1
+		m.baseWork.mu.Unlock()
+		release, err := m.baseWork.acquire(ctx, class)
+		if err != nil {
+			return err
+		}
+		defer release()
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+		return fn()
+	})
+}
+func (m *laneMail) maintenanceCommand(ctx context.Context, fn func() error) error {
+	if m.cleanupClient() == m.controlClient() {
+		return m.controlCommand(ctx, workMaintenance, fn)
+	}
+	return m.command(ctx, workMaintenance, fn)
+}

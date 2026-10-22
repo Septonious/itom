@@ -57,7 +57,13 @@ func TestFieldSpeedtestSequence(t *testing.T) {
 	t.Setenv("ITOM_HEALTHY_SERVER", "1")
 	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
 	streams := loadEnvInt(t, "ITOM_FIELD_SEQUENCE_STREAMS", 1, 1, 32)
-	f := newProductionSupervisorFixtureState(t, 15, fieldSequenceHistory(t))
+	var f *productionSupervisorFixture
+	if os.Getenv("ITOM_FIELD_EARLY_START") == "1" {
+		f = newProductionSupervisorFixtureState(t, 15, fieldSequenceHistory(t), func(d Dial) Dial { return d })
+		f.waitLane(t, "a01", 0) // start with one working line, not an all-account warmup
+	} else {
+		f = newProductionSupervisorFixtureState(t, 15, fieldSequenceHistory(t))
+	}
 	logical, generation := f.client.logicalSession, f.client.generation
 	for run := 1; run <= 3; run++ {
 		for _, upload := range []bool{false, true} {
