@@ -1651,7 +1651,10 @@ func (l *lane) startReader() {
 			if provider, ok := l.mail.(interface{ ReaderIdleCapable() bool }); ok {
 				idleCapable = provider.ReaderIdleCapable()
 			}
-			adaptive := idleCapable && demand.enabled(directRTT, l.independentDataMaintenance())
+			// ReaderIdleCapable requires a dedicated receive connection.
+			// Shared DATA/cleanup writers do not make this independent reader
+			// unsafe to poll during a bounded request-response window.
+			adaptive := idleCapable && demand.enabled(directRTT, true)
 			useDemandIdle := adaptive && demand.empty(hot, advanced, len(rows))
 			active := l.active.Load()
 			if l.stripe != nil && l.stripe.activeStreams() > active {

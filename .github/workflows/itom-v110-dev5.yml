@@ -239,12 +239,12 @@ jobs:
             ${{ runner.temp }}/paired/host.txt
           retention-days: 90
   short-sequence:
-    name: Short sequence streams=${{ matrix.streams }} provider=${{ matrix.service }}
+    name: Short sequence streams=${{ matrix.streams }} provider=${{ matrix.service }} sessions=${{ matrix.sessions }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      matrix: {streams: [1, 16], service: [0, 1]}
+      matrix: {streams: [1, 16], service: [0, 1], sessions: [4, 10]}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v6
@@ -261,6 +261,7 @@ jobs:
         env:
           ITOM_LOAD_CLIENT_RTT_MS: "20"
           ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "${{ matrix.sessions }}"
           ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
           ITOM_FIELD_COMMAND_SERVICE: "${{ matrix.service }}"
           ITOM_LOAD_LITERAL_PLUS: "0"
@@ -279,7 +280,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dev5-short-${{ matrix.streams }}-service${{ matrix.service }}
+          name: dev5-short-${{ matrix.streams }}-service${{ matrix.service }}-sessions${{ matrix.sessions }}
           path: |
             ${{ runner.temp }}/paired/*-sequence.log
             ${{ runner.temp }}/paired/FIELD_PROVENANCE.json

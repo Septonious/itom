@@ -3,6 +3,7 @@
   "previous_source_tree": "35122014c829739dda948a58295552908b03b119",
   "production_delta_from_dev4": [
     "core/tunnel/grant_recovery.go",
+    "core/tunnel/io.go",
     "core/tunnel/lane.go",
     "core/tunnel/throughput_model.go",
     "core/tunnel/version.go",
@@ -48,7 +49,7 @@
     "core/tunnel/trace_admission_sampler.go": "7cfa75e46daa4c7ab63415efcafebc45f04200676dda8787e79385a48bf8c51d",
     "core/tunnel/control_repeat.go": "c93c8250dbeb862f6e460b9affae5582a057014ff6df4b9f7d91749b5ca23776",
     "core/tunnel/pipe.go": "4181488f4f2e641f8ccf37e798ae7b131821b8af785201346c4303293bfcbb3f",
-    "core/tunnel/io.go": "bb3bdcc3c61893ca4d31068026e18ff683c8c5e4187da5a0de08fdff702f9699",
+    "core/tunnel/io.go": "accf8254a8ec81c5fda186a5e56126dd949ae5a73fb8588b2ff720bce3607f49",
     "core/tunnel/data_envelope.go": "3bbe631032916d60d31243a190d30628f8d4588dcc0794acd2cf936babe715f6",
     "core/tunnel/notification_audit.go": "7493615518a590124cbec3de63d8663db3b07eb7102e1be2a9d94af68996c316",
     "core/tunnel/account_view.go": "0986fe4da827e9fb3c974cb95fb8b4770898af5ebc2efaa665244b9ecf92082e",

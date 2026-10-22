@@ -61,7 +61,7 @@ func TestFieldSpeedtestSequence(t *testing.T) {
 	logical, generation := f.client.logicalSession, f.client.generation
 	for run := 1; run <= 3; run++ {
 		for _, upload := range []bool{false, true} {
-			func() {
+			t.Run(fmt.Sprintf("run%d-upload%t", run, upload), func(t *testing.T) {
 				target := newProductionLoadTarget(t, fmt.Sprintf("%x/field/%d/%t", logical, run, upload))
 				var workers sync.WaitGroup
 				var stop atomic.Bool
@@ -157,7 +157,7 @@ func TestFieldSpeedtestSequence(t *testing.T) {
 				if err = target.firstError(); err != nil {
 					t.Fatal(err)
 				}
-			}()
+			})
 		}
 	}
 	if f.client.logicalSession != logical || f.client.generation != generation {

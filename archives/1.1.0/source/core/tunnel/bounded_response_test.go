@@ -2,6 +2,7 @@ package tunnel
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -56,5 +57,33 @@ func TestBoundedResponseNewBulkEpochKeepsCapacityWithoutOldPlateau(t *testing.T)
 	}
 	if !m.startup || seed <= deliveryInitialWindow {
 		t.Fatal("old fast epoch prematurely ended fresh bandwidth discovery", m, seed)
+	}
+}
+
+// A two-socket provider can have shared write/cleanup service and still have
+// an independent IDLE-capable reader. The old gate incorrectly disabled hot
+// response search on exactly this observed field topology.
+type sharedWriterResponseMailbox struct {
+	noPushResponseMailbox
+	waits atomic.Int64
+}
+
+func (*sharedWriterResponseMailbox) ReaderIdleCapable() bool       { return true }
+func (*sharedWriterResponseMailbox) DataMaintenanceIsolated() bool { return false }
+func (m *sharedWriterResponseMailbox) WaitReadWake(context.Context, string, time.Duration, <-chan struct{}) (bool, bool, bool, error) {
+	m.waits.Add(1)
+	return false, false, false, nil
+}
+func TestBoundedResponseSharedWriterKeepsDedicatedReaderHot(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	m := &sharedWriterResponseMailbox{}
+	l := &lane{ctx: ctx, mail: m, pages: make(chan pageResult, 224), readWake: make(chan struct{}, 1)}
+	l.active.Store(1)
+	l.armReaderHot(time.Second)
+	l.startReader()
+	defer func() { cancel(); l.workers.Wait() }()
+	time.Sleep(300 * time.Millisecond)
+	if m.polls.Load() < 8 || m.waits.Load() != 0 {
+		t.Fatal("shared writer disabled independent hot reader", m.polls.Load(), m.waits.Load())
 	}
 }
