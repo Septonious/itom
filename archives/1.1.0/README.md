@@ -1,9 +1,7 @@
-# ITOM 1.1.0 DEV4 testing candidate
+# ITOM 1.1.0 DEV5 testing RC
 
-The current source/ contains the conservative, delivery-clocked DEV4 controller selected for the next field test. Stable 1.0.0/RC2 is unchanged. Android retains org.itom.client and uses versionCode 10104.
+Current source/ contains DEV5 shared-socket fairness, bounded historical-grant audit traffic, dedicated-reader response search and faster useful-ACK startup. Stable1.0.0/RC2 remains unchanged. DEV4 is frozen in checkpoints/DEV4/source.
 
-[Testing notes, measurements and limitations](DEV4_TESTING.md) document 20/20 original performance rounds versus RC2 16/20, passing full correctness checks, improved retained light-load means and upload supply, and the remaining 8–13% retained simultaneous-duplex download loss and mixed sparse tails. No thresholds were relaxed. Real Rambler/Android qualification is pending.
+[Testing notes and downloads](DEV5_TESTING.md) | [Build checks and hashes](DEV5_BUILD.json) | [Matched DEV4/RC2 results](experiments/field-feedback/RESULTS.md) | [Field analysis](experiments/field-feedback/FIELD_ANALYSIS.md).
 
-Build using [the DEV4 workflow](../../.github/workflows/itom-v110-dev4.yml). The [selected immutable comparison](experiments/refill-baseline-cadence/results.json), [reproduction recipe](experiments/refill-baseline-cadence/stage.py), [migration guidance](MIGRATION.md), [DEV2 checkpoint](checkpoints/DEV2/README.md), historical DEV3_BUILD.json and earlier experiment reports remain available. DEV3 source is frozen in checkpoints/DEV3/source.
-
-Build completed successfully: [APK](https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12388210238), [Linux amd64/arm64](https://github.com/Septonious/itom/actions/runs/39687896641/artifacts/12387765301), [build checks and SHA256 hashes](DEV4_BUILD.json). All 89 Android unit tests passed; lint has zero errors and one dependency-version notice. APK uses a temporary debug signer; do not erase app wallet data to work around signing incompatibility.
+Direct comparison:48/48short phases versus DEV4 42/48; original sustained17/20 versus RC2 13/20. Full Go/vet/races and all89Android unit tests pass. Known capped MULTI download and idle-tail regressions remain; real Rambler improvement is unverified. Thresholds are unchanged. Preserve journals, wallet data and signing identity between updates. The workspace persistent APK signer differs from the temporary CI debug signer; see testing notes before choosing a package.

@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "revision": "itom-1-1-0-dev5",
+  "classification": "experimental testing RC; known performance regressions; real-provider improvement unverified",
+  "build_commit": "21cf237482f4e57c83c8a3f8841d6808c28e5ffe",
+  "build_run_id": 39843841636,
+  "core": {
+    "job_id": 120051751318,
+    "full_suite": "passed",
+    "tunnel_seconds": 725.632,
+    "vet": "passed",
+    "required_races": "passed",
+    "controller_race_seconds": 37.841,
+    "local_shared_socket_race_seconds": 1.908,
+    "ci_log_sha256": "2e391c909d41efed6068bc0503cfac7ba640b59d5417871f7307badcf726584a",
+    "local_race_log_sha256": "4f9357f9fbb64017edbd6b1c6c4fef4a598ab2414822c4db08a2fb435e751fd1",
+    "worst_raw_4g": {
+      "useful_mbps_each_direction": 0.274281,
+      "completed": 63,
+      "failed": 0,
+      "client_down_mbps": 1,
+      "client_up_mbps": 2.5,
+      "server_rtt_ms": 20,
+      "log_sha256": "735f3cb60e6d8ad8e6da5cf135d84fbc1a22ff67fd74649784dda6478311a9a6"
+    }
+  },
+  "android": {
+    "itom": "1.1.0",
+    "source_revision": "itom-1-1-0-dev5",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-22T20:07:36Z",
+    "jdk_source": "local JDK 17",
+    "cmdline_tools": {
+      "version": "22.0",
+      "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+      "algorithm": "sha1"
+    },
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "c1b465b0b29bdfcab34ff77fc20fb50d39b1326612dff167db46dada624c7366",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "app_unit_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+          "locations": [
+            {
+              "file": "/home/runner/work/_temp/dev5/android/app/build.gradle.kts",
+              "line": "60",
+              "column": "20"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10105,
+      "version_name": "1.1.0-dev5-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "072318e64b4349bb9d8ed3cbf379328e9e8c303fc3d72ad4c34e6e7f1c5e7a27",
+      "lib/armeabi-v7a/libgojni.so": "00bbceb7ab06d0f9459a5e329691324d373fae9d4928566900533fea899a8076"
+    },
+    "status": "passed",
+    "apk": "ITOM-1.1.0-DEV5-debug.apk",
+    "sha256": "7b485cfc755d5e60886284298a5c6e9868b456c2b7d48ee07d4cf2fcc3bfbe4b",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "persistent_signed_apk": {
+    "source_ci_sha256": "7b485cfc755d5e60886284298a5c6e9868b456c2b7d48ee07d4cf2fcc3bfbe4b",
+    "persistent_signed_sha256": "bb3a4678502fc2e8286e0be0fa627dd6f21cc22fe8f462f5a3ebbb9bdae6b4f9",
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10105,
+      "version_name": "1.1.0-dev5-debug"
+    },
+    "certificate": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): false\nVerified using v3 scheme (APK Signature Scheme v3): true\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=ITOM Android, O=ITOM, C=FI\nSigner #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6\nSigner #1 certificate SHA-1 digest: 5c2da4052c263942628a59bce1725d9c12030785\nSigner #1 certificate MD5 digest: eedbe686c31c6081069726531684cd3d\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 3072\nSigner #1 public key SHA-256 digest: 87c822607c0ffb426f340a6aed45cf2dd55f0a121e1966e56dafe41f3d0437ff\nSigner #1 public key SHA-1 digest: 136c2c0b81941dc11f995d23a9d89ad4bd884212\nSigner #1 public key MD5 digest: 3f161d14b3897665e07a4f8e168a1384\n",
+    "key_material_exported": false,
+    "private_key_retained_locally": true,
+    "note": "Persistent signer differs from DEV4 temporary Actions debug key; use this signer for future updates"
+  },
+  "linux": {
+    "build_commit": "21cf237482f4e57c83c8a3f8841d6808c28e5ffe",
+    "artifact_id": 12455052773,
+    "embedded_revision_verified": true,
+    "sha256sums": "dbfcfbdeadfcca2668809331a21bef75b3156fcf1c6318d635a560c5ed20172f  ITOM-1.1.0-DEV5-linux-amd64.bin\nd1dd3be1dc30beecce9a7ccc0aec3c1bb13c0339408095fa0407054662b27272  ITOM-1.1.0-DEV5-linux-arm64.bin\n"
+  },
+  "performance": {
+    "duplex": {
+      "rc2": {
+        "accepted": 13,
+        "observed": 20,
+        "planned": 20
+      },
+      "model": {
+        "accepted": 17,
+        "observed": 20,
+        "planned": 20
+      }
+    },
+    "short": {
+      "rc2": {
+        "passed": 42,
+        "completed": 48,
+        "planned": 48
+      },
+      "dev4": {
+        "passed": 42,
+        "completed": 48,
+        "planned": 48
+      },
+      "model": {
+        "passed": 48,
+        "completed": 48,
+        "planned": 48
+      }
+    },
+    "results_file": "experiments/field-feedback/RESULTS.json"
+  },
+  "downloads": {
+    "persistent_apk_workspace": "/workspace/work/v110/dev5-release/ITOM-1.1.0-DEV5.apk",
+    "ci_debug_apk": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12454844124",
+    "linux": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12455052773",
+    "build_evidence": "https://github.com/Septonious/itom/actions/runs/39843841636/artifacts/12454509509"
+  },
+  "apk_export_run_id": 39847331280,
+  "signing_note": "Persistent workspace-signed APK differs from CI temporary debug signer and DEV4 temporary signer. Keep the persistent signer for future updates. Private key and passwords are not published."
+}
