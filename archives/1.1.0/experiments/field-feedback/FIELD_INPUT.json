@@ -1,0 +1,31 @@
+{
+  "user_confirmed": "DEV4 server; app reinstalled/cleared",
+  "screenshots": {
+    "multi_download_mbps": [
+      68.1,
+      64.2,
+      67.8
+    ],
+    "multi_upload_mbps": [
+      32.7,
+      40.8,
+      26.8
+    ],
+    "single_download_mbps": [
+      19.3,
+      7.69,
+      12.2
+    ],
+    "single_upload_mbps": [
+      46.8,
+      50.1,
+      107
+    ]
+  },
+  "trace_sha256": {
+    "transport-trace.jsonl.1": "2ac6c1057f0aa45d9fbe8e9b66b12d16c5fd7311600486082291f3ed84f0a15c",
+    "transport-trace.jsonl": "56b3df7b45c010bbda2d638e96090b2497f56cb13b70a394a0455ea8c60c8bbb",
+    "transport-trace.jsonl.2": "92f757f6ec8325c99ff44706b4552dbe4fd85eaca8886d9e99b679c151b96220"
+  },
+  "raw_private_logs_not_committed": true
+}

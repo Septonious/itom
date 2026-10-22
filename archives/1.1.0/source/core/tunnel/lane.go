@@ -220,6 +220,7 @@ type lane struct {
 	grantLimits                                 map[wire.QuotaKey]wire.Quota
 	grantFast                                   map[wire.QuotaKey]bool
 	grantRecoverySent                           map[wire.QuotaKey]time.Time
+	nextGrantRecovery                           time.Time
 	stripe                                      *stripeGroup
 	physicalSlots                               chan struct{}
 	fastPhysicalSlots                           chan struct{}
@@ -2606,9 +2607,6 @@ func (l *lane) offer() error {
 	if l.quiescing.Load() {
 		return nil
 	}
-	if err := l.reconcileUnpublishedGrants(); err != nil {
-		return err
-	}
 	fastActive, bulkActive := l.issuedGrantCounts()
 
 	// Publish the latency lease first. The peer classifies it by its distinct
@@ -2657,7 +2655,8 @@ func (l *lane) offer() error {
 		l.diag.line.GrantWaitReason = reason
 		l.diag.mu.Unlock()
 	}
-	return nil
+	// Current-session leases and readiness take precedence over historical audits.
+	return l.reconcileUnpublishedGrants()
 }
 
 func (l *lane) markGrantReady() {

@@ -2,6 +2,7 @@ package tunnel
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"itom.local/core/journal"
@@ -98,6 +99,13 @@ func (l *lane) reconcileUnpublishedGrants() error {
 	if !l.side || l.cipher == nil || l.boot == nil || !l.boot.Ready() {
 		return nil
 	}
+	return l.reconcileUnpublishedGrantsAt(time.Now())
+}
+
+func (l *lane) reconcileUnpublishedGrantsAt(now time.Time) error {
+	if now.Before(l.nextGrantRecovery) {
+		return nil
+	}
 	grants, err := l.data.ScanGrants(0, 256)
 	if err != nil {
 		return err
@@ -105,7 +113,6 @@ func (l *lane) reconcileUnpublishedGrants() error {
 	if l.grantRecoverySent == nil {
 		l.grantRecoverySent = make(map[wire.QuotaKey]time.Time)
 	}
-	now := time.Now()
 	interval := 15 * time.Second
 	if l.stripe != nil {
 		mode := l.stripe.deliverySnapshot().Mode
@@ -113,6 +120,16 @@ func (l *lane) reconcileUnpublishedGrants() error {
 			interval = 45 * time.Second
 		}
 	}
+	// The per-key retry interval alone allowed a fresh batch on every offer()
+	// call: hundreds of missing-wallet grants could monopolize control mail.
+	// Fairly rotate the oldest audit first and cap the entire lane to four
+	// per interval. Timing never closes or refunds an old reservation.
+	keyOf := func(g journal.Grant) wire.QuotaKey {
+		return wire.QuotaKey{Store: g.Ref.Store, Epoch: g.Run, Grant: g.Ref.ID, Session: g.Ref.Scope.Session, User: g.Ref.Scope.User, Account: g.Ref.Scope.Account}
+	}
+	sort.SliceStable(grants, func(i, j int) bool {
+		return l.grantRecoverySent[keyOf(grants[i])].Before(l.grantRecoverySent[keyOf(grants[j])])
+	})
 	queued := 0
 	live := make(map[wire.QuotaKey]bool)
 	for _, g := range grants {
@@ -133,6 +150,9 @@ func (l *lane) reconcileUnpublishedGrants() error {
 		}
 		l.grantRecoverySent[key] = now
 		queued++
+	}
+	if queued > 0 {
+		l.nextGrantRecovery = now.Add(interval)
 	}
 	for key := range l.grantRecoverySent {
 		if !live[key] {

@@ -175,7 +175,10 @@ func (m *throughputModel) next(now time.Time, f modelFeedback) uint64 {
 		m.mode = deliveryMode("BULK_STARTUP")
 		// ACK-clocked bounded startup is independent of an absolute RTT goal.
 		if utilized {
-			window += max(uint64(64<<10), window/2)
+			// One bounded doubling per useful-ACK turn reaches capacity in
+			// four turns instead of seven. Empty ticks, timers, repairs and
+			// application-limited requests still cannot trigger growth.
+			window += max(uint64(64<<10), window)
 		}
 	} else {
 		m.mode = deliveryMode("BULK_CRUISE")
