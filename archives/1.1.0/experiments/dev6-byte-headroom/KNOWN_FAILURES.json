@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "source_commit": "765643ea2bf0a0035023f1376ed136223f52ba3c",
+  "source_run": 39882769996,
+  "isolated_race_run": 39885675385,
+  "experimental_build_run": 39886424651,
+  "known_failed_tests": [
+    {
+      "test": "TestRev5RampAbortAndRestartKeepOriginalChatUsable",
+      "configuration": "race-instrumented 15-account mixed bulk ramp, client RTT 240 ms",
+      "assertion": "1100 ms independent original-chat response deadline",
+      "result": "FAILED",
+      "also_reproduced_on_DEV5": true,
+      "deadline_unchanged": true
+    }
+  ],
+  "rejected_experiment": {
+    "name": "temporary one-account split control reserve",
+    "result": "same original chat timeout; rejected",
+    "runtime_changed": false
+  },
+  "cpu_contended_capped_EOF": {
+    "passed": 24,
+    "observed": 30,
+    "failed": 6,
+    "result": "NOT PASSED"
+  },
+  "isolated_capped_EOF": {
+    "passed": 20,
+    "observed": 20,
+    "deadline_seconds": 12
+  },
+  "qualifications_waived": false,
+  "fully_qualified": false,
+  "isolated_race_cases": {
+    "passed": 36,
+    "failed": 1,
+    "observed": 37,
+    "reported_data_races": false
+  }
+}
