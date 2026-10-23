@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"itom.local/core/mailbox"
 	"itom.local/core/wire"
 )
 
@@ -26,7 +27,27 @@ func TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants(t *testing.T) {
 	t.Setenv("ITOM_HEALTHY_SERVER", "1")
 	t.Setenv("ITOM_LOAD_DEV7_FIELD_DEBT", "1")
 	t.Setenv("ITOM_LOAD_MANY_RETAINED_GRANTS", "1")
+	t.Setenv("ITOM_LOAD_ACCOUNT_SESSIONS", "6")
+	t.Setenv("ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS", "4")
+	t.Setenv("ITOM_LOAD_ENDPOINT_CONNECTIONS", "45")
 	f := newProductionSupervisorFixtureState(t, 15, fieldSequenceHistory(t))
+	logRoles := func(side, id string, m any) {
+		if sockets, ok := m.(interface {
+			SocketSnapshots() []mailbox.SocketSnapshot
+		}); ok {
+			t.Logf("dev8_endpoint_roles side=%s account=%s sockets=%+v", side, id, sockets.SocketSnapshots())
+		}
+	}
+	f.client.mu.Lock()
+	for id, l := range f.client.lanes {
+		logRoles("client", id, physicalMail(l.mail))
+	}
+	f.client.mu.Unlock()
+	f.mu.Lock()
+	for id, l := range f.serverLanes {
+		logRoles("server", id, physicalMail(l.mail))
+	}
+	f.mu.Unlock()
 	payload := make([]byte, 512<<10)
 	for i := range payload {
 		payload[i] = byte((i*131 + 17) % 251)

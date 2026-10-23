@@ -30,7 +30,7 @@ jobs:
           root=Path(os.environ['RUNNER_TEMP'])/'paired'
           hashes=lambda p:{str(f.relative_to(p)):hashlib.sha256(f.read_bytes()).hexdigest()for f in sorted(p.rglob('*.go'))if not f.name.endswith('_test.go')}
           before={v:hashes(root/v)for v in ['rc2','dev7','model']}
-          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go']
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go','supervisor_fixture_test.go']
           for v in ['rc2','dev7']:
               for n in names:shutil.copyfile(root/'model/tunnel'/n,root/v/'tunnel'/n)
           assert before=={v:hashes(root/v)for v in before}
@@ -48,7 +48,8 @@ jobs:
           ITOM_LOAD_SERVER_RTT_MS: "20"
           ITOM_LOAD_CLIENT_MBPS: "500"
           ITOM_LOAD_SERVER_MBPS: "1000"
-          ITOM_LOAD_ACCOUNT_SESSIONS: "5"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "6"
+          ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS: "4"
           ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
           ITOM_FIELD_COMMAND_SERVICE: "0"
           ITOM_FIELD_EARLY_START: "1"
@@ -97,7 +98,7 @@ jobs:
           root=Path(os.environ['RUNNER_TEMP'])/'paired'
           hashes=lambda p:{str(f.relative_to(p)):hashlib.sha256(f.read_bytes()).hexdigest()for f in sorted(p.rglob('*.go'))if not f.name.endswith('_test.go')}
           before={v:hashes(root/v)for v in ['rc2','dev7','model']}
-          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go']
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go','supervisor_fixture_test.go']
           for v in ['rc2','dev7']:
               for n in names:shutil.copyfile(root/'model/tunnel'/n,root/v/'tunnel'/n)
           assert before=={v:hashes(root/v)for v in before}
@@ -115,7 +116,8 @@ jobs:
           ITOM_LOAD_SERVER_RTT_MS: "20"
           ITOM_LOAD_CLIENT_MBPS: "500"
           ITOM_LOAD_SERVER_MBPS: "1000"
-          ITOM_LOAD_ACCOUNT_SESSIONS: "5"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "6"
+          ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS: "4"
           ITOM_MODEL_MOBILE_TRACE: "${{ matrix.mobile }}"
           ITOM_FIELD_COMMAND_SERVICE: "0"
           ITOM_FIELD_EARLY_START: "1"

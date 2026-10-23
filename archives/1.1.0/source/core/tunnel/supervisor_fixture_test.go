@@ -194,6 +194,9 @@ func newProductionSupervisorFixtureState(t *testing.T, accounts int, setup func(
 		}})
 	}()
 	profile := servercfg.Profile{Schema: 1, Server: cfg.Server, Provider: cfg.Provider, User: u, Accounts: cfg.Accounts, Transport: cfg.TransportForUsers()}
+	// Installed server settings and an imported phone profile can have different
+	// socket budgets. Model their actual independent endpoint roles explicitly.
+	profile.Transport.AccountSessions = loadEnvInt(t, "ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS", profile.Transport.AccountSessions, 2, 128)
 	f.client, e = StartClientWithOptions(ctx, profile, clientDir, clientDial, ClientOptions{Diagnostics: os.Getenv("ITOM_LOAD_DIAGNOSTICS") == "1", onCarrierExit: f.carrierExits.observe})
 	if e != nil {
 		cancel()
