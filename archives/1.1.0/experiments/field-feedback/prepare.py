@@ -10,7 +10,7 @@ def main():
  subprocess.run(['python3',str(HERE.parent/'refill-baseline-cadence/prepare.py'),str(out)],check=True)
  shutil.rmtree(out/'model');shutil.copytree(ROOT/'archives/1.1.0/checkpoints/DEV4/source/core',out/'dev4')
  shutil.copytree(ROOT/'archives/1.1.0/source/core',out/'model',ignore=shutil.ignore_patterns('*.test','__pycache__'))
- shared=('imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','field_idle_itomtest_test.go')
+ shared=('imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','field_idle_itomtest_test.go','dev7_field_throughput_test.go')
  before=hashes(out/'rc2')
  for variant in ('rc2','dev4','model'):
   for name in shared:shutil.copyfile(ROOT/'archives/1.1.0/source/core/tunnel'/name,out/variant/'tunnel'/name)

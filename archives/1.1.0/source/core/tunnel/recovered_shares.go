@@ -53,5 +53,13 @@ func recoveredFastReserveBytes(profile pool.Amount, u journal.OriginUsage) uint6
 	if room < dataBatchMIMEHardCap+minimum {
 		return localFastReserveBytes
 	}
+	// When the remaining capacity can hold two bulk copies in each direction,
+	// reserve them before assigning surplus bytes to the FAST cushion. The
+	// collector's complete worst-case FAST body still fits in minimum. Keeping
+	// 512 KiB for a few hundred-byte FAST copies otherwise forces a grant/GC
+	// cycle after every bulk body despite a second complete body fitting.
+	if room >= 2*dataBatchMIMEHardCap+minimum {
+		return min(uint64(localFastReserveBytes), room-2*dataBatchMIMEHardCap)
+	}
 	return min(uint64(localFastReserveBytes), room-dataBatchMIMEHardCap)
 }

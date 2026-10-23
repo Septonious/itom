@@ -1591,7 +1591,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		if cur.Validity == 0 || verify || c.selectedFolder != folder {
 			var selected *imap.SelectData
 			var err error
-			if cur.Validity != 0 && known && knownValidity == cur.Validity && c.selectedFolder == folder && count > 0 {
+			if cur.Validity != 0 && known && knownValidity == cur.Validity && count > 0 {
 				rows, selected, err = c.selectTailFetch(folder, cur, set, count, onRow)
 				fetched = err == nil && selected.UIDValidity == cur.Validity
 			} else {

@@ -73,6 +73,12 @@ func testSupervisedProductionLoad(t *testing.T) {
 	if os.Getenv("ITOM_LOAD_RETAINED_STATE") == "1" {
 		retained = rev4RetainedState(t)
 	}
+	if os.Getenv("ITOM_LOAD_DEV7_FIELD_DEBT") == "1" {
+		if retained != nil {
+			t.Fatal("conflicting retained-state fixtures")
+		}
+		retained = dev7RetainedFieldState(t)
+	}
 	// Test-only, existing allowlisted 16 MiB server journal; no production
 	// default, profile migration, APPEND evidence, or client wallet changes.
 	if os.Getenv("ITOM_EXPERIMENT_SERVER_PROFILE") == "16" {

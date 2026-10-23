@@ -35,13 +35,6 @@ func (c *Client) FetchExact(ctx context.Context, folder string, validity uint32,
 	}
 	var out []Message
 	err := c.operation(ctx, folder, func() error {
-		selected, err := c.selectFolder(folder)
-		if err != nil {
-			return err
-		}
-		if selected.UIDValidity != validity {
-			return ErrChanged
-		}
 		uids := make([]imap.UID, len(ids))
 		seen := map[uint32]bool{}
 		for i, uid := range ids {
@@ -51,7 +44,16 @@ func (c *Client) FetchExact(ctx context.Context, folder string, validity uint32,
 			seen[uid] = true
 			uids[i] = imap.UID(uid)
 		}
-		out, err = c.fetchSet(imap.UIDSetNum(uids...), len(uids), true)
+		// Reuse the live reader's joined read-only SELECT fence. No row from
+		// a changed/failed selection can become a cleanup candidate.
+		rows, selected, err := c.selectTailFetch(folder, Cursor{Validity: validity}, imap.UIDSetNum(uids...), len(uids), nil)
+		if err != nil {
+			return err
+		}
+		if selected.UIDValidity != validity {
+			return ErrChanged
+		}
+		out = rows
 		for i := range out {
 			out[i].Folder = folder
 			out[i].Validity = validity

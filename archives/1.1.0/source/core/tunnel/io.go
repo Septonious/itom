@@ -1345,7 +1345,24 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 	}
 	var rows []mailbox.Message
 	var next mailbox.Cursor
-	err := m.maintenanceCommand(ctx, func() error { var e error; rows, next, e = m.cleanupClient().Page(ctx, f, cur); return e })
+	// With a socket cap, control receive shares the maintenance connection.
+	// Use the bounded live-tail path here too. It checks SELECT after any
+	// folder switch, and periodically verifies UIDVALIDITY on an unchanged
+	// selection; maintenance inventory retains its conservative Page path.
+	read := func() error {
+		var e error
+		if f == m.recv && m.recv != "" {
+			verify := cur.Validity == 0 || m.readerCheck.IsZero() || time.Since(m.readerCheck) >= 2*time.Second
+			rows, next, e = m.cleanupClient().PageTailLimit(ctx, f, cur, verify, 16)
+			if e == nil && verify {
+				m.readerCheck = time.Now()
+			}
+		} else {
+			rows, next, e = m.cleanupClient().Page(ctx, f, cur)
+		}
+		return e
+	}
+	err := m.maintenanceCommand(ctx, read)
 	// With a provider socket cap, receive may share the control connection.
 	// Retry only this read, keeping its original cursor. APPEND and deletion
 	// outcomes never pass through this read-only retry path.
@@ -1353,7 +1370,8 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 		if repairErr := m.repairControl(ctx); repairErr != nil {
 			return nil, cur, repairErr
 		}
-		err = m.maintenanceCommand(ctx, func() error { var e error; rows, next, e = m.controlClient().Page(ctx, f, cur); return e })
+		m.readerCheck = time.Time{}
+		err = m.maintenanceCommand(ctx, read)
 	}
 	return rows, next, err
 }

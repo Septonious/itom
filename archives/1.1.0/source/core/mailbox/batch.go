@@ -160,9 +160,17 @@ func (c *Client) DeleteObservedMany(ctx context.Context, messages []Message) err
 		if selected.UIDValidity != validity {
 			return ErrChanged
 		}
-		if err = c.c.Store(set, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
-			return err
+		// The successful SELECT above fences this immutable, already observed
+		// exact UID set. Pipeline only these two ordered UID commands, never
+		// the validity check. Join BOTH outcomes before exposing success:
+		// any failure retains all journal debt, even if deletion took effect.
+		store := c.c.Store(set, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
+		expunge := c.c.UIDExpunge(set)
+		storeErr := store.Close()
+		expungeErr := expunge.Close()
+		if storeErr != nil {
+			return storeErr
 		}
-		return c.c.UIDExpunge(set).Close()
+		return expungeErr
 	})
 }

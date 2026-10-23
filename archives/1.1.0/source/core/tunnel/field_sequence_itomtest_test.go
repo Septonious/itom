@@ -22,6 +22,9 @@ import (
 // Reinstall left one field account with many separate historical grants, not
 // merely one large reservation. No wallet exists and no zero-spend fence is made.
 func fieldSequenceHistory(t *testing.T) func(string, string, servercfg.Config, servercfg.User) {
+	if os.Getenv("ITOM_LOAD_DEV7_FIELD_DEBT") == "1" {
+		return dev7RetainedFieldState(t)
+	}
 	return func(serverDir, _ string, cfg servercfg.Config, u servercfg.User) {
 		for _, a := range cfg.Accounts {
 			if a.ID != "a10" {
