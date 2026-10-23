@@ -1575,13 +1575,10 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 	original := cur
 	next := cur
 	e := c.operation(ctx, folder, func() error {
-		// EXISTS does not prove a UID or incarnation. Renew SELECT in the
-		// existing read-only overlap turn when a new notification is pending;
-		// quiet polls keep the cached proof. This also retains a notification
-		// whose ordinary wake was already consumed by IDLE.
-		if c.tailNotified != nil && c.tailNotified.Swap(false) {
-			verify = true
-		}
+		// Keep the new-mail hint until an empty bounded probe needs a fresh
+		// allocation proof. Dense live traffic needs only FETCH: renewing
+		// SELECT on every EXISTS adds provider work to every normal BODY.
+		notified := c.tailNotified != nil && c.tailNotified.Swap(false)
 		var allocatedThrough uint32
 		var rows []Message
 		var set imap.UIDSet
@@ -1684,7 +1681,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Live dense pages need one FETCH turn. If concurrent cleanup leaves an
 		// empty probe, switch to sparse discovery instead of enumerating holes.
 		// Provisional rows are never emitted twice by the fallback operation.
-		if len(rows) == 0 && !emitted && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= limit) && c.tailNotified != nil && c.tailNotified.Swap(false) {
+		if len(rows) == 0 && !emitted && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= limit) && (notified || c.tailNotified != nil && c.tailNotified.Swap(false)) {
 			// A notification may arrive during the empty FETCH. Refresh its
 			// allocation proof rather than waiting for the periodic audit.
 			selected, err := c.selectFolder(folder)

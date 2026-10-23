@@ -1,4 +1,4 @@
-name: ITOM DEV8 receive isolation and notified allocation audits
+name: ITOM DEV8 receive isolation and empty-probe allocation repair
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

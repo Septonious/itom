@@ -8,7 +8,7 @@
     "core/manager/trace.go",
     "core/cmd/itom/main.go"
   ],
-  "qualification": "DEV8 candidate; qualification pending; field speedtest recovery is not yet verified",
+  "qualification": "DEV8 empty-probe-only candidate; qualification pending; previous notified-every-read candidate rejected for upload regression",
   "production_sha256": {
     "core/adminapi/api.go": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
     "core/adminserver/server.go": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
@@ -45,7 +45,7 @@
     "core/mailbox/dispatcher.go": "52f9e36e3070df5b1b8efe24f8258a7096473320f182f4e993f13cb9f32820db",
     "core/mailbox/inbox.go": "a96864d8ff299a73afb47461555da45ce14e3f4786f09b54ad7cb1fda342dacf",
     "core/mailbox/keepalive.go": "d53aa0f4f8b5c6d86352c1734c6f0f68c89300b9f9014239491c921a1a4071a6",
-    "core/mailbox/mailbox.go": "013af29bc46b115a42fdc023d6223aa93673af64bfba9e83af68b3562629a324",
+    "core/mailbox/mailbox.go": "b6d8376d21fd0e8a64526d21fa19a042f05ea8737dc9d83a0919fdab2a476ae0",
     "core/mailbox/purge.go": "7063023bfb0c9ebfdf421b1aa54ee23a61494be049cf6acf01ce7acd3372e644",
     "core/mailbox/receive_interrupt.go": "25c69bb3928137a4cfdd7b7a156d3fc9ed79cfaed67db2d2b791d5731c05fe83",
     "core/mailbox/socket_lifecycle.go": "92337b11775ae2113d0a874d341979785d615f9cb8611564e0fbae6fee56b2ee",

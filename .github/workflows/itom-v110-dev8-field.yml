@@ -1,4 +1,4 @@
-name: DEV8 notified allocation audits versus DEV7 and RC2 under captured socket roles and quota pressure
+name: DEV8 empty-probe allocation repair versus DEV7 and RC2 with captured roles
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

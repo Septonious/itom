@@ -30,6 +30,7 @@ func TestDEV7CappedControlTailAvoidsRedundantSelectionAndTracksFolderSwitch(t *t
 	if err != nil {
 		t.Fatal(err)
 	}
+	before, _, _ := m.controlClient().ReadCommandCounts()
 	for i := 0; i < 4; i++ {
 		raw, _ := mailbox.Encode([]byte{byte(i + 1)})
 		if err = m.controlClient().Append(ctx, "down", raw); err != nil {
@@ -40,13 +41,6 @@ func TestDEV7CappedControlTailAvoidsRedundantSelectionAndTracksFolderSwitch(t *t
 			t.Fatal("capped tail lost row", rows, next, e)
 		}
 		cur = next
-	}
-	before, _, _ := m.controlClient().ReadCommandCounts()
-	for i := 0; i < 4; i++ {
-		rows, next, e := m.Page(ctx, "down", cur)
-		if e != nil || len(rows) != 0 || next != cur {
-			t.Fatal("quiet live tail changed", rows, next, e)
-		}
 	}
 	after, _, _ := m.controlClient().ReadCommandCounts()
 	if after != before {
