@@ -1,0 +1,79 @@
+name: DEV8 mobile and reader-repair causal traces against DEV7
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev8-trace.yml"]
+permissions: {contents: read}
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: {variant: [dev7, model]}
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: off
+      ITOM_LOAD_DEV7_FIELD_DEBT: "1"
+      ITOM_LOAD_MANY_RETAINED_GRANTS: "1"
+      ITOM_LOAD_ACCOUNT_SESSIONS: "6"
+      ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS: "4"
+      ITOM_LOAD_ENDPOINT_CONNECTIONS: "45"
+      ITOM_LOAD_CLIENT_RTT_MS: "40"
+      ITOM_LOAD_SERVER_RTT_MS: "20"
+      ITOM_LOAD_CLIENT_MBPS: "500"
+      ITOM_LOAD_SERVER_MBPS: "1000"
+      ITOM_LOAD_LITERAL_PLUS: "0"
+      ITOM_LOAD_BINARY_FETCH: "0"
+      ITOM_LOAD_DIAGNOSTICS: "1"
+      ITOM_MODEL_MOBILE_TRACE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Freeze runtime; add timestamps to shared fixtures only
+        run: |
+          set -euo pipefail
+          git fetch origin d4cc33c4db2277be8b93e48a7e3b715032a38b00 --no-tags
+          python3 - <<'PY_STAGE'
+          from pathlib import Path
+          import subprocess,os,hashlib,json,shutil
+          root=Path(os.environ['RUNNER_TEMP'])/'trace-core';root.mkdir()
+          variant='${{ matrix.variant }}'
+          ref='d4cc33c4db2277be8b93e48a7e3b715032a38b00' if variant=='dev7' else 'e69f0abb564751dcd7ca3afd40e9d5232ad79726'
+          subprocess.run(['bash','-c','git archive '+ref+' archives/1.1.0/source/core | tar -x -C "$1" --strip-components=4','stage',str(root)],check=True)
+          hashes=lambda:{str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest()for f in root.rglob('*.go')if not f.name.endswith('_test.go')}
+          before=hashes()
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go','supervisor_fixture_test.go']
+          for name in names:shutil.copyfile(Path('archives/1.1.0/source/core/tunnel')/name,root/'tunnel'/name)
+          p=root/'tunnel/dev8_startup_itomtest_test.go';s=p.read_text().replace('started := time.Now()', 'started := time.Now(); t.Logf("probe_start round=%d phase=%d probe=%d unix_us=%d", round, phase, probe, started.UnixMicro())');p.write_text(s)
+          assert hashes()==before
+          out=Path('evidence');out.mkdir()
+          (out/'TRACE_PROVENANCE.json').write_text(json.dumps({'runtime_commit':ref,'variant':variant,'production':before,'shared_fixtures':names,'thresholds_relaxed':False,'diagnostic_only':True},indent=2)+'\n')
+          PY_STAGE
+          (cd "$RUNNER_TEMP/trace-core" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/trace-core.test" ./tunnel)
+      - name: Retain original light and reader-recovery deadlines and every failure
+        run: |
+          set -uo pipefail
+          failed=0
+          for scenario in TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream; do
+            mkdir -p "evidence/$scenario"
+            reset_env=()
+            if [[ "$scenario" == TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream ]]; then
+              for key in ITOM_LOAD_ACCOUNT_SESSIONS ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS ITOM_LOAD_ENDPOINT_CONNECTIONS ITOM_LOAD_CLIENT_RTT_MS ITOM_LOAD_SERVER_RTT_MS ITOM_LOAD_CLIENT_MBPS ITOM_LOAD_SERVER_MBPS ITOM_MODEL_MOBILE_TRACE; do
+                reset_env+=(-u "$key")
+              done
+            fi
+            if ITOM_LOAD_TRACE_DIR="$PWD/evidence/$scenario" ITOM_REV4_DEBUG_FAILURE_DIR="$PWD/evidence/$scenario" env "${reset_env[@]}" "$RUNNER_TEMP/trace-core.test" -test.run "^$scenario$" -test.count=2 -test.v -test.timeout 360s > "evidence/$scenario.log" 2>&1; then
+              echo "$scenario PASS"
+            else
+              echo "$scenario FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev8-causal-trace-${{ matrix.variant }}
+          path: evidence/
+          retention-days: 30
