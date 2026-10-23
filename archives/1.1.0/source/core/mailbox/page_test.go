@@ -155,15 +155,15 @@ func TestPageTailSkipsRepeatedSelectBetweenValidityChecks(t *testing.T) {
 		t.Fatal(err)
 	}
 	rows, next, err := c.PageTail(ctx, "page", cur, false)
-	if err != nil || len(rows) != 1 || next.After != 4 || next.Validity != cur.Validity || selects.Load() != 1 || fetches.Load() != 2 {
+	if err != nil || len(rows) != 1 || next.After != 4 || next.Validity != cur.Validity || selects.Load() != 2 || fetches.Load() != 2 {
 		t.Fatalf("fast tail page rows=%d cursor=%+v select=%d fetch=%d err=%v", len(rows), next, selects.Load(), fetches.Load(), err)
 	}
 	rows, same, err := c.PageTail(ctx, "page", next, false)
-	if err != nil || len(rows) != 0 || same != next || selects.Load() != 1 || fetches.Load() != 3 {
+	if err != nil || len(rows) != 0 || same != next || selects.Load() != 2 || fetches.Load() != 3 {
 		t.Fatalf("empty tail poll rows=%d cursor=%+v select=%d fetch=%d err=%v", len(rows), same, selects.Load(), fetches.Load(), err)
 	}
 	rows, verified, err := c.PageTail(ctx, "page", next, true)
-	if err != nil || len(rows) != 0 || verified != next || selects.Load() != 2 || fetches.Load() != 4 {
+	if err != nil || len(rows) != 0 || verified != next || selects.Load() != 3 || fetches.Load() != 4 {
 		t.Fatalf("validity refresh rows=%d cursor=%+v select=%d fetch=%d err=%v", len(rows), verified, selects.Load(), fetches.Load(), err)
 	}
 }

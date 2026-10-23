@@ -1575,6 +1575,13 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 	original := cur
 	next := cur
 	e := c.operation(ctx, folder, func() error {
+		// EXISTS does not prove a UID or incarnation. Renew SELECT in the
+		// existing read-only overlap turn when a new notification is pending;
+		// quiet polls keep the cached proof. This also retains a notification
+		// whose ordinary wake was already consumed by IDLE.
+		if c.tailNotified != nil && c.tailNotified.Swap(false) {
+			verify = true
+		}
 		var allocatedThrough uint32
 		var rows []Message
 		var set imap.UIDSet
@@ -1619,7 +1626,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Real mailboxes keep UIDNEXT after EXPUNGE. Iterating four UID numbers
 		// per audit strands new DATA behind historical holes for minutes. Locate
 		// a bounded number of present UIDs, retaining compressed visibility gaps.
-		sparseForward := !fetched && discoverSparse && allocatedThrough > cur.After && allocatedThrough-cur.After > limit
+		sparseForward := !fetched && discoverSparse && allocatedThrough > cur.After && allocatedThrough-cur.After > 16
 		var sparseRequest *tailRange
 		var sparseThrough uint32
 		var rangeCandidates []imap.UID
@@ -1677,39 +1684,18 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Live dense pages need one FETCH turn. If concurrent cleanup leaves an
 		// empty probe, switch to sparse discovery instead of enumerating holes.
 		// Provisional rows are never emitted twice by the fallback operation.
-		if len(rows) == 0 && !emitted && cur.After != ^uint32(0) && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= limit) && c.tailNotified != nil && c.tailNotified.Swap(false) {
-			// EXISTS is a discovery hint, never an allocation/incarnation proof.
-			// A bounded SEARCH can locate mail beyond freshly EXPUNGEd UIDs
-			// even when it is beyond the cached SELECT's UIDNEXT. If the hint
-			// was already drained, avoid renewing SELECT on every empty poll.
-			ids, _, err := c.searchTailUIDs(cur.After+1, ^uint32(0), int(limit))
+		if len(rows) == 0 && !emitted && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= limit) && c.tailNotified != nil && c.tailNotified.Swap(false) {
+			// A notification may arrive during the empty FETCH. Refresh its
+			// allocation proof rather than waiting for the periodic audit.
+			selected, err := c.selectFolder(folder)
 			if err != nil {
 				return err
 			}
-			if len(ids) > 0 {
-				set, count, last = imap.UIDSetNum(ids...), len(ids), uint32(ids[len(ids)-1])
-				for _, gap := range gaps {
-					set.AddNum(imap.UID(gap.uid))
-					count++
-				}
-				for _, id := range rangeCandidates {
-					set.AddNum(id)
-					count++
-				}
-				// Fresh tagged SELECT fences all candidate delivery. SEARCH is
-				// advisory, and a changed/failed incarnation exposes no old row.
-				var selected *imap.SelectData
-				rows, selected, err = c.selectTailFetch(folder, cur, set, count, onRow)
-				if err != nil {
-					return err
-				}
-				if selected.UIDValidity != cur.Validity {
-					next = Cursor{Validity: selected.UIDValidity}
-					return nil
-				}
-				allocatedThrough = uint32(selected.UIDNext) - 1
-				sparseForward = true
+			if selected.UIDValidity != cur.Validity {
+				next = Cursor{Validity: selected.UIDValidity}
+				return nil
 			}
+			allocatedThrough = uint32(selected.UIDNext) - 1
 		}
 		if !sparseForward && len(rows) == 0 && !emitted && allocatedThrough > cur.After && allocatedThrough-cur.After > limit {
 			if err := locateForward(); err != nil {

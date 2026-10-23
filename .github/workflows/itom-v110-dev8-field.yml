@@ -1,4 +1,4 @@
-name: DEV8 UID hole fix versus DEV7 and RC2 under captured socket roles and quota pressure
+name: DEV8 notified allocation audits versus DEV7 and RC2 under captured socket roles and quota pressure
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

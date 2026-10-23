@@ -1,4 +1,4 @@
-name: ITOM DEV8 receive isolation and live UID hole discovery
+name: ITOM DEV8 receive isolation and notified allocation audits
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
