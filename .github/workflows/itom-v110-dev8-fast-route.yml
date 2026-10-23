@@ -1,0 +1,65 @@
+name: DEV8 short DATA routing sensitivity without changing production source
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev8-fast-route.yml"]
+permissions: {contents: read}
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: {mobile: [0, 1], streams: [1, 4]}
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: off
+      ITOM_LOAD_DEV7_FIELD_DEBT: "1"
+      ITOM_LOAD_MANY_RETAINED_GRANTS: "1"
+      ITOM_LOAD_ACCOUNT_SESSIONS: "6"
+      ITOM_LOAD_CLIENT_ACCOUNT_SESSIONS: "4"
+      ITOM_LOAD_ENDPOINT_CONNECTIONS: "45"
+      ITOM_LOAD_CLIENT_RTT_MS: "40"
+      ITOM_LOAD_SERVER_RTT_MS: "20"
+      ITOM_LOAD_CLIENT_MBPS: "500"
+      ITOM_LOAD_SERVER_MBPS: "1000"
+      ITOM_LOAD_LITERAL_PLUS: "0"
+      ITOM_LOAD_BINARY_FETCH: "0"
+      ITOM_LOAD_DIAGNOSTICS: "1"
+      ITOM_FIELD_EARLY_START: "1"
+      ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
+      ITOM_MODEL_MOBILE_TRACE: "${{ matrix.mobile }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Freeze three explicitly different short DATA routes
+        run: |
+          set -euo pipefail
+          git fetch origin 6ade0182848652152fd8aa9af7a8078dfda27563 --no-tags
+          python3 archives/1.1.0/experiments/dev8-fast-route/prepare.py "$RUNNER_TEMP/fast-route"
+          mkdir evidence
+          cp "$RUNNER_TEMP/fast-route/FAST_ROUTE_PROVENANCE.json" evidence/
+          for variant in current data_receive data_both; do
+            (cd "$RUNNER_TEMP/fast-route/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/fast-route/$variant.test" ./tunnel)
+          done
+      - name: Retain all original deadlines, floors and failed rounds
+        run: |
+          set -uo pipefail
+          failed=0
+          for variant in current data_receive data_both; do
+            for scenario in TestFieldIdleLightReference TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants TestFieldSpeedtestSequence; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/fast-route/$variant.test" -test.run "^$scenario$" -test.v -test.timeout 360s > "evidence/$variant-$scenario.log" 2>&1; then
+                echo "$variant $scenario PASS"
+              else
+                echo "$variant $scenario FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev8-fast-routes-mobile${{ matrix.mobile }}-streams${{ matrix.streams }}
+          path: evidence/*
+          retention-days: 90
