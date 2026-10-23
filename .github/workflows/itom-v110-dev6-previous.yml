@@ -1,0 +1,75 @@
+name: DEV6 versus exact DEV5 bandwidth preservation
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev6-previous.yml"]
+permissions: {contents: read}
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: shared-single, streams: 1, service: 1, sessions: 4}
+          - {name: shared-multi, streams: 16, service: 1, sessions: 4}
+          - {name: field-sockets, streams: 16, service: 0, sessions: 5}
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: off
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Frozen production sources and byte-identical sequence fixtures
+        run: |
+          set -euo pipefail
+          git fetch origin 3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a 90568d39461a6a384a4fd86c60f0227f59a157a2 --no-tags
+          mkdir -p "$RUNNER_TEMP/paired/dev5" "$RUNNER_TEMP/paired/dev6" evidence
+          git archive 3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev5" --strip-components=4
+          git archive 90568d39461a6a384a4fd86c60f0227f59a157a2 archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev6" --strip-components=4
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,hashlib,json,shutil
+          root=Path(os.environ['RUNNER_TEMP'])/'paired'
+          production=lambda p:{str(f.relative_to(p)):hashlib.sha256(f.read_bytes()).hexdigest() for f in p.rglob('*.go') if not f.name.endswith('_test.go')}
+          before={v:production(root/v) for v in ['dev5','dev6']}
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','field_idle_itomtest_test.go']
+          for name in names:shutil.copyfile(root/'dev6/tunnel'/name,root/'dev5/tunnel'/name)
+          assert before=={v:production(root/v) for v in ['dev5','dev6']}
+          Path('evidence/provenance.json').write_text(json.dumps({'dev5_commit':'3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a','dev6_commit':'90568d39461a6a384a4fd86c60f0227f59a157a2','production':before,'fixtures':{n:hashlib.sha256((root/'dev6/tunnel'/n).read_bytes()).hexdigest()for n in names},'cpu_count':os.cpu_count(),'thresholds_relaxed':False},indent=2)+'\n')
+          PY
+          for variant in dev5 dev6; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: ABBA ordering, original startup deadlines and throughput floors
+        env:
+          ITOM_LOAD_CLIENT_RTT_MS: "20"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "${{ matrix.sessions }}"
+          ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
+          ITOM_FIELD_COMMAND_SERVICE: "${{ matrix.service }}"
+          ITOM_FIELD_EARLY_START: "1"
+          ITOM_LOAD_LITERAL_PLUS: "0"
+          ITOM_LOAD_BINARY_FETCH: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          for trial in 1 2; do
+            order='dev5 dev6'; if [ "$trial" = 2 ]; then order='dev6 dev5'; fi
+            for variant in $order; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestFieldSpeedtestSequence$' -test.v -test.timeout 300s > "evidence/$trial-$variant.log" 2>&1; then
+                echo "$trial $variant PASS"
+              else
+                echo "$trial $variant FAIL"; failed=1
+              fi
+            done
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev6-previous-${{ matrix.name }}
+          path: evidence/*
+          retention-days: 90

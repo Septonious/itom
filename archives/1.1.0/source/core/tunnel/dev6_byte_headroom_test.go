@@ -16,8 +16,8 @@ import (
 )
 
 // DEV5 field a08 has no current grant: all 11,193,823 bytes / 165 slots
-// remain charged. a02/a13 also hold one current 512 KiB fast lease, removed
-// here to reproduce their pre-offer byte headroom. These are sufficient
+// remain charged. For a02/a13 the single issued metadata entry is modeled as
+// a current 512 KiB fast lease, removed to model pre-offer headroom. These are sufficient
 // debt shapes, not claims that the captures contain the complete journal.
 var dev6ByteDebt = []pool.Amount{
 	{Bytes: 10976200, Messages: 156},
