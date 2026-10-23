@@ -2,7 +2,7 @@ name: ITOM DEV9 convergent split routing and original qualification
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
-    paths: [".github/workflows/itom-v110-dev9.yml"]
+    paths: ["archives/1.1.0/source/**"]
   workflow_dispatch:
 permissions: {contents: read}
 env:
@@ -124,7 +124,7 @@ jobs:
           from pathlib import Path
           meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
           assert meta['applicationId']=='org.itom.client', meta
-          assert any(x['versionCode']==10108 and x['versionName']=='1.1.0-dev9-debug' for x in meta['elements'])
+          assert any(x['versionCode']==10109 and x['versionName']=='1.1.0-dev9-debug' for x in meta['elements'])
           apk=Path('dist/ITOM-1.1.0-DEV9-debug.apk')
           assert apk.stat().st_size > 1000000
           with zipfile.ZipFile(apk) as z:
