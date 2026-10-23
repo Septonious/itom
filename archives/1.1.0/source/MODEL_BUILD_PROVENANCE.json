@@ -17,7 +17,7 @@
     "core/tunnel/topology.go",
     "core/tunnel/version.go"
   ],
-  "qualification": "Unpublished DEV9 dynamic socket and measured response/placement candidate; all original gates pending; no debt forgiveness or authority changes",
+  "qualification": "Unpublished DEV9 convergent split routing and dynamic socket candidate; original qualification pending; every debt and authority retained",
   "production_sha256": {
     "core/adminapi/api.go": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
     "core/adminserver/server.go": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
@@ -179,7 +179,7 @@
     "core/tunnel/account_work.go": "54844cd63531d3caaf9c02f7a247b70bf4f1524a692eb2c1ebad4e3419b01b12",
     "core/tunnel/bulk_admission.go": "a50cd9e7eee6d1d2bf7d949cf2e137367b6b8447ad46aaec0fbfc28c02fd1d5f",
     "core/tunnel/capacity_notify.go": "8b83e3ad1236237731408f9f409123575861dcc1ae419a85eae5a65f5ef50775",
-    "core/tunnel/carrier_feedback.go": "b152a9fd29c9145bf86aefe93485e3dcf05d9620cc53c8fbb4fb5d7c680fb159",
+    "core/tunnel/carrier_feedback.go": "5bbe56e92f0f7a3d826c4104585d26830d8e18f758cc90ac2ea451db44b81e14",
     "core/tunnel/carrier_retry.go": "ecf5e1dbb5f3c67c57fcdba7b86f89d18c296708229cf027394e5e87a68b9f37",
     "core/tunnel/cleanup.go": "89eef2e5a0b7e362f9ffbf035fa21af193c4f560ccff8f6c8a583a326f00f798",
     "core/tunnel/cleanup_proof.go": "38bbee28a314620bf6cb2632ca194a2471577b6e76b3f8b4a2d5471a52d149a0",
@@ -210,7 +210,7 @@
     "core/tunnel/pool.go": "a2a74cecdfdca0dbad161494d564a9b71968a09683e7ff5cca5caf61c2295a92",
     "core/tunnel/preparation.go": "01ab3474ecdcc27b4c44e409eb98cd29c5c792175ebc6867259a08aee1980423",
     "core/tunnel/progress.go": "191e7e27284a913575f10c3bcf2d39f3ddce70ac470528ec79ef0e28c0899c18",
-    "core/tunnel/reader_reserve.go": "81b66e4ee9a453fca496d63a4abc67982adb9cbe704d7dbaa96138b1b8f6534a",
+    "core/tunnel/reader_reserve.go": "6f2c23e3099fbbf652abe0f693f35203458c9893fa50384ea4a37a02ced66c0a",
     "core/tunnel/receive_page_policy.go": "e971ce379ab46632ea4cff566dfd5daaa2447b8d0d949472090a4e2ad1db0510",
     "core/tunnel/receive_worker.go": "63751c2dff018d8add24d6d257f86a5b25259c2fa07daf4b7ef956960e736f14",
     "core/tunnel/reclamation_policy.go": "54408805c8294e33c82309d94e171f9237f9f0ed21092703d1fccaa79d05c873",

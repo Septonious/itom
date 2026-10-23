@@ -89,19 +89,6 @@ func (g *stripeGroup) fastSlotGraceLocked() time.Duration {
 			outlier = min(outlier, rtt)
 		}
 	}
-	// A split endpoint can borrow a genuinely idle receive connection. Its
-	// shared-control echo is not a reason to hold short DATA behind an empty
-	// preferred slot for150–650ms while other authenticated carriers are ready.
-	// Bound that placement grace by measured pool feedback; mixed/legacy
-	// services retain their original reader-protection contract.
-	for _, l := range g.lanes {
-		if l == nil {
-			continue
-		}
-		if m := physicalMail(l.mail); l.dataShards > 0 && m != nil && m.dataReaderWake != nil && l.streamCarrierReady() {
-			return max(5*time.Millisecond, min(50*time.Millisecond, time.Duration(min(best, int64(400)))*time.Millisecond/8))
-		}
-	}
 	if outlier == 1<<62 {
 		return 150 * time.Millisecond
 	}
@@ -133,6 +120,13 @@ func (g *stripeGroup) preferShortTargetLocked(keys []string, preferred *lane) {
 	if preferred == nil || len(keys) < 2 {
 		return
 	}
+	reserve := g.interactiveReadersLocked()
+	if reserve[0] != nil && reserve[0].dataShards > 0 && preferred != reserve[0] {
+		// A startup spill must not pin subsequent RPCs to a control mailbox. The
+		// existing scores/slots still allow fallback when the protected path is busy.
+		return
+	}
+
 	score := func(l *lane) int {
 		// The peer can choose a different outgoing reserve. Compare actual
 		// latency/backlog here, without our own reserve's artificial bonus.

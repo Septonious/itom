@@ -1,4 +1,4 @@
-name: ITOM DEV9 dynamic socket service and original qualification
+name: ITOM DEV9 convergent split routing and original qualification
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
