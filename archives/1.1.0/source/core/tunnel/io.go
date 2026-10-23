@@ -652,19 +652,20 @@ func (r *accountRuntime) Close() {
 // WINDOW, RECEIPT or liveness traffic. A second DATA writer is best-effort;
 // providers with a lower connection limit safely fall back to one writer.
 type laneMail struct {
-	baseWork       accountWorkBudget // one fair command turn on the shared control socket
-	dataWork       accountWorkBudget
-	dataChecks     map[string]time.Time
-	dataReadLimit  uint32 // command mutex; large-BODY evidence only, reset on replacement
-	dataDiscovery  map[string]mailbox.TailDiscovery
-	topologyMu     sync.Mutex
-	topology       servercfg.Transport
-	dataReader     *mailbox.Client
-	dataReaderWake chan struct{}
-	borrowHintMu   sync.Mutex
-	borrowHints    []mailbox.AppendHint
-	topologyCaps   uint64
-	writerTarget   int
+	baseWork          accountWorkBudget // one fair command turn on the shared control socket
+	dataWork          accountWorkBudget
+	dataChecks        map[string]time.Time
+	dataReadLimit     uint32 // command mutex; large-BODY evidence only, reset on replacement
+	dataDiscovery     map[string]mailbox.TailDiscovery
+	topologyMu        sync.Mutex
+	topology          servercfg.Transport
+	dataReader        *mailbox.Client
+	dataReaderWake    chan struct{}
+	dataResponseUntil atomic.Int64 // explicit short request demand, never generic control traffic
+	borrowHintMu      sync.Mutex
+	borrowHints       []mailbox.AppendHint
+	topologyCaps      uint64
+	writerTarget      int
 
 	readerStateMu      sync.Mutex
 	readerCommandMu    sync.Mutex

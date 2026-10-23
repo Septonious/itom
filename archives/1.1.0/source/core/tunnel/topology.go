@@ -313,6 +313,9 @@ func (m *laneMail) retainDataDiscovery(reader *mailbox.Client, folder string) {
 // IDLE on the selected DATA folder avoids a per-account empty-FETCH storm.
 // The bounded audit still revisits visibility gaps and other configured shards.
 func (m *laneMail) waitData(ctx context.Context, folder string, budget time.Duration) (used, notified bool, err error) {
+	if time.Now().UnixNano() < m.dataResponseUntil.Load() {
+		return false, false, nil
+	}
 	release, admissionErr := m.dataSocket(ctx, workReceive)
 	if admissionErr != nil {
 		return false, false, admissionErr

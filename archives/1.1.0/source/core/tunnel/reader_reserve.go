@@ -44,19 +44,27 @@ func (g *stripeGroup) expectFastResponseOn(owner, physical *lane) {
 	quiet := g.interactiveReadersLocked()
 	g.mu.Unlock()
 	budget := owner.readerResponseBudget(650 * time.Millisecond)
+	prime := func(l *lane) {
+		l.armReaderHot(budget)
+		if m := physicalMail(l.mail); m != nil && l.dataShards > 0 {
+			extendReaderHot(&m.dataResponseUntil, time.Now().Add(budget).UnixNano())
+			m.wakeDataReader()
+		}
+	}
+
 	if quiet[0] == nil {
-		owner.armReaderHot(budget)
+		prime(owner)
 	} else {
 		for _, l := range quiet {
 			if l != nil {
-				l.armReaderHot(budget)
+				prime(l)
 			}
 		}
 	}
 	// Parallel cold startups can spill beyond the two reserved readers. Prime
 	// the actual request carrier too, while retaining bounded response polling.
 	if physical != nil && physical != quiet[0] && physical != quiet[1] && physical.ctx.Err() == nil {
-		physical.armReaderHot(budget)
+		prime(physical)
 	}
 }
 
