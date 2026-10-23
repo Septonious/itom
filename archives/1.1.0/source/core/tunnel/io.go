@@ -1362,7 +1362,20 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 		}
 		return e
 	}
-	err := m.maintenanceCommand(ctx, read)
+	readCommand := func() error {
+		if f == m.recv && m.recv != "" {
+			// A socket cap changes the physical connection, not the class of
+			// live receive work. Sharing maintenance's account admission queue
+			// can strand OPEN_OK/PONG behind unrelated proof work even while
+			// this socket is idle. Actual bytes still take a fair baseWork turn.
+			if m.cleanupClient() == m.controlClient() {
+				return m.controlCommand(ctx, workReceive, read)
+			}
+			return m.command(ctx, workReceive, read)
+		}
+		return m.maintenanceCommand(ctx, read)
+	}
+	err := readCommand()
 	// With a provider socket cap, receive may share the control connection.
 	// Retry only this read, keeping its original cursor. APPEND and deletion
 	// outcomes never pass through this read-only retry path.
@@ -1371,7 +1384,7 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 			return nil, cur, repairErr
 		}
 		m.readerCheck = time.Time{}
-		err = m.maintenanceCommand(ctx, read)
+		err = readCommand()
 	}
 	return rows, next, err
 }

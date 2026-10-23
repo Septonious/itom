@@ -49,7 +49,7 @@ def export_verified_artifacts(extracted_root: Path, source_archive: Path, info: 
                 raise RuntimeError("Invalid server SHA256SUMS")
             checks[name] = digest
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-1.1.0-DEV7-linux-{arch}" if info["version"] == "1.1.0" else f"ITOM-1.0.0-linux-{arch}" if release == "Final" else f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final") else f"ITOM_{release}_linux_{arch}"
+            name = f"ITOM-1.1.0-DEV8-linux-{arch}" if info["version"] == "1.1.0" else f"ITOM-1.0.0-linux-{arch}" if release == "Final" else f"ITOM-{info['version']}-{release}-linux-{arch}" if release in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final") else f"ITOM_{release}_linux_{arch}"
             binary = internal / name
             if (not binary.is_file() or binary.is_symlink() or binary.stat().st_size == 0
                     or checks.get(name) != hashlib.sha256(binary.read_bytes()).hexdigest()):

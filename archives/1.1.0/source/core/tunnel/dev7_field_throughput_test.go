@@ -41,8 +41,22 @@ func dev7RetainedFieldState(t *testing.T) func(string, string, servercfg.Config,
 			if err = s.EnableAfterInventory(a.ID, u.ID, s.Run()); err != nil {
 				t.Fatal(err)
 			}
-			if _, err = s.IssueRemote(journal.Scope{Account: a.ID, User: u.ID, Session: wire.ID{99}}, dev7HistoricalDebt[i%len(dev7HistoricalDebt)]); err != nil {
-				t.Fatal(err)
+			debt := dev7HistoricalDebt[i%len(dev7HistoricalDebt)]
+			grants := 1
+			if os.Getenv("ITOM_LOAD_MANY_RETAINED_GRANTS") == "1" {
+				// DEV7 field diagnostics show dozens of missing-wallet grants on
+				// every account. Preserve the exact same aggregate charge while
+				// exercising the reconciliation traffic absent from the one-grant
+				// capacity model. No invented spend or release proof is supplied.
+				grants = 48
+			}
+			for remaining := uint64(grants); remaining > 0; remaining-- {
+				part := pool.Amount{Bytes: debt.Bytes / remaining, Messages: debt.Messages / remaining}
+				if _, err = s.IssueRemote(journal.Scope{Account: a.ID, User: u.ID, Session: wire.ID{99}}, part); err != nil {
+					t.Fatal(err)
+				}
+				debt.Bytes -= part.Bytes
+				debt.Messages -= part.Messages
 			}
 			if err = s.Close(); err != nil {
 				t.Fatal(err)

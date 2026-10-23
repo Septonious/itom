@@ -1,22 +1,18 @@
 {
-  "revision": "itom-1-1-0-dev7",
-  "previous_source_tree": "ac33683709d1a7e93f88448fd9ed6d820fd16a15",
-  "production_delta_from_dev4": [
-    "core/tunnel/grant_recovery.go",
-    "core/tunnel/account_work.go",
+  "revision": "itom-1-1-0-dev8",
+  "previous_runtime_commit": "d4cc33c4db2277be8b93e48a7e3b715032a38b00",
+  "production_delta_from_dev7": [
     "core/tunnel/io.go",
-    "core/tunnel/lane.go",
-    "core/tunnel/throughput_model.go",
     "core/tunnel/version.go",
     "core/manager/trace.go",
     "core/cmd/itom/main.go"
   ],
-  "qualification": "DEV7 candidate; strict qualification and field testing pending; previous experimental rates are not field predictions",
+  "qualification": "DEV8 candidate; qualification pending; field speedtest recovery is not yet verified",
   "production_sha256": {
     "core/adminapi/api.go": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
     "core/adminserver/server.go": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
     "core/adminserver/watchdog.go": "d3ef6f9932d23c8c5be84d9c111d42b639b3527da697a2ded4a6ad5b5571b6ea",
-    "core/cmd/itom/main.go": "4b21486f010ef51d14b7cda48cf613932fc57304e5c8d9d2407de4444802f911",
+    "core/cmd/itom/main.go": "cf3d89a6fd9565646f19d77a30d18f73a45be47ac6cdd99438bf783711809d63",
     "core/cmd/itom/signal_unix.go": "662047d7de67955e1adceb6a577ab1db27e24f2e7dc5b33df55aa337064a86f5",
     "core/cmd/itom/signal_windows.go": "63f4d6416f02bce6759d933d5d169d96d15aa792fed0f178e752c52f0de5583e",
     "core/datapath/control_queue.go": "b9756ed11e05a85bf8ad08bc739c761c2980083dbaa9cb7b6a9a183a0893f2aa",
@@ -60,7 +56,7 @@
     "core/manager/manager.go": "42d59bb9e06b2f8665165cbe16497a5220abf694b8d4cf9160ae76d729501afe",
     "core/manager/notices.go": "0b281f6dd859d917920152e5d39496a51a2c4a21bacac8342e88ade540effc80",
     "core/manager/selections.go": "95fb737f4dd273f7235d47cd294d742d24998d941313df3770a0da6c53a93db6",
-    "core/manager/trace.go": "6a42910f37b6ec179e55ab52c31bc0234f8d601e631f0d9e81027c741cb97a2f",
+    "core/manager/trace.go": "c33ee5a9bbdf42aa614be6f0b5a739727c4ecda2e09f1fe3bf28d0f4cf943d01",
     "core/manager/traffic.go": "1e1b699bb3619c3b2376b234e21a1c7992577419b30e6e8976256a8db308853d",
     "core/manager/uninstall.go": "ef694ff08e15637bd7ae5a0ce213e2e7192c9c1fa1ce0812ffc460fbd7496e25",
     "core/netroute/dial.go": "676e9d9ea750bdd5a5a31be5031c100003b69e804200593056946c0b30fa75f5",
@@ -192,7 +188,7 @@
     "core/tunnel/flow_control.go": "35770d664f508f177fbe03eadfd5dca0764c551e8f3249383921d56239b0e552",
     "core/tunnel/grant_recovery.go": "3831875f8a193641b4b13b4cc0c1109beedd054cb4368efa060fc3db0bcb1c4a",
     "core/tunnel/integration_fixture.go": "3bf8f3b65a01bb926c531e1308add58efff4a443d6a8b2a52a59f92ad1153a3b",
-    "core/tunnel/io.go": "dbb56b11431de8e082d78bd1b0297f86e2341a0560e3b4e8beca1a9d36a754f2",
+    "core/tunnel/io.go": "485f0bc28b34884f59578aee245d0fe0d495aba93571877257f88e945b9c7543",
     "core/tunnel/lane.go": "3a3d15a3487e139491a803d6a33f0f0d3a37ab75b43e321d5062cdeca46180ce",
     "core/tunnel/local_selection.go": "393c21c38257ba2cdaeeb65a74cbcb140e1e917e794a8bc86df6fae61123306a",
     "core/tunnel/login_admission.go": "d9d532d8835354fb261a8d115ec843b27d5b9222c5a9a5d42c562e0a97076633",
@@ -225,7 +221,7 @@
     "core/tunnel/trace.go": "b9d4e7ed421d43dfdd2dbf7df85ab183f94e13eff3b599c576dd5190e12a5476",
     "core/tunnel/trace_admission_sampler.go": "7cfa75e46daa4c7ab63415efcafebc45f04200676dda8787e79385a48bf8c51d",
     "core/tunnel/traffic.go": "9883bd1c213506dd3e33af10b692539bbc7b0143dbc6350c5e8c37d46c7dcc59",
-    "core/tunnel/version.go": "3c6b5928a829408121d2e5b4a300edaf20364e5b3e53e0f27d1365939a049d14",
+    "core/tunnel/version.go": "4a536a4432ea6ef4c71d56786957b4c842730b0e02a775f19031e8671b1696e1",
     "core/wallet/reconcile.go": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165",
     "core/wallet/wallet.go": "5cef740ff3e8c2174007b38e6e091890f13ce1026b68eb3ee91ade1f4d7bde0b",
     "core/wire/control.go": "5894116a1ca18a868acadcb3fdbbad26985cc814ce6b41bc1642b113d4897bb4",
@@ -234,35 +230,6 @@
     "core/wire/grants.go": "381a1b57f2c0478d8b52ec07daa504588e28039a2392fa509a864ecd70dfe53f",
     "core/wire/notice.go": "25071db0cd469f237149bb57a03ac4cd83b1b37dea5a1d4c18d0e5a520da9b9a",
     "core/wire/progress_merge.go": "aae9201e28fe441b489dcdf6002a95982ed192b75f00800766f70b33e11a65bc",
-    "core/wire/wire.go": "0e0cd8c39030e4fe8440ea4467d20454490beb123440bb41cd1007f07353423a",
-    "native/admin.go": "181cfd4fb11407a5a3f95e88b5fb8a8be2ea8a3ac60ddbaaf9b05ad9bdf2c80d",
-    "native/dns.go": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912",
-    "native/mobile.go": "232c3958b68a66b86651bd01ac68e9ce0ce0012607907f091dc0aac4baf734a7",
-    "native/tools.go": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f",
-    "native/version.go": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee"
-  },
-  "previous_commit": "3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a",
-  "production_delta_from_dev5": [
-    "core/tunnel/control.go",
-    "core/tunnel/diagnostics.go",
-    "core/tunnel/grant_recovery.go",
-    "core/tunnel/lane.go",
-    "core/tunnel/recovered_shares.go",
-    "core/tunnel/version.go",
-    "core/manager/trace.go",
-    "core/cmd/itom/main.go",
-    "core/tunnel/io.go"
-  ],
-  "previous_source_commit": "765643ea2bf0a0035023f1376ed136223f52ba3c",
-  "production_delta_from_dev6": [
-    "core/mailbox/append_hints.go",
-    "core/mailbox/batch.go",
-    "core/mailbox/mailbox.go",
-    "core/tunnel/io.go",
-    "core/tunnel/recovered_shares.go",
-    "core/tunnel/version.go",
-    "core/manager/trace.go",
-    "core/cmd/itom/main.go",
-    "core/tunnel/delivery_control.go"
-  ]
+    "core/wire/wire.go": "0e0cd8c39030e4fe8440ea4467d20454490beb123440bb41cd1007f07353423a"
+  }
 }

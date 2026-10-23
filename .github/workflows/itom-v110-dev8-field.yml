@@ -1,0 +1,148 @@
+name: Final DEV8 versus DEV7 and RC2 under all-account field quota pressure
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev8-field.yml"]
+permissions: {contents: read}
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: {streams: [1, 4]}
+    env: {GOTOOLCHAIN: local, GOWORK: off}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Freeze each production variant and share only identical test fixtures
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          git fetch origin d4cc33c4db2277be8b93e48a7e3b715032a38b00 --no-tags
+          python3 archives/1.1.0/experiments/field-feedback/prepare.py "$RUNNER_TEMP/paired"
+          mkdir -p "$RUNNER_TEMP/paired/dev7" evidence
+          git archive d4cc33c4db2277be8b93e48a7e3b715032a38b00 archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev7" --strip-components=4
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,hashlib,json,shutil
+          root=Path(os.environ['RUNNER_TEMP'])/'paired'
+          hashes=lambda p:{str(f.relative_to(p)):hashlib.sha256(f.read_bytes()).hexdigest()for f in sorted(p.rglob('*.go'))if not f.name.endswith('_test.go')}
+          before={v:hashes(root/v)for v in ['rc2','dev7','model']}
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go']
+          for v in ['rc2','dev7']:
+              for n in names:shutil.copyfile(root/'model/tunnel'/n,root/v/'tunnel'/n)
+          assert before=={v:hashes(root/v)for v in before}
+          Path('evidence/FIELD_CAPACITY_PROVENANCE.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'dev7_runtime':'d4cc33c4db2277be8b93e48a7e3b715032a38b00','rc2_reference':'v1.0.0-rc2','production':before,'fixtures':{n:hashlib.sha256((root/'model/tunnel'/n).read_bytes()).hexdigest()for n in names},'classification':'many-retained-grant sensitivity; provider timing not calibrated','thresholds_relaxed':False},indent=2)+'\n')
+          PY
+          for variant in rc2 dev7 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Three no-warmup download/upload runs, original floors and deadlines
+        env:
+          ITOM_LOAD_DEV7_FIELD_DEBT: "1"
+          ITOM_LOAD_MANY_RETAINED_GRANTS: "1"
+          ITOM_LOAD_ENDPOINT_CONNECTIONS: "45"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_CLIENT_MBPS: "500"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "5"
+          ITOM_FIELD_SEQUENCE_STREAMS: "${{ matrix.streams }}"
+          ITOM_FIELD_COMMAND_SERVICE: "0"
+          ITOM_FIELD_EARLY_START: "1"
+          ITOM_LOAD_LITERAL_PLUS: "1"
+          ITOM_LOAD_BINARY_FETCH: "1"
+          ITOM_LOAD_DIAGNOSTICS: "0"
+        run: |
+          set -uo pipefail
+          failed=0
+          for variant in model dev7 rc2; do
+            if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestFieldSpeedtestSequence$' -test.v -test.timeout 360s > "evidence/$variant.log" 2>&1; then
+              echo "$variant PASS"
+            else
+              echo "$variant FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev8-field-capacity-streams${{ matrix.streams }}
+          path: evidence/*
+          retention-days: 90
+  light:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: {mobile: [0, 1]}
+    env: {GOTOOLCHAIN: local, GOWORK: off}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Freeze each production variant and share only identical test fixtures
+        run: |
+          set -euo pipefail
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          git fetch origin d4cc33c4db2277be8b93e48a7e3b715032a38b00 --no-tags
+          python3 archives/1.1.0/experiments/field-feedback/prepare.py "$RUNNER_TEMP/paired"
+          mkdir -p "$RUNNER_TEMP/paired/dev7" evidence
+          git archive d4cc33c4db2277be8b93e48a7e3b715032a38b00 archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev7" --strip-components=4
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,hashlib,json,shutil
+          root=Path(os.environ['RUNNER_TEMP'])/'paired'
+          hashes=lambda p:{str(f.relative_to(p)):hashlib.sha256(f.read_bytes()).hexdigest()for f in sorted(p.rglob('*.go'))if not f.name.endswith('_test.go')}
+          before={v:hashes(root/v)for v in ['rc2','dev7','model']}
+          names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go']
+          for v in ['rc2','dev7']:
+              for n in names:shutil.copyfile(root/'model/tunnel'/n,root/v/'tunnel'/n)
+          assert before=={v:hashes(root/v)for v in before}
+          Path('evidence/FIELD_CAPACITY_PROVENANCE.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'dev7_runtime':'d4cc33c4db2277be8b93e48a7e3b715032a38b00','rc2_reference':'v1.0.0-rc2','production':before,'fixtures':{n:hashlib.sha256((root/'model/tunnel'/n).read_bytes()).hexdigest()for n in names},'classification':'many-retained-grant sensitivity; provider timing not calibrated','thresholds_relaxed':False},indent=2)+'\n')
+          PY
+          for variant in rc2 dev7 model; do
+            (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
+          done
+      - name: Idle/light probes and fresh TLS starts after aborts; original deadlines
+        env:
+          ITOM_LOAD_DEV7_FIELD_DEBT: "1"
+          ITOM_LOAD_MANY_RETAINED_GRANTS: "1"
+          ITOM_LOAD_ENDPOINT_CONNECTIONS: "45"
+          ITOM_LOAD_CLIENT_RTT_MS: "40"
+          ITOM_LOAD_SERVER_RTT_MS: "20"
+          ITOM_LOAD_CLIENT_MBPS: "500"
+          ITOM_LOAD_SERVER_MBPS: "1000"
+          ITOM_LOAD_ACCOUNT_SESSIONS: "5"
+          ITOM_MODEL_MOBILE_TRACE: "${{ matrix.mobile }}"
+          ITOM_FIELD_COMMAND_SERVICE: "0"
+          ITOM_FIELD_EARLY_START: "1"
+          ITOM_LOAD_LITERAL_PLUS: "1"
+          ITOM_LOAD_BINARY_FETCH: "1"
+          ITOM_LOAD_DIAGNOSTICS: "1"
+        run: |
+          set -uo pipefail
+          failed=0
+          for variant in dev7 model rc2; do
+            for trial in 1 2; do
+              if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestFieldIdleLightReference$' -test.v -test.timeout 360s > "evidence/$variant-idle-$trial.log" 2>&1; then
+                echo "$variant idle $trial PASS"
+              else
+                echo "$variant idle $trial FAIL"; failed=1
+              fi
+            done
+            if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/paired/$variant.test" -test.run '^TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants$' -test.v -test.timeout 360s > "evidence/$variant-tls.log" 2>&1; then
+              echo "$variant TLS PASS"
+            else
+              echo "$variant TLS FAIL"; failed=1
+            fi
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev8-light-mobile${{ matrix.mobile }}
+          path: evidence/*
+          retention-days: 90

@@ -15,7 +15,7 @@ func TestFieldIdleLightReference(t *testing.T) {
 	t.Setenv("ITOM_LOAD_COMMAND_DELAY_MS", "0")
 	f := newProductionSupervisorFixtureState(t, 15, fieldSequenceHistory(t))
 	p := rev4Open(t, f)
-	defer p.Close()
+	defer func() { p.Close() }()
 	for _, phase := range []string{"idle", "light"} {
 		samples := make([]float64, 0, 24)
 		failed := 0
@@ -30,6 +30,12 @@ func TestFieldIdleLightReference(t *testing.T) {
 			if err != nil {
 				failed++
 				t.Errorf("%s probe%d: %v", phase, i, err)
+				// The timed-out reply can still arrive. A new request on the
+				// same byte stream would consume that old reply and misreport
+				// every subsequent probe as corruption. Keep the deadline miss
+				// as a failure, then use a fresh stream for the next measurement.
+				p.Close()
+				p = rev4Open(t, f)
 			}
 		}
 		ordered := append([]float64(nil), samples...)
