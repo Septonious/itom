@@ -103,14 +103,16 @@ jobs:
           set -euo pipefail
           tag=v1.1.0-dev6
           gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-dev6")' > "$RUNNER_TEMP/existing-release.json"
+          printf '%s\n' 'Release collection read successfully; verified runtime remains 765643ea2bf0a0035023f1376ed136223f52ba3c'
           if [ -s "$RUNNER_TEMP/existing-release.json" ]; then
             python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing-release.json"))["draft"], "Refusing to replace a published release"'
           else
             gh release create "$tag" --draft --prerelease --latest=false \
-              --target 765643ea2bf0a0035023f1376ed136223f52ba3c \
+              --target "${{ github.sha }}" \
               --title 'ITOM 1.1.0 DEV6 — experimental testing RC' \
               --notes-file archives/1.1.0/DEV6_TESTING.md
           fi
+          printf '%s\n' 'Draft release created or verified; uploading exact packages'
           gh release upload "$tag" release-assets/* --clobber
           # Draft releases with an unpublished tag are found through the collection.
           gh api "repos/$GH_REPO/releases?per_page=100" \

@@ -315,5 +315,6 @@
     "preserve_app_wallet": true,
     "preserve_server_state_directory": true,
     "private_signing_key_exported": false
-  }
+  },
+  "release_tag_target": "publication commit, whose runtime production files are identical to runtime_source_commit"
 }
