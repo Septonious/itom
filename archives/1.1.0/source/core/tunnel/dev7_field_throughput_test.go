@@ -42,6 +42,10 @@ func dev7RetainedFieldState(t *testing.T) func(string, string, servercfg.Config,
 				t.Fatal(err)
 			}
 			debt := dev7HistoricalDebt[i%len(dev7HistoricalDebt)]
+			if os.Getenv("ITOM_LOAD_DEV9_FIELD_DEBT") == "1" {
+				latest := []pool.Amount{{Bytes: 10474874, Messages: 173}, {Bytes: 10976200, Messages: 154}, {Bytes: 10450688, Messages: 152}, {Bytes: 10240547, Messages: 166}, {Bytes: 9672610, Messages: 172}, {Bytes: 10377791, Messages: 173}, {Bytes: 10383225, Messages: 170}, {Bytes: 11329548, Messages: 166}, {Bytes: 8921158, Messages: 151}, {Bytes: 9029531, Messages: 140}, {Bytes: 10008192, Messages: 162}, {Bytes: 9521350, Messages: 151}, {Bytes: 10780973, Messages: 172}, {Bytes: 8565977, Messages: 149}, {Bytes: 9844240, Messages: 164}}
+				debt = latest[i%len(latest)]
+			}
 			grants := 1
 			if os.Getenv("ITOM_LOAD_MANY_RETAINED_GRANTS") == "1" {
 				// DEV7 field diagnostics show dozens of missing-wallet grants on

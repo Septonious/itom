@@ -36,13 +36,14 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	}
 	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
 	fastBytes := recoveredFastReserveBytes(profile, usage)
-	reserveBytes := fastBytes + dataBatchMIMEHardCap
+	bulkBody := recoveredBulkBodyBytes(profile, usage)
+	reserveBytes := fastBytes + bulkBody
 	fastActive, bulkActive := l.issuedGrantCounts()
-	neededBytes := uint64(dataBatchMIMEHardCap)
+	neededBytes := bulkBody
 	neededBulkBytes, neededBulkMessages := uint64(0), uint64(0)
 	if fast {
 		if bulkActive == 0 && !l.everReady.Load() {
-			neededBulkBytes, neededBulkMessages = dataBatchMIMEHardCap, 1
+			neededBulkBytes, neededBulkMessages = bulkBody, 1
 		}
 		// A usable bulk lease already occupies its share of held/remoteFree.
 		// Reserve additional bulk headroom only during initial bootstrap.
@@ -84,21 +85,21 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	remaining := uint64(max(1, remoteBulkLeases-bulkActive))
 	availableBytes := min(profile.Bytes-held.Bytes-reserveBytes, remoteFree.Bytes)
 	availableMessages := min(profile.Messages-held.Messages-reserveMessages, remoteFree.Messages)
-	remaining = min(remaining, availableMessages, availableBytes/dataBatchMIMEHardCap)
+	remaining = min(remaining, availableMessages, availableBytes/bulkBody)
 	if remaining == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}
 	byteLimit := min(uint64(dataLeaseBytes), availableBytes/remaining)
 	// Whole maximum-BODY units avoid trapping nearly a full copy of unused
 	// permission in each small recovery lease. The next lease can use it.
-	byteLimit -= byteLimit % dataBatchMIMEHardCap
+	byteLimit -= byteLimit % bulkBody
 	limit := pool.Amount{Bytes: byteLimit, Messages: min(uint64(dataLeaseMessages), availableMessages/remaining)}
 	// WRITE_GRANT's historical fast marker is exactly 512 KiB / 32 slots.
 	// A reduced bulk lease must never alias it and fill the peer's fast queue.
 	if limit.Bytes == fastLeaseBytes && limit.Messages == fastLeaseMessages {
 		limit.Messages--
 	}
-	if limit.Bytes < dataBatchMIMEHardCap || limit.Messages == 0 {
+	if limit.Bytes < bulkBody || limit.Messages == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}
 	return limit, nil

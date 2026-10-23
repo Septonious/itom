@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand/v2"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -651,16 +652,19 @@ func (r *accountRuntime) Close() {
 // WINDOW, RECEIPT or liveness traffic. A second DATA writer is best-effort;
 // providers with a lower connection limit safely fall back to one writer.
 type laneMail struct {
-	baseWork      accountWorkBudget // one fair command turn on the shared control socket
-	dataCommandMu sync.Mutex
-	dataChecks    map[string]time.Time
-	dataReadLimit uint32 // command mutex; large-BODY evidence only, reset on replacement
-	dataDiscovery map[string]mailbox.TailDiscovery
-	topologyMu    sync.Mutex
-	topology      servercfg.Transport
-	dataReader    *mailbox.Client
-	topologyCaps  uint64
-	writerTarget  int
+	baseWork       accountWorkBudget // one fair command turn on the shared control socket
+	dataWork       accountWorkBudget
+	dataChecks     map[string]time.Time
+	dataReadLimit  uint32 // command mutex; large-BODY evidence only, reset on replacement
+	dataDiscovery  map[string]mailbox.TailDiscovery
+	topologyMu     sync.Mutex
+	topology       servercfg.Transport
+	dataReader     *mailbox.Client
+	dataReaderWake chan struct{}
+	borrowHintMu   sync.Mutex
+	borrowHints    []mailbox.AppendHint
+	topologyCaps   uint64
+	writerTarget   int
 
 	readerStateMu      sync.Mutex
 	readerCommandMu    sync.Mutex
@@ -960,10 +964,13 @@ func (m *laneMail) AppendData(ctx context.Context, f string, raw []byte) error {
 	return m.AppendDataPriority(ctx, f, raw, false)
 }
 func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte, fast bool) error {
-	if fast && m.topologyCaps&capSplitData != 0 && len(raw) <= 64<<10 {
+	if fast && m.topologyCaps&capSplitData != 0 && len(raw) <= 64<<10 && !strings.Contains(f, "-data-") {
 		// This is charged to DATA, including unknown outcomes. Only its physical
 		// service uses the control socket; large payloads cannot enter this slot.
 		return m.appendControlData(ctx, workUrgent, f, raw)
+	}
+	if fast && strings.Contains(f, "-data-") && m.dataReaderWake != nil {
+		return m.appendShortData(ctx, f, raw)
 	}
 	if m.runtime != nil {
 		return m.runtime.AppendClass(ctx, m.runtimeUser, f, raw, fast)
@@ -1221,6 +1228,7 @@ func (m *laneMail) SetReaderHot(until time.Time) {
 	}
 	extendReaderHot(&m.readerHotUntil, until.UnixNano())
 	m.readerHotRequestAt.Store(time.Now().UnixNano())
+	m.wakeDataReader()
 }
 
 // ReaderWakeToFetchDelay consumes a best-effort diagnostic timestamp. It never
@@ -1882,6 +1890,13 @@ func connectionLimitFallback(err error) bool {
 // balance changes here, and wrong/stale hints cannot authorize a deletion.
 func (m *laneMail) FetchCleanupCandidates(ctx context.Context, folder string, wanted map[[32]byte]bool) ([]mailbox.Message, error) {
 	hints := m.controlClient().AppendHints(folder, wanted)
+	m.borrowHintMu.Lock()
+	for _, h := range m.borrowHints {
+		if h.Folder == folder && wanted[h.Digest] {
+			hints = append(hints, h)
+		}
+	}
+	m.borrowHintMu.Unlock()
 	if m.runtime != nil {
 		m.runtime.mu.Lock()
 		for _, entry := range m.runtime.appendHints {

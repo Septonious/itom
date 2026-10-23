@@ -90,7 +90,7 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 	var best [2]*lane
 	var candidates []*lane
 	for _, l := range g.lanes {
-		if l == nil || l.dataShards > 0 || !l.streamCarrierReady() || l.ctx.Err() != nil || physicalSlotLimit(l) == 0 {
+		if l == nil || !l.streamCarrierReady() || l.ctx.Err() != nil || physicalSlotLimit(l) == 0 {
 			continue
 		}
 		if available, ok := l.mail.(interface{ DataAvailable() bool }); ok && !available.DataAvailable() {
@@ -101,6 +101,16 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 	if len(candidates) < 5 {
 		g.interactiveReserve = [2]string{}
 		return best
+	}
+	count := 2
+	// A split deployment needs only one protected DATA receiver. Keep its
+	// account order symmetric so the request primes the actual return path.
+	// Mixed layouts retain their original two-reader policy.
+	for _, l := range candidates {
+		if l.dataShards > 0 {
+			count = 1
+			break
+		}
 	}
 	if g.delivery.bulk > 0 {
 		for _, l := range candidates {
@@ -113,7 +123,10 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 		// Do not make a loaded ping turn a current bulk BODY reader into a
 		// supposedly empty reserve. Re-evaluate only after logical bulk drains;
 		// disappearance of a carrier still permits immediate replacement.
-		if best[0] != nil && best[1] != nil {
+		if best[0] != nil && (count == 1 || best[1] != nil) {
+			if count == 1 {
+				best[1] = nil
+			}
 			return best
 		}
 		best = [2]*lane{}
@@ -121,6 +134,9 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 	scores := map[*lane]int64{}
 	for _, l := range candidates {
 		scores[l] = g.carrierLatencyLocked(l)
+		if count == 1 {
+			scores[l] = 0
+		}
 	}
 	sort.Slice(candidates, func(i, j int) bool {
 		if scores[candidates[i]] == scores[candidates[j]] {
@@ -128,7 +144,7 @@ func (g *stripeGroup) interactiveReadersLocked() [2]*lane {
 		}
 		return scores[candidates[i]] < scores[candidates[j]]
 	})
-	for i := range best {
+	for i := 0; i < count; i++ {
 		chosen := candidates[0]
 		for _, l := range candidates {
 			if l.account.ID == g.interactiveReserve[i] && scores[l] <= scores[chosen]+max(int64(100), scores[chosen]/4) {

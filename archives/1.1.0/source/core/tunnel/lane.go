@@ -1740,11 +1740,22 @@ func (l *lane) independentDataMaintenance() bool {
 	io, ok := l.mail.(interface{ DataMaintenanceIsolated() bool })
 	return ok && io.DataMaintenanceIsolated()
 }
+
+// Split DATA can lend its receive socket to a short APPEND. Socket leases
+// serialize actual IMAP commands; exact eligible-body proofs still serialize
+// accounting, so an unrelated cleanup intent is not a reason to block DATA.
+func (l *lane) independentFastMaintenance() bool {
+	if l.independentDataMaintenance() {
+		return true
+	}
+	m := physicalMail(l.mail)
+	return m != nil && m.topologyCaps&capSplitData != 0 && m.dataReaderWake != nil
+}
 func (l *lane) cleanupBlocksFast() bool {
-	return !l.independentDataMaintenance() && (l.gcActive.Load() || l.cleanupWanted.Load())
+	return !l.independentFastMaintenance() && (l.gcActive.Load() || l.cleanupWanted.Load())
 }
 func (l *lane) tryBeginFastPhysical() bool {
-	if l.independentDataMaintenance() {
+	if l.independentFastMaintenance() {
 		return true
 	}
 	for {
@@ -1770,7 +1781,7 @@ func (l *lane) tryBeginFastPhysical() bool {
 	}
 }
 func (l *lane) endFastPhysical() {
-	if !l.independentDataMaintenance() {
+	if !l.independentFastMaintenance() {
 		l.maintenanceIO.Add(-1)
 	}
 }
@@ -2085,7 +2096,7 @@ func (l *lane) writeBatchPhysicalPrepared(owner *lane, jobs []*datapath.Job, res
 	}
 	body, err := wire.PackDataBatch(batch, packets)
 	folder := l.nextDataFolder()
-	if fastBatch && l.dataShards > 0 {
+	if fastBatch && l.dataShards > 0 && !l.protectedDataReader() {
 		folder = l.sendFolder
 	}
 	if err != nil {

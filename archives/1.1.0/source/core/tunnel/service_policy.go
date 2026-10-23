@@ -49,6 +49,16 @@ func (l *lane) serviceBatchTarget() uint64 {
 	} else if l.peerReadBatchTarget != 0 && time.Since(l.peerReadAt) <= 30*time.Second {
 		target = min(target, l.peerReadBatchTarget)
 	}
+	if l.side && l.data != nil && l.cipher != nil {
+		profile, e := l.data.Limit(l.account.ID, l.user.ID)
+		usage, ue := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
+		if e == nil && ue == nil {
+			body := recoveredBulkBodyBytes(profile, usage)
+			if body < dataBatchMIMEHardCap {
+				target = min(target, max(uint64(32<<10), body*3/4-(48<<10)))
+			}
+		}
+	}
 	return target
 }
 

@@ -274,7 +274,7 @@ func interactiveCarrierScore(l *lane, quiet [2]*lane) int {
 	if l.controlWriting.Load() > 0 {
 		n += 256
 	}
-	if (l == quiet[0] || l == quiet[1]) && l.unreceivedLocalRecords.Load() == 0 && l.unreceivedLocalBytes.Load() == 0 && l.controlDebt.Load() < 80 && !l.cleanupBlocksFast() && (l.independentDataMaintenance() || l.controlWriting.Load() == 0) && len(l.physicalSlots) < physicalSlotLimit(l) {
+	if (l == quiet[0] || l == quiet[1]) && l.unreceivedLocalRecords.Load() == 0 && l.unreceivedLocalBytes.Load() == 0 && l.controlDebt.Load() < 80 && !l.cleanupBlocksFast() && (l.independentFastMaintenance() || l.controlWriting.Load() == 0) && len(l.physicalSlots) < physicalSlotLimit(l) {
 		n -= 512
 	}
 	return n

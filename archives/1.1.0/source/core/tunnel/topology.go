@@ -92,6 +92,7 @@ func (m *laneMail) stageTopology(ctx context.Context) (uint64, error) {
 	}
 	m.topologyMu.Lock()
 	m.dataReader = reader
+	m.dataReaderWake = make(chan struct{}, 1)
 	m.topologyMu.Unlock()
 	caps |= capSplitData
 	// One selected DATA reader serves one active mailbox. Advertising extra
@@ -185,8 +186,11 @@ func (m *laneMail) dataReaderRef() *mailbox.Client {
 	return m.dataReader
 }
 func (m *laneMail) pageData(ctx context.Context, folder string, cursor mailbox.Cursor, emit func(mailbox.Message) error) (mailbox.Cursor, error) {
-	m.dataCommandMu.Lock()
-	defer m.dataCommandMu.Unlock()
+	release, admissionErr := m.dataSocket(ctx, workReceive)
+	if admissionErr != nil {
+		return cursor, admissionErr
+	}
+	defer release()
 	reader := m.dataReaderRef()
 	if reader == nil || !reader.Ready() {
 		if reader != nil {
@@ -280,7 +284,7 @@ func (m *laneMail) pageData(ctx context.Context, folder string, cursor mailbox.C
 
 // Retain one failed generation so the first DATA receive EOF/no-progress
 // cause remains visible after recovery, just like control and mixed receive.
-// Caller owns dataCommandMu; no cursor or physical quota proof is created.
+// Caller owns dataWork; no cursor or physical quota proof is created.
 func (m *laneMail) retireDataReader(reader *mailbox.Client, folder string) {
 	m.retainDataDiscovery(reader, folder)
 	_ = reader.Close()
@@ -295,7 +299,7 @@ func (m *laneMail) retireDataReader(reader *mailbox.Client, folder string) {
 
 // Discovery is bounded by the existing per-folder UID-gap limit and owned
 // shard count. A reconnect preserves original expiry; it creates no proof.
-// Caller holds dataCommandMu.
+// Caller holds dataWork.
 func (m *laneMail) retainDataDiscovery(reader *mailbox.Client, folder string) {
 	if m.dataDiscovery == nil {
 		m.dataDiscovery = map[string]mailbox.TailDiscovery{}
@@ -309,8 +313,11 @@ func (m *laneMail) retainDataDiscovery(reader *mailbox.Client, folder string) {
 // IDLE on the selected DATA folder avoids a per-account empty-FETCH storm.
 // The bounded audit still revisits visibility gaps and other configured shards.
 func (m *laneMail) waitData(ctx context.Context, folder string, budget time.Duration) (used, notified bool, err error) {
-	m.dataCommandMu.Lock()
-	defer m.dataCommandMu.Unlock()
+	release, admissionErr := m.dataSocket(ctx, workReceive)
+	if admissionErr != nil {
+		return false, false, admissionErr
+	}
+	defer release()
 	reader := m.dataReaderRef()
 	if reader == nil || !reader.Ready() || !reader.IdleCapable() {
 		return false, false, nil
@@ -319,7 +326,7 @@ func (m *laneMail) waitData(ctx context.Context, folder string, budget time.Dura
 	err = m.command(ctx, workDataReceive, func() error {
 		return guardReceive(ctx, reader, budget+m.receiveProgressBudget(), func(context.Context) error {
 			var e error
-			notified, _, e = reader.IdleWaitWakeAhead(ctx, folder, budget, nil)
+			notified, _, e = reader.IdleWaitWakeAhead(ctx, folder, budget, m.dataReaderWake)
 			return e
 		})
 	})

@@ -18,9 +18,9 @@ func TestDEV6FastReserveFitsCollectorAndPreservesFreshProfile(t *testing.T) {
 	if reserve := recoveredFastReserveBytes(dataProfile12, journal.OriginUsage{}); reserve != localFastReserveBytes {
 		t.Fatal("fresh account policy changed", reserve)
 	}
-	// Insufficient space for both maximum bulk BODYs and both fast cushions
-	// must not fabricate a smaller legal bulk size or readiness.
-	u := journal.OriginUsage{HistoricalRemote: pool.Amount{Bytes: dataProfile12.Bytes - 2*(dataBatchMIMEHardCap+160<<10) + 1, Messages: 165}}
+	// Space below the minimum complete duplex body + FAST cushion still
+	// fails closed; maximum BODY size is a ceiling, not a minimum transfer.
+	u := journal.OriginUsage{HistoricalRemote: pool.Amount{Bytes: dataProfile12.Bytes - 2*((128<<10)+(160<<10)) + 1, Messages: 165}}
 	if reserve := recoveredFastReserveBytes(dataProfile12, u); reserve != localFastReserveBytes {
 		t.Fatal("unsafe partial duplex floor admitted", reserve)
 	}

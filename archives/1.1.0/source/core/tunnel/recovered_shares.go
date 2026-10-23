@@ -51,6 +51,9 @@ func recoveredFastReserveBytes(profile pool.Amount, u journal.OriginUsage) uint6
 	room := min(local.Bytes-u.HistoricalLocal.Bytes, remote.Bytes-u.HistoricalRemote.Bytes)
 	const minimum = 160 << 10
 	if room < dataBatchMIMEHardCap+minimum {
+		if room >= (128<<10)+minimum {
+			return minimum
+		}
 		return localFastReserveBytes
 	}
 	// When the remaining capacity can hold two bulk copies in each direction,
@@ -62,4 +65,20 @@ func recoveredFastReserveBytes(profile pool.Amount, u journal.OriginUsage) uint6
 		return min(uint64(localFastReserveBytes), room-2*dataBatchMIMEHardCap)
 	}
 	return min(uint64(localFastReserveBytes), room-dataBatchMIMEHardCap)
+}
+
+// When charged history no longer leaves a maximum BODY in each direction,
+// retain complete fast batches and shrink the advisory bulk publication unit.
+// No historical charge, journal ceiling or authenticated permission is changed.
+func recoveredBulkBodyBytes(profile pool.Amount, u journal.OriginUsage) uint64 {
+	local, remote, err := recoveredDirectionalShares(profile, u)
+	if err != nil || local.Bytes < u.HistoricalLocal.Bytes || remote.Bytes < u.HistoricalRemote.Bytes {
+		return dataBatchMIMEHardCap
+	}
+	room := min(local.Bytes-u.HistoricalLocal.Bytes, remote.Bytes-u.HistoricalRemote.Bytes)
+	const fast = 160 << 10
+	if room >= fast+dataBatchMIMEHardCap || room < fast+(128<<10) {
+		return dataBatchMIMEHardCap
+	}
+	return (room - fast) / (32 << 10) * (32 << 10)
 }
