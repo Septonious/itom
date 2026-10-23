@@ -1,0 +1,812 @@
+{
+  "runtime_source_commit": "d4cc33c4db2277be8b93e48a7e3b715032a38b00",
+  "run_id": 39946916484,
+  "classification": "LABORATORY; real provider/device not qualified",
+  "scenario": {
+    "accounts": 15,
+    "historical_debt": "all fifteen captured capacity shapes, one old reservation per account; no debt forgiven",
+    "client_rtt_ms": 40,
+    "server_rtt_ms": 20,
+    "client_mbps": 500,
+    "server_mbps": 1000,
+    "client_sockets_per_account": 2,
+    "server_sockets_per_account": 3,
+    "warmup_seconds": 0,
+    "phases": "three download/upload pairs, 12 seconds per phase",
+    "strict_floor_mbps": 100,
+    "half_second_stalls_after_first_two_seconds_allowed": 0
+  },
+  "thresholds_relaxed": false,
+  "cases": {
+    "dev7-field-capacity-streams1": {
+      "dev6": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 0,
+        "means_mbps": {
+          "download": 91.90331733333333,
+          "upload": 69.439033
+        },
+        "empty_half_seconds": 14,
+        "phases": [
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "89.653248",
+            "first2_mbps": "45.613056",
+            "last2_mbps": "98.828288",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "72.657579",
+            "first2_mbps": "62.521344",
+            "last2_mbps": "86.507520",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "88.560981",
+            "first2_mbps": "70.254592",
+            "last2_mbps": "107.479040",
+            "empty_half_seconds": "3",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "69.752149",
+            "first2_mbps": "50.724864",
+            "last2_mbps": "72.876032",
+            "empty_half_seconds": "4",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "97.495723",
+            "first2_mbps": "58.982400",
+            "last2_mbps": "100.925440",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "65.907371",
+            "first2_mbps": "46.268416",
+            "last2_mbps": "60.555264",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "FAIL",
+            "run1-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run1-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "2102827f8b26b34647c97e45c18299bbbcfe1ac59104579ac376f69411f5a2c0",
+        "failures": [
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 false 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 89.653248",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 72.65757866666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 3",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 false 88.56098133333333",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 4",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 69.75214933333334",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 97.49572266666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 65.90737066666667"
+        ]
+      },
+      "model": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 2,
+        "means_mbps": {
+          "download": 116.814279,
+          "upload": 104.05660433333334
+        },
+        "empty_half_seconds": 6,
+        "phases": [
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "110.821376",
+            "first2_mbps": "56.885248",
+            "last2_mbps": "98.041856",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "103.393963",
+            "first2_mbps": "53.739520",
+            "last2_mbps": "109.576192",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "121.722197",
+            "first2_mbps": "69.992448",
+            "last2_mbps": "123.994112",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "104.879445",
+            "first2_mbps": "59.768832",
+            "last2_mbps": "116.785152",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "117.899264",
+            "first2_mbps": "64.618496",
+            "last2_mbps": "169.476096",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "103.896405",
+            "first2_mbps": "78.381056",
+            "last2_mbps": "122.552320",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "PASS",
+            "run1-uploadfalse"
+          ],
+          [
+            "PASS",
+            "run1-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "77ab5ee7523cec7900cdff24acbe13e0537c00197807f5f131aee3b325ff03e5",
+        "failures": [
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 2",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 2"
+        ]
+      },
+      "rc2": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 0,
+        "means_mbps": {
+          "download": 73.58236433333333,
+          "upload": 24.415801
+        },
+        "empty_half_seconds": 15,
+        "phases": [
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "70.363819",
+            "first2_mbps": "32.768000",
+            "last2_mbps": "54.788096",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "23.898795",
+            "first2_mbps": "36.569088",
+            "last2_mbps": "24.117248",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "77.157717",
+            "first2_mbps": "57.671680",
+            "last2_mbps": "85.065728",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "24.051712",
+            "first2_mbps": "27.656192",
+            "last2_mbps": "30.670848",
+            "empty_half_seconds": "7",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "73.225557",
+            "first2_mbps": "52.690944",
+            "last2_mbps": "56.229888",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "25.296896",
+            "first2_mbps": "33.030144",
+            "last2_mbps": "22.937600",
+            "empty_half_seconds": "5",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "FAIL",
+            "run1-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run1-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "763442a93cd5ffd8f5328b9a87885f52a4828a78b0748182136e43df05207f2f",
+        "failures": [
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 false 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 70.36381866666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 23.898794666666667",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 false 77.15771733333332",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 7",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 24.051712",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 73.22555733333333",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 5",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 25.296896"
+        ]
+      }
+    },
+    "dev7-field-capacity-streams4": {
+      "dev6": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 0,
+        "means_mbps": {
+          "download": 92.704313,
+          "upload": 68.73270066666667
+        },
+        "empty_half_seconds": 14,
+        "phases": [
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "90.767360",
+            "first2_mbps": "48.758784",
+            "last2_mbps": "111.017984",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "70.429355",
+            "first2_mbps": "51.249152",
+            "last2_mbps": "70.647808",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "91.750400",
+            "first2_mbps": "57.933824",
+            "last2_mbps": "86.507520",
+            "empty_half_seconds": "3",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "67.545771",
+            "first2_mbps": "40.108032",
+            "last2_mbps": "86.245376",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "95.595179",
+            "first2_mbps": "71.958528",
+            "last2_mbps": "128.188416",
+            "empty_half_seconds": "3",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev6",
+            "streams": "4",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "68.222976",
+            "first2_mbps": "40.370176",
+            "last2_mbps": "69.206016",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "FAIL",
+            "run1-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run1-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "5c61883c2c5c8bdbd476b96755c3eaf38c093124e555d1a4efd4d1a1c61c3d52",
+        "failures": [
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 false 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 90.76736",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 70.42935466666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 3",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 false 91.7504",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 67.54577066666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 3",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 95.59517866666667",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 2",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 68.222976"
+        ]
+      },
+      "model": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 2,
+        "means_mbps": {
+          "download": 119.115321,
+          "upload": 91.30621133333334
+        },
+        "empty_half_seconds": 4,
+        "phases": [
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "115.321515",
+            "first2_mbps": "69.337088",
+            "last2_mbps": "115.343360",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "88.298837",
+            "first2_mbps": "62.783488",
+            "last2_mbps": "90.832896",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "122.224640",
+            "first2_mbps": "90.963968",
+            "last2_mbps": "134.086656",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "92.536832",
+            "first2_mbps": "71.696384",
+            "last2_mbps": "93.716480",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "119.799808",
+            "first2_mbps": "90.832896",
+            "last2_mbps": "119.668736",
+            "empty_half_seconds": "2",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "4",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "93.082965",
+            "first2_mbps": "77.070336",
+            "last2_mbps": "103.809024",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "PASS",
+            "run1-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run1-uploadtrue"
+          ],
+          [
+            "PASS",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "ea7bc859fe2018708ac826e674add47bde91b3a78235183cefd2113dd73da258",
+        "failures": [
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 88.29883733333332",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 92.536832",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 2",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 93.08296533333333"
+        ]
+      },
+      "rc2": {
+        "completed_phases": 6,
+        "planned_phases": 6,
+        "passed_phases": 0,
+        "means_mbps": {
+          "download": 75.57028966666667,
+          "upload": 21.648725333333335
+        },
+        "empty_half_seconds": 16,
+        "phases": [
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "73.007104",
+            "first2_mbps": "42.598400",
+            "last2_mbps": "87.949312",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "24.270165",
+            "first2_mbps": "25.559040",
+            "last2_mbps": "32.112640",
+            "empty_half_seconds": "7",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "75.431936",
+            "first2_mbps": "57.278464",
+            "last2_mbps": "69.730304",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "20.643840",
+            "first2_mbps": "25.034752",
+            "last2_mbps": "8.912896",
+            "empty_half_seconds": "4",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "78.271829",
+            "first2_mbps": "60.424192",
+            "last2_mbps": "70.647808",
+            "empty_half_seconds": "1",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "4",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "20.032171",
+            "first2_mbps": "26.869760",
+            "last2_mbps": "9.961472",
+            "empty_half_seconds": "3",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ],
+        "subtests": [
+          [
+            "FAIL",
+            "run1-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run1-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run2-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run2-uploadtrue"
+          ],
+          [
+            "FAIL",
+            "run3-uploadfalse"
+          ],
+          [
+            "FAIL",
+            "run3-uploadtrue"
+          ]
+        ],
+        "log_sha256": "0c1ed9fceabc267c849c163530d2597a5e79c22d788c9aac12f86b38037457b3",
+        "failures": [
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 73.007104",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 7",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 24.27016533333333",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 false 75.431936",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 4",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 20.64384",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 78.27182933333333",
+          "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 3",
+          "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 20.03217066666667"
+        ]
+      }
+    }
+  },
+  "totals": {
+    "rc2": {
+      "passed": 0,
+      "completed": 12,
+      "planned": 12
+    },
+    "dev6": {
+      "passed": 0,
+      "completed": 12,
+      "planned": 12
+    },
+    "model": {
+      "passed": 4,
+      "completed": 12,
+      "planned": 12
+    }
+  }
+}

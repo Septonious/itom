@@ -1,0 +1,143 @@
+name: Publish exact signed DEV7 testing packages
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev7-publish.yml"]
+permissions: {contents: write, actions: read}
+concurrency:
+  group: publish-itom-v110-dev7
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev7-model-android
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/original-apk
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev7-model-linux
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev7-public-signing-tools
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/tools
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev7-throughput-*
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/duplex
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev7-short-*
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/short
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev7-field-capacity-*
+          run-id: 39946916484
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/field-capacity
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev7-final-race-safety-report
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/race-safety
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev7-byte-headroom-comparison
+          run-id: 39946916440
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/byte-headroom
+      - name: Restore exact signed APK and verify all package identities
+        env:
+          PACKAGE_ROOT: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          git fetch origin d4cc33c4db2277be8b93e48a7e3b715032a38b00 --no-tags
+          git diff --exit-code d4cc33c4db2277be8b93e48a7e3b715032a38b00 HEAD -- archives/1.1.0/source/core archives/1.1.0/source/native archives/1.1.0/source/android
+          mkdir release-assets
+          python3 archives/1.1.0/publication/restore_dev7_signed_apk.py \
+            "$PACKAGE_ROOT/original-apk/ITOM-1.1.0-DEV7-debug.apk" \
+            release-assets/ITOM-1.1.0-DEV7.apk
+          cp "$PACKAGE_ROOT"/linux/ITOM-1.1.0-DEV7-linux-*.bin release-assets/
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          metadata=json.loads(Path('archives/1.1.0/DEV7_BUILD.json').read_text())
+          assert metadata['runtime_source_commit']=='d4cc33c4db2277be8b93e48a7e3b715032a38b00'
+          assert metadata['build_run_id']==39946916440
+          assert metadata['fully_qualified'] is False
+          assert metadata['qualification']['minimum_17_of_20_met']
+          assert metadata['qualification']['short_totals']['model']['passed']==48
+          assert metadata['race_report']['no_data_race_detected']
+          assert metadata['core']['conclusion']=='success'
+          expected={'ITOM-1.1.0-DEV7.apk':metadata['persistent_signed_apk']['persistent_signed_sha256']}
+          for line in metadata['linux']['sha256sums'].splitlines():
+              digest,name=line.split();expected[name]=digest
+          for name,digest in expected.items():
+              assert hashlib.sha256((Path('release-assets')/name).read_bytes()).hexdigest()==digest,name
+          Path('release-assets/SHA256SUMS').write_text(''.join(f'{digest}  {name}\n' for name,digest in sorted(expected.items())))
+          PY
+          java -jar "$PACKAGE_ROOT/tools/apksigner.jar" verify --verbose --print-certs release-assets/ITOM-1.1.0-DEV7.apk > release-assets/SIGNER.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          report=Path('release-assets/SIGNER.txt').read_text()
+          assert 'Signer #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6' in report
+          assert 'Verified using v3 scheme (APK Signature Scheme v3): true' in report
+          PY
+          cp archives/1.1.0/DEV7_BUILD.json archives/1.1.0/DEV7_TESTING.md release-assets/
+          cp archives/1.1.0/experiments/dev7-field-capacity/{RESULTS.md,RESULTS.json,FIELD_COMPARISON.json,KNOWN_FAILURES.json} release-assets/
+          (cd "$PACKAGE_ROOT/lab-results" && zip -q -r "$GITHUB_WORKSPACE/release-assets/ITOM-DEV7-lab-results.zip" .)
+          python3 - <<'PY_SUMS'
+          from pathlib import Path
+          import hashlib
+          root=Path('release-assets')
+          root.joinpath('SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(root.iterdir()) if p.name!='SHA256SUMS'))
+          PY_SUMS
+      - name: Publish prerelease only after verifying uploaded hashes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag=v1.1.0-dev7
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-dev7")' > "$RUNNER_TEMP/existing-release.json"
+          printf '%s\n' 'Release collection read successfully; verified runtime remains d4cc33c4db2277be8b93e48a7e3b715032a38b00'
+          if [ -s "$RUNNER_TEMP/existing-release.json" ]; then
+            python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing-release.json"))["draft"], "Refusing to replace a published release"'
+          else
+            gh release create "$tag" --draft --prerelease --latest=false \
+              --target "${{ github.sha }}" \
+              --title 'ITOM 1.1.0 DEV7 — experimental testing RC' \
+              --notes-file archives/1.1.0/DEV7_TESTING.md
+          fi
+          printf '%s\n' 'Draft release created or verified; uploading exact packages'
+          gh release upload "$tag" release-assets/* --clobber
+          # Draft releases with an unpublished tag are found through the collection.
+          gh api "repos/$GH_REPO/releases?per_page=100" \
+            --jq '.[] | select(.tag_name == "v1.1.0-dev7")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          release=json.loads((Path(os.environ['RUNNER_TEMP'])/'release.json').read_text())
+          assets={a['name']:a for a in release['assets']}
+          for path in Path('release-assets').iterdir():
+              asset=assets[path.name]
+              assert asset['size']==path.stat().st_size,path.name
+              assert asset['digest']=='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest(),path.name
+          print('Every uploaded asset size and SHA-256 verified')
+          PY
+          gh release edit "$tag" --draft=false --prerelease --latest=false

@@ -1,11 +1,11 @@
-# ITOM 1.1.0 DEV6 experimental testing RC
+# ITOM 1.1.0 DEV7 experimental testing RC
 
-Current `source/` fixes historical byte-headroom starvation, independent fast refill and known-dead fallback DATA publication. Reproduced quota-bound startup now reaches 30/30 directions across fifteen real TLS/IMAP test accounts while preserving every historical charge. Stable 1.0.0/RC2 remains unchanged.
+DEV7 reduces shared IMAP command waits and makes two complete bulk bodies usable where retained quota capacity permits, preserving a complete FAST batch and every historical charge. It also fixes an admission diagnostic-snapshot data race. Stable 1.0.0/RC2 remains unchanged.
 
-[Testing notes and downloads](DEV6_TESTING.md) · [Build checks and hashes](DEV6_BUILD.json) · [Field analysis](experiments/dev6-byte-headroom/FIELD_ANALYSIS.md) · [Final matched results](experiments/dev6-byte-headroom/RESULTS.md) · [Retained failures](experiments/dev6-byte-headroom/KNOWN_FAILURES.json).
+[GitHub downloads](https://github.com/Septonious/itom/releases/tag/v1.1.0-dev7) · [Testing notes](DEV7_TESTING.md) · [Build checks and hashes](DEV7_BUILD.json) · [Field analysis](experiments/dev7-field-capacity/FIELD_ANALYSIS.md) · [Matched results](experiments/dev7-field-capacity/RESULTS.md) · [Retained failures](experiments/dev7-field-capacity/KNOWN_FAILURES.json).
 
-Final-source sustained qualification is **19/20 versus RC2 19/20**; short sequences are **48/48 versus RC2 42/48**. Direct DEV5 comparison passes 36/36 phases on each version, with measured mean bandwidth differences from −2.7% to +5.7%. Thirteen source manifests were checked. Simulation rates above 200 Mbps do not predict Rambler field throughput.
+The captured-capacity test averages improve from DEV6's 92.7/68.7 to **119.1/91.3 Mbps MULTI**, and 91.9/69.4 to **116.8/104.1 Mbps SINGLE**. All twelve phases complete, with fewer stalled windows; only **4/12** meet every strict criterion. Original sustained qualification is **17/20 versus RC2 19/20**; original short sequences are **48/48 versus RC2 42/48**. Fifteen source/fixture manifests were verified. Empty/less-indebted journal rates above 200 Mbps cannot predict installed Rambler performance.
 
-Full normal Go/vet and accounting races pass. Of 37 selected tunnel race tests, 36 pass and one retains its failed 1100 ms mixed-load chat deadline. CPU-contended capped-socket stress also has 6/30 failures. Experimental packaging explicitly retains those limitations; this is not an all-checks-passed or fully qualified release. No qualification threshold or test assertion was changed. Real-provider idle RTT improvement is unverified.
+Full normal Go/vet, accounting/mailbox races, new concurrent admission regression, original mixed-load race test in CI, Android unit tests/lint and native builds pass. The original throughput, loaded RTT and stall failures remain intact; local race-instrumented loaded chat also has a deadline miss without a data race. This is not fully qualified or a guarantee of real-provider 100 Mbps or improved idle RTT. No numerical qualification threshold was relaxed.
 
-Update the signed APK in place and preserve app wallets and server journals. Public DEV5 and DEV6 APKs share the persistent signing certificate. Keep the experimental app and server versions paired.
+Update both the signed APK and server in place. Preserve app wallets, server identity and journals. Published DEV5/DEV6/DEV7 APKs use the same persistent signing certificate.

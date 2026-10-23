@@ -1,0 +1,34 @@
+{
+  "runtime_source_commit": "d4cc33c4db2277be8b93e48a7e3b715032a38b00",
+  "fully_qualified": false,
+  "thresholds_relaxed": false,
+  "sustained_failures": {
+    "dev7-throughput-local16-mobile-variable": [
+      "supervised_load_test.go:541: duplex performance/cadence gate 99.5622912 442.098638ms 30 0 0"
+    ],
+    "dev7-throughput-local16-multi": [
+      "supervised_load_test.go:541: duplex performance/cadence gate 149.9987968 811.093307ms 30 0 0",
+      "supervised_load_test.go:541: duplex performance/cadence gate 118.6988032 1.058645438s 30 0 0"
+    ]
+  },
+  "field_capacity_failures": {
+    "dev7-field-capacity-streams1": [
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 2",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 2"
+    ],
+    "dev7-field-capacity-streams4": [
+      "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 88.29883733333332",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+      "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 92.536832",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 2",
+      "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 1",
+      "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 93.08296533333333"
+    ]
+  },
+  "source_before_race_fix": "59002fa10164ec40cff37341ce4b932f559833c4 contained an admission diagnostic snapshot data race and is rejected for publication; fixed in final source",
+  "final_ci_original_mixed_load_race_test": "PASSED; exact-source report dev7-final-race-safety-report, run39946916440",
+  "local_candidate_original_mixed_load_race_test": "No data race after fix, but 1100 ms chat deadline missed under local race instrumentation; observed result retained. This local run preceded final formatting cleanup.",
+  "real_android_provider_speedtest": "NOT RUN; capture startup rotated out; instant field failure root cause not proven"
+}
