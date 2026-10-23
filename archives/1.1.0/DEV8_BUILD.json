@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "release": "ITOM 1.1.0 DEV8",
+  "classification": "EXPERIMENTAL TESTING PACKAGE; NOT FIELD QUALIFIED",
+  "runtime_source_commit": "6ade0182848652152fd8aa9af7a8078dfda27563",
+  "build_run_id": 39988189691,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/39988189691",
+  "field_run_id": 39988189674,
+  "release_tag_target": "publication workflow commit; core/native/Android source unchanged from runtime_source_commit",
+  "core": {
+    "job_id": 120532758403,
+    "conclusion": "success",
+    "normal_tunnel_seconds": 749.572,
+    "core_log_sha256": "f26c0c2de9328fd18d9cfd26c6648e82459617072834dec40cfdcbabdc358e60",
+    "additional_capped_eof_repetitions": 10,
+    "checks": [
+      "go vet ./...",
+      "complete normal Go suite",
+      "10 capped EOF repetitions",
+      "journal/wallet/flow/datapath/mailbox races",
+      "DEV6/DEV7/DEV8 and control recovery races"
+    ]
+  },
+  "race_report": {
+    "source_commit": "6ade0182848652152fd8aa9af7a8078dfda27563",
+    "test": "TestRev5RampAbortAndRestartKeepOriginalChatUsable",
+    "original_test_passed": true,
+    "no_data_race_detected": true,
+    "thresholds_relaxed": false,
+    "classification": "EXPERIMENTAL testing package; original 1100 ms mixed-load chat deadline remains failed when original_test_passed is false; this job is not a passing qualification result"
+  },
+  "authority_production_unchanged_from_dev7": {
+    "journal": 10,
+    "wallet": 2,
+    "pool": 2,
+    "wire": 7,
+    "flow": 2,
+    "datapath": 8
+  },
+  "storage_profiles_and_canonical_data_limits_unchanged": true,
+  "qualification": {
+    "duplex_totals": {
+      "rc2": {
+        "accepted": 16,
+        "observed": 20,
+        "planned": 20
+      },
+      "model": {
+        "accepted": 20,
+        "observed": 20,
+        "planned": 20
+      }
+    },
+    "short_totals": {
+      "rc2": {
+        "passed": 42,
+        "completed": 48,
+        "planned": 48
+      },
+      "dev4": {
+        "passed": 42,
+        "completed": 48,
+        "planned": 48
+      },
+      "model": {
+        "passed": 48,
+        "completed": 48,
+        "planned": 48
+      }
+    },
+    "field_totals": {
+      "rc2": {
+        "passed": 0,
+        "completed": 12,
+        "planned": 12
+      },
+      "dev7": {
+        "passed": 5,
+        "completed": 12,
+        "planned": 12
+      },
+      "model": {
+        "passed": 3,
+        "completed": 12,
+        "planned": 12
+      }
+    },
+    "minimum_17_of_20_met": true,
+    "complete_evidence": true,
+    "all_performance_assertions_passed": false
+  },
+  "all_checks_passed": false,
+  "fully_qualified": false,
+  "field_qualified": false,
+  "real_provider_speedtest": "NOT RUN",
+  "android_device_test": "NOT RUN",
+  "persistent_signed_apk": {
+    "source_ci_sha256": "9194ed647204c0b50052955b3e031bef253571530bb1d7e1865f49b31b44d41b",
+    "persistent_signed_sha256": "d18ab0314f3da47c69ce533d165e6668796d839773ca3844c95d5c5fef9c52c1",
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10108,
+      "version_name": "1.1.0-dev8-debug"
+    },
+    "certificate": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): false\nVerified using v3 scheme (APK Signature Scheme v3): true\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=ITOM Android, O=ITOM, C=FI\nSigner #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6\nSigner #1 certificate SHA-1 digest: 5c2da4052c263942628a59bce1725d9c12030785\nSigner #1 certificate MD5 digest: eedbe686c31c6081069726531684cd3d\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 3072\nSigner #1 public key SHA-256 digest: 87c822607c0ffb426f340a6aed45cf2dd55f0a121e1966e56dafe41f3d0437ff\nSigner #1 public key SHA-1 digest: 136c2c0b81941dc11f995d23a9d89ad4bd884212\nSigner #1 public key MD5 digest: 3f161d14b3897665e07a4f8e168a1384\n",
+    "key_material_exported": false,
+    "private_key_retained_locally": true,
+    "note": "Same persistent signer as DEV5 and DEV6; preserve app wallet data for in-place updates"
+  },
+  "android_build_report": {
+    "itom": "1.1.0",
+    "source_revision": "itom-1-1-0-dev8",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-23T16:52:26Z",
+    "jdk_source": "local JDK 17",
+    "cmdline_tools": {
+      "version": "22.0",
+      "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+      "algorithm": "sha1"
+    },
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "cba9a92dc85852a639351e2b29c3db946db9c0641abad070450a3f969bbb39a5",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "app_unit_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+          "locations": [
+            {
+              "file": "/home/runner/work/_temp/dev8/android/app/build.gradle.kts",
+              "line": "60",
+              "column": "20"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10108,
+      "version_name": "1.1.0-dev8-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "3f744a89e02cbe9b5fd436fbcb7a58b4a95392a1f94345f44969af438c6faa51",
+      "lib/armeabi-v7a/libgojni.so": "542e29100149a10103870500c09da78ae1c422f6cd8bea41a8dd7c402f3d3e80"
+    },
+    "status": "passed",
+    "apk": "ITOM-1.1.0-DEV8-debug.apk",
+    "sha256": "9194ed647204c0b50052955b3e031bef253571530bb1d7e1865f49b31b44d41b",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "linux": {
+    "sha256sums": "83b42334f2c4f15fae0ad0307dc4dd016d3aaf5ba40625d4e6f5ce4d13266502  ITOM-1.1.0-DEV8-linux-amd64.bin\ne0615fd3f403aaff73c595f6798de263f7e798a7dd4936bd59b2842ae4683c65  ITOM-1.1.0-DEV8-linux-arm64.bin\n",
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "static_elf": true,
+    "amd64_version_output": "ITOM itom-1-1-0-dev8 linux amd64"
+  },
+  "limitations": [
+    "Captured-role capacity phases retain 100 Mbps and zero half-second stall requirements: model3/12, DEV7 5/12, RC2 0/12 passed; every phase completed with verified bytes",
+    "Captured-role upload means are1.35% SINGLE and3.81% MULTI below DEV7 in this matched run",
+    "Variable40\u2013180ms mobile light probes and TLS/abort case still have deadline failures; exact logs and failed samples retained",
+    "The complete field startup/failed Speedtest boundaries are outside rotating diagnostics; no claim that every real failure is fixed or100Mbps restored",
+    "Local host scheduling pauses contaminated local timed tests; exact-source GitHub qualifications are the reported comparisons, and local failures are not waived",
+    "Normal full-headroom SINGLE/MULTI mean upload remains about8\u20139% below unchanged RC2 while mean download increases; qualification pass counts do not prove universal throughput improvement"
+  ],
+  "private_key_exported": false,
+  "full_results_sha256": "ae2cd2606d31d23819a13b62a4f189bfd26e110653fa1a0f28a0796e652f7d94"
+}
