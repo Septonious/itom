@@ -1,6 +1,6 @@
 from pathlib import Path
 import hashlib,json,os,shutil,subprocess,sys
-repo=Path(__file__).resolve().parents[4];out=Path(sys.argv[1]);out.mkdir(parents=True,exist_ok=True)
+repo=Path(__file__).resolve().parents[4];out=Path(sys.argv[1])
 subprocess.run(['python3',str(repo/'archives/1.1.0/experiments/field-feedback/prepare.py'),str(out)],check=True)
 (out/'dev8').mkdir()
 archive=subprocess.Popen(['git','archive','6ade0182848652152fd8aa9af7a8078dfda27563','archives/1.1.0/source/core'],cwd=repo,stdout=subprocess.PIPE)
