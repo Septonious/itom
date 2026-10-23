@@ -1,4 +1,4 @@
-name: DEV9 exact source correctness and short service safety
+name: DEV9 dynamic lending full correctness and short service safety
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

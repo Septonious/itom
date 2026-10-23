@@ -36,6 +36,9 @@ func (l *lane) serviceBatchTarget() uint64 {
 	l.serviceMu.Lock()
 	defer l.serviceMu.Unlock()
 	target := uint64(datapath.BulkBatchTargetBytes)
+	if !l.side && l.remoteBodyCap > 0 && l.remoteBodyCap < dataBatchMIMEHardCap {
+		target = min(target, bodyPayloadTarget(l.remoteBodyCap))
+	}
 	if l.serviceSamples >= 4 && l.serviceNS > uint64(400*time.Millisecond) {
 		// A slow literal must not occupy its service for seconds. Base64/envelope
 		// overhead is conservative; complete 32 KiB records remain indivisible.
@@ -49,16 +52,10 @@ func (l *lane) serviceBatchTarget() uint64 {
 	} else if l.peerReadBatchTarget != 0 && time.Since(l.peerReadAt) <= 30*time.Second {
 		target = min(target, l.peerReadBatchTarget)
 	}
-	if l.side && l.data != nil && l.cipher != nil {
-		profile, e := l.data.Limit(l.account.ID, l.user.ID)
-		usage, ue := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
-		if e == nil && ue == nil {
-			body := recoveredBulkBodyBytes(profile, usage)
-			if body < dataBatchMIMEHardCap {
-				target = min(target, max(uint64(32<<10), body*3/4-(48<<10)))
-			}
-		}
+	if l.side && l.localBodyCap > 0 && l.localBodyCap < dataBatchMIMEHardCap {
+		target = min(target, bodyPayloadTarget(l.localBodyCap))
 	}
+
 	return target
 }
 
@@ -208,4 +205,14 @@ func (l *lane) peerReadWindowWait() (bool, time.Duration) {
 		return full, 0
 	}
 	return full, remaining
+}
+
+// Leave room for one indivisible final record, base64, and both envelopes.
+// Saturation avoids unsigned wrap on an authenticated, exceptionally small offer.
+func bodyPayloadTarget(body uint64) uint64 {
+	decoded := body * 3 / 4
+	if decoded <= 80<<10 {
+		return 32 << 10
+	}
+	return decoded - (48 << 10)
 }

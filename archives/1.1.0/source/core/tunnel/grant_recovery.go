@@ -37,6 +37,9 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
 	fastBytes := recoveredFastReserveBytes(profile, usage)
 	bulkBody := recoveredBulkBodyBytes(profile, usage)
+	l.serviceMu.Lock()
+	l.localBodyCap = bulkBody
+	l.serviceMu.Unlock()
 	reserveBytes := fastBytes + bulkBody
 	fastActive, bulkActive := l.issuedGrantCounts()
 	neededBytes := bulkBody

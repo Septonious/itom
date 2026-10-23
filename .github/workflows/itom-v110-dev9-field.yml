@@ -1,4 +1,4 @@
-name: DEV9 protected short DATA and captured quota comparison
+name: DEV9 dynamic socket lending against DEV8 and RC2
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
@@ -48,7 +48,7 @@ jobs:
         run: |
           set -uo pipefail
           failed=0
-          for variant in rc2 dev8 model; do
+          for variant in model dev8 rc2; do
             for scenario in TestDEV9LatestFieldReadiness TestFieldIdleLightReference TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants TestFieldSpeedtestSequence; do
               if ITOM_EXPERIMENT_LABEL="$variant" "$RUNNER_TEMP/dev9-field/$variant.test" -test.run "^$scenario$" -test.v -test.timeout 360s > "evidence/$variant-$scenario.log" 2>&1; then
                 echo "$variant $scenario PASS"

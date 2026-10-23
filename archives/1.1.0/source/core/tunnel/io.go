@@ -913,6 +913,9 @@ func (m *laneMail) Append(ctx context.Context, f string, raw []byte) error {
 	return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
 }
 func (m *laneMail) AppendControl(ctx context.Context, f string, raw []byte) error {
+	if m.topologyCaps&capSplitData != 0 && m.dataReaderWake != nil && len(raw) <= 64<<10 {
+		return m.appendShortData(ctx, f, raw)
+	}
 	return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
 }
 func (m *laneMail) reserveDataWriter() (index int, writer *mailbox.Client, reserved, base bool) {
@@ -1005,6 +1008,9 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 			class := workData
 			if fast {
 				class = workUrgent
+			}
+			if m.topologyCaps&capSplitData != 0 && m.dataReaderWake != nil {
+				return m.appendAvailableData(ctx, class, f, raw)
 			}
 			return m.appendControlData(ctx, class, f, raw)
 		}

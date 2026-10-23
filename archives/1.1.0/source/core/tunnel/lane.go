@@ -145,6 +145,8 @@ type lane struct {
 	ownerStarted                                        bool
 	ownerWorkers                                        sync.WaitGroup
 	serviceMu                                           sync.Mutex
+	remoteBodyCap                                       uint64 // serviceMu; accepted grant advice, never spending authority
+	localBodyCap                                        uint64 // serviceMu; advisory sizing of new outgoing batches
 	serviceNS, serviceBytes, serviceSamples             uint64
 	fastServiceNS, fastServiceBytes, fastServiceSamples uint64
 	peerReadBatchTarget                                 uint64
@@ -2990,6 +2992,11 @@ func (l *lane) acceptRemoteGrant(m wire.StorageGrant, fastClass bool) error {
 	}
 	if !accepted {
 		return nil
+	}
+	if !fastClass {
+		l.serviceMu.Lock()
+		l.remoteBodyCap = min(uint64(dataBatchMIMEHardCap), m.Limit.Bytes)
+		l.serviceMu.Unlock()
 	}
 	if !l.queued[m.Key] {
 

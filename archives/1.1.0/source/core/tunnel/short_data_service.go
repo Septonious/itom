@@ -45,6 +45,19 @@ type shortSocketLease struct {
 // invoking APPEND once. Unused permits are always released; cancellation of
 // admission never owns the actual wire operation's context.
 func (m *laneMail) shortSocket(ctx context.Context) (shortSocketLease, error) {
+	return m.availableSocket(ctx, workUrgent)
+}
+
+func (m *laneMail) availableSocket(ctx context.Context, class accountWorkClass) (shortSocketLease, error) {
+	if err := ctx.Err(); err != nil {
+		return shortSocketLease{}, err
+	}
+	m.baseWork.mu.Lock()
+	m.baseWork.capacity = 1
+	m.baseWork.mu.Unlock()
+	if release, ok := m.baseWork.tryAcquire(class); ok {
+		return shortSocketLease{release: release}, nil
+	}
 	admission, cancel := context.WithCancel(ctx)
 	defer cancel()
 	m.wakeDataReader()
@@ -53,11 +66,11 @@ func (m *laneMail) shortSocket(ctx context.Context) (shortSocketLease, error) {
 		m.baseWork.mu.Lock()
 		m.baseWork.capacity = 1
 		m.baseWork.mu.Unlock()
-		release, err := m.baseWork.acquire(admission, workUrgent)
+		release, err := m.baseWork.acquire(admission, class)
 		results <- shortSocketLease{release: release, err: err}
 	}()
 	go func() {
-		release, err := m.dataSocket(admission, workUrgent)
+		release, err := m.dataSocket(admission, class)
 		results <- shortSocketLease{data: true, release: release, err: err}
 	}()
 	first := <-results
@@ -81,8 +94,15 @@ func (m *laneMail) shortSocket(ctx context.Context) (shortSocketLease, error) {
 	return winner, nil
 }
 func (m *laneMail) appendShortData(ctx context.Context, folder string, raw []byte) error {
-	return m.command(ctx, workUrgent, func() error {
-		lease, err := m.shortSocket(ctx)
+	return m.appendAvailableData(ctx, workUrgent, folder, raw)
+}
+
+// The capped phone can lend a quiet receiver to bulk as well. This uses the
+// normal DATA class and existing physical slots; actual receive BODYs cannot be
+// interrupted. It adds no connection, write permit, or uncertain-publication retry.
+func (m *laneMail) appendAvailableData(ctx context.Context, class accountWorkClass, folder string, raw []byte) error {
+	return m.command(ctx, class, func() error {
+		lease, err := m.availableSocket(ctx, class)
 		if err != nil {
 			return err
 		}
@@ -101,7 +121,7 @@ func (m *laneMail) appendShortData(ctx context.Context, folder string, raw []byt
 					return err
 				}
 			}
-			return m.sharedSocketCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, folder, raw) })
+			return m.sharedSocketCommand(ctx, class, func() error { return m.controlClient().Append(ctx, folder, raw) })
 		}
 		err = writer.Append(ctx, folder, raw)
 		if err == nil && lease.data {
@@ -118,7 +138,7 @@ func (m *laneMail) appendShortData(ctx context.Context, folder string, raw []byt
 			clear(body)
 		}
 		if err != nil && lease.data {
-			m.retireDataReader(writer, m.recv)
+			m.retireDataReader(writer, m.recv+"-data-00")
 		}
 		lease.release()
 		return err // UNKNOWN is never resent here

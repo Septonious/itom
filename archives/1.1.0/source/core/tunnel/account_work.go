@@ -191,3 +191,47 @@ func (m *laneMail) maintenanceCommand(ctx context.Context, fn func() error) erro
 	}
 	return m.command(ctx, workMaintenance, fn)
 }
+
+// Prefer a genuinely free control socket before lending the DATA reader. A
+// queued class keeps its fair turn; this fast path cannot overtake any waiter.
+func (b *accountWorkBudget) tryAcquire(class accountWorkClass) (func(), bool) {
+	if class >= workClassCount {
+		return nil, false
+	}
+	b.mu.Lock()
+	total := 0
+	for i, n := range b.busy {
+		total += n
+		if len(b.queues[i]) > 0 {
+			b.mu.Unlock()
+			return nil, false
+		}
+	}
+	limit := b.capacity
+	if limit <= 0 {
+		limit = 7
+	}
+	if total >= limit || b.busy[class] >= accountWorkLimits[class] {
+		b.mu.Unlock()
+		return nil, false
+	}
+	b.busy[class]++
+	b.mu.Unlock()
+	started := time.Now()
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			b.mu.Lock()
+			b.busy[class]--
+			elapsed := time.Since(started)
+			if b.service[class] == 0 {
+				b.service[class] = elapsed
+			} else {
+				b.service[class] = (7*b.service[class] + elapsed) / 8
+			}
+			b.completed[class]++
+			b.dispatch(class)
+			b.mu.Unlock()
+		})
+	}, true
+}
