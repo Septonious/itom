@@ -1,0 +1,25 @@
+# DEV5 field feedback and DEV6 development
+
+The uploaded client snapshot is DEV5 and reports **24/30 active directions**. All fifteen accounts have two IMAP connections; accounts a02, a08 and a13 remain at `grants`, have zero available bulk grants, and have never reached initial application readiness. Their reconnect counters and last IMAP errors are zero. The retained client trace spans 21:17:02–21:19:26 UTC on 22 October; the server trace spans 21:16:48–21:19:43. Startup is already outside the rolling trace, so it cannot establish cold-start login timing.
+
+The client readiness measurements for the other twelve accounts are 2.7–8.5 seconds. Server InitialReadyMS also includes waiting for the client attachment; its roughly 389-second values are not comparable to client login latency.
+
+The last server health samples show these blocked accounts:
+
+| Account | Charged bytes | Charged ordinals / 192 | Current issued grants | Wait reason |
+| --- | ---: | ---: | ---: | --- |
+| a02 | 11,500,488 | 157 | 1 | DATA_BYTE_HEADROOM |
+| a08 | 11,193,823 | 165 | 0 | DATA_BYTE_HEADROOM |
+| a13 | 11,305,261 | 174 | 1 | DATA_BYTE_HEADROOM |
+
+The journal profile stays 12,582,912 bytes / 192 messages. Every retained IMAP completion has code OK. The client receives 576 historical grant reconciliation requests and reports missing wallet history 576 times. This is evidence of unavailable historical wallet entries, not proof that those grants were unused. No reservation may be forgiven or erased to reach readiness.
+
+The fixed 512 KiB fast lease and fixed 512 KiB outbound fast cushion can strand capacity that would otherwise fit maximum-sized bulk BODYs and bounded fast batches in both directions. DEV6 reduces only those fast byte cushions on historical byte-bound accounts. It derives the size from durable directional headroom, keeps 512 KiB bulk BODY capacity in each direction and at least 160 KiB per fast cushion (enough for the collector's worst overshooting fast batch including MIME/envelope). Debt-free accounts retain DEV5 sizes. Insufficient complete duplex headroom stays blocked. The explicit existing RECOVERY_FAST_WRITE_GRANT class prevents reduced fast permission being mistaken for bulk. No journal, wallet, proof or wire-authority implementation is changed.
+
+The exact field journals are not included in these exports. Regression inputs reproduce sufficient debt shapes: a08 uses its complete observed held amount; a02/a13 subtract one 512 KiB current lease to model pre-offer headroom, conservatively retaining the other observed message slots. We do not claim exact reconstruction of their origin split or historical spend. A fifteen-account TLS/IMAP fixture repeats these severe shapes on every account, uses a fresh client wallet, keeps sparse UID history and constrains account sockets to five across both endpoints. It checks actual short/bulk/short TCP traffic on every account and verifies that old grants remain byte-for-byte unchanged.
+
+The same three new debt regressions fail on exact DEV5 source (3ccdd5a) and pass on DEV6. The first unshaped TLS run reaches 30/30 directions after 4.101 seconds and completes all fifteen account sequences. This is an improvement in reproduced quota-bound startup, not a claim about real Rambler throughput or RTT. A separate 40 ms client / 20 ms server run also passes. Further checks and their results accompany the build; original throughput qualification thresholds remain unchanged.
+
+The screenshots show SINGLE 24.6/26.6 and 23.0/14.1 Mbps, MULTI 20.4/18.6 Mbps, idle ping 424–537 ms and loaded ping up to 1105 ms. These are poor field results. Reaching 30/30 by fixing allocation does not establish that the RTT/speed regression is solved. Continued missing history constrains real available capacity even after this fix. Update in place with the persistent signing identity and preserve server journals and app wallet data.
+
+Diagnostics now include historical charged bytes/messages, actual free headroom, chosen fast reserve and a cumulative missing-wallet audit counter. Server health readiness reflects the live lane flag instead of a default false field. No private captures, credentials or key material are published.

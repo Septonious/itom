@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage the tracked DEV5 source without modifying experiment checkpoints."""
+"""Stage the tracked active development source without modifying experiment checkpoints."""
 from pathlib import Path
 import argparse,shutil
 ROOT=Path(__file__).resolve().parents[4]

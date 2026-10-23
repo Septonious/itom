@@ -35,7 +35,8 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		return pool.Amount{}, journal.ErrLimit
 	}
 	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
-	reserveBytes := uint64(localFastReserveBytes + dataBatchMIMEHardCap)
+	fastBytes := recoveredFastReserveBytes(profile, usage)
+	reserveBytes := fastBytes + dataBatchMIMEHardCap
 	if historicalMessages > profile.Messages {
 		return pool.Amount{}, journal.ErrLimit
 	}
@@ -53,13 +54,13 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		// Leave at least one bulk ordinal. When the standard fast grant cannot
 		// fit alongside bulk, share the genuinely free message slots between
 		// the two classes instead of requiring 32 unused slots to connect.
-		if available < 2 || remoteFree.Bytes < fastLeaseBytes {
+		if available < 2 || remoteFree.Bytes < fastBytes+dataBatchMIMEHardCap {
 			return pool.Amount{}, journal.ErrLimit
 		}
 		// Match the normal quota proportions instead of giving the half-MiB
 		// latency lease most of a debt-bound account's remaining ordinals.
 		messages := min(uint64(fastLeaseMessages), max(uint64(1), available/5))
-		return pool.Amount{Bytes: fastLeaseBytes, Messages: messages}, nil
+		return pool.Amount{Bytes: fastBytes, Messages: messages}, nil
 	}
 	fastActive, bulkActive := l.issuedGrantCounts()
 	if fastActive == 0 {
@@ -169,6 +170,9 @@ func (l *lane) reconcileGrantOffer(offer wire.StorageGrant) error {
 	entry, err := l.wallet.ReconcileOffer(offer)
 	if errors.Is(err, wallet.ErrMissing) {
 		if l.diag != nil {
+			l.diag.mu.Lock()
+			l.diag.line.MissingWalletRecoveryOffers++
+			l.diag.mu.Unlock()
 			l.diag.event("event=grant_recovery_deferred code=WALLET_HISTORY_MISSING")
 		}
 		return nil // lost client history is never substituted for a zero-spend proof

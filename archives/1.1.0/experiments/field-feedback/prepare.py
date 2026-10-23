@@ -15,6 +15,6 @@ def main():
  for variant in ('rc2','dev4','model'):
   for name in shared:shutil.copyfile(ROOT/'archives/1.1.0/source/core/tunnel'/name,out/variant/'tunnel'/name)
  assert hashes(out/'rc2')==before
- prov=json.loads((out/'provenance.json').read_text());prov['model_production']=hashes(out/'model');prov['local_cleanup_divisor']=16;prov['refill_trigger']='empty';prov['periodic_remote_cleanup_ms']=1500;prov['field_comparison_source']='tracked active DEV5 source; previous model recipe is only RC2/fixture input';(out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')
+ prov=json.loads((out/'provenance.json').read_text());prov['model_production']=hashes(out/'model');prov['local_cleanup_divisor']=16;prov['refill_trigger']='empty';prov['periodic_remote_cleanup_ms']=1500;prov['field_comparison_source']='tracked active development source; previous model recipe is only RC2/fixture input';(out/'provenance.json').write_text(json.dumps(prov,indent=2)+'\n')
  (out/'FIELD_PROVENANCE.json').write_text(json.dumps({'reference_production_unchanged':True,'model_production':hashes(out/'model'),'dev4_production':hashes(out/'dev4'),'rc2_production':before,'shared':{n:hashlib.sha256((out/'model/tunnel'/n).read_bytes()).hexdigest() for n in shared}},indent=2)+'\n')
 if __name__=='__main__':main()

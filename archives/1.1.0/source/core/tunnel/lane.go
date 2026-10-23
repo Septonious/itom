@@ -2524,6 +2524,22 @@ func (l *lane) issueRemoteGrantBounded(limit pool.Amount, fast, recovery bool) e
 		l.localGrantMu.Unlock()
 		return profileErr
 	}
+	localReserve := uint64(localFastReserveBytes)
+	if recovery || fast {
+		usage, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session)
+		if err != nil {
+			l.localGrantMu.Unlock()
+			return err
+		}
+		localReserve = recoveredFastReserveBytes(profile, usage)
+		// Do not publish a full fast lease that strands the initial bulk lease.
+		// The recovery path publishes the same durable permission, explicitly
+		// classified as fast, from the complete remaining duplex budget.
+		if !recovery && fast && localReserve < fastLeaseBytes {
+			l.localGrantMu.Unlock()
+			return journal.ErrLimit
+		}
+	}
 	// Legacy reservations remain charged, but must not strand bootstrap behind
 	// a fixed 2 MiB / 32-message lease. Borrow only unused directional headroom,
 	// retaining one maximum local bulk BODY and the local latency reserve.
@@ -2549,7 +2565,7 @@ func (l *lane) issueRemoteGrantBounded(limit pool.Amount, fast, recovery bool) e
 			return journal.ErrLimit
 		}
 	}
-	if held.Bytes+limit.Bytes > profile.Bytes-localFastReserveBytes {
+	if held.Bytes+limit.Bytes > profile.Bytes-localReserve {
 		l.localGrantMu.Unlock()
 		return journal.ErrLimit
 	}
@@ -2567,7 +2583,7 @@ func (l *lane) issueRemoteGrantBounded(limit pool.Amount, fast, recovery bool) e
 	if recovery && l.diag != nil {
 		l.diag.event(fmt.Sprintf("event=grant_recovery_capacity bytes=%d messages=%d held_bytes=%d held_messages=%d", limit.Bytes, limit.Messages, held.Bytes, held.Messages))
 	}
-	if fast && limit.Messages < fastLeaseMessages {
+	if fast && (limit.Messages != fastLeaseMessages || limit.Bytes != fastLeaseBytes) {
 		return l.controlSend(wire.RecoveryFastGrant{Offer: offer})
 	}
 	return l.controlSend(offer)

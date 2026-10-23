@@ -37,3 +37,21 @@ func recoveredDirectionalShares(profile pool.Amount, u journal.OriginUsage) (loc
 	remote = pool.Amount{Bytes: u.HistoricalRemote.Bytes + available.Bytes - localNew.Bytes, Messages: u.HistoricalRemote.Messages + available.Messages - localNew.Messages}
 	return local, remote, nil
 }
+
+// Size only the fast cushion when old, still-charged reservations leave too
+// little space for four full-sized cushions. Both directions retain a complete
+// maximum bulk BODY. 160 KiB also fits the collector's worst fast batch (the
+// 64 KiB payload target may overshoot by one 32 KiB record, plus MIME/envelope).
+// Below that complete duplex floor, keep the normal bound and fail closed.
+func recoveredFastReserveBytes(profile pool.Amount, u journal.OriginUsage) uint64 {
+	local, remote, err := recoveredDirectionalShares(profile, u)
+	if err != nil || local.Bytes < u.HistoricalLocal.Bytes || remote.Bytes < u.HistoricalRemote.Bytes {
+		return localFastReserveBytes
+	}
+	room := min(local.Bytes-u.HistoricalLocal.Bytes, remote.Bytes-u.HistoricalRemote.Bytes)
+	const minimum = 160 << 10
+	if room < dataBatchMIMEHardCap+minimum {
+		return localFastReserveBytes
+	}
+	return min(uint64(localFastReserveBytes), room-dataBatchMIMEHardCap)
+}

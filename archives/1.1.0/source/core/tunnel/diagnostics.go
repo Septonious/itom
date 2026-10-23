@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"itom.local/core/pool"
 	"net"
 	"strings"
 	"sync"
@@ -19,6 +20,10 @@ import (
 
 // No hostnames, target domains, mailbox names, keys or credentials are logged.
 type LineDiagnostic struct {
+	HistoricalDataBytes, HistoricalDataMessages       uint64
+	FreeDataBytes, FreeDataMessages, FastReserveBytes uint64
+	MissingWalletRecoveryOffers                       uint64
+
 	Scheduler                                              datapath.SchedulerSnapshot
 	RTTSampleAgeMS, RTTSmoothedMillis, RTTIdleMillis       int64
 	RTTFresh                                               bool
@@ -158,6 +163,14 @@ func (l *lane) health() {
 	c, _ := l.control.Held(l.account.ID, l.user.ID)
 	b, _ := l.data.Held(l.account.ID, l.user.ID)
 	limit, _ := l.data.Limit(l.account.ID, l.user.ID)
+	var historical pool.Amount
+	fastReserve := uint64(localFastReserveBytes)
+	if l.side && l.cipher != nil {
+		if usage, err := l.data.UsageByOrigin(l.account.ID, l.user.ID, l.cipher.Context().Session); err == nil {
+			historical = pool.Amount{Bytes: usage.HistoricalLocal.Bytes + usage.HistoricalRemote.Bytes, Messages: usage.HistoricalLocal.Messages + usage.HistoricalRemote.Messages}
+			fastReserve = recoveredFastReserveBytes(limit, usage)
+		}
+	}
 	batchTarget := l.serviceBatchTarget()
 	gov := l.stripe.deliverySnapshot()
 	streams := 0
@@ -184,6 +197,17 @@ func (l *lane) health() {
 	d.line.DataMessages = b.Messages
 	d.line.DataBytes = b.Bytes
 	d.line.DataLimitBytes, d.line.DataLimitMessages = limit.Bytes, limit.Messages
+	d.line.HistoricalDataBytes, d.line.HistoricalDataMessages = historical.Bytes, historical.Messages
+	d.line.FreeDataBytes, d.line.FreeDataMessages = 0, 0
+	if b.Bytes <= limit.Bytes {
+		d.line.FreeDataBytes = limit.Bytes - b.Bytes
+	}
+	if b.Messages <= limit.Messages {
+		d.line.FreeDataMessages = limit.Messages - b.Messages
+	}
+	d.line.FastReserveBytes = fastReserve
+	d.line.Ready = l.ready.Load()
+
 	d.line.BulkBatchTargetBytes = batchTarget
 	if !l.lastRX.IsZero() {
 		d.line.RXAgeMS = time.Since(l.lastRX).Milliseconds()
