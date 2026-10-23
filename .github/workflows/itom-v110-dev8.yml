@@ -1,4 +1,4 @@
-name: ITOM DEV8 capped control receive isolation and field startup regressions
+name: ITOM DEV8 receive isolation and live UID hole discovery
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

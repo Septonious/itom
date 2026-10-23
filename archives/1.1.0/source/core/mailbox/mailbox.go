@@ -200,6 +200,7 @@ type Client struct {
 	conn                                     *cappedConn
 	folders                                  map[string]bool
 	updates                                  chan struct{}
+	tailNotified                             *atomic.Bool
 	idle                                     atomic.Bool
 	literalMode                              string
 	appendHints                              []AppendHint
@@ -301,12 +302,16 @@ func dialNetwork(ctx context.Context, cfg Config, folders []string, testTLS *tls
 		tc = testTLS.Clone()
 	}
 	updates := make(chan struct{}, 1)
+	tailNotified := new(atomic.Bool)
 	handler := &imapclient.UnilateralDataHandler{Mailbox: func(data *imapclient.UnilateralDataMailbox) {
 		// IDLE reports new mail as an unsolicited mailbox-size update. Keep the
 		// callback non-blocking: go-imap executes it on its decoder goroutine.
 		if data == nil || data.NumMessages == nil {
 			return
 		}
+		// Keep discovery's hint independent of the IDLE wake channel: IDLE
+		// can consume that wake before a bounded FETCH encounters a UID hole.
+		tailNotified.Store(true)
 		select {
 		case updates <- struct{}{}:
 		default:
@@ -341,7 +346,7 @@ func dialNetwork(ctx context.Context, cfg Config, folders []string, testTLS *tls
 		return nil, ctx.Err()
 	}
 	caps := cli.Caps()
-	out := &Client{c: cli, conn: conn, folders: allowed, updates: updates}
+	out := &Client{c: cli, conn: conn, folders: allowed, updates: updates, tailNotified: tailNotified}
 	out.literalMode = "synchronizing"
 	if caps.Has(imap.CapLiteralPlus) {
 		out.literalMode = "literal-plus"
@@ -1614,7 +1619,7 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Real mailboxes keep UIDNEXT after EXPUNGE. Iterating four UID numbers
 		// per audit strands new DATA behind historical holes for minutes. Locate
 		// a bounded number of present UIDs, retaining compressed visibility gaps.
-		sparseForward := !fetched && discoverSparse && allocatedThrough > cur.After && allocatedThrough-cur.After > 16
+		sparseForward := !fetched && discoverSparse && allocatedThrough > cur.After && allocatedThrough-cur.After > limit
 		var sparseRequest *tailRange
 		var sparseThrough uint32
 		var rangeCandidates []imap.UID
@@ -1672,7 +1677,41 @@ func (c *Client) pageTailLimit(ctx context.Context, folder string, cur Cursor, v
 		// Live dense pages need one FETCH turn. If concurrent cleanup leaves an
 		// empty probe, switch to sparse discovery instead of enumerating holes.
 		// Provisional rows are never emitted twice by the fallback operation.
-		if !sparseForward && len(rows) == 0 && !emitted && allocatedThrough > cur.After && allocatedThrough-cur.After > 16 {
+		if len(rows) == 0 && !emitted && cur.After != ^uint32(0) && (allocatedThrough <= cur.After || allocatedThrough-cur.After <= limit) && c.tailNotified != nil && c.tailNotified.Swap(false) {
+			// EXISTS is a discovery hint, never an allocation/incarnation proof.
+			// A bounded SEARCH can locate mail beyond freshly EXPUNGEd UIDs
+			// even when it is beyond the cached SELECT's UIDNEXT. If the hint
+			// was already drained, avoid renewing SELECT on every empty poll.
+			ids, _, err := c.searchTailUIDs(cur.After+1, ^uint32(0), int(limit))
+			if err != nil {
+				return err
+			}
+			if len(ids) > 0 {
+				set, count, last = imap.UIDSetNum(ids...), len(ids), uint32(ids[len(ids)-1])
+				for _, gap := range gaps {
+					set.AddNum(imap.UID(gap.uid))
+					count++
+				}
+				for _, id := range rangeCandidates {
+					set.AddNum(id)
+					count++
+				}
+				// Fresh tagged SELECT fences all candidate delivery. SEARCH is
+				// advisory, and a changed/failed incarnation exposes no old row.
+				var selected *imap.SelectData
+				rows, selected, err = c.selectTailFetch(folder, cur, set, count, onRow)
+				if err != nil {
+					return err
+				}
+				if selected.UIDValidity != cur.Validity {
+					next = Cursor{Validity: selected.UIDValidity}
+					return nil
+				}
+				allocatedThrough = uint32(selected.UIDNext) - 1
+				sparseForward = true
+			}
+		}
+		if !sparseForward && len(rows) == 0 && !emitted && allocatedThrough > cur.After && allocatedThrough-cur.After > limit {
 			if err := locateForward(); err != nil {
 				return err
 			}
