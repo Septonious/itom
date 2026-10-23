@@ -25,10 +25,10 @@ jobs:
       - name: Frozen production sources and byte-identical sequence fixtures
         run: |
           set -euo pipefail
-          git fetch origin 3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a 90568d39461a6a384a4fd86c60f0227f59a157a2 --no-tags
+          git fetch origin 3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a 765643ea2bf0a0035023f1376ed136223f52ba3c --no-tags
           mkdir -p "$RUNNER_TEMP/paired/dev5" "$RUNNER_TEMP/paired/dev6" evidence
           git archive 3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev5" --strip-components=4
-          git archive 90568d39461a6a384a4fd86c60f0227f59a157a2 archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev6" --strip-components=4
+          git archive 765643ea2bf0a0035023f1376ed136223f52ba3c archives/1.1.0/source/core | tar -x -C "$RUNNER_TEMP/paired/dev6" --strip-components=4
           python3 - <<'PY'
           from pathlib import Path
           import os,hashlib,json,shutil
@@ -38,7 +38,7 @@ jobs:
           names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','field_idle_itomtest_test.go']
           for name in names:shutil.copyfile(root/'dev6/tunnel'/name,root/'dev5/tunnel'/name)
           assert before=={v:production(root/v) for v in ['dev5','dev6']}
-          Path('evidence/provenance.json').write_text(json.dumps({'dev5_commit':'3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a','dev6_commit':'90568d39461a6a384a4fd86c60f0227f59a157a2','production':before,'fixtures':{n:hashlib.sha256((root/'dev6/tunnel'/n).read_bytes()).hexdigest()for n in names},'cpu_count':os.cpu_count(),'thresholds_relaxed':False},indent=2)+'\n')
+          Path('evidence/provenance.json').write_text(json.dumps({'dev5_commit':'3ccdd5a631ddf33c3d764fda1b6e52b4ad278b3a','dev6_commit':'765643ea2bf0a0035023f1376ed136223f52ba3c','production':before,'fixtures':{n:hashlib.sha256((root/'dev6/tunnel'/n).read_bytes()).hexdigest()for n in names},'cpu_count':os.cpu_count(),'thresholds_relaxed':False},indent=2)+'\n')
           PY
           for variant in dev5 dev6; do
             (cd "$RUNNER_TEMP/paired/$variant" && go test -p 2 -tags itomtest -c -o "$RUNNER_TEMP/paired/$variant.test" ./tunnel)
