@@ -184,7 +184,7 @@
     "core/tunnel/control_stall.go": "625485c7c7b4cc791fb63cc51d583b10f1f4d212031db79e2d65275ed89d1dfd",
     "core/tunnel/data_envelope.go": "3bbe631032916d60d31243a190d30628f8d4588dcc0794acd2cf936babe715f6",
     "core/tunnel/data_worker_lifecycle.go": "c11142a15ed438fc9e164efe9e3529de819c3ba0b5854fa98070db2ca9b1fb1f",
-    "core/tunnel/delivery_control.go": "c05e15375e64362c00d17bab7482d4080b58c5cc93e5dc4529157c333581f7a2",
+    "core/tunnel/delivery_control.go": "9af607df3653f7844e8364f3e2184a46f15cdd2f513e7a1b6fb019683d74962a",
     "core/tunnel/delivery_policy.go": "3a005ca64f2d3a2b160c6431aea232ba3f7e682dda7cc160c2c579578becb987",
     "core/tunnel/descriptor_repair.go": "5fb42000b0202602f8df558cf54d7fe0052b6d52daf54201c7131a72658d4363",
     "core/tunnel/diagnostics.go": "7dce9a15f08459b88504b5e91dc7be404c83aebc9caffce128a7591519496897",
@@ -262,6 +262,7 @@
     "core/tunnel/recovered_shares.go",
     "core/tunnel/version.go",
     "core/manager/trace.go",
-    "core/cmd/itom/main.go"
+    "core/cmd/itom/main.go",
+    "core/tunnel/delivery_control.go"
   ]
 }

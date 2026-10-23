@@ -1,4 +1,4 @@
-name: ITOM DEV7 shared-socket command overlap and useful recovered bulk capacity
+name: ITOM DEV7 final candidate with command overlap, recovered capacity and admission snapshot race fix
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
@@ -32,8 +32,8 @@ jobs:
           go test -p 2 -count=1 -timeout=180s ./cmd/itom ./manager ./journal ./wallet ./flow ./datapath
           go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestDEV6|TestDEV7|TestRev7AcceptedControl|TestRev7CloseDuringControlRepair|TestRev7CappedMixedSocketsRepair|TestThroughputModel|TestBoundedResponse|TestResponseSearch|TestDuplexProof|TestRetainedCadence|TestRecoveryPacing|TestRefillTrigger|TestRev7RetainedOutboundCleanup' -v
   linux:
-    needs: [core, byte-headroom]
-    if: ${{ needs.core.result == 'success' && needs.byte-headroom.result == 'success' }}
+    needs: [core, byte-headroom, race-safety]
+    if: ${{ needs.core.result == 'success' && needs.byte-headroom.result == 'success' && needs.race-safety.result == 'success' }}
     name: Compile experimental Linux artifacts (not a qualified release)
     runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 20
@@ -73,8 +73,8 @@ jobs:
           if-no-files-found: error
           retention-days: 30
   android:
-    needs: [core, byte-headroom]
-    if: ${{ needs.core.result == 'success' && needs.byte-headroom.result == 'success' }}
+    needs: [core, byte-headroom, race-safety]
+    if: ${{ needs.core.result == 'success' && needs.byte-headroom.result == 'success' && needs.race-safety.result == 'success' }}
     name: Compile experimental APK, SDK tests, lint and JNI
     runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 75
@@ -396,3 +396,37 @@ jobs:
         with:
           name: dev7-known-loaded-chat-race
           path: ${{ runner.temp }}/loaded-chat-race.log
+
+  race-safety:
+    name: Reject data races; retain the original loaded timing result
+    needs: [known-loaded-race]
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev7-known-loaded-chat-race
+          path: evidence
+      - name: Record raw outcome without waiving the original deadline
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          text=Path('evidence/loaded-chat-race.log').read_text()
+          assert 'DATA RACE' not in text and 'panic:' not in text, 'Unsafe runtime failure; reject packaging'
+          passed='--- PASS: TestRev5RampAbortAndRestartKeepOriginalChatUsable' in text
+          if not passed:
+              assert '--- FAIL: TestRev5RampAbortAndRestartKeepOriginalChatUsable' in text
+              assert 'chat during ramp' in text and 'read pipe: i/o timeout' in text
+              assert 'ramp request' not in text, 'Unexpected failed bulk request'
+          report={'source_commit':os.environ['GITHUB_SHA'],'test':'TestRev5RampAbortAndRestartKeepOriginalChatUsable','original_test_passed':passed,'no_data_race_detected':True,'thresholds_relaxed':False,'classification':'EXPERIMENTAL testing package; original 1100 ms mixed-load chat deadline remains failed when original_test_passed is false; this job is not a passing qualification result'}
+          Path('EXPERIMENTAL_RACE_REPORT.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev7-final-race-safety-report
+          path: |
+            EXPERIMENTAL_RACE_REPORT.json
+            evidence/loaded-chat-race.log

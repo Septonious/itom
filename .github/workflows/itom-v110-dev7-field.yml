@@ -1,4 +1,4 @@
-name: DEV7 versus DEV6 and RC2 under all-account field quota pressure
+name: Final DEV7 versus DEV6 and RC2 under all-account field quota pressure
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

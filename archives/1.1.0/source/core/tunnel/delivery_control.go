@@ -633,8 +633,11 @@ func (g *stripeGroup) reserveDeliveryMode(ctx context.Context, jobs []*datapath.
 			if len(entries) > 0 || w.repair {
 				d.changed()
 			}
+			// Other admissions may re-plan this waiter until the deferred
+			// removal acquires mu. Snapshot its diagnostic while still locked.
+			debug := w.debug
 			g.mu.Unlock()
-			return &deliveryReservation{g: g, inserted: entries, jobs: selected, repair: w.repair, debug: w.debug}, nil
+			return &deliveryReservation{g: g, inserted: entries, jobs: selected, repair: w.repair, debug: debug}, nil
 		}
 		wake := d.wake
 		if yield {
