@@ -6,9 +6,10 @@
     "core/mailbox/mailbox.go",
     "core/tunnel/version.go",
     "core/manager/trace.go",
-    "core/cmd/itom/main.go"
+    "core/cmd/itom/main.go",
+    "core/tunnel/account_work.go"
   ],
-  "qualification": "DEV8 empty-probe-only candidate; qualification pending; previous notified-every-read candidate rejected for upload regression",
+  "qualification": "DEV8 account/socket class separation candidate; qualification pending; no authority or profile changes",
   "production_sha256": {
     "core/adminapi/api.go": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876",
     "core/adminserver/server.go": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39",
@@ -167,7 +168,7 @@
     "core/tunnel/account_placement.go": "259cff47ab2ed65115aac57e7dace665b00d5a8c913aee4e0363150d7f05a091",
     "core/tunnel/account_scheduler.go": "02c6b3ec2ae6f891ae2959523ab6c88ad467132a2583b3ba8ebb955d1198352a",
     "core/tunnel/account_view.go": "0986fe4da827e9fb3c974cb95fb8b4770898af5ebc2efaa665244b9ecf92082e",
-    "core/tunnel/account_work.go": "67f331da3fccdef1f556406270e8181fe4d29cf08398a75d6e43afdde5c158d1",
+    "core/tunnel/account_work.go": "404f93cfcf36d6fb0404c6372060f96e80a8092fe0aee389c3c3bbabac2c64ff",
     "core/tunnel/bulk_admission.go": "a50cd9e7eee6d1d2bf7d949cf2e137367b6b8447ad46aaec0fbfc28c02fd1d5f",
     "core/tunnel/capacity_notify.go": "8b83e3ad1236237731408f9f409123575861dcc1ae419a85eae5a65f5ef50775",
     "core/tunnel/carrier_feedback.go": "5d90c93e81c981e586c196f15bb503fad64a1e925904c500bd3b282a88be928b",
@@ -189,7 +190,7 @@
     "core/tunnel/flow_control.go": "35770d664f508f177fbe03eadfd5dca0764c551e8f3249383921d56239b0e552",
     "core/tunnel/grant_recovery.go": "3831875f8a193641b4b13b4cc0c1109beedd054cb4368efa060fc3db0bcb1c4a",
     "core/tunnel/integration_fixture.go": "3bf8f3b65a01bb926c531e1308add58efff4a443d6a8b2a52a59f92ad1153a3b",
-    "core/tunnel/io.go": "485f0bc28b34884f59578aee245d0fe0d495aba93571877257f88e945b9c7543",
+    "core/tunnel/io.go": "eaeacc5202ed60296c07027097fc8a8504691b0860cdc9bf6c8bc0cbcd543a5b",
     "core/tunnel/lane.go": "3a3d15a3487e139491a803d6a33f0f0d3a37ab75b43e321d5062cdeca46180ce",
     "core/tunnel/local_selection.go": "393c21c38257ba2cdaeeb65a74cbcb140e1e917e794a8bc86df6fae61123306a",
     "core/tunnel/login_admission.go": "d9d532d8835354fb261a8d115ec843b27d5b9222c5a9a5d42c562e0a97076633",

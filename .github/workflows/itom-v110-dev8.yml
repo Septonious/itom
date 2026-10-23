@@ -1,4 +1,4 @@
-name: ITOM DEV8 receive isolation and empty-probe allocation repair
+name: ITOM DEV8 independent receive admission with original socket service shares
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

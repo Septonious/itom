@@ -1369,7 +1369,7 @@ func (m *laneMail) page(ctx context.Context, f string, cur mailbox.Cursor, emit 
 			// can strand OPEN_OK/PONG behind unrelated proof work even while
 			// this socket is idle. Actual bytes still take a fair baseWork turn.
 			if m.cleanupClient() == m.controlClient() {
-				return m.controlCommand(ctx, workReceive, read)
+				return m.controlReceiveCommand(ctx, read)
 			}
 			return m.command(ctx, workReceive, read)
 		}

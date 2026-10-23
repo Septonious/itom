@@ -1,4 +1,4 @@
-name: DEV8 empty-probe allocation repair versus DEV7 and RC2 with captured roles
+name: DEV8 account and socket class separation versus DEV7 and RC2
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

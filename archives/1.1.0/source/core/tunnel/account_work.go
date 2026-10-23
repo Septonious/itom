@@ -161,20 +161,29 @@ func (m *laneMail) DataQueueCost() int64 {
 // existing round-robin class scheduler preserves both urgency and GC/bulk progress;
 // independent DATA workers/cleaners retain their original parallel service.
 func (m *laneMail) controlCommand(ctx context.Context, class accountWorkClass, fn func() error) error {
-	return m.command(ctx, class, func() error {
-		m.baseWork.mu.Lock()
-		m.baseWork.capacity = 1
-		m.baseWork.mu.Unlock()
-		release, err := m.baseWork.acquire(ctx, class)
-		if err != nil {
-			return err
-		}
-		defer release()
-		if err = ctx.Err(); err != nil {
-			return err
-		}
-		return fn()
-	})
+	return m.command(ctx, class, func() error { return m.sharedSocketCommand(ctx, class, fn) })
+}
+
+// Live reads have independent account admission, but keep their historical
+// maintenance turn on the actual shared socket. Giving them a fourth socket
+// class would reduce DATA's service share even when every command succeeds.
+func (m *laneMail) controlReceiveCommand(ctx context.Context, fn func() error) error {
+	return m.command(ctx, workReceive, func() error { return m.sharedSocketCommand(ctx, workMaintenance, fn) })
+}
+
+func (m *laneMail) sharedSocketCommand(ctx context.Context, class accountWorkClass, fn func() error) error {
+	m.baseWork.mu.Lock()
+	m.baseWork.capacity = 1
+	m.baseWork.mu.Unlock()
+	release, err := m.baseWork.acquire(ctx, class)
+	if err != nil {
+		return err
+	}
+	defer release()
+	if err = ctx.Err(); err != nil {
+		return err
+	}
+	return fn()
 }
 func (m *laneMail) maintenanceCommand(ctx context.Context, fn func() error) error {
 	if m.cleanupClient() == m.controlClient() {

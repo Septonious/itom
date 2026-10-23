@@ -1,4 +1,4 @@
-name: DEV8 mobile and reader-repair causal traces against DEV7
+name: DEV8 socket-share candidate mobile and reader-repair causal traces against DEV7
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
@@ -40,13 +40,13 @@ jobs:
           import subprocess,os,hashlib,json,shutil
           root=Path(os.environ['RUNNER_TEMP'])/'trace-core';root.mkdir()
           variant='${{ matrix.variant }}'
-          ref='d4cc33c4db2277be8b93e48a7e3b715032a38b00' if variant=='dev7' else 'e69f0abb564751dcd7ca3afd40e9d5232ad79726'
+          ref='d4cc33c4db2277be8b93e48a7e3b715032a38b00' if variant=='dev7' else os.environ['GITHUB_SHA']
           subprocess.run(['bash','-c','git archive '+ref+' archives/1.1.0/source/core | tar -x -C "$1" --strip-components=4','stage',str(root)],check=True)
           hashes=lambda:{str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest()for f in root.rglob('*.go')if not f.name.endswith('_test.go')}
           before=hashes()
           names=['imap_test.go','field_command_service_test.go','field_sequence_itomtest_test.go','dev7_field_throughput_test.go','field_idle_itomtest_test.go','dev8_startup_itomtest_test.go','supervisor_fixture_test.go']
           for name in names:shutil.copyfile(Path('archives/1.1.0/source/core/tunnel')/name,root/'tunnel'/name)
-          p=root/'tunnel/dev8_startup_itomtest_test.go';s=p.read_text().replace('started := time.Now()', 'started := time.Now(); t.Logf("probe_start round=%d phase=%d probe=%d unix_us=%d", round, phase, probe, started.UnixMicro())');p.write_text(s)
+          p=root/'tunnel/dev8_startup_itomtest_test.go';s=p.read_text().replace('started := time.Now()', 'started := time.Now(); t.Logf("probe_start round=%d phase=%d probe=%d unix_us=%d", round, phase, probe, started.UnixMicro())').replace('\"net/http/httptest\"', '\"net/http/httptest\"\n\"os\"').replace('f := newProductionSupervisorFixtureState', 't.Setenv(\"ITOM_LOAD_TRACE_DIR\", os.Getenv(\"ITOM_LOAD_TRACE_DIR\")+\"/\"+strconv.FormatInt(time.Now().UnixNano(),10)); f := newProductionSupervisorFixtureState');p.write_text(s)
           assert hashes()==before
           out=Path('evidence');out.mkdir()
           (out/'TRACE_PROVENANCE.json').write_text(json.dumps({'runtime_commit':ref,'variant':variant,'production':before,'shared_fixtures':names,'thresholds_relaxed':False,'diagnostic_only':True},indent=2)+'\n')
