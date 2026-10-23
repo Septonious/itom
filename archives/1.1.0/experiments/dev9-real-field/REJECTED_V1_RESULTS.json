@@ -1,0 +1,1255 @@
+{
+  "dev9-field-mobile0-streams1": {
+    "rc2-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV9LatestFieldReadiness": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldIdleLightReference": {
+      "pass": true,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 442.305959,
+          "mean_ms": 251.56306020833333,
+          "p95_ms": 440.808083,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            372.031908,
+            294.42352,
+            132.226925,
+            442.305959,
+            287.12939,
+            161.761924,
+            282.92861,
+            132.466082,
+            175.37895,
+            132.081932,
+            439.660622,
+            440.808083,
+            440.269698,
+            148.545261,
+            353.35539,
+            131.634635,
+            353.960085,
+            283.455321,
+            376.908429,
+            133.621803,
+            157.570476,
+            97.192264,
+            136.788068,
+            131.00811
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 506.447966,
+          "mean_ms": 275.96082237499996,
+          "p95_ms": 463.55404,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            176.482173,
+            259.37485,
+            131.610434,
+            349.66055,
+            300.434432,
+            305.992375,
+            132.198762,
+            174.107033,
+            214.123965,
+            422.241016,
+            210.383441,
+            309.160625,
+            438.472124,
+            350.944979,
+            437.683798,
+            308.084078,
+            264.853047,
+            132.537613,
+            506.447966,
+            214.130068,
+            174.193826,
+            170.513813,
+            463.55404,
+            175.874729
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "rc2-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 48,
+      "sequence": []
+    },
+    "dev8-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 105.556651,
+          "stalls": 0
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 69.533696,
+          "stalls": 3
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 106.539691,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 77.616469,
+          "stalls": 2
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 103.852715,
+          "stalls": 0
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 78.206293,
+          "stalls": 0
+        }
+      ]
+    },
+    "dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 48,
+      "sequence": []
+    },
+    "rc2-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestFieldIdleLightReference": {
+      "pass": true,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 369.805228,
+          "mean_ms": 230.23669129166663,
+          "p95_ms": 328.905608,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            261.312969,
+            328.905608,
+            250.446763,
+            247.867214,
+            237.527114,
+            252.788332,
+            192.858044,
+            236.758318,
+            211.198658,
+            231.255177,
+            282.502135,
+            183.623893,
+            196.212414,
+            170.786123,
+            192.284914,
+            205.958314,
+            170.803194,
+            199.536244,
+            369.805228,
+            205.580231,
+            195.678315,
+            193.331431,
+            290.328815,
+            218.331143
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 475.505123,
+          "mean_ms": 264.33913233333334,
+          "p95_ms": 392.951543,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            387.635654,
+            352.757635,
+            171.665199,
+            347.173604,
+            307.688721,
+            283.854832,
+            176.828785,
+            203.304069,
+            259.466126,
+            175.855979,
+            176.764112,
+            298.276724,
+            475.505123,
+            215.313337,
+            192.753836,
+            134.292674,
+            351.005186,
+            191.126149,
+            245.286607,
+            392.951543,
+            184.937557,
+            296.92028,
+            260.959356,
+            261.816088
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 102.541995,
+          "stalls": 1
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 75.300864,
+          "stalls": 2
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 103.2192,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 76.393131,
+          "stalls": 0
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 102.629376,
+          "stalls": 0
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 72.351744,
+          "stalls": 1
+        }
+      ]
+    },
+    "rc2-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 67.283627,
+          "stalls": 1
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 24.204629,
+          "stalls": 4
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 71.543467,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 21.255509,
+          "stalls": 5
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 69.446315,
+          "stalls": 3
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 17.541803,
+          "stalls": 1
+        }
+      ]
+    }
+  },
+  "dev9-field-mobile0-streams4": {
+    "rc2-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV9LatestFieldReadiness": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldIdleLightReference": {
+      "pass": true,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 572.716861,
+          "mean_ms": 298.6949525833333,
+          "p95_ms": 511.284553,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            334.740313,
+            171.329806,
+            165.824145,
+            420.583353,
+            163.582883,
+            246.121349,
+            572.716861,
+            174.0586,
+            133.927226,
+            245.163747,
+            399.90581,
+            511.284553,
+            450.188317,
+            359.913295,
+            226.565235,
+            495.980165,
+            366.052019,
+            201.209041,
+            164.348862,
+            410.976538,
+            166.810434,
+            293.45226,
+            243.310854,
+            250.633196
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 581.975808,
+          "mean_ms": 295.4428106666667,
+          "p95_ms": 524.774576,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            426.224355,
+            319.833036,
+            259.857695,
+            179.870754,
+            395.795209,
+            439.215714,
+            418.587669,
+            438.3567,
+            524.774576,
+            329.670021,
+            260.600265,
+            151.629043,
+            200.878826,
+            277.065186,
+            169.909694,
+            186.109215,
+            382.861426,
+            581.975808,
+            190.035857,
+            137.77367,
+            260.355203,
+            229.496568,
+            152.496825,
+            177.254141
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "rc2-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 48,
+      "sequence": []
+    },
+    "dev8-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 93.71648,
+          "stalls": 0
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 73.968299,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 104.114859,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 63.766528,
+          "stalls": 3
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 104.289621,
+          "stalls": 1
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 69.14048,
+          "stalls": 2
+        }
+      ]
+    },
+    "dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 48,
+      "sequence": []
+    },
+    "rc2-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestFieldIdleLightReference": {
+      "pass": true,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 419.008361,
+          "mean_ms": 264.7080191666667,
+          "p95_ms": 356.483557,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            354.291535,
+            289.971265,
+            210.74769,
+            185.605114,
+            356.483557,
+            218.472159,
+            307.345857,
+            330.011505,
+            280.217415,
+            242.313775,
+            331.136418,
+            242.982005,
+            265.436133,
+            312.306582,
+            299.719002,
+            210.379048,
+            148.918452,
+            245.616659,
+            243.18512,
+            176.896127,
+            194.976224,
+            240.67575,
+            419.008361,
+            246.296707
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 0,
+          "field_qualified": false,
+          "max_ms": 707.903923,
+          "mean_ms": 346.68526925,
+          "p95_ms": 513.734437,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            481.238264,
+            261.639426,
+            392.182907,
+            294.856659,
+            327.464334,
+            513.734437,
+            472.097558,
+            233.481146,
+            484.755108,
+            284.514679,
+            403.529283,
+            364.14547,
+            384.437141,
+            391.809297,
+            234.064168,
+            263.997604,
+            270.612842,
+            176.504317,
+            285.570322,
+            707.903923,
+            367.949557,
+            285.595404,
+            178.712666,
+            259.64995
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 84.366677,
+          "stalls": 0
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 62.149973,
+          "stalls": 1
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 92.340224,
+          "stalls": 0
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 69.599232,
+          "stalls": 1
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 101.012821,
+          "stalls": 0
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 69.621077,
+          "stalls": 1
+        }
+      ]
+    },
+    "rc2-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 63.679147,
+          "stalls": 0
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 20.447232,
+          "stalls": 1
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 73.902763,
+          "stalls": 2
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 19.726336,
+          "stalls": 1
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 68.834645,
+          "stalls": 2
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 13.697024,
+          "stalls": 0
+        }
+      ]
+    }
+  },
+  "dev9-field-mobile1-streams1": {
+    "rc2-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV9LatestFieldReadiness": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 3,
+          "field_qualified": false,
+          "max_ms": 750.818171,
+          "mean_ms": 409.30717925000005,
+          "p95_ms": 750.604727,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            134.359159,
+            194.253051,
+            445.574063,
+            444.479615,
+            106.860984,
+            154.134969,
+            136.364891,
+            561.362181,
+            182.616827,
+            364.205589,
+            380.993802,
+            585.401465,
+            750.604727,
+            301.35076,
+            562.813752,
+            423.66484,
+            376.555155,
+            139.128894,
+            486.706154,
+            507.393924,
+            568.942525,
+            750.818171,
+            750.157516,
+            514.629288
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 1,
+          "field_qualified": false,
+          "max_ms": 750.372123,
+          "mean_ms": 393.37264116666665,
+          "p95_ms": 700.226245,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            443.001907,
+            418.840158,
+            244.288755,
+            485.897098,
+            351.019543,
+            302.793528,
+            131.723142,
+            223.815396,
+            89.957623,
+            217.614602,
+            265.439409,
+            700.226245,
+            504.629729,
+            679.291366,
+            750.372123,
+            193.405918,
+            312.811843,
+            287.124027,
+            389.490849,
+            430.441666,
+            648.535605,
+            631.376081,
+            340.577167,
+            398.269608
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "rc2-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 15,
+      "sequence": []
+    },
+    "dev8-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 53.586603,
+          "stalls": 5
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 43.952811,
+          "stalls": 5
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 51.707904,
+          "stalls": 3
+        }
+      ]
+    },
+    "dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 6,
+      "sequence": []
+    },
+    "rc2-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 2,
+          "field_qualified": false,
+          "max_ms": 750.667372,
+          "mean_ms": 337.1578532916666,
+          "p95_ms": 750.106131,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            118.484368,
+            134.452671,
+            177.60122,
+            316.635227,
+            269.765978,
+            226.789791,
+            144.330669,
+            500.760096,
+            245.634232,
+            464.645549,
+            587.190444,
+            750.667372,
+            301.50295,
+            317.386864,
+            444.798782,
+            402.207843,
+            231.440071,
+            147.763869,
+            138.946104,
+            144.832398,
+            229.576528,
+            458.994452,
+            750.106131,
+            587.27487
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 1,
+          "field_qualified": false,
+          "max_ms": 750.978832,
+          "mean_ms": 322.0816874166666,
+          "p95_ms": 544.680108,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            495.977401,
+            266.9538,
+            330.422653,
+            294.005654,
+            203.186511,
+            181.515839,
+            260.210894,
+            177.259843,
+            243.941088,
+            198.457474,
+            239.134989,
+            259.053228,
+            207.061799,
+            166.046543,
+            191.747063,
+            314.940758,
+            270.481999,
+            394.543701,
+            544.680108,
+            305.176463,
+            538.501657,
+            750.978832,
+            527.625083,
+            368.057118
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 74.405205,
+          "stalls": 1
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 46.137344,
+          "stalls": 5
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 44.870315,
+          "stalls": 4
+        }
+      ]
+    },
+    "rc2-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 28.442624,
+          "stalls": 2
+        },
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 15.07328,
+          "stalls": 8
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 2.861739,
+          "stalls": 7
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 9.065813,
+          "stalls": 10
+        }
+      ]
+    }
+  },
+  "dev9-field-mobile1-streams4": {
+    "rc2-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV9LatestFieldReadiness": {
+      "pass": true,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 1,
+          "field_qualified": false,
+          "max_ms": 750.520725,
+          "mean_ms": 314.18875654166663,
+          "p95_ms": 556.061804,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            148.59095,
+            215.749709,
+            360.858457,
+            333.591903,
+            130.747624,
+            194.339419,
+            157.812947,
+            248.674744,
+            282.037002,
+            252.831335,
+            235.939333,
+            556.061804,
+            151.807128,
+            456.280529,
+            750.520725,
+            425.194773,
+            406.25798,
+            396.358686,
+            454.844127,
+            368.213876,
+            147.999196,
+            156.960791,
+            292.130289,
+            416.72683
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 4,
+          "field_qualified": false,
+          "max_ms": 750.491396,
+          "mean_ms": 372.2792844166667,
+          "p95_ms": 750.378883,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            493.05518,
+            750.491396,
+            750.090204,
+            285.648608,
+            379.614278,
+            316.396696,
+            184.575532,
+            214.972026,
+            273.513159,
+            390.877396,
+            134.213063,
+            311.739343,
+            261.020072,
+            133.562662,
+            265.625162,
+            342.997744,
+            152.941649,
+            198.508787,
+            194.056088,
+            502.052702,
+            254.361285,
+            750.365922,
+            750.378883,
+            643.644989
+          ],
+          "server_rtt_ms": 20,
+          "variant": "model"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "rc2-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 15,
+      "sequence": []
+    },
+    "dev8-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": true,
+          "mbps": 49.545216,
+          "stalls": 3
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 69.817685,
+          "stalls": 3
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 44.280491,
+          "stalls": 3
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 71.390549,
+          "stalls": 1
+        },
+        {
+          "run": 3,
+          "upload": true,
+          "mbps": 44.477099,
+          "stalls": 5
+        }
+      ]
+    },
+    "dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 6,
+      "sequence": []
+    },
+    "rc2-TestDEV9LatestFieldReadiness": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "dev8-TestFieldIdleLightReference": {
+      "pass": false,
+      "latency": [
+        {
+          "configured_account_sessions": "6",
+          "failed": 2,
+          "field_qualified": false,
+          "max_ms": 750.229458,
+          "mean_ms": 410.64667191666666,
+          "p95_ms": 750.042088,
+          "phase": "idle",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            197.115959,
+            135.251706,
+            220.662691,
+            251.254249,
+            288.044617,
+            279.527987,
+            165.463103,
+            322.433581,
+            482.966608,
+            750.229458,
+            633.885425,
+            458.109054,
+            691.919828,
+            358.054029,
+            354.527226,
+            305.928838,
+            323.953768,
+            380.279012,
+            271.821977,
+            654.234449,
+            745.350204,
+            750.042088,
+            395.26679,
+            439.197479
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        },
+        {
+          "configured_account_sessions": "6",
+          "failed": 1,
+          "field_qualified": false,
+          "max_ms": 750.042621,
+          "mean_ms": 375.1824152083334,
+          "p95_ms": 734.929634,
+          "phase": "light",
+          "provider_sensitivity": "",
+          "samples_ms": [
+            301.909358,
+            288.411298,
+            217.196278,
+            445.827573,
+            396.417024,
+            249.256141,
+            261.620103,
+            192.344338,
+            250.027681,
+            198.654032,
+            207.744601,
+            324.81909,
+            330.066795,
+            493.522167,
+            345.963753,
+            680.242457,
+            734.929634,
+            505.846836,
+            326.786229,
+            632.67656,
+            282.965479,
+            750.042621,
+            296.355643,
+            290.752274
+          ],
+          "server_rtt_ms": 20,
+          "variant": "dev8"
+        }
+      ],
+      "short_probes": 0,
+      "sequence": []
+    },
+    "model-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": [
+        {
+          "run": 1,
+          "upload": false,
+          "mbps": 64.924331,
+          "stalls": 4
+        },
+        {
+          "run": 2,
+          "upload": false,
+          "mbps": 67.676843,
+          "stalls": 2
+        },
+        {
+          "run": 2,
+          "upload": true,
+          "mbps": 46.683477,
+          "stalls": 4
+        },
+        {
+          "run": 3,
+          "upload": false,
+          "mbps": 60.664491,
+          "stalls": 1
+        }
+      ]
+    },
+    "rc2-TestFieldSpeedtestSequence": {
+      "pass": false,
+      "latency": [],
+      "short_probes": 0,
+      "sequence": []
+    }
+  }
+}

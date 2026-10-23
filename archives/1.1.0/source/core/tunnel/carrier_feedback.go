@@ -89,6 +89,19 @@ func (g *stripeGroup) fastSlotGraceLocked() time.Duration {
 			outlier = min(outlier, rtt)
 		}
 	}
+	// A split endpoint can borrow a genuinely idle receive connection. Its
+	// shared-control echo is not a reason to hold short DATA behind an empty
+	// preferred slot for150–650ms while other authenticated carriers are ready.
+	// Bound that placement grace by measured pool feedback; mixed/legacy
+	// services retain their original reader-protection contract.
+	for _, l := range g.lanes {
+		if l == nil {
+			continue
+		}
+		if m := physicalMail(l.mail); l.dataShards > 0 && m != nil && m.dataReaderWake != nil && l.streamCarrierReady() {
+			return max(5*time.Millisecond, min(50*time.Millisecond, time.Duration(min(best, int64(400)))*time.Millisecond/8))
+		}
+	}
 	if outlier == 1<<62 {
 		return 150 * time.Millisecond
 	}

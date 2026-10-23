@@ -1,0 +1,1773 @@
+{
+  "scope": "All canonical archived RC and 1.1 development result/qualification/build/field analyses in this repository; inherited source-doc copies excluded to avoid duplicate evidence. This is an evidence inventory, not a rerun of every historical test.",
+  "through_commit": "0df63506190770c11c69b605d678e061aa2fa8c1",
+  "unique_reports": 89,
+  "reports": [
+    {
+      "paths": [
+        "archives/1.0.0-rc10.1/audit/BUILD_VALIDATION.json",
+        "archives/1.0.0-rc10.1/downloads/BUILD_VALIDATION.json"
+      ],
+      "git_blob": "d07d31dd53b0499b20b3f6e0a35702e46607eba6",
+      "sha256": "b26e011b147232d98685b4645be42ce2f49c5e2f25aa06389903921388df825f",
+      "bytes": 2945,
+      "review_signals": [
+        "\"release_qualified\": false,",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10.1/audit/FIELD_ANALYSIS_2026-10-19.md"
+      ],
+      "git_blob": "4394b2271051dc28252590e193561351b0bd7ccb",
+      "sha256": "cf84ea12979e6ab601c1b65701f93749b6fe2cbe306251a3cc216146519a7312",
+      "bytes": 10113,
+      "review_signals": [
+        "| Mode | Download Mbps | Upload Mbps | Idle RTT ms | Download-loaded RTT ms | Upload-loaded RTT ms | Jitter ms |",
+        "All four screenshots show completed measurements. The supplied data does not establish whether any additional attempts failed. MULTI varies markedly; three observations are insufficient to conclude it is always worse than SINGLE. The similar 363\u2013379ms idle RTT across all four results points to a persistent transport-path floor rather than a problem only at peak load. These measurements do not meet the earlier sustained 100Mbps objective.",
+        "- Client retained trace: approximately 16:55:28\u201316:57:46 Moscow time. Server: 16:56:17\u201316:58:24. Approximate wall-clock overlap is 89 seconds; no one-way durations were calculated by subtracting endpoint clocks.",
+        "- Each endpoint retained one trace run. Rotation removed earlier events from an approximately twenty-minute session. The Android diagnostics were exported with phase OFF and an empty current transport snapshot. Retained health events are therefore the live-state evidence, not the final OFF snapshot.",
+        "- Retained health snapshots report zero trace drops. File rotation still limits coverage. Sampled frame counts and sampled batch timelines are not complete event populations.",
+        "These directly locate much of those particular spikes in the server's durable path, rather than pure IMAP network time. Across data/control stores, snapshot deltas show approximately **19.59ms per journal transaction** and **3.35ms mutex queue time** on the server, versus **0.657ms** and **0.0019ms** on the phone. The transaction timer includes the entire bbolt Update; these logs do not isolate fsync, filesystem, VM storage, transaction processing or scheduler effects. They do not prove faulty server hardware. Journal `Failures` also includes expected business-rule rejections, so its nonzero value is not proof of disk errors.",
+        "Among retained server bulk batches, **236/461 (51.2%)** had physical body size at most 40KiB; the median body size was **32,972 bytes**, while some reached **362,452 bytes**. Server batch-target snapshots include 32, 64, 256 and 336KiB. Cold/aged downstream observations can legitimately return the target to 32KiB. The supplied data does not establish which reductions were justified; receiver-receipt training and cold resets need a focused audit.",
+        "Client bulk admission had **4848 deferrals / 5311 attempts**; server bulk had **2533 / 3003**. These are repeated nonblocking admission attempts, not failed TCP requests or lost packets. They show backpressure but do not alone prove the window is too small. Blindly shrinking flight or permanently capping batches would risk repeating earlier throughput regressions.",
+        "Retained client trace: **6603 control APPENDs versus 1549 DATA APPENDs**. Server: **4545 control APPEND completions versus 1429 DATA APPENDs**. Count ratio is operation overhead, not bandwidth ratio. The client also recorded **542 WALLET_HISTORY_MISSING deferrals**, spread across all ten accounts.",
+        "The recovery code emits that message when an old server grant has no matching client wallet history. Reinstallation or client-state reset while retaining server journals is one possible cause, but these archives do not establish when or why the histories diverged. The implementation correctly refuses to invent a zero-spend proof. This recurring historical reconciliation adds work; no hard quota exhaustion was demonstrated by these stage samples. Server held-message snapshots reach 173/192 but include reservations and retained debt, not only unread payload.",
+        "### 5. Retained evidence does not show carrier collapse during the measured client window",
+        "No new client reconnect lifecycle events were retained, and reconnect counters do not increase between retained health snapshots. One account already had one earlier reconnect; its cause is outside retained coverage. Retained client DATA/CONTROL APPEND operations have no IMAP error completions."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/CURRENT_SELECTION.md"
+      ],
+      "git_blob": "2823ce8066bcef8d9c258742d12173da5789cfc0",
+      "sha256": "fbdafbc8aeaccea1d8f40053458659c5c06f2d30ee21e086c38c8ef2790d4cd7",
+      "bytes": 10941,
+      "review_signals": [
+        "Build39243128236 passed source/vet, targeted accounting/proof/recovery/race,82 Android domain tests,7 app JVM tests, zero-error/zero-warning lint and both JNI/APK identity checks. No physical-device/provider qualification is claimed. Strict run39243128189 still fails fresh4-stream RTT784.168ms, low-capacity ramps and100ms-client upload/tail; thresholds remain unchanged. Five of six normal two-round cases passed. The optional feedback-allocation experiment is archived and excluded; reverting also showed intermittent RTT, so no causal claim is made.",
+        "User explicitly requested a field-test package after reviewing the failures. Testing workflow builds after safety and Android gates; strict release qualification stays unchanged. The packaged core is exactly checkpoint522d7cf from the paired comparison. A later feedback-allocation experiment is archived, not selected; no controller policy changes. Packaging is authorized for testing, not certified performance.",
+        "Latest paired comparison39239603639: both original RC2 and current RC10 pass all six normal load cases (12 rounds each), while both fail10/20Mbps client ramps and100ms-client upload/tail. Performance differences are mixed, not universal improvement. See `RC2_HEALTHY_COMPARISON.md` and `paired-rc2-rc10-39239603639.json`. The corrected common core rerun39240291399 passes on both versions. No production change is selected from this comparison; packaging stays blocked.",
+        "User reports an eight-core server with a 20 ms Rambler route and strong uplinks, and a phone route normally 20\u201350 ms, almost always <=100 ms. Primary qualification now applies independent below-TLS endpoint paths: server 20 ms / 1000 Mbps; phone 40 ms / 600 Mbps reference, with 20/50/100 ms client sensitivity and client-only capacity transitions. Backend service 2 ms and server capacity are configurable assumptions, not measurements. Actual CPU quota is recorded; local runs have two cores and do not certify eight-core hardware.",
+        "Focused endpoint isolation/capacity units, TLS NOOP calibration, client interruption/original-TCP recovery and legacy relay calibration passed. Offline source check and 91 Python tests passed. These are not full performance qualification. No RC10 package is authorized yet. Latest old-model failures remain historical evidence, not new-profile results. Useful-only cleanup, including the newly preserved fairness correction, remains NOT selected: broad recovery still failed.",
+        "## Retained for further comparison, not release-qualified",
+        "- Integrated exact-sized journal scan allocations: same immutable transaction, bounded cursor and owned rows. Serial empty/sparse scans reduce allocation; full-page attempt/grant results and interleaved noisy grant repeats are retained. No blanket CPU-speed claim is made.",
+        "- Fixed 8 MiB hinted cleanup command bound: original proof/accounting and 32-UID bound. Some retained32 rounds pass unchanged throughput/tail/RTT gates; repeats still fail, so this is promising rather than certified.",
+        "Short recovery run `39207637183`: retained32 81.112/73.868 Mbps, minimum full/tail 72.893508 Mbps, max RTT 510.839 ms; matched control 79.980/73.641 Mbps, minimum 73.640619 Mbps, max RTT 390.085 ms. The earlier STATUS/sibling-route changes therefore show no repeatable improvement without a regression. Early10 failed cold probe 2 after one successful sample. Local repeat timed out probe 14, max successful RTT 1315 ms. Focused correctness passing does not override those failures. Do not apply this bundle.",
+        "The first all-record quantum variant regressed delayed-BODY recovery (20-second socket read deadline exceeded). Reject it. A corrected fixture explicitly attaches the unit lane to its group; it previously exercised the no-stripe fallback. The narrowed variant limits only a stream with no actor-pending bytes, keeps subsequent records intact and explicitly preserves bulk classification. Focused datapath tests pass 0.653s; delayed BODY + reader restart and independent-prefix checks pass 26.894s. Load comparison is still pending; this correctness pass is not acceptance.",
+        "Prefix variant rejected too: GitHub39208684384 failed long-blackout recovery before retained load; early10 cold probe2 timed out. Local low profile completed all30probes and socket checks with no carrier resets but max1491.209ms and8.993/21.453Mbps, still a failure. Do not promote either framing variant.",
+        "Honest-floor run39209203584 deferred: retained32 80.662/74.475Mbps, minimum73.828489, max438.222ms; matched control79.561/75.170Mbps, minimum74.545015, max427.247ms. Early10 timed out measured probe2 (first1277ms). Correctness tests passed15.527s, but the isolated controller still did not demonstrate an improvement without regression."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/SELECTION.md"
+      ],
+      "git_blob": "8897589150e79b331d88a3e6b19a3180afd7ccb5",
+      "sha256": "b9a15d307a82cdfee1577ae30ccde9d05fc51a9eab214c52006c69f20bbaf967",
+      "bytes": 12033,
+      "review_signals": [
+        "Baseline: exact tagged RC2 tree `9cd9cc3fa2e07882b4d8154d7836e112840e3f1d`, checkpoint `ddd94e3`. No reset of accounts, journal, wallet, profile, logical identities, quota or physical proofs. RC2's field behavior is the baseline; its old intermittent discovery failure and lack of complete lab certification are not erased.",
+        "`release-source-inventory.json` inventories every changed path across RC2\u2013RC9, including RC3/4 changes absent from current HEAD; it records per-release SHA256, RC10 SHA256 and a selection decision. `post-rc2-commit-history.tsv` includes intermediate and reverted experiments, including the non-ancestor RC3/4 tags. The two retained RC7 audits explain the older experiments and measured failures. RC8/9 chronological qualification remains in their original archives. Changes absent from the source snapshots (experimental pacing, journal sizes, session partitioning and controller clamps) were rejected in the earlier experiment ledger and are not reconstructed from favorable isolated results.",
+        "- Unhinted DATA cleanup: reclaim already eligible bodies after the first useful page instead of scanning another full page first. Original observation, deletion/absence and exact refund rules remain. A failed delete refunds nothing; cursor resumes later.",
+        "| RC3 20ms pool-wide hot polling; RC4 conditional 20ms quiet-reader polling | Reject: user-observed speed/connection regression. Restore exact RC2 10/20/40/80ms hot backoff and original IDLE/audit scheduling. |",
+        "| RC6 max8MiB; RC7 max16/12MiB directional logical flight | Reject from baseline: retained throughput regressions. Restore RC2 symmetric16MiB, without changing physical quota. RC7's partial RC2 rollback retained the reduced ceiling and was not an exact RC2 control. |",
+        "| RC5 journal16/24MiB, physical pacer180Mbps, ACK clamps/urgent fairness, 4+6 sessions | Reject: documented upload-tail/starvation/RTT failures. Preserve existing12MiB journal policy and5+5 session partition. |",
+        "| RC9 short-reader150ms audit | Reject: retained32-stream tails34/47Mbps and timeout; already reverted upstream. |",
+        "| RC9 always256KiB seed, discovery250ms pacing, ACK-floor calibration bundle | Defer: initial12/12 pass followed by8/12 repeat with51Mbps tail,1166ms RTT and stalled1s download. Keep RC2 seed, calibration and independent-stream escape. Calibration-only fix remains a future isolated candidate. |",
+        "| RC9 global two-frame escape and1s emergency | Reject: retained4-stream tail67Mbps and zero-progress interval; keep RC2 independent-stream progress. |",
+        "| RC5/6 throughput waivers and favorable-run-only certification | Reject: no qualification threshold relaxed. Historical failures remain failures. |",
+        "Red/green tests reproduce both descriptor replay disconnect and over-scanning on exact RC2, then pass after the selected fixes. Fresh and retained SINGLE/4/32 must pass two60s rounds: >=75.000Mbps both directions over full/trailing30s/trailing10s windows, max loaded RTT<=750ms, every scheduled probe, positive useful duplex in every1s interval, original sockets and post-load integrity. True10/20Mbps startup cases keep their strict latency/continuity gates (a deliberately10Mbps cap is never claimed as75Mbps throughput). Quota/journal/proof/recovery race checks and Android SDK/lint/JNI/identity checks remain prerequisites to packaging. Passing a deterministic regression does not certify Rambler or sub200ms field RTT.",
+        "Two matched retained SINGLE/32 A/B runs compared reference,4MiB hinted cleanup, and RC8 selection scoring. The larger read improved measured download roughly6\u20138Mbps in both repeats without a higher measured maximum RTT; only one SINGLE tail passed75Mbps. Retained32 remained71.976\u201373.885Mbps, so this is a promising isolated tuning change, not qualification. The selection change gave no consistent latency benefit and reduced retained32 download to64.557\u201365.571Mbps, with SINGLE max789.049ms once: reject from RC10."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/TESTING_BUILD_VALIDATION.json",
+        "archives/1.0.0-rc10/downloads/BUILD_VALIDATION.json"
+      ],
+      "git_blob": "2148022c645df67f89c47a48947ef34398b8f27f",
+      "sha256": "17ea6220913c0f2e1737b49072889b468157c10768ae076c6d542d7631abac28",
+      "bytes": 3051,
+      "review_signals": [
+        "\"release_qualified\": false,",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"10/20Mbps client ramp probe timeouts.\",",
+        "\"100ms client RTT upload/tail71.168Mbps missed75Mbps floor.\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/healthy-qualification-39238567647.json"
+      ],
+      "git_blob": "c323565aa9f026463ec6154ec9a3b2cafe6c4a35",
+      "sha256": "d457388edd158d04106452a46094a5d08c041f070aa31582f141e2212814d7b2",
+      "bytes": 31212,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"conclusion\": \"failure\",",
+        "\"2026-10-19T10:36:59.3985479Z     supervised_load_test.go:266: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=1 max_ms=497 timeouts=0 missed=0 failure=<nil>\",",
+        "\"2026-10-19T10:37:59.4118721Z     supervised_load_test.go:352: supervised_result round=1 measured_ms=60000 upload_mbps=76.834 download_mbps=76.546 rtt_samples=30 p50_ms=251 p95_ms=902 max_ms=912 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T10:37:59.4145114Z     supervised_load_test.go:361: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=177.679 p95_ms=438.395 max_ms=536.860 target_ms=100 field_qualified=false\",",
+        "\"2026-10-19T10:37:59.4566075Z     supervised_load_test.go:431: supervised_tail round=1 duration_ms=30000 upload_mbps=103.302 download_mbps=104.692\",",
+        "\"2026-10-19T10:37:59.4567669Z     supervised_load_test.go:441: supervised_tail10 round=1 duration_ms=10000 upload_mbps=104.307 download_mbps=106.063\",",
+        "\"2026-10-19T10:37:59.4573600Z     supervised_load_test.go:521: supervised_acceptance round=1 tier=itom-1-0-0-rc10-stability-throughput-floor-waived minimum_verified_mbps=76.546048 max_rtt_ns=912578370 accepted=false field_qualified=false\",",
+        "\"2026-10-19T10:38:07.6211809Z --- FAIL: TestTransportReworkQualification (86.95s)\"",
+        "\"2026-10-19T10:36:50.3941733Z     supervised_load_test.go:266: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=1 max_ms=216 timeouts=0 missed=0 failure=<nil>\",",
+        "\"2026-10-19T10:37:50.3994085Z     supervised_load_test.go:352: supervised_result round=1 measured_ms=60000 upload_mbps=188.630 download_mbps=252.746 rtt_samples=30 p50_ms=157 p95_ms=217 max_ms=237 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T10:37:50.3997309Z     supervised_load_test.go:361: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=36.712 p95_ms=82.875 max_ms=92.781 target_ms=100 field_qualified=false\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/paired-common-production-manifest.json"
+      ],
+      "git_blob": "3761a5ac4c0ab2e1079ee56b0f2475a19a65ab7c",
+      "sha256": "a922aa2705277e952bb88f4b06321bf7b2a0cfb9e3b0f8f081b6f5bf63f895e0",
+      "bytes": 53123,
+      "review_signals": []
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/paired-rc2-rc10-39239603639.json"
+      ],
+      "git_blob": "538070215fad30329633d27d13dcd77853d03cc2",
+      "sha256": "3d8ae789299810baf688f9244b5650679364d5516183f834fc11e3e52acf2691",
+      "bytes": 97861,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"core_result\": \"Corrected identical common core PASS on both RC2 and RC10; run39240291399, job118019195238. Original historical-fixture failure remains documented.\",",
+        "\"upload_mbps\": 83.196,",
+        "\"download_mbps\": 238.194,",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": 81.841,",
+        "\"download_mbps\": 246.581",
+        "\"upload_mbps\": 78.774,",
+        "\"download_mbps\": 251.894",
+        "\"tier\": \"rc8-75-75mbps-max750ms-hard-release\",",
+        "\"minimum_verified_mbps\": 78.774272,",
+        "\"field_qualified\": false"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/qualification-39209952896.json"
+      ],
+      "git_blob": "4e508bcc6ab653ea0323665b45aa30b2b100ecd8",
+      "sha256": "2b9afcc82e425af5f5bf3cbda1085da4447892575e024c4ee7368dc620bc3c57",
+      "bytes": 10559,
+      "review_signals": [
+        "\"result\": \"not qualified; builds correctly skipped\",",
+        "\"name\": \"1 streams, retained=0, two 60s rounds\",",
+        "\"2026-10-19T06:28:50.5959336Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=157.557 download_mbps=79.465 rtt_samples=30 p50_ms=278 p95_ms=360 max_ms=367 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T06:28:50.6041251Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=77.568410 max_rtt_ns=367065085 accepted=true field_qualified=false\",",
+        "\"2026-10-19T06:29:52.8608526Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=161.664 download_mbps=76.231 rtt_samples=30 p50_ms=289 p95_ms=354 max_ms=444 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T06:29:52.8713094Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=75.025613 max_rtt_ns=444535129 accepted=true field_qualified=false\",",
+        "\"conclusion\": \"failure\",",
+        "\"2026-10-19T06:28:35.3302280Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=16500 upload_mbps=8.309 download_mbps=6.990 rtt_samples=7 p50_ms=785 p95_ms=1428 max_ms=1428 timeouts=1 missed=0 overlap=7 failure=probe user=1 index=8 status=timeout: read pipe: i/o timeout\",",
+        "\"2026-10-19T06:28:35.3854150Z --- FAIL: TestTransportReworkQualification (46.06s)\"",
+        "\"name\": \"32 streams, retained=0, two 60s rounds\",",
+        "\"conclusion\": \"failure\",",
+        "\"2026-10-19T06:29:17.1016942Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=135.070 download_mbps=77.372 rtt_samples=30 p50_ms=299 p95_ms=394 max_ms=414 timeouts=0 missed=0 overlap=30 failure=<nil>\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/audit/qualification-39243128189.json"
+      ],
+      "git_blob": "e2701ea1d7a1757b2c153bebee74ac8a6797eab9",
+      "sha256": "14dfe942ea8b02a84af39a3e25ad4172a4902738be1c74c1eea2f28804203bcd",
+      "bytes": 26642,
+      "review_signals": [
+        "\"release_qualified\": false,",
+        "\"2026-10-19T11:15:03.2732363Z     supervised_load_test.go:266: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=155 timeouts=0 missed=0 failure=<nil>\",",
+        "\"2026-10-19T11:16:03.2797131Z     supervised_load_test.go:352: supervised_result round=1 measured_ms=60000 upload_mbps=189.194 download_mbps=257.779 rtt_samples=30 p50_ms=155 p95_ms=205 max_ms=246 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T11:16:03.2823498Z     supervised_load_test.go:361: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=35.234 p95_ms=73.802 max_ms=91.585 target_ms=100 field_qualified=false\",",
+        "\"2026-10-19T11:16:03.3043057Z     supervised_load_test.go:431: supervised_tail round=1 duration_ms=30000 upload_mbps=188.971 download_mbps=259.182\",",
+        "\"2026-10-19T11:16:03.3045008Z     supervised_load_test.go:441: supervised_tail10 round=1 duration_ms=10000 upload_mbps=190.028 download_mbps=257.373\",",
+        "\"2026-10-19T11:16:03.3050353Z     supervised_load_test.go:521: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=188.970871 max_rtt_ns=246328234 accepted=true field_qualified=false\",",
+        "\"name\": \"4 streams, retained=1, two 60s rounds\",",
+        "\"2026-10-19T11:15:03.6078573Z     supervised_load_test.go:266: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=173 timeouts=0 missed=0 failure=<nil>\",",
+        "\"2026-10-19T11:16:03.6085559Z     supervised_load_test.go:352: supervised_result round=1 measured_ms=60000 upload_mbps=148.889 download_mbps=213.241 rtt_samples=30 p50_ms=148 p95_ms=213 max_ms=260 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-19T11:16:03.6089311Z     supervised_load_test.go:361: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=37.044 p95_ms=83.468 max_ms=101.437 target_ms=100 field_qualified=false\",",
+        "\"2026-10-19T11:16:03.6371306Z     supervised_load_test.go:431: supervised_tail round=1 duration_ms=30000 upload_mbps=167.728 download_mbps=205.364\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc10/evidence/05383c2-qualification.json"
+      ],
+      "git_blob": "95dbfecd1224519e40238a626e7e60514d829caa",
+      "sha256": "943ce71c8af82eb7ad59fb374b32ff021f82a3193018954d6dcb6e7aed4f444c",
+      "bytes": 21999,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"builds\": \"skipped; gates failed\",",
+        "\"name\": \"32 streams, retained=1, two 60s rounds\",",
+        "\"conclusion\": \"failure\",",
+        "\"2026-10-18T17:46:08.1076311Z     supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=334 timeouts=0 missed=0 failure=<nil>\",",
+        "\"2026-10-18T17:47:08.1063026Z     supervised_load_test.go:341: supervised_result round=1 measured_ms=60000 upload_mbps=85.026 download_mbps=68.843 rtt_samples=30 p50_ms=270 p95_ms=404 max_ms=551 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-18T17:47:08.1195958Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=85.026 download_mbps=68.843 verified_tail_mbps=67.790 rtt_ms=551.884 accepted=false\",",
+        "\"2026-10-18T17:47:08.1196620Z     supervised_load_test.go:506: supervised_acceptance round=1 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=67.790438 max_rtt_ns=551883952 accepted=false field_qualified=false\",",
+        "\"2026-10-18T17:48:10.4212355Z     supervised_load_test.go:341: supervised_result round=2 measured_ms=60000 upload_mbps=86.311 download_mbps=68.988 rtt_samples=30 p50_ms=309 p95_ms=376 max_ms=398 timeouts=0 missed=0 overlap=30 failure=<nil>\",",
+        "\"2026-10-18T17:48:10.4369111Z     supervised_load_test.go:504: rc8_hard_gate upload_mbps=86.311 download_mbps=68.988 verified_tail_mbps=68.149 rtt_ms=398.095 accepted=false\",",
+        "\"2026-10-18T17:48:10.4369782Z     supervised_load_test.go:506: supervised_acceptance round=2 tier=rc8-75-75mbps-max750ms-hard-release minimum_verified_mbps=68.148702 max_rtt_ns=398095151 accepted=false field_qualified=false\",",
+        "\"2026-10-18T17:48:19.7840939Z --- FAIL: TestTransportReworkQualification (161.27s)\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc11/downloads/ANDROID_BUILD_REPORT.json"
+      ],
+      "git_blob": "e754f769cc88211a250d65b5b098214d6ca9723f",
+      "sha256": "f212f7bc21002b2db883e2837e2cd387a9f7d62a26d4e2c606ef89b6560b95a9",
+      "bytes": 2070,
+      "review_signals": [
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc11/downloads/BUILD_VALIDATION.json"
+      ],
+      "git_blob": "5e4deba4e03b455b29587315a33e8bd72e439342",
+      "sha256": "c68af15a0c42d3ceb6713b73f1a0083a31b187befbf3c03f1e14ed8d7165127a",
+      "bytes": 1428,
+      "review_signals": [
+        "\"selected delivery/profiler regressions\",",
+        "\"72-stream paired home startup regression on RC10.1 and RC11\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc12/downloads/ANDROID_BUILD_REPORT.json"
+      ],
+      "git_blob": "b75894647136b917549b4cc4a77992c9bae0bdb2",
+      "sha256": "94ef5399178f7f0acbd9bfe93e4a2a55e83e426d1974a31c7b492898f2a72673",
+      "bytes": 2501,
+      "review_signals": [
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc12/downloads/BUILD_VALIDATION.json"
+      ],
+      "git_blob": "af15d7fd0e87817ac396189817841822b1ffa9cf",
+      "sha256": "e391c27fee36fb70e4cfe9383c760e2fe1e16ee0b168db6880753c95609d94ef",
+      "bytes": 7407,
+      "review_signals": [
+        "\"test_failures\": 0,",
+        "\"baseline_download_mbps\": 46.44,",
+        "\"baseline_upload_mbps\": 28.157,",
+        "\"rc12_download_mbps\": 53.427,",
+        "\"rc12_upload_mbps\": 38.115,",
+        "\"download_mbps\": 92.932,",
+        "\"upload_mbps\": 40.022,",
+        "\"real_provider_speedtest_resolution\": \"unqualified\",",
+        "\"sustained_100mbps\": \"unqualified\",",
+        "\"sub_200ms_rtt\": \"unqualified\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc13/audit/long-results.json"
+      ],
+      "git_blob": "b89ddd4ef46dcf79f1ca47e4de818b2b75b04437",
+      "sha256": "5762e9f529cc862723e4cad6776745a8ad1628981a0ff28f9d138261a3573707",
+      "bytes": 2050,
+      "review_signals": [
+        "\"failures\": []",
+        "\"phase=D sink_interval_mbps=17.616 elapsed_ms=5000\",",
+        "\"phase=D sink_interval_mbps=96.469 elapsed_ms=10000\",",
+        "\"phase=D application_mbps=76.735 duration_ms=13992\",",
+        "\"phase=U sink_interval_mbps=35.652 elapsed_ms=5000\",",
+        "\"phase=U sink_interval_mbps=30.199 elapsed_ms=10000\",",
+        "\"phase=U sink_interval_mbps=38.168 elapsed_ms=15000\",",
+        "\"phase=U sink_interval_mbps=39.007 elapsed_ms=20000\",",
+        "\"phase=U sink_interval_mbps=38.168 elapsed_ms=25000\",",
+        "\"phase=U sink_interval_mbps=33.554 elapsed_ms=30000\",",
+        "\"phase=U application_mbps=35.464 duration_ms=30277\",",
+        "\"failures\": []"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc13/audit/results.json"
+      ],
+      "git_blob": "8cd20d6e4c247a99f96fd36518130b44d519033a",
+      "sha256": "4c5d21b8c1c74af610a1a7d9b15dd6ab29f914f2faca7a30def1fcd5b789f335",
+      "bytes": 1234,
+      "review_signals": [
+        "\"failures\": []",
+        "\"phase=D application_mbps=25.491 duration_ms=10530\",",
+        "\"phase=U application_mbps=28.770 duration_ms=9330\",",
+        "\"failures\": [",
+        "\"--- FAIL: TestRC12RetainedPhasedTransfersWithObservedJournalCost (67.84s)\",",
+        "\"FAIL\"",
+        "\"phase=D application_mbps=66.029 duration_ms=4065\",",
+        "\"phase=U application_mbps=41.509 duration_ms=6466\",",
+        "\"failures\": []",
+        "\"phase=D application_mbps=59.593 duration_ms=4504\",",
+        "\"phase=U application_mbps=37.928 duration_ms=7077\",",
+        "\"failures\": []"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc13/downloads/ANDROID_BUILD_REPORT.json"
+      ],
+      "git_blob": "45a3f0902c1a5d0d738667f5ba38439483834392",
+      "sha256": "5ad4060fbd809f99540d9a4bdd0f7bed0b0637328b653a118ee25c65e267c0ae",
+      "bytes": 2501,
+      "review_signals": [
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc13/downloads/BUILD_VALIDATION.json"
+      ],
+      "git_blob": "276bb7d90a920b2ec6ae4410dd00dff6cd548944",
+      "sha256": "cd11240cdad21809e884a347b416b60de33ecdaf4657c360c401ef3d00c1cec9",
+      "bytes": 7263,
+      "review_signals": [
+        "\"down_mbps\": 93.339,",
+        "\"up_mbps\": 37.623,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc8/FINAL_TESTING_RTT_CHECKPOINT.md"
+      ],
+      "git_blob": "bcb9776030811a989c1691675114680a18eaef6b",
+      "sha256": "4ba6e0521d61e92cf2a380770db6ceac34bc5bdf9b6abb61b166b8fa0801dbd1",
+      "bytes": 2462,
+      "review_signals": [
+        "- The original descriptor-cache 512-entry headroom correction is retained.",
+        "- Regression `TestRC8FreshQuietEchoOverridesOlderIdleBaseline` checks idle,",
+        "unqualified while RC8 strict CI and real Android/Rambler validation remain red.",
+        "Accept RC8 only with >=75Mbps each direction for entire 60s, tail 30s and",
+        "10/20Mbps startup continuity, fresh/retained recovery and real-device tests.",
+        "32-stream throughput FAIL because last 10-second download = 73.374106 Mbps",
+        "despite 60-second 132.029/78.237 Mbps and max RTT 401.053 ms:",
+        "fresh+retained qualification, low-link startup, real Android/Rambler test",
+        "and <=100ms jitter goal remain unqualified."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc8/evidence/cleanup-qualification-20261018.json"
+      ],
+      "git_blob": "4ed8e81ec85b882bf3a766bc9d5da1bc88a5dda9",
+      "sha256": "f9c3f94cee2f7b2140918c43968499a44cbed5be96321d0de1c71c84936fbba3",
+      "bytes": 299373,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"minimum_full_and_tail_each_direction_mbps\": 75,",
+        "\"name\": \"32 streams, retained=0, two 60s rounds\",",
+        "\"production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=6488064 download_bytes=1376256 upload_mbps=51.905 download_mbps=11.010 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=3 observed_ms=1000 upload_bytes=11960320 download_bytes=2031616 upload_mbps=95.683 download_mbps=16.253 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=331 timeouts=0 missed=0 failure=<nil>\",",
+        "\"production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=17530880 download_bytes=2785280 upload_mbps=140.247 download_mbps=22.282 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=19202048 download_bytes=8388608 upload_mbps=153.616 download_mbps=67.109 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=19693568 download_bytes=13467648 upload_mbps=157.549 download_mbps=107.741 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=11993088 download_bytes=18055168 upload_mbps=95.945 download_mbps=144.441 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=13926400 download_bytes=11403264 upload_mbps=111.411 download_mbps=91.226 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"production_window5 user=1 index=1 observed_ms=5000 upload_mbps=131.753 download_mbps=86.560\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc9/evidence/0dc4e91-qualification.json"
+      ],
+      "git_blob": "0c8089fa4da948baa45bf889cc78782fc00b7b3f",
+      "sha256": "a04762d3ac2fafd7e409ef8e97fc5916da829bf59f8f4bb695b724e274074cd8",
+      "bytes": 394936,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"decision\": \"Reject extra global exception restriction: retained 4-stream rounds fell below 75 Mbps and one stalled a 1-second upload window. Low-rate cases completed 60s/30 probes without loss but exceeded 750ms. Restore 8868df3 runtime.\",",
+        "\"measurement_test.go:158: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=1048576 download_bytes=1081344 upload_mbps=8.389 download_mbps=8.651 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"measurement_test.go:158: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=1 observed_ms=1000 upload_bytes=5275648 download_bytes=3604480 upload_mbps=42.205 download_mbps=28.836 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=401 timeouts=0 missed=0 failure=<nil>\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=5570560 download_bytes=5963776 upload_mbps=44.564 download_mbps=47.710 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=12746752 download_bytes=13008896 upload_mbps=101.974 download_mbps=104.071 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=2 observed_ms=1000 upload_bytes=360448 download_bytes=9306112 upload_mbps=2.884 download_mbps=74.449 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=5 observed_ms=1000 upload_bytes=17301504 download_bytes=10092544 upload_mbps=138.412 download_mbps=80.740 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=5898240 download_bytes=8781824 upload_mbps=47.186 download_mbps=70.255 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window5 user=1 index=1 observed_ms=5000 upload_mbps=67.004 download_mbps=75.445\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=6 period_ms=1000 boundary_ms=6000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=13697024 download_bytes=12582912 upload_mbps=109.576 download_mbps=100.663 upload_gap_ms=0 download_gap_ms=0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc9/evidence/41688d1-qualification.json"
+      ],
+      "git_blob": "445f1fe54369764b1744133fb314f0a3792e95ac",
+      "sha256": "7f84eb4f078e6253a1e8eb0f6f6b8d46f7f45671229eba4934ec8efe9e528e72",
+      "bytes": 371386,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"failures\": [",
+        "\"SINGLE retained round 2 download bytes zero in window 60\",",
+        "\"early 10 Mbps timeout\",",
+        "\"early 20 Mbps max RTT 1224.427 ms\"",
+        "\"measurement_test.go:158: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=4194304 download_bytes=2523136 upload_mbps=33.554 download_mbps=20.185 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"measurement_test.go:158: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=12058624 download_bytes=4849664 upload_mbps=96.469 download_mbps=38.797 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=336 timeouts=0 missed=0 failure=<nil>\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=4 observed_ms=1000 upload_bytes=6946816 download_bytes=6291456 upload_mbps=55.575 download_mbps=50.332 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=3604480 download_bytes=3899392 upload_mbps=28.836 download_mbps=31.195 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=14680064 download_bytes=8945664 upload_mbps=117.441 download_mbps=71.565 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=16449536 download_bytes=18874368 upload_mbps=131.596 download_mbps=150.995 upload_gap_ms=0 download_gap_ms=0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc9/evidence/8868df3-qualification.json"
+      ],
+      "git_blob": "4a9688e7c1e709d1e808bafea5051400d9a8f35f",
+      "sha256": "55e27bfab375f90a347ad3ce801f93eec717ff819a56e0f3436f1a057426f1ce",
+      "bytes": 373221,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"decision\": \"Retain calibration correction and bounded cleanup scheduling: 12/12 repeated full-capacity rounds pass. Early 10/20 Mbps still fail unchanged latency gates; builds remain skipped.\",",
+        "\"measurement_test.go:158: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=1310720 download_bytes=1409024 upload_mbps=10.486 download_mbps=11.272 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"measurement_test.go:158: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=4194304 download_bytes=4096000 upload_mbps=33.554 download_mbps=32.768 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=1 max_ms=288 timeouts=0 missed=0 failure=<nil>\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=7700480 download_bytes=10190848 upload_mbps=61.604 download_mbps=81.527 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=9109504 download_bytes=11993088 upload_mbps=72.876 download_mbps=95.945 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=12615680 download_bytes=13336576 upload_mbps=100.925 download_mbps=106.693 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=13697024 download_bytes=10452992 upload_mbps=109.576 download_mbps=83.624 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=7274496 download_bytes=11173888 upload_mbps=58.196 download_mbps=89.391 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window5 user=1 index=1 observed_ms=5000 upload_mbps=80.627 download_mbps=91.426\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=6 period_ms=1000 boundary_ms=6000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=14548992 download_bytes=10452992 upload_mbps=116.392 download_mbps=83.624 upload_gap_ms=0 download_gap_ms=0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc9/evidence/eef1123-repeat-qualification.json"
+      ],
+      "git_blob": "05731e50f939320a156565ee0043d2219e2965a3",
+      "sha256": "e665f364aa6e291f84533a47fdf3b63c55dcb2edb4e4d33f73c324cbbf9ed76f",
+      "bytes": 373177,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"measurement_test.go:158: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=1409024 download_bytes=1736704 upload_mbps=11.272 download_mbps=13.894 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"measurement_test.go:158: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=3899392 download_bytes=3080192 upload_mbps=31.195 download_mbps=24.642 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=259 timeouts=0 missed=0 failure=<nil>\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=9732096 download_bytes=7602176 upload_mbps=77.857 download_mbps=60.817 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=11534336 download_bytes=9207808 upload_mbps=92.275 download_mbps=73.662 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=8847360 download_bytes=12156928 upload_mbps=70.779 download_mbps=97.255 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=10878976 download_bytes=8650752 upload_mbps=87.032 download_mbps=69.206 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=6324224 download_bytes=14057472 upload_mbps=50.594 download_mbps=112.460 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window5 user=1 index=1 observed_ms=5000 upload_mbps=75.694 download_mbps=82.666\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=6 period_ms=1000 boundary_ms=6000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=9994240 download_bytes=10092544 upload_mbps=79.954 download_mbps=80.740 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=7 period_ms=1000 boundary_ms=7000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=12550144 download_bytes=6127616 upload_mbps=100.401 download_mbps=49.021 upload_gap_ms=0 download_gap_ms=0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.0.0-rc9/evidence/f549009-qualification.json"
+      ],
+      "git_blob": "15452ad142e676749b862498896e148e3f0070d3",
+      "sha256": "c7f6e53a06c68ae1f91c085685749db82ac59dc231e5d10558fb547622c18aa5",
+      "bytes": 321743,
+      "review_signals": [
+        "\"qualified\": false,",
+        "\"decision\": \"Reject and revert short-reader audit experiment: retained 32-stream tails regressed to 34.157/47.789 Mbps; early full-rate 4-stream cold probe timed out. Keep evidence; do not hide failing rounds.\",",
+        "\"measurement_test.go:158: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=6651904 download_bytes=2097152 upload_mbps=53.215 download_mbps=16.777 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"measurement_test.go:158: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=15892480 download_bytes=4128768 upload_mbps=127.140 download_mbps=33.030 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:255: supervised_cold_probes elapsed_ms=2000 samples=2 overlap=2 max_ms=341 timeouts=0 missed=0 failure=<nil>\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=1 period_ms=1000 boundary_ms=1000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=15204352 download_bytes=12943360 upload_mbps=121.635 download_mbps=103.547 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=2 period_ms=1000 boundary_ms=2000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=18808832 download_bytes=14745600 upload_mbps=150.471 download_mbps=117.965 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=3 period_ms=1000 boundary_ms=3000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=17399808 download_bytes=14778368 upload_mbps=139.198 download_mbps=118.227 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=4 period_ms=1000 boundary_ms=4000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=15466496 download_bytes=14057472 upload_mbps=123.732 download_mbps=112.460 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=5 period_ms=1000 boundary_ms=5000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=23887872 download_bytes=14057472 upload_mbps=191.103 download_mbps=112.460 upload_gap_ms=0 download_gap_ms=0\",",
+        "\"supervised_load_test.go:309: production_window5 user=1 index=1 observed_ms=5000 upload_mbps=145.206 download_mbps=112.914\",",
+        "\"supervised_load_test.go:309: production_window user=1 index=6 period_ms=1000 boundary_ms=6000 scheduling_lag_ms=0 observed_ms=1000 upload_bytes=17891328 download_bytes=9011200 upload_mbps=143.131 download_mbps=72.090 upload_gap_ms=0 download_gap_ms=0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV3_BUILD.json"
+      ],
+      "git_blob": "fc005747e5b6925023efa6c26f5a4d6f5c62324e",
+      "sha256": "691847f2c8241bc6b8f1ce9cb6757f9d05b688b2ce3dcb7a1b45e682264dc9e0",
+      "bytes": 3211,
+      "review_signals": [
+        "\"classification\": \"experimental testing build; not stable/field qualified\",",
+        "\"useful_mbps_each_direction\": 0.324402,",
+        "\"failed\": 0,",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV4_BUILD.json"
+      ],
+      "git_blob": "b88f9688fec7350d9fd5e4cc9aa3dc7b89381aaf",
+      "sha256": "fa8493e75f2153de2c2d4df609efbea9ecb7676cefa471a20c460345872c9cf4",
+      "bytes": 4337,
+      "review_signals": [
+        "\"classification\": \"testing candidate; field qualification pending; known retained duplex and sparse-tail regressions\",",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV4_TESTING.md"
+      ],
+      "git_blob": "6e97530185b2e6c8b1b06b4617295cdb2cdb06ea",
+      "sha256": "e71d88f69b96c442bb334349df98699f8f7c5cef784a68f7b67bd8e3a5ac79ff",
+      "bytes": 3372,
+      "review_signals": [
+        "Original sustained performance gates: candidate 20/20, RC2 16/20, with the same fixtures and thresholds. Each variant completed all planned rounds; failed reference invocations remain in results.json. Some workflow jobs are red because they include failed RC2 comparisons; this is not an all-green workflow claim. Candidate short-request, retained interactive, full-flight transition and worst-4G checks passed. These are simulated IMAP tests, not real Rambler or Android measurements; CI has four cores, deployment has eight.",
+        "Retained upload-only: 158.2 vs RC2 76.9 Mbps. Download-only capacity remains about 269 vs 266 Mbps. Retained 40 ms short-request mean improves 168.7 to 134.7 ms (p95 356.3 to 198.7 ms). Changing-path light-load mean improves 210.9 to 200.3 ms. RTT is tunnel request/response time, not direct IMAP latency.",
+        "Retained simultaneous-duplex download is 8.4% lower in MULTI and 13.0% lower in SINGLE; upload improves. Some idle/light tails still regress, including a fixed-40 ms fresh idle maximum of 522.5 vs 228.6 ms. This build does not meet a universal no-regression or spike-free claim. It is selected for field testing because it has the strongest completed gate result and full correctness proof, not because every original development goal is met."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV5_BUILD.json"
+      ],
+      "git_blob": "d01387b4558e6353c74868abff3429f807e6aa8f",
+      "sha256": "83fb7cf8fdf6a8babeb617f7d518ce3625d682101f89baf99bc9d10325efe3e5",
+      "bytes": 7029,
+      "review_signals": [
+        "\"classification\": \"experimental testing RC; known performance regressions; real-provider improvement unverified\",",
+        "\"useful_mbps_each_direction\": 0.274281,",
+        "\"failed\": 0,",
+        "\"client_down_mbps\": 1,",
+        "\"client_up_mbps\": 2.5,",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"private_key_retained_locally\": true,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV5_TESTING.md"
+      ],
+      "git_blob": "8bb5f203807a4c700fb622841a1bcdcefd7eecbd",
+      "sha256": "485526ebed49c1d7b183b10482701087df31495bae339fec400971598e48cc69",
+      "bytes": 3572,
+      "review_signals": [
+        "DEV5 has directly measured gains over the last DEV4 RC:48/48short sequential phases pass versus42/48 for DEV4, upload average improves in all eight profiles and download in seven. The capped SINGLE processing case improves180.3/91.1\u2192197.0/124.4Mbps. These are matched simulator measurements, not predicted Rambler speed.",
+        "The unchanged sustained suite scores17/20 versus RC2 13/20. All original candidate sockets/probes survive. Two variable-path tails below100Mbps and one819ms loaded RTT maximum still fail; no gate is waived. Against DEV4, capped MULTI download in the processing sensitivity regresses8.4% while upload improves33%. The capped processing idle/light case also has worse tails, including555ms idle maximum. Other idle/light profiles improve; all means improve against RC2. Retained simultaneous-duplex download remains8\u201310% below RC2. This build is not universally faster or spike-free and still needs field testing.",
+        "Full Go/vet/accounting/controller race suites pass. The local shared-socket/recovery/reader race tests and the worst raw4G case pass (0.274Mbps each direction,63exchanges, zero failures). Android:82domain+7adapter unit tests pass, no skipped/failed tests, lint zero errors and one dependency-version notice. Both JNI architectures, package org.itom.client and versionCode10105/versionName1.1.0-dev5-debug are verified. Linux amd64/arm64 hashes and embedded revision are verified.",
+        "Use matching client/server builds and preserve private server state, journals and wallet data. The persistent-signed APK attached to this GitHub prerelease uses the previously retained private signer, with SHA256 certificate47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6. It differs from DEV4's temporary debug key; in-place compatibility with DEV4 is not claimed. The GitHub APK artifact is the original temporary-debug-signed CI build, with the same runtime and a different signer. Neither key material nor passwords are distributed. Future updates should keep the persistent signer and app data; do not erase wallet data to work around a signature mismatch."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV6_BUILD.json"
+      ],
+      "git_blob": "d5549c1cff224ee138389e0304a4ee651da8efa8",
+      "sha256": "e3764ad2d812b28c972ded00751c33de2404bec4e11e5c05795e9f6a54b011cd",
+      "bytes": 10964,
+      "review_signals": [
+        "\"classification\": \"experimental testing RC; known failed loaded-race timing diagnostic and one sustained tail gate; real-provider RTT improvement unverified\",",
+        "\"fully_qualified\": false,",
+        "\"regression_run_id\": 39885675385,",
+        "\"exact_DEV5_three_debt_shapes\": \"all three fail before fix\",",
+        "\"classification\": \"EXPERIMENTAL TESTING PACKAGE, NOT FULLY QUALIFIED\",",
+        "\"failed\": [",
+        "\"result\": \"FAILED\",",
+        "\"publication_note\": \"All original failures remain visible. Known loaded-race timing miss also reproduces on DEV5; field idle RTT is unverified.\"",
+        "\"experimental_packaging_policy\": \"Normal full suite, vet, accounting races and quota regressions must pass. All 37 selected tunnel race cases remain visible with original assertions. One explicit existing mixed-load 1100ms chat deadline failure is retained as FAILED; no data race, panic, bulk request failure or other failed test is permitted. This is not full qualification.\",",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV6_TESTING.md"
+      ],
+      "git_blob": "165d3440bb1a1de239ba76bd85d4851bd66a1104",
+      "sha256": "3f585f416770833e0036a031c349ccd697037277fb80a97c370ec3b3ee321670",
+      "bytes": 4082,
+      "review_signals": [
+        "The new real TLS/IMAP regression reaches **30/30 directions** and verifies short/bulk/short exchanges on every one of fifteen accounts under retained byte pressure. The same three field-shaped allocation cases fail on frozen DEV5 and pass on DEV6. Normal profiles keep their existing fast/bulk sizes. Diagnostics expose historical charges, actual free headroom, the chosen fast reserve and missing-wallet audit counts.",
+        "**Matched laboratory results:** DEV6 19/20 sustained rounds versus RC2 19/20; DEV6 48/48 short phases versus RC2 42/48. Against DEV5 both variants pass 36/36 short phases, with measured mean bandwidth changes from \u22122.7% to +5.7% across three fixtures. The worst raw-4G test delivers 0.287 Mbps in each direction, 66 exchanges, zero failures. Server network latency is modeled at **20 ms**. These are simulated-provider results, not Rambler field measurements. Rates above 200 Mbps in the lab do not predict phone/provider throughput.",
+        "**Known failures remain.** One sustained mobile tail is 99.457 Mbps, below the unchanged 100 Mbps gate. The race-enabled mixed-load test still misses its original 1100 ms chat deadline; the miss also reproduces on unchanged DEV5. A separate capped-socket stress run under CPU contention fails 6/30 repetitions, despite isolated 20/20. Every failed observation is retained. The testing APK is built with an explicit exception for that known loaded-race timing diagnostic; this is **not an all-checks-passed or fully qualified release**. No data race or accounting failure is permitted by that exception.",
+        "[Field analysis](https://github.com/Septonious/itom/blob/codex/v1.1.0-transport-rework/archives/1.1.0/experiments/dev6-byte-headroom/FIELD_ANALYSIS.md) \u00b7 [Complete comparisons](https://github.com/Septonious/itom/blob/codex/v1.1.0-transport-rework/archives/1.1.0/experiments/dev6-byte-headroom/RESULTS.md) \u00b7 [Known failed cases](https://github.com/Septonious/itom/blob/codex/v1.1.0-transport-rework/archives/1.1.0/experiments/dev6-byte-headroom/KNOWN_FAILURES.json) \u00b7 [Build, signing and package hashes](https://github.com/Septonious/itom/releases/download/v1.1.0-dev6/DEV6_BUILD.json)."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV7_BUILD.json"
+      ],
+      "git_blob": "d6af3e6a26c4110df1cd4abf7fb01bcd3de81dde",
+      "sha256": "5c57ef80d839a0ecaf17ae7a9199af3fbfb4196df4bb576f7c5fce7e2063d23b",
+      "bytes": 154395,
+      "review_signals": [
+        "\"classification\": \"EXPERIMENTAL TESTING PACKAGE; NOT FIELD QUALIFIED\",",
+        "\"classification\": \"EXPERIMENTAL testing package; original 1100 ms mixed-load chat deadline remains failed when original_test_passed is false; this job is not a passing qualification result\"",
+        "\"classification\": \"LABORATORY; real provider/device not qualified\",",
+        "\"upload_mbps\": \"113.993\",",
+        "\"download_mbps\": \"262.022\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"114.959\",",
+        "\"download_mbps\": \"265.425\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"114.745\",",
+        "\"download_mbps\": \"260.829\",",
+        "\"failure\": \"<nil>\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV7_TESTING.md"
+      ],
+      "git_blob": "3fe10f9145291edeb214ca4069cf8cee2d97c0cc",
+      "sha256": "c8b8d42737f81209bc97ae5c4cb5141e457fbba6ac122dcb07b7179908c59a65",
+      "bytes": 1721,
+      "review_signals": [
+        "DEV7 removes shared IMAP command waits and makes two full bulk copies usable where retained quota capacity permits, while preserving a complete FAST batch and every old reservation. It also fixes a concurrent admission diagnostic-snapshot race.",
+        "Matched captured-capacity tests: DEV7 averaged **119.1/91.3 Mbps MULTI** and **116.8/104.1 Mbps SINGLE**; DEV6 averaged 92.7/68.7 and 91.9/69.4. All twelve DEV7 phases completed, with fewer stalled half-second windows. Only 4/12 met every strict 100 Mbps/no-stall criterion. Original sustained gates: DEV7 17/20, RC2 19/20; original short phases: DEV7 48/48, RC2 42/48. All numerical thresholds and failed observations remain intact.",
+        "This is an **experimental testing build**. Real-provider Speedtest reliability, consistent 100 Mbps and idle/light RTT improvement remain unverified. The initial instant failure was outside the retained startup trace, so it has no proven diagnosis. See the included RESULTS and KNOWN_FAILURES files for the remaining loaded RTT, tail-speed and stall failures."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV8_BUILD.json"
+      ],
+      "git_blob": "fa21103c1c628e3792601fd9e44a7f3bef6d449f",
+      "sha256": "2a62fa4c52a7efa15b1924361fe0f387d4e2c0412e23439ad7cb2a69e7b8e623",
+      "bytes": 8399,
+      "review_signals": [
+        "\"classification\": \"EXPERIMENTAL TESTING PACKAGE; NOT FIELD QUALIFIED\",",
+        "\"classification\": \"EXPERIMENTAL testing package; original 1100 ms mixed-load chat deadline remains failed when original_test_passed is false; this job is not a passing qualification result\"",
+        "\"fully_qualified\": false,",
+        "\"field_qualified\": false,",
+        "\"private_key_retained_locally\": true,",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"task_failed_this_run\": false",
+        "\"failures\": 0,",
+        "\"failed_cases\": [],",
+        "\"Captured-role capacity phases retain 100 Mbps and zero half-second stall requirements: model3/12, DEV7 5/12, RC2 0/12 passed; every phase completed with verified bytes\",",
+        "\"Variable40\\u2013180ms mobile light probes and TLS/abort case still have deadline failures; exact logs and failed samples retained\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/DEV8_TESTING.md"
+      ],
+      "git_blob": "2108cab14f6dcc92d70c2484d17b0167a9eda191",
+      "sha256": "d1d16ca46f38ceb517d7ba1909ee46720a00467a516ce91ec384a940d930e5b4",
+      "bytes": 2438,
+      "review_signals": [
+        "The matched original lab qualification passed **20/20 sustained rounds and 48/48 short phases**, versus unchanged RC2's 16/20 and 42/48. Core correctness, vet, accounting/mailbox/recovery races, 89 Android unit tests, APK compilation and lint passed (one dependency-version lint warning). These are laboratory results, not a prediction of Rambler/device speeds. The older broad profiles have more socket/permission headroom and different provider capabilities than the captured deployment; their 200\u2013280 Mbps measurements do not establish real-world bandwidth. Normal-profile upload means remain about 8\u20139% below RC2 while download increases.",
+        "The closer 15-account simulation preserves 48 historical grants per account, the captured three-server/two-phone socket roles, a 20 ms server path and 40 ms phone path. SINGLE means: **108.1/78.2 Mbps**, versus DEV7's 108.2/79.2. MULTI: **105.0/76.9 Mbps**, versus 106.0/79.9. All 12 phases complete, but only 3/12 pass both the unchanged 100 Mbps floor and zero half-second stall requirement (DEV7: 5/12). Those failures remain failures.",
+        "**Known limitation:** the 40\u2013180 ms mobile sensitivity still has light-request/TLS timeouts. The code fixes specific reproduced faults; it is not yet field-qualified and does not establish that every reported Speedtest failure or idle spike is fixed. The full numeric results and raw logs accompany this release. Earlier rejected allocation, hot-polling and routing experiments are not in these binaries."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/RESULTS-DEV1.md"
+      ],
+      "git_blob": "e2f3c091f644215bdb73f05bdaec7c765fbe99b5",
+      "sha256": "1c558de929a071950bac761dadd47e07e28e92b2e422c444d2c2f5b468871dac",
+      "bytes": 4973,
+      "review_signals": [
+        "Ten accounts, independent2ms server/1000Mbps and client500Mbps routes, actual production supervisors, TLS/IMAP, journals and persistent verified TCP echoes. Each route uses three alternating AB/BA/AB pairs and72 verified32-byte requests per phase/version. Light load adds a4KiB echo stream; it is closed-loop, not a fixed offered-rate benchmark. Times below are pooled mean/p95 milliseconds; independent experimental units are the three runs, not72 unrelated machines.",
+        "All latency invocations completed, keeping their original two application sockets and carrier identities. Not every extreme improved:40ms idle max195.5\u2192198.0ms and light172.3\u2192206.0ms. That small sample cannot establish universal tail non-regression. Earlier broader policies produced worse40ms distributions and were not accepted; both prior reports and failures remain recorded.",
+        "Two complete60s rounds per side/scenario, client40ms/500Mbps, server2ms/1000Mbps except the explicit20ms sensitivity case. Same byte generators, complete scheduled probes, original full/30s/10s tails, all sockets and100Mbps/750ms gates. Each scenario runs both binaries serially on the same four-core shared runner. Rates below average only complete rounds, upload/download Mbps.",
+        "| Retained SINGLE | 76.6 /308.2 | 76.8 /309.4 | Both FAIL100Mbps upload/tail target |",
+        "| Retained MULTI32 | 76.8 /286.3 | 76.8 /282.6 | Both FAIL100Mbps upload/tail target |",
+        "All28 measurement rounds completed,420 loaded probes per version, with no timeouts/missed probes or carrier/socket replacement. Candidate maximum loaded RTT was340ms; RC2344ms. The observed BINARY download difference is retained in the table; two rounds do not certify equivalence or a causal regression. Earlier matched runs varied in both directions. This evidence supports continued field evaluation, not an all-scenarios100Mbps claim. Retained-state failures still block stable qualification.",
+        "The supplied worst4G trace,1Mbps down/2.5Mbps up and2ms server route completed78 verified16KiB request/replies in30.276s:0.338Mbps each direction, above the separate0.1Mbps connectivity objective. This does not waive any high-capacity target.",
+        "Corrected mailbox watchdog checks and journal/wallet/flow/datapath race checks passed locally. An extra local race-instrumented HTTPS stress invocation missed its original5s HTTP deadline without a race detector report; the same functional workload passed in a normal matched local run for RC2 and the preceding equivalent low-route candidate. This extra failure is not hidden or called a pass. Full CI correctness, Android SDK tests/lint, native identity and artifact status are recorded by the linked workflow when completed.",
+        "The full suite later failed the original capped/shared-socket repair test (12s1MiB transfer after forced control EOF). APK/binary export for this checkpoint was skipped automatically. The next DEV2 candidate preserves RC2 wait timing whenever DATA/maintenance are not physically isolated, and repeats correctness/qualification. These DEV1 performance numbers do not certify that later candidate."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/RESULTS-DEV2.md"
+      ],
+      "git_blob": "7e7ac1e8c31a55f449e1be0b8f8819ec1cea8241",
+      "sha256": "82d3ba4f734d33f44f89aef61a64b49a6b7f5706c2fd715a9d0f0b87637592bc",
+      "bytes": 5499,
+      "review_signals": [
+        "Source/build commit: [37d3fae](https://github.com/Septonious/itom/commit/37d3fae1b56213a8c6541e85ad64fa294155142e). [Complete run](https://github.com/Septonious/itom/actions/runs/39602535979). **Experimental; performance qualification failed.** Full correctness, race checks and Android/Linux builds passed. Final 1.0.0/RC2 is unchanged. The new useful-delivery controller is a separate experiment and is not included in these APK/binaries.",
+        "Ten actual supervisors and account pairs, TLS/IMAP, journals and persistent verified 32-byte application exchanges. Server route 2ms/1Gbps; client 500Mbps. Three alternating runs per variant, 72 requests per phase. Light traffic is a closed-loop 4KiB echo with think time. These are shared-host laboratory results, not Android/Rambler measurements. Mean / p95 / max, milliseconds:",
+        "The 5ms benefit repeats. The 40ms idle mean and tail worsened in this run; it is not a universal latency improvement. Restricting the new receive search to measured <=20ms independent DATA/maintenance paths prevents the prior capped-socket recovery failure, but does not establish tail equivalence on all mobile paths.",
+        "Two complete 60s rounds per side and scenario. Existing full/30s-tail/10s-tail, complete probe schedule, application/carrier identity, strict 100Mbps and 750ms gates are unchanged. Table rates average complete rounds, upload / download Mbps. Every missed target remains a failure.",
+        "| retained-single | 76.3 / 309.1 | 76.9 / 306.7 | Both FAIL 100Mbps upload/tails |",
+        "| retained-multi | 76.7 / 313.5 | 76.9 / 311.6 | Both FAIL 100Mbps upload/tails |",
+        "| historical-route | 132.0 / 164.6 | 133.2 / 164.2 | Both FAIL; loaded tail / RTT |",
+        "The 20ms-server sensitivity produced RC2 max 938ms and DEV2 max 809ms; DEV2 also had an 88.159Mbps minimum verified tail. All 28 measurement rounds completed, with zero probe timeouts/misses in the recorded rounds. Complete rounds and successful sockets do not convert failed rate/RTT gates into passes.",
+        "DEV2 full Go suite/vet, required journal/wallet/flow/datapath race checks and worst-4G check passed in CI. The guard also passed five repeated capped/shared-socket repair/controller checks locally without changing their deadlines. The extra local HTTPS race-instrumented 5s timeout recorded in the DEV1 report remains a failure, not a passed check.",
+        "Exact raw samples, rounds and log hashes: [ci4-dev2-results.json](experiments/ci4-dev2-results.json). Source file hashes: [SOURCE_INTEGRITY_DEV2.json](experiments/SOURCE_INTEGRITY_DEV2.json). Prior checkpoint failures: [RESULTS-DEV1.md](RESULTS-DEV1.md).",
+        "Faster quota-aware reclamation raised retained upload but also reduced download. Conservative 900/1000/1100ms floor trials each included four full rounds per variant in reversed orders. Upload averaged 120.4/111.8/103.8Mbps versus controls near 77; download fell approximately 5.7/3.6/2.6%. The earlier faster trial lost substantially more SINGLE download. These changes are preserved separately and **not promoted**. [Exact conservative trials](experiments/reclamation-floor-results.json). The fresh sparse fast-fence comparison did not demonstrate a mean RTT benefit."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/RESULTS.md"
+      ],
+      "git_blob": "888c49b92d02759909661befbc65ecef8d1b0e3d",
+      "sha256": "227878b457bdba09caba2c96faa47bf29e33a5978f94868e1761c0a1c8072c63",
+      "bytes": 9659,
+      "review_signals": [
+        "Current testing source is staged by stage.py as ITOM1.1.0 DEV3, package org.itom.client/versionCode10103. It is experimental and not a stable/field-qualified release. Final1.0.0 remains RC2. No historical qualification threshold or physical accounting rule is reduced.",
+        "## Trials retained and rejected",
+        "- First model, commit5be0d740bc9e7ac68d28e907e292a87707a1f4a5, [run39621414070](https://github.com/Septonious/itom/actions/runs/39621414070): all fresh and changing-route rounds completed, but no useful throughput win and weaker MULTI/retained tails. Not selected. [Raw rounds and samples](experiments/delivery-model/results-v1.json).",
+        "- First supply proxy, commit9de16a6200af2dbbb76233d63783a82284d14782, [run39624632542](https://github.com/Septonious/itom/actions/runs/39624632542): superseded because uncompleted APPENDs are not necessarily waiting for quota. It also recorded changing-route tail/RTT failures. No result is hidden. [Raw evidence](experiments/delivery-model/results-v2-supply-proxy.json).",
+        "[Run39625447401](https://github.com/Septonious/itom/actions/runs/39625447401). Immutable RC2 production plus identical fixture code, compiled before measurement and run serially in reversed orders on each four-core shared runner. Four complete60s rounds per variant/scenario; original full/30s/10s tails, complete probes, socket identities and100Mbps/750ms checks retained. Rates are mean upload/download Mbps of complete rounds; small differences do not establish statistical equivalence.",
+        "| retained-single | 76.6 / 322.4 | 76.8 / 327.0 | Both FAIL100Mbps upload/tail target |",
+        "| retained-multi | 76.7 / 312.3 | 76.7 / 314.2 | Both FAIL100Mbps upload/tail target |",
+        "Changing mobile RTT is40/80/180/60/140/45/120/180/70/40ms every1.5s. The server path stays2ms/1Gbps. All40 sustained rounds completed, with zero missed/timed-out scheduled probes in recorded rounds and unchanged socket/carrier identities. Retained-state upload remains about77Mbps for both; the controller does not claim to repair that physical-credit/cleanup ceiling.",
+        "A separate [provider-service sensitivity](https://github.com/Septonious/itom/actions/runs/39625798028) keeps network routes unchanged and varies IMAP command processing. At20ms service: RC2 about173.97/231.93, model173.91/233.18Mbps; both pass. At80ms service: RC2 about148.98/91.23, model149.18/93.87Mbps; both fail the unchanged100Mbps download/tail goal. An excellent server/ICMP path does not establish equally fast mailbox service. These are sensitivity inputs, not measured Rambler backend delays.",
+        "- Fixed40ms route: all four invocations pass. RC2 bulk158.46/159.32Mbps; model165.33/164.25Mbps each direction. Post-bulk mean/p95: RC2100.2/136.1ms; model102.7/140.3ms. Bandwidth improved in this screen; short tails did not uniformly improve.",
+        "- Varying40\u2013180ms route: both model invocations pass at102.26/110.27Mbps. RC2 times out in its first4MiB exchange; its second invocation passes at103.77Mbps. There is no complete control bulk/post-bulk distribution for the failed invocation and no rate is invented for it. Model post-bulk mean/p95 is165.7/346.1ms over48 requests; RC2 has only24 completed post-bulk samples. Phase timing samples different positions in the dynamic trace, so pooled means are not a controlled proof of lower propagation overhead.",
+        "The earlier256KiB closed-loop screen reached only20\u201340Mbps. Its passes remain recorded, but it is not used as proof of recovery after saturation."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/ci1-results.json"
+      ],
+      "git_blob": "c6fc0eae89dae1642c0d6b098fdacf49ffd665ad",
+      "sha256": "fc6f4128b15dfd4bab7454e6c003165a779437cd45379741a740a105e9997320",
+      "bytes": 54103,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"throughput_target_mbps\": 100,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/ci2-results.json"
+      ],
+      "git_blob": "40bc19f3cdacb506a0caf7993b777ff6deae6761",
+      "sha256": "8dca4f603c8ce9ef6272046e008b8ff119d89e6e9c72a9c2833d6004a3d28456",
+      "bytes": 54288,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/ci3-results.json"
+      ],
+      "git_blob": "6e1b4ac85b861560e3cf209fb3685b0c309dfe43",
+      "sha256": "edd95e2ab78df51f9a228eac73806f1c03589774bf537801cf9714dc71e908bd",
+      "bytes": 56144,
+      "review_signals": [
+        "\"field_qualified\": false,",
+        "\"throughput_target_mbps\": 100,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/ci4-dev2-results.json"
+      ],
+      "git_blob": "94d1890cfda020845928ccce784e10940cb42b12",
+      "sha256": "797b04d818ff75f5d6c96e2f4305930d6b6b270178b463b8689f00899d3b07ca",
+      "bytes": 54969,
+      "review_signals": [
+        "\"upload_mbps\": \"241.994\",",
+        "\"download_mbps\": \"260.086\",",
+        "\"upload_mbps\": \"235.108\",",
+        "\"download_mbps\": \"253.235\",",
+        "\"minimum_verified_mbps\": \"241.993865\",",
+        "\"minimum_verified_mbps\": \"229.087642\",",
+        "\"upload_mbps\": \"239.525\",",
+        "\"download_mbps\": \"258.189\",",
+        "\"upload_mbps\": \"243.519\",",
+        "\"download_mbps\": \"255.446\",",
+        "\"minimum_verified_mbps\": \"239.525342\",",
+        "\"minimum_verified_mbps\": \"243.518669\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/RESULTS.md"
+      ],
+      "git_blob": "9f6d6fa5983913cc047dad687d215eb1695d69cd",
+      "sha256": "26e61f937ecbe47a6a39a4f99b3b490cce2afee78980a05d3b514f5d6e05a504",
+      "bytes": 9225,
+      "review_signals": [
+        "Current testing source is staged by stage.py as ITOM1.1.0 DEV3, package org.itom.client/versionCode10103. It is experimental and not a stable/field-qualified release. Final1.0.0 remains RC2. No historical qualification threshold or physical accounting rule is reduced.",
+        "## Trials retained and rejected",
+        "- First model, commit5be0d740bc9e7ac68d28e907e292a87707a1f4a5, [run39621414070](https://github.com/Septonious/itom/actions/runs/39621414070): all fresh and changing-route rounds completed, but no useful throughput win and weaker MULTI/retained tails. Not selected. [Raw rounds and samples](results-v1.json).",
+        "- First supply proxy, commit9de16a6200af2dbbb76233d63783a82284d14782, [run39624632542](https://github.com/Septonious/itom/actions/runs/39624632542): superseded because uncompleted APPENDs are not necessarily waiting for quota. It also recorded changing-route tail/RTT failures. No result is hidden. [Raw evidence](results-v2-supply-proxy.json).",
+        "[Run39625447401](https://github.com/Septonious/itom/actions/runs/39625447401). Immutable RC2 production plus identical fixture code, compiled before measurement and run serially in reversed orders on each four-core shared runner. Four complete60s rounds per variant/scenario; original full/30s/10s tails, complete probes, socket identities and100Mbps/750ms checks retained. Rates are mean upload/download Mbps of complete rounds; small differences do not establish statistical equivalence.",
+        "| retained-single | 76.6 / 322.4 | 76.8 / 327.0 | Both FAIL100Mbps upload/tail target |",
+        "| retained-multi | 76.7 / 312.3 | 76.7 / 314.2 | Both FAIL100Mbps upload/tail target |",
+        "Changing mobile RTT is40/80/180/60/140/45/120/180/70/40ms every1.5s. The server path stays2ms/1Gbps. All40 sustained rounds completed, with zero missed/timed-out scheduled probes in recorded rounds and unchanged socket/carrier identities. Retained-state upload remains about77Mbps for both; the controller does not claim to repair that physical-credit/cleanup ceiling.",
+        "A separate [provider-service sensitivity](https://github.com/Septonious/itom/actions/runs/39625798028) keeps network routes unchanged and varies IMAP command processing. At20ms service: RC2 about173.97/231.93, model173.91/233.18Mbps; both pass. At80ms service: RC2 about148.98/91.23, model149.18/93.87Mbps; both fail the unchanged100Mbps download/tail goal. An excellent server/ICMP path does not establish equally fast mailbox service. These are sensitivity inputs, not measured Rambler backend delays.",
+        "- Fixed40ms route: all four invocations pass. RC2 bulk158.46/159.32Mbps; model165.33/164.25Mbps each direction. Post-bulk mean/p95: RC2100.2/136.1ms; model102.7/140.3ms. Bandwidth improved in this screen; short tails did not uniformly improve.",
+        "- Varying40\u2013180ms route: both model invocations pass at102.26/110.27Mbps. RC2 times out in its first4MiB exchange; its second invocation passes at103.77Mbps. There is no complete control bulk/post-bulk distribution for the failed invocation and no rate is invented for it. Model post-bulk mean/p95 is165.7/346.1ms over48 requests; RC2 has only24 completed post-bulk samples. Phase timing samples different positions in the dynamic trace, so pooled means are not a controlled proof of lower propagation overhead.",
+        "The earlier256KiB closed-loop screen reached only20\u201340Mbps. Its passes remain recorded, but it is not used as proof of recovery after saturation."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/SERVER_PATH_RESULTS.md"
+      ],
+      "git_blob": "f220ceb2daa07c605c099b8e77d30a05aa15e6ea",
+      "sha256": "5267b1835d952aaabdf0278f50689daec26280af39f122ceaceb7db4d8331150",
+      "bytes": 6257,
+      "review_signals": [
+        "Both variants use the same corrected fixtures, actual supervisors/TLS/IMAP/fsync, ten accounts, independent client/server serialization clocks and original deadlines. Compilation precedes measurements; two reversed AB/BA invocations preserve all failures. Provider command service is a separate2ms fixture input, not server propagation. CI uses a shared4-core host for both endpoints and provider; it does not reproduce an independent8-core server plus a physical phone. No artificial server fault is injected. [Machine-readable results](results-server20.json) record log hashes, all available samples, completed rounds and failures.",
+        "Each cell is pooled mean/p95/max application RTT in milliseconds,48 samples per phase and variant. These are two invocations, not48 independent experiments. All32B verified requests completed within the original3s deadline and retained their application sockets. Passing the request deadline is not proof of improved tails.",
+        "Mean light RTT improved on40/180ms client paths, but5ms light and changing-path maximum RTT regressed. A universal latency improvement or elimination of spikes is not established. Changing-path phase timing depends on request duration; raw per-request transitions are retained for the demand-transition case.",
+        "At static40ms client propagation, both versions completed both invocations. Mean useful bulk rate was152.952Mbps per direction for RC2 and154.454Mbps for the model. Post-bulk mean/p95/max RTT was139.3/194.0/271.7ms versus127.6/196.8/250.6ms; p95 did not improve.",
+        "On changing40\u2013180ms propagation, RC2 timed out reading a4MiB exchange in both invocations. The model completed both at84.199 and92.454Mbps per direction; post-bulk48 short requests had173.4/343.0/403.2ms mean/p95/max. There is no completed RC2 bulk rate or post-bulk distribution to compare in those failed runs. This is a limited laboratory stability observation, not proof of real Speedtest reliability.",
+        "With the user's ten-ping trace,1Mbps down/2.5Mbps up and20ms server propagation, RC2 delivered0.273361Mbps and the model0.278400Mbps useful verified requests/responses in each direction over30s. Both completed64 exchanges without a failure or replacement socket/carrier and passed the unchanged0.1Mbps minimum. One invocation per variant is not a general performance comparison.",
+        "Each case has four complete60s rounds per variant (two reversed invocations with two rounds each); mean useful upload/downloadMbps includes every round. Pass counts below are complete invocations satisfying all unchanged gates. No best-run selection or throughput-floor waiver is used.",
+        "|retained SINGLE|126.625/230.108|117.859/235.835|1/2|0/2|",
+        "|retained MULTI32|141.150/198.884|145.800/196.179|2/2|2/2|",
+        "All40 sustained rounds completed with600 scheduled probes per variant, zero missed/timeouts, and20 preserved-identity records per variant. Round qualification passed17/20 for RC2 and14/20 for the model. The full workflow is correctly red; no failures were waived.",
+        "SINGLE model loaded maxima reached792/801/790ms in three rounds, exceeding the unchanged750ms ceiling; RC2 exceeded it once at766ms. One retained SINGLE model round had a one-second zero-upload stability window despite its full/tail rates exceeding100Mbps. Other retained SINGLE failures include87.137Mbps model and95.923/94.582Mbps RC2 verified floors. One changing-client model round fell to98.619Mbps in its final10s; RC2 passed all four changing-client rounds. Full errors and gate decisions remain in the JSON and raw artifacts.",
+        "Retained SINGLE mean upload was117.859Mbps for the model versus126.625Mbps for RC2 (about6.9% lower across these four rounds); other mean directions are near the reference, but the limited trials do not establish throughput equivalence. Retained MULTI passed both variants here. The old2ms retained-state ceiling cannot be treated as an invariant at20ms."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/results-dev3-latency.json"
+      ],
+      "git_blob": "6005344cec6ef2efec25b41d990f6cd08c0dbd4a",
+      "sha256": "3f659b81150de47498a5b3e5435079568d47346c9a77cd9aa3853d3087a586cb",
+      "bytes": 37692,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not field qualified\",",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/results-grant-aware.json"
+      ],
+      "git_blob": "38bc1749d7f2065e4a08372bb0e27e9fc6ebdcef",
+      "sha256": "5385a0511a7087bf1d4323c37bb4952ead557f1dc3daab1d13e33f378638167c",
+      "bytes": 108290,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not field qualified\",",
+        "\"upload_mbps\": \"108.231\",",
+        "\"download_mbps\": \"274.976\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"111.018\",",
+        "\"download_mbps\": \"277.187\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"107.846\",",
+        "\"download_mbps\": \"277.663\"",
+        "\"upload_mbps\": \"112.556\",",
+        "\"download_mbps\": \"273.539\"",
+        "\"upload_mbps\": \"115.055\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/results-server20.json"
+      ],
+      "git_blob": "1e4d11f40452d69e6a34e6fa8a7feebda1b862ed",
+      "sha256": "769d01cd9feb4300cf5182db81083dd19263068f41c18be9e89bb62db7becdca",
+      "bytes": 129560,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not field qualified\",",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/results-v1.json"
+      ],
+      "git_blob": "8852de2351277200b0d29b1f2fb207f759729b43",
+      "sha256": "db5fed40d3c8af159a22ce8f87f834dfa1ccc939bbc5149402e9143f99faf9dd",
+      "bytes": 194911,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not field qualified\",",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/delivery-model/results-v2-supply-proxy.json"
+      ],
+      "git_blob": "212a1b8d64fe50a3a86f8dee2141f983f6212ca4",
+      "sha256": "f61e0995018c41bd2a5b1f1acdf391a2ad2b1df00be4a53e643cddd32b9cfc45",
+      "bytes": 109729,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not field qualified\",",
+        "\"upload_mbps\": \"110.100\",",
+        "\"download_mbps\": \"263.935\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"106.068\",",
+        "\"download_mbps\": \"258.946\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"110.022\",",
+        "\"download_mbps\": \"264.739\"",
+        "\"upload_mbps\": \"107.173\",",
+        "\"download_mbps\": \"260.353\"",
+        "\"upload_mbps\": \"120.141\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev6-byte-headroom/FIELD_ANALYSIS.md"
+      ],
+      "git_blob": "5fae746b6c75b218a8534a11b487ef192464c588",
+      "sha256": "8bbe014f9db86e9757acf44bde68ed6192c5242058256b43dbeb3ac2efc90ad5",
+      "bytes": 6452,
+      "review_signals": [
+        "The uploaded client snapshot is DEV5 and reports **24/30 active directions**. All fifteen accounts have two IMAP connections; accounts a02, a08 and a13 remain at `grants`, have zero available bulk grants, and have never reached initial application readiness. Their reconnect counters and last IMAP errors are zero. The retained client trace spans 21:17:02\u201321:19:26 UTC on 22 October; the server trace spans 21:16:48\u201321:19:43. Startup is already outside the rolling trace, so it cannot establish cold-start login timing.",
+        "The journal profile stays 12,582,912 bytes / 192 messages. Every retained IMAP completion has code OK. The client receives 576 historical grant reconciliation requests and reports missing wallet history 576 times. This is evidence of unavailable historical wallet entries, not proof that those grants were unused. No reservation may be forgiven or erased to reach readiness.",
+        "The exact field journals are not included in these exports. Regression inputs reproduce sufficient debt shapes: a08 uses its complete observed held amount; a02/a13 model their one issued metadata entry as a 512 KiB current fast lease and subtract it for pre-offer headroom, conservatively retaining the other observed message slots. The lost startup trace cannot independently confirm that entry\u2019s class or limit. We do not claim exact reconstruction of their origin split or historical spend. A fifteen-account TLS/IMAP fixture repeats these severe shapes on every account, uses a fresh client wallet, keeps sparse UID history and constrains account sockets to five across both endpoints. It checks actual short/bulk/short TCP traffic on every account and verifies that old grants remain byte-for-byte unchanged.",
+        "The same three new debt regressions fail on exact DEV5 source (3ccdd5a) and pass on DEV6. The first unshaped TLS run reaches 30/30 directions and completes all fifteen account sequences. Its original 4.101-second timer includes fixture seeding and is not a client login latency. The test now reports the maximum actual per-client connection-attempt readiness separately from UID seeding/setup. This is an improvement in reproduced quota-bound startup, not a claim about real Rambler throughput or RTT. A separate 40 ms client / 20 ms server run also passes. Further checks and their results accompany the build; original throughput qualification thresholds remain unchanged.",
+        "The screenshots show SINGLE 24.6/26.6 and 23.0/14.1 Mbps, MULTI 20.4/18.6 Mbps, idle ping 424\u2013537 ms and loaded ping up to 1105 ms. These are poor field results. Reaching 30/30 by fixing allocation does not establish that the RTT/speed regression is solved. Continued missing history constrains real available capacity even after this fix. Update in place with the persistent signing identity and preserve server journals and app wallet data.",
+        "Review also reproduced a fast-refill deadlock in the initial DEV6 candidate: it reserved additional bulk space even while a bulk lease already occupied that space. Repeated authenticated zero-spend fast fences expose the problem. Refill now accounts for existing bulk charges and requires extra bulk headroom only at initial activation; a physical bulk BODY awaiting cleanup remains charged and does not double-reserve its size against the fast class. The regression repeats the fence/refill three times for each debt shape.",
+        "A later full-core run on candidate 90568d3 failed the original capped-socket EOF transfer gate. It also reproduced on unchanged DEV5 (1/10 repetitions), so it predates the byte-headroom change. Diagnostic traces showed repeated fallback DATA APPENDs on a known-dead control socket, burning multiple write grants as no-start/uncertain attempts while control repair lagged. DATA fallback now repairs a known-dead control socket before invoking APPEND and rechecks readiness after command admission. Only admission that made no APPEND call is retried; an actual APPEND result is returned exactly once. The deterministic known-dead regression fails before the fix and passes afterward, and the lost-completion test verifies an error plus exactly one stored physical copy.",
+        "After repair, isolated capped-socket stress passes 20/20 with the original twelve-second deadline; focused race checks pass three repetitions including actual control lost-completion debt preservation. A separate run concurrent with race compilation still timed out in 6/30 repetitions (24/30 passed); this is retained as an unresolved CPU-contention sensitivity, not erased or relabeled a pass. The original full suite and comparisons are rerun for the final production source. The initial 90568d3 performance results (18/20 duplex, 48/48 short) precede the final socket repair and must not be represented as final-source results."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev6-byte-headroom/RESULTS.json"
+      ],
+      "git_blob": "9f1dd655722d6ea1eec360140bb748f7806eb664",
+      "sha256": "1a32aa8dff843a2c704c3032bb6a072c1f1f6cd8fff016b0c066c67f4ce1e5f0",
+      "bytes": 134511,
+      "review_signals": [
+        "\"upload_mbps\": \"117.213\",",
+        "\"download_mbps\": \"247.770\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"117.746\",",
+        "\"download_mbps\": \"249.810\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"117.257\",",
+        "\"download_mbps\": \"248.215\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"118.223\",",
+        "\"download_mbps\": \"248.115\",",
+        "\"failure\": \"<nil>\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev6-byte-headroom/RESULTS.md"
+      ],
+      "git_blob": "8897256ca3e1d8e9ddf6e8c643d98a5265dd5949",
+      "sha256": "85ef5c9f4eddc5e8695c33664ceeca856121efdb965c0e8d8d836c728fa2f382",
+      "bytes": 6318,
+      "review_signals": [
+        "The final-source comparison is [run 39882769996](https://github.com/Septonious/itom/actions/runs/39882769996). All twenty sustained rounds and all forty-eight short phases per variant were observed. The original 100 Mbps minimum useful/full/tail bandwidth and 750 ms maximum duplex RTT gates remain unchanged. Individual comparator failures make several matrix jobs red; they are retained.",
+        "| Three consecutive short download/upload sequences across eight fixtures (phases) | 48/48 | 42/48 | 41/48 |",
+        "DEV6's one sustained miss is variable-mobile trial 2, round 2: minimum verified tail **99.457434 Mbps**, below the unchanged 100 Mbps floor; maximum measured probe RTT **625.359080 ms**, below 750 ms. It is a failure, even though the full-round rate passed. No round was dropped, repeated to replace a failure, or waived. RC2 also missed one round. This is an experimental testing RC, not 20/20 qualification and not evidence that real-provider idle RTT is fixed.",
+        "Thirteen provenance manifests (eight short, five duplex) were checked against the final production files and the frozen comparator sources. The laboratory provider implements real TLS/IMAP and durable fsync but is not Rambler and does not reproduce its backend queueing or account shaping. Reported rates above 200 Mbps are useful TCP bytes in those fixtures; they do not predict field throughput.",
+        "| Fixture | Download DEV5 \u2192 DEV6, Mbps | Upload DEV5 \u2192 DEV6, Mbps |",
+        "These observed differences span \u22122.7% to +5.7%. They do not establish universal speed gains or a formal noninferiority margin. The specific improvement over DEV5 is quota-bound startup/refill: all three new field-shaped debt regressions fail on DEV5 and pass on DEV6 without forgiving historical grants.",
+        "The final source also passes the raw-4G fallback case: client download/upload limits **1/2.5 Mbps**, client RTT trace **84, 63, 43, 67, 23, 60, 55, 56, 21, 66 ms**, server path 20 ms. It delivers **0.287203 Mbps in each direction**, **66 completed exchanges**, **zero failed**, over 30.121 measured seconds. The target is at least 0.1 Mbps for text connectivity.",
+        "## Retained failures and limits",
+        "Before DATA fallback preflight repair, the existing capped-control EOF test failed on both DEV5 (1/10) and a preliminary DEV6. The final repair passes its deterministic known-dead case, preserves unknown-publication debt, and never replays an actual APPEND. Isolated original-deadline stress passes 20/20. A separate run concurrent with race compilation still fails **6/30**, retained as unresolved CPU-contention sensitivity.",
+        "On final source, the first CI run passes the full normal Go suite (tunnel 735.857 seconds), vet, ten additional capped-EOF repetitions and journal/wallet/flow/datapath race tests. Its combined tunnel race process later misses the existing 1100 ms chat deadline during mixed bulk ramp-up. A fresh standalone instrumented run also reproduces that deadline miss on DEV5. These are timed-test failures, not reported data races; neither is relabeled a pass. Further build checks isolate every originally selected race test in a fresh process with its original payloads, deadlines and assertions. The isolated CI process also misses the same 1100 ms mixed-load chat deadline. All other selected race checks pass without reported data races. An unsuccessful dynamic split-control reserve experiment also times out and was discarded; production remains byte-identical to 765643e. Those results and failures are recorded in DEV6_BUILD.json. No assertion or qualification threshold was changed.",
+        "Testing packages require the full normal suite, vet, accounting races, quota regressions and all remaining tunnel race checks. The known mixed-load timing diagnostic remains FAILED and visible; this explicit experimental packaging exception does not turn it into a pass or make the release fully qualified. It is permitted only for that exact chat deadline failure, with no data race, panic, bulk request failure or other failed test. The original sustained comparison remains 19/20, with its one tail miss retained.",
+        "The field screenshots still show idle ping 424\u2013537 ms and useful rates 14.1\u201326.6 Mbps. This release targets the proven allocation/readiness and dead-socket problems. It does not claim that all idle spikes, field Speedtest failures or provider shaping have been eliminated. Preserve the Android wallet and server journals when testing."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev7-field-capacity/FIELD_ANALYSIS.md"
+      ],
+      "git_blob": "59101aa7b8576271dc5c76cad26a96c07bf30abd",
+      "sha256": "d72eadb518e277cf34c786eac425adecaddd8653aae3f4bb09e59b20414c5e3e",
+      "bytes": 3569,
+      "review_signals": [
+        "The 2026-10-23 capture reports DEV6, 30/30 active directions, and zero account reconnects. Screenshots report MULTI 25.7/20.3 Mbps and SINGLE 22.8/24.7 Mbps, with idle RTT 529/523 ms. All 134 retained OPEN_OK responses succeeded. The beginning of startup is outside the rotated trace, so the instant Speedtest failure cannot be assigned a proven cause from this export. Application stream closures are not account disconnects.",
+        "Every server account retains substantial earlier-session quota debt: 8,565,977\u201311,193,823 bytes and 140\u2013173 message slots out of 12 MiB/192. These are still charged and must not be discarded because the client wallet was cleared. Server bulk carrier selection has median 58.8 ms and p95 976.6 ms waits; client median 139.7 ms, p95 942.8 ms. There are 6,925 server control APPENDs and 8,764 client control APPENDs in the retained intervals. Server APPEND DATA median 185.3 ms; cleanup exact FETCH median 197.5 ms, observed deletion median 271.9 ms. These durations include service and local scheduling, and are not raw network RTTs.",
+        "* Overlap read-only SELECT and exact BODY discovery, withholding results across selection failures or changed incarnation.",
+        "* After verified selection, pipeline exact-set STORE and UID EXPUNGE; join both results, preserving all debt on either failure. The no-UIDPLUS fallback remains unchanged.",
+        "The new fixture uses all fifteen captured capacity shapes and real TLS/public supervisors with a healthy 20 ms server route, 40 ms client route, 500/1000 Mbps capacities, and capped sockets. It models capacity, not exact original grant records, device CPU, provider processing or a calibrated trace replay. Original 100 Mbps, startup deadlines, and no-stall assertions remain. Existing high-rate empty/less-indebted journal fixtures cannot predict this installed-state performance. All preliminary six-phase sensitivity runs still FAIL the 100 Mbps/no-stall criteria, including RC2. No real-world 100 Mbps restoration or instant-failure fix is claimed."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev7-field-capacity/RESULTS.json"
+      ],
+      "git_blob": "ed3d579a03af0b0f29f267d3296f65476784c362",
+      "sha256": "e1748445de95b514bc4dec5a56d71cb1aa0ddf53c08b92df3b7ac2c8b5171c13",
+      "bytes": 138383,
+      "review_signals": [
+        "\"classification\": \"LABORATORY; real provider/device not qualified\",",
+        "\"upload_mbps\": \"113.993\",",
+        "\"download_mbps\": \"262.022\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"114.959\",",
+        "\"download_mbps\": \"265.425\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"114.745\",",
+        "\"download_mbps\": \"260.829\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"113.779\",",
+        "\"download_mbps\": \"264.578\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev7-field-capacity/RESULTS.md"
+      ],
+      "git_blob": "14f5f0dac7fc8394954d2f6da1950df89f5d313a",
+      "sha256": "228d16a1e63a6fb08ea6073308f86b3a67e7df76634aa33d569d628d967c8acb",
+      "bytes": 4128,
+      "review_signals": [
+        "Original sustained duplex gate: **DEV7 17/20, RC2 19/20**. DEV7's misses were two loaded RTT maxima (811.09 and 1058.65 ms versus the original 750 ms limit) and one 99.5622912 Mbps verified tail versus the 100 Mbps floor. The minimum requested 17/20 is met; every miss remains a failure.",
+        "Original short sequences: **DEV7 48/48, RC2 42/48, DEV4 42/48**. All phases contain real public-supervisor TCP transfers, byte integrity, startup deadlines and half-second byte clocks.",
+        "Mean useful rates from the same sustained rounds (full duplex; failures remain included):",
+        "| Profile | RC2 download/upload Mbps | DEV7 download/upload Mbps |",
+        "| retained-multi | 197.5 / 143.2 | 232.7 / 133.7 |",
+        "| retained-single | 228.0 / 126.8 | 251.1 / 142.5 |",
+        "Healthy server route 20 ms, client route 40 ms; 500/1000 Mbps client/server paths. Fifteen accounts use the captured old byte/ordinal reservation shapes and two client/three server sockets each. Three download/upload pairs run without warmup. Mean rates do not imply that every phase passed.",
+        "| Mode | Runtime | Mean download Mbps | Mean upload Mbps | Strict phases passed | Empty half-seconds after startup |",
+        "All twelve DEV7 phases completed, but only **4/12** satisfied every strict criterion, versus **0/12** on either baseline. The phase-level failures, byte windows and exact source manifests are retained. DEV7 improves mean throughput in both directions and reduces stalled windows in both modes relative to DEV6. It does not eliminate every stall or guarantee 100 Mbps in every phase.",
+        "These are capacity sensitivity tests, not a calibrated replay of Rambler, Android CPU or server storage service. One historical grant models each captured total; the capture does not include the original complete journal records. The earlier high-rate tests on empty or less-indebted journals were a different workload and could not predict this installed-state performance. No real-provider 100 Mbps restoration or field idle RTT improvement is claimed.",
+        "The original mixed-load race test exposed an actual shared diagnostic snapshot race before the final source. Another worker could re-plan a queued waiter while its diagnostic struct was copied after unlocking. DEV7 takes that copy under the existing mutex; delivery/credit policy is unchanged. The new 64-worker mixed-admission regression reproduced the race on DEV6 and passed ten local repetitions after the fix. The exact-source CI run passes the original mixed-load race test, and packaging rejects any detected data race. A local candidate run still missed that test's original 1100 ms loaded-chat deadline without a data race; that result is retained rather than recast as a pass.",
+        "The build manifest separately records complete correctness, accounting/mailbox races, Android tests/lint, native hashes, package identity and signing verification. Qualification remains **experimental** because the performance failures and real-provider verification are outstanding."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev8-capped-receive/FIELD_ANALYSIS.md"
+      ],
+      "git_blob": "3724d2217c5809cc2f19d9c5daca9b8e33bc27f5",
+      "sha256": "62497319d4bd8e8acf70c5afd1d88ee12d393b359f438729ed5150479a3311db",
+      "bytes": 7588,
+      "review_signals": [
+        "# DEV7 field feedback: control receive and short-start regressions",
+        "The supplied client is `1.1.0-dev7-debug`. It reports 30/30 active lines and zero carrier reconnects. The successful SINGLE screenshot reports 23.3/71.2 Mbps, 416 ms idle RTT, 758/911 ms loaded RTT, and 172 ms jitter. Three additional Speedtests failed according to the user.",
+        "The rotating client trace covers approximately 12:18:45\u201312:21:16 UTC on 23 October; the server trace starts later, around 12:19:23 UTC. These windows do not cover complete startup or identify all four application test boundaries. The retained client has 186 OPEN_OK records. Socket failure events describe application streams; they are not evidence of lost IMAP account connections. This capture therefore cannot, by itself, prove the cause of every reported Speedtest failure.",
+        "A concrete scheduling fault exists in that layout: the live control reader acquired the account maintenance class, including its single maintenance slot. It could wait behind unrelated maintenance even when its own control socket was free. DEV8 gives live reads the existing receive class while retaining fair serialization on the actual shared socket. Inventory and destructive proof work retain maintenance admission. A deterministic TLS mailbox regression fails on DEV7 with a read deadline and succeeds after this change.",
+        "The new application regression exercises fresh TLS/HTTP starts, single/four-flow ramps, partial downloads aborted by the application, and a persistent 32-byte light-request connection before and after each ramp. The existing 750 ms light-request and 1500 ms OPEN deadlines remain unchanged. Provider path propagation remains independently configured, with a default 20 ms server path and a separate variable 40\u2013180 ms phone sensitivity case.",
+        "An idle-test reporting error is also corrected: after a request timeout, the old fixture compared the late reply with the next request on the same byte stream and reported cascading corruption. The timeout remains a test failure; later measurements use a new stream. Earlier logs with that cascade must not be counted as independent corruption failures or used for aggregate successful-request latency.",
+        "DEV8 retains an independent new-mail discovery hint. It refreshes allocation only after an empty bounded FETCH, when that hint can expose a response beyond stale UIDNEXT. Dense reads retain the original one-FETCH path and SELECT command budget. Only a tagged-successful SELECT with unchanged UIDVALIDITY permits discovery progress; SEARCH and EXISTS cannot refund quota or independently advance the cursor. Known allocation holes use the actual requested page limit rather than a fixed sixteen-UID threshold. The twelve mailbox regressions cover limits one/four/sixteen, IDLE consuming the ordinary wake, and delayed SEARCH indexing.",
+        "The first notified-audit candidate (`3c09753204a5bc4c06246a51cb4b015d7f3d9b0a`) renewed SELECT alongside every notified FETCH. Main workflow 39983296917 measured 18/20 sustained rounds versus RC2's 17/20, and 48/48 short phases versus RC2's 42/48. Those aggregate results did not establish a field fix: the closer field workflow 39983297004 showed approximately 103/71 Mbps SINGLE and 103/70 Mbps MULTI versus DEV7's 106/79 and 109/79. Fixed-path idle means did not improve clearly; variable-path light deadlines still failed. Full correctness also failed the delayed-visibility reader-restart case. That runtime is not being packaged. The revised candidate restores the dense notification SELECT budget; all original performance floors and deadlines remain unchanged.",
+        "The empty-probe-only candidate (`e69f0abb564751dcd7ca3afd40e9d5232ad79726`) restored dense FETCH costs, but matched field runs still measured roughly 101/67 Mbps SINGLE and 104/68 Mbps MULTI versus DEV7's 109/81 and 108/78. It is also withheld. A further scheduling correction separates the two admission decisions: the account uses `workReceive` so an unrelated maintenance permit cannot block an idle socket; the shared physical socket retains the historical `workMaintenance` turn, so a new round-robin class cannot take another share from DATA writes. A real TLS mailbox regression inspects both admission levels while the socket is held. This change neither preempts running IMAP commands nor bypasses physical socket serialization. Its throughput and latency consequences require the matched comparisons; they are not inferred from the queue unit test.",
+        "Selected runtime `6ade0182848652152fd8aa9af7a8078dfda27563` passes the full normal correctness suite, vet, accounting/mailbox/recovery races, the original loaded-race deadline,20/20 sustained rounds and48/48 short phases. The unchanged RC2 comparator passes16/20 and42/48 in that same run. The closer capped comparison completes all phases but passes only3/12 strict phases versus DEV7's5/12; variable-mobile light deadlines still fail. These failures remain in RESULTS.json and the raw artifacts. The package is experimental, not field-qualified, and no real Speedtest recovery or100Mbps restoration is asserted. APK/native builds are pinned to that runtime, with the persistent Android signer retained. Earlier notified-every-read, empty-probe-only before socket-share correction, allocation and routing variants are not packaged."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev8-capped-receive/RESULTS.json"
+      ],
+      "git_blob": "49e4e63cce60069c4e159e9d4ec17ceabedc7611",
+      "sha256": "ae2cd2606d31d23819a13b62a4f189bfd26e110653fa1a0f28a0796e652f7d94",
+      "bytes": 160970,
+      "review_signals": [
+        "\"classification\": \"LABORATORY; real provider/device not qualified\",",
+        "\"upload_mbps\": \"119.861\",",
+        "\"download_mbps\": \"280.214\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"120.822\",",
+        "\"download_mbps\": \"281.477\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"120.101\",",
+        "\"download_mbps\": \"271.752\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"120.149\",",
+        "\"download_mbps\": \"273.683\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/dev8-capped-receive/RESULTS.md"
+      ],
+      "git_blob": "1496663fad1f8860da36feccc6a0f879594a1a48",
+      "sha256": "e80dfd2c7b2790a7b88a61e28386a5bbf3c107997eaf7ebf54427123c1d3837f",
+      "bytes": 2497,
+      "review_signals": [
+        "The matched original lab qualification passed **20/20 sustained rounds and 48/48 short phases**, versus unchanged RC2's 16/20 and 42/48. Core correctness, vet, accounting/mailbox/recovery races, 89 Android unit tests, APK compilation and lint passed (one dependency-version lint warning). These are laboratory results, not a prediction of Rambler/device speeds. The older broad profiles have more socket/permission headroom and different provider capabilities than the captured deployment; their 200\u2013280 Mbps measurements do not establish real-world bandwidth. Normal-profile upload means remain about 8\u20139% below RC2 while download increases.",
+        "The closer 15-account simulation preserves 48 historical grants per account, the captured three-server/two-phone socket roles, a 20 ms server path and 40 ms phone path. SINGLE means: **108.1/78.2 Mbps**, versus DEV7's 108.2/79.2. MULTI: **105.0/76.9 Mbps**, versus 106.0/79.9. All 12 phases complete, but only 3/12 pass both the unchanged 100 Mbps floor and zero half-second stall requirement (DEV7: 5/12). Those failures remain failures.",
+        "**Known limitation:** the 40\u2013180 ms mobile sensitivity still has light-request/TLS timeouts. The code fixes specific reproduced faults; it is not yet field-qualified and does not establish that every reported Speedtest failure or idle spike is fixed. The full numeric results and raw logs accompany this release. Earlier rejected allocation, hot-polling and routing experiments are not in these binaries."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/duplex-reclamation/results-confirmation.json"
+      ],
+      "git_blob": "33a51a14fcd176f6cab08569ff4ed37b34ebc321",
+      "sha256": "b6b66f43023f25b69af76911cc392c0b758c86cd8de8467c60464c6ec7e25015",
+      "bytes": 177207,
+      "review_signals": [
+        "\"classification\": \"not promoted; independent duplex improvement but one retained upload-only1s window is empty and some idle tails worsen\",",
+        "\"selected-capacity-local16-retained-download/1-model.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"269.510246\",",
+        "\"minimum_full_tail_mbps\": \"269.387913\",",
+        "\"field_qualified\": \"false\",",
+        "\"useful_mbps\": \"269.387913\"",
+        "\"useful_mbps\": \"270.742323\"",
+        "\"failures\": []",
+        "\"selected-capacity-local16-retained-download/1-rc2.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"266.124220\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/duplex-reclamation/results-directional.json"
+      ],
+      "git_blob": "16313fcef8a38a78512f576b2c67397ba31f5e89",
+      "sha256": "d3a0718a349d85860eeaa44a192ca97eaa77de218815efc5c05cd4fdd2b12d07",
+      "bytes": 23747,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not promoted or field qualified\",",
+        "\"duplex-directional-local16-retained-download/1-model.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"270.191821\",",
+        "\"minimum_full_tail_mbps\": \"266.600448\",",
+        "\"field_qualified\": \"false\",",
+        "\"useful_mbps\": \"269.816081\"",
+        "\"useful_mbps\": \"266.600448\"",
+        "\"failures\": []",
+        "\"duplex-directional-local16-retained-download/1-rc2.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"263.651328\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/duplex-reclamation/results-idle-observation.json"
+      ],
+      "git_blob": "f8f091a814d9e38e53f5b5fdc02ced931dfd9f7f",
+      "sha256": "693ccd3be5c7554b5822541eda73ed9994ff2455eb5269ea8ab38e29cdfdf7a5",
+      "bytes": 245372,
+      "review_signals": [
+        "\"idle-observation-retained-variable\": {",
+        "\"idle-observation-retained40\": {",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\",",
+        "\"retained\": \"0\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/duplex-reclamation/results-interactive.json"
+      ],
+      "git_blob": "3de6d2d327dc65812e33236c4f3261cd8aea20bf",
+      "sha256": "2ceb20635395945b24f5c30bda16a099965f29e1291dc5e6dc01d1dab41bc3b7",
+      "bytes": 44987,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not promoted or field qualified\",",
+        "\"retained-interactive-local16-mobile40/1-model.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"retained_state\": \"1\",",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"retained_state\": \"1\",",
+        "\"failures\": []",
+        "\"retained-interactive-local16-mobile40/1-rc2.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/duplex-reclamation/results.json"
+      ],
+      "git_blob": "fcf961e3470298f7814ef90d5dc05cab7e7d4974",
+      "sha256": "f326ba612dfabb3dff03f40e34838534fe732b46ef772b7e2cfd5e73c0dbc627",
+      "bytes": 156340,
+      "review_signals": [
+        "\"classification\": \"not promoted; local16 reaches19/20 but retained duplex download tradeoff and mixed idle tails require confirmation\",",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/field-feedback/FIELD_ANALYSIS.md"
+      ],
+      "git_blob": "08b7493ed6ea7082a71e0d60cda852bc350a5c27",
+      "sha256": "12309c0fd74ce81d52ae7ef7cdd75d66c1c67db98babfb6f2a5041f2eb35f707",
+      "bytes": 3359,
+      "review_signals": [
+        "Six completed screenshots show these averages; earlier failed attempts are additional failures and are not included in screenshot means.",
+        "| Mode | Download Mbps | Upload Mbps | Baseline RTT ms | Download RTT ms | Upload RTT ms |",
+        "The uploaded client trace retains 95 seconds of the end of the session. At capture all15 accounts/30 directions are ready and no carrier reconnects are recorded. It cannot reconstruct the lost early startup/ramp failures. Application RESET/CLOSED records near a phase boundary do not prove a transport-induced reset. All recorded completed IMAP operations succeed, but operation and queue durations are large: control APPEND mean89/p95 203/max748ms, DATA APPEND126/347/1527ms, FETCH35/140/1885ms, and STATUS enqueue wait77/249/649ms.",
+        "A representative DATA APPEND has only the control and receive sockets. Across captured socket snapshots, all physical command snapshots have two sockets; several accounts have a DATA-specific receive role. This differs from the original five-socket client lab topology. Live configuration values and the server diagnostic were not supplied, so a particular resource configuration cannot be asserted. Reinstallation was confirmed. 810 reconciliation requests were deferred for missing wallet history in the retained window, with353 WALLET_EXHAUSTED DATA completions. These are scheduling/permission events, not evidence of packet loss or an IMAP server outage.",
+        "The earlier200+Mbps figures were application-byte rates in long simulated TLS/IMAP transfers. The standard provider fixture has2ms processing latency. It did not establish Rambler throughput, cold first-ready-account startup, or a short sequential Speedtest result. The reported DEV4 download loss was the paired retained simultaneous-duplex measurement (8.4\u201313.0%), not a bound on real-world regression. The user's observed larger regression is not contradicted by that number. Treating the old pass count as sufficient release evidence was inadequate.",
+        "Qualification now includes exact RC2 and DEV4 controls, three short download\u2192upload runs with no warmup after the first ready account, single and16 streams, four and ten configured account sessions, optional50ms APPEND/10ms FETCH/25ms STORE+EXPUNGE processing sensitivity,500ms useful-byte windows, original OPEN/probe deadlines, and separate idle/light measurements. These provider-processing settings are sensitivity tests, not a calibrated replay or artificial server failure. The original60-second/20-round qualification and all thresholds remain unchanged. Neither passing these tests nor higher synthetic throughput certifies field performance."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/field-feedback/RESULTS.json"
+      ],
+      "git_blob": "78047524f269cc74f889fd6081cff41fd1f647ac",
+      "sha256": "13662451293036e81fdac27650c922b6bff9a852137859c1863c68898337c202",
+      "bytes": 162210,
+      "review_signals": [
+        "\"upload_mbps\": \"115.247\",",
+        "\"download_mbps\": \"246.078\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"115.536\",",
+        "\"download_mbps\": \"246.883\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"115.872\",",
+        "\"download_mbps\": \"243.104\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"115.968\",",
+        "\"download_mbps\": \"245.874\",",
+        "\"failure\": \"<nil>\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/field-feedback/RESULTS.md"
+      ],
+      "git_blob": "61c9131d4d633853495c0d0323e1c7f17fb0addb",
+      "sha256": "cfc8ef9f930cdca6cfd1739d2ba5ee13766e444ae66bde8ea7a554fd662f7b8e",
+      "bytes": 5186,
+      "review_signals": [
+        "| Original sustained duplex rounds | 13/20 | historical comparison only | 17/20 |",
+        "| Short sequential phases | 42/48 | 42/48 | 48/48 |",
+        "Every planned sustained round and short phase completed. All candidate startup OPENs and probes met their deadlines; the short phases have no empty500ms window after the first2seconds. The three candidate sustained failures remain failures: two variable40\u2013180ms-path throughput tails at95.735 and98.042Mbps, and one loaded RTT maximum819.105ms. All20candidate round sockets and probes survived. Historical DEV4 20/20 was a different invocation; compare DEV4 directly only in the matched short and idle tests here. Workflow comparison jobs can be red because either a reference or the candidate failed; an overall all-green performance workflow is not claimed.",
+        "Retained simultaneous-duplex download still trails matched RC2:210.1 versus229.2Mbps in SINGLE,223.6 versus249.6Mbps in MULTI. Upload improves in both cases. This inherited throughput tradeoff also remains unresolved.",
+        "All figures are simulator application goodput, not expected field speeds. Routes are client20ms/600Mbps, server20ms/1000Mbps.15accounts; one has64missing-wallet historical reservations. Four configured account sessions exercises the two-socket endpoint topology; ten allows wider isolation. A processing sensitivity uses APPEND50ms/FETCH10ms/STORE+EXPUNGE25ms. Each row averages three12-second phases per direction.",
+        "| Streams / sessions / processing sensitivity | RC2 D/U Mbps | DEV4 D/U Mbps | DEV5 D/U Mbps |",
+        "SINGLE capped processing case:197.0/124.4Mbps versus DEV4 180.3/91.1. MULTI capped processing case trades download215.4\u2192197.3Mbps for upload89.9\u2192119.8Mbps; the8.4% download regression is a remaining limitation, not hidden by the pass count. The other seven short-profile download averages and all eight upload averages improve over DEV4.",
+        "All four idle/light means improve versus RC2. Against DEV4, three profiles improve or are approximately unchanged, while the capped processing case worsens: idle270.8\u2192284.3ms, light277.3\u2192301.2ms, and idle maximum403.7\u2192555.3ms. This does not satisfy a universal spike-free idle goal. Full raw samples and failed gates remain in[RESULTS.json](RESULTS.json).",
+        "Full Go suite, vet and required accounting/controller races passed on CI job120051751318 (tunnel725.632seconds). Local final shared-socket/recovery/reader race checks passed1.908seconds. Worst raw4G test passed:0.274281Mbps each direction,63exchanges, zero failed, with the user-provided21\u201384ms direct RTT trace,1Mbps down/2.5Mbps up and20ms server propagation. Production journal/wallet/pool/wire/secure/recovery/session/flow/datapath files remain byte-identical to DEV4. Android and binary build metadata are recorded in ../../DEV5_BUILD.json when complete.",
+        "An earlier pre-fairness candidate scored18/20against RC2 10/20 and a local processing-sensitivity run timed out. Those iterations are retained in branch history and their Actions artifacts. The final candidate is selected for concrete recovery/queue fixes, direct short-test gains and passing correctness checks; real Android/Rambler improvement remains unverified until the next field run."
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/light-response/results.json"
+      ],
+      "git_blob": "c52d93841f4824f6566549c187c02ec2f26808c3",
+      "sha256": "02ee9592cba9e4204628576f34c7788376ead276fe6116fdbb034c4bb35923a0",
+      "bytes": 127964,
+      "review_signals": [
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/reclamation-floor-results.json"
+      ],
+      "git_blob": "8926dcde4ba5d4bd7961f9a4f247215caf699016",
+      "sha256": "ab1636d6a91ab2571311dd8a3563f43ffa0f1b21cd44c3aa9a74a8e8a78ac3d2",
+      "bytes": 26377,
+      "review_signals": [
+        "\"upload_mbps\": \"76.511\",",
+        "\"download_mbps\": \"305.712\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"77.472\",",
+        "\"download_mbps\": \"311.139\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"76.848\",",
+        "\"download_mbps\": \"309.103\",",
+        "\"failure\": \"<nil>\"",
+        "\"upload_mbps\": \"76.869\",",
+        "\"download_mbps\": \"311.021\",",
+        "\"failure\": \"<nil>\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/refill-baseline-cadence/results.json"
+      ],
+      "git_blob": "47a9d945c7ed8a79c8ee6d873127a5bd1e9f61fa",
+      "sha256": "313aff5feb7fd3ba004804e9f840a436e91d1529f63a8b51e248f0a34660d750",
+      "bytes": 174331,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; not promoted or field qualified\",",
+        "\"refill-baseline-capacity-local16-retained-download/1-model.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"267.024247\",",
+        "\"minimum_full_tail_mbps\": \"266.154803\",",
+        "\"field_qualified\": \"false\",",
+        "\"useful_mbps\": \"266.783949\"",
+        "\"useful_mbps\": \"266.154803\"",
+        "\"failures\": []",
+        "\"refill-baseline-capacity-local16-retained-download/1-rc2.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"265.748480\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/refill-trigger/results.json"
+      ],
+      "git_blob": "339a17ba084636f61dd496a2031e9f2d9e20bf6f",
+      "sha256": "5ed88b6285ae19f16799298ee777ec9a414b43bdfd632dcb05d66b266b462b22",
+      "bytes": 220437,
+      "review_signals": [
+        "\"classification\": \"not promoted; empty misses17/20 and low retains substantial duplex directional tradeoff\",",
+        "\"refill-capacity-empty-retained-download/1-model.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"273.673967\",",
+        "\"minimum_full_tail_mbps\": \"273.673967\",",
+        "\"field_qualified\": \"false\",",
+        "\"useful_mbps\": \"276.055108\"",
+        "\"useful_mbps\": \"279.130931\"",
+        "\"failures\": []",
+        "\"refill-capacity-empty-retained-download/1-rc2.log\": {",
+        "\"retained\": \"1\",",
+        "\"useful_mbps\": \"269.798605\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/retained-response/RESULTS.md"
+      ],
+      "git_blob": "4141b6d8e8e6ee16dad804d250bd96a9854ae954",
+      "sha256": "2e5708c72a0c8d064e9d8cf711e63855838fab40a039919329e80edd72a3a308",
+      "bytes": 4273,
+      "review_signals": [
+        "# Retained-capacity comparison results",
+        "The original duplex gates remain100Mbps in each direction over the full60s, final30s and final10s; positive duplex in every1s window; all scheduled probes under the original deadlines; maximum750ms; and preserved application/carrier identities. A loaded spike still fails that historical750ms gate. Additional one-way workloads are reported separately and never counted among the20 duplex rounds. No failed invocation is discarded.",
+        "|900ms|14/20 /17/20|15/20 /17/20|",
+        "|1250ms|14/20 /17/20|not repeated|",
+        "The900ms and1100ms candidates repeatedly improve the numerical goal. They were held back because mean retained-state simultaneous-duplex download fell in both cohorts, despite a substantial upload gain. Gentler floors do not solve the full problem:1250ms still loses retained duplex download and1350ms misses the pass-count target. Full Go/vet suites and accounting/controller races pass for all four floors; correctness success does not override a performance failure.",
+        "| Workload | RC2 usefulMbps | Candidate usefulMbps |",
+        "|Retained upload,900ms|76.885|126.576|",
+        "|Retained download,900ms|264.602|265.534|",
+        "|Retained upload,1100ms|76.332|105.024|",
+        "|Retained download,1100ms|265.589|266.902|",
+        "|Retained upload,1250ms|77.160|92.275|",
+        "|Retained download,1250ms|257.607|268.278|"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/retained-response/results-confirmation.json"
+      ],
+      "git_blob": "76d8fb762d82cfd7d5d4bd5d597eec40ac023903",
+      "sha256": "18b1faa63f13c46ef92adc261fdf0520ee4bce0de41d2fefa0ac6f7740873180",
+      "bytes": 146084,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; physical authority unchanged; retained directional throughput tradeoff prevents promotion\",",
+        "\"retained-holdout-latency-fast5/1-model.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"retained-holdout-latency-fast5/1-rc2.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/retained-response/results-directional.json"
+      ],
+      "git_blob": "071a270d722604c82fbf9025518123818114971b",
+      "sha256": "77df110de27020051971edb06c5ff8885b01e55941e7798728b6441d293a2faa",
+      "bytes": 48292,
+      "review_signals": [
+        "\"classification\": \"additional one-way results; do not count toward duplex qualification; 1250/1350 retained upload fails100Mbps\",",
+        "\"retained\": \"0\",",
+        "\"useful_mbps\": \"333.862229\",",
+        "\"minimum_full_tail_mbps\": \"333.862229\",",
+        "\"field_qualified\": \"false\",",
+        "\"useful_mbps\": \"338.672572\"",
+        "\"useful_mbps\": \"341.337702\"",
+        "\"failures\": []",
+        "\"retained\": \"0\",",
+        "\"useful_mbps\": \"334.482637\",",
+        "\"minimum_full_tail_mbps\": \"334.482637\",",
+        "\"field_qualified\": \"false\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/retained-response/results-gentler.json"
+      ],
+      "git_blob": "0781b40c2c7daf8784f090ab3af5e4afc36cf5ed",
+      "sha256": "5c4236c2f8dcdaef059130f445a76010696e43f3932739b410e1490b844c6727",
+      "bytes": 146433,
+      "review_signals": [
+        "\"classification\": \"not promoted; retained upload and duplex directional losses persist\",",
+        "\"retained-balanced-latency-fast5/1-model.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"retained-balanced-latency-fast5/1-rc2.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/1.1.0/experiments/retained-response/results.json"
+      ],
+      "git_blob": "134aa45e31294453add6aa2a4f06f1122e67aa42",
+      "sha256": "9d03a11f7d5147b9f15482de73612b1395359cd06baff58dc1c05b1dc78b51a3",
+      "bytes": 180592,
+      "review_signals": [
+        "\"classification\": \"laboratory experiment; physical authority unchanged; retained directional throughput tradeoff prevents promotion\",",
+        "\"retained-response-latency-fast5/1-model.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": []",
+        "\"retained-response-latency-fast5/1-rc2.log\": {",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,",
+        "\"failures\": 0,",
+        "\"field_qualified\": false,"
+      ]
+    },
+    {
+      "paths": [
+        "archives/post-rc2/POST_RC2_EVALUATION.md"
+      ],
+      "git_blob": "21558ea365e2db05ff2bd10c4772ca27f79ba35a",
+      "sha256": "83d9595c27cb8f357a758dbba44701452dbbb169d2bed954faf36a68dc91dc99",
+      "bytes": 7799,
+      "review_signals": [
+        "POST_RC2_CHANGES.zip preserves exact git binary patches from RC2 to each archived RC3\u2013RC13 source (including RC10.1), per-file SHA-256 manifests, historical audits/raw logs and workflow/tooling changes. RC3/RC4 have separate tag histories and are included explicitly. Historical branches/tags and original APK/binary artifacts are retained. This archive preserves code/evidence; it does not include secret signing material or duplicate historical executable binaries. The CI preservation tool can regenerate it from the recorded immutable Git objects. SOURCE_EVALUATION.json lists every path changed in any snapshot, including changes later reverted.",
+        "- RC3/RC4 traded improved ping for field speed loss, failures and reconnects, as reported by the user. Reject their latency policy as a default; do not explain away a field regression using an unrelated synthetic pass.",
+        "- RC5\u2013RC9 included larger/faster growth, smaller windows, batching, read gates and placement experiments. Historical ledger records many failures: a 4MiB window gave roughly41/32Mbps despite lower RTT; authenticated-rate admission gave roughly19/18Mbps. Those trades are unacceptable. Bigger384KiB batches failed startup.",
+        "- RC10's matched healthy-server comparison was mixed: fresh four-stream mean RTT203ms versus RC2162ms, rates168/221 versus176/232Mbps; fresh MULTI improved, retained MULTI traded download for upload. No uniform improvement was shown. Both original RC2 and RC10 have low-capacity startup/high-client-RTT limitations.",
+        "- RC11 duplicate-report no-op commits and RC12 grant changes address measured journal/retained-state cases. They require separate proof and workload controls before reuse; no wholesale journal rewrite is justified by a single throughput result.",
+        "- RC13 exact retained-debt reproduction restored20/20 directions instead of14/20 without erasing charges. Its longer synthetic76.7/35.5Mbps versus RC1266.2/30.4Mbps was a single pair, and the severe-reserve branch was inactive in that throughput case. It is not causal evidence for an RTT/throughput advantage over RC2.",
+        "| `core/tunnel/lane.go` | Defer reclaimed-ordinal cache exclusion, descriptor headroom, bounded profiler and fast-grant refill. These repair specific replay cases but change hot-path work/lease concurrency. Reintroduce individually only after RC2-controlled performance and retained-state tests. |",
+        "| `core/tunnel/delivery_policy.go` | Restore RC2. Reject unconditional small-window growth doubling and reduced/asymmetric ceilings without repeated non-regression evidence. |"
+      ]
+    },
+    {
+      "paths": [
+        "archives/post-rc2/SOURCE_EVALUATION.json"
+      ],
+      "git_blob": "4908f7dfd14e6956dc9001a59f760a44e844734c",
+      "sha256": "d7d907a3ea95a0b975c58abe5313ce438e4a660598a0b24c52e620745b55263f",
+      "bytes": 37212,
+      "review_signals": [
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Restore RC2. Reject unconditional small-window growth doubling and reduced/asymmetric ceilings without repeated non-regression evidence.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Defer reclaimed-ordinal cache exclusion, descriptor headroom, bounded profiler and fast-grant refill. These repair specific replay cases but change hot-path work/lease concurrency. Reintroduce individually only after RC2-controlled performance and retained-state tests.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\"",
+        "\"decision\": \"Preserve regression/fixture in archive and 1.1 research corpus. Tests tied to rejected policy are not proof that policy improves performance. Shared endpoint-only fixtures are used identically for experimental RC2/candidates.\""
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-commit-delay/20261015T113014-68499/results.json"
+      ],
+      "git_blob": "c032a82496a6ec8da1d349a4319c03d6d70617f5",
+      "sha256": "05d991430ffefae34c38ef2ac003dea7970039297f0ac064eabfd1448d4c4617",
+      "bytes": 5381,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": ["
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-repeated/20261015T110827-67797/results.json"
+      ],
+      "git_blob": "7e20efaf4fa2bb6a3903c6f31640defb08d361f2",
+      "sha256": "9fe4fe621c4818c22f87ba3af6f0ef5822968ce7ca5f956338419f99695c62bd",
+      "bytes": 5248,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": ["
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-repeated/20261015T111958-68216/results.json"
+      ],
+      "git_blob": "096af514f2fb469846057e0df16f758bd654f9e8",
+      "sha256": "b51a6b5fcff57e405ee3effb2a523c4c9994ef5031c2b810fb4b709fff1aa1fb",
+      "bytes": 10534,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": [],",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": [],",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\","
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-repeated/20261015T134650-69947/results.json"
+      ],
+      "git_blob": "f6bf81c73747a20821280aea4291202b81f0cbce",
+      "sha256": "6545410164a3d9ad930c7cfff2a6147c890d5cf78ed87c40e9893d571e9340be",
+      "bytes": 5616,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-repeated/20261015T140231-72483/results.json"
+      ],
+      "git_blob": "60c8a1c549f3ac8f12d8355b4c0f82c665a32552",
+      "sha256": "fb40965991d5db709bfca5c74a55fccb9e6b15e4666109301a3938fcfc475e15",
+      "bytes": 8490,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": [],",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": ["
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/field-repeated/20261015T200215-83011/results.json"
+      ],
+      "git_blob": "3bfaa44336692c4ca1ceb41cf22a8486f3e47752",
+      "sha256": "a3be5e204afb8d93c0bddaf176eb321c502accf236a6fa4dc0b6579f960d529b",
+      "bytes": 5836,
+      "review_signals": [
+        "\"classification\": \"FIELD_FAILURE_LABORATORY_REPRODUCTION\",",
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor\",",
+        "\"TestRev4RetainedStateMixedTrafficAndNextTransfer\",",
+        "\"failed\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/speed-final/20261015T100915-65203/results.json"
+      ],
+      "git_blob": "85f43f2a3f0c627db0cc4c01a9a18667ff987410",
+      "sha256": "90befd8bb8643f3766d2366766d02199057938bd22a14c86b2cbf1faec13be86",
+      "bytes": 5950,
+      "review_signals": [
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"field_qualified\": false,",
+        "\"nominal_upload_mbps\": 100,",
+        "\"nominal_download_mbps\": 100,",
+        "\"useful_upload_mbps_min\": 90,",
+        "\"useful_download_mbps_min\": 90,",
+        "\"provider_mbps\": 600,",
+        "\"failed\": [",
+        "\"failed\": [",
+        "\"failed\": [",
+        "\"failed\": [],",
+        "\"failed\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/speed-final/20261015T102446-65718/results.json"
+      ],
+      "git_blob": "9547c6fcf88c12db3dff700034b68b6d09a50817",
+      "sha256": "96f6e64808cc4409420e845dcf73acb080a235b0457f1145ccf9458bed5ecd28",
+      "bytes": 5948,
+      "review_signals": [
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"field_qualified\": false,",
+        "\"nominal_upload_mbps\": 100,",
+        "\"nominal_download_mbps\": 100,",
+        "\"useful_upload_mbps_min\": 90,",
+        "\"useful_download_mbps_min\": 90,",
+        "\"provider_mbps\": 600,",
+        "\"failed\": [",
+        "\"failed\": [],",
+        "\"failed\": [],",
+        "\"failed\": [],",
+        "\"failed\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/speed-final/20261015T103359-66162/results.json"
+      ],
+      "git_blob": "fd593f40cb5ae49be9d658080e10eb46121fadb9",
+      "sha256": "8e3d1a2334c2a070eeb8d251a05439c3bf05886d56b9498aba3abfca750e0ed6",
+      "bytes": 5945,
+      "review_signals": [
+        "\"qualification\": \"paired client/server field regression repair; full internal gates required; field-provider performance remains separate\",",
+        "\"field_qualified\": false,",
+        "\"nominal_upload_mbps\": 100,",
+        "\"nominal_download_mbps\": 100,",
+        "\"useful_upload_mbps_min\": 90,",
+        "\"useful_download_mbps_min\": 90,",
+        "\"provider_mbps\": 600,",
+        "\"failed\": [],",
+        "\"failed\": [],",
+        "\"failed\": [],",
+        "\"failed\": [],",
+        "\"failed\": [],"
+      ]
+    },
+    {
+      "paths": [
+        "archives/rev5/checkpoint/evidence/validation-cycle8-transport-checkpoint/transport-checkpoint-results-status.json"
+      ],
+      "git_blob": "ede1ce65040d5f7e2a6c0ad7886127811982b204",
+      "sha256": "a1972ee237304b804f78aba32d246a3614ee6b84a0034e9847e69a68402ea619",
+      "bytes": 475,
+      "review_signals": []
+    }
+  ]
+}

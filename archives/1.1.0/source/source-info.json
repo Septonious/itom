@@ -1,11 +1,11 @@
 {
   "version": "1.1.0",
-  "release": "DEV8",
-  "revision": "itom-1-1-0-dev8",
-  "archive_name": "ITOM-1.1.0-DEV8-sources.zip",
+  "release": "DEV9",
+  "revision": "itom-1-1-0-dev9",
+  "archive_name": "ITOM-1.1.0-DEV9-sources.zip",
   "baseline": "v1.0.0-rc2 @ a50a6a9e31ee9b38b53e84c9dce645e7ed7e415b",
   "qualification": "Experimental development; performance and field qualification pending",
-  "android_version_name": "1.1.0-dev8",
-  "android_version_code": 10108,
+  "android_version_name": "1.1.0-dev9",
+  "android_version_code": 10109,
   "android_application_id": "org.itom.client"
 }
