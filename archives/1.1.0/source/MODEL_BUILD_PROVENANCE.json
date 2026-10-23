@@ -50,7 +50,7 @@
     "core/tunnel/trace_admission_sampler.go": "7cfa75e46daa4c7ab63415efcafebc45f04200676dda8787e79385a48bf8c51d",
     "core/tunnel/control_repeat.go": "c93c8250dbeb862f6e460b9affae5582a057014ff6df4b9f7d91749b5ca23776",
     "core/tunnel/pipe.go": "4181488f4f2e641f8ccf37e798ae7b131821b8af785201346c4303293bfcbb3f",
-    "core/tunnel/io.go": "535ffa390be18cd37e01417d5a990189f74a8239a5e04abe8540b337836ee25a",
+    "core/tunnel/io.go": "1935eb6e07864dba9a226026f0b4e7cacb6d0a7450e21fbeeec4281424daf7e2",
     "core/tunnel/data_envelope.go": "3bbe631032916d60d31243a190d30628f8d4588dcc0794acd2cf936babe715f6",
     "core/tunnel/notification_audit.go": "7493615518a590124cbec3de63d8663db3b07eb7102e1be2a9d94af68996c316",
     "core/tunnel/account_view.go": "0986fe4da827e9fb3c974cb95fb8b4770898af5ebc2efaa665244b9ecf92082e",
@@ -250,6 +250,7 @@
     "core/tunnel/recovered_shares.go",
     "core/tunnel/version.go",
     "core/manager/trace.go",
-    "core/cmd/itom/main.go"
+    "core/cmd/itom/main.go",
+    "core/tunnel/io.go"
   ]
 }

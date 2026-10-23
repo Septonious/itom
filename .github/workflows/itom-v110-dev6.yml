@@ -1,4 +1,4 @@
-name: ITOM 1.1 DEV6 byte-headroom startup and independent refill, unchanged comparisons and testing builds
+name: ITOM 1.1 DEV6 byte-headroom and known-closed DATA repair, unchanged comparisons and testing builds
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
@@ -27,9 +27,10 @@ jobs:
           set -euo pipefail
           go vet ./...
           go test -p 2 -count=1 -timeout=900s ./...
+          go test -count=10 -timeout=180s ./tunnel -run '^TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream$'
           go test -race -p 2 -count=1 -timeout=180s ./journal ./wallet ./flow ./datapath
           go test -p 2 -count=1 -timeout=180s ./cmd/itom ./manager ./journal ./wallet ./flow ./datapath
-          go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestDEV6|TestThroughputModel|TestBoundedResponse|TestResponseSearch|TestDuplexProof|TestRetainedCadence|TestRecoveryPacing|TestRefillTrigger|TestRev7RetainedOutboundCleanup|TestRev5RampAbortAndRestartKeepOriginalChatUsable' -v
+          go test -race -p 2 -count=1 -timeout=180s ./tunnel -run 'TestDEV6|TestRev7AcceptedControl|TestRev7CloseDuringControlRepair|TestRev7CappedMixedSocketsRepair|TestThroughputModel|TestBoundedResponse|TestResponseSearch|TestDuplexProof|TestRetainedCadence|TestRecoveryPacing|TestRefillTrigger|TestRev7RetainedOutboundCleanup|TestRev5RampAbortAndRestartKeepOriginalChatUsable' -v
   linux:
     needs: [core, byte-headroom]
     if: ${{ needs.core.result == 'success' && needs.byte-headroom.result == 'success' }}

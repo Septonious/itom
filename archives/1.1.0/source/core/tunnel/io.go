@@ -963,7 +963,7 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 	if fast && m.topologyCaps&capSplitData != 0 && len(raw) <= 64<<10 {
 		// This is charged to DATA, including unknown outcomes. Only its physical
 		// service uses the control socket; large payloads cannot enter this slot.
-		return m.controlCommand(ctx, workUrgent, func() error { return m.controlClient().Append(ctx, f, raw) })
+		return m.appendControlData(ctx, workUrgent, f, raw)
 	}
 	if m.runtime != nil {
 		return m.runtime.AppendClass(ctx, m.runtimeUser, f, raw, fast)
@@ -999,7 +999,7 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 			if fast {
 				class = workUrgent
 			}
-			return m.controlCommand(ctx, class, func() error { return m.controlClient().Append(ctx, f, raw) })
+			return m.appendControlData(ctx, class, f, raw)
 		}
 		// Capacity repair owns replacement. Await it only while this lane is live;
 		// no raw bytes were APPENDed and no unknown publication is resent.
@@ -1014,6 +1014,39 @@ func (m *laneMail) AppendDataPriority(ctx context.Context, f string, raw []byte,
 		}
 	}
 }
+
+// A capped endpoint can use control as its only DATA writer. Repair a known
+// dead socket before invoking APPEND; otherwise a burst consumes whole grants
+// as immediate UNKNOWN attempts on the same dead connection before the control
+// writer repairs it. Once Append is invoked its result is returned exactly once:
+// an uncertain publication is never retried here with the same MIME/counters.
+func (m *laneMail) appendControlData(ctx context.Context, class accountWorkClass, folder string, raw []byte) error {
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if !m.controlClient().Ready() {
+			if err := m.repairControl(ctx); err != nil {
+				return err
+			}
+		}
+		notStarted := false
+		err := m.controlCommand(ctx, class, func() error {
+			writer := m.controlClient()
+			if !writer.Ready() {
+				notStarted = true
+				return mailbox.ErrNotStarted
+			}
+			return writer.Append(ctx, folder, raw)
+		})
+		if !notStarted {
+			return err
+		}
+		// The socket died while this caller queued for admission. No APPEND
+		// call happened, so release admission and repair before trying it.
+	}
+}
+
 func (m *laneMail) retireDataWriter(index int, writer *mailbox.Client) {
 	m.writerMu.Lock()
 	if m.closed || index < 0 || index >= len(m.writers) || m.writers[index] != writer || m.writerDead[index] {

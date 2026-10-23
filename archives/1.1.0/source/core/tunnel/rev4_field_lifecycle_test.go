@@ -58,9 +58,9 @@ func rev4Exchange(c net.Conn, label int, size int, deadline time.Duration) error
 	written := make(chan error, 1)
 	go func() { written <- productionWriteFull(c, want) }()
 	got := make([]byte, len(want))
-	_, readErr := io.ReadFull(c, got)
+	read, readErr := io.ReadFull(c, got)
 	if readErr != nil {
-		return fmt.Errorf("read %d bytes: %w", size, readErr)
+		return fmt.Errorf("read %d/%d bytes: %w", read, size, readErr)
 	}
 	if err := <-written; err != nil {
 		return err

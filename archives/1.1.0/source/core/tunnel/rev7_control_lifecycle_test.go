@@ -2,6 +2,8 @@ package tunnel
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -92,6 +94,9 @@ func TestRev7CorrelatedControlEOFBetweenTransfersKeepsEveryCarrier(t *testing.T)
 }
 
 func TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream(t *testing.T) {
+	if root := os.Getenv("ITOM_LOAD_TRACE_DIR"); root != "" {
+		t.Setenv("ITOM_LOAD_TRACE_DIR", filepath.Join(root, fmt.Sprint(time.Now().UnixNano())))
+	}
 	t.Setenv("ITOM_LOAD_LAYOUT", "mixed")
 	t.Setenv("ITOM_LOAD_ACCOUNT_SESSIONS", "4")
 	f := newProductionSupervisorFixtureAccounts(t, 2)
@@ -107,6 +112,13 @@ func TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream(t *testing.T) {
 		physicalMail(l.mail).Client.Close()
 	}
 	if err := rev4Exchange(c, 795, 1<<20, 12*time.Second); err != nil {
+		rev4RecoveryFailure(t, f)
+		for _, l := range lanes {
+			l.mu.Lock()
+			out := len(l.out)
+			l.mu.Unlock()
+			t.Logf("capped_repair_account account=%s server=%t out=%d bulk_grants=%d fast_grants=%d control_debt=%d scheduler=%+v sockets=%+v", l.account.ID, l.side, out, len(l.grants), len(l.fastGrants), l.controlDebt.Load(), l.pump.SchedulerSnapshot(), physicalMail(l.mail).SocketSnapshots())
+		}
 		t.Fatal("limited-socket stream after EOF", err)
 	}
 	for _, l := range lanes {
