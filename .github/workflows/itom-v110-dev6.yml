@@ -1,4 +1,4 @@
-name: ITOM 1.1 DEV6 byte-headroom startup, unchanged comparisons and testing builds
+name: ITOM 1.1 DEV6 byte-headroom startup and independent refill, unchanged comparisons and testing builds
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]

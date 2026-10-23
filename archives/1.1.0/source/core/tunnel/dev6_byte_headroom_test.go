@@ -66,6 +66,25 @@ func TestDEV6FieldByteHeadroomBootstrapsWithoutForgivingDebt(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
+			// Repeated authenticated zero-spend fences must refill fast service
+			// while the bulk lease remains outstanding. Its already-charged
+			// bytes/ordinals must not be reserved for a second time.
+			for round := 0; round < 3; round++ {
+				for key, active := range l.issued {
+					if active && l.issuedFast[key] {
+						if _, err = s.ApplyRemote(u.ID, s.Run(), wire.StorageRelease{Key: key}); err != nil {
+							t.Fatal(err)
+						}
+						l.issued[key] = false
+					}
+				}
+				if err = l.offer(); err != nil {
+					t.Fatal(err)
+				}
+				if fast, bulk := l.issuedGrantCounts(); fast != 1 || bulk < 1 {
+					t.Fatalf("fast refill stranded behind existing bulk: round=%d fast=%d bulk=%d", round, fast, bulk)
+				}
+			}
 			got, err := s.GetGrant(old.Ref)
 			if err != nil || got != old {
 				t.Fatal("historical debt changed", err)
@@ -109,8 +128,15 @@ func TestDEV6ByteHeadroomTLSFifteenAccounts(t *testing.T) {
 			}
 		}
 	})
-	readyAfter := time.Since(started)
-	t.Logf("all_ready_ms=%d accounts=15 before_application_traffic=true", readyAfter.Milliseconds())
+	setupAfter := time.Since(started)
+	var readyMS int64
+	for _, line := range f.client.Snapshot().Lines {
+		readyMS = max(readyMS, line.InitialReadyMS)
+	}
+	if readyMS == 0 {
+		t.Fatal("missing actual connection-attempt startup measurement")
+	}
+	t.Logf("maximum_client_attempt_ready_ms=%d fixture_setup_including_UID_seeding_ms=%d accounts=15 before_application_traffic=true", readyMS, setupAfter.Milliseconds())
 	for i := 1; i <= 15; i++ {
 		id := fmt.Sprintf("a%02d", i)
 		p := f.openOn(t, id)
@@ -137,5 +163,5 @@ func TestDEV6ByteHeadroomTLSFifteenAccounts(t *testing.T) {
 	if s := f.client.Snapshot(); s.ActiveLines != 30 {
 		t.Fatalf("only %d/30 active directions", s.ActiveLines)
 	}
-	t.Logf("byte_pressure_accounts=15 active_directions=30 all_ready_ms=%d per_account_short_bulk_short=true old_debt_unchanged=true", readyAfter.Milliseconds())
+	t.Logf("byte_pressure_accounts=15 active_directions=30 maximum_client_attempt_ready_ms=%d per_account_short_bulk_short=true old_debt_unchanged=true", readyMS)
 }

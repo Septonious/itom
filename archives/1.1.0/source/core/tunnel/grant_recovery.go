@@ -37,6 +37,19 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	remoteFree := pool.Amount{Bytes: remoteShare.Bytes - usage.Remote.Bytes, Messages: remoteShare.Messages - usage.Remote.Messages}
 	fastBytes := recoveredFastReserveBytes(profile, usage)
 	reserveBytes := fastBytes + dataBatchMIMEHardCap
+	fastActive, bulkActive := l.issuedGrantCounts()
+	neededBytes := uint64(dataBatchMIMEHardCap)
+	neededBulkBytes, neededBulkMessages := uint64(0), uint64(0)
+	if fast {
+		if bulkActive == 0 && !l.everReady.Load() {
+			neededBulkBytes, neededBulkMessages = dataBatchMIMEHardCap, 1
+		}
+		// A usable bulk lease already occupies its share of held/remoteFree.
+		// Reserve additional bulk headroom only during initial bootstrap.
+		// After activation a fenced bulk BODY may await proof cleanup; its
+		// still-charged bytes must not prevent independent fast refill.
+		neededBytes = fastBytes + neededBulkBytes
+	}
 	if historicalMessages > profile.Messages {
 		return pool.Amount{}, journal.ErrLimit
 	}
@@ -45,7 +58,7 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 	// instead of reserving all twelve free slots of a 180/192 field account.
 	reserveMessages := min(max(uint64(2), profile.Messages/16), max(uint64(2), (profile.Messages-historicalMessages)/2))
 	if !retained || held.Bytes > profile.Bytes || held.Messages > profile.Messages ||
-		profile.Bytes-held.Bytes < reserveBytes+dataBatchMIMEHardCap ||
+		profile.Bytes-held.Bytes < reserveBytes+neededBytes ||
 		profile.Messages-held.Messages <= reserveMessages {
 		return pool.Amount{}, journal.ErrLimit
 	}
@@ -54,7 +67,7 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		// Leave at least one bulk ordinal. When the standard fast grant cannot
 		// fit alongside bulk, share the genuinely free message slots between
 		// the two classes instead of requiring 32 unused slots to connect.
-		if available < 2 || remoteFree.Bytes < fastBytes+dataBatchMIMEHardCap {
+		if available < 1+neededBulkMessages || remoteFree.Bytes < fastBytes+neededBulkBytes {
 			return pool.Amount{}, journal.ErrLimit
 		}
 		// Match the normal quota proportions instead of giving the half-MiB
@@ -62,7 +75,6 @@ func (l *lane) recoveryQuotaLocked(profile, held pool.Amount, fast bool) (pool.A
 		messages := min(uint64(fastLeaseMessages), max(uint64(1), available/5))
 		return pool.Amount{Bytes: fastBytes, Messages: messages}, nil
 	}
-	fastActive, bulkActive := l.issuedGrantCounts()
 	if fastActive == 0 {
 		return pool.Amount{}, journal.ErrLimit
 	}

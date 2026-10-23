@@ -41,7 +41,7 @@
     "core/tunnel/receive_worker.go": "63751c2dff018d8add24d6d257f86a5b25259c2fa07daf4b7ef956960e736f14",
     "core/tunnel/control.go": "7bf0ed0a7a07567af7d94f2ca920a361f420e880fcb42f8520d5a2e8a9e6a6aa",
     "core/tunnel/reader_reserve.go": "e451bcaba7d5ec108d15f7fb0381e8aaf66c4b4d2a10f8f04ae052aa549e243b",
-    "core/tunnel/grant_recovery.go": "367303cad0a0e48eefec02f8a06534146397aa93d4848c533debb04e54c72b06",
+    "core/tunnel/grant_recovery.go": "3831875f8a193641b4b13b4cc0c1109beedd054cb4368efa060fc3db0bcb1c4a",
     "core/tunnel/control_repair.go": "2ecfa9f045e356b94e6df78252f3b85d1ab80ac2da2e5361405ae57fe80d8e40",
     "core/tunnel/account_work.go": "67f331da3fccdef1f556406270e8181fe4d29cf08398a75d6e43afdde5c158d1",
     "core/tunnel/throughput_model_runtime.go": "8dc660c9090e39ab77133efce8108b6e37eba8c32df9f5a05cba3913c3460793",
