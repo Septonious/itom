@@ -21,15 +21,17 @@ jobs:
           git fetch origin 96a592f4a9278d069a248e38ddb645a914bde6aa --no-tags
           git diff --exit-code 96a592f4a9278d069a248e38ddb645a914bde6aa HEAD -- archives/1.1.0/source
           gh api 'repos/Septonious/itom/actions/runs/40044377995/jobs?per_page=100' > "$RUNNER_TEMP/jobs.json"
-          gh api repos/Septonious/itom/actions/jobs/120722593356/logs > "$RUNNER_TEMP/original-core.log"
           python3 - <<'PY_GATE'
           from pathlib import Path
-          import json,os,re
+          import json,os,re,urllib.request
           root=Path(os.environ['RUNNER_TEMP']);jobs=json.loads((root/'jobs.json').read_text())['jobs']
           for name in ('qualification-summary','Reject data races; retain the original loaded timing result'):
               found=[j for j in jobs if j['name']==name]
               assert len(found)==1 and found[0]['conclusion']=='success',name
-          text=(root/'original-core.log').read_text(encoding='utf-8-sig')
+          req=urllib.request.Request('https://api.github.com/repos/Septonious/itom/actions/jobs/120722593356/logs',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+          with urllib.request.urlopen(req,timeout=30) as response:
+              text=response.read().decode('utf-8-sig')
+          (root/'original-core.log').write_text(text)
           assert 'WARNING: DATA RACE' not in text and 'panic:' not in text
           failures=re.findall(r'--- FAIL: (\w+)',text)
           assert failures==['TestRev5RampAbortAndRestartKeepOriginalChatUsable'],failures
