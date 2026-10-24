@@ -1,0 +1,4851 @@
+{
+  "schema": 1,
+  "classification": "synthetic observations, not field qualification",
+  "thresholds_relaxed": false,
+  "sustained": {
+    "local16-mobile-variable": {
+      "model": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "104.543027",
+          "max_rtt_ns": "586688189",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/1-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "93.664051",
+          "max_rtt_ns": "499147683",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/1-model.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "91.357184",
+          "max_rtt_ns": "602212245",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/2-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "103.232307",
+          "max_rtt_ns": "624635261",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/2-model.log"
+        }
+      ],
+      "rc2": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "108.029542",
+          "max_rtt_ns": "713527290",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/1-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "96.888422",
+          "max_rtt_ns": "415581117",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/1-rc2.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "113.272422",
+          "max_rtt_ns": "480756605",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/2-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "100.348723",
+          "max_rtt_ns": "628734698",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-mobile-variable/2-rc2.log"
+        }
+      ]
+    },
+    "local16-multi": {
+      "model": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "145.302050",
+          "max_rtt_ns": "597476025",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/1-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "152.222652",
+          "max_rtt_ns": "405387029",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/1-model.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "138.726605",
+          "max_rtt_ns": "629632016",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/2-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "132.566221",
+          "max_rtt_ns": "502950014",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/2-model.log"
+        }
+      ],
+      "rc2": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "158.990336",
+          "max_rtt_ns": "761404046",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/1-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "161.887027",
+          "max_rtt_ns": "608028795",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/1-rc2.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "147.189487",
+          "max_rtt_ns": "453574139",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/2-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "156.971827",
+          "max_rtt_ns": "576585610",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-multi/2-rc2.log"
+        }
+      ]
+    },
+    "local16-retained-multi": {
+      "model": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "117.781299",
+          "max_rtt_ns": "409477196",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/1-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "118.515302",
+          "max_rtt_ns": "446561345",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/1-model.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "121.608602",
+          "max_rtt_ns": "418351536",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/2-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "120.761003",
+          "max_rtt_ns": "411850360",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/2-model.log"
+        }
+      ],
+      "rc2": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "145.848183",
+          "max_rtt_ns": "214731249",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/1-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "129.289421",
+          "max_rtt_ns": "237384046",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/1-rc2.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "130.058377",
+          "max_rtt_ns": "202415190",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/2-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "144.310272",
+          "max_rtt_ns": "305193084",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-multi/2-rc2.log"
+        }
+      ]
+    },
+    "local16-retained-single": {
+      "model": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "140.596565",
+          "max_rtt_ns": "143877533",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/1-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "141.299985",
+          "max_rtt_ns": "176268031",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/1-model.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "141.706308",
+          "max_rtt_ns": "153490779",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/2-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "137.546957",
+          "max_rtt_ns": "384012796",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/2-model.log"
+        }
+      ],
+      "rc2": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "82.758861",
+          "max_rtt_ns": "405868831",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/1-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "81.941845",
+          "max_rtt_ns": "221720483",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/1-rc2.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "82.933623",
+          "max_rtt_ns": "213247301",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/2-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "84.537071",
+          "max_rtt_ns": "228583755",
+          "accepted": "false",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-retained-single/2-rc2.log"
+        }
+      ]
+    },
+    "local16-single": {
+      "model": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "152.174592",
+          "max_rtt_ns": "431553142",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/1-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "155.359642",
+          "max_rtt_ns": "476648478",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/1-model.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "167.562445",
+          "max_rtt_ns": "492127888",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/2-model.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "165.570150",
+          "max_rtt_ns": "504406372",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/2-model.log"
+        }
+      ],
+      "rc2": [
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "181.858031",
+          "max_rtt_ns": "233094728",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/1-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "183.684301",
+          "max_rtt_ns": "247381638",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/1-rc2.log"
+        },
+        {
+          "round": "1",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "182.006579",
+          "max_rtt_ns": "209313452",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/2-rc2.log"
+        },
+        {
+          "round": "2",
+          "tier": "rc8-75-75mbps-max750ms-hard-release",
+          "minimum_verified_mbps": "178.782208",
+          "max_rtt_ns": "224426817",
+          "accepted": "true",
+          "field_qualified": "false",
+          "log": "dev9-throughput-local16-single/2-rc2.log"
+        }
+      ]
+    }
+  },
+  "short": {
+    "dev9-short-1-service0-sessions10": {
+      "dev4": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "301.640363",
+            "first2_mbps": "78.249984",
+            "last2_mbps": "327.286784",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "243.269632",
+            "first2_mbps": "78.249984",
+            "last2_mbps": "289.931264",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "269.768021",
+            "first2_mbps": "47.054848",
+            "last2_mbps": "392.298496",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "263.520256",
+            "first2_mbps": "83.099648",
+            "last2_mbps": "291.241984",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "290.499243",
+            "first2_mbps": "166.330368",
+            "last2_mbps": "263.847936",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "254.345216",
+            "first2_mbps": "81.002496",
+            "last2_mbps": "271.843328",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "234.946560",
+            "first2_mbps": "58.327040",
+            "last2_mbps": "264.634368",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "221.686443",
+            "first2_mbps": "131.858432",
+            "last2_mbps": "260.308992",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "256.704512",
+            "first2_mbps": "155.320320",
+            "last2_mbps": "324.534272",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "248.337749",
+            "first2_mbps": "201.850880",
+            "last2_mbps": "263.323648",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "251.286869",
+            "first2_mbps": "184.549376",
+            "last2_mbps": "309.985280",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "233.330005",
+            "first2_mbps": "156.106752",
+            "last2_mbps": "250.216448",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 5,
+        "failed_phases": 1,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "216.705707",
+            "first2_mbps": "95.813632",
+            "last2_mbps": "259.522560",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "54.438571",
+            "first2_mbps": "51.642368",
+            "last2_mbps": "143.654912",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "199.491584",
+            "first2_mbps": "56.754176",
+            "last2_mbps": "294.125568",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "246.349824",
+            "first2_mbps": "117.440512",
+            "last2_mbps": "259.915776",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "286.960299",
+            "first2_mbps": "102.498304",
+            "last2_mbps": "325.189632",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "223.412224",
+            "first2_mbps": "39.321600",
+            "last2_mbps": "234.225664",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-1-service0-sessions4": {
+      "dev4": {
+        "passed_phases": 5,
+        "failed_phases": 1,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "190.578688",
+            "first2_mbps": "90.308608",
+            "last2_mbps": "214.827008",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "293.404672",
+            "first2_mbps": "98.566144",
+            "last2_mbps": "355.991552",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "188.590763",
+            "first2_mbps": "75.759616",
+            "last2_mbps": "219.152384",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "290.390016",
+            "first2_mbps": "100.663296",
+            "last2_mbps": "306.577408",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "193.331200",
+            "first2_mbps": "91.619328",
+            "last2_mbps": "213.385216",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "305.419605",
+            "first2_mbps": "158.597120",
+            "last2_mbps": "353.370112",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "242.592427",
+            "first2_mbps": "155.582464",
+            "last2_mbps": "260.308992",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "312.060587",
+            "first2_mbps": "179.699712",
+            "last2_mbps": "336.723968",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "243.051179",
+            "first2_mbps": "185.597952",
+            "last2_mbps": "246.677504",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "311.885824",
+            "first2_mbps": "199.622656",
+            "last2_mbps": "314.441728",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "239.665152",
+            "first2_mbps": "184.156160",
+            "last2_mbps": "261.750784",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "249.626624",
+            "first2_mbps": "51.511296",
+            "last2_mbps": "323.616768",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "186.668373",
+            "first2_mbps": "54.657024",
+            "last2_mbps": "220.594176",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "284.251477",
+            "first2_mbps": "94.502912",
+            "last2_mbps": "331.874304",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "190.251008",
+            "first2_mbps": "59.375616",
+            "last2_mbps": "213.385216",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "261.663403",
+            "first2_mbps": "73.269248",
+            "last2_mbps": "333.971456",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "190.578688",
+            "first2_mbps": "60.686336",
+            "last2_mbps": "224.919552",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-1-service1-sessions10": {
+      "dev4": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "217.513984",
+            "first2_mbps": "40.501248",
+            "last2_mbps": "250.216448",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "210.457941",
+            "first2_mbps": "79.822848",
+            "last2_mbps": "270.401536",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "239.512235",
+            "first2_mbps": "74.448896",
+            "last2_mbps": "288.358400",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "205.499051",
+            "first2_mbps": "57.671680",
+            "last2_mbps": "238.682112",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "245.454165",
+            "first2_mbps": "99.352576",
+            "last2_mbps": "289.144832",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "214.280875",
+            "first2_mbps": "61.079552",
+            "last2_mbps": "254.541824",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "236.978176",
+            "first2_mbps": "57.933824",
+            "last2_mbps": "274.726912",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "220.484949",
+            "first2_mbps": "132.120576",
+            "last2_mbps": "255.328256",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "246.764885",
+            "first2_mbps": "101.842944",
+            "last2_mbps": "300.679168",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "221.096619",
+            "first2_mbps": "105.644032",
+            "last2_mbps": "245.104640",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "248.446976",
+            "first2_mbps": "95.420416",
+            "last2_mbps": "288.489472",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "221.686443",
+            "first2_mbps": "117.833728",
+            "last2_mbps": "242.221056",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "200.758613",
+            "first2_mbps": "31.719424",
+            "last2_mbps": "279.707648",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "188.132011",
+            "first2_mbps": "46.006272",
+            "last2_mbps": "240.123904",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "232.062976",
+            "first2_mbps": "53.739520",
+            "last2_mbps": "291.241984",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "204.406784",
+            "first2_mbps": "62.259200",
+            "last2_mbps": "254.541824",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "241.106944",
+            "first2_mbps": "85.196800",
+            "last2_mbps": "276.168704",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "206.547627",
+            "first2_mbps": "66.584576",
+            "last2_mbps": "257.425408",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-1-service1-sessions4": {
+      "dev4": {
+        "passed_phases": 3,
+        "failed_phases": 3,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "178.148693",
+            "first2_mbps": "33.423360",
+            "last2_mbps": "258.736128",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "94.917973",
+            "first2_mbps": "34.078720",
+            "last2_mbps": "103.809024",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "185.095509",
+            "first2_mbps": "43.515904",
+            "last2_mbps": "222.953472",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "89.893547",
+            "first2_mbps": "29.097984",
+            "last2_mbps": "108.134400",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "179.044352",
+            "first2_mbps": "42.729472",
+            "last2_mbps": "212.860928",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "91.116885",
+            "first2_mbps": "34.078720",
+            "last2_mbps": "105.250816",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "212.817237",
+            "first2_mbps": "56.360960",
+            "last2_mbps": "227.934208",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "130.241877",
+            "first2_mbps": "52.166656",
+            "last2_mbps": "142.737408",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "215.744512",
+            "first2_mbps": "44.826624",
+            "last2_mbps": "255.983616",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "132.994389",
+            "first2_mbps": "55.050240",
+            "last2_mbps": "152.829952",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "216.640171",
+            "first2_mbps": "82.837504",
+            "last2_mbps": "258.211840",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "134.217728",
+            "first2_mbps": "66.715648",
+            "last2_mbps": "149.946368",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 3,
+        "failed_phases": 3,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "144.703488",
+            "first2_mbps": "9.699328",
+            "last2_mbps": "230.162432",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "83.602091",
+            "first2_mbps": "27.656192",
+            "last2_mbps": "99.483648",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "149.837141",
+            "first2_mbps": "10.092544",
+            "last2_mbps": "234.487808",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "82.924885",
+            "first2_mbps": "26.214400",
+            "last2_mbps": "111.017984",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "148.635648",
+            "first2_mbps": "11.927552",
+            "last2_mbps": "230.162432",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "1",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "89.696939",
+            "first2_mbps": "35.520512",
+            "last2_mbps": "116.785152",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-16-service0-sessions10": {
+      "dev4": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "298.079573",
+            "first2_mbps": "157.286400",
+            "last2_mbps": "333.447168",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "277.981867",
+            "first2_mbps": "150.732800",
+            "last2_mbps": "301.072384",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "302.951083",
+            "first2_mbps": "169.213952",
+            "last2_mbps": "326.500352",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "282.940757",
+            "first2_mbps": "188.612608",
+            "last2_mbps": "295.436288",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "298.647552",
+            "first2_mbps": "165.543936",
+            "last2_mbps": "333.185024",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "287.353515",
+            "first2_mbps": "165.675008",
+            "last2_mbps": "338.558976",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "286.326784",
+            "first2_mbps": "115.343360",
+            "last2_mbps": "320.339968",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "278.309547",
+            "first2_mbps": "210.370560",
+            "last2_mbps": "269.746176",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "308.740096",
+            "first2_mbps": "223.215616",
+            "last2_mbps": "330.825728",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "276.540075",
+            "first2_mbps": "217.055232",
+            "last2_mbps": "278.265856",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "305.397760",
+            "first2_mbps": "221.642752",
+            "last2_mbps": "341.442560",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "279.816875",
+            "first2_mbps": "204.472320",
+            "last2_mbps": "306.708480",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "282.525696",
+            "first2_mbps": "90.046464",
+            "last2_mbps": "302.907392",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "274.967211",
+            "first2_mbps": "144.048128",
+            "last2_mbps": "292.421632",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "288.052565",
+            "first2_mbps": "98.041856",
+            "last2_mbps": "322.961408",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "273.612800",
+            "first2_mbps": "130.416640",
+            "last2_mbps": "309.067776",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "286.567083",
+            "first2_mbps": "109.445120",
+            "last2_mbps": "340.131840",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "276.365312",
+            "first2_mbps": "144.834560",
+            "last2_mbps": "287.703040",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-16-service0-sessions4": {
+      "dev4": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "306.730325",
+            "first2_mbps": "135.921664",
+            "last2_mbps": "347.471872",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "206.045184",
+            "first2_mbps": "108.265472",
+            "last2_mbps": "233.177088",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "315.817984",
+            "first2_mbps": "169.082880",
+            "last2_mbps": "340.393984",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "205.651968",
+            "first2_mbps": "118.620160",
+            "last2_mbps": "215.089152",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "313.589760",
+            "first2_mbps": "142.213120",
+            "last2_mbps": "341.180416",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "201.938261",
+            "first2_mbps": "118.226944",
+            "last2_mbps": "215.613440",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "301.649920",
+            "first2_mbps": "143.056896",
+            "last2_mbps": "317.587456",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "234.247509",
+            "first2_mbps": "191.889408",
+            "last2_mbps": "241.303552",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "312.191659",
+            "first2_mbps": "196.739072",
+            "last2_mbps": "324.272128",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "223.455915",
+            "first2_mbps": "158.859264",
+            "last2_mbps": "250.347520",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "320.471040",
+            "first2_mbps": "228.065280",
+            "last2_mbps": "351.666176",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "233.526613",
+            "first2_mbps": "192.282624",
+            "last2_mbps": "240.910336",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "277.042517",
+            "first2_mbps": "72.876032",
+            "last2_mbps": "321.650688",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "181.578411",
+            "first2_mbps": "57.933824",
+            "last2_mbps": "211.419136",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "288.795307",
+            "first2_mbps": "125.304832",
+            "last2_mbps": "314.703872",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "185.510571",
+            "first2_mbps": "59.768832",
+            "last2_mbps": "244.187136",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "297.336832",
+            "first2_mbps": "125.173760",
+            "last2_mbps": "342.097920",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "184.046933",
+            "first2_mbps": "66.584576",
+            "last2_mbps": "211.156992",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "0",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-16-service1-sessions10": {
+      "dev4": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "236.694187",
+            "first2_mbps": "51.904512",
+            "last2_mbps": "274.595840",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "225.793365",
+            "first2_mbps": "118.095872",
+            "last2_mbps": "252.444672",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "251.374251",
+            "first2_mbps": "128.450560",
+            "last2_mbps": "288.096256",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "231.342080",
+            "first2_mbps": "91.881472",
+            "last2_mbps": "259.260416",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "243.051179",
+            "first2_mbps": "91.357184",
+            "last2_mbps": "283.770880",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "231.014400",
+            "first2_mbps": "107.872256",
+            "last2_mbps": "265.814016",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "235.427157",
+            "first2_mbps": "34.734080",
+            "last2_mbps": "263.979008",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "227.344384",
+            "first2_mbps": "129.368064",
+            "last2_mbps": "258.867200",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "251.854848",
+            "first2_mbps": "146.014208",
+            "last2_mbps": "288.882688",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "225.334613",
+            "first2_mbps": "127.270912",
+            "last2_mbps": "252.051456",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "255.503019",
+            "first2_mbps": "158.072832",
+            "last2_mbps": "271.450112",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "224.788480",
+            "first2_mbps": "129.892352",
+            "last2_mbps": "228.982784",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "212.795392",
+            "first2_mbps": "35.782656",
+            "last2_mbps": "258.342912",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "202.943147",
+            "first2_mbps": "49.938432",
+            "last2_mbps": "258.211840",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "231.604224",
+            "first2_mbps": "72.613888",
+            "last2_mbps": "273.416192",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "207.705429",
+            "first2_mbps": "55.312384",
+            "last2_mbps": "236.847104",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "222.894080",
+            "first2_mbps": "53.608448",
+            "last2_mbps": "274.071552",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "209.365675",
+            "first2_mbps": "61.210624",
+            "last2_mbps": "246.284288",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    },
+    "dev9-short-16-service1-sessions4": {
+      "dev4": {
+        "passed_phases": 3,
+        "failed_phases": 3,
+        "rows": [
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "189.901483",
+            "first2_mbps": "17.563648",
+            "last2_mbps": "247.726080",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "82.313216",
+            "first2_mbps": "29.097984",
+            "last2_mbps": "95.682560",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "195.734187",
+            "first2_mbps": "23.986176",
+            "last2_mbps": "238.288896",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "88.932352",
+            "first2_mbps": "28.966912",
+            "last2_mbps": "106.561536",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "183.522645",
+            "first2_mbps": "17.432576",
+            "last2_mbps": "244.449280",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "dev4",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "86.594901",
+            "first2_mbps": "35.389440",
+            "last2_mbps": "105.512960",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "model": {
+        "passed_phases": 6,
+        "failed_phases": 0,
+        "rows": [
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "227.824981",
+            "first2_mbps": "43.122688",
+            "last2_mbps": "261.619712",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "122.683392",
+            "first2_mbps": "70.123520",
+            "last2_mbps": "133.955584",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "247.114411",
+            "first2_mbps": "154.927104",
+            "last2_mbps": "250.740736",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "121.438208",
+            "first2_mbps": "45.613056",
+            "last2_mbps": "140.115968",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "241.827840",
+            "first2_mbps": "121.110528",
+            "last2_mbps": "276.430848",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "model",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "121.831424",
+            "first2_mbps": "62.128128",
+            "last2_mbps": "138.936320",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      },
+      "rc2": {
+        "passed_phases": 3,
+        "failed_phases": 3,
+        "rows": [
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "false",
+            "useful_mbps": "186.930517",
+            "first2_mbps": "27.262976",
+            "last2_mbps": "251.658240",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "1",
+            "upload": "true",
+            "useful_mbps": "84.344832",
+            "first2_mbps": "27.918336",
+            "last2_mbps": "107.216896",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "false",
+            "useful_mbps": "208.622933",
+            "first2_mbps": "52.953088",
+            "last2_mbps": "259.915776",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "2",
+            "upload": "true",
+            "useful_mbps": "77.485397",
+            "first2_mbps": "23.461888",
+            "last2_mbps": "96.600064",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "false",
+            "useful_mbps": "196.848299",
+            "first2_mbps": "35.913728",
+            "last2_mbps": "250.609664",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          },
+          {
+            "variant": "rc2",
+            "streams": "16",
+            "run": "3",
+            "upload": "true",
+            "useful_mbps": "75.846997",
+            "first2_mbps": "25.034752",
+            "last2_mbps": "70.123520",
+            "empty_half_seconds": "0",
+            "provider_sensitivity": "1",
+            "original_duplex_gates_unchanged": "true",
+            "field_qualified": "false"
+          }
+        ]
+      }
+    }
+  },
+  "paired": {
+    "dev9-final-field-mobile0-streams1": {
+      "model": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": true,
+          "completed_light_probes": 48,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": true,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 335.032015,
+              "mean_ms": 199.76517687500004,
+              "p95_ms": 318.006314,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                177.858154,
+                318.006314,
+                228.757125,
+                335.032015,
+                196.333488,
+                198.09159,
+                193.85758,
+                137.184223,
+                209.628016,
+                196.59061,
+                207.846168,
+                184.007536,
+                176.156955,
+                128.294281,
+                196.746685,
+                206.55734,
+                198.501619,
+                219.203777,
+                156.757413,
+                154.307525,
+                254.460622,
+                162.242113,
+                204.860976,
+                153.08212
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 487.247652,
+              "mean_ms": 225.124592875,
+              "p95_ms": 390.434555,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                487.247652,
+                284.479284,
+                191.92008,
+                183.541317,
+                241.394471,
+                154.969633,
+                390.434555,
+                209.03845,
+                186.334475,
+                100.594843,
+                161.505008,
+                139.521252,
+                182.050436,
+                304.066144,
+                187.624395,
+                326.603613,
+                145.238599,
+                160.374272,
+                210.15832,
+                352.327224,
+                192.010873,
+                194.412658,
+                202.206074,
+                214.936601
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "103.546880",
+              "first2_mbps": "45.088768",
+              "last2_mbps": "116.785152",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "101.012821",
+              "first2_mbps": "75.497472",
+              "last2_mbps": "96.600064",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "2",
+              "upload": "false",
+              "useful_mbps": "107.653803",
+              "first2_mbps": "81.395712",
+              "last2_mbps": "102.367232",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "99.592875",
+              "first2_mbps": "75.628544",
+              "last2_mbps": "109.576192",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "107.653803",
+              "first2_mbps": "66.322432",
+              "last2_mbps": "116.785152",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "100.182699",
+              "first2_mbps": "77.725696",
+              "last2_mbps": "118.226944",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 6,
+          "passed_phase_assertions": 3,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 99.59287466666667",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 1"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      },
+      "dev8": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": true,
+          "completed_light_probes": 48,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": false,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 283.502363,
+              "mean_ms": 214.31061783333328,
+              "p95_ms": 275.887389,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                177.224417,
+                241.27579,
+                217.481485,
+                236.838377,
+                244.134961,
+                159.336051,
+                154.959163,
+                275.887389,
+                230.948393,
+                201.363956,
+                283.502363,
+                238.459176,
+                195.727436,
+                199.412436,
+                145.214491,
+                209.067682,
+                136.068612,
+                242.053701,
+                221.236898,
+                197.560113,
+                218.043425,
+                231.120956,
+                246.617185,
+                239.920372
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 362.218633,
+              "mean_ms": 260.9152700416667,
+              "p95_ms": 346.554051,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                200.37067,
+                194.156591,
+                255.780048,
+                192.958525,
+                218.00461,
+                218.315976,
+                307.772205,
+                323.050918,
+                201.18876,
+                245.439326,
+                216.920035,
+                332.776801,
+                245.24973,
+                227.328065,
+                362.218633,
+                217.922391,
+                334.931129,
+                307.109098,
+                297.877308,
+                346.554051,
+                262.649763,
+                268.560723,
+                306.68154,
+                178.149585
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "103.699797",
+              "first2_mbps": "41.549824",
+              "last2_mbps": "116.785152",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "75.475627",
+              "first2_mbps": "46.268416",
+              "last2_mbps": "88.080384",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "2",
+              "upload": "false",
+              "useful_mbps": "107.304277",
+              "first2_mbps": "37.879808",
+              "last2_mbps": "125.435904",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "74.077525",
+              "first2_mbps": "37.355520",
+              "last2_mbps": "74.842112",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "110.996139",
+              "first2_mbps": "68.812800",
+              "last2_mbps": "127.664128",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "76.327595",
+              "first2_mbps": "54.132736",
+              "last2_mbps": "77.856768",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 6,
+          "passed_phase_assertions": 3,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 75.47562666666667",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 74.07752533333333",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 76.32759466666667"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      }
+    },
+    "dev9-final-field-mobile0-streams4": {
+      "model": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": true,
+          "completed_light_probes": 48,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": true,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 390.810267,
+              "mean_ms": 200.04700683333337,
+              "p95_ms": 342.681255,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                390.810267,
+                178.048169,
+                106.711497,
+                110.493281,
+                218.592936,
+                153.976359,
+                185.717277,
+                125.641785,
+                108.799909,
+                178.215814,
+                216.305009,
+                194.583252,
+                342.681255,
+                313.198071,
+                331.505084,
+                306.378828,
+                149.390843,
+                175.276259,
+                153.919821,
+                177.964218,
+                153.811797,
+                201.350505,
+                188.202423,
+                139.553505
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 455.292073,
+              "mean_ms": 222.1574970416667,
+              "p95_ms": 393.505974,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                137.35134,
+                164.224163,
+                233.174921,
+                393.505974,
+                205.846849,
+                135.08579,
+                198.514545,
+                352.400112,
+                209.913734,
+                455.292073,
+                344.238992,
+                273.402198,
+                179.889717,
+                179.040041,
+                147.765964,
+                126.861009,
+                206.907969,
+                223.626294,
+                122.692984,
+                234.594839,
+                177.648341,
+                214.497278,
+                237.505435,
+                177.799367
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "105.862485",
+              "first2_mbps": "59.244544",
+              "last2_mbps": "107.347968",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "95.529643",
+              "first2_mbps": "64.225280",
+              "last2_mbps": "73.531392",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "2",
+              "upload": "false",
+              "useful_mbps": "106.233856",
+              "first2_mbps": "74.317824",
+              "last2_mbps": "123.338752",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "100.532224",
+              "first2_mbps": "60.817408",
+              "last2_mbps": "109.576192",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "106.517845",
+              "first2_mbps": "68.026368",
+              "last2_mbps": "92.274688",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "98.828288",
+              "first2_mbps": "60.293120",
+              "last2_mbps": "102.367232",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 6,
+          "passed_phase_assertions": 1,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 95.52964266666667",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 1",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 98.828288"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      },
+      "dev8": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": true,
+          "completed_light_probes": 48,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": false,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 377.946452,
+              "mean_ms": 241.66049487499996,
+              "p95_ms": 375.745563,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                289.483336,
+                114.978741,
+                246.152218,
+                279.659701,
+                226.672721,
+                262.74094,
+                213.610016,
+                232.717577,
+                287.896007,
+                192.652274,
+                222.64487,
+                204.347602,
+                300.40483,
+                148.815735,
+                377.946452,
+                375.745563,
+                262.22635,
+                248.258999,
+                240.745997,
+                250.085445,
+                223.341568,
+                276.240652,
+                125.169197,
+                197.315086
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 443.589023,
+              "mean_ms": 237.10141875000002,
+              "p95_ms": 392.713407,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                101.817614,
+                392.713407,
+                443.589023,
+                227.383706,
+                234.512869,
+                203.319081,
+                208.689494,
+                323.169202,
+                216.613964,
+                177.512903,
+                261.938846,
+                175.536328,
+                319.393633,
+                200.951435,
+                197.206013,
+                206.276177,
+                176.404944,
+                265.187684,
+                246.653444,
+                261.401187,
+                208.961497,
+                264.470027,
+                190.7833,
+                185.948272
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "102.978901",
+              "first2_mbps": "56.492032",
+              "last2_mbps": "111.017984",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "80.740352",
+              "first2_mbps": "63.045632",
+              "last2_mbps": "89.653248",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "2",
+              "upload": "false",
+              "useful_mbps": "108.724224",
+              "first2_mbps": "67.895296",
+              "last2_mbps": "113.901568",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "76.130987",
+              "first2_mbps": "40.632320",
+              "last2_mbps": "74.579968",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "106.059093",
+              "first2_mbps": "44.433408",
+              "last2_mbps": "119.668736",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "69.140480",
+              "first2_mbps": "41.811968",
+              "last2_mbps": "41.156608",
+              "empty_half_seconds": "2",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 6,
+          "passed_phase_assertions": 1,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 80.740352",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 1",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 76.13098666666667",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 2",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 69.14048"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      }
+    },
+    "dev9-final-field-mobile1-streams1": {
+      "model": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": false,
+          "completed_light_probes": 22,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": true,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 596.584557,
+              "mean_ms": 299.3557452083333,
+              "p95_ms": 583.889217,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                244.093984,
+                175.615604,
+                190.365178,
+                130.000089,
+                190.163732,
+                125.583115,
+                192.567062,
+                213.470072,
+                273.148025,
+                329.531143,
+                327.859655,
+                393.400805,
+                583.889217,
+                596.584557,
+                304.10189,
+                259.749762,
+                202.811259,
+                304.345615,
+                462.845768,
+                489.211068,
+                223.568679,
+                318.896432,
+                244.761949,
+                407.973225
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 721.127009,
+              "mean_ms": 314.24378829166665,
+              "p95_ms": 578.651336,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                413.880766,
+                390.409809,
+                578.651336,
+                558.513571,
+                721.127009,
+                335.555025,
+                295.814982,
+                335.370407,
+                456.684218,
+                203.605738,
+                214.544987,
+                217.981192,
+                131.605229,
+                188.342123,
+                153.48596,
+                238.535469,
+                220.507055,
+                314.462244,
+                241.582081,
+                236.023708,
+                192.113668,
+                299.892681,
+                216.304713,
+                386.856948
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "74.077525",
+              "first2_mbps": "7.208960",
+              "last2_mbps": "72.089600",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "64.116053",
+              "first2_mbps": "28.180480",
+              "last2_mbps": "69.206016",
+              "empty_half_seconds": "2",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "2",
+              "upload": "false",
+              "useful_mbps": "68.463275",
+              "first2_mbps": "14.680064",
+              "last2_mbps": "54.788096",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "61.603840",
+              "first2_mbps": "23.855104",
+              "last2_mbps": "77.856768",
+              "empty_half_seconds": "2",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "76.240213",
+              "first2_mbps": "13.369344",
+              "last2_mbps": "106.692608",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "1",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "56.557568",
+              "first2_mbps": "26.738688",
+              "last2_mbps": "80.740352",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 6,
+          "passed_phase_assertions": 0,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 74.07752533333333",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 2",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 64.11605333333334",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 false 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 false 68.46327466666668",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 2",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 61.60384",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 false 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 76.24021333333333",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 56.557568"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      },
+      "dev8": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": false,
+          "completed_light_probes": 8,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": false,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": false,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 3,
+              "field_qualified": false,
+              "max_ms": 750.894885,
+              "mean_ms": 368.49812891666664,
+              "p95_ms": 750.0635,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                342.861435,
+                130.741153,
+                157.5278,
+                380.007951,
+                277.545981,
+                276.383045,
+                232.718759,
+                247.288226,
+                223.876917,
+                510.779912,
+                256.595313,
+                373.985202,
+                750.0635,
+                282.370429,
+                307.993206,
+                339.903641,
+                309.643894,
+                575.625993,
+                387.43212,
+                243.211531,
+                272.674849,
+                750.051218,
+                750.894885,
+                463.778134
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 3,
+              "field_qualified": false,
+              "max_ms": 750.752047,
+              "mean_ms": 359.39405654166666,
+              "p95_ms": 750.731169,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                429.019322,
+                268.041524,
+                204.054327,
+                311.747636,
+                321.999223,
+                256.084354,
+                216.093579,
+                301.012541,
+                211.314052,
+                180.950609,
+                189.584421,
+                293.08279,
+                323.470542,
+                251.349225,
+                750.030243,
+                615.724204,
+                750.731169,
+                333.686473,
+                217.158826,
+                436.49436,
+                750.752047,
+                477.598953,
+                341.893009,
+                193.583928
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            }
+          ],
+          "failures": [
+            "field_idle_itomtest_test.go:32: idle probe12: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: idle probe21: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: idle probe22: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe14: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe16: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe20: read 0/32 bytes: read pipe: i/o timeout"
+          ]
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "46.443179",
+              "first2_mbps": "41.025536",
+              "last2_mbps": "37.486592",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "45.525675",
+              "first2_mbps": "42.467328",
+              "last2_mbps": "41.811968",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "1",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "47.753899",
+              "first2_mbps": "44.957696",
+              "last2_mbps": "41.811968",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 3,
+          "passed_phase_assertions": 0,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 46.44317866666666",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 45.52567466666667",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 47.753898666666664"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      }
+    },
+    "dev9-final-field-mobile1-streams4": {
+      "model": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": false,
+          "completed_light_probes": 33,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": true,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": true,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 634.016267,
+              "mean_ms": 282.99379995833334,
+              "p95_ms": 464.32519,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                356.976307,
+                374.698362,
+                376.259492,
+                216.939219,
+                193.491386,
+                175.701258,
+                147.66294,
+                130.713327,
+                161.619416,
+                183.99529,
+                194.985386,
+                249.235493,
+                290.160619,
+                325.66897,
+                337.596915,
+                634.016267,
+                421.00633,
+                244.584895,
+                152.287313,
+                264.911583,
+                208.276935,
+                287.268941,
+                399.469365,
+                464.32519
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 0,
+              "field_qualified": false,
+              "max_ms": 707.282418,
+              "mean_ms": 300.8000398333333,
+              "p95_ms": 574.198533,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                288.99872,
+                182.372545,
+                274.703487,
+                196.12462,
+                235.474138,
+                212.626168,
+                376.476008,
+                376.07595,
+                407.898936,
+                574.198533,
+                473.851536,
+                707.282418,
+                293.048618,
+                151.498071,
+                289.963936,
+                285.010091,
+                335.067787,
+                318.44997,
+                200.425931,
+                272.672473,
+                253.128006,
+                178.698736,
+                162.852511,
+                172.301767
+              ],
+              "server_rtt_ms": 20,
+              "variant": "model"
+            }
+          ],
+          "failures": []
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "69.599232",
+              "first2_mbps": "29.229056",
+              "last2_mbps": "57.671680",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "1",
+              "upload": "true",
+              "useful_mbps": "59.288235",
+              "first2_mbps": "61.865984",
+              "last2_mbps": "73.531392",
+              "empty_half_seconds": "3",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "50.637483",
+              "first2_mbps": "46.530560",
+              "last2_mbps": "53.346304",
+              "empty_half_seconds": "1",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "3",
+              "upload": "false",
+              "useful_mbps": "78.708736",
+              "first2_mbps": "23.199744",
+              "last2_mbps": "92.274688",
+              "empty_half_seconds": "0",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "model",
+              "streams": "4",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "59.725141",
+              "first2_mbps": "53.870592",
+              "last2_mbps": "46.399488",
+              "empty_half_seconds": "7",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 5,
+          "passed_phase_assertions": 0,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 69.599232",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 true 3",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 true 59.28823466666666",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 1",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 50.63748266666666",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 false 78.708736",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 7",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 59.72514133333333"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      },
+      "dev8": {
+        "TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants": {
+          "passed": false,
+          "completed_light_probes": 10,
+          "failures": []
+        },
+        "TestDEV9LatestFieldReadiness": {
+          "passed": false,
+          "failures": []
+        },
+        "TestFieldIdleLightReference": {
+          "passed": false,
+          "phases": [
+            {
+              "configured_account_sessions": "6",
+              "failed": 1,
+              "field_qualified": false,
+              "max_ms": 750.197522,
+              "mean_ms": 406.7462216249999,
+              "p95_ms": 636.348936,
+              "phase": "idle",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                371.25759,
+                438.37978,
+                300.231425,
+                250.892387,
+                416.686959,
+                294.5991,
+                288.545955,
+                247.161995,
+                531.183109,
+                185.599403,
+                441.575481,
+                483.348645,
+                588.869039,
+                351.393265,
+                357.424122,
+                304.907312,
+                247.780056,
+                750.197522,
+                536.941556,
+                240.087237,
+                332.958893,
+                589.667574,
+                636.348936,
+                575.871978
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            },
+            {
+              "configured_account_sessions": "6",
+              "failed": 3,
+              "field_qualified": false,
+              "max_ms": 750.566585,
+              "mean_ms": 403.2102009166667,
+              "p95_ms": 750.564605,
+              "phase": "light",
+              "provider_sensitivity": "",
+              "samples_ms": [
+                750.566585,
+                367.476366,
+                151.742483,
+                221.473293,
+                414.635343,
+                308.758968,
+                453.469558,
+                218.88707,
+                356.350009,
+                314.407177,
+                298.877343,
+                330.514409,
+                238.711012,
+                317.56857,
+                501.229573,
+                292.573317,
+                551.101653,
+                533.170896,
+                750.190641,
+                320.828715,
+                454.29463,
+                378.932672,
+                750.564605,
+                400.719934
+              ],
+              "server_rtt_ms": 20,
+              "variant": "dev8"
+            }
+          ],
+          "failures": [
+            "field_idle_itomtest_test.go:32: idle probe17: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe0: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe18: read 0/32 bytes: read pipe: i/o timeout",
+            "field_idle_itomtest_test.go:32: light probe22: read 0/32 bytes: read pipe: i/o timeout"
+          ]
+        },
+        "TestFieldSpeedtestSequence": {
+          "passed": false,
+          "phases": [
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "1",
+              "upload": "false",
+              "useful_mbps": "65.164629",
+              "first2_mbps": "32.505856",
+              "last2_mbps": "74.973184",
+              "empty_half_seconds": "2",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "2",
+              "upload": "true",
+              "useful_mbps": "39.933269",
+              "first2_mbps": "25.427968",
+              "last2_mbps": "36.962304",
+              "empty_half_seconds": "5",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            },
+            {
+              "variant": "dev8",
+              "streams": "4",
+              "run": "3",
+              "upload": "true",
+              "useful_mbps": "34.996224",
+              "first2_mbps": "25.559040",
+              "last2_mbps": "25.952256",
+              "empty_half_seconds": "8",
+              "original_duplex_gates_unchanged": "true",
+              "field_qualified": "false"
+            }
+          ],
+          "completed_phases": 3,
+          "passed_phase_assertions": 0,
+          "first_and_last_2s_are_observations_not_independent_100mbps_assertions": true,
+          "failures": [
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 1 false 2",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 1 false 65.16462933333334",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 2 true 5",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 2 true 39.933269333333335",
+            "field_sequence_itomtest_test.go:161: half-second useful-delivery stalls after first two seconds 3 true 8",
+            "field_sequence_itomtest_test.go:164: short phase below existing100Mbps goal 3 true 34.996224"
+          ]
+        },
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable": {
+          "passed": false,
+          "failures": []
+        }
+      }
+    }
+  },
+  "cold": {
+    "dev9-cold-fanout1-rtt40-mobile1": {
+      "dev8": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "dev8",
+            "fanout": "1",
+            "starting_active_directions": "6",
+            "elapsed_ms": "3160",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "model": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "model",
+            "fanout": "1",
+            "starting_active_directions": "4",
+            "elapsed_ms": "2527",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "rc2": {
+        "passed": false,
+        "observations": [
+          {
+            "variant": "rc2",
+            "fanout": "1",
+            "starting_active_directions": "2",
+            "elapsed_ms": "1500",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": [
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=0: Get \"https://127.0.0.1:39709\": context deadline exceeded"
+        ]
+      }
+    },
+    "dev9-cold-fanout1-rtt5-mobile0": {
+      "dev8": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "dev8",
+            "fanout": "1",
+            "starting_active_directions": "2",
+            "elapsed_ms": "636",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "model": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "model",
+            "fanout": "1",
+            "starting_active_directions": "4",
+            "elapsed_ms": "424",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "rc2": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "rc2",
+            "fanout": "1",
+            "starting_active_directions": "2",
+            "elapsed_ms": "912",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      }
+    },
+    "dev9-cold-fanout4-rtt40-mobile1": {
+      "dev8": {
+        "passed": false,
+        "observations": [
+          {
+            "variant": "dev8",
+            "fanout": "4",
+            "starting_active_directions": "2",
+            "elapsed_ms": "3944",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": [
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=3: Get \"https://127.0.0.1:44577\": net/http: timeout awaiting response headers",
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=1: Get \"https://127.0.0.1:44577\": net/http: timeout awaiting response headers"
+        ]
+      },
+      "model": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "model",
+            "fanout": "4",
+            "starting_active_directions": "2",
+            "elapsed_ms": "2778",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "rc2": {
+        "passed": false,
+        "observations": [
+          {
+            "variant": "rc2",
+            "fanout": "4",
+            "starting_active_directions": "2",
+            "elapsed_ms": "1500",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": [
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=2: Get \"https://127.0.0.1:32955\": context deadline exceeded",
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=0: Get \"https://127.0.0.1:32955\": context deadline exceeded",
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=1: Get \"https://127.0.0.1:32955\": context deadline exceeded",
+          "cold_start_itomtest_test.go:88: cold TLS startup worker=3: Get \"https://127.0.0.1:32955\": context deadline exceeded"
+        ]
+      }
+    },
+    "dev9-cold-fanout4-rtt5-mobile0": {
+      "dev8": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "dev8",
+            "fanout": "4",
+            "starting_active_directions": "4",
+            "elapsed_ms": "840",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "model": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "model",
+            "fanout": "4",
+            "starting_active_directions": "4",
+            "elapsed_ms": "803",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      },
+      "rc2": {
+        "passed": true,
+        "observations": [
+          {
+            "variant": "rc2",
+            "fanout": "4",
+            "starting_active_directions": "2",
+            "elapsed_ms": "1229",
+            "no_application_warmup": "true",
+            "original_deadlines": "true"
+          }
+        ],
+        "errors": []
+      }
+    }
+  },
+  "evidence_files": [
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-byte-headroom-comparison/dev5.log",
+      "sha256": "590400275cd7b784d8db6041ed9b453bc71fb1c9ca37448108a3f4a4a573b9ff",
+      "bytes": 1330
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-byte-headroom-comparison/dev9-trace-0.log",
+      "sha256": "a9c49dd6189f8e9395239653fe0d914a1d4986b6495cd053418c1b71e3b8de3f",
+      "bytes": 48316
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-byte-headroom-comparison/dev9-trace-1.log",
+      "sha256": "19fc35884336bee721e8a79ae0f83b788193532e418660b8a12621336df877cb",
+      "bytes": 43071
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-known-loaded-chat-race/loaded-chat-race.log",
+      "sha256": "f2d67f692811af9e53897e2511a9be5ea7f633f97f7ba736a76b2443d9d22cd6",
+      "bytes": 14957
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-qualification-summary/QUALIFICATION.json",
+      "sha256": "f54862df061941a1e062c486f3893e657e6d25f22fcbb10ccac7450198c45bc4",
+      "bytes": 292
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions10/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions10/dev4-sequence.log",
+      "sha256": "0db5b0eb8d47b316b4a62af36b1265b715b8067ab8b6f2a8924dc86973e49eb1",
+      "bytes": 71605
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions10/model-sequence.log",
+      "sha256": "93a840bf6888785aeb63e01b2c6d47a387f69265e91b6aa2aa265f38b594d651",
+      "bytes": 72244
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions10/rc2-sequence.log",
+      "sha256": "7f4f88d228f14a3eac5117ae03cab3ca4c0e478b8eb46ed8501fe3cb246e994f",
+      "bytes": 71322
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions4/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions4/dev4-sequence.log",
+      "sha256": "a205db89a52e5f59f205378fc5af8058164e1c9e7a00b8498f293376e7a39b53",
+      "bytes": 59275
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions4/model-sequence.log",
+      "sha256": "27b5108c082cc7b29c892a1e23460790c66b939af2e8f642b7259323fbd0878a",
+      "bytes": 69083
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service0-sessions4/rc2-sequence.log",
+      "sha256": "8838dace318888f12d5e745d225c6b7cd3b662e60a537eb52880b4adfdc5f18f",
+      "bytes": 69095
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions10/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions10/dev4-sequence.log",
+      "sha256": "6b441c7b3f0fb6c9a3375731a65cce7a9f13fbc49564dab033c4645c87d26c32",
+      "bytes": 75057
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions10/model-sequence.log",
+      "sha256": "390351b9e1e8977ed36b0911980b36ad288571f15e346f0422ca506d480ac6c7",
+      "bytes": 74678
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions10/rc2-sequence.log",
+      "sha256": "5fe69c5b10db4d6121d24d4398711c6d34808641c1bb2665ca3e77a81902f1f7",
+      "bytes": 72936
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions4/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions4/dev4-sequence.log",
+      "sha256": "445a0aaed50140acaaf73c7c3ccf54bb629ea118e71dbb085328148387ebd1a6",
+      "bytes": 68799
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions4/model-sequence.log",
+      "sha256": "8af71b6bea72eeb410522bbc33e06f53bd29b378430a2a84ff1a8ce9e27099d7",
+      "bytes": 68162
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-1-service1-sessions4/rc2-sequence.log",
+      "sha256": "c8764f505dc6319e39427f2630ba4fc429e53fb03c4c665808d01c9cf0fb5178",
+      "bytes": 69776
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions10/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions10/dev4-sequence.log",
+      "sha256": "5e181b9dc7e9a257869d24ad71906be489d280c381aa5c7a6577d7f210a159ed",
+      "bytes": 79464
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions10/model-sequence.log",
+      "sha256": "84b8a3f8e86980e9fb45232247f73c7732e5515c77ba27e81d84b9839ea8cffa",
+      "bytes": 80064
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions10/rc2-sequence.log",
+      "sha256": "24abe8bc3fb2a71bae2a1a8a157efef6f988728258d07fa70d0a669c6e0f3359",
+      "bytes": 79975
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions4/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions4/dev4-sequence.log",
+      "sha256": "47378302d8860c42002926de27c02b72319b8f851b7fa8608867d7d8a73e5f2f",
+      "bytes": 75530
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions4/model-sequence.log",
+      "sha256": "12fad989d2d954f369297a2d7351778cbed0c824aa93ade09044e8d3ebc9be5c",
+      "bytes": 77036
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service0-sessions4/rc2-sequence.log",
+      "sha256": "42b544c446c5922f52084bd39cf84a12ea710e5987bae52260fc908f183a6bc3",
+      "bytes": 75860
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions10/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions10/dev4-sequence.log",
+      "sha256": "b7abf5bf99feab97283564550b3e9fa534e073a5b921883b825e7f3154de2dd4",
+      "bytes": 81327
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions10/model-sequence.log",
+      "sha256": "1020e0ede341d89873c30a1c7b2d124dd1aef76fffe6a84a9bff2f9678cfd0e7",
+      "bytes": 82050
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions10/rc2-sequence.log",
+      "sha256": "45153fd109d0b1759c1c3f815b6f31517f35fabf57d3bce0ee959e74672c3b8f",
+      "bytes": 82260
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions4/FIELD_PROVENANCE.json",
+      "sha256": "a5e52e15c0f55da582ecf323b1641b1386c221967ce021df209607b65600f63e",
+      "bytes": 68985
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions4/dev4-sequence.log",
+      "sha256": "6ca02a0e82bbb669dfc7fd48d9ac6374d89bea8bda7309c93d095ba987be57e9",
+      "bytes": 76270
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions4/model-sequence.log",
+      "sha256": "a7d3400025b1bda022a95e28b807d551d32519367d47ac4b88fddf4e4fd75c36",
+      "bytes": 76787
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-short-16-service1-sessions4/rc2-sequence.log",
+      "sha256": "91331f63c6a1d1f30517f82b86bbbff2ddc454a310ac1866300f00dacdd87c13",
+      "bytes": 75867
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/1-model.log",
+      "sha256": "987a1dfe635565f8c2d5728b93fe3f3c7f674ed79aeed2290f9e5d819129821a",
+      "bytes": 93946
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/1-rc2.log",
+      "sha256": "0148760016c6496c9ef85b02b2d897281d61364c14ee6d6cd9699eab7248eaa5",
+      "bytes": 95675
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/2-model.log",
+      "sha256": "c7e9431237b9a42bb9f98acdf69585fb1b386230d7fe7af56078c81877c9bc27",
+      "bytes": 93012
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/2-rc2.log",
+      "sha256": "22f57df45771f9cda88f2e0963dee545d78e51bf4b2d3a5014b1d254a3451a55",
+      "bytes": 92915
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/host.txt",
+      "sha256": "32ebe6ccfbc5719d771ae5cedaad156160637b81fe621d19c8256eee5755529a",
+      "bytes": 24
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-mobile-variable/provenance.json",
+      "sha256": "9b3cae481af9d215cf85a73fcc82902a9d428254f36b3e1010eabddb9ce0cc0c",
+      "bytes": 224279
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/1-model.log",
+      "sha256": "ddcadc488d5ec42efe0af7059e6a971299b8e77308a00a0e875eb8adbe89da74",
+      "bytes": 112227
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/1-rc2.log",
+      "sha256": "ee6812a27fceab18597ba02327e131e5748ab2a61435a79a53f5d7ca5ac2c5b8",
+      "bytes": 112123
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/2-model.log",
+      "sha256": "f9fa66ed9dab7e077ba5c4034b2878ea141b00ff7db8a249d63c9a923882df38",
+      "bytes": 112673
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/2-rc2.log",
+      "sha256": "037fb3556fb78b3d2067fa21bfe8d6be03c472e70b3519b98762991976daef74",
+      "bytes": 111819
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/host.txt",
+      "sha256": "32ebe6ccfbc5719d771ae5cedaad156160637b81fe621d19c8256eee5755529a",
+      "bytes": 24
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-multi/provenance.json",
+      "sha256": "9b3cae481af9d215cf85a73fcc82902a9d428254f36b3e1010eabddb9ce0cc0c",
+      "bytes": 224279
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/1-model.log",
+      "sha256": "1e105c08d99e6f5635dc5c4928d07e4f9147f79917e98c15457c2a1df7e08f18",
+      "bytes": 112989
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/1-rc2.log",
+      "sha256": "25e327dbf7a7a6d3e799ec6c3d1f8d8a8f5f9c069e8d3a7eb8c0020332946948",
+      "bytes": 112330
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/2-model.log",
+      "sha256": "a34a7ad511c89f79dcf85a7cc4e902085cee5c3c48b5e4c929a76f3babde39dd",
+      "bytes": 111937
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/2-rc2.log",
+      "sha256": "ee15cd41a0020213231d8d4aad94fb31fd5c6e568a2a72b8de3d0613ac3bfad0",
+      "bytes": 112274
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/host.txt",
+      "sha256": "32ebe6ccfbc5719d771ae5cedaad156160637b81fe621d19c8256eee5755529a",
+      "bytes": 24
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-multi/provenance.json",
+      "sha256": "9b3cae481af9d215cf85a73fcc82902a9d428254f36b3e1010eabddb9ce0cc0c",
+      "bytes": 224279
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/1-model.log",
+      "sha256": "ac0b7c2f27c5395976741718aac3872432c2c761deb37c43647a43dd0d724e38",
+      "bytes": 90724
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/1-rc2.log",
+      "sha256": "5ebabd23b5da6ce6d4ec660d64848ccb8ac94c6871b1bc2831b07a92cff765d3",
+      "bytes": 90267
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/2-model.log",
+      "sha256": "6a1fd6a9168bfb412b0cb71552cb489295bdba366a042b47cae5898401ff7d6f",
+      "bytes": 90746
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/2-rc2.log",
+      "sha256": "5591e19ff6b160045960df46d779662af48ea08e44511ca89849504e25b1d6c7",
+      "bytes": 90636
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/host.txt",
+      "sha256": "32ebe6ccfbc5719d771ae5cedaad156160637b81fe621d19c8256eee5755529a",
+      "bytes": 24
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-retained-single/provenance.json",
+      "sha256": "9b3cae481af9d215cf85a73fcc82902a9d428254f36b3e1010eabddb9ce0cc0c",
+      "bytes": 224279
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/1-model.log",
+      "sha256": "3443c4161e556b7d896c5b40b14c74c3c93182b1ca8afc5779e67d2a19786042",
+      "bytes": 90786
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/1-rc2.log",
+      "sha256": "318d6133ed111eae7dc701fb5849ce5887ddf0155ce7d27be9506b43e5df1449",
+      "bytes": 90735
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/2-model.log",
+      "sha256": "6b58f02ce2f970d523c7ea2d08cd3e4aaf234d37b68fcbc84bb01316ea718cde",
+      "bytes": 90529
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/2-rc2.log",
+      "sha256": "c701beaa4897b79c336b21af74659fc1ac6b3efdd888dff8d853d2b070016a85",
+      "bytes": 90693
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/host.txt",
+      "sha256": "32ebe6ccfbc5719d771ae5cedaad156160637b81fe621d19c8256eee5755529a",
+      "bytes": 24
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-throughput-local16-single/provenance.json",
+      "sha256": "9b3cae481af9d215cf85a73fcc82902a9d428254f36b3e1010eabddb9ce0cc0c",
+      "bytes": 224279
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-v7-late-DOWNLOADS.json",
+      "sha256": "9ce82ab193415d4384071377ccb19a22c94d7c314ad58e7ada20dc671eb32afd",
+      "bytes": 6039
+    },
+    {
+      "group": "dev9-v7-all-main",
+      "path": "dev9-v7-main-DOWNLOADS.json",
+      "sha256": "f208207c0fbf171f198695e43d346f07b086a58c383e227409ca41f960ac0a49",
+      "bytes": 10013
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "DOWNLOADS.json",
+      "sha256": "caac78bd49e8a213a1d0f2504684ff38946d13302a4a29d96c5f558e37cc33f6",
+      "bytes": 4023
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/DEV9_PROVENANCE.json",
+      "sha256": "13d6a16424d3ae1f6a6fdb1be8f4364472a83f1cbe4fe06a2ec841c940016d4b",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "d3079e73406d62823540ff5261d38b9aebabc6d85fbff0b9ddfd34cb3b42d6b6",
+      "bytes": 55046
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/dev8-TestDEV9LatestFieldReadiness.log",
+      "sha256": "411a0ec5d06024d6332e109abb1362d622d71998c3971e21caba620c49f6196a",
+      "bytes": 43472
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/dev8-TestFieldIdleLightReference.log",
+      "sha256": "8302c65ca2aec14d37665393364b846d3130a01e4089ff385b93ca95acedbc81",
+      "bytes": 37641
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/dev8-TestFieldSpeedtestSequence.log",
+      "sha256": "3584078abd9daa0188cfc0e084835b8fdef5f7d5f7d6c2d7d71d048945283181",
+      "bytes": 99686
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/dev8-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "29f9e5c67c09a7532aac719f87e342b937545634e0dd9166def0ba19cd277043",
+      "bytes": 35347
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "4ed49839b2ab18d34e8adfad80c09ced28d91129038d609044436e77a4f6b617",
+      "bytes": 55071
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/model-TestDEV9LatestFieldReadiness.log",
+      "sha256": "a53bf9716db15830eb8fc58af37849fbcfe20bb5099b4144c5423e2bdef29728",
+      "bytes": 30165
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/model-TestFieldIdleLightReference.log",
+      "sha256": "f87861a9f817bfb8a967bdfdead96ae8d75a96c1f339f7d1cfee531e12d60bc0",
+      "bytes": 38008
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/model-TestFieldSpeedtestSequence.log",
+      "sha256": "2b469e03416edbd56b027fc08fe61abd5650c4b37da4aa3601461a8e21e6fad5",
+      "bytes": 97936
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams1/model-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "56fd1053ffe48ac45e13fc66bca50b575ab21d2e50a78aad9501bd98c02e76d4",
+      "bytes": 37553
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/DEV9_PROVENANCE.json",
+      "sha256": "13d6a16424d3ae1f6a6fdb1be8f4364472a83f1cbe4fe06a2ec841c940016d4b",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "030bb890ec77162296d03fd8ec0ab079a132437e307e468400b28a7286320b3c",
+      "bytes": 55079
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/dev8-TestDEV9LatestFieldReadiness.log",
+      "sha256": "b3425ff1da5cb71056fba58168ab78e25193d9b08a3bba18aa9517100aab25c9",
+      "bytes": 43460
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/dev8-TestFieldIdleLightReference.log",
+      "sha256": "2dc43420e0b1917b222585ccac32c90ce65944ef79d9d88b3aea59a943ff2b20",
+      "bytes": 39128
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/dev8-TestFieldSpeedtestSequence.log",
+      "sha256": "e1263c9a325a26989a71092157349167db839614db968a64465b667eae301a74",
+      "bytes": 92745
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/dev8-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "3d84068a4f4f7f5707568faf357975ffc7e9886189c9a2e367680c6aa6e50992",
+      "bytes": 35531
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "6c84f45fe92d391556aee3539e1741c9243dabd9017f20eba3babca8d3e9463c",
+      "bytes": 56388
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/model-TestDEV9LatestFieldReadiness.log",
+      "sha256": "8f08070ee03df24a4e17827e02d942b3846d505a9cdeb05f513c93b7c0296b63",
+      "bytes": 26837
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/model-TestFieldIdleLightReference.log",
+      "sha256": "1863714840320e6158a73b3a244311175cf04b3cc80b935b9bc5ad06e778b4df",
+      "bytes": 37736
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/model-TestFieldSpeedtestSequence.log",
+      "sha256": "c826e8fab40398f8bf9634ed3fefa55d6a4c2c40ddf87b3835dbfc38d0e146bc",
+      "bytes": 92803
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile0-streams4/model-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "4d8eb3f57825bd92cc7ea263407c6eb724952e03949ea53eec7d94394e0c4ee7",
+      "bytes": 36805
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/DEV9_PROVENANCE.json",
+      "sha256": "13d6a16424d3ae1f6a6fdb1be8f4364472a83f1cbe4fe06a2ec841c940016d4b",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "5a911fd48a61d05e0f822794d25cf32de1e91cdd4cc384d00a301332834e6a8c",
+      "bytes": 45549
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/dev8-TestDEV9LatestFieldReadiness.log",
+      "sha256": "b2476bbe1314aa4f177d5434eb2be8455dd9cedc0e2ac543f7313809a08c1bfa",
+      "bytes": 43461
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/dev8-TestFieldIdleLightReference.log",
+      "sha256": "8d0b21c6efd8fdb4b89c78811b91ddb81f3f0e2737238078bdebe5f22e31be3b",
+      "bytes": 51361
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/dev8-TestFieldSpeedtestSequence.log",
+      "sha256": "bee07e7a6fd09ee123c85b89bae9d35f33b72f2b7c4334de6689439a6d8c48a3",
+      "bytes": 71565
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/dev8-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "5f3f633e579e122debd29f7362ca7b4410aea7fd1e036582491d89390240f70d",
+      "bytes": 35008
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "9e04aac40c7325082bd36086529d1caf8296f0047ad4fce0c7c33c672f41c3cd",
+      "bytes": 51865
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/model-TestDEV9LatestFieldReadiness.log",
+      "sha256": "df60aac0f3f2b92aec2c8087dac7f8030a702d4632430b0e396e5845b8ae59dc",
+      "bytes": 30697
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/model-TestFieldIdleLightReference.log",
+      "sha256": "229a6721634c1c49e14a3c32e85395c792ffe3c7bed2e116a6ef2d1c1495967f",
+      "bytes": 38788
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/model-TestFieldSpeedtestSequence.log",
+      "sha256": "1431b42434d69597339f33a94c6c43357b8e22dc9f4e62b9e3bfea391f4f9ffb",
+      "bytes": 92427
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams1/model-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "4ac08f34ce0f16e8a4fe087a493a1bfa427fa9456d957e6a2f78e0f91c87aaf8",
+      "bytes": 35516
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/DEV9_PROVENANCE.json",
+      "sha256": "13d6a16424d3ae1f6a6fdb1be8f4364472a83f1cbe4fe06a2ec841c940016d4b",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/dev8-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "6041f79501a5fbdb531464d4ae19c8f84c031072a120a9615024d02b7fd33c66",
+      "bytes": 42855
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/dev8-TestDEV9LatestFieldReadiness.log",
+      "sha256": "0b11e73f677b3f4e28486479ca3f623c74361a3598e6116935d9235c294ea790",
+      "bytes": 43439
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/dev8-TestFieldIdleLightReference.log",
+      "sha256": "42694fbf19a60470883ac6f12959d3600dd2b7fc81197884893a9402a0097b79",
+      "bytes": 51610
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/dev8-TestFieldSpeedtestSequence.log",
+      "sha256": "e354e318457552ae41bac938bd776d61c12eeb69358c10056d8f99d2221d7c28",
+      "bytes": 80425
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/dev8-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "1fff5bffe765640530f9bf62c3fa0bf42f78ed111b3b23fe3d3a8258301cdb0c",
+      "bytes": 35466
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/model-TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants.log",
+      "sha256": "21e82c3c0b5dddd7f52d0a2c8ad19fbdd0b7ec5f2763d18f3fbea3eadb96eeb0",
+      "bytes": 53695
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/model-TestDEV9LatestFieldReadiness.log",
+      "sha256": "15d5330cf494c7e238735d1578b663aa4a080270888ecf48abf4034de597974c",
+      "bytes": 30774
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/model-TestFieldIdleLightReference.log",
+      "sha256": "281b4b5c27ffbe17ed6da27971a562de9cf862f1e60ab08194fa3beca54269ab",
+      "bytes": 38955
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/model-TestFieldSpeedtestSequence.log",
+      "sha256": "0197ba5e19da1c60e8730efdd335dcd42ae1dad07cdf70271044371ed83604e4",
+      "bytes": 94371
+    },
+    {
+      "group": "dev9-final-field-ci",
+      "path": "dev9-final-field-mobile1-streams4/model-TestRev5RampAbortAndRestartKeepOriginalChatUsable.log",
+      "sha256": "a59590d10bd1e50b7f01d3336570152a63613c5bddd9feb88ea51ed5e0f25b6b",
+      "bytes": 38890
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "DOWNLOADS.json",
+      "sha256": "e20e730263d56077879b3861576033ba9213daa4368b49cefc85f0e8cd11773e",
+      "bytes": 4003
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt40-mobile1/COLD_FIXTURE_SHA256.txt",
+      "sha256": "38ec577d206fe3cdeb2b3670a4ba7bf8dce2ebd25ed9997213d1e2923845ff57",
+      "bytes": 137
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt40-mobile1/DEV9_PROVENANCE.json",
+      "sha256": "f41dd38b1951536b06ba45ab9ae7081a930fdaca5b9d51946a8297662d20315c",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt40-mobile1/dev8.log",
+      "sha256": "b6e607f949a40728353d42e64af96d17186bfd929249b283ecdd24299203830d",
+      "bytes": 32403
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt40-mobile1/model.log",
+      "sha256": "e43770252f871a2d0022404dab4e5e354e8eafade670bbaa828240ab5042e662",
+      "bytes": 31453
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt40-mobile1/rc2.log",
+      "sha256": "fc9bc22f116fc15e2dbe17eb536f14dbbf75e7fa30cc8a6d87150f0a0fd3c6dd",
+      "bytes": 33093
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt5-mobile0/COLD_FIXTURE_SHA256.txt",
+      "sha256": "38ec577d206fe3cdeb2b3670a4ba7bf8dce2ebd25ed9997213d1e2923845ff57",
+      "bytes": 137
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt5-mobile0/DEV9_PROVENANCE.json",
+      "sha256": "f41dd38b1951536b06ba45ab9ae7081a930fdaca5b9d51946a8297662d20315c",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt5-mobile0/dev8.log",
+      "sha256": "4415d2c49ca699eff6de5cc3ddaf48638cf5c1d967aa0e8c04b9756f23ff459b",
+      "bytes": 31329
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt5-mobile0/model.log",
+      "sha256": "f62b7ad8aaa22df12ad030f75eab6d8fd764aaf75d9bf818e9c6ac701794330c",
+      "bytes": 31662
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout1-rtt5-mobile0/rc2.log",
+      "sha256": "728e670ee16afbd5a5f8a4ede546ca3b00124392f96f4d12b9a0649b00687dd3",
+      "bytes": 33165
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt40-mobile1/COLD_FIXTURE_SHA256.txt",
+      "sha256": "38ec577d206fe3cdeb2b3670a4ba7bf8dce2ebd25ed9997213d1e2923845ff57",
+      "bytes": 137
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt40-mobile1/DEV9_PROVENANCE.json",
+      "sha256": "f41dd38b1951536b06ba45ab9ae7081a930fdaca5b9d51946a8297662d20315c",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt40-mobile1/dev8.log",
+      "sha256": "c9ed95a05c6364cec4ef2a6698b328cb7ddefa3ed9c56f39512997c01549e644",
+      "bytes": 30994
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt40-mobile1/model.log",
+      "sha256": "1d6641fcf870a24065fbb093274a3c03b096ce21a7b4b7ca31fc74624f6b61df",
+      "bytes": 27514
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt40-mobile1/rc2.log",
+      "sha256": "e5c0e95896e1c7ac70b54e46b91635a2ddbc3f4be8945068e7aab5e5762b97f5",
+      "bytes": 33001
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt5-mobile0/COLD_FIXTURE_SHA256.txt",
+      "sha256": "38ec577d206fe3cdeb2b3670a4ba7bf8dce2ebd25ed9997213d1e2923845ff57",
+      "bytes": 137
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt5-mobile0/DEV9_PROVENANCE.json",
+      "sha256": "f41dd38b1951536b06ba45ab9ae7081a930fdaca5b9d51946a8297662d20315c",
+      "bytes": 70864
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt5-mobile0/dev8.log",
+      "sha256": "dc57bbfb60a833629ad77283f3732937eca983e1cef899cf3c71aae729e0a1f3",
+      "bytes": 32148
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt5-mobile0/model.log",
+      "sha256": "c8f5ee150897681bd18b5becd4329e259c51e9d02cd82bfadd0a7a5537de57ab",
+      "bytes": 31514
+    },
+    {
+      "group": "dev9-v7-cold",
+      "path": "dev9-cold-fanout4-rtt5-mobile0/rc2.log",
+      "sha256": "91f73f04fdc0750b1c49e8139f2c32918140887560885a7d15c3dad1c951fd1b",
+      "bytes": 33624
+    }
+  ],
+  "sustained_totals": {
+    "model": {
+      "observed": 20,
+      "passed": 18
+    },
+    "rc2": {
+      "observed": 20,
+      "passed": 14
+    }
+  }
+}

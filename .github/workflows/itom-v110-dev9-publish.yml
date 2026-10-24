@@ -1,0 +1,178 @@
+name: Publish exact signed DEV9 testing packages
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev9-publish.yml"]
+permissions: {contents: write, actions: read}
+concurrency:
+  group: publish-itom-v110-dev9
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require the exact-source upstream qualification and build jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/40046244852" > "$RUNNER_TEMP/upstream.json"
+          gh api "repos/$GH_REPO/actions/runs/40046244852/jobs?per_page=100" > "$RUNNER_TEMP/jobs.json"
+          python3 - <<'PY_GATE'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          run=json.loads((root/'upstream.json').read_text())
+          assert run['head_sha']=='96f872809f03d18515794e350621508d53300fff'
+          jobs=json.loads((root/'jobs.json').read_text())['jobs']
+          required=['safety','Compile experimental APK, SDK tests, lint and JNI','Compile experimental Linux artifacts (not a qualified release)']
+          for name in required:
+              hits=[j for j in jobs if j['name']==name]
+              assert len(hits)==1 and hits[0]['conclusion']=='success',name
+          print('Exact-source invariant/race and build jobs verified; original failed timing results retained')
+          PY_GATE
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev9-model-android
+          run-id: 40046244852
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/original-apk
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev9-model-linux
+          run-id: 40046244852
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: v110-dev9-public-signing-tools
+          run-id: 40046244852
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/tools
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev9-throughput-*
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/duplex
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev9-short-*
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/short
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev9-final-field-*
+          run-id: 40045987210
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/captured-topology
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev9-cold-*
+          run-id: 40044378059
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/cold
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev9-final-race-safety-report
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/race-safety
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev9-byte-headroom-comparison
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/byte-headroom
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev9-qualification-summary
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/lab-results/qualification
+      - name: Restore exact signed APK and verify all package identities
+        env:
+          PACKAGE_ROOT: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          git fetch origin 96a592f4a9278d069a248e38ddb645a914bde6aa --no-tags
+          git diff --exit-code 96a592f4a9278d069a248e38ddb645a914bde6aa HEAD -- archives/1.1.0/source/core archives/1.1.0/source/native archives/1.1.0/source/android
+          mkdir release-assets
+          python3 archives/1.1.0/publication/restore_dev9_signed_apk.py \
+            "$PACKAGE_ROOT/original-apk/ITOM-1.1.0-DEV9-debug.apk" \
+            release-assets/ITOM-1.1.0-DEV9.apk
+          cp "$PACKAGE_ROOT"/linux/ITOM-1.1.0-DEV9-linux-*.bin release-assets/
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          metadata=json.loads(Path('archives/1.1.0/DEV9_BUILD.json').read_text())
+          assert metadata['runtime_source_commit']=='96a592f4a9278d069a248e38ddb645a914bde6aa'
+          assert metadata['build_run_id']==40046244852
+          assert metadata['field_qualified'] is False
+          assert metadata['all_required_invariant_checks_passed']
+          q=metadata['qualification']
+          assert q['source_commit']==metadata['runtime_source_commit']
+          assert q['sustained_observed']==20 and q['sustained_passed']>=17
+          assert q['short_phases_passed']==48 and q['thresholds_relaxed'] is False
+          assert metadata['core']['invariant_checks_passed'] and metadata['core']['conclusion']=='failure'
+          expected={'ITOM-1.1.0-DEV9.apk':metadata['persistent_signed_apk']['persistent_signed_sha256']}
+          for line in metadata['linux']['sha256sums'].splitlines():
+              digest,name=line.split();expected[name]=digest
+          for name,digest in expected.items():
+              assert hashlib.sha256((Path('release-assets')/name).read_bytes()).hexdigest()==digest,name
+          Path('release-assets/SHA256SUMS').write_text(''.join(f'{digest}  {name}\n' for name,digest in sorted(expected.items())))
+          PY
+          java -jar "$PACKAGE_ROOT/tools/apksigner.jar" verify --verbose --print-certs release-assets/ITOM-1.1.0-DEV9.apk > release-assets/SIGNER.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          report=Path('release-assets/SIGNER.txt').read_text()
+          assert 'Signer #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6' in report
+          assert 'Verified using v3 scheme (APK Signature Scheme v3): true' in report
+          PY
+          cp archives/1.1.0/DEV9_BUILD.json archives/1.1.0/DEV9_TESTING.md release-assets/
+          cp archives/1.1.0/experiments/dev9-real-field/{RESULTS.md,RESULTS.json,FIELD_ANALYSIS.md,HISTORY_REVIEW.md,HISTORY_EVIDENCE_INDEX.json} release-assets/
+          (cd "$PACKAGE_ROOT/lab-results" && zip -q -r "$GITHUB_WORKSPACE/release-assets/ITOM-DEV9-lab-results.zip" .)
+          python3 - <<'PY_SUMS'
+          from pathlib import Path
+          import hashlib
+          root=Path('release-assets')
+          root.joinpath('SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(root.iterdir()) if p.name!='SHA256SUMS'))
+          PY_SUMS
+      - name: Publish prerelease only after verifying uploaded hashes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag=v1.1.0-dev9
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-dev9")' > "$RUNNER_TEMP/existing-release.json"
+          printf '%s\n' 'Release collection read successfully; verified runtime remains 96a592f4a9278d069a248e38ddb645a914bde6aa'
+          if [ -s "$RUNNER_TEMP/existing-release.json" ]; then
+            python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing-release.json"))["draft"], "Refusing to replace a published release"'
+          else
+            gh release create "$tag" --draft --prerelease --latest=false \
+              --target "${{ github.sha }}" \
+              --title 'ITOM 1.1.0 DEV9 — experimental testing RC' \
+              --notes-file archives/1.1.0/DEV9_TESTING.md
+          fi
+          printf '%s\n' 'Draft release created or verified; uploading exact packages'
+          gh release upload "$tag" release-assets/* --clobber
+          # Draft releases with an unpublished tag are found through the collection.
+          gh api "repos/$GH_REPO/releases?per_page=100" \
+            --jq '.[] | select(.tag_name == "v1.1.0-dev9")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          release=json.loads((Path(os.environ['RUNNER_TEMP'])/'release.json').read_text())
+          assets={a['name']:a for a in release['assets']}
+          for path in Path('release-assets').iterdir():
+              asset=assets[path.name]
+              assert asset['size']==path.stat().st_size,path.name
+              assert asset['digest']=='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest(),path.name
+          print('Every uploaded asset size and SHA-256 verified')
+          PY
+          gh release edit "$tag" --draft=false --prerelease --latest=false

@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "release": "ITOM 1.1.0 DEV9",
+  "classification": "EXPERIMENTAL TESTING RC; NOT FULLY QUALIFIED",
+  "runtime_source_commit": "96a592f4a9278d069a248e38ddb645a914bde6aa",
+  "build_commit": "96f872809f03d18515794e350621508d53300fff",
+  "build_run_id": 40046244852,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40046244852",
+  "qualification_run_id": 40044377995,
+  "field_run_id": 40045987210,
+  "cold_run_id": 40044378059,
+  "all_required_invariant_checks_passed": true,
+  "all_performance_assertions_passed": false,
+  "fully_qualified": false,
+  "field_qualified": false,
+  "qualification": {
+    "source_commit": "96a592f4a9278d069a248e38ddb645a914bde6aa",
+    "sustained_observed": 20,
+    "sustained_planned": 20,
+    "sustained_passed": 18,
+    "minimum_required": 17,
+    "short_phases_passed": 48,
+    "short_phases_required": 48,
+    "thresholds_relaxed": false,
+    "field_qualified": false
+  },
+  "core": {
+    "conclusion": "failure",
+    "invariant_checks_passed": true,
+    "scope": "all normal invariant cases passed; original loaded-chat deadline failed and remains a failure; omitted correctness and race checks completed by packaging safety job",
+    "original_full_suite_timing_passed": false,
+    "original_loaded_race_timing_passed": false
+  },
+  "authority_production_unchanged_from_dev8": {
+    "journal": 10,
+    "wallet": 2,
+    "pool": 2,
+    "wire": 7,
+    "flow": 2,
+    "datapath": 8
+  },
+  "storage_profiles_and_canonical_data_limits_unchanged": true,
+  "android_build_report": {
+    "itom": "1.1.0",
+    "source_revision": "itom-1-1-0-dev9",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-24T00:45:13Z",
+    "jdk_source": "local JDK 17",
+    "cmdline_tools": {
+      "version": "22.0",
+      "checksum": "040d3996a65543d22ec4bf73e4c37aa37a8d4af4",
+      "algorithm": "sha1"
+    },
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "9e714754e44d98b0b23216f06a55090049a597ab8ace77983136ce449bd58564",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 82,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "app_unit_tests": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.jetbrains.kotlinx:kotlinx-serialization-json than 1.11.0 is available: 1.12.0",
+          "locations": [
+            {
+              "file": "/home/runner/work/_temp/dev9/android/app/build.gradle.kts",
+              "line": "60",
+              "column": "20"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10109,
+      "version_name": "1.1.0-dev9-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "ad81e5ddddb96e1df74444bd91af82a37522954bb03c6a9e48b099c89325f471",
+      "lib/armeabi-v7a/libgojni.so": "63337daf2a05b9cca566ca6b689115c5ee664ecce2b349c766da3e767c0a8baf"
+    },
+    "status": "passed",
+    "apk": "ITOM-1.1.0-DEV9-debug.apk",
+    "sha256": "f9d691f49e17747a95fcb6837e3f25717d0b3185289e075c280ac6ad512760f5",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "persistent_signed_apk": {
+    "source_ci_sha256": "f9d691f49e17747a95fcb6837e3f25717d0b3185289e075c280ac6ad512760f5",
+    "persistent_signed_sha256": "d148793d0f3ce541945e79995630861b362553f4cfcb4059e038ff95de4383b2",
+    "apk_identity": {
+      "application_id": "org.itom.client",
+      "version_code": 10109,
+      "version_name": "1.1.0-dev9-debug"
+    },
+    "certificate": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): false\nVerified using v3 scheme (APK Signature Scheme v3): true\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=ITOM Android, O=ITOM, C=FI\nSigner #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6\nSigner #1 certificate SHA-1 digest: 5c2da4052c263942628a59bce1725d9c12030785\nSigner #1 certificate MD5 digest: eedbe686c31c6081069726531684cd3d\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 3072\nSigner #1 public key SHA-256 digest: 87c822607c0ffb426f340a6aed45cf2dd55f0a121e1966e56dafe41f3d0437ff\nSigner #1 public key SHA-1 digest: 136c2c0b81941dc11f995d23a9d89ad4bd884212\nSigner #1 public key MD5 digest: 3f161d14b3897665e07a4f8e168a1384\n",
+    "key_material_exported": false,
+    "private_key_retained_locally": true,
+    "note": "Same persistent signer as DEV5 and DEV6; preserve app wallet data for in-place updates"
+  },
+  "linux": {
+    "sha256sums": "3ebdf1a45cc508bf5555e40da891ecb1e27d4f1b226fe226970eadb1b238dd2f  ITOM-1.1.0-DEV9-linux-amd64.bin\n14d8c8ad9ec7769ddc759cf9b2e46c07490f30e5ee2cccb1d4134e49f5ab9a86  ITOM-1.1.0-DEV9-linux-arm64.bin\n",
+    "architectures": [
+      "amd64",
+      "arm64"
+    ],
+    "static_elf": true
+  },
+  "real_provider_speedtest": "NOT RUN",
+  "android_device_test": "NOT RUN",
+  "private_key_exported": false,
+  "known_limitations": [
+    "Original 1100ms loaded-chat timing test fails in normal and race-instrumented runs; no timeout changed",
+    "Variable40\u2013180ms mobile sensitivity retains light/TLS deadline misses and rates below100Mbps; all failed samples retained",
+    "Fixed-rate field sequence has some half-second stalls and below100Mbps phases; first/last2s rates are observations, not independently asserted100Mbps gates",
+    "New quota readiness preserves every historical charge; service below a complete minimum duplex floor still fails closed",
+    "Synthetic throughput is not a prediction of Android/Rambler capacity; earlier200+Mbps used more generous sockets/quota and longer already-established transfers"
+  ],
+  "full_results_sha256": "37616185a695a33f84379dbad517893fd3dce64f1530ea589a4033d74a5cfb74"
+}

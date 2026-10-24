@@ -1,0 +1,160 @@
+diff --git a/archives/1.1.0/source/core/tunnel/dev9_short_service_test.go b/archives/1.1.0/source/core/tunnel/dev9_short_service_test.go
+index 45a0c07..1f386b4 100644
+--- a/archives/1.1.0/source/core/tunnel/dev9_short_service_test.go
++++ b/archives/1.1.0/source/core/tunnel/dev9_short_service_test.go
+@@ -3,12 +3,32 @@ package tunnel
+ import (
+ 	"bytes"
+ 	"context"
++	"fmt"
+ 	"itom.local/core/mailbox"
+ 	"itom.local/core/servercfg"
++	"itom.local/core/wire"
+ 	"testing"
+ 	"time"
+ )
+ 
++// PING/OPEN/cleanup control demand belongs to the control reader. Waking an
++// unrelated DATA IDLE adds DONE/FETCH turns to every account; only actual
++// request DATA or a socket borrower may demand that wake.
++func TestDEV9ControlDemandDoesNotWakeIndependentDataReader(t *testing.T) {
++	m := &laneMail{dataReaderWake: make(chan struct{}, 1)}
++	m.SetReaderHot(time.Now().Add(time.Second))
++	if len(m.dataReaderWake) != 0 {
++		t.Fatal("generic control demand woke independent DATA IDLE")
++	}
++	if m.readerHotUntil.Load() <= time.Now().UnixNano() {
++		t.Fatal("control response search was not armed")
++	}
++	m.wakeDataReader()
++	if len(m.dataReaderWake) != 1 {
++		t.Fatal("explicit DATA wake lost")
++	}
++}
++
+ func TestDEV9ShortDataBorrowsReaderAndJoinsIdleWithoutDuplicateAppend(t *testing.T) {
+ 	for _, idle := range []bool{false, true} {
+ 		t.Run(map[bool]string{false: "free-reader", true: "idle-reader"}[idle], func(t *testing.T) {
+@@ -249,3 +269,48 @@ func TestDEV9BulkFallbackLendsIdleReceiverWithoutNewSocketOrRetry(t *testing.T)
+ 		})
+ 	}
+ }
++
++// Only authenticated application setup/small incoming requests justify the
++// bounded server receive search; bulk and receipt/control traffic leave IDLE.
++func TestDEV9ServerRequestPrimesOnlyProtectedAndActualDataReaders(t *testing.T) {
++	for _, tc := range []struct {
++		name string
++		kind wire.Type
++		size int
++		want bool
++	}{
++		{"open", wire.Open, 0, true}, {"small", wire.Data, 32, true},
++		{"bulk", wire.Data, 32 << 10, false}, {"ack", wire.Receipt, 0, false},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			g := newStripeGroup(wire.ID{1}, 1)
++			for i := 1; i <= 5; i++ {
++				l := stripeTestLane(g, fmt.Sprintf("a%02d", i), true)
++				t.Cleanup(l.cancel)
++				l.dataShards = 1
++				l.mail = &laneMail{baseData: true, dataReaderWake: make(chan struct{}, 1)}
++				l.ownerFrames = make(chan wire.Frame, 2)
++				if e := g.attach(l); e != nil {
++					t.Fatal(e)
++				}
++			}
++			owner, carrier := g.lanes["a02"], g.lanes["a03"]
++			if e := g.register(1, owner); e != nil {
++				t.Fatal(e)
++			}
++			if e := g.dispatchStream(carrier, wire.Frame{Type: tc.kind, Stream: 1, Payload: make([]byte, tc.size)}); e != nil {
++				t.Fatal(e)
++			}
++			for id, l := range g.lanes {
++				m := physicalMail(l.mail)
++				want := tc.want && (id == "a01" || id == "a03")
++				if got := m.dataResponseUntil.Load() > time.Now().UnixNano(); got != want {
++					t.Fatalf("%s armed=%t want=%t", id, got, want)
++				}
++				if len(m.dataReaderWake) > 0 != want {
++					t.Fatalf("%s DATA wake mismatch", id)
++				}
++			}
++		})
++	}
++}
+diff --git a/archives/1.1.0/source/core/tunnel/io.go b/archives/1.1.0/source/core/tunnel/io.go
+index c513c1d..080c721 100644
+--- a/archives/1.1.0/source/core/tunnel/io.go
++++ b/archives/1.1.0/source/core/tunnel/io.go
+@@ -1235,7 +1235,6 @@ func (m *laneMail) SetReaderHot(until time.Time) {
+ 	}
+ 	extendReaderHot(&m.readerHotUntil, until.UnixNano())
+ 	m.readerHotRequestAt.Store(time.Now().UnixNano())
+-	m.wakeDataReader()
+ }
+ 
+ // ReaderWakeToFetchDelay consumes a best-effort diagnostic timestamp. It never
+diff --git a/archives/1.1.0/source/core/tunnel/local_selection.go b/archives/1.1.0/source/core/tunnel/local_selection.go
+index 5409f09..93fb7b6 100644
+--- a/archives/1.1.0/source/core/tunnel/local_selection.go
++++ b/archives/1.1.0/source/core/tunnel/local_selection.go
+@@ -225,7 +225,7 @@ func (g *stripeGroup) prioritizeFastTargetsLocked(keys []string, avoid *lane) {
+ 			// Include client wallet publications as well as server journal debt.
+ 			// A busy reserve must not keep winning every cold connection's turn.
+ 			n += pending * 128
+-			if l == quiet[0] || l == quiet[1] {
++			if (l == quiet[0] || l == quiet[1]) && !(l.dataShards > 0 && pending == 1) {
+ 				n += 512
+ 			}
+ 		}
+@@ -274,7 +274,7 @@ func interactiveCarrierScore(l *lane, quiet [2]*lane) int {
+ 	if l.controlWriting.Load() > 0 {
+ 		n += 256
+ 	}
+-	if (l == quiet[0] || l == quiet[1]) && l.unreceivedLocalRecords.Load() == 0 && l.unreceivedLocalBytes.Load() == 0 && l.controlDebt.Load() < 80 && !l.cleanupBlocksFast() && (l.independentFastMaintenance() || l.controlWriting.Load() == 0) && len(l.physicalSlots) < physicalSlotLimit(l) {
++	if (l == quiet[0] || l == quiet[1]) && (l.dataShards > 0 || l.unreceivedLocalRecords.Load() == 0 && l.unreceivedLocalBytes.Load() == 0) && l.controlDebt.Load() < 80 && !l.cleanupBlocksFast() && (l.independentFastMaintenance() || l.controlWriting.Load() == 0) && len(l.physicalSlots) < physicalSlotLimit(l) {
+ 		n -= 512
+ 	}
+ 	return n
+diff --git a/archives/1.1.0/source/core/tunnel/reader_reserve.go b/archives/1.1.0/source/core/tunnel/reader_reserve.go
+index ed3e783..bdbaf7b 100644
+--- a/archives/1.1.0/source/core/tunnel/reader_reserve.go
++++ b/archives/1.1.0/source/core/tunnel/reader_reserve.go
+@@ -40,6 +40,21 @@ func (g *stripeGroup) expectFastResponseOn(owner, physical *lane) {
+ 	if g == nil || owner == nil || owner.side {
+ 		return
+ 	}
++	g.primeFastDataReaders(owner, physical)
++}
++
++// An accepted OPEN or small request gives the server concrete evidence of an
++// incoming handshake/request burst too. Keep just its protected reader and
++// actual request carrier out of extra IDLE/DONE turns for the same bounded
++// measured window. Echoes, ACKs, bulk records and outgoing replies do not arm it.
++func (g *stripeGroup) expectNextFastRequest(owner, physical *lane) {
++	if g == nil || owner == nil || !owner.side {
++		return
++	}
++	g.primeFastDataReaders(owner, physical)
++}
++
++func (g *stripeGroup) primeFastDataReaders(owner, physical *lane) {
+ 	g.mu.Lock()
+ 	quiet := g.interactiveReadersLocked()
+ 	g.mu.Unlock()
+diff --git a/archives/1.1.0/source/core/tunnel/stripe.go b/archives/1.1.0/source/core/tunnel/stripe.go
+index 85ab662..595b1f9 100644
+--- a/archives/1.1.0/source/core/tunnel/stripe.go
++++ b/archives/1.1.0/source/core/tunnel/stripe.go
+@@ -1297,6 +1297,9 @@ func (g *stripeGroup) dispatchStream(carrier *lane, f wire.Frame) error {
+ 		clear(f.Payload)
+ 		return nil
+ 	}
++	if carrier.side && (f.Type == wire.Open || f.Type == wire.Data && len(f.Payload) <= datapath.InteractiveDataThreshold) {
++		g.expectNextFastRequest(owner, carrier)
++	}
+ 	if f.Type == wire.Open || f.Type == wire.OpenOK || f.Type == wire.Data && len(f.Payload) <= datapath.InteractiveDataThreshold {
+ 		g.mu.Lock()
+ 		if g.owners[f.Stream] != nil {
