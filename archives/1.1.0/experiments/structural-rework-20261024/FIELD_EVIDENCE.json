@@ -1,0 +1,1429 @@
+{
+  "schema": 1,
+  "purpose": "Evidence for an integrated transport replacement plan; not implementation or qualification",
+  "runtime": "itom-1-1-0-dev9",
+  "clock": "UTC; RTT computed within one endpoint clock only",
+  "history_review": {
+    "canonical_prior_reports_read_and_hash_verified": 89,
+    "prior_bytes": 5944091,
+    "additional_dev9_records": [
+      {
+        "path": "archives/1.1.0/DEV9_BUILD.json",
+        "sha256": "b01bcb1896c0bfaeb77b94d2599481b46de4bb0f6cb11ccd53575ae032e7ed85",
+        "bytes": 6986
+      },
+      {
+        "path": "archives/1.1.0/DEV9_TESTING.md",
+        "sha256": "a8323d0092526fe0c7beb056c1194cd84983c842e37e8e38e9028042177d699a",
+        "bytes": 3907
+      },
+      {
+        "path": "archives/1.1.0/experiments/dev9-real-field/RESULTS.json",
+        "sha256": "37616185a695a33f84379dbad517893fd3dce64f1530ea589a4033d74a5cfb74",
+        "bytes": 164270
+      },
+      {
+        "path": "archives/1.1.0/experiments/dev9-real-field/FIELD_ANALYSIS.md",
+        "sha256": "9956edb97ca6e8c534b57424fc3833066f590167777f0e39c3495337efca65e8",
+        "bytes": 10726
+      },
+      {
+        "path": "archives/1.1.0/experiments/dev9-real-field/REJECTED_LOCAL_TIMING.diff",
+        "sha256": "795b64094b44c1d8e6124d6d33382afc0daf7bed154ade3458dd5bfab899f135",
+        "bytes": 6816
+      }
+    ],
+    "not_a_rerun_of_historical_binaries": true
+  },
+  "inputs": {
+    "client_speedtests": {
+      "zip_sha256": "233f188fb93cb90eeb4100418a60e1f44134490f54d3043a37d20b48140fb52f",
+      "files": [
+        {
+          "path": "transport-trace.jsonl.1",
+          "bytes": 16777192
+        },
+        {
+          "path": "capture.json",
+          "bytes": 87
+        },
+        {
+          "path": "transport-trace.jsonl",
+          "bytes": 13422486
+        },
+        {
+          "path": "transport-trace.jsonl.2",
+          "bytes": 16776911
+        },
+        {
+          "path": "diagnostics.json",
+          "bytes": 197518
+        }
+      ]
+    },
+    "server_unsuffixed": {
+      "zip_sha256": "0d2dbbc21880c7f65af67e32530b5dc8205d9af4feefe7b4e6b1a78964e207bd",
+      "files": [
+        {
+          "path": "transport-trace.jsonl.1",
+          "bytes": 16777048
+        },
+        {
+          "path": "capture.json",
+          "bytes": 180
+        },
+        {
+          "path": "transport-trace.jsonl",
+          "bytes": 6055629
+        },
+        {
+          "path": "transport-trace.jsonl.2",
+          "bytes": 16776630
+        }
+      ]
+    },
+    "server_speedtests": {
+      "zip_sha256": "865e1f22fdda0102c96b121348041f5d73c28e47b5078024dc5fc22e2acf9423",
+      "files": [
+        {
+          "path": "transport-trace.jsonl.1",
+          "bytes": 16776941
+        },
+        {
+          "path": "capture.json",
+          "bytes": 179
+        },
+        {
+          "path": "transport-trace.jsonl",
+          "bytes": 10147741
+        },
+        {
+          "path": "transport-trace.jsonl.2",
+          "bytes": 16776832
+        }
+      ]
+    },
+    "client_unsuffixed": {
+      "zip_sha256": "38ded258a928d7eafe58b5092c035466eb0ffe90a9e77c3acff5b5035f628c77",
+      "files": [
+        {
+          "path": "transport-trace.jsonl.1",
+          "bytes": 16777166
+        },
+        {
+          "path": "capture.json",
+          "bytes": 87
+        },
+        {
+          "path": "transport-trace.jsonl",
+          "bytes": 12922140
+        },
+        {
+          "path": "transport-trace.jsonl.2",
+          "bytes": 16777127
+        },
+        {
+          "path": "diagnostics.json",
+          "bytes": 241037
+        }
+      ]
+    }
+  },
+  "captures": {
+    "client_unsuffixed": {
+      "window": [
+        "2026-10-24T01:32:15.449921306Z",
+        "2026-10-24T01:34:36.950846513Z"
+      ],
+      "completed_ping_ms": {
+        "n": 419,
+        "mean": 406.714,
+        "p50": 351.045,
+        "p95": 709.165,
+        "p99": 1247.948,
+        "max": 2307.412,
+        "over250": 372,
+        "over2000": 2
+      },
+      "zero_nearby_payload_ping_ms": {
+        "n": 15,
+        "mean": 463.855,
+        "p50": 351.597,
+        "p95": 639.762,
+        "p99": 639.762,
+        "max": 1746.563,
+        "over250": 15,
+        "over2000": 0
+      },
+      "small_nearby_payload_ping_ms": {
+        "n": 175,
+        "mean": 409.753,
+        "p50": 351.597,
+        "p95": 670.406,
+        "p99": 1301.143,
+        "max": 1899.661,
+        "over250": 158,
+        "over2000": 0
+      },
+      "completed_open_ms": {
+        "n": 189,
+        "mean": 355.157,
+        "p50": 331.233,
+        "p95": 570.78,
+        "p99": 784.191,
+        "max": 806.597,
+        "over250": 153,
+        "over2000": 0
+      },
+      "open_results": {
+        "OPEN_OK": 189
+      },
+      "codes": {
+        "application_copy_end|RESET": 61,
+        "application_copy_end|IO_ERROR": 14,
+        "delivery_admission_wait|DELIVERY_MEMBER_DEFERRED": 3
+      },
+      "metrics_ms": {
+        "imap_ensure": {
+          "n": 180,
+          "mean": 16.091,
+          "p50": 14.541,
+          "p95": 25.627,
+          "p99": 42.088,
+          "max": 64.554,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_recovery_page": {
+          "n": 122,
+          "mean": 48.478,
+          "p50": 22.542,
+          "p95": 170.473,
+          "p99": 341.965,
+          "max": 444.142,
+          "over250": 4,
+          "over2000": 0
+        },
+        "imap_delete_observed_batch": {
+          "n": 2319,
+          "mean": 126.467,
+          "p50": 112.191,
+          "p95": 234.573,
+          "p99": 316.782,
+          "max": 766.286,
+          "over250": 97,
+          "over2000": 0
+        },
+        "imap_absence": {
+          "n": 3,
+          "mean": 20.45,
+          "p50": 20.938,
+          "p95": 20.938,
+          "p99": 20.938,
+          "max": 22.331,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_delete_batch": {
+          "n": 15,
+          "mean": 120.838,
+          "p50": 103.832,
+          "p95": 170.44,
+          "p99": 170.44,
+          "max": 241.236,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_tail": {
+          "n": 15,
+          "mean": 15.023,
+          "p50": 15.588,
+          "p95": 19.473,
+          "p99": 19.473,
+          "max": 25.449,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_recent": {
+          "n": 15,
+          "mean": 72.772,
+          "p50": 64.489,
+          "p95": 103.597,
+          "p99": 103.597,
+          "max": 130.409,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_append_control": {
+          "n": 6794,
+          "mean": 50.548,
+          "p50": 48.529,
+          "p95": 68.148,
+          "p99": 97.165,
+          "max": 226.116,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_fetch_page": {
+          "n": 6113,
+          "mean": 65.907,
+          "p50": 45.077,
+          "p95": 187.706,
+          "p99": 298.96,
+          "max": 1231.687,
+          "over250": 117,
+          "over2000": 0
+        },
+        "imap_activate_io": {
+          "n": 15,
+          "mean": 0.074,
+          "p50": 0.073,
+          "p95": 0.128,
+          "p99": 0.128,
+          "max": 0.195,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_presence": {
+          "n": 2771,
+          "mean": 37.471,
+          "p50": 26.486,
+          "p95": 85.887,
+          "p99": 157.944,
+          "max": 1180.363,
+          "over250": 7,
+          "over2000": 0
+        },
+        "imap_cleanup_fetch_exact": {
+          "n": 2206,
+          "mean": 47.481,
+          "p50": 36.394,
+          "p95": 104.109,
+          "p99": 167.375,
+          "max": 1003.611,
+          "over250": 9,
+          "over2000": 0
+        },
+        "delivery_admission_wait|fast": {
+          "n": 627,
+          "mean": 0.066,
+          "p50": 0.055,
+          "p95": 0.133,
+          "p99": 0.3,
+          "max": 0.853,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|fast": {
+          "n": 624,
+          "mean": 0.157,
+          "p50": 0.158,
+          "p95": 0.257,
+          "p99": 0.571,
+          "max": 2.277,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_grant|fast": {
+          "n": 624,
+          "mean": 0.006,
+          "p50": 0.006,
+          "p95": 0.009,
+          "p99": 0.017,
+          "max": 0.123,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_append_data": {
+          "n": 646,
+          "mean": 62.591,
+          "p50": 51.922,
+          "p95": 111.473,
+          "p99": 170.859,
+          "max": 710.914,
+          "over250": 5,
+          "over2000": 0
+        },
+        "data_batch_append|c2s": {
+          "n": 646,
+          "mean": 62.622,
+          "p50": 52.031,
+          "p95": 111.497,
+          "p99": 170.885,
+          "max": 710.941,
+          "over250": 5,
+          "over2000": 0
+        },
+        "data_batch_completion|fast": {
+          "n": 624,
+          "mean": 63.825,
+          "p50": 52.91,
+          "p95": 112.603,
+          "p99": 171.358,
+          "max": 712.334,
+          "over250": 5,
+          "over2000": 0
+        },
+        "imap_fetch_data_page": {
+          "n": 243,
+          "mean": 67.64,
+          "p50": 45.148,
+          "p95": 162.421,
+          "p99": 235.165,
+          "max": 513.858,
+          "over250": 3,
+          "over2000": 0
+        },
+        "delivery_admission_wait|other": {
+          "n": 22,
+          "mean": 0.076,
+          "p50": 0.062,
+          "p95": 0.101,
+          "p99": 0.161,
+          "max": 0.332,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|other": {
+          "n": 22,
+          "mean": 0.068,
+          "p50": 0.072,
+          "p95": 0.11,
+          "p99": 0.149,
+          "max": 0.165,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_grant|bulk": {
+          "n": 22,
+          "mean": 0.007,
+          "p50": 0.005,
+          "p95": 0.007,
+          "p99": 0.01,
+          "max": 0.055,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_physical_slot|other": {
+          "n": 22,
+          "mean": 0.026,
+          "p50": 0.008,
+          "p95": 0.012,
+          "p99": 0.013,
+          "max": 0.43,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_completion|other": {
+          "n": 22,
+          "mean": 61.35,
+          "p50": 65.935,
+          "p95": 73.804,
+          "p99": 81.685,
+          "max": 85.407,
+          "over250": 0,
+          "over2000": 0
+        }
+      },
+      "sockets_per_account": [
+        2
+      ],
+      "ready_accounts_last": 15,
+      "reconnect_counter_ranges": {
+        "a06": [
+          0,
+          0
+        ],
+        "a03": [
+          0,
+          0
+        ],
+        "a10": [
+          0,
+          0
+        ],
+        "a07": [
+          0,
+          0
+        ],
+        "a05": [
+          0,
+          0
+        ],
+        "a15": [
+          0,
+          0
+        ],
+        "a08": [
+          0,
+          0
+        ],
+        "a04": [
+          0,
+          0
+        ],
+        "a11": [
+          0,
+          0
+        ],
+        "a14": [
+          0,
+          0
+        ],
+        "a12": [
+          0,
+          0
+        ],
+        "a13": [
+          0,
+          0
+        ],
+        "a09": [
+          0,
+          0
+        ],
+        "a02": [
+          0,
+          0
+        ],
+        "a01": [
+          0,
+          0
+        ]
+      },
+      "trace_drops_reported": 0
+    },
+    "server_unsuffixed": {
+      "window": [
+        "2026-10-24T01:32:29.05684327Z",
+        "2026-10-24T01:35:13.574898033Z"
+      ],
+      "completed_ping_ms": {
+        "n": 493,
+        "mean": 357.077,
+        "p50": 314.186,
+        "p95": 627.273,
+        "p99": 874.385,
+        "max": 1769.497,
+        "over250": 381,
+        "over2000": 0
+      },
+      "zero_nearby_payload_ping_ms": {
+        "n": 33,
+        "mean": 347.343,
+        "p50": 318.979,
+        "p95": 536.892,
+        "p99": 584.474,
+        "max": 692.438,
+        "over250": 28,
+        "over2000": 0
+      },
+      "small_nearby_payload_ping_ms": {
+        "n": 290,
+        "mean": 355.274,
+        "p50": 308.775,
+        "p95": 617.867,
+        "p99": 861.358,
+        "max": 1769.497,
+        "over250": 225,
+        "over2000": 0
+      },
+      "completed_open_ms": {
+        "n": 0
+      },
+      "open_results": {},
+      "codes": {
+        "socket_failure|IO_ERROR": 2,
+        "delivery_admission_wait|DELIVERY_MEMBER_DEFERRED": 1,
+        "socket_failure|RESET": 1,
+        "socket_failure|TIMEOUT": 1
+      },
+      "metrics_ms": {
+        "imap_fetch_page": {
+          "n": 7422,
+          "mean": 120.638,
+          "p50": 114.409,
+          "p95": 259.412,
+          "p99": 348.031,
+          "max": 1112.253,
+          "over250": 459,
+          "over2000": 0
+        },
+        "imap_append_control": {
+          "n": 6140,
+          "mean": 71.861,
+          "p50": 66.956,
+          "p95": 99.116,
+          "p99": 125.487,
+          "max": 556.281,
+          "over250": 11,
+          "over2000": 0
+        },
+        "imap_delete_observed_batch": {
+          "n": 2903,
+          "mean": 185.191,
+          "p50": 174.048,
+          "p95": 304.979,
+          "p99": 393.047,
+          "max": 858.019,
+          "over250": 379,
+          "over2000": 0
+        },
+        "imap_presence": {
+          "n": 1964,
+          "mean": 76.172,
+          "p50": 64.026,
+          "p95": 140.087,
+          "p99": 202.008,
+          "max": 420.67,
+          "over250": 8,
+          "over2000": 0
+        },
+        "imap_cleanup_fetch_exact": {
+          "n": 2452,
+          "mean": 99.102,
+          "p50": 87.449,
+          "p95": 200.168,
+          "p99": 295.961,
+          "max": 1037.707,
+          "over250": 47,
+          "over2000": 0
+        },
+        "imap_fetch_data_page": {
+          "n": 1498,
+          "mean": 107.74,
+          "p50": 104.079,
+          "p95": 153.74,
+          "p99": 185.623,
+          "max": 827.819,
+          "over250": 14,
+          "over2000": 0
+        },
+        "imap_recovery_page": {
+          "n": 555,
+          "mean": 98.736,
+          "p50": 74.688,
+          "p95": 229.052,
+          "p99": 325.13,
+          "max": 491.054,
+          "over250": 24,
+          "over2000": 0
+        },
+        "delivery_admission_wait|fast": {
+          "n": 605,
+          "mean": 0.077,
+          "p50": 0.068,
+          "p95": 0.134,
+          "p99": 0.248,
+          "max": 0.519,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|fast": {
+          "n": 604,
+          "mean": 14.217,
+          "p50": 7.885,
+          "p95": 46.991,
+          "p99": 101.552,
+          "max": 147.919,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_grant|other": {
+          "n": 656,
+          "mean": 0.006,
+          "p50": 0.005,
+          "p95": 0.009,
+          "p99": 0.024,
+          "max": 0.11,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_journal_prepare_start|other": {
+          "n": 656,
+          "mean": 10.872,
+          "p50": 6.969,
+          "p95": 33.217,
+          "p99": 56.769,
+          "max": 82.776,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_append_data": {
+          "n": 656,
+          "mean": 95.367,
+          "p50": 81.982,
+          "p95": 171.356,
+          "p99": 248.013,
+          "max": 388.119,
+          "over250": 7,
+          "over2000": 0
+        },
+        "data_batch_append|s2c": {
+          "n": 656,
+          "mean": 95.393,
+          "p50": 82.005,
+          "p95": 171.38,
+          "p99": 248.054,
+          "max": 388.151,
+          "over250": 7,
+          "over2000": 0
+        },
+        "data_journal_complete_close|other": {
+          "n": 656,
+          "mean": 10.374,
+          "p50": 6.626,
+          "p95": 29.532,
+          "p99": 50.686,
+          "max": 313.016,
+          "over250": 1,
+          "over2000": 0
+        },
+        "data_batch_completion|fast": {
+          "n": 604,
+          "mean": 118.612,
+          "p50": 105.156,
+          "p95": 206.767,
+          "p99": 272.211,
+          "max": 397.44,
+          "over250": 12,
+          "over2000": 0
+        },
+        "delivery_admission_wait|other": {
+          "n": 52,
+          "mean": 0.073,
+          "p50": 0.059,
+          "p95": 0.106,
+          "p99": 0.115,
+          "max": 0.509,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|other": {
+          "n": 52,
+          "mean": 14.595,
+          "p50": 10.444,
+          "p95": 29.381,
+          "p99": 76.004,
+          "max": 86.139,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_physical_slot|other": {
+          "n": 52,
+          "mean": 0.75,
+          "p50": 0.016,
+          "p95": 2.298,
+          "p99": 8.863,
+          "max": 20.51,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_completion|other": {
+          "n": 52,
+          "mean": 96.884,
+          "p50": 89.246,
+          "p95": 148.514,
+          "p99": 161.869,
+          "max": 210.037,
+          "over250": 0,
+          "over2000": 0
+        }
+      },
+      "sockets_per_account": [
+        3
+      ],
+      "ready_accounts_last": 15,
+      "reconnect_counter_ranges": {
+        "a08": [
+          0,
+          0
+        ],
+        "a07": [
+          0,
+          0
+        ],
+        "a10": [
+          0,
+          0
+        ],
+        "a03": [
+          0,
+          0
+        ],
+        "a06": [
+          0,
+          0
+        ],
+        "a05": [
+          0,
+          0
+        ],
+        "a13": [
+          0,
+          0
+        ],
+        "a15": [
+          0,
+          0
+        ],
+        "a02": [
+          0,
+          0
+        ],
+        "a11": [
+          0,
+          0
+        ],
+        "a14": [
+          0,
+          0
+        ],
+        "a12": [
+          0,
+          0
+        ],
+        "a04": [
+          0,
+          0
+        ],
+        "a09": [
+          0,
+          0
+        ],
+        "a01": [
+          0,
+          0
+        ]
+      },
+      "trace_drops_reported": null
+    },
+    "client_speedtests": {
+      "window": [
+        "2026-10-24T01:39:12.104148803Z",
+        "2026-10-24T01:41:09.945748133Z"
+      ],
+      "completed_ping_ms": {
+        "n": 351,
+        "mean": 473.385,
+        "p50": 426.175,
+        "p95": 771.886,
+        "p99": 1266.296,
+        "max": 2633.667,
+        "over250": 332,
+        "over2000": 4
+      },
+      "zero_nearby_payload_ping_ms": {
+        "n": 23,
+        "mean": 423.896,
+        "p50": 351.336,
+        "p95": 621.674,
+        "p99": 734.911,
+        "max": 1266.296,
+        "over250": 21,
+        "over2000": 0
+      },
+      "small_nearby_payload_ping_ms": {
+        "n": 104,
+        "mean": 445.182,
+        "p50": 394.194,
+        "p95": 686.809,
+        "p99": 739.668,
+        "max": 1266.296,
+        "over250": 98,
+        "over2000": 0
+      },
+      "completed_open_ms": {
+        "n": 56,
+        "mean": 382.991,
+        "p50": 335.625,
+        "p95": 764.484,
+        "p99": 890.148,
+        "max": 1021.226,
+        "over250": 49,
+        "over2000": 0
+      },
+      "open_results": {
+        "OPEN_OK": 56
+      },
+      "codes": {
+        "delivery_admission_wait|DELIVERY_MEMBER_DEFERRED": 43,
+        "application_copy_end|RESET": 73,
+        "application_copy_end|IO_ERROR": 9,
+        "grant_rollover|WALLET_EXHAUSTED": 249,
+        "data_batch_completion|WALLET_EXHAUSTED": 283
+      },
+      "metrics_ms": {
+        "imap_append_data": {
+          "n": 1674,
+          "mean": 79.311,
+          "p50": 65.473,
+          "p95": 152.774,
+          "p99": 215.058,
+          "max": 541.764,
+          "over250": 9,
+          "over2000": 0
+        },
+        "data_batch_append|c2s": {
+          "n": 1674,
+          "mean": 79.337,
+          "p50": 65.498,
+          "p95": 152.794,
+          "p99": 215.087,
+          "max": 541.776,
+          "over250": 9,
+          "over2000": 0
+        },
+        "data_batch_completion|fast": {
+          "n": 1293,
+          "mean": 71.567,
+          "p50": 58.547,
+          "p95": 146.312,
+          "p99": 238.577,
+          "max": 542.37,
+          "over250": 10,
+          "over2000": 0
+        },
+        "imap_presence": {
+          "n": 3072,
+          "mean": 44.804,
+          "p50": 31.33,
+          "p95": 112.026,
+          "p99": 175.981,
+          "max": 948.294,
+          "over250": 11,
+          "over2000": 0
+        },
+        "imap_append_control": {
+          "n": 8762,
+          "mean": 54.176,
+          "p50": 49.895,
+          "p95": 83.854,
+          "p99": 131.578,
+          "max": 921.145,
+          "over250": 7,
+          "over2000": 0
+        },
+        "imap_fetch_data_page": {
+          "n": 831,
+          "mean": 89.387,
+          "p50": 86.619,
+          "p95": 180.461,
+          "p99": 261.037,
+          "max": 1221.466,
+          "over250": 11,
+          "over2000": 0
+        },
+        "delivery_admission_wait|fast": {
+          "n": 1307,
+          "mean": 0.068,
+          "p50": 0.04,
+          "p95": 0.182,
+          "p99": 0.562,
+          "max": 2.511,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|fast": {
+          "n": 1289,
+          "mean": 0.349,
+          "p50": 0.093,
+          "p95": 0.397,
+          "p99": 1.634,
+          "max": 70.566,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_grant|fast": {
+          "n": 1289,
+          "mean": 0.005,
+          "p50": 0.003,
+          "p95": 0.007,
+          "p99": 0.028,
+          "max": 0.311,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_fetch_page": {
+          "n": 7162,
+          "mean": 76.459,
+          "p50": 57.035,
+          "p95": 202.752,
+          "p99": 290.906,
+          "max": 1044.796,
+          "over250": 150,
+          "over2000": 0
+        },
+        "imap_delete_observed_batch": {
+          "n": 2147,
+          "mean": 140.29,
+          "p50": 126.713,
+          "p95": 252.345,
+          "p99": 320.386,
+          "max": 783.491,
+          "over250": 115,
+          "over2000": 0
+        },
+        "imap_cleanup_fetch_exact": {
+          "n": 2071,
+          "mean": 62.382,
+          "p50": 48.523,
+          "p95": 142.646,
+          "p99": 236.9,
+          "max": 1023.207,
+          "over250": 21,
+          "over2000": 0
+        },
+        "delivery_admission_wait|other": {
+          "n": 689,
+          "mean": 0.119,
+          "p50": 0.052,
+          "p95": 0.484,
+          "p99": 1.231,
+          "max": 3.854,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|other": {
+          "n": 664,
+          "mean": 183.235,
+          "p50": 81.378,
+          "p95": 707.932,
+          "p99": 988.033,
+          "max": 1373.447,
+          "over250": 176,
+          "over2000": 0
+        },
+        "data_batch_grant|bulk": {
+          "n": 664,
+          "mean": 0.005,
+          "p50": 0.003,
+          "p95": 0.008,
+          "p99": 0.019,
+          "max": 0.554,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_physical_slot|other": {
+          "n": 685,
+          "mean": 14.253,
+          "p50": 0.013,
+          "p95": 113.293,
+          "p99": 158.988,
+          "max": 209.915,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_completion|other": {
+          "n": 664,
+          "mean": 79.231,
+          "p50": 91.99,
+          "p95": 197.511,
+          "p99": 297.955,
+          "max": 367.293,
+          "over250": 15,
+          "over2000": 0
+        }
+      },
+      "sockets_per_account": [
+        2
+      ],
+      "ready_accounts_last": 15,
+      "reconnect_counter_ranges": {
+        "a07": [
+          1,
+          1
+        ],
+        "a15": [
+          0,
+          0
+        ],
+        "a10": [
+          0,
+          0
+        ],
+        "a04": [
+          0,
+          0
+        ],
+        "a11": [
+          0,
+          0
+        ],
+        "a09": [
+          0,
+          0
+        ],
+        "a02": [
+          0,
+          0
+        ],
+        "a06": [
+          0,
+          0
+        ],
+        "a05": [
+          0,
+          0
+        ],
+        "a13": [
+          0,
+          0
+        ],
+        "a08": [
+          0,
+          0
+        ],
+        "a12": [
+          0,
+          0
+        ],
+        "a01": [
+          0,
+          0
+        ],
+        "a14": [
+          0,
+          0
+        ],
+        "a03": [
+          0,
+          0
+        ]
+      },
+      "trace_drops_reported": 0
+    },
+    "server_speedtests": {
+      "window": [
+        "2026-10-24T01:39:28.345677997Z",
+        "2026-10-24T01:41:27.824712093Z"
+      ],
+      "completed_ping_ms": {
+        "n": 360,
+        "mean": 387.905,
+        "p50": 367.065,
+        "p95": 618.307,
+        "p99": 878.856,
+        "max": 1440.1,
+        "over250": 311,
+        "over2000": 0
+      },
+      "zero_nearby_payload_ping_ms": {
+        "n": 32,
+        "mean": 339.361,
+        "p50": 295.557,
+        "p95": 448.612,
+        "p99": 561.237,
+        "max": 1440.1,
+        "over250": 24,
+        "over2000": 0
+      },
+      "small_nearby_payload_ping_ms": {
+        "n": 176,
+        "mean": 365.887,
+        "p50": 345.156,
+        "p95": 574.772,
+        "p99": 748.602,
+        "max": 1440.1,
+        "over250": 145,
+        "over2000": 0
+      },
+      "completed_open_ms": {
+        "n": 0
+      },
+      "open_results": {},
+      "codes": {
+        "delivery_admission_wait|DELIVERY_MEMBER_DEFERRED": 9,
+        "socket_failure|RESET": 2
+      },
+      "metrics_ms": {
+        "imap_fetch_page": {
+          "n": 6118,
+          "mean": 152.117,
+          "p50": 139.825,
+          "p95": 319.229,
+          "p99": 432.258,
+          "max": 1183.768,
+          "over250": 840,
+          "over2000": 0
+        },
+        "delivery_admission_wait|fast": {
+          "n": 1266,
+          "mean": 0.08,
+          "p50": 0.06,
+          "p95": 0.168,
+          "p99": 0.444,
+          "max": 1.199,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_journal_complete_close|other": {
+          "n": 1526,
+          "mean": 21.427,
+          "p50": 14.928,
+          "p95": 57.452,
+          "p99": 98.757,
+          "max": 242.975,
+          "over250": 0,
+          "over2000": 0
+        },
+        "data_batch_completion|fast": {
+          "n": 1265,
+          "mean": 174.401,
+          "p50": 158.92,
+          "p95": 315.22,
+          "p99": 392.972,
+          "max": 1120.457,
+          "over250": 158,
+          "over2000": 0
+        },
+        "data_journal_prepare_start|other": {
+          "n": 1522,
+          "mean": 27.57,
+          "p50": 18.347,
+          "p95": 74.804,
+          "p99": 129.221,
+          "max": 475.526,
+          "over250": 4,
+          "over2000": 0
+        },
+        "imap_append_control": {
+          "n": 6213,
+          "mean": 79.195,
+          "p50": 78.442,
+          "p95": 111.971,
+          "p99": 160.33,
+          "max": 339.631,
+          "over250": 11,
+          "over2000": 0
+        },
+        "imap_cleanup_fetch_exact": {
+          "n": 1680,
+          "mean": 128.357,
+          "p50": 111.408,
+          "p95": 269.623,
+          "p99": 350.757,
+          "max": 1150.282,
+          "over250": 114,
+          "over2000": 0
+        },
+        "stripe_select_wait|fast": {
+          "n": 1259,
+          "mean": 47.05,
+          "p50": 20.29,
+          "p95": 179.226,
+          "p99": 292.914,
+          "max": 560.901,
+          "over250": 20,
+          "over2000": 0
+        },
+        "data_batch_grant|other": {
+          "n": 1520,
+          "mean": 0.006,
+          "p50": 0.005,
+          "p95": 0.01,
+          "p99": 0.029,
+          "max": 0.188,
+          "over250": 0,
+          "over2000": 0
+        },
+        "imap_presence": {
+          "n": 938,
+          "mean": 88.05,
+          "p50": 73.121,
+          "p95": 169.575,
+          "p99": 251.515,
+          "max": 737.099,
+          "over250": 12,
+          "over2000": 0
+        },
+        "imap_fetch_data_page": {
+          "n": 2536,
+          "mean": 116.341,
+          "p50": 107.087,
+          "p95": 175.775,
+          "p99": 247.586,
+          "max": 1230.055,
+          "over250": 26,
+          "over2000": 0
+        },
+        "imap_append_data": {
+          "n": 1524,
+          "mean": 120.339,
+          "p50": 103.463,
+          "p95": 241.38,
+          "p99": 316.428,
+          "max": 1067.334,
+          "over250": 68,
+          "over2000": 0
+        },
+        "data_batch_append|s2c": {
+          "n": 1524,
+          "mean": 120.37,
+          "p50": 103.484,
+          "p95": 241.419,
+          "p99": 316.479,
+          "max": 1067.365,
+          "over250": 68,
+          "over2000": 0
+        },
+        "imap_delete_observed_batch": {
+          "n": 2613,
+          "mean": 203.982,
+          "p50": 190.268,
+          "p95": 343.681,
+          "p99": 437.679,
+          "max": 974.561,
+          "over250": 546,
+          "over2000": 0
+        },
+        "imap_recovery_page": {
+          "n": 406,
+          "mean": 121.704,
+          "p50": 103.88,
+          "p95": 284.392,
+          "p99": 351.204,
+          "max": 632.304,
+          "over250": 33,
+          "over2000": 0
+        },
+        "delivery_admission_wait|other": {
+          "n": 261,
+          "mean": 0.089,
+          "p50": 0.076,
+          "p95": 0.155,
+          "p99": 0.279,
+          "max": 1.05,
+          "over250": 0,
+          "over2000": 0
+        },
+        "stripe_select_wait|other": {
+          "n": 261,
+          "mean": 27.536,
+          "p50": 16.955,
+          "p95": 66.97,
+          "p99": 97.992,
+          "max": 441.923,
+          "over250": 2,
+          "over2000": 0
+        },
+        "data_batch_physical_slot|other": {
+          "n": 261,
+          "mean": 25.613,
+          "p50": 0.025,
+          "p95": 98.926,
+          "p99": 501.348,
+          "max": 1876.154,
+          "over250": 4,
+          "over2000": 0
+        },
+        "data_batch_completion|other": {
+          "n": 261,
+          "mean": 172.9,
+          "p50": 143.438,
+          "p95": 302.004,
+          "p99": 658.675,
+          "max": 2006.03,
+          "over250": 34,
+          "over2000": 1
+        }
+      },
+      "sockets_per_account": [
+        3
+      ],
+      "ready_accounts_last": 15,
+      "reconnect_counter_ranges": {
+        "a04": [
+          1,
+          1
+        ],
+        "a02": [
+          1,
+          1
+        ],
+        "a09": [
+          1,
+          1
+        ],
+        "a10": [
+          1,
+          1
+        ],
+        "a15": [
+          1,
+          1
+        ],
+        "a08": [
+          1,
+          1
+        ],
+        "a03": [
+          1,
+          1
+        ],
+        "a05": [
+          1,
+          1
+        ],
+        "a07": [
+          1,
+          1
+        ],
+        "a06": [
+          1,
+          1
+        ],
+        "a12": [
+          1,
+          1
+        ],
+        "a11": [
+          1,
+          1
+        ],
+        "a13": [
+          1,
+          1
+        ],
+        "a14": [
+          1,
+          1
+        ],
+        "a01": [
+          1,
+          1
+        ]
+      },
+      "trace_drops_reported": null
+    }
+  },
+  "screenshots": [
+    {
+      "mode": "SINGLE",
+      "download_mbps": 19.5,
+      "upload_mbps": 45.3,
+      "idle_ms": 357,
+      "download_loaded_ms": 618,
+      "upload_loaded_ms": 701,
+      "jitter_ms": 136
+    },
+    {
+      "mode": "MULTI",
+      "download_mbps": 40.6,
+      "upload_mbps": 27.9,
+      "idle_ms": 354,
+      "download_loaded_ms": 609,
+      "upload_loaded_ms": 685,
+      "jitter_ms": 120
+    }
+  ],
+  "caveats": [
+    "One client archive contains36503 earlier-session events; they were excluded from the new-capture calculations",
+    "Control echoes are sealedPING-to-receivedPONG on the same clock, not application echo or ICMP RTT",
+    "Observed payload-quiescent windows are not proof that every application socket and maintenance task was idle",
+    "IMAP wrapper duration includes local admission, network, parsing and callbacks; do not replay it as independent backend delay",
+    "Socket failure events with stream IDs describe application/upstream sockets, not automatically IMAP transport reconnects",
+    "Completed OPEN_OK is not a completed TLS handshake or Speedtest; early server startup and some prior client history rotated out",
+    "WALLET_EXHAUSTED batch completions are retryable pre-APPEND outcomes in this code, not proof of overdraw, data corruption or one Speedtest failure per event"
+  ]
+}

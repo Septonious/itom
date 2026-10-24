@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "status": "proposed acceptance contract; no candidate has passed it",
+  "single_integrated_delivery": true,
+  "network_rtt_ms": {
+    "client_min": 10,
+    "client_max": 50,
+    "server_min": 20,
+    "server_max": 40,
+    "independent_paths": true,
+    "measured_command_service_and_durability_additionally_modelled": true
+  },
+  "primary_topology": {
+    "account_counts": [
+      10,
+      15
+    ],
+    "phone_sockets_per_account": 2,
+    "server_sockets_per_account": 3,
+    "no_hidden_extra_connections": true
+  },
+  "targets": {
+    "idle_and_light_application_rtt_max_ms": 250,
+    "loaded_application_rtt_max_ms": 2000,
+    "sustained_useful_upload_mbps": 100,
+    "sustained_useful_download_mbps": 100,
+    "unexpected_tls_or_speedtest_failures": 0,
+    "load_induced_imap_socket_replacements": 0,
+    "account_line_losses": 0
+  },
+  "measurement": {
+    "maxima_are_gates_not_percentiles": true,
+    "application_path": "kernel/app TCP + Android TUN/native bridge + IMAP + real TCP exit; include actual Android device validation",
+    "payload_bytes_counted_once_at_verified_application_receiver": true,
+    "app_payload_compression_disabled_for_benchmarks": true,
+    "full_elapsed_time_and_all_failed_attempts_retained": true,
+    "cold_tests_have_no_application_warmup": true,
+    "no_failed_seed_rerun_substitution": true,
+    "source_build_and_fixture_hashes_required": true
+  },
+  "strict_checks": {
+    "small_echo_payload_bytes": [
+      32,
+      256,
+      4096,
+      16384
+    ],
+    "idle_intervals_seconds": [
+      0.1,
+      1,
+      5,
+      30
+    ],
+    "light_aggregate_offered_bytes_per_second_max": 65536,
+    "stream_counts": [
+      1,
+      4,
+      16,
+      32
+    ],
+    "speedtest_phase_seconds": 12,
+    "speedtest_full_phase_mean_min_mbps": 100,
+    "speedtest_tail_last_2_seconds_min_mbps": 100,
+    "zero_useful_byte_windows_500ms_after_ramp_max": 0,
+    "ramp_to_100mbps_max_seconds": 2,
+    "sustained_measurement_seconds": 60,
+    "sustained_rolling_window_seconds": 5,
+    "sustained_rolling_window_min_mbps_after_ramp": 100,
+    "target_network_speedtest_sequences_required": 20,
+    "target_network_speedtest_sequences_passed_required": 20,
+    "cold_tls_attempts_per_primary_case_min": 300,
+    "legacy_open_tls_header_timeouts_ms": [
+      1500,
+      1500,
+      1500
+    ],
+    "legacy_512kib_http_total_timeout_ms": 5000
+  },
+  "load_classification": "external application demand/phase; internal recovery, cleanup or heartbeat work cannot reclassify idle as heavy load",
+  "state_profiles": [
+    "fresh",
+    "exact latest captured charged history",
+    "older RC12/DEV6/DEV8 pressure shapes",
+    "same installation across20 consecutive speedtest sequences",
+    "stop/restart and process restart without wallet removal",
+    "missing wallet with every unproved old reservation retained"
+  ],
+  "required_variations": [
+    "deterministic propagation extrema and opposite-phase client/server changes",
+    "correlated10-50/20-40ms traces, queue phase alignment, not IID jitter only",
+    "actual synchronizing literals and LITERAL_PLUS optional",
+    "IDLE notification coalescing/delay, flags-only updates, UID holes and stale allocation hints",
+    "real provider processes, isolated endpointCPU and durable storage costs",
+    "TLS fragmentation, early responses, aborts, half-close, TCP_NODELAY on/off, DNS and IP family paths",
+    "exact two-phone/three-server socket limits, physical IDs stable throughout load",
+    "diagnostics on/off overhead and untruncated anomaly capture"
+  ],
+  "legacy_suite": "retained unchanged as separately reported reference evidence; old17/20 gate cannot qualify the new transport",
+  "recovery_fault_group": "separate injected EOF/lostAPPENDreply/UIDVALIDITY and crash safety tests; never presented as the healthy-server primary network",
+  "release_gate": "All required primary cases and correctness/security/accounting checks pass, no allowlisted failed performance tests and no separate packaging bypass; one integrated candidate then real-phone confirmation",
+  "wire_executor_invariants": [
+    "single parser and serialized literal writer with bounded tagged-command state",
+    "no ambiguous FETCH/SELECT/EXPUNGE overlap and no command before the required IDLE DONE completion",
+    "per-command response accounting, no shared budget/deadline reset race",
+    "own-message loopback cannot advance peer delivery, useful bandwidth or peer-proof-gated refunds",
+    "one physical BODY belongs to one quota ledger even when mailboxes carry multiple ledger classes",
+    "cross-user/cross-account/generation/UIDVALIDITY and quota-origin mismatch negative tests",
+    "cancel one app stream without aborting pooled IMAP commands; bounded drain preserves uncertain outcomes",
+    "fast BODY cannot contain bulk inventory ahead of a small request"
+  ],
+  "android_identity": {
+    "application_id": "org.itom.client",
+    "preserve_persistent_signer": true,
+    "preserve_wallet_data": true
+  }
+}
