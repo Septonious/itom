@@ -381,48 +381,56 @@ func (s *Store) ObserveMany(run uint64, proofs []ObservedAttempt) error {
 		}
 		digests[i] = sha256.Sum256(proof.Observation.Decoded)
 	}
-	return s.write(func(tx *bolt.Tx) error {
-		if run != s.run {
-			return ErrGeneration
+	return s.write(func(tx *bolt.Tx) error { return s.observeManyTx(tx, run, proofs, digests) })
+}
+
+// observeManyTx preserves the same full proof validation for standalone scans
+// and atomic remote registration/observation. The caller owns one transaction.
+func (s *Store) observeManyTx(tx *bolt.Tx, run uint64, proofs []ObservedAttempt, digests [][32]byte) error {
+	if len(proofs) == 0 || len(proofs) > MaxProofBatch || len(digests) != len(proofs) {
+		return ErrLimit
+	}
+
+	if run != s.run {
+		return ErrGeneration
+	}
+	type locator struct {
+		account, folder string
+		location        Location
+	}
+	seen := map[locator]bool{}
+	refs := map[AttemptRef]bool{}
+	for i, proof := range proofs {
+		ref, evidence := proof.Ref, proof.Observation
+		loc := locator{evidence.Account, evidence.Folder, evidence.Location}
+		if seen[loc] || refs[ref] {
+			return ErrScope
 		}
-		type locator struct {
-			account, folder string
-			location        Location
+		seen[loc], refs[ref] = true, true
+		a, g, e := s.attempt(tx, ref)
+		if e != nil {
+			return e
 		}
-		seen := map[locator]bool{}
-		refs := map[AttemptRef]bool{}
-		for i, proof := range proofs {
-			ref, evidence := proof.Ref, proof.Observation
-			loc := locator{evidence.Account, evidence.Folder, evidence.Location}
-			if seen[loc] || refs[ref] {
-				return ErrScope
-			}
-			seen[loc], refs[ref] = true, true
-			a, g, e := s.attempt(tx, ref)
-			if e != nil {
-				return e
-			}
-			if a.State == Prepared {
-				return ErrState
-			}
-			if evidence.Account != ref.Grant.Scope.Account || evidence.Folder != a.Folder ||
-				evidence.Location.UIDValidity == 0 || evidence.Location.UID == 0 ||
-				uint64(len(evidence.Decoded)) != a.DecodedBytes || digests[i] != a.Digest {
-				return ErrScope
-			}
-			if g.Remote && (evidence.EncodedBytes != a.EncodedBytes || !wire.CheckPhysical(evidence.Decoded, quotaKey(g), a.Ordinal, a.Batch)) {
-				return ErrScope
-			}
-			if a.Location.UIDValidity == evidence.Location.UIDValidity && a.Location.UID != evidence.Location.UID {
-				return ErrState
-			}
-			a.State, a.Location = Committed, evidence.Location
-			if e = putJSON(tx.Bucket(attemptBucket), ref.ID, a); e != nil {
-				return e
-			}
+		if a.State == Prepared {
+			return ErrState
 		}
-		return nil
-	})
+		if evidence.Account != ref.Grant.Scope.Account || evidence.Folder != a.Folder ||
+			evidence.Location.UIDValidity == 0 || evidence.Location.UID == 0 ||
+			uint64(len(evidence.Decoded)) != a.DecodedBytes || digests[i] != a.Digest {
+			return ErrScope
+		}
+		if g.Remote && (evidence.EncodedBytes != a.EncodedBytes || !wire.CheckPhysical(evidence.Decoded, quotaKey(g), a.Ordinal, a.Batch)) {
+			return ErrScope
+		}
+		if a.Location.UIDValidity == evidence.Location.UIDValidity && a.Location.UID != evidence.Location.UID {
+			return ErrState
+		}
+		a.State, a.Location = Committed, evidence.Location
+		if e = putJSON(tx.Bucket(attemptBucket), ref.ID, a); e != nil {
+			return e
+		}
+	}
+	return nil
 }
 
 // Deleted is a TRUSTED local IMAP-worker completion after verifying actual

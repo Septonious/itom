@@ -1,70 +1,107 @@
 # Replacement transport implementation status
 
-This branch is an **unqualified first implementation**, not a runnable RC or an
-achievement of the 250ms/100Mbps targets. Production client/server startup fails
-explicitly with `V2_NOT_READY`. There is no fallback to the removed transport.
-No APK or deployable server binary is published from this branch.
+This branch is an **unqualified implementation in progress**, not a runnable RC
+or achievement of the 250ms/100Mbps targets. Production client/server startup
+still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
+binary is published from this branch. This is one structural replacement, not a
+series of intermediate timing releases.
 
-The predecessor is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
-The removal manifests record paths and SHA-256 hashes. Historical transport
-behavior is not an implementation or test oracle. Field captures supply failure
-cases and required workload shapes; immutable historical binaries may later be
-used only as comparison controls. Cryptographic and accounting contracts remain
-mandatory independently of the old scheduling implementation.
+The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
+The first independent implementation is `fb22eba`. Removal manifests retain paths
+and SHA-256 hashes. Historical scheduling, timers and congestion behavior are
+not implementation or test oracles. Cryptographic/accounting contracts remain
+mandatory independently of that implementation.
 
-Implemented from the new contract:
+## Implemented
 
-* `core/transport`: session-owned bounded stream queues and reorder buffers,
-  shared memory reservations behind receive credit, fast/bulk dispatch, short
-  burst classification, prompt publication without fill sleeps, and a useful
-  receiver-service model that does not reduce flight on loaded RTT alone.
-* A new verified TLS/LOGIN/CAPABILITY/SELECT bootstrap, with pinned mailbox and
-  UIDVALIDITY. One bounded parser owns tagged completions; APPEND can overlap
-  UID FETCH. Synchronizing literal barriers and negotiated LITERAL+ are explicit.
-  App cancellation detaches a waiter without closing the shared connection.
-  Tagged refusal and uncertain publication are different outcomes.
-* Independent v2 framing and Noise domain. The existing crypto authority retains
-  nonce allocation, replay checking, authenticated scope and key usage limits.
-  New sessions cannot use the legacy record API under v2 keys. Own-direction
-  loopback cannot become peer data.
-* Atomic wallet admission tickets select a concrete grant using its remaining
-  encoded bytes, message slots and pending-descriptor capacity. Successful spend
-  and ticket consumption share the durable transaction mutex. Uncertain physical
-  publications remain charged; unused admission cancellation is not a refund.
-* New receiver-trace checks enforce full-phase rate, ramp, tail, exact rolling
-  windows, stalls and application RTT maxima. No successful-only or peak-only
-  performance score is a release qualification.
+* Session-owned bounded send/reorder queues, separate fast/bulk dispatch and
+  receiver-backed memory credit. Dispatched bytes stay retained until cumulative
+  authenticated peer receipt, rather than disappearing on APPEND acceptance.
+* Event-driven application `net.Conn` adapter: blocking reads/writes, mutable
+  deadlines, independent cancellation, half-close, FIN/RESET acknowledgments,
+  bounded retirement and retired-ID rejection. App closure does not close a
+  provider socket. Tests exercise 2,000 short connection lifecycles.
+* Replenishing per-flow and aggregate interactive budgets replace the initial
+  lifetime burst counter. A continuing 320 B/s flow remains fast across 10,000
+  exchanges; opening more flows cannot multiply the fast budget. Excess DATA
+  continues on bulk immediately, without waiting to fill a collector or refill.
+* Receipts and credit are coalesced; DATA replies can piggyback both. Short
+  responses need not create a separate physical control solely for feedback.
+  Reserved dispatch slots keep bulk uncertainty from consuming protocol capacity.
+* New verified TLS/LOGIN/CAPABILITY/SELECT bootstrap and pinned UIDVALIDITY.
+  The bounded single-parser executor overlaps APPEND with UID FETCH, supports
+  synchronizing literals, LITERAL+, and LITERAL- up to its 4096-wire-byte limit.
+  Unsolicited flags-only FETCH does not break BODY completion ownership.
+* Independent v2 framing/Noise domain with the original nonce, replay and key
+  usage safeguards. The unqualified prototype framing now includes receipt and
+  credit fields. It has never been deployed as a compatible production wire.
+* Concrete-grant admission fits exact encrypted-envelope/canonical MIME size
+  before encryption and durable spend. Publisher construction rejects a wallet
+  from a different authenticated session. DATA and control use explicit separate
+  ledger classes even when sharing fast mailbox service.
+* Client publication path through the new executor, plus server client-origin
+  BODY authentication/accounting/delivery. A missing descriptor prefix defers
+  before consuming an AEAD replay slot. A verified delivery object can wait for
+  logical receiver capacity without decrypting the BODY a second time.
+* Remote descriptor registration and owned BODY observation now share one
+  durable transaction using the same grant/proof validators. Failed proof rolls
+  back both; a lost commit acknowledgment preserves both after reopening. No
+  receipt is returned before the commit and no refund occurs in this method.
+* Unknown publications cannot be automatically re-APPENDed. A command which
+  never started can retain its exact prepared body/permit. Trusted local FETCH
+  of the exact body can confirm provider acceptance, but cannot invent peer
+  delivery, release logical replay bytes, or refund physical quota.
+* Receiver-trace checks retain the required full-phase/ramp/tail/rolling rate,
+  no-stall and RTT-maximum assertions. No peak-only or successful-only score is
+  accepted as qualification.
 
-After writing the first implementation, all old owned Go tests in active
-core/native were removed as requested. Tests in already removed runtime packages
-are listed in `REMOVAL_MANIFEST.json`; other owned tests are listed in
-`TEST_REPLACEMENT_MANIFEST.json`. Third-party sources/tests and historical release
-archives are untouched. Fresh tests cover protocol ordering, verified TLS,
-both literal modes, app abort isolation, uncertain outcomes, byte reordering,
-half-close, memory/credit backing, quota concurrency, wallet loss, durable debt,
-UIDVALIDITY proof rejection, nonce/replay safety and measurement rejection rules.
-These do not yet replace the complete integration/security qualification matrix.
+## Verification boundary
 
-Still required in this same structural replacement before any release:
+All old owned Go tests were removed after the first implementation, as requested.
+Their manifests and immutable Git history remain; third-party tests and release
+archives were untouched. Fresh scenario and invariant tests are independent.
 
-* Session OPEN/READY/roster negotiation, stream/socket adapter, cumulative
-  delivery receipts, bounded retirement and reliable handling of admitted work
-  across known/unknown publication outcomes.
-* Bidirectional mailbox inventory and discovery, fast carrier roster agreement,
-  canonical MIME carrier pipeline, server-side journal ticket integration,
-  authenticated grant/control exchange, bounded proof-based reclamation, legacy
-  store migration and restart recovery under real socket limits. The new executor
-  currently implements APPEND/FETCH/NOOP; IDLE/DONE and reclamation are not yet
-  implemented. No performance claim assumes those costs are absent.
-* Separate provider/client/server processes with independently calibrated paths,
-  real disk/CPU costs and complete workload/state/seed manifests. The scripted
-  loopback provider tests are protocol tests, not that calibrated laboratory.
-* Actual native TUN/TCP exit integration and Android first-run, SINGLE, MULTI,
-  300 cold TLS attempts, 20 consecutive sequences, 60s duplex and soak checks.
-  The new native test exercises OS TCP half-close only, not the full TUN path.
-* Complete quota/crypto/recovery negative matrix and all required primary gates.
-  A passing `go test ./...` cannot stand in for these missing integrations.
+Current application/TCP integration runs real TLS/HTTP and a real TCP exit over
+separate fast/bulk OS TCP carriers with the new framing and Noise. It manually
+establishes the logical streams. It does **not** execute transport OPEN over IMAP,
+provider mailbox polling/reclamation or Android TUN. Quota/IMAP/BODY tests cover
+those individual components separately; they do not yet form the full pipeline.
 
-No source-level unit result proves sustained 100Mbps on Rambler or <=250ms idle
-RTT. Neither threshold has been established for this implementation. The prior
-200+Mbps simulator peak is not used as evidence for it.
+Earlier versions of this component fixture used a zero-I/O in-memory carrier
+loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
+TCP fixture was then substituted. A later diagnostic timeout showed bytes still
+arriving, a full receive buffer, and expiration of an arbitrary five-second
+**total** deadline on a 2–3 MiB byte-integrity transfer. That fixture now enforces
+five seconds **without application-byte progress**. The failed runs are retained
+in the continuation evidence. This is not a transport throughput improvement.
+
+The release contract is unchanged: 250ms light maximum, 2000ms loaded maximum,
+100Mbps useful sustained traffic, fixed 12s/60s measurements, ramp/tail/stall gates,
+legacy OPEN/TLS/HTTP timeouts, zero unexpected TLS failures and zero load-induced
+carrier replacements. Component integrity tests cannot satisfy those gates.
+The source-test host has a two-CPU quota; it is not the eight-core server profile.
+
+## Still required before release
+
+* Authenticated transport bootstrap, OPEN/READY/roster negotiation and target
+  authorization; wire/control exchange for grants, usage, retirement and recovery.
+  The stream adapter currently starts after an externally established OPEN_OK.
+* Bulk physical-body aggregation and service-sized batch selection: the current
+  client publication path carries one logical record per BODY and is not a
+  throughput-qualified batching path.
+* The server-origin publication/client receive half, active carrier selection,
+  controller/receiver-window integration and complete status/NACK recovery.
+* Scoped bidirectional mailbox inventory/discovery, origin/ledger classification,
+  IDLE/DONE or a calibrated alternative, bounded proof-based reclamation and
+  migration/restart reconciliation using original stores and retained debt.
+* Independent provider/client/server processes with calibrated network, command,
+  CPU and disk service; all required socket/account/state/workload/seed cases.
+* Real native TUN/TCP integration, Android validation, 300 cold TLS attempts per
+  primary case, 20 consecutive complete Speedtests, 60s SINGLE/MULTI/duplex checks
+  and soak. Component TLS repetitions are not these primary attempts.
+* Complete quota/crypto/recovery negative matrix and every primary release gate.
+
+No current result proves sustained 100Mbps on Rambler or <=250ms idle application
+RTT. Neither target is established for this implementation. The prior 200+Mbps
+simulator peak is not evidence for it. Android identity remains `org.itom.client`;
+signing material and installed wallet history have not been changed.

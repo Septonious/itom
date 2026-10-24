@@ -6,7 +6,7 @@ import (
 	"itom.local/core/wire"
 )
 
-const SessionMaxPlaintext = (64 << 10) + 34
+const SessionMaxPlaintext = (64 << 10) + 50
 const sessionHeader = 64
 
 // SealSession authenticates a v2 record. Keys and nonce allocation stay inside
@@ -88,4 +88,13 @@ func (e *Epoch) OpenSession(packet []byte) ([]byte, error) {
 	e.rxBytes += n
 	e.replay.commit(counter)
 	return plain, nil
+}
+
+// SessionPacketSize is the exact stored packet length before encryption; it
+// allocates no key state or nonce and conveys no publication permission.
+func SessionPacketSize(plaintextBytes int) (int, error) {
+	if plaintextBytes < 1 || plaintextBytes > SessionMaxPlaintext {
+		return 0, wire.ErrLimit
+	}
+	return sessionHeader + plaintextBytes + wire.TagSize, nil
 }

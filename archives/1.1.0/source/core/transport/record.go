@@ -14,7 +14,7 @@ var ErrCapacity = errors.New("V2_CAPACITY")
 var ErrClosed = errors.New("V2_CLOSED")
 
 const MaxPayload = 64 << 10
-const headerSize = 34
+const headerSize = 50
 const WireVersion = 2
 
 type Kind uint8
@@ -24,25 +24,33 @@ const (
 	Credit
 	Finish
 	Reset
+	Receipt
+	FinishAck
+	ResetAck
 )
 
 type Record struct {
-	Kind       Kind
-	Generation uint64
-	Stream     uint64
-	Offset     uint64
-	Payload    []byte
+	Kind                       Kind
+	Generation                 uint64
+	Stream                     uint64
+	Offset                     uint64
+	Acknowledged, ReceiveLimit uint64
+	Payload                    []byte
 }
 
 func (r Record) valid() bool {
-	if r.Generation == 0 || r.Stream == 0 || len(r.Payload) > MaxPayload {
+	if r.Generation == 0 || r.Stream == 0 || r.Stream > maxStreamID || len(r.Payload) > MaxPayload || r.Acknowledged > maxStreamID || r.ReceiveLimit > maxStreamID {
 		return false
 	}
 	switch r.Kind {
 	case Data:
-		return len(r.Payload) > 0 && r.Offset <= ^uint64(0)-uint64(len(r.Payload))
-	case Credit, Finish, Reset:
-		return len(r.Payload) == 0
+		return len(r.Payload) > 0 && r.Offset <= maxStreamID-uint64(len(r.Payload)) && ((r.ReceiveLimit == 0 && r.Acknowledged == 0) || (r.ReceiveLimit > 0 && r.Acknowledged <= r.ReceiveLimit))
+	case Credit:
+		return len(r.Payload) == 0 && r.Offset <= maxStreamID && r.ReceiveLimit == 0 && r.Acknowledged <= r.Offset
+	case Finish, Receipt, FinishAck:
+		return len(r.Payload) == 0 && r.Offset <= maxStreamID && r.Acknowledged == 0 && r.ReceiveLimit == 0
+	case Reset, ResetAck:
+		return len(r.Payload) == 0 && r.Offset == 0 && r.Acknowledged == 0 && r.ReceiveLimit == 0
 	default:
 		return false
 	}
@@ -57,15 +65,17 @@ func (r Record) MarshalBinary() ([]byte, error) {
 	binary.BigEndian.PutUint64(b[2:10], r.Generation)
 	binary.BigEndian.PutUint64(b[10:18], r.Stream)
 	binary.BigEndian.PutUint64(b[18:26], r.Offset)
-	binary.BigEndian.PutUint64(b[26:34], uint64(len(r.Payload)))
-	copy(b[34:], r.Payload)
+	binary.BigEndian.PutUint64(b[26:34], r.Acknowledged)
+	binary.BigEndian.PutUint64(b[34:42], r.ReceiveLimit)
+	binary.BigEndian.PutUint64(b[42:50], uint64(len(r.Payload)))
+	copy(b[50:], r.Payload)
 	return b, nil
 }
 func DecodeRecord(b []byte) (Record, error) {
-	if len(b) < headerSize || len(b) > headerSize+MaxPayload || b[0] != WireVersion || binary.BigEndian.Uint64(b[26:34]) != uint64(len(b)-headerSize) {
+	if len(b) < headerSize || len(b) > headerSize+MaxPayload || b[0] != WireVersion || binary.BigEndian.Uint64(b[42:50]) != uint64(len(b)-headerSize) {
 		return Record{}, ErrProtocol
 	}
-	r := Record{Kind: Kind(b[1]), Generation: binary.BigEndian.Uint64(b[2:10]), Stream: binary.BigEndian.Uint64(b[10:18]), Offset: binary.BigEndian.Uint64(b[18:26]), Payload: append([]byte(nil), b[34:]...)}
+	r := Record{Kind: Kind(b[1]), Generation: binary.BigEndian.Uint64(b[2:10]), Stream: binary.BigEndian.Uint64(b[10:18]), Offset: binary.BigEndian.Uint64(b[18:26]), Acknowledged: binary.BigEndian.Uint64(b[26:34]), ReceiveLimit: binary.BigEndian.Uint64(b[34:42]), Payload: append([]byte(nil), b[50:]...)}
 	if !r.valid() {
 		return Record{}, ErrProtocol
 	}

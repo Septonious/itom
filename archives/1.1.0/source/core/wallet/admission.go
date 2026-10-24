@@ -100,3 +100,14 @@ func (t *Ticket) Commit(folder string, encrypted, authenticationKey []byte, enco
 	}
 	return t.wallet.spend(t.Key, folder, encrypted, authenticationKey, encodedSize, t.id)
 }
+
+// Identity returns only public durable scope. It allows a new transport to
+// reject a wallet/Noise-session mismatch before it spends any grant or nonce.
+type Identity struct {
+	User           string
+	Store, Session wire.ID
+}
+
+func (w *Wallet) Identity() Identity {
+	return Identity{User: w.user, Store: w.store, Session: w.session}
+}

@@ -2,6 +2,7 @@ package transport_test
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -38,9 +39,16 @@ var certificate = func() (tls.Certificate, *x509.CertPool, error) {
 	return tls.Certificate{Certificate: [][]byte{der}, PrivateKey: key}, roots, nil
 }
 
-func TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor(t *testing.T) {
-	for _, plus := range []bool{false, true} {
-		t.Run(fmt.Sprintf("literal_plus_%t", plus), func(t *testing.T) {
+func TestVerifiedTLSBootstrapNegotiatesLiteralModesAndTheirSizeLimits(t *testing.T) {
+	for _, mode := range []struct {
+		name        string
+		plus, minus bool
+		size        int
+	}{{"synchronizing", false, false, 4}, {"literal_plus", true, false, 4097}, {"literal_minus_small", false, true, 4}, {"literal_minus_boundary", false, true, 4096}, {"literal_minus_large", false, true, 4097}} {
+		plus, minus := mode.plus, mode.minus
+		payload := bytes.Repeat([]byte{'x'}, mode.size)
+		nonSync := plus || minus && mode.size <= 4096
+		t.Run(mode.name, func(t *testing.T) {
 			cert, roots, e := certificate()
 			if e != nil {
 				t.Fatal(e)
@@ -74,6 +82,9 @@ func TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor(t *testin
 				if plus {
 					capability = " LITERAL+"
 				}
+				if minus {
+					capability = " LITERAL-"
+				}
 				fmt.Fprintf(c, "* CAPABILITY IMAP4rev1%s\r\nBOOT2 OK\r\n", capability)
 				line = readLine(t, r)
 				if !strings.Contains(line, " SELECT ") {
@@ -81,8 +92,8 @@ func TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor(t *testin
 				}
 				fmt.Fprint(c, "* 0 EXISTS\r\n* OK [UIDVALIDITY 123] epoch\r\nBOOT3 OK\r\n")
 				line = readLine(t, r)
-				if plus {
-					if !strings.Contains(line, "{4+}") {
+				if nonSync {
+					if !strings.Contains(line, fmt.Sprintf("{%d+}", len(payload))) {
 						t.Error("negotiated LITERAL+ ignored")
 					}
 				} else {
@@ -91,11 +102,11 @@ func TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor(t *testin
 					}
 					fmt.Fprint(c, "+ send\r\n")
 				}
-				b := make([]byte, 6)
+				b := make([]byte, len(payload)+2)
 				if _, e = io.ReadFull(r, b); e != nil {
 					t.Error(e)
 				}
-				if string(b) != "body\r\n" {
+				if !bytes.Equal(b, append(append([]byte(nil), payload...), '\r', '\n')) {
 					t.Error("body corrupted")
 				}
 				fmt.Fprintf(c, "%s OK\r\n", tag(line))
@@ -107,10 +118,10 @@ func TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor(t *testin
 				t.Fatal(e)
 			}
 			defer selected.Executor.Close()
-			if selected.UIDValidity != 123 || selected.LiteralPlus != plus {
+			if selected.UIDValidity != 123 || selected.LiteralPlus != plus || selected.LiteralMinus != minus {
 				t.Fatal("selection metadata lost")
 			}
-			cmd, e := selected.Executor.Append(ctx, "fast", []byte("body"))
+			cmd, e := selected.Executor.Append(ctx, "fast", payload)
 			if e != nil {
 				t.Fatal(e)
 			}

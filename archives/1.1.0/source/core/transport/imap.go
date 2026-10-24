@@ -62,34 +62,35 @@ func DefaultIMAPLimits() IMAPLimits {
 // untagged responses have no command tag. SELECT/EXPUNGE/IDLE are deliberately
 // not issued concurrently; mailbox changes require a new executor.
 type Executor struct {
-	literalPlus bool
-	mailbox     string
-	validity    uint32
-	conn        net.Conn
-	reader      *bufio.Reader
-	limits      IMAPLimits
-	writer      chan struct{}
-	mu          sync.Mutex
-	pending     map[string]*operation
-	sequence    uint64
-	literal     *operation
-	fetch       *operation
-	closed      error
-	done        chan struct{}
-	changes     chan struct{}
+	literalPlus  bool
+	literalMinus bool
+	mailbox      string
+	validity     uint32
+	conn         net.Conn
+	reader       *bufio.Reader
+	limits       IMAPLimits
+	writer       chan struct{}
+	mu           sync.Mutex
+	pending      map[string]*operation
+	sequence     uint64
+	literal      *operation
+	fetch        *operation
+	closed       error
+	done         chan struct{}
+	changes      chan struct{}
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
 // The bootstrap owner must hand over the reader too, including buffered bytes.
 // No caller may continue reading/writing the connection after this transfer.
 func NewSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits) (*Executor, error) {
-	return newSelectedExecutor(conn, reader, l, "", 0, false)
+	return newSelectedExecutor(conn, reader, l, "", 0, false, false)
 }
-func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mailbox string, validity uint32, plus bool) (*Executor, error) {
+func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mailbox string, validity uint32, plus, minus bool) (*Executor, error) {
 	if conn == nil || reader == nil || l.Pending < 2 || l.Pending > 128 || l.LineBytes < 128 || l.LineBytes > 64<<10 || l.LiteralBytes < 1 || l.LiteralBytes > 2<<20 || l.ResponseBytes < l.LiteralBytes || l.ResponseBytes > 8<<20 || l.ProgressTimeout <= 0 {
 		return nil, ErrCapacity
 	}
-	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1)}
+	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1)}
 	go e.readLoop()
 	return e, nil
 }
@@ -211,20 +212,23 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 	if err = ctx.Err(); err != nil {
 		return nil, err
 	}
-	tag, op, err := e.begin(false, !e.literalPlus)
+	// RFC 7888 LITERAL- permits non-synchronizing literals up to 4096
+	// wire bytes. Larger bodies retain the legal synchronizing barrier.
+	nonSync := e.literalPlus || e.literalMinus && len(body) <= 4096
+	tag, op, err := e.begin(false, !nonSync)
 	if err != nil {
 		return nil, err
 	}
 	cmd := &Command{op}
 	literalCount := fmt.Sprintf("{%d}", len(body))
-	if e.literalPlus {
+	if nonSync {
 		literalCount = fmt.Sprintf("{%d+}", len(body))
 	}
 	if err = e.write([]byte(fmt.Sprintf("%s APPEND %s %s\r\n", tag, name, literalCount))); err != nil {
 		e.fail(ErrUnknown)
 		return cmd, ErrUnknown
 	}
-	if !e.literalPlus {
+	if !nonSync {
 		select {
 		case <-op.continuation:
 		case <-op.done:

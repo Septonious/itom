@@ -34,11 +34,11 @@ func TestSmallRequestIsImmediatelyEligibleWhileBulkIsQueued(t *testing.T) {
 	if e := s.Queue(2, []byte("first TLS record"), now); e != nil {
 		t.Fatal(e)
 	}
-	r, ok := s.Next(transport.Fast, 64<<10)
+	r, ok := next(t, s, transport.Fast, 64<<10)
 	if !ok || r.Stream != 2 || string(r.Payload) != "first TLS record" {
 		t.Fatalf("interactive request was delayed: %+v", r)
 	}
-	r, ok = s.Next(transport.Bulk, 64<<10)
+	r, ok = next(t, s, transport.Bulk, 64<<10)
 	if !ok || r.Stream != 1 || len(r.Payload) != 64<<10 {
 		t.Fatalf("bulk service lost: %+v", r)
 	}
@@ -46,28 +46,30 @@ func TestSmallRequestIsImmediatelyEligibleWhileBulkIsQueued(t *testing.T) {
 func TestFragmentedBulkCannotKeepFastPriorityButLaterRequestCan(t *testing.T) {
 	s := session(t, transport.DefaultLimits())
 	add(t, s, 1, 8<<20, 8<<20)
-	now := time.Now()
-	for i := 0; i < 16; i++ {
+	// Symbolic policy time keeps this classification assertion independent
+	// of the host CPU schedule. Application/TCP deadlines use real clocks.
+	now := time.Now().Add(time.Hour)
+	for i := 0; i < transport.DefaultLimits().InteractiveBytes/1024; i++ {
 		if e := s.Queue(1, make([]byte, 1024), now); e != nil {
 			t.Fatal(e)
 		}
-		if _, ok := s.Next(transport.Fast, 1024); !ok {
+		if _, ok := next(t, s, transport.Fast, 1024); !ok {
 			t.Fatal("short initial burst blocked")
 		}
 	}
-	if e := s.Queue(1, []byte("bulk"), now); e != nil {
+	if e := s.Queue(1, make([]byte, 1024), now); e != nil {
 		t.Fatal(e)
 	}
-	if _, ok := s.Next(transport.Fast, 1024); ok {
+	if _, ok := next(t, s, transport.Fast, 1024); ok {
 		t.Fatal("fragmented bulk monopolized fast")
 	}
-	if _, ok := s.Next(transport.Bulk, 1024); !ok {
+	if _, ok := next(t, s, transport.Bulk, 1024); !ok {
 		t.Fatal("bulk not eligible")
 	}
 	if e := s.Queue(1, []byte("new request"), now.Add(2*time.Second)); e != nil {
 		t.Fatal(e)
 	}
-	if _, ok := s.Next(transport.Fast, 1024); !ok {
+	if _, ok := next(t, s, transport.Fast, 1024); !ok {
 		t.Fatal("established flow permanently stuck as bulk")
 	}
 }
@@ -90,8 +92,8 @@ func TestReorderedDeliveryAndHalfClosePreserveEveryByte(t *testing.T) {
 	if _, e = s.Read(1, b); e != io.EOF {
 		t.Fatal("half close lost", e)
 	}
-	r, ok := s.Next(transport.Fast, 64)
-	if !ok || r.Kind != transport.Credit || r.Offset != 1<<20+6 {
+	r, ok := next(t, s, transport.Fast, 64)
+	if !ok || r.Kind != transport.Credit || r.Offset != 1<<20+6 || r.Acknowledged != 6 {
 		t.Fatal("consumed credit missing", r)
 	}
 }
@@ -174,4 +176,18 @@ func TestUnloadedPathChangeCanRefreshPropagationWithoutLosingBandwidth(t *testin
 	if after := m.Window(1<<20, 8<<20); after <= initial {
 		t.Fatal("old path minimum starved the new path", initial, after)
 	}
+}
+
+// Unit-only handoff helper: no provider throughput or delivery is inferred.
+func next(t *testing.T, s *transport.Session, plane transport.Plane, max int) (transport.Record, bool) {
+	t.Helper()
+	d, ok := s.Take(plane, max)
+	if !ok {
+		return transport.Record{}, false
+	}
+	r := d.Record
+	if err := d.Complete(transport.Accepted); err != nil {
+		t.Fatal(err)
+	}
+	return r, true
 }

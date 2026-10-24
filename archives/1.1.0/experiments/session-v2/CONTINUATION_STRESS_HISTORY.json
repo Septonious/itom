@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "scope": "component integrity fixtures, not primary performance qualification",
+  "failed_attempts_retained": [
+    {
+      "test": "TestFullDuplexApplicationBytesAndFINAcrossIndependentPlanes",
+      "elapsed_seconds": 10.65,
+      "output": [
+        "=== RUN   TestFullDuplexApplicationBytesAndFINAcrossIndependentPlanes",
+        "    session_network_test.go:200: i/o timeout",
+        "    session_network_test.go:206: download corrupted 2624 i/o timeout",
+        "--- FAIL: TestFullDuplexApplicationBytesAndFINAcrossIndependentPlanes (10.65s)"
+      ]
+    }
+  ],
+  "initial_fixture": "zero-I/O direct in-memory record delivery",
+  "initial_mixed_cohort": {
+    "top_level_passes": 79,
+    "top_level_failures": 1,
+    "source_log_sha256": "95e4c27a3f0ed344acc4d33e92642c5c6639ff72f8dcc55751bb27e76b91e0cd"
+  },
+  "followup_before_fixture_replacement": {
+    "isolated_duplex_repetitions": 100,
+    "result": "all pass",
+    "elapsed_seconds": 120.715,
+    "concurrent_duplex_repetitions_per_process": 10,
+    "processes": 2,
+    "results": "both pass with concurrent fuzzing",
+    "original_mixed_cases_repeated": 80
+  },
+  "tcp_fixture_diagnostic_total_deadline_failure": {
+    "test": "TestFullDuplexApplicationBytesAndFINAcrossIndependentPlanes",
+    "elapsed_seconds": 5.18,
+    "error": "i/o timeout",
+    "download_bytes_consumed": 2596864,
+    "download_bytes_received": 2859008,
+    "unread_receive_bytes": 262144,
+    "total_limit_seconds": 5,
+    "interpretation": "total byte-integrity deadline expired with more bytes available; not a proven lack-of-progress stall"
+  },
+  "fixture_corrections": [
+    "replace direct zero-I/O record delivery with distinct fast/bulk OS TCP sockets",
+    "bound byte-integrity reads by five seconds without positive application-byte progress; retain overall test-run timeout"
+  ],
+  "qualification_thresholds_changed": false,
+  "qualification_scope_note": "Fixed 12s/60s useful-throughput, 250ms/2000ms RTT, ramp/tail and stall thresholds are unchanged and cannot be met by the component fixture."
+}
