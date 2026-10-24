@@ -60,14 +60,15 @@ func serverInboxDecoder(receivers ...*RemoteReceiver) (scopedInboxDecoder, error
 			return nil, ErrProtocol
 		}
 		if envelope.class == 0 {
-			if !available.allows(r.class) {
-				return nil, &inboxDeferred{class: r.class}
+			admit, progressOnly, err := peerInboxAdmission(r.session, r.class, available)
+			if err != nil {
+				return nil, err
 			}
-			delivery, err := r.receiveEnvelope(validity, physical.UID, envelope)
+			delivery, err := r.receiveAdmittedEnvelope(validity, physical.UID, envelope, admit)
 			if delivery == nil {
 				return nil, err
 			}
-			return classifyDelivery(delivery, r.class, err)
+			return classifyDelivery(delivery, r.class, progressOnly, err)
 		}
 		expected := wire.ServerData
 		if r.class == ControlLedger {

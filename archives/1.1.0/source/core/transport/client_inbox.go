@@ -65,13 +65,14 @@ func clientInboxDecoder(receivers ...*ClientReceiver) (scopedInboxDecoder, error
 		if envelope.class != expected {
 			return nil, ErrProtocol
 		}
-		if !available.allows(r.class) {
-			return nil, &inboxDeferred{class: r.class}
+		admit, progressOnly, err := peerInboxAdmission(r.session, r.class, available)
+		if err != nil {
+			return nil, err
 		}
-		delivery, err := r.receiveEnvelope(validity, physical.UID, envelope)
+		delivery, err := r.receiveAdmittedEnvelope(validity, physical.UID, envelope, admit)
 		if delivery == nil {
 			return nil, err
 		}
-		return classifyDelivery(delivery, r.class, err)
+		return classifyDelivery(delivery, r.class, progressOnly, err)
 	}, nil
 }

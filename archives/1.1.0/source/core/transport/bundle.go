@@ -82,6 +82,12 @@ func (c *Cipher) OpenRecordsFor(body []byte, class LedgerClass) ([]Record, error
 	return c.openRecordsFor(body, class, 0)
 }
 func (c *Cipher) openRecordsFor(body []byte, class LedgerClass, expectedGeneration uint64) (records []Record, err error) {
+	return c.openRecordsAdmitted(body, class, expectedGeneration, nil)
+}
+
+// admit is a pure, nonblocking semantic admission check. Rejection consumes
+// original cryptographic usage but never commits replay or exposes plaintext.
+func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGeneration uint64, admit func([]Record) error) (records []Record, err error) {
 	if class > ControlLedger {
 		return nil, ErrProtocol
 	}
@@ -109,6 +115,9 @@ func (c *Cipher) openRecordsFor(body []byte, class LedgerClass, expectedGenerati
 			}
 			generation = r.Generation
 			records = append(records, r)
+		}
+		if admit != nil {
+			return admit(records)
 		}
 		return nil
 	})

@@ -19,7 +19,7 @@ func (f InboxAction) Apply() error { return f() }
 
 type InboxDecoder func(validity uint32, body Body) (InboxDelivery, error)
 
-type inboxAdmission struct{ data, control bool }
+type inboxAdmission struct{ data, control, progress bool }
 
 func (a inboxAdmission) allows(class LedgerClass) bool {
 	return class == DataLedger && a.data || class == ControlLedger && a.control
@@ -28,7 +28,8 @@ func (a inboxAdmission) allows(class LedgerClass) bool {
 type scopedInboxDecoder func(uint32, Body, inboxAdmission) (InboxDelivery, error)
 type ledgerDelivery struct {
 	InboxDelivery
-	class LedgerClass
+	class    LedgerClass
+	progress bool
 }
 
 func deliveryClass(d InboxDelivery) LedgerClass {
@@ -37,15 +38,15 @@ func deliveryClass(d InboxDelivery) LedgerClass {
 	}
 	return DataLedger
 }
-func classifyDelivery(d InboxDelivery, class LedgerClass, err error) (InboxDelivery, error) {
+func classifyDelivery(d InboxDelivery, class LedgerClass, progress bool, err error) (InboxDelivery, error) {
 	if d == nil {
 		return nil, err
 	}
-	return &ledgerDelivery{InboxDelivery: d, class: class}, err
+	return &ledgerDelivery{InboxDelivery: d, class: class, progress: progress}, err
 }
 func standaloneInboxDecoder(decode scopedInboxDecoder) InboxDecoder {
 	return func(validity uint32, body Body) (InboxDelivery, error) {
-		delivery, err := decode(validity, body, inboxAdmission{true, true})
+		delivery, err := decode(validity, body, inboxAdmission{data: true, control: true})
 		// Preserve the standalone decoder API; a generic Inbox has one shared
 		// delivery bound. Only the scoped factories install ledger admission.
 		if tagged, ok := delivery.(*ledgerDelivery); ok {
@@ -55,7 +56,10 @@ func standaloneInboxDecoder(decode scopedInboxDecoder) InboxDecoder {
 	}
 }
 
-type inboxDeferred struct{ class LedgerClass }
+type inboxDeferred struct {
+	class     LedgerClass
+	transient bool
+}
 
 func (e *inboxDeferred) Error() string { return ErrCapacity.Error() }
 func (e *inboxDeferred) Unwrap() error { return ErrCapacity }
@@ -85,15 +89,17 @@ type InboxScope struct {
 // make it advance past an unseen body. FETCH is one BODY per command: a burst
 // cannot overflow the unchanged response budget and force a healthy reconnect.
 type Inbox struct {
-	mu       sync.Mutex
-	executor *Executor
-	scope    InboxScope
-	limits   InboxLimits
-	decode   InboxDecoder
-	admit    scopedInboxDecoder
-	seen     map[uint32]bool
-	pending  map[uint32]InboxDelivery
-	deferred map[uint32]LedgerClass
+	mu                  sync.Mutex
+	executor            *Executor
+	scope               InboxScope
+	limits              InboxLimits
+	decode              InboxDecoder
+	admit               scopedInboxDecoder
+	seen                map[uint32]bool
+	pending             map[uint32]InboxDelivery
+	deferred            map[uint32]LedgerClass
+	examined            map[uint32]bool
+	continuing, forward bool
 }
 type InboxProgress struct {
 	Observed, Applied, Deferred int
@@ -104,7 +110,7 @@ func NewInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode I
 	if executor == nil || scope.Account == "" || scope.Account != executor.account || scope.Folder != executor.mailbox || scope.UIDValidity == 0 || scope.UIDValidity != executor.validity || limits.KnownUIDs < 1 || limits.KnownUIDs > 65536 || limits.PendingDeliveries < 1 || limits.PendingDeliveries > 32 || limits.PendingControls < 1 || limits.PendingControls > 32 || decode == nil {
 		return nil, ErrProtocol
 	}
-	return &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass)}, nil
+	return &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass), examined: make(map[uint32]bool)}, nil
 }
 
 func newScopedInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode scopedInboxDecoder) (*Inbox, error) {
@@ -128,7 +134,7 @@ func (i *Inbox) admission() inboxAdmission {
 			data++
 		}
 	}
-	return inboxAdmission{data: data < i.limits.PendingDeliveries, control: i.admit != nil && control < i.limits.PendingControls}
+	return inboxAdmission{data: data < i.limits.PendingDeliveries, control: i.admit != nil && control < i.limits.PendingControls, progress: i.admit != nil}
 }
 
 func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
@@ -164,6 +170,16 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 			delete(i.deferred, uid)
 		}
 	}
+	if !i.continuing {
+		clear(i.examined)
+		i.forward = false
+	}
+	i.continuing = false
+	for uid := range i.examined {
+		if !present[uid] {
+			delete(i.examined, uid)
+		}
+	}
 	// A decoded body can be consumed even if another worker already removed its
 	// physical mail. It is retained here, not decrypted/replayed a second time.
 	pendingUIDs := make([]uint32, 0, len(i.pending))
@@ -197,7 +213,7 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 		for low, high := 0, len(uids)-1; low <= high; {
 			available := i.admission()
 			var uid uint32
-			if !available.data && available.control {
+			if !available.data && available.control && !i.forward {
 				uid = uids[high]
 				high--
 			} else {
@@ -207,7 +223,10 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 			if i.seen[uid] || i.pending[uid] != nil {
 				continue
 			}
-			if !available.data && !available.control {
+			if i.examined[uid] {
+				continue
+			}
+			if !available.data && !available.control && !available.progress {
 				progress.Deferred++
 				continue
 			}
@@ -218,10 +237,12 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 			if i.admit != nil && (!available.data || !available.control) {
 				if blockedProbes == maxBlockedInboxProbes {
 					progress.More = true
+					i.continuing = true
 					return progress, nil
 				}
 				blockedProbes++
 			}
+			i.examined[uid] = true
 			fetch, err := i.executor.Fetch(ctx, uid, uid)
 			if err != nil {
 				return progress, err
@@ -243,8 +264,11 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 				delivery, err = i.decode(i.scope.UIDValidity, bodies[0])
 			}
 			if errors.Is(err, journal.ErrOrder) || errors.Is(err, ErrCapacity) {
+				if errors.Is(err, journal.ErrOrder) {
+					i.forward = true
+				}
 				var blocked *inboxDeferred
-				if errors.As(err, &blocked) {
+				if errors.As(err, &blocked) && !blocked.transient {
 					i.deferred[uid] = blocked.class
 				}
 				progress.Deferred++
@@ -260,10 +284,19 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 			}
 			delete(i.deferred, uid)
 			if delivery != nil {
-				if !available.allows(deliveryClass(delivery)) {
+				progressOnly := false
+				if tagged, ok := delivery.(*ledgerDelivery); ok {
+					progressOnly = tagged.progress
+				}
+				if progressOnly && (!available.progress || deliveryClass(delivery) != ControlLedger) || !progressOnly && !available.allows(deliveryClass(delivery)) {
 					return progress, ErrProtocol
 				}
 				if err = delivery.Apply(); errors.Is(err, ErrCapacity) {
+					// Progress-only records were admitted precisely because they
+					// cannot allocate receiver capacity. Never overrun either queue.
+					if progressOnly {
+						return progress, ErrProtocol
+					}
 					i.pending[uid] = delivery
 					progress.Deferred++
 					continue
@@ -278,6 +311,7 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 		if !advanced {
 			break
 		}
+		clear(i.examined)
 	}
 	return progress, nil
 }

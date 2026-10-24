@@ -55,6 +55,10 @@ func (r *RemoteReceiver) Decode(validity, uid uint32, raw []byte) (*StoredDelive
 }
 
 func (r *RemoteReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxEnvelope) (*StoredDelivery, error) {
+	return r.receiveAdmittedEnvelope(validity, uid, envelope, nil)
+}
+
+func (r *RemoteReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope mailboxEnvelope, admit func([]Record) error) (*StoredDelivery, error) {
 	if validity != r.validity || uid == 0 || envelope.class != 0 {
 		return nil, ErrProtocol
 	}
@@ -70,7 +74,7 @@ func (r *RemoteReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxE
 	if err != nil {
 		return nil, err
 	}
-	records, err := r.cipher.openRecordsFor(envelope.packet, r.class, r.session.generation)
+	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, admit)
 	if err != nil {
 		return nil, err
 	}

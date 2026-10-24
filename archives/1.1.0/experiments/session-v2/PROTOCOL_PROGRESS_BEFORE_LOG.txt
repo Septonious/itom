@@ -1,0 +1,9 @@
+=== RUN   TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream
+    inbox_pressure_test.go:66: blocked protocol deliveries hid freeing RESET {1 0 3 false} {1 0 0 0 1048576 0 1048576 0 0 0 0 0 0 false false false false false false false} {1 0 0 0 0 1048576 false}
+--- FAIL: TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream (0.04s)
+=== RUN   TestBoundedProbeContinuationFindsMissingOrdinalInsteadOfRepeatingNewestUIDs
+    inbox_pressure_test.go:136: probe continuation never reached missing oldest ordinal {1 20 0 20 0 1048576 false}
+--- FAIL: TestBoundedProbeContinuationFindsMissingOrdinalInsteadOfRepeatingNewestUIDs (0.25s)
+FAIL
+FAIL	itom.local/core/transport	0.319s
+FAIL

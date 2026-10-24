@@ -118,6 +118,14 @@ mandatory independently of that implementation.
   BODY reads while blocked; bounded probes and explicit More work prevent an
   entire backlog from monopolizing one sweep. These memory/work bounds do not
   borrow protocol quota or change physical envelope ceilings.
+* Capacity-free protocol updates can now pass a full protocol delivery queue.
+  A pure pre-replay admission check permits receipts and resets of existing
+  streams, while deferring OPEN and unknown early RESET which may need memory.
+  It never allocates extra queue slots; original crypto byte/failure limits still
+  apply even to rejected admission. A deferred OPEN retains replay eligibility
+  and its original physical debt. Bounded probe continuations retain examined
+  UIDs and switch to prefix order on dependency gaps instead of repeating the
+  newest unresolved ordinals indefinitely.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -185,6 +193,9 @@ The [inbox pressure regression](experiments/session-v2/INBOX_PRESSURE_CHECK_RESU
 retains a failing pre-fix queue-pressure run and the passing accounted receipt
 path. Queue pressure is injected to isolate admission from receiver-credit
 invariants; this is not a field performance reproduction or rate qualification.
+The [protocol progress continuation](experiments/session-v2/PROTOCOL_PROGRESS_CHECK_RESULTS.json)
+retains failing RESET/dependency reproducers and checks deferred OPEN replay,
+physical debt and bounded continuation progress after the fixes.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -222,8 +233,9 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
   reclamation and migration/restart reconciliation using original stores and
   retained debt. The bounded serialized Inbox is not yet a complete concurrent
   mailbox service. DATA pressure no longer consumes protocol delivery slots;
-  progress when protocol admission itself is exhausted, coordinator fairness and
-  complete memory/service behavior still need integration and qualification.
+  capacity-free protocol progress now bypasses exhausted protocol slots too.
+  Multi-account fairness/liveness and complete memory/service behavior still
+  need integration and qualification with the coordinator and recovery paths.
 * Independent provider/client/server processes with calibrated network, command,
   CPU and disk service; all required socket/account/state/workload/seed cases.
 * Real native TUN/TCP integration, Android validation, 300 cold TLS attempts per

@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T13:17:41.277366+00:00",
+  "parent_commit": "9d9dc58ea8e5b68769fc347e80692b1077e395a5",
+  "status": "unqualified source/component checkpoint; startup and packaging guards unchanged",
+  "checks": [
+    {
+      "file": "PROTOCOL_PROGRESS_BEFORE_LOG.txt",
+      "raw_sha256": "81dcbf848c04f53a5087ed1323a9d6db390009f22b1a225ec493ca894812336e",
+      "normalized_sha256": "81dcbf848c04f53a5087ed1323a9d6db390009f22b1a225ec493ca894812336e"
+    },
+    {
+      "file": "PROTOCOL_PROGRESS_TARGETED_LOG.txt",
+      "raw_sha256": "1dbd1baa2976ddacc24592cf0e7c75491c2d8f909fe7cba1677bb56bab2a3a59",
+      "normalized_sha256": "1dbd1baa2976ddacc24592cf0e7c75491c2d8f909fe7cba1677bb56bab2a3a59"
+    },
+    {
+      "file": "PROTOCOL_PROGRESS_CORE_RACE.jsonl",
+      "raw_sha256": "532768be569962d3d18392cae11efb79648d7f5f79a5a4668fddc4b900a7f640",
+      "normalized_sha256": "532768be569962d3d18392cae11efb79648d7f5f79a5a4668fddc4b900a7f640",
+      "top_level_group_executions": 111,
+      "failures": []
+    },
+    {
+      "file": "PROTOCOL_PROGRESS_NATIVE_RACE.jsonl",
+      "raw_sha256": "515510c95784deba96b13fa190ac13693662ded5bfa15bbd8f2d5f35b45f12aa",
+      "normalized_sha256": "515510c95784deba96b13fa190ac13693662ded5bfa15bbd8f2d5f35b45f12aa",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "PROTOCOL_PROGRESS_REPEATED.jsonl",
+      "raw_sha256": "530bc39576e4b726ab8e7529bbdcb14dd693557cc91da05e6eebc45d1a9f45d4",
+      "normalized_sha256": "530bc39576e4b726ab8e7529bbdcb14dd693557cc91da05e6eebc45d1a9f45d4",
+      "top_level_group_executions": 25,
+      "failures": []
+    },
+    {
+      "file": "PROTOCOL_PROGRESS_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go vet ./... (core)",
+    "go test -race -json ./transport -run <5 exhausted-protocol/dependency/deferred-OPEN/cold-IMAP groups> -count=5 -timeout=90s"
+  ],
+  "regressions_before": [
+    "Two blocked protocol deliveries hid a later RESET of an existing stream, retaining its receiver reservation.",
+    "Bounded probe continuation repeatedly revisited the newest unresolved ordinals and never reached the missing prefix. Both failing reproducers are retained."
+  ],
+  "implemented": [
+    "Pure pre-replay semantic admission permits capacity-free protocol progress through full delivery queues, without adding queue slots or borrowing quota.",
+    "Existing-stream identity snapshot is captured outside the crypto receive lock. OPEN and unknown early RESET defer; no session lock, I/O or mutation runs inside the AEAD validator.",
+    "Rejected semantic admission retains replay eligibility while charging original cryptographic usage ceilings. Full physical accounting and peer scope/ledger/generation checks remain mandatory.",
+    "Continuation retains examined UIDs across bounded More batches, and ordinal gaps switch to prefix order. It does not endlessly retry the same newest BODYs."
+  ],
+  "checks_specific": [
+    "RESET of an existing stream releases receiver reservation through real accounted TLS/IMAP while protocol slots are full.",
+    "Authenticated peer receipt passes full DATA or full protocol delivery queues without physical refund.",
+    "An authenticated OPEN deferred at protocol admission can be delivered after capacity returns, with original physical observation/debt retained and no replay loss.",
+    "Twenty ordered grant-prefix dependencies complete in <=24 BODY FETCHes, rather than repeating newest unresolved UIDs."
+  ],
+  "limits": [
+    "Queue pressure is injected in component tests; no raw field/provider timing reproduction claimed.",
+    "Noise/grants pre-established; one-account in-process pump; no calibrated provider service or cross-account fairness proof.",
+    "Adaptive measured-service coordinator, control bootstrap/grant exchange, reclamation/recovery and Android qualification still incomplete.",
+    "No sustained 100Mbps or required idle/loaded RTT proof; no package."
+  ],
+  "source_manifest_file": "PROTOCOL_PROGRESS_SOURCE_MANIFEST.json"
+}

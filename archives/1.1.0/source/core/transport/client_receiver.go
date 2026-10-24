@@ -57,6 +57,10 @@ func (r *ClientReceiver) Decode(validity, uid uint32, raw []byte) (*ClientDelive
 }
 
 func (r *ClientReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxEnvelope) (*ClientDelivery, error) {
+	return r.receiveAdmittedEnvelope(validity, uid, envelope, nil)
+}
+
+func (r *ClientReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope mailboxEnvelope, admit func([]Record) error) (*ClientDelivery, error) {
 	if validity != r.origin.UIDValidity || uid == 0 {
 		return nil, ErrProtocol
 	}
@@ -68,7 +72,7 @@ func (r *ClientReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxE
 	if envelope.class != expectedClass || usage.Attempt == nil || usage.Key.Store != r.origin.Store || usage.Key.Epoch != r.origin.Run || usage.Key.Account != r.origin.Account || usage.Key.User != r.origin.User || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.origin.Folder {
 		return nil, ErrProtocol
 	}
-	records, err := r.cipher.openRecordsFor(envelope.packet, r.class, r.session.generation)
+	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, admit)
 	if err != nil {
 		return nil, err
 	}
