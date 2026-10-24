@@ -1,0 +1,246 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T09:50:39.422153+00:00",
+  "status": "source/component checkpoint; production startup and packaging remain disabled",
+  "parent_commit": "044f980ee8518900ddd3edb6e0d69a4ea07812bf",
+  "branch": "codex/v1.1.0-session-transport-v2",
+  "source_manifest_canonical_sha256": "7c1fac5718a2b237b44f820663d933c4f86aaa6b8f491574e1542b748f834212",
+  "source_manifest_note": "Manifest describes final checked source. Earlier development logs precede the final added remote-origin negative assertion and/or fixture expectation correction.",
+  "toolchain": "go version go1.27.1 linux/amd64",
+  "cpu_quota": "2 CPUs (200000/100000); no eight-core server calibration claimed",
+  "implemented": [
+    "Durable local server tickets fit BOTH account and protected-user availability, including retained remote reservations; no quota ceiling or fsync reduction.",
+    "Local body intent and unused grant close commit atomically before I/O; ambiguous commit returns no writer permission and retains conservative debt.",
+    "Server-origin DATA/protocol bodies have independent magic and MAC domains, with the same bounded geometry. Original client body format/domain remains unchanged.",
+    "Client reception pins issuer store/run, account/user/folder/UIDVALIDITY, Noise session and record generation; server descriptors cannot register as remote client grant usage.",
+    "Server outcomes and exact trusted own-FETCH storage proof update the journal. Neither peer receipt nor physical reclamation follows from self-observation.",
+    "Prepared publication and stored-proof calls require a profile-account-bound selected executor. Wrong/unbound account or plane rejects before IMAP I/O, without a second spend."
+  ],
+  "checks": [
+    {
+      "module": "core",
+      "command": "go test -race -count=1 -json ./...",
+      "exit_code": 0,
+      "top_level_groups_including_fuzz_seeds": 86,
+      "groups": [
+        "itom.local/core/journal:TestLocalTicketIOFailuresNeverReturnWriterPermissionAndRetainCommittedDebt",
+        "itom.local/core/journal:TestAtomicBodyReceiptSurvivesLostCommitAcknowledgmentAndRollsBackPrecommitFailure",
+        "itom.local/core/journal:TestLocalAdmissionCannotBorrowRetainedRemoteReservationOrRefundStartedBody",
+        "itom.local/core/journal:TestLocalTicketHasOneWriterAndCanceledUnusedTicketCannotCommit",
+        "itom.local/core/secure:TestRejectedBatchChargesDecryptUsageWithoutCommittingReplay",
+        "itom.local/core/journal:TestLostAppendReplyRemainsChargedAcrossRestartAndInventory",
+        "itom.local/core/secure:TestBatchHardByteCeilingCannotPartiallyCommitReplay",
+        "itom.local/core/journal:TestUnownedBodyOrChangedUIDValidityCannotAuthorizeRefund",
+        "itom.local/core/secure:TestBatchRetainsOriginalAuthenticationFailureCeiling",
+        "itom.local/core/secure:TestConcurrentPublishersCannotReuseANonceOrAcceptReplay",
+        "itom.local/core/journal:TestReceivedBodyRegistrationAndObservationHaveOneDurableCommit",
+        "itom.local/core/qualification:TestUsefulReceiverEvidenceMustSustainTheThreshold",
+        "itom.local/core/qualification:TestAPeakAbove200MbpsCannotHidePoorMeanOrTail",
+        "itom.local/core/qualification:TestFastOverallMeanCannotHideHalfSecondStalls",
+        "itom.local/core/secure:TestTamperedPacketDoesNotPoisonAuthenticDelivery",
+        "itom.local/core/qualification:TestWarmFastTailCannotHideSlowStartup",
+        "itom.local/core/qualification:TestAOneMillisecondLowWindowCannotBeHiddenBetweenSampleTicks",
+        "itom.local/core/qualification:TestIdleMaximumCannotBecomeAPercentile",
+        "itom.local/core/qualification:TestMissingOrOutOfOrderRawEvidenceFails",
+        "itom.local/core/journal:TestBadStoredBodyProofRollsBackRegistrationAndCannotPoisonLaterDelivery",
+        "itom.local/core/wallet:TestConcurrentAdmissionNeverPromisesTheSameLastGrantSpace",
+        "itom.local/core/wallet:TestOneTicketCannotPublishTwoBodiesEvenWithConcurrentCommit",
+        "itom.local/core/wallet:TestMissingHistoryCannotProduceZeroSpendProofAfterReinstall",
+        "itom.local/core/wallet:TestAdmissionSelectsConcreteRemainingAllowanceWithoutFencing",
+        "itom.local/core/transport:TestVerifiedTLSBootstrapNegotiatesLiteralModesAndTheirSizeLimits",
+        "itom.local/core/transport:TestTLSVerificationCannotBeDisabledByEndpointConfiguration",
+        "itom.local/core/wire:TestAdmissionSizeMatchesActualAuthenticatedEnvelopeAndCanonicalMIME",
+        "itom.local/core/wire:TestServerBodiesAuthenticateOriginLedgerAndExactPhysicalCharge",
+        "itom.local/core/wire:FuzzAuthenticatedServerEnvelopeMetadataIsCanonicalAndBounded",
+        "itom.local/core/transport:TestBulkApplicationBytesCrossTLSAppendFetchAndDurableAccounting",
+        "itom.local/core/transport:TestBulkPublicationCombinesReadyRecordsUnderOnePhysicalOrdinal",
+        "itom.local/core/transport:TestBulkBatchNeverWaitsToFillOrConsumesShortFastWork",
+        "itom.local/core/transport:TestBatchUsesExactPartiallyAvailableGrantWithoutFencingIt",
+        "itom.local/core/transport:TestClosingOneFlowInsideBatchCannotResetOrDropAnotherFlow",
+        "itom.local/core/transport:TestBulkDispatchRetryIsBoundedAndUnknownCannotBeRequeued",
+        "itom.local/core/transport:TestLostBulkAppendReplyRetainsEveryRecordUntilExactScopedProof",
+        "itom.local/core/transport:TestCanceledUnstartedBulkAppendReusesOneExactBodyAndOneSpend",
+        "itom.local/core/transport:TestFailedBatchAuthenticationDoesNotConsumeEarlierRecordReplayCounters",
+        "itom.local/core/transport:TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters",
+        "itom.local/core/transport:TestMalformedContainerIsBoundedAndSingleRecordAPIRejectsContainers",
+        "itom.local/core/transport:TestNewProtocolHasIndependentKeysAndAuthenticatesFullSizeRecords",
+        "itom.local/core/transport:TestDuplexTLSIMAPKeepsOriginsLedgersAndPeerReceiptsIndependent",
+        "itom.local/core/transport:TestAppendAndFetchCompleteIndependentlyOnOneSocket",
+        "itom.local/core/transport:TestCanceledApplicationDoesNotBreakStartedLiteralOrSharedConnection",
+        "itom.local/core/transport:TestRefusalBeforeLiteralDoesNotDeadlockTheWriter",
+        "itom.local/core/transport:TestUnknownAppendIsNotReclassifiedAsRetryableRefusal",
+        "itom.local/core/transport:TestOversizedLiteralFailsBeforeReadingItsPayload",
+        "itom.local/core/transport:TestUnrequestedUIDCannotBeDeliveredByAConcurrentFetch",
+        "itom.local/core/transport:TestFlagsOnlyFetchDoesNotKillOrCompleteTheBodyCommand",
+        "itom.local/core/transport:TestCanceledQueuedCommandDoesNotWaitForAnotherLiteralBarrier",
+        "itom.local/core/transport:TestProviderAcceptanceDoesNotReleaseUnreceivedSendMemory",
+        "itom.local/core/transport:TestUnstartedPublicationRequeuesImmutableBytesWithinNewAdmissionLimit",
+        "itom.local/core/transport:TestUncertainPublicationCannotBecomeAnAutomaticPhysicalRetry",
+        "itom.local/core/transport:TestStreamCloseUnblocksBothDirectionsWithoutAffectingAnotherStream",
+        "itom.local/core/transport:TestReadDeadlineCanBeUpdatedAndClearedWithoutKillingSession",
+        "itom.local/core/transport:TestFINCannotOvertakeUndeliveredBulkBytes",
+        "itom.local/core/transport:TestThousandsOfShortConnectionsRetireWithoutReusingIDsOrLeakingSlots",
+        "itom.local/core/transport:TestUncertainBulkCannotConsumeReservedProtocolDispatchSlots",
+        "itom.local/core/transport:TestSmallReplyCarriesCumulativeReceiptAndCreditWithoutAnotherPhysicalControl",
+        "itom.local/core/transport:TestContinuousLightRequestsDoNotBecomePermanentlyBulk",
+        "itom.local/core/transport:TestAggregateFastBudgetCannotBeMultipliedByOpeningMoreFlows",
+        "itom.local/core/transport:TestPreparedPublicationRequiresBoundAccountAndPlaneBeforeAnyIO",
+        "itom.local/core/transport:TestPreparedBodyFitsCanonicalGrantBeforeEncryptionAndIsChargedBeforeIO",
+        "itom.local/core/transport:TestAccountingGapDoesNotConsumeCipherReplayOrForceCarrierReconnect",
+        "itom.local/core/transport:TestPreparedBodyCanSurviveCanceledUnstartedCommandWithoutSecondSpend",
+        "itom.local/core/transport:TestWrongMailboxIncarnationCannotRegisterOrDeliver",
+        "itom.local/core/transport:TestProtocolRecordsCannotSpendDataAllowanceInTheFastMailbox",
+        "itom.local/core/transport:TestOwnStoredBodyProofResolvesAcceptanceButCannotFabricatePeerDelivery",
+        "itom.local/core/transport:TestWalletNoiseSessionMismatchFailsBeforeSpendingOrEncryption",
+        "itom.local/core/transport:TestUnstartedBurstsRemainReachableAfterMoreThanOneDispatchWindow",
+        "itom.local/core/transport:TestUnstartedCumulativeControlsCoalesceWithoutLosingLatestProgress",
+        "itom.local/core/transport:TestServerBulkBodyIsDurablyChargedBeforeIOAndClientCannotRefundIt",
+        "itom.local/core/transport:TestServerBodyScopeAndLedgerMismatchCannotPoisonLaterCorrectDelivery",
+        "itom.local/core/transport:TestLostServerAppendReplyRequiresDurableExactProofWithoutLogicalReceipt",
+        "itom.local/core/transport:TestRepeatedColdTLSHTTPRequestsReuseOneSessionAndRetireAllStreams",
+        "itom.local/core/transport:TestFullDuplexApplicationBytesAndFINAcrossIndependentPlanes",
+        "itom.local/core/transport:TestSmallRequestIsImmediatelyEligibleWhileBulkIsQueued",
+        "itom.local/core/transport:TestFragmentedBulkCannotKeepFastPriorityButLaterRequestCan",
+        "itom.local/core/transport:TestReorderedDeliveryAndHalfClosePreserveEveryByte",
+        "itom.local/core/transport:TestAdvertisedCreditHasActualMemoryBacking",
+        "itom.local/core/transport:TestInvalidOverlapAndPrematureFINCannotTruncateAFlow",
+        "itom.local/core/transport:TestServiceLearningDoesNotPunishLoadedRTTOrForgetCapacityAtIdle",
+        "itom.local/core/transport:TestServiceBatchCannotOverflowIntoOneByteAdmission",
+        "itom.local/core/transport:TestUnloadedPathChangeCanRefreshPropagationWithoutLosingBandwidth",
+        "itom.local/core/transport:FuzzBulkContainerFramingIsCanonicalAndBounded",
+        "itom.local/core/transport:FuzzRecordDecoderNeverAcceptsLengthOrScopeMismatch"
+      ]
+    },
+    {
+      "module": "core",
+      "command": "go vet ./...",
+      "exit_code": 0
+    },
+    {
+      "module": "native",
+      "command": "go test -race -count=1 -json ./...",
+      "exit_code": 0,
+      "top_level_groups_including_fuzz_seeds": 2,
+      "groups": [
+        "itom.local/mobile:TestApplicationCopyPreservesReplyAfterUploadHalfClose",
+        "itom.local/mobile:TestUnqualifiedReplacementCannotMasqueradeAsARelease"
+      ]
+    },
+    {
+      "module": "native",
+      "command": "go vet ./...",
+      "exit_code": 0
+    }
+  ],
+  "repeated_checks": {
+    "command": "go test -race ./transport ./journal -run 'TestDuplexTLSIMAPKeepsOriginsLedgersAndPeerReceiptsIndependent|TestLostServerAppendReplyRequiresDurableExactProofWithoutLogicalReceipt|TestPreparedPublicationRequiresBoundAccountAndPlaneBeforeAnyIO|TestLocalTicketIOFailuresNeverReturnWriterPermissionAndRetainCommittedDebt' -count=10 -timeout=180s",
+    "exit_code": 0,
+    "top_level_runs": 40,
+    "duplex_runs": 10,
+    "injected_journal_fault_subcases": 40
+  },
+  "fuzz": {
+    "command": "go test ./wire -run '^$' -fuzz '^FuzzAuthenticatedServerEnvelopeMetadataIsCanonicalAndBounded$' -fuzztime=10s -parallel=2",
+    "exit_code": 0,
+    "executions": 143019,
+    "method": "authenticate mutated metadata before decoding; canonical round trip and original physical bounds"
+  },
+  "duplex_component": {
+    "accounts": 1,
+    "client_sockets": 2,
+    "server_sockets": 2,
+    "fixed_selected_executors_per_endpoint": "one fast and one bulk; no replacement in healthy scenario",
+    "logical_streams": 3,
+    "verified_useful_upload_bytes": 1048854,
+    "verified_useful_download_bytes": 1048905,
+    "both_endpoints_fetch_all_bodies_including_self": true,
+    "data_and_protocol_authorities": "separate journals and Noise-bound wallets",
+    "application_bytes_compared": true,
+    "peer_receipts_drain_logical_retention": true,
+    "physical_debt_retained": true,
+    "logical_open": "manual setup",
+    "mailbox_discovery_and_origin_correlation": "test-only bounded enumeration; not a production inventory worker",
+    "application_tls_http_over_imap_tested": false,
+    "ramp_or_sustained_throughput_measured": false,
+    "rtt_measured": false
+  },
+  "durability_cost_boundary": "Current local server adapter durably reserves a one-body grant, then commits body intent/close, then records APPEND outcome. Own inventory adds proof observation. These costs are real and not yet calibrated for latency/throughput.",
+  "development_failures_retained": [
+    {
+      "attempt": "initial authority fault tests",
+      "failure": "body_after expected Started after reopening; original recovery correctly changes Started to Unknown. One test/subcase failed.",
+      "correction": "Assert Unknown with identical held exposure and atomic closed grant/body intent. No production recovery logic, threshold or persistence behavior was relaxed. Original failed log retained."
+    }
+  ],
+  "prior_unresolved_history": "The earlier BULK_CHECK_RESULTS.json records one intermittent cold TLS component timeout. No new failure in this checkpoint establishes its cause or proves field stability.",
+  "release_gates": {
+    "idle_light_max_ms": 250,
+    "loaded_max_ms": 2000,
+    "sustained_up_down_mbps": 100,
+    "targets_verified": false,
+    "primary_network_suite_run": false,
+    "complete_production_pipeline": false,
+    "apk_or_release_binary_built": false,
+    "android_identity_changed": false,
+    "signer_changed": false,
+    "old_wallet_or_journal_debt_reset": false,
+    "qualification_thresholds_relaxed": false
+  },
+  "remaining": [
+    "Authenticated session bootstrap, OPEN/READY/roster and target authorization",
+    "Production scoped bidirectional inventory, origin correlation, notification/discovery and proof reclamation",
+    "Grant/control/status/NACK exchange, legacy-state migration and restart reconciliation",
+    "Measured per-carrier service, demand/supply coordinator and receiver-window/controller integration",
+    "Calibrated independent provider/client/server processes; strict primary latency, throughput, application TLS/Speedtest, Android and Rambler qualification"
+  ],
+  "artifacts": {
+    "SERVER_CORE_RACE.jsonl": {
+      "sha256": "de79f769d02d461352739526cca2807d51aa32cf1719b80cad614f88e6081de6",
+      "bytes": 111930
+    },
+    "SERVER_CORE_RACE_INITIAL.jsonl": {
+      "sha256": "45acb5ad104ead035b273639b40f6802693254e485f588b94cdc70428904327c",
+      "bytes": 111931
+    },
+    "SERVER_NATIVE_RACE.jsonl": {
+      "sha256": "f78190021a378520fc5cbc8472555291c9d574d37984a505f4bad8ab0128ad13",
+      "bytes": 2100
+    },
+    "SERVER_REPEATED_LOG.txt": {
+      "sha256": "1be911d87a31c66cd16b36b50e30a22c04d6e47e8f2b8fab9f7239064557fb26",
+      "bytes": 75
+    },
+    "SERVER_METADATA_FUZZ_LOG.txt": {
+      "sha256": "a2577a2659fe5799c8633aad98e84fcd449a844c88bbddeba647e4c43aadb4ce",
+      "bytes": 498
+    },
+    "SERVER_AUTHORITY_INITIAL_LOG.txt": {
+      "sha256": "92e1f2c2a8c50b0b9cef6e30e1bd6c2f9ed0d8bbed672223feef48892ae05770",
+      "bytes": 659
+    },
+    "SERVER_AUTHORITY_FIXED_LOG.txt": {
+      "sha256": "919198d95b2331e328be0714b17610437b340267d57fc8b4fc79f17bb1aff75f",
+      "bytes": 107
+    },
+    "SERVER_DUPLEX_INITIAL_LOG.txt": {
+      "sha256": "8db8bb59795e602aedd8deae4fec45275b1766ae5d24a2091a9860a1d3dc2cde",
+      "bytes": 38
+    },
+    "SERVER_SCOPE_CHECK_LOG.txt": {
+      "sha256": "c7bed9e40a179de786b6d6cec9b67147d4622c5fc9edb798112faee027bdec32",
+      "bytes": 108
+    },
+    "SERVER_SCOPE_TARGETED_LOG.txt": {
+      "sha256": "b748ea1782adf58c9cd654d047787515b50e05ebec624747debeed575d1e8a50",
+      "bytes": 38
+    },
+    "SERVER_ORIGIN_NEGATIVE_LOG.txt": {
+      "sha256": "5998f7b0ba8b3793b06fd46d67507d534ab5823d7b04e1491916c5cf6a6ff549",
+      "bytes": 38
+    },
+    "SERVER_SOURCE_MANIFEST.json": {
+      "sha256": "7216aafd2fd4ab6a7162ec9e8786d1d6adc77442bd9c9b06ce0888e4320a8a99",
+      "bytes": 33920
+    }
+  }
+}

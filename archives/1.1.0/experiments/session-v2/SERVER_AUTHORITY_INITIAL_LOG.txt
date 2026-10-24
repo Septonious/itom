@@ -1,0 +1,7 @@
+--- FAIL: TestLocalTicketIOFailuresNeverReturnWriterPermissionAndRetainCommittedDebt (0.02s)
+    --- FAIL: TestLocalTicketIOFailuresNeverReturnWriterPermissionAndRetainCommittedDebt/body_after (0.01s)
+        local_ticket_fault_test.go:74: atomic body intent missing after lost commit ACK [{{{[161 24 16 2 92 85 0 3 232 141 252 81 246 86 122 133] 1 {account1 12345678 [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]}} 1} 1 [2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] bulk 1050 10 [83 205 238 101 221 98 204 50 66 208 20 154 210 170 17 254 233 46 44 4 98 114 36 237 102 51 158 4 7 70 147 164] 2 0 {0 0}}]
+FAIL
+FAIL	itom.local/core/journal	0.043s
+ok  	itom.local/core/wire	1.192s
+FAIL

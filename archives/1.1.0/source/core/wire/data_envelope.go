@@ -19,6 +19,10 @@ const MaxDataEnvelopeBody = MaxDataBatchBody + 512
 // receiver may register it. DATA records still require Noise/AEAD validation.
 // encodedSize must return the canonical carrier charge for a body of this length.
 func BindDataEnvelope(k QuotaKey, ordinal uint64, batch ID, previousBytes uint64, folder string, encrypted, key []byte, encodedSize func([]byte) (uint64, error)) (UsageReport, []byte, error) {
+	return bindPhysicalEnvelope(DataEnvelopeMagic, dataEnvelopeMAC, k, ordinal, batch, previousBytes, folder, encrypted, key, encodedSize)
+}
+
+func bindPhysicalEnvelope(magic string, mac func([]byte, []byte) []byte, k QuotaKey, ordinal uint64, batch ID, previousBytes uint64, folder string, encrypted, key []byte, encodedSize func([]byte) (uint64, error)) (UsageReport, []byte, error) {
 	if len(key) != 32 || encodedSize == nil || !validQuotaFolder(folder) || ordinal == 0 || ordinal > 1<<24 || batch == (ID{}) || len(encrypted) == 0 || len(encrypted) > MaxDataBatchBody {
 		return UsageReport{}, nil, ErrLimit
 	}
@@ -26,7 +30,7 @@ func BindDataEnvelope(k QuotaKey, ordinal uint64, batch ID, previousBytes uint64
 	if err != nil {
 		return UsageReport{}, nil, err
 	}
-	body := append([]byte(DataEnvelopeMagic), p...)
+	body := append([]byte(magic), p...)
 	body = binary.BigEndian.AppendUint16(body, uint16(len(folder)))
 	body = append(body, folder...)
 	chargeAt := len(body)
@@ -51,8 +55,7 @@ func BindDataEnvelope(k QuotaKey, ordinal uint64, batch ID, previousBytes uint64
 	}
 	binary.BigEndian.PutUint64(body[chargeAt:], charge)
 	binary.BigEndian.PutUint64(body[chargeAt+8:], total.Bytes)
-	mac := dataEnvelopeMAC(key, body[:len(body)-sha256.Size])
-	copy(body[len(body)-sha256.Size:], mac)
+	copy(body[len(body)-sha256.Size:], mac(key, body[:len(body)-sha256.Size]))
 	report := UsageReport{Key: k, Total: total, Attempt: &PhysicalDescriptor{Batch: batch, EncodedBytes: charge, DecodedBytes: uint64(len(body)), Digest: sha256.Sum256(body), Folder: folder}}
 	if _, err := EncodeControl(0, report); err != nil {
 		return UsageReport{}, nil, err
@@ -113,7 +116,11 @@ func parseDataEnvelope(body []byte) (UsageReport, []byte, error) {
 // digest belongs to these exact immutable bytes. This private helper is called
 // only after the enclosing entry point computes it; it is never supplied by a peer.
 func parseDataEnvelopeWithDigest(body []byte, digest [32]byte) (UsageReport, []byte, error) {
-	if len(body) > MaxDataEnvelopeBody || len(body) < 4+sha256.Size || !bytes.HasPrefix(body, []byte(DataEnvelopeMagic)) {
+	return parsePhysicalEnvelopeWithDigest(body, digest, DataEnvelopeMagic)
+}
+
+func parsePhysicalEnvelopeWithDigest(body []byte, digest [32]byte, magic string) (UsageReport, []byte, error) {
+	if len(body) > MaxDataEnvelopeBody || len(body) < 4+sha256.Size || !bytes.HasPrefix(body, []byte(magic)) {
 		return UsageReport{}, nil, ErrLimit
 	}
 	k, p, err := decodeQuotaKey(body[4:])

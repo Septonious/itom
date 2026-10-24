@@ -65,6 +65,22 @@ mandatory independently of that implementation.
   never started can retain its exact prepared body/permit. Trusted local FETCH
   of the exact body can confirm provider acceptance, but cannot invent peer
   delivery, release logical replay bytes, or refund physical quota.
+* Server-origin publication and client reception now have independent physical
+  origin/ledger authentication. The client pins the issuer store/run, account,
+  user, folder, UIDVALIDITY, Noise session and record generation before delivery.
+  Server descriptors cannot become remote client grant reports. Protocol and
+  DATA authorities remain distinct even on a shared fast mailbox.
+* Local server admission fits a concrete one-body reservation to BOTH account
+  and protected user availability, including retained remote grants. Body intent
+  and unused-grant close commit atomically before I/O. A lost commit reply grants
+  no writer permission; committed exposure survives reopening as unknown debt.
+  Server APPEND outcomes and trusted exact FETCH proofs update the local journal
+  without inventing peer receipt or physical reclamation.
+* Prepared publication and storage-proof calls require an executor bound to the
+  correct profile account and selected mailbox. Unbound low-level executors can
+  run protocol tests but cannot publish an accounted body. Mismatched routes fail
+  before any IMAP command; the exact prepared body/permission stays usable on the
+  correct route without an additional spend.
 * Receiver-trace checks retain the required full-phase/ramp/tail/rolling rate,
   no-stall and RTT-maximum assertions. No peak-only or successful-only score is
   accepted as qualification.
@@ -91,6 +107,26 @@ tests exercise exact scoped storage proof and single-spend behavior. These are
 component integrity tests, not calibrated network/rate measurements or a duplex
 server-origin implementation. See [bulk continuation evidence](experiments/session-v2/BULK_CHECK_RESULTS.json).
 
+A newer duplex component scenario connects both publication/receive halves over
+four actual TLS/IMAP connections: one fixed fast and bulk executor per endpoint,
+one account, separate DATA/protocol journals and wallets, three logical streams
+with short demand, bulk records and nonaligned tails. Both endpoints FETCH all
+messages, including self-writes. Own bodies are correlated/accounted independently;
+they do not count as peer DATA, bandwidth or refund evidence. All application
+bytes are compared, authenticated peer receipts drain logical retention, and
+physical wallet/journal debt stays charged. No socket replacement occurs in the
+healthy component scenario. See [server/duplex continuation evidence](experiments/session-v2/SERVER_CHECK_RESULTS.json).
+
+This fixture manually establishes streams and enumerates bounded mailbox state.
+Its classification/correlation code is test-only, not a production inventory
+worker. It is not the 10/15-account primary topology, calibrated provider service,
+an application TLS/HTTP sequence over IMAP, or an Android speed measurement.
+The server adapter currently durably reserves a one-body grant, commits body
+intent/close, then records APPEND outcome; trusted inventory adds observation
+work. These real persistence costs must be measured and included in the complete
+controller/provider fixture. Neither zero-cost journal service nor an assumed
+100Mbps rate follows from these component results.
+
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
 TCP fixture was then substituted. A later diagnostic timeout showed bytes still
@@ -112,8 +148,8 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
   The stream adapter currently starts after an externally established OPEN_OK.
 * Per-carrier measured-service batch selection and its demand/supply coordinator;
   the new concrete-grant aggregation path is not yet throughput-qualified.
-* The server-origin publication/client receive half, active carrier selection,
-  controller/receiver-window integration and complete status/NACK recovery.
+* Active carrier selection, controller/receiver-window integration and complete
+  status/NACK recovery for both publication/receive halves.
 * Scoped bidirectional mailbox inventory/discovery, origin/ledger classification,
   IDLE/DONE or a calibrated alternative, bounded proof-based reclamation and
   migration/restart reconciliation using original stores and retained debt.

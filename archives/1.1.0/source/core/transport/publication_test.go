@@ -25,6 +25,20 @@ import (
 
 func cipherPair(t *testing.T, session wire.ID) (*transport.Cipher, *transport.Cipher) {
 	t.Helper()
+	x, y := sessionEpochs(t, session)
+	c, e := transport.NewCipher(x)
+	if e != nil {
+		t.Fatal(e)
+	}
+	s, e := transport.NewCipher(y)
+	if e != nil {
+		t.Fatal(e)
+	}
+	return c, s
+}
+
+func sessionEpochs(t *testing.T, session wire.ID) (*secure.Epoch, *secure.Epoch) {
+	t.Helper()
 	binding := secure.Binding{Server: wire.ID{1}, User: "12345678", Pair: wire.ID{2}, Session: session, Handshake: wire.ID{4}, Epoch: 1, ConfigHash: [32]byte{5}}
 	key := bytes.Repeat([]byte{6}, 32)
 	a, e := secure.NewSessionHandshake(binding, key, true)
@@ -57,15 +71,7 @@ func cipherPair(t *testing.T, session wire.ID) (*transport.Cipher, *transport.Ci
 	if e != nil {
 		t.Fatal(e)
 	}
-	c, e := transport.NewCipher(x)
-	if e != nil {
-		t.Fatal(e)
-	}
-	s, e := transport.NewCipher(y)
-	if e != nil {
-		t.Fatal(e)
-	}
-	return c, s
+	return x, y
 }
 
 type publicationFixture struct {
@@ -204,7 +210,7 @@ func TestPreparedBodyCanSurviveCanceledUnstartedCommandWithoutSecondSpend(t *tes
 	f := publications(t, 50000, 10)
 	p := prepare(t, f, []byte("payload"))
 	received := make(chan []byte, 1)
-	x, _ := executor(t, func(c net.Conn) {
+	x := selectedPeer(t, func(c net.Conn) {
 		r := bufio.NewReader(c)
 		line := readLine(t, r)
 		at := strings.LastIndex(line, "{")
@@ -292,6 +298,11 @@ func selectedPeer(t *testing.T, script func(net.Conn)) *transport.Executor {
 }
 func selectedPeerOn(t *testing.T, folder string, script func(net.Conn)) *transport.Executor {
 	t.Helper()
+	return selectedAccountPeer(t, "account1", folder, script)
+}
+
+func selectedAccountPeer(t *testing.T, account, folder string, script func(net.Conn)) *transport.Executor {
+	t.Helper()
 	cert, roots, err := certificate()
 	if err != nil {
 		t.Fatal(err)
@@ -321,7 +332,7 @@ func selectedPeerOn(t *testing.T, folder string, script func(net.Conn)) *transpo
 	}()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, transport.DefaultIMAPLimits())
+	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), AccountID: account, ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, transport.DefaultIMAPLimits())
 	if err != nil {
 		listener.Close()
 		t.Fatal(err)

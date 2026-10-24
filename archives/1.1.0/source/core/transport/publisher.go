@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"itom.local/core/journal"
 	"itom.local/core/mailbox"
 	"itom.local/core/secure"
 	"itom.local/core/wallet"
@@ -51,6 +52,12 @@ type PreparedPublication struct {
 	started, finished bool
 	outcome           PublicationOutcome
 	err               error
+	local             *localPublication
+}
+
+type localPublication struct {
+	store   *journal.Store
+	attempt journal.AttemptRef
 }
 
 func (p *ClientPublisher) Prepare(ctx context.Context, maxPayload int) (*PreparedPublication, error) {
@@ -121,7 +128,7 @@ func finishPublication(work publicationWork, usage wire.UsageReport, body []byte
 // Start's context governs admission to the executor, not the lifetime of an
 // already issued literal. The executor has its own bounded completion timeout.
 func (p *PreparedPublication) Start(ctx context.Context, executor *Executor) (PublicationOutcome, error) {
-	if p == nil || executor == nil {
+	if p == nil || executor == nil || executor.account == "" || executor.account != p.usage.Key.Account || executor.mailbox != p.folder || executor.validity == 0 {
 		return NotStarted, ErrProtocol
 	}
 	p.mu.Lock()
@@ -146,6 +153,16 @@ func (p *PreparedPublication) Start(ctx context.Context, executor *Executor) (Pu
 	outcome := Accepted
 	if err != nil {
 		outcome = Uncertain
+	}
+	if p.local != nil {
+		result := journal.Accepted
+		if outcome == Uncertain {
+			result = journal.Uncertain
+		}
+		if commitErr := p.local.store.Complete(p.local.attempt, result); commitErr != nil {
+			outcome = Uncertain
+			err = errors.Join(err, commitErr)
+		}
 	}
 	// Even a definitive provider refusal stays charged in the wallet until the
 	// original grant/proof authority reconciles it. No local debt reset exists.
@@ -176,11 +193,20 @@ func (p *PreparedPublication) Usage() wire.UsageReport {
 // physical body is not peer delivery and must not advance session receipts.
 func (p *PreparedPublication) MIME() []byte { return append([]byte(nil), p.mime...) }
 
+// ServerAttempt exposes local recovery identity only. Its descriptor must never
+// be treated as a client's UsageReport or permission to retire remote debt.
+func (p *PreparedPublication) ServerAttempt() (journal.AttemptRef, bool) {
+	if p == nil || p.local == nil {
+		return journal.AttemptRef{}, false
+	}
+	return p.local.attempt, true
+}
+
 // ConfirmStored is a trusted local FETCH check, not a peer report or a refund.
 // It can resolve only provider acceptance of these exact prepared bytes. It
 // never synthesizes session receipt, delivery bandwidth or reclaimed quota.
 func (p *PreparedPublication) ConfirmStored(ctx context.Context, executor *Executor, uid uint32) error {
-	if p == nil || executor == nil || uid == 0 || executor.validity == 0 || executor.mailbox != p.folder {
+	if p == nil || executor == nil || uid == 0 || executor.validity == 0 || executor.mailbox != p.folder || executor.account == "" || executor.account != p.usage.Key.Account {
 		return ErrProtocol
 	}
 	p.mu.Lock()
@@ -211,6 +237,12 @@ func (p *PreparedPublication) ConfirmStored(ctx context.Context, executor *Execu
 	defer clear(body)
 	if p.usage.Attempt == nil || charge != p.usage.Attempt.EncodedBytes || sha256.Sum256(body) != p.usage.Attempt.Digest {
 		return ErrProtocol
+	}
+	if p.local != nil {
+		proof := journal.Observation{Account: p.local.attempt.Grant.Scope.Account, Folder: p.folder, EncodedBytes: charge, Location: journal.Location{UIDValidity: executor.validity, UID: uid}, Decoded: body}
+		if err = p.local.store.Observe(p.local.attempt, p.local.store.Run(), proof); err != nil {
+			return err
+		}
 	}
 	err = p.work.complete(Accepted, true)
 	if err != nil && !errors.Is(err, ErrClosed) {

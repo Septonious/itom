@@ -16,7 +16,10 @@ type NetworkDialer interface {
 }
 type Endpoint struct {
 	Address, ServerName, Username, Password, Mailbox string
-	TLS                                              *tls.Config
+	// AccountID is the trusted profile's quota identity for these credentials.
+	// An unbound executor can run protocol checks, not accounted publications.
+	AccountID string
+	TLS       *tls.Config
 }
 type Selected struct {
 	Executor     *Executor
@@ -30,7 +33,7 @@ type Selected struct {
 // operation mutex is involved. Error strings never contain provider responses,
 // mailbox names, credentials or target hostnames.
 func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits) (Selected, error) {
-	if d == nil || p.Address == "" || p.ServerName == "" {
+	if d == nil || p.Address == "" || p.ServerName == "" || len(p.AccountID) > 64 {
 		return Selected{}, ErrProtocol
 	}
 	user, err := quoteMailbox(p.Username)
@@ -153,6 +156,7 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	if err != nil {
 		return Selected{}, err
 	}
+	executor.account = p.AccountID
 	owned = true
 	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus}, nil
 }

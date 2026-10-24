@@ -1,0 +1,3 @@
+ok  	itom.local/core/transport	10.258s
+ok  	itom.local/core/journal	1.301s
+ok  	itom.local/core/wire	1.190s

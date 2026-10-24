@@ -19,6 +19,11 @@ import (
 func readAppendBody(t *testing.T, conn net.Conn, reader *bufio.Reader) (string, []byte) {
 	t.Helper()
 	line := readLine(t, reader)
+	return readAppendLiteral(t, conn, reader, line)
+}
+
+func readAppendLiteral(t *testing.T, conn net.Conn, reader *bufio.Reader, line string) (string, []byte) {
+	t.Helper()
 	at, end := strings.LastIndex(line, "{"), strings.LastIndex(line, "}")
 	if at < 0 || end <= at {
 		t.Error("missing APPEND literal", line)

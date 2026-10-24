@@ -65,6 +65,7 @@ type Executor struct {
 	literalPlus  bool
 	literalMinus bool
 	mailbox      string
+	account      string
 	validity     uint32
 	conn         net.Conn
 	reader       *bufio.Reader
