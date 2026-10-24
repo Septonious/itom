@@ -312,3 +312,8 @@ func (e *Epoch) open(packet []byte, controlOnly bool) (wire.Frame, error) {
 
 // Context returns a copy of the public authenticated session binding, not keys.
 func (e *Epoch) Context() Binding { return e.binding }
+
+// SessionDirection exposes immutable role/domain metadata, never keys or Noise
+// state. Transport owners must not attach a legacy epoch or opposite endpoint's
+// sender role to the replacement session merely because public bindings match.
+func (e *Epoch) SessionDirection() (wire.Direction, bool) { return e.direction, e.sessionV2 }

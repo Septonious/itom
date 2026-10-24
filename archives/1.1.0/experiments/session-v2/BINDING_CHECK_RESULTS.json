@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T18:25:30.126517+00:00",
+  "parent_commit": "851502915def62b80d11f51416383aed699e9c50",
+  "status": "unqualified logical-session crypto binding prerequisite; window integration pending; V2_NOT_READY",
+  "checks": [
+    {
+      "file": "BINDING_BEFORE_LOG.txt",
+      "sha256": "2e2ca4f5625a24da5be28c1bfb889c67e1b7539cb3fa157df68a50720b2e1447",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 4
+    },
+    {
+      "file": "BINDING_REPEATED_LOG.txt",
+      "sha256": "644db68e8a6baac33f6edaa61ea52f9b5cb2a71783dfc142b611ccf8529d891b",
+      "passed_top_level_groups": 20,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "BINDING_CORE_RACE.jsonl",
+      "sha256": "b4ff8ecd9fadb0b54a0462f96e063531cbcfc063edfdd788037bfb55925d445c",
+      "top_level_group_executions": 148,
+      "failures": []
+    },
+    {
+      "file": "BINDING_NATIVE_RACE.jsonl",
+      "sha256": "1742b496cecea8bfc73e37f44ab4d654f184b8f1177e4729791ce477ac94f231",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "BINDING_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "BINDING_FIXTURE_COMPILE_LOG.txt",
+      "sha256": "d775a773b671bd8d6787174c26f2d0c6ca21acdb1afeb6f019ef12b20365b0b7",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    }
+  ],
+  "commands": [
+    "go test -race ./transport -run TestSessionRejectsRoutes|TestOppositeEndpoint|TestExitRoleBinding|TestReplacementCipherRejects -count=1 -v -timeout=60s (archived 8515029 core plus the identical new regression file)",
+    "go test -race ./transport -run TestSessionRejectsRoutes|TestOppositeEndpoint|TestExitRoleBinding|TestReplacementCipherRejects -count=5 -v -timeout=90s (corrected source)",
+    "go test -race -json ./... -count=1 -timeout=150s (core, default package concurrency)",
+    "go test -race -json ./... -count=1 -timeout=90s (native)",
+    "go vet ./... (core)"
+  ],
+  "reproducer": {
+    "production_source_commit": "8515029",
+    "added_test": "archives/1.1.0/source/core/transport/session_binding_test.go",
+    "added_test_sha256": "e699dfa684ae8c2d229ae4eb903c37431d58bc86afe61476ce77bae83da94e3a",
+    "production_source_modified": false,
+    "expected_before_failures": 4
+  },
+  "implemented": [
+    "Each logical Session pins the exact replacement Noise epoch pointer and endpoint role shared by all of its publishers/receivers across accounts, planes and ledgers.",
+    "Public binding equality does not authorize an independent handshake to replace live keys/counters. Wrappers of the same original epoch remain usable.",
+    "Legacy-domain epochs reject at NewCipher before quota admission; immutable role/domain metadata exposes no keys or mutable Noise state.",
+    "OPEN/exit configuration validates and binds under one Session lock. Invalid constructors cannot claim an OPEN role; already bound server receive state cannot be configured as a client dialer.",
+    "Route construction guards reject zero/invalid cipher handles and closed owners before any publication admission. No journal/wallet schema or wire/crypto thresholds changed."
+  ],
+  "validation": [
+    "All four new regression groups fail on archived 8515029 with the identical test file: different session, independent same-label keys, wrong roles, non-atomic exit setup and legacy epoch acceptance.",
+    "The four groups pass five repetitions after correction (20 group executions); rejected routes retain original unused wallet grants and issuer exposure, leave logical snapshots unchanged, and do not poison the same original epoch.",
+    "148 top-level core groups and 10 native groups pass with race detection and default package concurrency; core vet passes.",
+    "The first new test compilation used pool.Amount instead of the wallet wire.Quota type. The retained compile log records this fixture error; correction changes no production invariant."
+  ],
+  "limitations": [
+    "Receiver-window state machines still are not integrated with Session/wire credit. No automatic growth or safe idle credit return is enabled.",
+    "Coordinated cryptographic rekey remains a required explicit owner transition, not a per-publisher epoch substitution.",
+    "Prior intermittent OPEN deadline miss remains retained in INBOX_WORKER evidence and is not declared fixed by passing source checks.",
+    "No calibrated multi-account provider, independent CPU/disk/process or Android qualification; no measured <=250ms idle/light RTT, <=2000ms loaded RTT or sustained 100Mbps claim.",
+    "No new APK/binary release; production remains V2_NOT_READY."
+  ]
+}

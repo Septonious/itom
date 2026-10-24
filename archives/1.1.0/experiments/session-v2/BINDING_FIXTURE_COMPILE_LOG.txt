@@ -1,0 +1,4 @@
+# itom.local/core/transport_test [itom.local/core/transport.test]
+transport/session_binding_test.go:85:61: invalid operation: entries[0].Used != (pool.Amount{}) (mismatched types wire.Quota and pool.Amount)
+FAIL	itom.local/core/transport [build failed]
+FAIL

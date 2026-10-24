@@ -6,6 +6,8 @@ import (
 	"io"
 	"sync"
 	"time"
+
+	"itom.local/core/secure"
 )
 
 type Limits struct {
@@ -64,6 +66,7 @@ func (f *stream) signal() { close(f.notify); f.notify = make(chan struct{}) }
 // authenticated cumulative peer receipt. No disk/provider I/O runs under mu.
 type Session struct {
 	mu                           sync.Mutex
+	crypto                       *secure.Epoch
 	generation                   uint64
 	limits                       Limits
 	flows                        map[uint64]*stream

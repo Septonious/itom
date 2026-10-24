@@ -29,6 +29,11 @@ All quantities here are logical byte/memory credit, never storage quota refunds.
 
 ## Session and wire requirements before activation
 
+Session route construction now pins one exact replacement Noise epoch and role
+across its carriers. This supplies the authenticated identity needed below and
+rejects piecemeal epoch replacement; it does not yet connect these window state
+machines to the Session credit fields or enable automatic growth/reclamation.
+
 * Bind window scope to the authenticated Noise session, record generation,
   stream ID and direction. Initialize the credit epoch once for the new flow.
   A window component must replace the existing flow-credit fields under the

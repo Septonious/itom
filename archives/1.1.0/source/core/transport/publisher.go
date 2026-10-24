@@ -27,12 +27,15 @@ type ClientPublisher struct {
 }
 
 func NewClientPublisher(s *Session, plane Plane, class LedgerClass, cipher *Cipher, w *wallet.Wallet, account, folder string, authenticationKey []byte) (*ClientPublisher, error) {
-	if class != DataLedger && class != ControlLedger || class == ControlLedger && plane != Fast || s == nil || plane > Bulk || cipher == nil || w == nil || account == "" || folder == "" || len(authenticationKey) != 32 {
+	if class != DataLedger && class != ControlLedger || class == ControlLedger && plane != Fast || s == nil || plane > Bulk || cipher == nil || cipher.epoch == nil || w == nil || account == "" || folder == "" || len(authenticationKey) != 32 {
 		return nil, ErrProtocol
 	}
 	identity, binding := w.Identity(), cipher.epoch.Context()
 	if identity.User != binding.User || identity.Session != binding.Session {
 		return nil, ErrProtocol
+	}
+	if err := s.bindCipher(cipher, wire.C2S); err != nil {
+		return nil, err
 	}
 	p := &ClientPublisher{session: s, plane: plane, class: class, cipher: cipher, wallet: w, account: account, folder: folder}
 	copy(p.authenticationKey[:], authenticationKey)

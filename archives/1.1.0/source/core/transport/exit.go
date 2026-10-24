@@ -37,7 +37,7 @@ func NewExitServer(s *Session, cipher *Cipher, receiveWindow uint64, workers int
 	if s == nil || cipher == nil || workers < 1 || workers > 64 || policy == nil || dialer == nil {
 		return nil, ErrProtocol
 	}
-	if err := s.configureOpen(2, receiveWindow); err != nil {
+	if err := s.configureOpen(2, receiveWindow, cipher); err != nil {
 		return nil, err
 	}
 	return &ExitServer{session: s, user: cipher.epoch.Context().User, policy: policy, dialer: dialer, workers: workers, active: make(map[*Conn]net.Conn)}, nil

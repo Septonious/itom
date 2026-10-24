@@ -176,6 +176,14 @@ mandatory independently of that implementation.
   growth without treating sparse lifetime traffic as bulk. These components are
   NOT yet connected to Session/wire credit; they do not enable automatic growth.
   See the [credit integration contract](WINDOW_CREDIT_DESIGN.md).
+* Every publisher/receiver route of one logical Session now pins the same exact
+  replacement Noise epoch and endpoint role across all accounts, planes and
+  ledgers. Independently established keys cannot be substituted even with equal
+  public binding labels; legacy epochs reject at cipher construction. OPEN role
+  configuration and exit binding are atomic, so a rejected constructor cannot
+  claim the session's role. Rejected routes do not spend/clear grants or mutate
+  queues. Coordinated rekey still requires an explicit owner transition; binding
+  is a prerequisite for scoped window integration, not automatic window growth.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -286,6 +294,13 @@ unsolicited EXISTS on the selected connections; no test wake channel enters the
 receive worker. Original polling cases remain. The final default-parallel full
 race cohort passes, but does not prove the earlier OPEN miss was eliminated or
 establish application RTT/bandwidth targets.
+The [session-binding checks](experiments/session-v2/BINDING_CHECK_RESULTS.json)
+run the same four regression groups against archived `8515029` and corrected
+source. The archived implementation accepts invalid epoch/role attachments;
+the corrected source rejects them before any spend, preserving original wallet
+and journal exposure and allowing a wrapper of the same original epoch. Full
+default-parallel core race checks pass with these guards. This is scope/counter
+ownership validation, not a measured RTT or bandwidth improvement.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual

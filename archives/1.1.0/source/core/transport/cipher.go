@@ -11,6 +11,9 @@ func NewCipher(epoch *secure.Epoch) (*Cipher, error) {
 	if epoch == nil {
 		return nil, ErrProtocol
 	}
+	if _, session := epoch.SessionDirection(); !session {
+		return nil, ErrProtocol
+	}
 	return &Cipher{epoch}, nil
 }
 func (c *Cipher) Seal(r Record) ([]byte, error) {

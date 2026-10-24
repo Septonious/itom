@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"time"
+
+	"itom.local/core/wire"
 )
 
 type openState uint8
@@ -34,11 +36,22 @@ func (f OpenFailure) Error() string {
 	}
 }
 
-func (s *Session) configureOpen(role uint8, window uint64) error {
+func (s *Session) configureOpen(role uint8, window uint64, cipher *Cipher) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed || s.openRole != 0 || len(s.flows) != 0 || window == 0 || window > s.limits.StreamBytes {
 		return ErrProtocol
+	}
+	if s.crypto != nil {
+		direction, _ := s.crypto.SessionDirection()
+		if role != uint8(direction)+1 {
+			return ErrProtocol
+		}
+	}
+	if cipher != nil {
+		if err := s.bindCipherLocked(cipher, wire.Direction(role-1)); err != nil {
+			return err
+		}
 	}
 	s.openRole, s.openWindow, s.nextOpenID = role, window, 1
 	s.openChanged = make(chan struct{})
@@ -60,7 +73,7 @@ func NewClientDialer(s *Session, receiveWindow uint64) (*ClientDialer, error) {
 	if s == nil {
 		return nil, ErrProtocol
 	}
-	if err := s.configureOpen(1, receiveWindow); err != nil {
+	if err := s.configureOpen(1, receiveWindow, nil); err != nil {
 		return nil, err
 	}
 	return &ClientDialer{session: s}, nil

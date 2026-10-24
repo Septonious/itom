@@ -25,12 +25,15 @@ type ClientReceiver struct {
 }
 
 func NewClientReceiver(s *Session, class LedgerClass, cipher *Cipher, origin ServerOrigin, key []byte) (*ClientReceiver, error) {
-	if s == nil || cipher == nil || class != DataLedger && class != ControlLedger || len(key) != 32 || origin.UIDValidity == 0 || origin.User != cipher.epoch.Context().User {
+	if s == nil || cipher == nil || cipher.epoch == nil || class != DataLedger && class != ControlLedger || len(key) != 32 || origin.UIDValidity == 0 || origin.User != cipher.epoch.Context().User {
 		return nil, ErrProtocol
 	}
 	shape := wire.QuotaKey{Store: origin.Store, Epoch: origin.Run, Grant: 1, Session: cipher.epoch.Context().Session, Account: origin.Account, User: origin.User}
 	if _, err := wire.ServerEnvelopeSize(shape, wire.ServerData, origin.Folder, 1); err != nil {
 		return nil, ErrProtocol
+	}
+	if err := s.bindCipher(cipher, wire.C2S); err != nil {
+		return nil, err
 	}
 	r := &ClientReceiver{session: s, cipher: cipher, origin: origin, class: class}
 	copy(r.authenticationKey[:], key)

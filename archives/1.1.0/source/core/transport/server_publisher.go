@@ -24,12 +24,15 @@ type ServerPublisher struct {
 }
 
 func NewServerPublisher(s *Session, plane Plane, class LedgerClass, cipher *Cipher, store *journal.Store, scope journal.Scope, folder string, key []byte) (*ServerPublisher, error) {
-	if s == nil || plane > Bulk || class != DataLedger && class != ControlLedger || class == ControlLedger && plane != Fast || cipher == nil || store == nil || folder == "" || len(key) != 32 {
+	if s == nil || plane > Bulk || class != DataLedger && class != ControlLedger || class == ControlLedger && plane != Fast || cipher == nil || cipher.epoch == nil || store == nil || folder == "" || len(key) != 32 {
 		return nil, ErrProtocol
 	}
 	binding := cipher.epoch.Context()
 	if scope.Account == "" || scope.User != binding.User || scope.Session != binding.Session {
 		return nil, ErrProtocol
+	}
+	if err := s.bindCipher(cipher, wire.S2C); err != nil {
+		return nil, err
 	}
 	p := &ServerPublisher{session: s, plane: plane, class: class, cipher: cipher, store: store, scope: scope, folder: folder}
 	copy(p.authenticationKey[:], key)

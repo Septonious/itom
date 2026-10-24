@@ -1,0 +1,102 @@
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys
+--- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend (0.16s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session (0.10s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys (0.06s)
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver
+--- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession (0.07s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver (0.00s)
+=== RUN   TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient
+--- PASS: TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient (0.09s)
+=== RUN   TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission
+--- PASS: TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission (0.02s)
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys
+--- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend (0.15s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session (0.09s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys (0.06s)
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver
+--- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession (0.06s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver (0.00s)
+=== RUN   TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient
+--- PASS: TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient (0.08s)
+=== RUN   TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission
+--- PASS: TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission (0.02s)
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys
+--- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend (0.30s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session (0.12s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys (0.17s)
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher
+--- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession (0.04s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher (0.00s)
+=== RUN   TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient
+--- PASS: TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient (0.05s)
+=== RUN   TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission
+--- PASS: TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission (0.01s)
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys
+--- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend (0.19s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session (0.14s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys (0.05s)
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver
+--- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession (0.03s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver (0.00s)
+=== RUN   TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient
+--- PASS: TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient (0.14s)
+=== RUN   TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission
+--- PASS: TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission (0.01s)
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session
+=== RUN   TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys
+--- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend (0.09s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/different_session (0.07s)
+    --- PASS: TestSessionRejectsRoutesFromOtherNoiseEpochsBeforeAnySpend/same_public_binding_independent_keys (0.02s)
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher
+=== RUN   TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver
+--- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession (0.01s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/server_receiver (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_publisher (0.00s)
+    --- PASS: TestOppositeEndpointRoleCannotClaimAnUnboundLogicalSession/client_receiver (0.00s)
+=== RUN   TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient
+--- PASS: TestExitRoleBindingIsAtomicAndCannotReplaceAConfiguredClient (0.05s)
+=== RUN   TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission
+--- PASS: TestReplacementCipherRejectsLegacyNoiseEpochBeforeTransportAdmission (0.01s)
+PASS
+ok  	itom.local/core/transport	3.306s

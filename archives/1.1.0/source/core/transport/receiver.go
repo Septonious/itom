@@ -21,8 +21,11 @@ type RemoteReceiver struct {
 }
 
 func NewRemoteReceiver(s *Session, class LedgerClass, cipher *Cipher, store *journal.Store, account, user, folder string, validity uint32, key []byte) (*RemoteReceiver, error) {
-	if class != DataLedger && class != ControlLedger || s == nil || cipher == nil || store == nil || account == "" || user == "" || folder == "" || validity == 0 || len(key) != 32 || cipher.epoch.Context().User != user {
+	if class != DataLedger && class != ControlLedger || s == nil || cipher == nil || cipher.epoch == nil || store == nil || account == "" || user == "" || folder == "" || validity == 0 || len(key) != 32 || cipher.epoch.Context().User != user {
 		return nil, ErrProtocol
+	}
+	if err := s.bindCipher(cipher, wire.S2C); err != nil {
+		return nil, err
 	}
 	r := &RemoteReceiver{session: s, class: class, cipher: cipher, store: store, account: account, user: user, folder: folder, validity: validity}
 	copy(r.authenticationKey[:], key)
