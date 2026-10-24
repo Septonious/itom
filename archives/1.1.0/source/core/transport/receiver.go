@@ -36,7 +36,8 @@ func NewRemoteReceiver(s *Session, class LedgerClass, cipher *Cipher, store *jou
 type StoredDelivery struct {
 	mu        sync.Mutex
 	session   *Session
-	record    Record
+	records   []Record
+	next      int
 	status    wire.CleanupStatus
 	finished  bool
 	discarded bool
@@ -70,15 +71,11 @@ func (r *RemoteReceiver) Decode(validity, uid uint32, raw []byte) (*StoredDelive
 	if err != nil {
 		return nil, err
 	}
-	record, err := r.cipher.Open(packet)
+	records, err := r.cipher.openRecordsFor(packet, r.class, r.session.generation)
 	if err != nil {
 		return nil, err
 	}
-	if !r.class.accepts(record.Kind) {
-		clear(record.Payload)
-		return nil, ErrProtocol
-	}
-	return &StoredDelivery{session: r.session, record: record, status: status}, nil
+	return &StoredDelivery{session: r.session, records: records, status: status}, nil
 }
 func (d *StoredDelivery) Apply() error {
 	if d == nil {
@@ -89,18 +86,18 @@ func (d *StoredDelivery) Apply() error {
 	if d.finished {
 		return nil
 	}
-	err := d.session.Receive(d.record)
-	if errors.Is(err, ErrClosed) {
-		d.discarded = true
-		d.finished = true
-		clear(d.record.Payload)
-		return nil
-	}
-	if err != nil {
-		return err
+	for d.next < len(d.records) {
+		record := &d.records[d.next]
+		err := d.session.Receive(*record)
+		if errors.Is(err, ErrClosed) {
+			d.discarded = true
+		} else if err != nil {
+			return err
+		}
+		clear(record.Payload)
+		d.next++
 	}
 	d.finished = true
-	clear(d.record.Payload)
 	return nil
 }
 func (d *StoredDelivery) Status() wire.CleanupStatus { return d.status }

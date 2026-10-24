@@ -39,6 +39,20 @@ mandatory independently of that implementation.
   before encryption and durable spend. Publisher construction rejects a wallet
   from a different authenticated session. DATA and control use explicit separate
   ledger classes even when sharing fast mailbox service.
+* Bulk aggregation drains ready DATA immediately into bounded multi-record
+  bodies, under one exact physical grant/ordinal. It neither waits to fill a
+  body nor borrows short fast-plane work. A partially available concrete grant
+  can admit a smaller body without fencing that grant. The existing physical
+  byte/record ceilings are unchanged.
+* Whole-body batch authentication stages replay advancement until every record
+  has authenticated and passed scope/ledger validation. Failed groups expose no
+  plaintext and consume no replay slots, while successful decryptions still
+  count against the original hard key-usage limits. Delivery retains progress
+  across temporary capacity pressure and discards a closed stream independently.
+* Definitely unstarted bursts remain reachable beyond one dispatch window;
+  retry metadata is bounded by retained DATA and coalesced per-stream controls.
+  Unknown publications never enter this retry queue. Retirement removes stale
+  retry entries without changing physical debt.
 * Client publication path through the new executor, plus server client-origin
   BODY authentication/accounting/delivery. A missing descriptor prefix defers
   before consuming an AEAD replay slot. A verified delivery object can wait for
@@ -67,6 +81,16 @@ establishes the logical streams. It does **not** execute transport OPEN over IMA
 provider mailbox polling/reclamation or Android TUN. Quota/IMAP/BODY tests cover
 those individual components separately; they do not yet form the full pipeline.
 
+An additional one-way component scenario now transfers 1.5MiB across three
+streams through actual TLS/IMAP APPEND and UID FETCH, exact wallet admission,
+durable server receipt and application byte comparison. It uses three physical
+bodies containing 24 logical DATA records; it deliberately isolates bulk service
+with whole-record body boundaries. Separate tests exercise fast-work protection
+and a closed stream within a body. Lost-reply and canceled-unstarted whole-body
+tests exercise exact scoped storage proof and single-spend behavior. These are
+component integrity tests, not calibrated network/rate measurements or a duplex
+server-origin implementation. See [bulk continuation evidence](experiments/session-v2/BULK_CHECK_RESULTS.json).
+
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
 TCP fixture was then substituted. A later diagnostic timeout showed bytes still
@@ -86,9 +110,8 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 * Authenticated transport bootstrap, OPEN/READY/roster negotiation and target
   authorization; wire/control exchange for grants, usage, retirement and recovery.
   The stream adapter currently starts after an externally established OPEN_OK.
-* Bulk physical-body aggregation and service-sized batch selection: the current
-  client publication path carries one logical record per BODY and is not a
-  throughput-qualified batching path.
+* Per-carrier measured-service batch selection and its demand/supply coordinator;
+  the new concrete-grant aggregation path is not yet throughput-qualified.
 * The server-origin publication/client receive half, active carrier selection,
   controller/receiver-window integration and complete status/NACK recovery.
 * Scoped bidirectional mailbox inventory/discovery, origin/ledger classification,

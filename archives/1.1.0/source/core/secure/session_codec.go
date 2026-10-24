@@ -1,7 +1,6 @@
 package secure
 
 import (
-	"bytes"
 	"encoding/binary"
 	"itom.local/core/wire"
 )
@@ -47,47 +46,11 @@ func (e *Epoch) SealSession(plain []byte, interactive bool) ([]byte, error) {
 // OpenSession authenticates before consuming a replay slot. Own-direction
 // mailbox loopback and every other session/account epoch are rejected here.
 func (e *Epoch) OpenSession(packet []byte) ([]byte, error) {
-	if !e.sessionV2 {
-		return nil, ErrContext
-	}
-	if len(packet) < sessionHeader+wire.TagSize+1 || len(packet) > sessionHeader+wire.TagSize+SessionMaxPlaintext {
-		return nil, wire.ErrLimit
-	}
-	h := packet[:sessionHeader]
-	if string(h[:4]) != "ITS2" || !bytes.Equal(h[4:20], e.binding.Pair[:]) || !bytes.Equal(h[20:36], e.binding.Session[:]) || binary.BigEndian.Uint32(h[36:40]) != e.binding.Epoch || h[40] != byte(e.direction.Reverse()) || int(binary.BigEndian.Uint32(h[56:60])) != len(packet)-sessionHeader {
-		return nil, ErrContext
-	}
-	for _, i := range []int{41, 42, 43, 44, 45, 46, 47, 60, 61, 62, 63} {
-		if h[i] != 0 {
-			return nil, ErrContext
-		}
-	}
-	counter := binary.BigEndian.Uint64(h[48:56])
-	if counter >= HardRecords {
-		return nil, ErrKeyLimit
-	}
-	e.rxMu.Lock()
-	defer e.rxMu.Unlock()
-	if e.rxFailures >= 1024 {
-		return nil, ErrKeyLimit
-	}
-	if err := e.replay.check(counter); err != nil {
+	plains, err := e.OpenSessionBatch([][]byte{packet}, nil)
+	if err != nil {
 		return nil, err
 	}
-	e.rx.SetNonce(counter)
-	plain, err := e.rx.Decrypt(nil, h, packet[sessionHeader:])
-	if err != nil {
-		e.rxFailures++
-		return nil, ErrAuth
-	}
-	n := uint64(len(plain) + sessionHeader)
-	if e.rxBytes > HardBytes || n > HardBytes-e.rxBytes {
-		clear(plain)
-		return nil, ErrKeyLimit
-	}
-	e.rxBytes += n
-	e.replay.commit(counter)
-	return plain, nil
+	return plains[0], nil
 }
 
 // SessionPacketSize is the exact stored packet length before encryption; it

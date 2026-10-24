@@ -221,7 +221,10 @@ func TestRepeatedColdTLSHTTPRequestsReuseOneSessionAndRetireAllStreams(t *testin
 	for range 20 {
 		response, err := client.Get(upstream.URL)
 		if err != nil {
-			t.Fatal("cold TLS/HTTP failed", err)
+			id := sequence.Load() - 1
+			left, _ := a.FlowSnapshot(id)
+			right, _ := b.FlowSnapshot(id)
+			t.Fatal("cold TLS/HTTP failed", err, "client", left, "exit", right)
 		}
 		body, err := io.ReadAll(response.Body)
 		response.Body.Close()

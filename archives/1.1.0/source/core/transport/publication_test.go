@@ -78,12 +78,18 @@ type publicationFixture struct {
 }
 
 func publications(t *testing.T, limit uint64, messages uint64) *publicationFixture {
+	return publicationsOn(t, limit, messages, transport.Fast)
+}
+func publicationsOn(t *testing.T, limit uint64, messages uint64, plane transport.Plane) *publicationFixture {
 	t.Helper()
 	folder := "fast"
+	if plane == transport.Bulk {
+		folder = "bulk"
+	}
 	user := "12345678"
 	account := "account1"
 	dir := t.TempDir()
-	config := journal.Config{Accounts: []journal.Account{{ID: account, Provider: "fixture", Limit: pool.Amount{Bytes: limit, Messages: messages}, Users: []journal.User{{ID: user, Limit: pool.Amount{Bytes: limit, Messages: messages}, Folders: []string{folder, "bulk"}}}}}, MaxGrants: 32, MaxAttempts: 64}
+	config := journal.Config{Accounts: []journal.Account{{ID: account, Provider: "fixture", Limit: pool.Amount{Bytes: limit, Messages: messages}, Users: []journal.User{{ID: user, Limit: pool.Amount{Bytes: limit, Messages: messages}, Folders: []string{"fast", "bulk"}}}}}, MaxGrants: 32, MaxAttempts: 64}
 	store, e := journal.Open(filepath.Join(dir, "issuer.db"), config, time.Second)
 	if e != nil {
 		t.Fatal(e)
@@ -114,7 +120,7 @@ func publications(t *testing.T, limit uint64, messages uint64) *publicationFixtu
 	add(t, receiver, 1, 1<<20, 1<<20)
 	c, s := cipherPair(t, w.Session())
 	key := bytes.Repeat([]byte{7}, 32)
-	publisher, e := transport.NewClientPublisher(sender, transport.Fast, transport.DataLedger, c, w, account, folder, key)
+	publisher, e := transport.NewClientPublisher(sender, plane, transport.DataLedger, c, w, account, folder, key)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -282,6 +288,10 @@ func TestProtocolRecordsCannotSpendDataAllowanceInTheFastMailbox(t *testing.T) {
 // fixture asserts command ownership; it is not calibrated provider service.
 func selectedPeer(t *testing.T, script func(net.Conn)) *transport.Executor {
 	t.Helper()
+	return selectedPeerOn(t, "fast", script)
+}
+func selectedPeerOn(t *testing.T, folder string, script func(net.Conn)) *transport.Executor {
+	t.Helper()
 	cert, roots, err := certificate()
 	if err != nil {
 		t.Fatal(err)
@@ -311,7 +321,7 @@ func selectedPeer(t *testing.T, script func(net.Conn)) *transport.Executor {
 	}()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: "fast", TLS: &tls.Config{RootCAs: roots}}, transport.DefaultIMAPLimits())
+	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, transport.DefaultIMAPLimits())
 	if err != nil {
 		listener.Close()
 		t.Fatal(err)

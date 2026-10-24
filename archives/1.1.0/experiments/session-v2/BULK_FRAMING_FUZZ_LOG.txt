@@ -1,0 +1,8 @@
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 3s, execs: 12890 (4296/sec), new interesting: 5 (total: 8)
+fuzz: elapsed: 6s, execs: 27810 (4973/sec), new interesting: 6 (total: 9)
+fuzz: elapsed: 9s, execs: 43807 (5333/sec), new interesting: 7 (total: 10)
+fuzz: elapsed: 10s, execs: 50084 (6116/sec), new interesting: 7 (total: 10)
+PASS
+ok  	itom.local/core/transport	10.120s

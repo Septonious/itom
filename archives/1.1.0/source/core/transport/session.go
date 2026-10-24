@@ -148,7 +148,7 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 		r := s.retries[plane][0]
 		s.retries[plane] = s.retries[plane][1:]
 		f := s.flows[r.Stream]
-		if f == nil {
+		if f == nil || f.stopped() && r.Kind != Reset && r.Kind != ResetAck {
 			continue
 		}
 		if r.Kind == Data && (f.stopped() || r.Offset+uint64(len(r.Payload)) <= f.receipt) {
@@ -555,6 +555,7 @@ func (s *Session) retireLocked(id uint64) error {
 	if !f.stopped() {
 		s.dropLocked(f)
 	}
+	s.discardRetriesLocked(id)
 	delete(s.flows, id)
 	for i, entry := range s.order {
 		if entry == id {

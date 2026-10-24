@@ -22,10 +22,13 @@ func (c *Cipher) Seal(r Record) ([]byte, error) {
 	return c.epoch.SealSession(b, r.Kind != Data)
 }
 func (c *Cipher) Open(packet []byte) (Record, error) {
-	b, err := c.epoch.OpenSession(packet)
+	// The single-record API must not silently drop records from a container.
+	if len(packet) >= 4 && string(packet[:4]) == bulkMagic {
+		return Record{}, ErrProtocol
+	}
+	records, err := c.OpenRecords(packet)
 	if err != nil {
 		return Record{}, err
 	}
-	defer clear(b)
-	return DecodeRecord(b)
+	return records[0], nil
 }

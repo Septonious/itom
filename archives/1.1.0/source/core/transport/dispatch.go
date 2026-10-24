@@ -35,6 +35,9 @@ func (s *Session) TakeFor(plane Plane, max int, class LedgerClass) (*Dispatch, b
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.takeForLocked(plane, max, class)
+}
+func (s *Session) takeForLocked(plane Plane, max int, class LedgerClass) (*Dispatch, bool) {
 	if len(s.dispatches) >= maxDispatches || s.nextToken == ^uint64(0) {
 		return nil, false
 	}
@@ -69,6 +72,10 @@ func (d *Dispatch) complete(outcome PublicationOutcome, proofOfStorage bool) err
 	s := d.session
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return d.completeLocked(outcome, proofOfStorage)
+}
+func (d *Dispatch) completeLocked(outcome PublicationOutcome, proofOfStorage bool) error {
+	s := d.session
 	state, exists := s.dispatches[d.token]
 	if !exists {
 		return ErrClosed
@@ -88,10 +95,7 @@ func (d *Dispatch) complete(outcome PublicationOutcome, proofOfStorage bool) err
 	if outcome == NotStarted {
 		// Keep a bounded exact immutable record. Requeuing does not allocate a new
 		// logical offset, nonce, ticket or physical descriptor.
-		if len(s.retries[state.plane]) >= maxDispatches {
-			return ErrCapacity
-		}
-		s.retries[state.plane] = append(s.retries[state.plane], state.record)
+		s.queueUnstartedLocked(state)
 	} else if state.record.Kind == Data {
 		for _, chunk := range f.pending {
 			if chunk.record.Offset == state.record.Offset {

@@ -1,0 +1,12 @@
+{"Time":"2026-10-24T09:19:20.681065635Z","Action":"start","Package":"itom.local/mobile"}
+{"Time":"2026-10-24T09:19:20.701213036Z","Action":"run","Package":"itom.local/mobile","Test":"TestApplicationCopyPreservesReplyAfterUploadHalfClose"}
+{"Time":"2026-10-24T09:19:20.701344132Z","Action":"output","Package":"itom.local/mobile","Test":"TestApplicationCopyPreservesReplyAfterUploadHalfClose","Output":"=== RUN   TestApplicationCopyPreservesReplyAfterUploadHalfClose\n","OutputType":"frame"}
+{"Time":"2026-10-24T09:19:20.703283823Z","Action":"output","Package":"itom.local/mobile","Test":"TestApplicationCopyPreservesReplyAfterUploadHalfClose","Output":"--- PASS: TestApplicationCopyPreservesReplyAfterUploadHalfClose (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-24T09:19:20.703308385Z","Action":"pass","Package":"itom.local/mobile","Test":"TestApplicationCopyPreservesReplyAfterUploadHalfClose","Elapsed":0}
+{"Time":"2026-10-24T09:19:20.703325895Z","Action":"run","Package":"itom.local/mobile","Test":"TestUnqualifiedReplacementCannotMasqueradeAsARelease"}
+{"Time":"2026-10-24T09:19:20.703330405Z","Action":"output","Package":"itom.local/mobile","Test":"TestUnqualifiedReplacementCannotMasqueradeAsARelease","Output":"=== RUN   TestUnqualifiedReplacementCannotMasqueradeAsARelease\n","OutputType":"frame"}
+{"Time":"2026-10-24T09:19:20.70333606Z","Action":"output","Package":"itom.local/mobile","Test":"TestUnqualifiedReplacementCannotMasqueradeAsARelease","Output":"--- PASS: TestUnqualifiedReplacementCannotMasqueradeAsARelease (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-24T09:19:20.703390612Z","Action":"pass","Package":"itom.local/mobile","Test":"TestUnqualifiedReplacementCannotMasqueradeAsARelease","Elapsed":0}
+{"Time":"2026-10-24T09:19:20.703393819Z","Action":"output","Package":"itom.local/mobile","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-24T09:19:21.706842745Z","Action":"output","Package":"itom.local/mobile","Output":"ok  \titom.local/mobile\t1.025s\n"}
+{"Time":"2026-10-24T09:19:21.707688348Z","Action":"pass","Package":"itom.local/mobile","Elapsed":1.027}

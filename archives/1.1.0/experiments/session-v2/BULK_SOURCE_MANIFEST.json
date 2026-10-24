@@ -1,0 +1,922 @@
+[
+  {
+    "path": "core/adminapi/api.go",
+    "sha256": "9eb7af13efab62b74391d022c6c9e20206049b10d4804acb167757114cdae876"
+  },
+  {
+    "path": "core/adminserver/server.go",
+    "sha256": "c7fe9a7ffb21ebd1f8a003a8e1564f3800170c587968e8b69cd44e1209509c39"
+  },
+  {
+    "path": "core/adminserver/watchdog.go",
+    "sha256": "d3ef6f9932d23c8c5be84d9c111d42b639b3527da697a2ded4a6ad5b5571b6ea"
+  },
+  {
+    "path": "core/cmd/itom/main.go",
+    "sha256": "288d01f13c4e994751a4a7bd2a309c4f058765c273af5f4f5c6665c60d80ba3d"
+  },
+  {
+    "path": "core/cmd/itom/signal_unix.go",
+    "sha256": "662047d7de67955e1adceb6a577ab1db27e24f2e7dc5b33df55aa337064a86f5"
+  },
+  {
+    "path": "core/cmd/itom/signal_windows.go",
+    "sha256": "63f4d6416f02bce6759d933d5d169d96d15aa792fed0f178e752c52f0de5583e"
+  },
+  {
+    "path": "core/go.mod",
+    "sha256": "2193ef1dca8560a22817ce6c403e1e5f9785694b6c44f2d79a50bf0f6e222d80"
+  },
+  {
+    "path": "core/go.sum",
+    "sha256": "ffcd0a958ada22e730daf5f672019eda05aa7e67fae0f940959e6e472283c2f6"
+  },
+  {
+    "path": "core/journal/audit.go",
+    "sha256": "5a7abcc95038cf294e8b39fbc05cabce86a8d87639420367010e5455c6197e7b"
+  },
+  {
+    "path": "core/journal/commit_metrics.go",
+    "sha256": "dde60fb66269cd67fb96e8089af611a002a7af5607e5f30d869e1651b7eb5dbb"
+  },
+  {
+    "path": "core/journal/latency_itomtest.go",
+    "sha256": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50"
+  },
+  {
+    "path": "core/journal/ledger.go",
+    "sha256": "f633bdc3935f264bd7078b671e2a2612c77a6f8562d2eaf61e5708a0861eb875"
+  },
+  {
+    "path": "core/journal/model.go",
+    "sha256": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532"
+  },
+  {
+    "path": "core/journal/origin_view.go",
+    "sha256": "097656fcef7d3db609a3b62d6b8296a4c1c96761775d39efa17e077f0fc2033a"
+  },
+  {
+    "path": "core/journal/profile.go",
+    "sha256": "2a546b9559e11267cd8a5e5db365c9e0ae104bfdbdac906021b30c710e4724e9"
+  },
+  {
+    "path": "core/journal/recovery_test.go",
+    "sha256": "659f9498d12cd8c9113cffa47f083f3ad92ef5a40fbedbcdd0700c1138e911ab"
+  },
+  {
+    "path": "core/journal/remote.go",
+    "sha256": "16f39d5dfc47f8c1c67c6d0d623bc6ddbf0eb19dde9dd66266858ac8e94625ad"
+  },
+  {
+    "path": "core/journal/remote_body.go",
+    "sha256": "fc34db889dfaa4a844391209f59b9ec36a183192b9ae439c570c540a21b67ed5"
+  },
+  {
+    "path": "core/journal/remote_body_fault_test.go",
+    "sha256": "ad0371fe3f0149dc4d3972cf8986ffc99e5057b2ecff0cff7cfdd6af3d989aeb"
+  },
+  {
+    "path": "core/journal/remote_body_test.go",
+    "sha256": "08231c568e7aee99e19a4bb009b0ba39f7ab0fb7e021f66ea0be64c03dd86bea"
+  },
+  {
+    "path": "core/journal/remote_index.go",
+    "sha256": "aba722a22b19a0ee39d056af591445df8e4d1103e75f80fb1fa57513d842e53e"
+  },
+  {
+    "path": "core/journal/store.go",
+    "sha256": "f45833b8b06e2de8b0f658b5459ef40ff69966e9e5285694155dc9d974905148"
+  },
+  {
+    "path": "core/mailbox/admin.go",
+    "sha256": "d3a2b069b2eb1d4117724e03cf4ba736041ffe4317db2565f8eda5594297cc25"
+  },
+  {
+    "path": "core/mailbox/append_hints.go",
+    "sha256": "8c6bf9b39dff84536beccceed8b6e81cd7ff8933847c12a618a67c4045fd35f9"
+  },
+  {
+    "path": "core/mailbox/batch.go",
+    "sha256": "940570cb8802c1ad683d3f989daf3ec9a3d1ed8d49cb57e1e208e8152742b423"
+  },
+  {
+    "path": "core/mailbox/binary_policy.go",
+    "sha256": "5fd51cb3b7aaf18c3ea698ebad355e7a45ea2b43484a9973f709e8ada7919587"
+  },
+  {
+    "path": "core/mailbox/check.go",
+    "sha256": "dad4df454c586c7dc025ed8727a196f6e2ec187d40b408f2c95a8784023e3966"
+  },
+  {
+    "path": "core/mailbox/connection_error.go",
+    "sha256": "e7f7709d642cc1e627d2b8c2122caaded58a043d93c265fa766ee2c2e1933916"
+  },
+  {
+    "path": "core/mailbox/dispatcher.go",
+    "sha256": "52f9e36e3070df5b1b8efe24f8258a7096473320f182f4e993f13cb9f32820db"
+  },
+  {
+    "path": "core/mailbox/inbox.go",
+    "sha256": "a96864d8ff299a73afb47461555da45ce14e3f4786f09b54ad7cb1fda342dacf"
+  },
+  {
+    "path": "core/mailbox/keepalive.go",
+    "sha256": "d53aa0f4f8b5c6d86352c1734c6f0f68c89300b9f9014239491c921a1a4071a6"
+  },
+  {
+    "path": "core/mailbox/mailbox.go",
+    "sha256": "b6d8376d21fd0e8a64526d21fa19a042f05ea8737dc9d83a0919fdab2a476ae0"
+  },
+  {
+    "path": "core/mailbox/purge.go",
+    "sha256": "7063023bfb0c9ebfdf421b1aa54ee23a61494be049cf6acf01ce7acd3372e644"
+  },
+  {
+    "path": "core/mailbox/receive_interrupt.go",
+    "sha256": "25c69bb3928137a4cfdd7b7a156d3fc9ed79cfaed67db2d2b791d5731c05fe83"
+  },
+  {
+    "path": "core/mailbox/socket_lifecycle.go",
+    "sha256": "92337b11775ae2113d0a874d341979785d615f9cb8611564e0fbae6fee56b2ee"
+  },
+  {
+    "path": "core/mailbox/tail_gaps.go",
+    "sha256": "37385485165d17bcb972722566efe6594339f6c4384249192740ea19480333ff"
+  },
+  {
+    "path": "core/mailbox/tail_sparse.go",
+    "sha256": "27a3110e2dfbb3aa04ba3ef179bb39f4015f8f651c8034a008250c44f5337d19"
+  },
+  {
+    "path": "core/manager/accounts.go",
+    "sha256": "0c8ce3b57500625453b0ac9896e630692f5c5a4f310395dcd404219470d4e517"
+  },
+  {
+    "path": "core/manager/logs.go",
+    "sha256": "3113f40ce986bf78182572b4914b2cfc1610c0dbf8cfadb0c3b9674273954946"
+  },
+  {
+    "path": "core/manager/manager.go",
+    "sha256": "42d59bb9e06b2f8665165cbe16497a5220abf694b8d4cf9160ae76d729501afe"
+  },
+  {
+    "path": "core/manager/notices.go",
+    "sha256": "0b281f6dd859d917920152e5d39496a51a2c4a21bacac8342e88ade540effc80"
+  },
+  {
+    "path": "core/manager/selections.go",
+    "sha256": "95fb737f4dd273f7235d47cd294d742d24998d941313df3770a0da6c53a93db6"
+  },
+  {
+    "path": "core/manager/trace.go",
+    "sha256": "6c7bb22f000412680eba0e899f1ca20b76978125ac94926e5211e6399b0a6214"
+  },
+  {
+    "path": "core/manager/traffic.go",
+    "sha256": "1e1b699bb3619c3b2376b234e21a1c7992577419b30e6e8976256a8db308853d"
+  },
+  {
+    "path": "core/manager/uninstall.go",
+    "sha256": "ef694ff08e15637bd7ae5a0ce213e2e7192c9c1fa1ce0812ffc460fbd7496e25"
+  },
+  {
+    "path": "core/netroute/dial.go",
+    "sha256": "676e9d9ea750bdd5a5a31be5031c100003b69e804200593056946c0b30fa75f5"
+  },
+  {
+    "path": "core/pool/fair.go",
+    "sha256": "89c0507ed84a911f8dc60550edd73692c92946a11698eef0e3a176dc698b3174"
+  },
+  {
+    "path": "core/pool/governor.go",
+    "sha256": "7d4d24d33ef02988135ef83c30238098e0c619c4fe1e4c9702022ff34ff1fcd2"
+  },
+  {
+    "path": "core/probe/imap.go",
+    "sha256": "1c02722ede53795275d9ff11e5f1cee4d82b21caa3044706f68d528d4b062b14"
+  },
+  {
+    "path": "core/probe/probe.go",
+    "sha256": "1ebe9db0be61966bfa344181cc369268e1c1b71bc75488dc5bcd6f8d9d08e42c"
+  },
+  {
+    "path": "core/qualification/measure.go",
+    "sha256": "7147e2e20558a248341465818d0d78495552a633fa67e381fd64ee08ec7fc477"
+  },
+  {
+    "path": "core/qualification/measure_test.go",
+    "sha256": "95b493744f22270b4c7529e04b112a259181e00e8a26636805bc06bbac9900e0"
+  },
+  {
+    "path": "core/secure/replay.go",
+    "sha256": "2888fbf1048293aecbbe5d02eb1f390d4e9a4024afacb0369545aa248a09d905"
+  },
+  {
+    "path": "core/secure/secure.go",
+    "sha256": "333376dd8575108779a58b1bf2e0572b6b577999001c3ed17203e48133259c00"
+  },
+  {
+    "path": "core/secure/session_batch.go",
+    "sha256": "71f11777a7859443f78516743f0b3bee55e0bb450e935069c5a571ec3f6998f6"
+  },
+  {
+    "path": "core/secure/session_batch_test.go",
+    "sha256": "a748673b6412a7a6d82cde646dab1c8799432252eac4b30c1f00eda10b4d0024"
+  },
+  {
+    "path": "core/secure/session_codec.go",
+    "sha256": "26a4438b7f2d7b6ef7ac993b4341e40f2a07a6ac3e687a58cfda31a6d7979e6e"
+  },
+  {
+    "path": "core/secure/session_test.go",
+    "sha256": "c0e9c91c370ceaebf565313844bf1e2740fee54178380d3160786192186f2f29"
+  },
+  {
+    "path": "core/servercfg/accounts.go",
+    "sha256": "0fcc35a6f00f684cc194b4d9be2c6b5e702b092050918af7bbc68ca8960a280c"
+  },
+  {
+    "path": "core/servercfg/android.go",
+    "sha256": "ed5e4223a08f6ef18313052d2525303c6c66a6190c113df21f6594f9cfb005c9"
+  },
+  {
+    "path": "core/servercfg/config.go",
+    "sha256": "cd1334ce59d18ea36d6bc44b518f9a66284c4e07df933ee1667b6dc3e1ee02ec"
+  },
+  {
+    "path": "core/servercfg/guard.go",
+    "sha256": "7092998ed538d0e00396285736a24c225c3f3d082ee3e1bd96034b1afba165f3"
+  },
+  {
+    "path": "core/servercfg/notice.go",
+    "sha256": "57fd9bd3dea3de3cae98cdd1793053ec65ffaba98686223fb4e5789d06fee7f6"
+  },
+  {
+    "path": "core/servercfg/transport.go",
+    "sha256": "d2c8c53b6165808097c3c6a8ee2674996539b78769dc72735024944c832a9d8c"
+  },
+  {
+    "path": "core/servercfg/users.go",
+    "sha256": "5cd15ae975124385122d1d211b056b79b8f50d1ba25776ef90a70d752e57aab0"
+  },
+  {
+    "path": "core/socks/server.go",
+    "sha256": "86054b083643c4fd7e1e45099eca7c4086483bde28493051464c3060ebabf2b3"
+  },
+  {
+    "path": "core/third_party/go-imap/acl.go",
+    "sha256": "f59c01be17f793137016eb822d22699c7ce52699e47eeb8b5b6492f6c66e5cbc"
+  },
+  {
+    "path": "core/third_party/go-imap/append.go",
+    "sha256": "ec5fd00ed5f46c54b4b8707dfd98a4c05ef41772cd4cd454f10bc818f2287f73"
+  },
+  {
+    "path": "core/third_party/go-imap/capability.go",
+    "sha256": "65637f7368afa8544512a6be1b552d9060e077bf8d6a5ee9ea630410a8181dbe"
+  },
+  {
+    "path": "core/third_party/go-imap/cmd/imapmemserver/main.go",
+    "sha256": "ddc760af2daff3f1918af2f46f739b8edf40f1319b7764fbdb25efab4f9ca11a"
+  },
+  {
+    "path": "core/third_party/go-imap/copy.go",
+    "sha256": "e2f27eaa857afc0e39b3e035861877e10355dcde7cc97990457a210302b02a27"
+  },
+  {
+    "path": "core/third_party/go-imap/create.go",
+    "sha256": "74ea550ff49337ee07e01c60f5fa36b676d0894a5a9f11feb8ce9f81844464e1"
+  },
+  {
+    "path": "core/third_party/go-imap/fetch.go",
+    "sha256": "31e2b5e701b5d80b78b4067ae77bfc23c13850fd602300fc315134a01c22a723"
+  },
+  {
+    "path": "core/third_party/go-imap/go.mod",
+    "sha256": "646c63bd35a064f19b092a3a766232d46af7a2d085f086aee0934714ed5784a9"
+  },
+  {
+    "path": "core/third_party/go-imap/go.sum",
+    "sha256": "1acb000fe875dcccfbffea8817c0d2be7cc5789af1d04c523b8182df921ef1a9"
+  },
+  {
+    "path": "core/third_party/go-imap/id.go",
+    "sha256": "6c4ab834635d867c14745266b4d0ba5b60b6346c726f394ec353c6a08bdfef10"
+  },
+  {
+    "path": "core/third_party/go-imap/imap.go",
+    "sha256": "32cf3dc57723ee383864364502dab75cea80c5f14abec52a07566677e6102124"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/acl.go",
+    "sha256": "e67401eb13e1c4055ae12d40f8c848e5b8b8493257dc0b9746d934fd9e4e70b8"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/acl_test.go",
+    "sha256": "5bfaa0a8a2226fcca4f77481d48496690fdca42a0518f127f3e41c08dce7d32e"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/append.go",
+    "sha256": "eaa2da775bf05c40d829987dbe5f2636ba3b059c9afcb39175daf1bf9c92bc3e"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/append_test.go",
+    "sha256": "60072f0f41ad4f7c75d0b590f33990be3e6b5eb4315ee1b859c67d72c08db2c1"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/authenticate.go",
+    "sha256": "f518613a826087fa00312f680111542392eb26f55c54530de67ecc86e41e7ac6"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/authenticate_test.go",
+    "sha256": "43802974752ccfb78f14df9fd7ad7ce352487b8d49fbb3e269fcd55749694419"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/capability.go",
+    "sha256": "0ec5f3d8c3de9fa60f0373572e8900d43eb3bd230f406f07d69c54035f7d9758"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/client.go",
+    "sha256": "ecdffef3a162e494216938539bd0b87c0cbfbd36c8d857dbe9807ac84e4b8a78"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/client_test.go",
+    "sha256": "ff84f37e3ed350f6bca2bf5860cc34a48b2b9790ad8046fc62f9fac9fe520217"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/connection_test.go",
+    "sha256": "fd04d74f610345de0d5cd045b7bbb096bb9bbaa48a0dc8cc294f10d7855fb8cb"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/copy.go",
+    "sha256": "312276710a9f2d1ae4aa3da20d25e2985f879c4255f2ddaec7925002eb7ebfe1"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/create.go",
+    "sha256": "76a59c8cbf67d6a6732984cd74e20c5c3919a99bc0c21dd990995e1cc87840b8"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/create_test.go",
+    "sha256": "99be8ce5c14205ae54be5ab6b9be8b02a2ccb62c96fd4bc65535210a8054feb7"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/dovecot_test.go",
+    "sha256": "1c51ecae17948b61f7d97e1fec6e1b91cf4a2d59ed35e085c669f0a44133a0e5"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/enable.go",
+    "sha256": "a3cb7a5ba534708fe0a9ba8c239d03d2a2a591a958f32560efc61a33f856a592"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/example_test.go",
+    "sha256": "4aff5d276eae6551bbae8e75765f36b5217f9ff3ea21af7aef073d7e9b5f801e"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/expunge.go",
+    "sha256": "aefa8cea8fa6183821247c89743fdf16066b2f4998f4fcde6f3b1df9b6fc37c9"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/expunge_test.go",
+    "sha256": "fea37dac013c546c664c54afd540137eb48c289e6c8aa3c523b0986b791e09ca"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/fetch.go",
+    "sha256": "0d83d821d2a581e3f855fa9a3eae19c4c9dd34de8e98f2b0bebcfb66440ff959"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/fetch_test.go",
+    "sha256": "d54e6591c1a3649ed8c48af04f674b4c231ac0c3fa52ef2dbc402c72f4a170f3"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/fetch_update_regression_test.go",
+    "sha256": "168f87e73b38f04fa239abfe85677eb5386dcae8e4e9b8ea9dea8e426aa2ad5d"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/id.go",
+    "sha256": "3187d4bb7c4eb2dd5694617255295acae279356563ac515706aa67cf413b73ca"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/idle.go",
+    "sha256": "835682df1f91d4496cbd0bedb26448f4e37ce4d0c9c9e2124f5d3f1974256763"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/idle_eof_regression_test.go",
+    "sha256": "6c48f66f00f1e33e8b2862232737428ad6160ddbb77735c81f9ab3190f7276e4"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/idle_test.go",
+    "sha256": "24f8aa8070eea3888e946d5c2ea3ab6780284cfb6e4b9a56ca8fafc541da0f69"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/list.go",
+    "sha256": "ad934b67fcc74250443be003cccd0b63801dbe3695b29df00eddfad6362d576f"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/list_test.go",
+    "sha256": "8982955a636c280deaeef7b9880c59d730f530f9adc2f26f6800c21499e24aa7"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/literal_capability_regression_test.go",
+    "sha256": "b605dd91c7986117200ec701d923760d76bbc6ca7aa265e2a933752e6ede3b74"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/metadata.go",
+    "sha256": "a1531c9287a46d5d733c143f2bf373e8b5558860fef4ecaeb7cf4f639e92b6f3"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/move.go",
+    "sha256": "851d2bb701a2cd41116e898b8c5d33f3264879726c73d05f179b93b8e7cd8bea"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/namespace.go",
+    "sha256": "c75e258205154041aed5dda65d365341237e954aac51b555e62f766f973e4ee8"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/quota.go",
+    "sha256": "31ae95e8d51dfcd8168b19ac5a16a20caa5998ede93457b1d2c5bf9cea663885"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/search.go",
+    "sha256": "ae93cdbfb2f53f185d0e16b7c994731d9e1dd169393eb0a46f81719d3344cd93"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/search_test.go",
+    "sha256": "05bdb711ffac676162cde4f5d0771af5e3fa8478fdbbfae36945ccb3ee6760cf"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/select.go",
+    "sha256": "87e37eb5f6ed7602f5fcadb58d7c6d2630855e90e17a26ae9edfd1ecc310f6d2"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/select_test.go",
+    "sha256": "b9c124245a1e26771ab3a39b1cd3acf2d3af9b9354bbfd06ae791434b12c78c4"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/sort.go",
+    "sha256": "979dcd3cb530902dffc4cd20b676f82376d03a68cd08bbb0b1b82966ed0cccff"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/starttls.go",
+    "sha256": "5904a84983dd4b394623b1314ec9db290303ee1e661ad09fc6f7bfa38ffe4419"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/starttls_test.go",
+    "sha256": "603c17d9aabec3a7371e94e003a5917b8be652b5807ab1a0af68a5fe4c7bf256"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/status.go",
+    "sha256": "94e5b7d316016d3dbd8e5f2747b09b1c9cdaebf0072c8a5014fbfe0f06bed58f"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/status_test.go",
+    "sha256": "e7c918067d9362456d1cb7e4cb8ce7bf4e70df3c63097870ad7eed726ead1bb2"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/store.go",
+    "sha256": "ad7a116f6ca4e0b70e5fc89f84eea26fdc76cf30e8cde846aa0d197e58ad93ab"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/store_test.go",
+    "sha256": "c1000ef5c99bfb1b31af113c2af2d79d3f679f8d72e6c153c7f05bab9c104c7f"
+  },
+  {
+    "path": "core/third_party/go-imap/imapclient/thread.go",
+    "sha256": "2ba8e0268b3668f04f1b1da0187bd67c56cee9bc964645b0ca63199e1e1ff008"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/append.go",
+    "sha256": "8334e6744443f2b852be4b4ff87092bf11b5238c69915c8b2cabe43d4da4c2ea"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/authenticate.go",
+    "sha256": "51c03449f2763ef5fcd30565f1637b77428075ce53b9f22c2f1a4e27b3e4dc9e"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/capability.go",
+    "sha256": "3a05816d2c71f98d8937741bc77fd1e333eae316bd6c251a9f0bd983e6ecc5e6"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/conn.go",
+    "sha256": "14b29626ba9f5f44fe62c27f63061bd67219fd298200f24ebcdc5bf1c80323d5"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/copy.go",
+    "sha256": "c192437e1d7e8e32f3f985f4bab2922574fa0e50bc1dd64790bfe8c2f5e41f32"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/create.go",
+    "sha256": "33425020630984d54072136be35e082a07e98d2c9e2d2eba4669f56dfb74092b"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/enable.go",
+    "sha256": "9cda48a14940a0ef817e39259f46edb125314c85e204ed5a7a1315ad5ca6c16e"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/expunge.go",
+    "sha256": "4292bbe08a133ef6fdb61a79e355b5ad2e892d3719d2eefcbe40e49032197802"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/fetch.go",
+    "sha256": "5dc06224defb50d046aba97a62a4998bfc765ade4bb70268e7d2fdb9385d211a"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/idle.go",
+    "sha256": "30c8dc257353ce1d001d4f1611d9e5bdbe8868695234f5a204ffbb5af31881e2"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/imapmemserver/mailbox.go",
+    "sha256": "ec1268ca732cbaa651991b044b80808c6f513d02c5880cd367262781bfe3ebb8"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/imapmemserver/message.go",
+    "sha256": "1ec3ed1173ec2115097feedeb8578728d2b84c37141b8d902639e482e60a1418"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/imapmemserver/server.go",
+    "sha256": "9c3d93f00ba02ef79c0f5b741aa989b0bfb4cac50aa0719cf1d7c0a22a509672"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/imapmemserver/session.go",
+    "sha256": "8cd1eb35d605773cdc8f199735f9908dc264b87c129083ecc97d5b4020686a45"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/imapmemserver/user.go",
+    "sha256": "f615f717ac8c099024a9279c1bf6fb29027638892b8fc3088d7928ef808eb3b4"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/list.go",
+    "sha256": "77067bf1cf6c014ce2677458f5b4d5f397c78a361e0cb50c249369eb49fb33f6"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/list_test.go",
+    "sha256": "a1b105d0d67999c81e3e94321e1f93bf7b73a817e8ea870fb71c181111abce15"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/login.go",
+    "sha256": "a377653a2c88cfe5fdf0fa1bbffe61df89c91b5bdba639075a9b3c8e4ddf2d2b"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/message.go",
+    "sha256": "0b904a01e98ed5ea02fb93b52e57e792945c8c823f07cc95e2a28a500e09fc97"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/move.go",
+    "sha256": "9eb22b9026a02ce98d1370436f67f5de374eaf03c1c9f94040e3344cbb1585c4"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/namespace.go",
+    "sha256": "aa9eea9b083cd3f13df4f02bfc630c149b22ad97dd41187f5e58da118712ed9a"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/search.go",
+    "sha256": "aa76848fbc313989a14b9b505f798ff490c00c96a54181fe02905638749c3932"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/select.go",
+    "sha256": "e0db4793b232062ea4147a0d0612566b99131eee5495b8474cef1c5b66062c65"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/server.go",
+    "sha256": "aae5f25a814b3620f5bc70bb91a60b0d683e81471a8a1bf12c7985182dc6f934"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/session.go",
+    "sha256": "5cf94b1764f8aa6529d74caaae70cf43997b29ce29af377c6d5276d9895965c5"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/starttls.go",
+    "sha256": "a49bfb5a9e701aff77e05a3ca861b3450d58c2f46e84d3c48ccbc9b0fbb58ba2"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/status.go",
+    "sha256": "31bb11d1b8184840f2e57198410dc8ca85d6b82b0c48512cb6a90d793b42f260"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/store.go",
+    "sha256": "1da56cfb20047c0c287f7d287be990e4405f91643404bea5f9c4777b93d56bec"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/tracker.go",
+    "sha256": "7fe138447cf97bc4f4e83a0164842b4110305c8e0b8ba8cbf0bed9535775df33"
+  },
+  {
+    "path": "core/third_party/go-imap/imapserver/tracker_test.go",
+    "sha256": "21eee6bc9f99f5cfa196c06b13e3bb8c02fada4f4ebef967082d624845f23ba8"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/acl.go",
+    "sha256": "ad37cf68c24e300df7d9bbd780fd77bbc91bb59a9a435085fdc05c76ca99dcc6"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapnum/numset.go",
+    "sha256": "91529970f9853d2893cd0ecc5c19248db05f2b45a3009623426215cf9701d943"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapnum/numset_test.go",
+    "sha256": "bc97da880583b61ead59d2935461d1808619913fe3dde3f27664dc05330cf989"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapwire/decoder.go",
+    "sha256": "3b64ee4011a59f24bcec9467ca3bd20da2bdda715e9af046bc365c3eeda7b8d0"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapwire/encoder.go",
+    "sha256": "f5c4a676ea2cb7445af0ff905debc017c63f694457f78b5557d930c1123be760"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapwire/imapwire.go",
+    "sha256": "69e33b9238acfb926367c44057edd95b74ee37dbc2641e904db4105f995a84f0"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/imapwire/num.go",
+    "sha256": "3aaffc332108edd98110946a450720ddc3a93f04e197ddb3457c87760220a5f5"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/internal.go",
+    "sha256": "c83d6cf6ce80b495df42f4a9f4260bbf342b0c56b3e071a42899dfb5bac90312"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/sasl.go",
+    "sha256": "fdb0f05a59b42f715690a404f6709029e91f1d64917f4543bbfb91cf9b97be1e"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/utf7/decoder.go",
+    "sha256": "64334b84c2a56b4a96eed21513d22a9254bba2128da3529c57d4992dafdb046b"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/utf7/decoder_test.go",
+    "sha256": "12fc1a2caf1cd7d4d273d3e589987b9a9b83b612d3b2926eea547ef98d30bc43"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/utf7/encoder.go",
+    "sha256": "34ea2af0ad5e622e81e301cc3bc3972384e134584b9031b6c72d251dbc62f40a"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/utf7/encoder_test.go",
+    "sha256": "23259a052ca3d8fb81e93ffcaa7c63db95898679c4d54f40daa40f28032ff388"
+  },
+  {
+    "path": "core/third_party/go-imap/internal/utf7/utf7.go",
+    "sha256": "710d793e51e4ab8dd37f27c79e323d1666cccf122695b94fff82ec2a3f82730c"
+  },
+  {
+    "path": "core/third_party/go-imap/list.go",
+    "sha256": "23f2f44fa0b5481c7e2c5c89f0e62b8328e18a0ce175cd3c0588265515ced20b"
+  },
+  {
+    "path": "core/third_party/go-imap/namespace.go",
+    "sha256": "bd5207e1d46fffc6f8481fec0d84e33d954014d5d8de80839d9e0bdabddcb3e1"
+  },
+  {
+    "path": "core/third_party/go-imap/numset.go",
+    "sha256": "85f7ad4fbf7e694b44994e7afd86330f817a1f3dd0ddfcc28a3e5541e2625d56"
+  },
+  {
+    "path": "core/third_party/go-imap/quota.go",
+    "sha256": "59162cf2bde7c3e2a50a58a6069b9e9f6724f14a62549b171dd9fb6fbe3271c0"
+  },
+  {
+    "path": "core/third_party/go-imap/rename.go",
+    "sha256": "a124dae8e1087f24d9d5ca7b6ecaab8771fa1f65ec2dd4a1e7e31dd3e153ebf8"
+  },
+  {
+    "path": "core/third_party/go-imap/response.go",
+    "sha256": "3ec5aa9191eee3f655b0d02e8a17b26454685a1e940c2506aa13b6e22cefc47b"
+  },
+  {
+    "path": "core/third_party/go-imap/search.go",
+    "sha256": "0f67c0c7aa97b6688fd0cc775777f9c5a91ecf36886ea75bb8cc5b18bef9cad8"
+  },
+  {
+    "path": "core/third_party/go-imap/select.go",
+    "sha256": "cf8fc04646a4665a9737ec95432221a6cef5aa792fa3ef895d7bbfbf44da5973"
+  },
+  {
+    "path": "core/third_party/go-imap/status.go",
+    "sha256": "c5f03abc11dc61d2355f0d38c25bef0c1e3524d5b35b5ae307c63dfd90370206"
+  },
+  {
+    "path": "core/third_party/go-imap/store.go",
+    "sha256": "22289dfb3b19dbab1d89a8ca9475debdb627c0c7b697f09cce98f46c65548bec"
+  },
+  {
+    "path": "core/third_party/go-imap/thread.go",
+    "sha256": "532029d2b9fa6f725c3ac68b888fb6af133d608858fbc374df1a4e5ab0166696"
+  },
+  {
+    "path": "core/transport/bootstrap.go",
+    "sha256": "5a39d7f080578720d464ac398cd18c70b53a09b37595339ed77bce5dcbf1f54d"
+  },
+  {
+    "path": "core/transport/bootstrap_test.go",
+    "sha256": "9fd413fe4c366ebfd554678812fe6b54b50cdda1f16b856af5306b6279ac70c5"
+  },
+  {
+    "path": "core/transport/bulk_dispatch.go",
+    "sha256": "780cee61c0458b1724be999207dc68b5aa9b27f95f53ef1abcd02de23a71bdba"
+  },
+  {
+    "path": "core/transport/bulk_imap_test.go",
+    "sha256": "0cef6a0721173bdc890c54ab13222f1d0135277635d383fb1afcbe1ebaaf6629"
+  },
+  {
+    "path": "core/transport/bulk_publication_test.go",
+    "sha256": "b4e3ed97614736b7f83d77b020b2a8fa2a7f36bce079bf69c395b7a762c0eab8"
+  },
+  {
+    "path": "core/transport/bulk_recovery_test.go",
+    "sha256": "cc049cf8594b72e5542a5c1e8f5c80b12bbff09da1c33e53be709a976399235b"
+  },
+  {
+    "path": "core/transport/bundle.go",
+    "sha256": "1d1446c7c58a0d3112eec624b43d2952b616fcb313ed167fb7ca44cfdb987656"
+  },
+  {
+    "path": "core/transport/bundle_fuzz_test.go",
+    "sha256": "effa5c5136c6dc0e8fbaef26e74a9d291eeac3d8583fe281bc4ecbfc6addfc48"
+  },
+  {
+    "path": "core/transport/bundle_test.go",
+    "sha256": "8848960d9d1061848667969b9bdfe7c9f4bf7e5d6f5f86969c614b65f39cd227"
+  },
+  {
+    "path": "core/transport/cipher.go",
+    "sha256": "5d4e848ed4e6d0d8511a834f24a827f3182105e0bef7b9d402b3e66c8e3f2ee1"
+  },
+  {
+    "path": "core/transport/cipher_test.go",
+    "sha256": "f512b57ffebef422563f978d5454e9513fc5a0309f1e2bd2a0cde1a3d311ce96"
+  },
+  {
+    "path": "core/transport/classification.go",
+    "sha256": "32853cce25de8336dd2a56de06221e749dc881b68b8aaff0e90f4aa8220da6e2"
+  },
+  {
+    "path": "core/transport/controller.go",
+    "sha256": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a"
+  },
+  {
+    "path": "core/transport/dispatch.go",
+    "sha256": "86f403d266e8f1550a4f5e9f65b238c9f5eadd6e19b053da2e015f103bb3f8da"
+  },
+  {
+    "path": "core/transport/ids.go",
+    "sha256": "ca6ee28082ec326475004a3d538f539b6611f21f635c4ea171bc98f6c0e6cdbe"
+  },
+  {
+    "path": "core/transport/imap.go",
+    "sha256": "f376b0d5b5722be1fb016b05cbfc7bd4949e74b683ac8e90ea76d19ceda3de99"
+  },
+  {
+    "path": "core/transport/imap_test.go",
+    "sha256": "426b16340f62fa316f10fb70a51519411d4ce19468547792ceef8cffc5398d2d"
+  },
+  {
+    "path": "core/transport/ledger.go",
+    "sha256": "75ece8a1798289a89323d881d2f6db75a03e81d67abe8a72790081cdd0a927d6"
+  },
+  {
+    "path": "core/transport/lifecycle_test.go",
+    "sha256": "e0c3715962f0917557006eefd24d670d12861e63214e12a57cf67da35999afff"
+  },
+  {
+    "path": "core/transport/publication_test.go",
+    "sha256": "200c285c47f1a143d29f8fa71de7ce022c5002c67b6af28b569534a630d14ae1"
+  },
+  {
+    "path": "core/transport/publisher.go",
+    "sha256": "6ebadd0694787c41d2dd72d6cb637f7192e8932098596439c5651a8da9b73d4d"
+  },
+  {
+    "path": "core/transport/readiness.go",
+    "sha256": "728e939aecff537c00377b642d5f05491e79999f028f0af25d7fc34119de8974"
+  },
+  {
+    "path": "core/transport/receiver.go",
+    "sha256": "cb58052222b3992b7f8840dd59b7c968fce7909d677063be5ac9aa921630f51e"
+  },
+  {
+    "path": "core/transport/record.go",
+    "sha256": "6a07c8d867bf8e13f96eaa2940ec5f724c605b09e6c0acf9763f665a83ef6957"
+  },
+  {
+    "path": "core/transport/retry.go",
+    "sha256": "110e3fdde5fedb3e20fe24929522fc0b77dc642ccf0c7a2e8691e9e0fb0e6a7d"
+  },
+  {
+    "path": "core/transport/retry_test.go",
+    "sha256": "6a12fd45957d0dc28ba3541a3887067f898770816f832bc0859c9c49a5d90950"
+  },
+  {
+    "path": "core/transport/session.go",
+    "sha256": "4e9aded465ab0ee104442e1ca152412105cdac0d073ceff5da49d37ed1cd0fef"
+  },
+  {
+    "path": "core/transport/session_network_test.go",
+    "sha256": "6efc9bd47533d71018a74e39af937198133da0319afff0b71f20d783875a3478"
+  },
+  {
+    "path": "core/transport/session_test.go",
+    "sha256": "8eb0f7bc255ea08391424d60a8fdeaebbe00ecd8eba5c313ce535f86c4a40080"
+  },
+  {
+    "path": "core/transport/stream.go",
+    "sha256": "db53a8daa63c99c88b171d60a1a2919f65c242931d5727e65ff738bc182b79af"
+  },
+  {
+    "path": "core/tunnel/api.go",
+    "sha256": "3f97672b1781fef2ee83fe8f6907e0b0b66af7fc5f531c0a903892947f98d065"
+  },
+  {
+    "path": "core/wallet/admission.go",
+    "sha256": "3fbeb93636376468748ee8518470af41d6584b8b1c23e986d52ad93b6121a902"
+  },
+  {
+    "path": "core/wallet/admission_test.go",
+    "sha256": "575f526297f71eff91033266d1f3534cdd343204ae69458478666f72b2bcc340"
+  },
+  {
+    "path": "core/wallet/reconcile.go",
+    "sha256": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165"
+  },
+  {
+    "path": "core/wallet/sized_admission.go",
+    "sha256": "b07dc0a22dfeddca9e3d868bebc170f8eb207833d6c5cd29bbc23eef0cbb60c7"
+  },
+  {
+    "path": "core/wallet/wallet.go",
+    "sha256": "548ba003e474006481b687c649fb98a030e8e54f20e775644cdde4ff0fc00d56"
+  },
+  {
+    "path": "core/wire/control.go",
+    "sha256": "5894116a1ca18a868acadcb3fdbbad26985cc814ce6b41bc1642b113d4897bb4"
+  },
+  {
+    "path": "core/wire/data_batch.go",
+    "sha256": "5ac27b71179202301ed71f8b6eeba3f0a21903f3b19b14a50fadf0d3312f5ef6"
+  },
+  {
+    "path": "core/wire/data_envelope.go",
+    "sha256": "badbb41b877cc80ac38c8ce720d937e5c39bf6faa41311af99c32814bef2f542"
+  },
+  {
+    "path": "core/wire/envelope_size.go",
+    "sha256": "e64a9de1a0324f3f06beafc634ffbf0d7369797a90fd1dc9268a4bcb6812bd14"
+  },
+  {
+    "path": "core/wire/envelope_size_test.go",
+    "sha256": "e245bd2f433dbac6d98a9b95b00fb1107a65a8eef06b35da4322f2681b29c505"
+  },
+  {
+    "path": "core/wire/grants.go",
+    "sha256": "381a1b57f2c0478d8b52ec07daa504588e28039a2392fa509a864ecd70dfe53f"
+  },
+  {
+    "path": "core/wire/notice.go",
+    "sha256": "25071db0cd469f237149bb57a03ac4cd83b1b37dea5a1d4c18d0e5a520da9b9a"
+  },
+  {
+    "path": "core/wire/progress_merge.go",
+    "sha256": "aae9201e28fe441b489dcdf6002a95982ed192b75f00800766f70b33e11a65bc"
+  },
+  {
+    "path": "core/wire/wire.go",
+    "sha256": "0e0cd8c39030e4fe8440ea4467d20454490beb123440bb41cd1007f07353423a"
+  },
+  {
+    "path": "native/admin.go",
+    "sha256": "181cfd4fb11407a5a3f95e88b5fb8a8be2ea8a3ac60ddbaaf9b05ad9bdf2c80d"
+  },
+  {
+    "path": "native/copy.go",
+    "sha256": "caeeade92d99cda4e2a163c605e1b1036aa8ddb76cce0aeb6845862633310b20"
+  },
+  {
+    "path": "native/copy_test.go",
+    "sha256": "8f950ddc53510a87c6972e24ff1a02de1acf035b80ab43ab9618dc95ffafc476"
+  },
+  {
+    "path": "native/dns.go",
+    "sha256": "5b9e9b52c41ff7518c6da5a95b868a88b29f5025a0ce6baca046432b83a8a912"
+  },
+  {
+    "path": "native/go.mod",
+    "sha256": "0c1e3f707eb4c289eddc48139c437710cfaa8daf2b0c0e5389f31d1f0d2e6679"
+  },
+  {
+    "path": "native/go.sum",
+    "sha256": "3b2bf006809fa32acb3b302e26a1ea3ddd499a346347d2bb0041be66ddfc1f53"
+  },
+  {
+    "path": "native/mobile.go",
+    "sha256": "d3103f8889224800e5e39f960718e151f4c9a2d4e6ed533026e119fd0cb17086"
+  },
+  {
+    "path": "native/tools.go",
+    "sha256": "5b916be9f7eb318f9bd21c28a110c977405a02159f4c6b21a91273f53e935a4f"
+  },
+  {
+    "path": "native/version.go",
+    "sha256": "b8eb8a0e70c3be03bed1c669496b51a0b6e0fa0153caf4141410aa653e52c9ee"
+  }
+]

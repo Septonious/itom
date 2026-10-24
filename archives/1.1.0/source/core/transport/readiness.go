@@ -26,7 +26,7 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 	s.refillInteractiveLocked(time.Now())
 	for _, r := range s.retries[plane] {
 		f := s.flows[r.Stream]
-		if class.accepts(r.Kind) && f != nil && (r.Kind != Data || !f.stopped() && r.Offset+uint64(len(r.Payload)) > f.receipt) {
+		if class.accepts(r.Kind) && f != nil && (!f.stopped() || r.Kind == Reset || r.Kind == ResetAck) && (r.Kind != Data || !f.stopped() && r.Offset+uint64(len(r.Payload)) > f.receipt) {
 			return true
 		}
 	}

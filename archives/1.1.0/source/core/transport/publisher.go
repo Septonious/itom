@@ -44,7 +44,7 @@ func NewClientPublisher(s *Session, plane Plane, class LedgerClass, cipher *Ciph
 // after a lost reply or an ordinary application cancellation.
 type PreparedPublication struct {
 	mu                sync.Mutex
-	dispatch          *Dispatch
+	work              publicationWork
 	usage             wire.UsageReport
 	mime              []byte
 	folder            string
@@ -103,15 +103,19 @@ func (p *ClientPublisher) Prepare(ctx context.Context, maxPayload int) (*Prepare
 		_ = dispatch.Complete(NotStarted)
 		return nil, err
 	}
+	return finishPublication(dispatch, usage, body, p.folder)
+}
+
+func finishPublication(work publicationWork, usage wire.UsageReport, body []byte, folder string) (*PreparedPublication, error) {
 	mime, err := mailbox.Encode(body)
 	clear(body)
 	if err != nil || usage.Attempt == nil || uint64(len(mime)) != usage.Attempt.EncodedBytes {
 		// The durable spend has happened. It cannot be canceled/refunded locally.
 		// Fail closed; keep the logical publication uncertain for reconciliation.
-		_ = dispatch.Complete(Uncertain)
+		_ = work.complete(Uncertain, false)
 		return nil, ErrProtocol
 	}
-	return &PreparedPublication{dispatch: dispatch, usage: usage, mime: mime, folder: p.folder}, nil
+	return &PreparedPublication{work: work, usage: usage, mime: mime, folder: folder}, nil
 }
 
 // Start's context governs admission to the executor, not the lifetime of an
@@ -145,7 +149,7 @@ func (p *PreparedPublication) Start(ctx context.Context, executor *Executor) (Pu
 	}
 	// Even a definitive provider refusal stays charged in the wallet until the
 	// original grant/proof authority reconciles it. No local debt reset exists.
-	completion := p.dispatch.Complete(outcome)
+	completion := p.work.complete(outcome, false)
 	p.mu.Lock()
 	p.finished = true
 	p.outcome = outcome
@@ -208,7 +212,7 @@ func (p *PreparedPublication) ConfirmStored(ctx context.Context, executor *Execu
 	if p.usage.Attempt == nil || charge != p.usage.Attempt.EncodedBytes || sha256.Sum256(body) != p.usage.Attempt.Digest {
 		return ErrProtocol
 	}
-	err = p.dispatch.complete(Accepted, true)
+	err = p.work.complete(Accepted, true)
 	if err != nil && !errors.Is(err, ErrClosed) {
 		return err
 	}
@@ -217,4 +221,64 @@ func (p *PreparedPublication) ConfirmStored(ctx context.Context, executor *Execu
 	p.err = nil
 	p.mu.Unlock()
 	return nil
+}
+
+// PrepareBulk fits a whole DATA container to one concrete grant before draining
+// or encrypting records. maxEncryptedBytes is a service/memory bound, not a
+// minimum fill size, so fresh demand does not wait to collect a larger BODY.
+func (p *ClientPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int) (*PreparedPublication, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if p.plane != Bulk || p.class != DataLedger || maxEncryptedBytes > MaxBulkBytes {
+		return nil, ErrProtocol
+	}
+	overhead, _ := secure.SessionPacketSize(headerSize)
+	minimum := bulkHeader + bulkEntryHeader + overhead + 1
+	if maxEncryptedBytes < minimum {
+		return nil, ErrCapacity
+	}
+	if !p.session.ReadyFor(Bulk, DataLedger) {
+		return nil, nil
+	}
+	size := func(key wire.QuotaKey, encryptedBytes int) (uint64, error) {
+		body, err := wire.DataEnvelopeSize(key, p.folder, encryptedBytes)
+		if err != nil {
+			return 0, err
+		}
+		return mailbox.EncodedSize(body)
+	}
+	ticket, limit, err := p.wallet.ReserveSized(p.account, minimum, maxEncryptedBytes, size)
+	if err != nil {
+		return nil, err
+	}
+	batch, ok := p.session.TakeBulk(limit)
+	if !ok {
+		ticket.Cancel()
+		return nil, nil
+	}
+	records := batch.Records()
+	packet, err := p.cipher.SealRecords(records)
+	for _, record := range records {
+		clear(record.Payload)
+	}
+	if err != nil {
+		ticket.Cancel()
+		_ = batch.Complete(NotStarted)
+		return nil, err
+	}
+	if len(packet) != batch.EncryptedBytes() {
+		ticket.Cancel()
+		_ = batch.Complete(NotStarted)
+		clear(packet)
+		return nil, ErrProtocol
+	}
+	usage, body, err := ticket.Commit(p.folder, packet, p.authenticationKey[:], func(body []byte) (uint64, error) { return mailbox.EncodedSize(len(body)) })
+	clear(packet)
+	if err != nil {
+		ticket.Cancel()
+		_ = batch.Complete(NotStarted)
+		return nil, err
+	}
+	return finishPublication(batch, usage, body, p.folder)
 }
