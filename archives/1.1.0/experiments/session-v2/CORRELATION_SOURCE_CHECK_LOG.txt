@@ -1,0 +1,19 @@
+?   	itom.local/core/adminapi	[no test files]
+?   	itom.local/core/adminserver	[no test files]
+?   	itom.local/core/cmd/itom	[no test files]
+ok  	itom.local/core/journal	1.928s
+?   	itom.local/core/mailbox	[no test files]
+?   	itom.local/core/manager	[no test files]
+?   	itom.local/core/netroute	[no test files]
+?   	itom.local/core/pool	[no test files]
+?   	itom.local/core/probe	[no test files]
+ok  	itom.local/core/qualification	(cached)
+ok  	itom.local/core/secure	1.368s
+?   	itom.local/core/servercfg	[no test files]
+?   	itom.local/core/socks	[no test files]
+ok  	itom.local/core/transport	14.557s
+?   	itom.local/core/tunnel	[no test files]
+ok  	itom.local/core/wallet	1.268s
+ok  	itom.local/core/wire	1.418s
+ok  	itom.local/mobile	1.812s
+SOURCE CHECKS PASSED. Full transport qualification is incomplete; packaging remains disabled.

@@ -237,6 +237,9 @@ func OpenCompatible(path string, config Config, alternatives []Config, lockTimeo
 		if e := rebuildRemoteIndex(tx); e != nil {
 			return e
 		}
+		if e := rebuildLocalIndex(tx); e != nil {
+			return e
+		}
 		if e := s.audit(tx); e != nil {
 			return e
 		}

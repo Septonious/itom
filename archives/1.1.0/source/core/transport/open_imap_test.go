@@ -94,7 +94,6 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		inboxes        []*transport.Inbox
 		routes         map[transport.LedgerClass]route
 	}
-	localRefs := map[wire.ID]journal.AttemptRef{}
 	var services []*service
 	for _, plane := range []transport.Plane{transport.Fast, transport.Bulk} {
 		folder := "fast"
@@ -131,9 +130,9 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			x      *transport.Executor
 			client bool
 		}{{s.client, true}, {s.server, false}} {
-			// This classifier is fixture-owned: tracked local publication references
-			// substitute for the still-unimplemented durable recovery index.
-			decode := func(validity uint32, physical transport.Body) (transport.InboxDelivery, error) {
+			// Client classification remains fixture-owned. The server below uses
+			// the production scoped decoder and original persisted attempt index.
+			var decode transport.InboxDecoder = func(validity uint32, physical transport.Body) (transport.InboxDelivery, error) {
 				charge, err := mailbox.CanonicalEncodedBytes(physical.Bytes)
 				if err != nil {
 					return nil, err
@@ -161,22 +160,20 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 				if r.store == nil || usage.Attempt == nil || usage.Key.Account != scope.Account || usage.Key.User != scope.User || usage.Key.Session != scope.Session || usage.Attempt.Folder != folder {
 					return nil, transport.ErrProtocol
 				}
-				if serverOrigin && end.client {
+				if serverOrigin {
 					return r.down.Decode(validity, physical.UID, physical.Bytes)
 				}
-				if !serverOrigin && !end.client {
-					return r.up.Decode(validity, physical.UID, physical.Bytes)
-				}
-				if serverOrigin {
-					ref, ok := localRefs[usage.Attempt.Batch]
-					if !ok {
-						return nil, transport.ErrProtocol
-					}
-					if err = r.store.Observe(ref, r.store.Run(), journal.Observation{Account: scope.Account, Folder: folder, EncodedBytes: charge, Location: journal.Location{UIDValidity: validity, UID: physical.UID}, Decoded: body}); err != nil {
-						return nil, err
-					}
-				}
 				return nil, nil // own BODY is neither peer application data nor GC proof
+			}
+			if !end.client {
+				var receivers []*transport.RemoteReceiver
+				for _, r := range s.routes {
+					receivers = append(receivers, r.up)
+				}
+				decode, err = transport.NewServerInboxDecoder(receivers...)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 			i, err := transport.NewInbox(end.x, transport.InboxScope{Account: "account1", Folder: folder, UIDValidity: 9}, transport.DefaultInboxLimits(), decode)
 			if err != nil {
@@ -231,9 +228,6 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 						}
 						if p == nil {
 							continue
-						}
-						if ref, ok := p.ServerAttempt(); ok {
-							localRefs[p.Usage().Attempt.Batch] = ref
 						}
 						x := s.server
 						if client {

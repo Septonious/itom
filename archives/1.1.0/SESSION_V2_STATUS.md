@@ -98,6 +98,13 @@ mandatory independently of that implementation.
   gaps defer before decryption; a backpressured authenticated delivery is retained
   without decrypting or fetching it twice. Solicited metadata produces no
   self-poll notification. Inventory absence is never financial release evidence.
+* Server mailbox decoding now classifies client/own origins and DATA/protocol
+  stores under pinned account/user/session/folder/incarnation. Own publications
+  correlate through a bounded journal index rebuilt from original attempt rows
+  on startup, including historical unknown debt. Exact BODY observation is still
+  mandatory; lookup, ambiguity and index absence never authorize refund or retry.
+  The index changes atomically with body intent/deletion and tolerates compatible
+  writers which do not maintain derived metadata.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -150,12 +157,16 @@ application TLS/HTTP, both quota authorities, persistent journals/wallets,
 TLS/IMAP APPEND/FETCH and the scoped Inbox. Four new HTTP connections echo both
 short and nonaligned bodies larger than the initial receive window. Four fixed
 IMAP sockets remain alive; no manual stream creation or synthetic application
-response bypasses the pipeline. Noise/grants are still pre-established, own-body
-correlation uses fixture-owned publication references, and a single test pump
-coordinates both endpoints without calibrated provider service. This is byte
+response bypasses the pipeline. Noise/grants are still pre-established, and a
+single test pump coordinates both endpoints without calibrated provider service.
+Server origin classification/correlation now uses the scoped implementation and
+original persisted attempts; client own-body classification is still fixture-owned.
+This is byte
 integrity, not a 250ms/100Mbps result. Five repetitions cover 20 such IMAP-backed
 HTTP requests, in addition to 100 cold TLS requests on the raw TCP carrier fixture.
 See [OPEN/inbox evidence](experiments/session-v2/OPEN_INBOX_CHECK_RESULTS.json).
+Later [journal correlation evidence](experiments/session-v2/CORRELATION_CHECK_RESULTS.json)
+records the production server decoder, restart and lost-commit checks.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -181,8 +192,8 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete
   status/NACK recovery for both publication/receive halves.
-* Production bidirectional origin/ledger classification and durable own-body
-  correlation, IDLE/DONE or a calibrated alternative, bounded proof-based
+* Production client origin/ledger classification, IDLE/DONE or a calibrated
+  alternative, bounded proof-based
   reclamation and migration/restart reconciliation using original stores and
   retained debt. The bounded serialized Inbox is not yet a complete concurrent
   mailbox service; control progress under full DATA pending queues must be

@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T12:38:59.153424+00:00",
+  "parent_commit": "a5f6b0c2ec674769c739799928645835cebf33b8",
+  "status": "unqualified source checkpoint; production startup/packaging disabled",
+  "checks": [
+    {
+      "file": "CORRELATION_CORE_RACE.jsonl",
+      "raw_sha256": "e8d8b01688880b1c2318b27b7619e5bc53dac532d949325518c888f33c93079e",
+      "normalized_sha256": "e8d8b01688880b1c2318b27b7619e5bc53dac532d949325518c888f33c93079e",
+      "top_level_group_executions": 101,
+      "failures": [],
+      "package_results": [
+        {
+          "package": "itom.local/core/qualification",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/journal",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/secure",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/wallet",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/wire",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "action": "pass"
+        }
+      ]
+    },
+    {
+      "file": "CORRELATION_REPEATED.jsonl",
+      "raw_sha256": "4e9e711b8070835cebef2dace475e0bcd843c8d3b67846f770355a13081cc8e4",
+      "normalized_sha256": "4e9e711b8070835cebef2dace475e0bcd843c8d3b67846f770355a13081cc8e4",
+      "top_level_group_executions": 30,
+      "failures": [],
+      "package_results": [
+        {
+          "package": "itom.local/core/journal",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "action": "pass"
+        }
+      ]
+    },
+    {
+      "file": "CORRELATION_SOURCE_CHECK_LOG.txt",
+      "raw_sha256": "cb6d6971153cb84a0082d326d4689204111bfbc56b5bf0459a243189383d7174",
+      "normalized_sha256": "cb6d6971153cb84a0082d326d4689204111bfbc56b5bf0459a243189383d7174"
+    },
+    {
+      "file": "CORRELATION_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go vet ./... (core)",
+    "go test -race -json ./journal ./transport -run <6 correlation/inbox/HTTP groups> -count=5 -timeout=90s",
+    "python3 tools/check_session_v2.py --go /workspace/toolchains/go/bin/go (core/native race+vet)"
+  ],
+  "implemented": [
+    "Scoped server inbox classifies client/own origin and DATA/protocol ledger before peer delivery or own observation.",
+    "Bounded derived local-attempt lookup uses original durable grant/account/user/session/run/batch records; ambiguous matches fail closed.",
+    "Derived index updates share body-intent/deletion transactions and rebuild from originals at each open; no quota/fsync ceiling changed.",
+    "IMAP-backed cold OPEN/TLS/HTTP fixture no longer carries ephemeral own-server publication references."
+  ],
+  "negative_checks": [
+    "Cross-account/user/session/store/run and mailbox-incarnation mismatch.",
+    "Valid MAC with forged BODY cannot replace original hash/size/folder observation.",
+    "Duplicate batch lookup never chooses an arbitrary attempt; remote grants are never local authority.",
+    "Precommit failure produces no speculative entry or writer permission; lost commit reply recovers original unknown debt.",
+    "Missing derived metadata rebuilds after compatible older writer without changing physical exposure.",
+    "Own scan neither consumes peer replay slots nor releases held quota."
+  ],
+  "limits": [
+    "Client origin classification remains fixture-owned.",
+    "Noise/grants are pre-established; one account and one in-process pump; no calibrated provider/network service.",
+    "No solved pending-DATA control progress, IDLE coordinator, reclamation, full recovery exchange or Android TUN qualification.",
+    "No sustained 100Mbps or RTT target proof; no APK/server package."
+  ],
+  "source_manifest_file": "CORRELATION_SOURCE_MANIFEST.json"
+}

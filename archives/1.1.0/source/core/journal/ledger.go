@@ -221,7 +221,10 @@ func (s *Store) prepareTx(tx *bolt.Tx, ref GrantRef, folder string, batch wire.I
 	if e = putJSON(tx.Bucket(grantBucket), ref.ID, g); e != nil {
 		return e
 	}
-	return putJSON(tx.Bucket(attemptBucket), id, result)
+	if e = putJSON(tx.Bucket(attemptBucket), id, result); e != nil {
+		return e
+	}
+	return indexLocalAttempt(tx, *result)
 }
 
 // StartLocalAttempt combines exact local quota reservation, charged intent and
@@ -505,6 +508,8 @@ func (s *Store) releaseAttempt(tx *bolt.Tx, a Attempt, g Grant) error {
 		if err := tx.Bucket(remoteIndexBucket).Delete(remoteIndexKey(g.Ref.ID, a.Ordinal)); err != nil {
 			return err
 		}
+	} else if err := tx.Bucket(localIndexBucket).Delete(localIndexKey(a)); err != nil {
+		return err
 	}
 	if err := tx.Bucket(attemptBucket).Delete(key(a.Ref.ID)); err != nil {
 		return err
