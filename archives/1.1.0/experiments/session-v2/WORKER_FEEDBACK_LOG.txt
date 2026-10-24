@@ -1,0 +1,6 @@
+=== RUN   TestSmallApplicationReadsDoNotMultiplyBulkCreditMessages
+--- PASS: TestSmallApplicationReadsDoNotMultiplyBulkCreditMessages (0.00s)
+=== RUN   TestCreditAtThePeerEdgeDoesNotWaitForABatchOrTimer
+--- PASS: TestCreditAtThePeerEdgeDoesNotWaitForABatchOrTimer (0.00s)
+PASS
+ok  	itom.local/core/transport	1.035s

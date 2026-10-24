@@ -5,7 +5,7 @@ replacement implementation in progress and new tests. It cannot carry live traff
 client/server startup returns `V2_NOT_READY`, and packaging is disabled.
 
 See [implementation status](../SESSION_V2_STATUS.md) and
-[current source check results](../experiments/session-v2/POLL_CHECK_RESULTS.json)
+[current source check results](../experiments/session-v2/WORKER_CHECK_RESULTS.json)
 ([first iteration](../experiments/session-v2/SOURCE_CHECK_RESULTS.json)).
 Use `python3 tools/check_session_v2.py --go /path/to/pinned/go` for source checks.
 These checks do not establish the application latency/throughput release gates.

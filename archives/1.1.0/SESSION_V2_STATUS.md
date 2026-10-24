@@ -132,6 +132,20 @@ mandatory independently of that implementation.
   EXPUNGE/count invalidation or deferred delivery requests full inventory. Actual
   UID scope/proof, response ceilings and replay/accounting stay identical through
   one shared delivery path. Sequence information is a discovery hint only.
+* Each selected executor now has one scoped publication worker, independent of
+  inbox reads. Ready fast ledgers alternate after the initial protocol turn;
+  DATA/protocol allowances remain distinct. Permission exhaustion parks that
+  ledger until a real grant/reclamation/recovery notification, without another
+  spend or socket closure. A worker retains at most one exact prepared body;
+  uncertainty stops writes for explicit recovery rather than blind re-APPEND.
+  Physical prepare/publish timing and accepted MIME bytes are exposed separately
+  and are never useful-delivery bandwidth or application-RTT samples.
+* A verified bounded BODY now applies in one session turn, preventing its
+  feedback from being published between records in that same body. Beyond
+  initial light traffic, small app reads renew standalone credit in window
+  quanta, or immediately at the peer's dispatched edge; DATA still piggybacks
+  the latest credit. No collection sleep, quota increase or unbacked credit is
+  introduced.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -185,7 +199,8 @@ TLS/IMAP APPEND/FETCH and the scoped Inbox. Four new HTTP connections echo both
 short and nonaligned bodies larger than the initial receive window. Four fixed
 IMAP sockets remain alive; no manual stream creation or synthetic application
 response bypasses the pipeline. Noise/grants are still pre-established, and a
-single test pump coordinates both endpoints without calibrated provider service.
+fixture read pump plus four independent scoped publication workers coordinate
+the endpoints without calibrated provider service.
 Both endpoints now use scoped inbox constructors and origin/ledger decoders;
 server correlation uses original persisted attempts. This is byte
 integrity, not a 250ms/100Mbps result. Five repetitions cover 20 such IMAP-backed
@@ -207,6 +222,13 @@ checks the one-command contiguous read, UID holes, late lower UID discovery and
 sequence movement. The cold IMAP application fixture now uses this path on fast
 and full inventory on bulk. No command-count saving is counted as measured
 application RTT or sustained bandwidth.
+The [publication-worker continuation](experiments/session-v2/WORKER_CHECK_RESULTS.json)
+checks an independently completing FETCH while APPEND's tag is withheld,
+permission wakeups, uncertain-body retention, separate ledger service and the
+parallel cold-application IMAP path. The initial repeated run exceeded the
+unchanged 64-message fixture bound after feedback amplification; its failure is
+retained. Coalesced feedback/body application passes that same bound. These are
+integrity/service tests, not independent multi-account performance qualification.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual

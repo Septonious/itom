@@ -63,26 +63,28 @@ func DefaultIMAPLimits() IMAPLimits {
 // untagged responses have no command tag. SELECT/EXPUNGE/IDLE are deliberately
 // not issued concurrently; mailbox changes require a new executor.
 type Executor struct {
-	literalPlus     bool
-	literalMinus    bool
-	mailbox         string
-	account         string
-	validity        uint32
-	conn            net.Conn
-	reader          *bufio.Reader
-	limits          IMAPLimits
-	writer          chan struct{}
-	mu              sync.Mutex
-	pending         map[string]*operation
-	sequence        uint64
-	literal         *operation
-	fetch           *operation
-	closed          error
-	done            chan struct{}
-	changes         chan struct{}
-	sequenceVersion uint64
-	exists          uint32
-	existsKnown     bool
+	literalPlus      bool
+	literalMinus     bool
+	mailbox          string
+	account          string
+	validity         uint32
+	conn             net.Conn
+	reader           *bufio.Reader
+	limits           IMAPLimits
+	writer           chan struct{}
+	mu               sync.Mutex
+	pending          map[string]*operation
+	sequence         uint64
+	literal          *operation
+	fetch            *operation
+	closed           error
+	done             chan struct{}
+	changes          chan struct{}
+	sequenceVersion  uint64
+	exists           uint32
+	existsKnown      bool
+	space            chan struct{}
+	publicationOwner bool
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
@@ -95,11 +97,16 @@ func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mail
 	if conn == nil || reader == nil || l.Pending < 2 || l.Pending > 128 || l.LineBytes < 128 || l.LineBytes > 64<<10 || l.LiteralBytes < 1 || l.LiteralBytes > 2<<20 || l.ResponseBytes < l.LiteralBytes || l.ResponseBytes > 8<<20 || l.ProgressTimeout <= 0 {
 		return nil, ErrCapacity
 	}
-	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1)}
+	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
 	go e.readLoop()
 	return e, nil
 }
 func (e *Executor) Changes() <-chan struct{} { return e.changes }
+
+// SpaceChanged is an edge notification for pending-command capacity,
+// independent of unsolicited mailbox changes and application flow activity.
+func (e *Executor) SpaceChanged() <-chan struct{} { e.mu.Lock(); defer e.mu.Unlock(); return e.space }
+func (e *Executor) signalSpaceLocked()            { close(e.space); e.space = make(chan struct{}) }
 
 // SequenceVersion is only an invalidation hint. It cannot establish UID
 // ownership, deletion, absence, delivery or any financial release.
@@ -122,6 +129,7 @@ func (e *Executor) fail(err error) {
 	}
 	e.pending = map[string]*operation{}
 	close(e.done)
+	e.signalSpaceLocked()
 	e.mu.Unlock()
 	e.conn.Close()
 }
@@ -440,6 +448,7 @@ func (e *Executor) readLoop() {
 			op.result.Err = ErrRefused
 		}
 		delete(e.pending, fields[0])
+		e.signalSpaceLocked()
 		if e.fetch == op {
 			e.fetch = nil
 		}

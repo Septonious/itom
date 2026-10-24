@@ -31,6 +31,7 @@ type stream struct {
 	rx                                                                     bytes.Buffer
 	reorder                                                                map[uint64][]byte
 	reorderBytes, window, buffered                                         uint64
+	creditSent                                                             uint64
 	pending                                                                []*sentChunk
 	interactive                                                            interactiveBudget
 	creditPending, receiptPending, finishAckPending, resetAckPending       bool
@@ -112,7 +113,7 @@ func (s *Session) addLocked(id, initialCredit, receiveWindow uint64) error {
 	if _, exists := s.flows[id]; exists || !s.ids.available(id) {
 		return ErrProtocol
 	}
-	s.flows[id] = &stream{id: id, peerCredit: initialCredit, window: receiveWindow, interactive: interactiveBudget{tokens: float64(s.limits.InteractiveBytes)}, reorder: make(map[uint64][]byte), notify: make(chan struct{})}
+	s.flows[id] = &stream{id: id, peerCredit: initialCredit, window: receiveWindow, creditSent: receiveWindow, interactive: interactiveBudget{tokens: float64(s.limits.InteractiveBytes)}, reorder: make(map[uint64][]byte), notify: make(chan struct{})}
 	s.ids.commit(id)
 	s.order = append(s.order, id)
 	s.reserved += receiveWindow
@@ -198,12 +199,18 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 				r = f.openFrame
 				f.openPending = false
 				f.openSent = true
+				if r.ReceiveLimit > f.creditSent {
+					f.creditSent = r.ReceiveLimit
+				}
 			case !f.stopped() && f.creditPending:
 				f.creditPending = false
 				f.receiptPending = false
 				r.Kind = Credit
 				r.Offset = f.receiveLimit()
 				r.Acknowledged = f.recv
+				if r.Offset > f.creditSent {
+					f.creditSent = r.Offset
+				}
 			case !f.stopped() && f.receiptPending:
 				f.receiptPending = false
 				r.Kind = Receipt
@@ -240,6 +247,9 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 		r.Offset = f.sent
 		r.Acknowledged = f.recv
 		r.ReceiveLimit = f.receiveLimit()
+		if r.ReceiveLimit > f.creditSent {
+			f.creditSent = r.ReceiveLimit
+		}
 		f.receiptPending = false
 		f.creditPending = false
 		r.Payload = append([]byte(nil), f.tx.Next(take)...)
@@ -352,11 +362,18 @@ func (s *Session) dropLocked(f *stream) {
 // Receive requires authenticated scope and durable physical accounting from
 // the carrier. Receipts release logical replay memory, never physical quota.
 func (s *Session) Receive(r Record) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.receiveLocked(r)
+}
+
+// receiveLocked contains no provider I/O, disk commit or target dialing. A
+// verified bounded BODY can apply its records in one session turn, coalescing
+// feedback before a publisher drains it between records of that same BODY.
+func (s *Session) receiveLocked(r Record) error {
 	if !r.valid() {
 		return ErrProtocol
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	if s.closed {
 		return ErrClosed
 	}
@@ -523,8 +540,15 @@ func (s *Session) readLocked(id uint64, b []byte) (int, error) {
 	if n > 0 {
 		f.consumed += uint64(n)
 		s.received -= uint64(n)
-		f.creditPending = true
-		s.signalOutgoing()
+		// Initial/light work keeps prompt feedback. Beyond that, consumption
+		// renews credit in useful window quanta, or immediately when the peer
+		// has reached the last dispatched edge. DATA replies still piggyback
+		// the latest limit regardless of this standalone-control threshold.
+		advance := f.receiveLimit() - min(f.receiveLimit(), f.creditSent)
+		if f.recv <= uint64(s.limits.InteractiveBytes) || f.remoteFinish || advance >= max(uint64(1), f.window/2) || f.recv >= f.creditSent {
+			f.creditPending = true
+			s.signalOutgoing()
+		}
 		return n, nil
 	}
 	if f.remoteFinish && f.recv == f.final {

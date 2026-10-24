@@ -89,9 +89,11 @@ func (d *StoredDelivery) Apply() error {
 	if d.finished {
 		return nil
 	}
+	d.session.mu.Lock()
+	defer d.session.mu.Unlock()
 	for d.next < len(d.records) {
 		record := &d.records[d.next]
-		err := d.session.Receive(*record)
+		err := d.session.receiveLocked(*record)
 		if errors.Is(err, ErrClosed) {
 			d.discarded = true
 		} else if err != nil {

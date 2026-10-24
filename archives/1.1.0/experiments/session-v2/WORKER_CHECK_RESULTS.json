@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T14:48:59.022872+00:00",
+  "parent_commit": "09e9986987409bc014d01a8ab107b82c6fc34837",
+  "status": "unqualified source/component checkpoint; startup and packaging remain disabled",
+  "checks": [
+    {
+      "file": "WORKER_REPEATED_INITIAL.jsonl",
+      "raw_sha256": "b393f71ba5737f4859f89ccc7b9e131a8f7ec4f859660817dc097c305f26145e",
+      "normalized_sha256": "b393f71ba5737f4859f89ccc7b9e131a8f7ec4f859660817dc097c305f26145e",
+      "top_level_group_executions": 29,
+      "failures": [
+        {
+          "Time": "2026-10-24T14:37:40.620879456Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+          "Elapsed": 3.87
+        },
+        {
+          "Time": "2026-10-24T14:37:47.715682476Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 20.386
+        }
+      ]
+    },
+    {
+      "file": "WORKER_CORE_RACE.jsonl",
+      "raw_sha256": "53e73edba7604f3615ee902b79091616843f6039f644f8d367d68305b8c32745",
+      "normalized_sha256": "53e73edba7604f3615ee902b79091616843f6039f644f8d367d68305b8c32745",
+      "top_level_group_executions": 121,
+      "failures": []
+    },
+    {
+      "file": "WORKER_NATIVE_RACE.jsonl",
+      "raw_sha256": "fd9f8012100334a75fd7cc8621c447de42a9516f9e4e93ee6f95118f4ff5452e",
+      "normalized_sha256": "fd9f8012100334a75fd7cc8621c447de42a9516f9e4e93ee6f95118f4ff5452e",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "WORKER_REPEATED.jsonl",
+      "raw_sha256": "f97607898be866dcc1a85d3c7e6c3f161d2caa0a86bed773a1c118c18e395f96",
+      "normalized_sha256": "f97607898be866dcc1a85d3c7e6c3f161d2caa0a86bed773a1c118c18e395f96",
+      "top_level_group_executions": 40,
+      "failures": []
+    },
+    {
+      "file": "WORKER_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "WORKER_FEEDBACK_LOG.txt",
+      "raw_sha256": "bcce3219b3c474eb53ed33ff074459f124ed3f89e722679fe46437e928d4484f",
+      "normalized_sha256": "bcce3219b3c474eb53ed33ff074459f124ed3f89e722679fe46437e928d4484f"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go vet ./... (core)",
+    "go test -race -json ./transport -run <8 publication/permission/uncertainty/ledger/scope/feedback/cold-IMAP groups> -count=5 -timeout=90s"
+  ],
+  "implemented": [
+    "One bound publication owner per selected executor; publication service is independent of mailbox reads and creates no connections.",
+    "Protocol receives the initial fast turn, then ready DATA/protocol ledgers alternate under independent quota authority.",
+    "Permission exhaustion waits for a real state-change notification without nonce/spend churn; protocol service can continue while DATA is exhausted.",
+    "At most one exact prepared body is retained per worker; unstarted service can resume, uncertain publication cannot blindly re-APPEND and stays charged.",
+    "Physical preparation/publication timing and accepted MIME bytes are separated from useful-delivery/RTT learning.",
+    "Verified BODY records apply in one bounded session turn; standalone credits coalesce beyond initial light demand and remain immediate at the peer edge.",
+    "Cold TLS/HTTP through IMAP now runs four independent publication workers plus a fixture read pump on the same four physical sockets."
+  ],
+  "retained_failure": "The initial 5-repeat cohort had one cold-application fixture failure after it exceeded the existing 64-message mailbox bound. Independent publication exposed credit feedback on small reads and inter-record feedback publication. The bound, original OPEN/TLS/header limits, BODY sizes, grant/account quotas and timed qualification gates were not raised. Corrected credit/body feedback passed the same cohort and bounds.",
+  "validation": [
+    "FETCH completes before a withheld APPEND tag; worker cancellation leaves the carrier selected for NOOP.",
+    "A new independently issued grant wakes parked DATA without rewriting old used/pending wallet exposure.",
+    "Lost reply produces one retained exact body, one spend and no automatic re-APPEND.",
+    "A credit control can proceed after DATA permission exhaustion without borrowing the DATA ledger.",
+    "128 small application reads produce one coalesced credit; a peer at its credit edge receives immediate newly backed credit."
+  ],
+  "limits": [
+    "No adaptive multi-account carrier scheduler, service calibration, receiver-window integration, roster/bootstrap grant exchange or complete recovery/reclamation yet.",
+    "The pipeline still has pre-established Noise/grants and one in-process account; it is not the 10/15-account, independent-process or Android TUN qualification.",
+    "No proven sustained 100Mbps or required idle/loaded RTT; no deployable package."
+  ],
+  "source_manifest_file": "WORKER_SOURCE_MANIFEST.json"
+}

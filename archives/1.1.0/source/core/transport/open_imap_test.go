@@ -24,7 +24,8 @@ import (
 )
 
 // Application-integrity fixture, NOT provider/rate qualification: Noise and
-// grants are pre-established and one pump owns both endpoints. Real target TCP,
+// grants are pre-established. A fixture read pump and four independent scoped
+// publication workers serve the endpoints. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
 func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
@@ -92,6 +93,7 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		client, server *transport.Executor
 		inboxes        []*transport.Inbox
 		routes         map[transport.LedgerClass]route
+		writers        []*transport.PublicationWorker
 	}
 	var services []*service
 	for _, plane := range []transport.Plane{transport.Fast, transport.Bulk} {
@@ -148,12 +150,40 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			}
 			s.inboxes = append(s.inboxes, inbox)
 		}
+		var clientPublishers []*transport.ClientPublisher
+		var serverPublishers []*transport.ServerPublisher
+		for _, r := range s.routes {
+			clientPublishers = append(clientPublishers, r.client)
+			serverPublishers = append(serverPublishers, r.server)
+		}
+		clientWriter, err := transport.NewClientPublicationWorker(s.client, plane, clientPublishers...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		serverWriter, err := transport.NewServerPublicationWorker(s.server, plane, serverPublishers...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.writers = []*transport.PublicationWorker{clientWriter, serverWriter}
 		services = append(services, s)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	var workers sync.WaitGroup
 	failed := make(chan error, 1)
 	workers.Go(func() { exit.Run(ctx) })
+	for _, s := range services {
+		for _, writer := range s.writers {
+			workers.Go(func() {
+				if err := writer.Run(ctx); err != nil && ctx.Err() == nil {
+					select {
+					case failed <- err:
+					default:
+					}
+					cancel()
+				}
+			})
+		}
+	}
 	workers.Go(func() {
 		fail := func(err error) {
 			if ctx.Err() == nil {
@@ -168,48 +198,6 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			left, right := a.WorkChanged(), b.WorkChanged()
 			progress := false
 			for _, s := range services {
-				for _, class := range []transport.LedgerClass{transport.ControlLedger, transport.DataLedger} {
-					r, ok := s.routes[class]
-					if !ok {
-						continue
-					}
-					for _, client := range []bool{true, false} {
-						var p *transport.PreparedPublication
-						var err error
-						if client {
-							if s.plane == transport.Fast {
-								p, err = r.client.Prepare(ctx, transport.MaxPayload)
-							} else {
-								p, err = r.client.PrepareBulk(ctx, transport.MaxBulkBytes)
-							}
-						} else {
-							if s.plane == transport.Fast {
-								p, err = r.server.Prepare(ctx, transport.MaxPayload)
-							} else {
-								p, err = r.server.PrepareBulk(ctx, transport.MaxBulkBytes)
-							}
-						}
-						if err != nil {
-							fail(err)
-							return
-						}
-						if p == nil {
-							continue
-						}
-						x := s.server
-						if client {
-							x = s.client
-						}
-						if outcome, err := p.Start(ctx, x); err != nil || outcome != transport.Accepted {
-							if err == nil {
-								err = transport.ErrUnknown
-							}
-							fail(err)
-							return
-						}
-						progress = true
-					}
-				}
 				for _, i := range s.inboxes {
 					var p transport.InboxProgress
 					var err error
