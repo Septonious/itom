@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T13:00:50.634568+00:00",
+  "parent_commit": "15e7d69d27c648e655bc38c87f5bb9bac2291989",
+  "status": "unqualified component/source checkpoint; production startup and packaging disabled",
+  "checks": [
+    {
+      "file": "INBOX_PRESSURE_BEFORE_LOG.txt",
+      "raw_sha256": "0fe6eed54476f83668f1c8bcf157651144c5560c5823f7744dfcb3515da86467",
+      "normalized_sha256": "0fe6eed54476f83668f1c8bcf157651144c5560c5823f7744dfcb3515da86467"
+    },
+    {
+      "file": "INBOX_PRESSURE_CORE_INITIAL.jsonl",
+      "raw_sha256": "5bc4dbcdef81f8cee6b2330bcdf28f7610d65d5a238f8f5bc333632a490a1a04",
+      "normalized_sha256": "5bc4dbcdef81f8cee6b2330bcdf28f7610d65d5a238f8f5bc333632a490a1a04",
+      "top_level_group_executions": 106,
+      "failures": [
+        {
+          "Time": "2026-10-24T12:55:50.281047221Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestDuplexTLSIMAPKeepsOriginsLedgersAndPeerReceiptsIndependent",
+          "Elapsed": 4.75
+        },
+        {
+          "Time": "2026-10-24T12:55:58.524912185Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 19.963
+        }
+      ]
+    },
+    {
+      "file": "INBOX_PRESSURE_CORE_RACE.jsonl",
+      "raw_sha256": "43fcba8d666a7b94d4f4a0fdc425d8f24dee5d4ad133eb3c246baae42846d658",
+      "normalized_sha256": "43fcba8d666a7b94d4f4a0fdc425d8f24dee5d4ad133eb3c246baae42846d658",
+      "top_level_group_executions": 107,
+      "failures": []
+    },
+    {
+      "file": "INBOX_PRESSURE_NATIVE_RACE.jsonl",
+      "raw_sha256": "50c86c29518252e6b782d38a1f75ffc4dc62db8cb9b9dcd4da595d0399e926ac",
+      "normalized_sha256": "50c86c29518252e6b782d38a1f75ffc4dc62db8cb9b9dcd4da595d0399e926ac",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "INBOX_PRESSURE_REPEATED.jsonl",
+      "raw_sha256": "dbd32f8fdcbffcb7b02aa2fdf4c8d0d83f2da138157f57d21184f46d3760fcd3",
+      "normalized_sha256": "dbd32f8fdcbffcb7b02aa2fdf4c8d0d83f2da138157f57d21184f46d3760fcd3",
+      "top_level_group_executions": 25,
+      "failures": []
+    },
+    {
+      "file": "INBOX_PRESSURE_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go vet ./... (core)",
+    "go test -race -json ./transport -run <5 pressure/duplex/cold-IMAP groups> -count=5 -timeout=90s"
+  ],
+  "regression": "Before the fix, two injected backpressured DATA deliveries prevented the same scoped inbox from FETCHing a later authenticated protocol receipt. The sender retained 10 bytes despite the receipt being physically present. The failed run is retained. Queue pressure is injected, not claimed to be a raw field/provider reproduction.",
+  "implemented": [
+    "Separate bounded pending DATA and protocol admission; protocol quota is never borrowed by DATA.",
+    "Full DATA admission rejects after actual physical scope/MAC checks but before peer AEAD/replay or remote body registration.",
+    "Immutable-UID class cache prevents repeat BODY reads while blocked; cache removal/absence is never financial proof.",
+    "Newest candidates get priority under DATA pressure; at most eight speculative blocked-phase BODY probes per sweep with explicit More work for fair coordination.",
+    "Pending protocol deliveries are reapplied before DATA; retained authenticated objects are not decrypted again."
+  ],
+  "test_fixture_correction": "The initial full suite failed the older duplex byte-integrity fixture at 4.75s because the scripted TLS peer had a four-second absolute socket lifetime. Changed only the fixture to four seconds without read/write progress, retaining BODY/count bounds, all production timeouts, original OPEN/TLS limits and timed qualification gates. Kept the failing full-suite JSON. This is not a throughput result.",
+  "limits": [
+    "No coordinator fairness or full protocol-pressure escape solution yet; bounded protocol OPEN pressure still needs integration.",
+    "One-account in-process fixture with pre-established Noise/grants; no calibrated network/provider processes.",
+    "No measured sustained 100Mbps or required idle/loaded RTT, no Android TUN qualification and no package."
+  ],
+  "source_manifest_file": "INBOX_PRESSURE_SOURCE_MANIFEST.json"
+}

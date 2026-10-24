@@ -216,7 +216,7 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 						fail(err)
 						return
 					}
-					progress = progress || p.Applied > 0
+					progress = progress || p.Applied > 0 || p.More
 				}
 			}
 			if !progress {

@@ -319,7 +319,9 @@ func selectedAccountPeer(t *testing.T, account, folder string, script func(net.C
 			return
 		}
 		defer conn.Close()
-		conn.SetDeadline(time.Now().Add(4 * time.Second))
+		// This bounded byte-integrity fixture is not a timed throughput gate.
+		// Guard missing I/O progress, not total lifetime across many commands.
+		conn = &fixtureProgressConn{Conn: conn, timeout: 4 * time.Second}
 		reader := bufio.NewReader(conn)
 		fmt.Fprint(conn, "* OK provider\r\n")
 		readLine(t, reader)
@@ -352,6 +354,24 @@ func selectedAccountPeer(t *testing.T, account, folder string, script func(net.C
 type bufferedConn struct {
 	net.Conn
 	reader *bufio.Reader
+}
+
+type fixtureProgressConn struct {
+	net.Conn
+	timeout time.Duration
+}
+
+func (c *fixtureProgressConn) Read(p []byte) (int, error) {
+	if err := c.Conn.SetReadDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Read(p)
+}
+func (c *fixtureProgressConn) Write(p []byte) (int, error) {
+	if err := c.Conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Write(p)
 }
 
 func (c *bufferedConn) Read(b []byte) (int, error) { return c.reader.Read(b) }

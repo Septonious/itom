@@ -5,12 +5,12 @@ import "itom.local/core/wire"
 // NewClientInbox binds the decoder to the actual selected account/mailbox and
 // UIDVALIDITY, before allowing FETCH or any peer delivery.
 func NewClientInbox(executor *Executor, limits InboxLimits, receivers ...*ClientReceiver) (*Inbox, error) {
-	decode, err := NewClientInboxDecoder(receivers...)
+	decode, err := clientInboxDecoder(receivers...)
 	if err != nil {
 		return nil, err
 	}
 	o := receivers[0].origin
-	return NewInbox(executor, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
+	return newScopedInbox(executor, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
 }
 
 // NewClientInboxDecoder demultiplexes peer DATA/protocol under negotiated scope.
@@ -20,6 +20,14 @@ func NewClientInbox(executor *Executor, limits InboxLimits, receivers ...*Client
 // Direct decoder callers must supply a BODY from this exact trusted scope;
 // NewClientInbox enforces the selected-executor binding automatically.
 func NewClientInboxDecoder(receivers ...*ClientReceiver) (InboxDecoder, error) {
+	decode, err := clientInboxDecoder(receivers...)
+	if err != nil {
+		return nil, err
+	}
+	return standaloneInboxDecoder(decode), nil
+}
+
+func clientInboxDecoder(receivers ...*ClientReceiver) (scopedInboxDecoder, error) {
 	if len(receivers) < 1 || len(receivers) > 2 || receivers[0] == nil {
 		return nil, ErrProtocol
 	}
@@ -33,7 +41,7 @@ func NewClientInboxDecoder(receivers ...*ClientReceiver) (InboxDecoder, error) {
 		routes[r.origin.Store] = r
 		classes[r.class] = true
 	}
-	return func(validity uint32, physical Body) (InboxDelivery, error) {
+	return func(validity uint32, physical Body, available inboxAdmission) (InboxDelivery, error) {
 		if validity != first.origin.UIDValidity || physical.UID == 0 {
 			return nil, ErrProtocol
 		}
@@ -50,10 +58,20 @@ func NewClientInboxDecoder(receivers ...*ClientReceiver) (InboxDecoder, error) {
 		if envelope.class == 0 {
 			return nil, nil
 		}
+		expected := wire.ServerData
+		if r.class == ControlLedger {
+			expected = wire.ServerControl
+		}
+		if envelope.class != expected {
+			return nil, ErrProtocol
+		}
+		if !available.allows(r.class) {
+			return nil, &inboxDeferred{class: r.class}
+		}
 		delivery, err := r.receiveEnvelope(validity, physical.UID, envelope)
 		if delivery == nil {
 			return nil, err
 		}
-		return delivery, err
+		return classifyDelivery(delivery, r.class, err)
 	}, nil
 }

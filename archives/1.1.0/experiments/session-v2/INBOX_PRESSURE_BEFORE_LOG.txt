@@ -1,0 +1,6 @@
+=== RUN   TestFullDataDeliveryQueueStillAllowsAuthenticatedPeerReceipt
+    inbox_pressure_test.go:59: pending DATA hid the later peer receipt {1 0 3} {1 1 0 10 0 1048576 false}
+--- FAIL: TestFullDataDeliveryQueueStillAllowsAuthenticatedPeerReceipt (0.03s)
+FAIL
+FAIL	itom.local/core/transport	0.057s
+FAIL

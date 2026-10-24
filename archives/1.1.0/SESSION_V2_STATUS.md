@@ -111,6 +111,13 @@ mandatory independently of that implementation.
   factories bind these routes to the actual selected executor before FETCH.
   MIME/physical authentication is performed once per body before scoped peer
   record decryption or own journal observation, avoiding duplicate decode work.
+* Scoped inbox admission now keeps separate bounded DATA/protocol pending slots.
+  An authenticated later receipt can pass a full DATA delivery queue. DATA which
+  cannot be retained defers after physical scope/MAC validation but before peer
+  AEAD/replay consumption. Cached immutable-UID classification avoids repeated
+  BODY reads while blocked; bounded probes and explicit More work prevent an
+  entire backlog from monopolizing one sweep. These memory/work bounds do not
+  borrow protocol quota or change physical envelope ceilings.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -174,6 +181,10 @@ Later [journal correlation evidence](experiments/session-v2/CORRELATION_CHECK_RE
 records the production server decoder, restart and lost-commit checks.
 The [client inbox continuation](experiments/session-v2/CLIENT_INBOX_CHECK_RESULTS.json)
 records removal of the last fixture-owned classifier from this application path.
+The [inbox pressure regression](experiments/session-v2/INBOX_PRESSURE_CHECK_RESULTS.json)
+retains a failing pre-fix queue-pressure run and the passing accounted receipt
+path. Queue pressure is injected to isolate admission from receiver-credit
+invariants; this is not a field performance reproduction or rate qualification.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -182,6 +193,14 @@ arriving, a full receive buffer, and expiration of an arbitrary five-second
 **total** deadline on a 2–3 MiB byte-integrity transfer. That fixture now enforces
 five seconds **without application-byte progress**. The failed runs are retained
 in the continuation evidence. This is not a transport throughput improvement.
+
+A later full-suite run also exposed an absolute four-second lifetime in the
+shared TLS/IMAP byte-integrity fixture: the duplex test lost its fixture socket
+at 4.75 seconds under the two-CPU source-check host. That fixture now enforces
+four seconds without read/write progress, retaining its body/count bounds. The
+failed full-suite output is preserved in the inbox-pressure evidence. Production
+progress timeout, 1500ms OPEN/TLS limits and all timed qualification gates are
+unchanged; this correction is not a measured transport speed improvement.
 
 The release contract is unchanged: 250ms light maximum, 2000ms loaded maximum,
 100Mbps useful sustained traffic, fixed 12s/60s measurements, ramp/tail/stall gates,
@@ -202,8 +221,9 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 * IDLE/DONE or a calibrated alternative, bounded proof-based
   reclamation and migration/restart reconciliation using original stores and
   retained debt. The bounded serialized Inbox is not yet a complete concurrent
-  mailbox service; control progress under full DATA pending queues must be
-  integrated and qualified before activation.
+  mailbox service. DATA pressure no longer consumes protocol delivery slots;
+  progress when protocol admission itself is exhausted, coordinator fairness and
+  complete memory/service behavior still need integration and qualification.
 * Independent provider/client/server processes with calibrated network, command,
   CPU and disk service; all required socket/account/state/workload/seed cases.
 * Real native TUN/TCP integration, Android validation, 300 cold TLS attempts per

@@ -8,12 +8,12 @@ import (
 // NewServerInbox couples selected physical scope with all peer/own routes.
 // A wrong account, folder or incarnation rejects before any mailbox command.
 func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*RemoteReceiver) (*Inbox, error) {
-	decode, err := NewServerInboxDecoder(receivers...)
+	decode, err := serverInboxDecoder(receivers...)
 	if err != nil {
 		return nil, err
 	}
 	r := receivers[0]
-	return NewInbox(executor, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+	return newScopedInbox(executor, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
 }
 
 // NewServerInboxDecoder pins the authenticated peer/session and physical
@@ -24,6 +24,14 @@ func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*Remote
 // Direct decoder callers must supply actual BODY evidence from this scope;
 // NewServerInbox enforces the selected-executor binding automatically.
 func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
+	decode, err := serverInboxDecoder(receivers...)
+	if err != nil {
+		return nil, err
+	}
+	return standaloneInboxDecoder(decode), nil
+}
+
+func serverInboxDecoder(receivers ...*RemoteReceiver) (scopedInboxDecoder, error) {
 	if len(receivers) < 1 || len(receivers) > 2 || receivers[0] == nil {
 		return nil, ErrProtocol
 	}
@@ -37,7 +45,7 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 		routes[r.store.StoreID()] = r
 		classes[r.class] = true
 	}
-	return func(validity uint32, physical Body) (InboxDelivery, error) {
+	return func(validity uint32, physical Body, available inboxAdmission) (InboxDelivery, error) {
 		if validity != first.validity || physical.UID == 0 {
 			return nil, ErrProtocol
 		}
@@ -52,11 +60,14 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 			return nil, ErrProtocol
 		}
 		if envelope.class == 0 {
+			if !available.allows(r.class) {
+				return nil, &inboxDeferred{class: r.class}
+			}
 			delivery, err := r.receiveEnvelope(validity, physical.UID, envelope)
 			if delivery == nil {
 				return nil, err
 			}
-			return delivery, err
+			return classifyDelivery(delivery, r.class, err)
 		}
 		expected := wire.ServerData
 		if r.class == ControlLedger {
