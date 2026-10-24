@@ -64,6 +64,7 @@ func (b Binding) prologue() ([]byte, error) {
 }
 
 type Handshake struct {
+	sessionV2   bool
 	binding     Binding
 	initiator   bool
 	state       *noise.HandshakeState
@@ -81,7 +82,19 @@ func NewHandshake(b Binding, psk []byte, initiator bool) (*Handshake, error) {
 	return newHandshake(b, psk, initiator, rand.Reader)
 }
 func newHandshake(b Binding, psk []byte, initiator bool, entropy io.Reader) (*Handshake, error) {
+	return newHandshakeDomain(b, psk, initiator, entropy, false)
+}
+
+// NewSessionHandshake creates independent keys for the replacement transport.
+// The v2 domain is mixed into Noise before any key material is derived.
+func NewSessionHandshake(b Binding, psk []byte, initiator bool) (*Handshake, error) {
+	return newHandshakeDomain(b, psk, initiator, rand.Reader, true)
+}
+func newHandshakeDomain(b Binding, psk []byte, initiator bool, entropy io.Reader, sessionV2 bool) (*Handshake, error) {
 	prologue, err := b.prologue()
+	if sessionV2 {
+		prologue = append([]byte("ITOM/session-transport/v2\x00"), prologue...)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +109,7 @@ func newHandshake(b Binding, psk []byte, initiator bool, entropy io.Reader) (*Ha
 	if err != nil {
 		return nil, err
 	}
-	return &Handshake{binding: b, initiator: initiator, state: state}, nil
+	return &Handshake{binding: b, initiator: initiator, state: state, sessionV2: sessionV2}, nil
 }
 func (h *Handshake) split(a, b *noise.CipherState) {
 	if a == nil || b == nil {
@@ -108,7 +121,7 @@ func (h *Handshake) split(a, b *noise.CipherState) {
 		tx, rx = b, a
 		direction = wire.S2C
 	}
-	h.epoch = &Epoch{binding: h.binding, direction: direction, tx: tx, rx: rx}
+	h.epoch = &Epoch{binding: h.binding, direction: direction, tx: tx, rx: rx, sessionV2: h.sessionV2}
 }
 
 // Write retransmits immutable cached bytes on a duplicate call. Callers must
@@ -186,6 +199,7 @@ func (h *Handshake) Epoch() (*Epoch, error) {
 }
 
 type Epoch struct {
+	sessionV2  bool
 	binding    Binding
 	direction  wire.Direction
 	tx, rx     *noise.CipherState
@@ -202,6 +216,9 @@ func (e *Epoch) NeedsRekey() bool {
 	return e.txBytes >= SoftBytes || e.tx.Nonce() >= SoftRecords
 }
 func (e *Epoch) Seal(f wire.Frame) ([]byte, error) {
+	if e.sessionV2 {
+		return nil, ErrContext
+	}
 	inner, err := f.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -241,6 +258,9 @@ func (e *Epoch) Open(packet []byte) (wire.Frame, error) { return e.open(packet, 
 // An unauthenticated mailbox routing marker cannot consume a valid DATA record.
 func (e *Epoch) OpenControl(packet []byte) (wire.Frame, error) { return e.open(packet, true) }
 func (e *Epoch) open(packet []byte, controlOnly bool) (wire.Frame, error) {
+	if e.sessionV2 {
+		return wire.Frame{}, ErrContext
+	}
 	if len(packet) < wire.HeaderSize || len(packet) > wire.MaxRecord {
 		return wire.Frame{}, wire.ErrLimit
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/xjasonlyu/tun2socks/v2/core/device"
 	"github.com/xjasonlyu/tun2socks/v2/core/device/fdbased"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
-	"itom.local/core/datapath"
 	"itom.local/core/netroute"
 	"itom.local/core/servercfg"
 	"itom.local/core/socks"
@@ -346,7 +345,7 @@ func (c *Client) handleTCP(conn adapter.TCPConn) {
 		done := make(chan struct{}, 1)
 		go func() {
 			defer func() { done <- struct{}{} }()
-			n, e, stage := datapath.CopySocket(upstream, conn, make([]byte, 32<<10))
+			n, e, stage := copyApplicationSocket(upstream, conn, make([]byte, 32<<10))
 			c.recordCopyStage(upstream, "upload", n, e, stage)
 			if e == nil {
 				e = upstream.CloseWrite()
@@ -357,7 +356,7 @@ func (c *Client) handleTCP(conn adapter.TCPConn) {
 				conn.Close()
 			}
 		}()
-		n, e, stage := datapath.CopySocket(conn, upstream, make([]byte, 32<<10))
+		n, e, stage := copyApplicationSocket(conn, upstream, make([]byte, 32<<10))
 		c.recordCopyStage(upstream, "download", n, e, stage)
 		if cw, ok := conn.(interface{ CloseWrite() error }); ok && e == nil {
 			closeErr := cw.CloseWrite()

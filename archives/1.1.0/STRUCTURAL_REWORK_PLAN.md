@@ -1,6 +1,6 @@
 # One integrated replacement for the ITOM transport
 
-Decision document, 24 October 2026 (Moscow). Planning only: no runtime, ledger, APK or server binary is changed by this document.
+Decision document, 24 October 2026 (Moscow). Implementation has begun on the isolated session-v2 branch; see [current implementation status](SESSION_V2_STATUS.md). This document is a contract, not a qualification result. The later user instruction replaces all owned active Go tests after the first implementation and rejects the old transport as an implementation or behavioral oracle.
 
 ## Decision and acceptance boundary
 

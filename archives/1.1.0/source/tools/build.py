@@ -39,6 +39,8 @@ def fail(message: str):
 
 def read_source_info(root: Path = ROOT) -> dict:
     info = json.loads((root / "source-info.json").read_text(encoding="utf-8"))
+    if isinstance(info, dict) and info.get("build_allowed") is False:
+        fail("V2_UNQUALIFIED: source-only replacement; runtime integration and complete qualification are required before packaging. Run tools/check_session_v2.py for source checks.")
     if not isinstance(info, dict) or not all(isinstance(info.get(k), str) for k in ("version", "revision", "archive_name")):
         fail("Invalid source-info.json")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", info["version"]) or not re.fullmatch(r"[A-Za-z0-9_-]+", info["revision"]):

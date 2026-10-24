@@ -1,0 +1,100 @@
+{
+  "status": "UNQUALIFIED_FIRST_IMPLEMENTATION",
+  "complete": false,
+  "production_runtime": "V2_NOT_READY",
+  "historical_transport_used_as_oracle": false,
+  "checks": [
+    {
+      "module": "core",
+      "passed_packages": [
+        "itom.local/core/journal",
+        "itom.local/core/qualification",
+        "itom.local/core/secure",
+        "itom.local/core/transport",
+        "itom.local/core/wallet"
+      ],
+      "passed_top_level_tests": [
+        "TestLostAppendReplyRemainsChargedAcrossRestartAndInventory",
+        "TestUnownedBodyOrChangedUIDValidityCannotAuthorizeRefund",
+        "TestUsefulReceiverEvidenceMustSustainTheThreshold",
+        "TestAPeakAbove200MbpsCannotHidePoorMeanOrTail",
+        "TestFastOverallMeanCannotHideHalfSecondStalls",
+        "TestWarmFastTailCannotHideSlowStartup",
+        "TestAOneMillisecondLowWindowCannotBeHiddenBetweenSampleTicks",
+        "TestIdleMaximumCannotBecomeAPercentile",
+        "TestMissingOrOutOfOrderRawEvidenceFails",
+        "TestConcurrentPublishersCannotReuseANonceOrAcceptReplay",
+        "TestTamperedPacketDoesNotPoisonAuthenticDelivery",
+        "TestVerifiedTLSBootstrapAndBothLiteralModesUseReplacementExecutor",
+        "TestTLSVerificationCannotBeDisabledByEndpointConfiguration",
+        "TestNewProtocolHasIndependentKeysAndAuthenticatesFullSizeRecords",
+        "TestAppendAndFetchCompleteIndependentlyOnOneSocket",
+        "TestCanceledApplicationDoesNotBreakStartedLiteralOrSharedConnection",
+        "TestRefusalBeforeLiteralDoesNotDeadlockTheWriter",
+        "TestUnknownAppendIsNotReclassifiedAsRetryableRefusal",
+        "TestOversizedLiteralFailsBeforeReadingItsPayload",
+        "TestUnrequestedUIDCannotBeDeliveredByAConcurrentFetch",
+        "TestFlagsOnlyFetchDoesNotKillOrCompleteTheBodyCommand",
+        "TestCanceledQueuedCommandDoesNotWaitForAnotherLiteralBarrier",
+        "TestSmallRequestIsImmediatelyEligibleWhileBulkIsQueued",
+        "TestFragmentedBulkCannotKeepFastPriorityButLaterRequestCan",
+        "TestReorderedDeliveryAndHalfClosePreserveEveryByte",
+        "TestAdvertisedCreditHasActualMemoryBacking",
+        "TestInvalidOverlapAndPrematureFINCannotTruncateAFlow",
+        "TestServiceLearningDoesNotPunishLoadedRTTOrForgetCapacityAtIdle",
+        "TestServiceBatchCannotOverflowIntoOneByteAdmission",
+        "TestUnloadedPathChangeCanRefreshPropagationWithoutLosingBandwidth",
+        "FuzzRecordDecoderNeverAcceptsLengthOrScopeMismatch",
+        "TestConcurrentAdmissionNeverPromisesTheSameLastGrantSpace",
+        "TestOneTicketCannotPublishTwoBodiesEvenWithConcurrentCommit",
+        "TestMissingHistoryCannotProduceZeroSpendProofAfterReinstall",
+        "TestAdmissionSelectsConcreteRemainingAllowanceWithoutFencing"
+      ],
+      "race_detector": true
+    },
+    {
+      "module": "native",
+      "passed_packages": [
+        "itom.local/mobile"
+      ],
+      "passed_top_level_tests": [
+        "TestApplicationCopyPreservesReplyAfterUploadHalfClose",
+        "TestUnqualifiedReplacementCannotMasqueradeAsARelease"
+      ],
+      "race_detector": true
+    }
+  ],
+  "stress": {
+    "command": "go test -race -count=50 ./transport ./wallet ./journal ./secure ./qualification",
+    "result": "passed before final flags-only FETCH/cancellation additions; those additions also pass race checks"
+  },
+  "fuzz": {
+    "target": "FuzzRecordDecoderNeverAcceptsLengthOrScopeMismatch",
+    "duration_seconds": 10,
+    "executions": 127642,
+    "failures": 0
+  },
+  "full_integration_qualification": {
+    "status": "NOT_RUN_INCOMPLETE",
+    "idle_application_rtt_max_ms": null,
+    "sustained_upload_mbps": null,
+    "sustained_download_mbps": null,
+    "cold_tls_300_attempts": null,
+    "speedtest_20_sequences": null,
+    "android_tun_validation": null
+  },
+  "source_hashes": {
+    "core/transport/bootstrap.go": "ecadb4698ed5fb3e559d42436dbd3ec8282bd04e984ca7faef269d8f1646a8d9",
+    "core/transport/bootstrap_test.go": "b4e52ee2b4f53c6e9e56fe5bc77b2289670cbd6890b60330011a0c881cb2224b",
+    "core/transport/cipher.go": "1e5ba757c400a3b60afd4e3219f237eba4b8a17346427132ddbe78a700b582c5",
+    "core/transport/cipher_test.go": "f512b57ffebef422563f978d5454e9513fc5a0309f1e2bd2a0cde1a3d311ce96",
+    "core/transport/controller.go": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a",
+    "core/transport/imap.go": "5552b45aa0468c292b5a59ce78bc861037da131e551094fa22c5685a35d21c0b",
+    "core/transport/imap_test.go": "426b16340f62fa316f10fb70a51519411d4ce19468547792ceef8cffc5398d2d",
+    "core/transport/record.go": "1d1e32edf33a4cfbfa24cc80d241357020ea7813b5abf5b3565845e89ec2e996",
+    "core/transport/session.go": "24a4a64fc8a6860de97d9fcb2dce12df81c41e315b632e49fff6b0448c559868",
+    "core/transport/session_test.go": "6a7a89acc3038883a7106cc24365fc43d3e6e7978772e296592156392880683e",
+    "core/qualification/measure.go": "7147e2e20558a248341465818d0d78495552a633fa67e381fd64ee08ec7fc477",
+    "core/qualification/measure_test.go": "95b493744f22270b4c7529e04b112a259181e00e8a26636805bc06bbac9900e0"
+  }
+}

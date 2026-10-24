@@ -95,7 +95,7 @@
     "exact two-phone/three-server socket limits, physical IDs stable throughout load",
     "diagnostics on/off overhead and untruncated anomaly capture"
   ],
-  "legacy_suite": "retained unchanged as separately reported reference evidence; old17/20 gate cannot qualify the new transport",
+  "legacy_suite": "Historical code/tests retained only in immutable Git history and removal manifests. Per later user instruction, all owned active Go tests were removed after the first v2 iteration; new tests are independent. No old transport behavior is an oracle.",
   "recovery_fault_group": "separate injected EOF/lostAPPENDreply/UIDVALIDITY and crash safety tests; never presented as the healthy-server primary network",
   "release_gate": "All required primary cases and correctness/security/accounting checks pass, no allowlisted failed performance tests and no separate packaging bypass; one integrated candidate then real-phone confirmation",
   "wire_executor_invariants": [

@@ -53,6 +53,8 @@ type Wallet struct {
 	store, session wire.ID
 	failed         bool
 	recovered      bool // an existing authenticated store identity survived reopen
+	tickets        map[uint64]ticketReservation
+	nextTicket     uint64
 	oldSessions    map[wire.ID]bool
 }
 
@@ -283,13 +285,17 @@ func (w *Wallet) Close() error {
 	w.failed = true
 	return w.db.Close()
 }
-func (w *Wallet) write(fn func(*bolt.Tx) error) error {
+func (w *Wallet) write(fn func(*bolt.Tx) error) error { return w.writeAfter(fn, nil) }
+func (w *Wallet) writeAfter(fn func(*bolt.Tx) error, after func()) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.failed {
 		return ErrIO
 	}
 	e := w.db.Update(fn)
+	if e == nil && after != nil {
+		after()
+	}
 	if e != nil && !errors.Is(e, ErrState) && !errors.Is(e, ErrMissing) && !errors.Is(e, ErrLimit) && !errors.Is(e, ErrExhausted) {
 		w.failed = true
 	}
@@ -359,7 +365,7 @@ func (w *Wallet) acceptOffer(o wire.StorageGrant) (accepted, known bool, err err
 // A failed/uncertain return authorizes NO I/O. Retrying this API consumes a NEW
 // attempt; retransmitting its report never authorizes another APPEND.
 func (w *Wallet) Spend(k wire.QuotaKey, folder string, encrypted []byte, encodedSize func([]byte) (uint64, error)) (wire.UsageReport, []byte, error) {
-	return w.spend(k, folder, encrypted, nil, encodedSize)
+	return w.spend(k, folder, encrypted, nil, encodedSize, 0)
 }
 
 // SpendEnvelope retains exactly the existing durable spend/descriptor/restart
@@ -368,13 +374,13 @@ func (w *Wallet) SpendEnvelope(k wire.QuotaKey, folder string, encrypted, authen
 	if len(authenticationKey) != 32 {
 		return wire.UsageReport{}, nil, ErrState
 	}
-	return w.spend(k, folder, encrypted, authenticationKey, encodedSize)
+	return w.spend(k, folder, encrypted, authenticationKey, encodedSize, 0)
 }
 
-func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authenticationKey []byte, encodedSize func([]byte) (uint64, error)) (wire.UsageReport, []byte, error) {
+func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authenticationKey []byte, encodedSize func([]byte) (uint64, error), ticket uint64) (wire.UsageReport, []byte, error) {
 	var report wire.UsageReport
 	var body []byte
-	e := w.write(func(tx *bolt.Tx) error {
+	e := w.writeAfter(func(tx *bolt.Tx) error {
 		b := tx.Bucket(grants)
 		x, e := get(b, k)
 		if e != nil {
@@ -409,8 +415,18 @@ func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authentication
 		if n > 2<<20 {
 			return ErrLimit
 		}
-		if !within(total, x.Offer.Limit) {
+		if ticket != 0 {
+			reservation, ok := w.tickets[ticket]
+			if !ok || reservation.key != k || n > reservation.bytes {
+				return ErrState
+			}
+		}
+		reserved, messages := w.reservedLocked(k, ticket)
+		if !within(total, x.Offer.Limit) || reserved > x.Offer.Limit.Bytes-total.Bytes || messages > x.Offer.Limit.Messages-total.Messages {
 			return ErrExhausted
+		}
+		if len(x.Pending)+int(messages) >= MaxPending {
+			return ErrLimit
 		}
 		report = wire.UsageReport{Key: k, Total: total, Attempt: &wire.PhysicalDescriptor{Batch: batch, EncodedBytes: n, DecodedBytes: uint64(len(body)), Digest: sha256.Sum256(body), Folder: folder}}
 		if _, e = wire.EncodeControl(0, report); e != nil {
@@ -418,7 +434,15 @@ func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authentication
 		}
 		x.Used = total
 		x.Pending = append(x.Pending, report)
-		return put(b, k.Grant, x)
+		if err := put(b, k.Grant, x); err != nil {
+			return err
+		}
+		// Deletion must follow successful DB commit, outside this callback.
+		return nil
+	}, func() {
+		if ticket != 0 {
+			delete(w.tickets, ticket)
+		}
 	})
 	if e != nil {
 		return wire.UsageReport{}, nil, e

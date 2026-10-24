@@ -1,0 +1,25 @@
+name: ITOM session v2 source checks (not release qualification)
+on:
+  push:
+    branches: ["codex/v1.1.0-session-transport-v2"]
+    paths: ["archives/1.1.0/source/**", ".github/workflows/itom-session-v2-source.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: archives/1.1.0/source/core/go.mod
+          cache-dependency-path: |
+            archives/1.1.0/source/core/go.sum
+            archives/1.1.0/source/native/go.sum
+      - name: Independent core scenarios and safety checks
+        working-directory: archives/1.1.0/source/core
+        run: go test -race ./...
+      - name: Native source and OS TCP primitive checks
+        working-directory: archives/1.1.0/source/native
+        run: go test -race ./...
