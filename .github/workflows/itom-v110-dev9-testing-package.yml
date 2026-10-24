@@ -1,0 +1,267 @@
+name: Build exact DEV9 experimental testing package with failed timings retained
+on:
+  push:
+    branches: ["codex/v1.1.0-transport-rework"]
+    paths: [".github/workflows/itom-v110-dev9-testing-package.yml"]
+permissions: {contents: read, actions: read}
+env: {GOTOOLCHAIN: local, GOWORK: off}
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Preserve exact source and all original failed timing results
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin 96a592f4a9278d069a248e38ddb645a914bde6aa --no-tags
+          git diff --exit-code 96a592f4a9278d069a248e38ddb645a914bde6aa HEAD -- archives/1.1.0/source
+          gh api 'repos/Septonious/itom/actions/runs/40044377995/jobs?per_page=100' > "$RUNNER_TEMP/jobs.json"
+          gh api repos/Septonious/itom/actions/jobs/120722593356/logs > "$RUNNER_TEMP/original-core.log"
+          python3 - <<'PY_GATE'
+          from pathlib import Path
+          import json,os,re
+          root=Path(os.environ['RUNNER_TEMP']);jobs=json.loads((root/'jobs.json').read_text())['jobs']
+          for name in ('qualification-summary','Reject data races; retain the original loaded timing result'):
+              found=[j for j in jobs if j['name']==name]
+              assert len(found)==1 and found[0]['conclusion']=='success',name
+          text=(root/'original-core.log').read_text(encoding='utf-8-sig')
+          assert 'WARNING: DATA RACE' not in text and 'panic:' not in text
+          failures=re.findall(r'--- FAIL: (\w+)',text)
+          assert failures==['TestRev5RampAbortAndRestartKeepOriginalChatUsable'],failures
+          assert 'chat during ramp' in text and 'read pipe: i/o timeout' in text and 'ramp request' not in text
+          print('Original full normal suite retains one failed loaded-chat deadline. Not fully qualified.')
+          PY_GATE
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev9-qualification-summary
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: evidence/qualification
+      - uses: actions/download-artifact@v4
+        with:
+          name: dev9-byte-headroom-comparison
+          run-id: 40044377995
+          github-token: ${{ github.token }}
+          path: evidence/byte-headroom
+      - name: Retain strict performance outcomes and reject any accounting/readiness regression
+        run: |
+          python3 - <<'PY_GATE'
+          from pathlib import Path
+          import json,re
+          q=json.loads(Path('evidence/qualification/QUALIFICATION.json').read_text())
+          assert q['source_commit']=='96a592f4a9278d069a248e38ddb645a914bde6aa'
+          assert q['sustained_observed']==20 and q['sustained_passed']>=17
+          assert q['short_phases_passed']==48 and q['thresholds_relaxed'] is False
+          for trace in (0,1):
+              text=Path(f'evidence/byte-headroom/dev9-trace-{trace}.log').read_text()
+              assert 'panic:' not in text and 'DATA RACE' not in text
+              failures=re.findall(r'^--- FAIL: (\w+)',text,re.M)
+              assert failures==([] if trace==0 else ['TestDEV8RepeatedTLSStartsAndAbortsWithRetainedGrants']),failures
+              assert '--- PASS: TestDEV9LatestFieldReadiness' in text
+              assert '--- PASS: TestDEV9TightAccountTransfersBothDirections' in text
+          print('30/30 readiness and actual low-headroom transfer pass. Mobile light deadline remains failed.')
+          PY_GATE
+      - name: Complete correctness and race checks skipped after the full-suite timing failure
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          go vet ./...
+          go test -p 2 -count=1 -timeout=180s ./cmd/itom ./manager ./journal ./wallet ./flow ./datapath ./mailbox
+          go test -race -p 2 -count=1 -timeout=240s ./journal ./wallet ./flow ./datapath ./mailbox
+          go test -count=10 -timeout=180s ./tunnel -run '^TestRev7CappedMixedSocketsRepairWithoutLosingOriginalStream$'
+          go test -race -p 2 -count=1 -timeout=240s ./tunnel -run 'TestDEV6|TestDEV7|TestDEV8|TestDEV9|TestRev7AcceptedControl|TestRev7CloseDuringControlRepair|TestRev7CappedMixedSocketsRepair|TestThroughputModel|TestBoundedResponse|TestResponseSearch|TestDuplexProof|TestRetainedCadence|TestRecoveryPacing|TestRefillTrigger|TestRev7RetainedOutboundCleanup' -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev9-testing-package-safety-evidence
+          path: evidence/*
+  linux:
+    needs: [safety]
+    if: ${{ needs.safety.result == 'success' }}
+    name: Compile experimental Linux artifacts (not a qualified release)
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the exact grant-aware DEV9 source
+        run: |
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/field-feedback/stage.py "$RUNNER_TEMP/dev9"
+          echo "SOURCE=$RUNNER_TEMP/dev9" >> "$GITHUB_ENV"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Match revision, build both server architectures
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV9; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: see DEV9 qualification record; individual failed rounds and mixed tails retained; no field qualification.' 'Do not reset journals, wallets or Android app data. Preserve private server state when migrating.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py check --expect-revision itom-1-1-0-dev9
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            (cd core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "../dist/ITOM-1.1.0-DEV9-linux-$arch.bin" ./cmd/itom)
+            strings "dist/ITOM-1.1.0-DEV9-linux-$arch.bin" | grep -q 'itom-1-1-0-dev9'
+            test "$(stat -c %s "dist/ITOM-1.1.0-DEV9-linux-$arch.bin")" -gt 1000000
+          done
+          (cd dist && sha256sum ITOM-1.1.0-DEV9-linux-*.bin > NATIVE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev9-model-linux
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV9-linux-*.bin
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/NATIVE_SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    needs: [safety]
+    if: ${{ needs.safety.result == 'success' }}
+    name: Compile experimental APK, SDK tests, lint and JNI
+    runs-on: ${{ vars.ITOM_QUALIFICATION_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 75
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the exact grant-aware DEV9 source
+        run: |
+          git fetch origin tag v1.0.0-rc2 --no-tags
+          python3 archives/1.1.0/experiments/field-feedback/stage.py "$RUNNER_TEMP/dev9"
+          echo "SOURCE=$RUNNER_TEMP/dev9" >> "$GITHUB_ENV"
+      - name: Load optional persistent signing key from Actions secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SIGNING'
+          import base64, os
+          from pathlib import Path
+          names = ('ITOM_ANDROID_KEYSTORE_B64', 'ITOM_ANDROID_STORE_PASSWORD', 'ITOM_ANDROID_KEY_ALIAS', 'ITOM_ANDROID_KEY_PASSWORD')
+          present = [bool(os.environ.get(n)) for n in names]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete persistent signing setup; configure all four ITOM_ANDROID signing secrets')
+          if all(present):
+              target = Path(os.environ['RUNNER_TEMP']) / 'itom-signing.jks'
+              target.write_bytes(base64.b64decode(''.join(os.environ[names[0]].split()), validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'], 'a') as f:
+                  f.write(f'ITOM_ANDROID_SIGNING_STORE_FILE={target}\n')
+              print('Persistent signing key loaded; private key is never an artifact')
+          else:
+              print('No persistent signing secrets: temporary debug signer; in-place update compatibility is NOT assured')
+          PY_SIGNING
+      - name: Pin SDK/JDK/NDK and build exact 1.1 development application
+        working-directory: ${{ env.SOURCE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          printf '%s\n' 'EXPERIMENTAL ITOM 1.1.0 DEV9; NOT STABLE OR FIELD QUALIFIED.' 'Commit ${{ github.sha }}. Performance gate result: see DEV9 qualification record; individual failed rounds and mixed tails retained; no field qualification.' 'If signing secrets are absent this APK uses a temporary debug signer. A signature mismatch must not be solved by erasing wallet data.' > dist/TESTING_NOTES.txt
+          python3 tools/build.py android --expect-revision itom-1-1-0-dev9 --accept-android-licenses
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          meta=json.loads(Path('android/app/build/outputs/apk/debug/output-metadata.json').read_text())
+          assert meta['applicationId']=='org.itom.client', meta
+          assert any(x['versionCode']==10109 and x['versionName']=='1.1.0-dev9-debug' for x in meta['elements'])
+          apk=Path('dist/ITOM-1.1.0-DEV9-debug.apk')
+          assert apk.stat().st_size > 1000000
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-1-0-dev9' in z.read(f'lib/{abi}/libgojni.so')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          test -x "$signer"
+          "$signer" verify --print-certs dist/ITOM-1.1.0-DEV9-debug.apk > dist/SIGNER.txt
+      - name: Hash APK
+        working-directory: ${{ env.SOURCE }}/dist
+        run: sha256sum ITOM-1.1.0-DEV9-debug.apk > APK_SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev9-model-android
+          path: |
+            ${{ env.SOURCE }}/dist/ITOM-1.1.0-DEV9-debug.apk
+            ${{ env.SOURCE }}/dist/SIGNER.txt
+            ${{ env.SOURCE }}/dist/APK_SHA256SUMS
+            ${{ env.SOURCE }}/dist/TESTING_NOTES.txt
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Verify entire APK, export all chunks and bound each archive
+        env:
+          APK_INPUT: ${{ env.SOURCE }}/dist
+          APK_EXPORT: ${{ runner.temp }}/apk-export
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,hashlib,zipfile,json,shutil
+          source=next(Path(os.environ['APK_INPUT']).rglob('ITOM-1.1.0-DEV9-debug.apk'))
+          data=source.read_bytes();sha=hashlib.sha256(data).hexdigest()
+          root=Path(os.environ['APK_EXPORT']);root.mkdir()
+          chunks=[]
+          for index,offset in enumerate(range(0,len(data),4<<20)):
+              part=data[offset:offset+(4<<20)];name=f'apk.part-{index:03d}'
+              zpath=root/(name+'.zip')
+              with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:z.writestr(name,part)
+              chunks.append({'index':index,'name':name,'sha256':hashlib.sha256(part).hexdigest(),'size':len(part),'zip_size':zpath.stat().st_size})
+          sizes=[0,0,0]
+          for part in sorted(chunks,key=lambda x:x['zip_size'],reverse=True):
+              group=min(range(3),key=lambda i:sizes[i]);part['group']=group;sizes[group]+=part['zip_size']
+              target=root/f'group-{group}';target.mkdir(exist_ok=True);shutil.move(root/(part['name']+'.zip'),target/(part['name']+'.zip'))
+          assert max(sizes)<15<<20, sizes
+          manifest={'source_build_commit':os.environ['GITHUB_SHA'],'source_run_id':os.environ['GITHUB_RUN_ID'],'apk_sha256':sha,'apk_bytes':len(data),'parts':sorted(chunks,key=lambda x:x['index']),'group_zip_bytes':sizes}
+          assert sum(p['size'] for p in chunks)==len(data)
+          for i in range(3):(root/f'group-{i}'/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print('Complete APK verified',len(data),'bytes;',len(chunks),'parts; group sizes',sizes)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev9-complete-apk-group-0
+          path: ${{ runner.temp }}/apk-export/group-0/*
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev9-complete-apk-group-1
+          path: ${{ runner.temp }}/apk-export/group-1/*
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev9-complete-apk-group-2
+          path: ${{ runner.temp }}/apk-export/group-2/*
+          compression-level: 0
+          if-no-files-found: error
+      - name: Export public APK verifier
+        working-directory: ${{ env.SOURCE }}
+        run: |
+          mkdir -p dist/signing-tools
+          signer="$(find "$HOME/.cache/itom-build" -type f -path '*/build-tools/36.0.0/apksigner' -print -quit)"
+          cp "$(dirname "$signer")/lib/apksigner.jar" dist/signing-tools/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v110-dev9-public-signing-tools
+          path: ${{ env.SOURCE }}/dist/signing-tools/*
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v110-dev9-model-android-build-evidence
+          path: |
+            ${{ env.SOURCE }}/dist/build.log
+            ${{ env.SOURCE }}/dist/native-build.log
+            ${{ env.SOURCE }}/dist/build-report.json
+            ${{ env.SOURCE }}/dist/test-summary.json
+            ${{ env.SOURCE }}/dist/app-test-summary.json
+            ${{ env.SOURCE }}/dist/lint-summary.json
+          retention-days: 30
