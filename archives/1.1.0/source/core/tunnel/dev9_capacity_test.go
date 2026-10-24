@@ -37,10 +37,11 @@ func TestDEV9LatestFieldDebtKeepsDuplexServiceWithoutRefund(t *testing.T) {
 				t.Fatal(err)
 			}
 			fast, bulk := l.issuedGrantCounts()
-			if !l.ready.Load() || fast != 1 || bulk < 1 {
+			if !l.ready.Load() || fast != 1 || bulk != 2 {
 				t.Fatalf("byte headroom stranded: debt=%+v ready=%t fast=%d bulk=%d", debt, l.ready.Load(), fast, bulk)
 			}
-			// Hold a full bulk BODY and a worst-case fast BODY concurrently. Neither
+			// Hold the two smaller bulk units' combined space and a worst-case
+			// fast BODY concurrently. Neither
 			// inbound allocation may take the outbound service classes' real capacity.
 			local, err := l.tryLocalGrant(448<<10, false)
 			if err != nil {
@@ -70,7 +71,7 @@ func TestDEV9LatestFieldDebtKeepsDuplexServiceWithoutRefund(t *testing.T) {
 				if err = l.offer(); err != nil {
 					t.Fatal(err)
 				}
-				if fast, bulk := l.issuedGrantCounts(); fast != 1 || bulk < 1 {
+				if fast, bulk := l.issuedGrantCounts(); fast != 1 || bulk != 2 {
 					t.Fatalf("fast refill stranded behind existing bulk: round=%d fast=%d bulk=%d", round, fast, bulk)
 				}
 			}
@@ -82,5 +83,37 @@ func TestDEV9LatestFieldDebtKeepsDuplexServiceWithoutRefund(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+// A normal collector batch must not consume a small account's permission and
+// fence it repeatedly when another authenticated account can carry the BODY.
+func TestDEV9BulkPlacementLeavesUndersizedPermissionUnused(t *testing.T) {
+	g := newStripeGroup(wire.ID{1}, 1)
+	small := stripeTestLane(g, "a01", false)
+	full := stripeTestLane(g, "a02", false)
+	defer small.cancel()
+	defer full.cancel()
+	small.remoteBodyCap = 224 << 10
+	full.remoteBodyCap = dataBatchMIMEHardCap
+	for _, l := range []*lane{small, full} {
+		l.markRemoteProgress()
+		l.grants <- wire.QuotaKey{Account: l.account.ID, User: "12345678", Store: wire.ID{1}, Session: g.logical, Epoch: 1, Grant: 2}
+		if err := g.attach(l); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	target, key, err := g.takeRemoteGrantPreferred(ctx, nil, nil, false, 400<<10)
+	if err != nil || target != full || key.Account != "a02" {
+		t.Fatal("oversized BODY selected a small permission", key, err)
+	}
+	if len(small.grants) != 1 {
+		t.Fatal("undersized permission consumed")
+	}
+	target, key, err = g.takeRemoteGrantPreferred(ctx, nil, nil, false, 128<<10)
+	if err != nil || target != small || key.Account != "a01" {
+		t.Fatal("small BODY lost usable account", key, err)
 	}
 }

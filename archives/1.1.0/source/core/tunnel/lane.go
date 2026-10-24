@@ -1912,6 +1912,18 @@ func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryRes
 			l.stripe.signal()
 		}
 	}()
+	var remoteBytes uint64
+	if !l.side && !fastBatch {
+		// This is an advisory upper bound before sealing/choosing an account.
+		// As in the server branch below, allow 512 decoded envelope bytes,
+		// rounded up to complete base64 groups.
+		// Spending still requires the original wallet transaction and exact MIME.
+		if n, e := localBatchMIMESize(jobs); e == nil {
+			remoteBytes = min(uint64(dataBatchMIMEHardCap), n+(512+2)/3*4)
+		} else {
+			remoteBytes = dataBatchMIMEHardCap
+		}
+	}
 	var localBytes uint64
 	var err error
 	var preferred *lane
@@ -1936,7 +1948,7 @@ func (l *lane) writeAdmittedBatch(jobs []*datapath.Job, reservation *deliveryRes
 	for {
 		if !l.side {
 			var key wire.QuotaKey
-			target, key, err = l.stripe.takeRemoteGrantPreferred(l.logicalContext(), l, preferred, fastBatch)
+			target, key, err = l.stripe.takeRemoteGrantPreferred(l.logicalContext(), l, preferred, fastBatch, remoteBytes)
 			if err == nil {
 				reservedGrant = &key
 			}

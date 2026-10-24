@@ -80,5 +80,12 @@ func recoveredBulkBodyBytes(profile pool.Amount, u journal.OriginUsage) uint64 {
 	if room >= fast+dataBatchMIMEHardCap || room < fast+(128<<10) {
 		return dataBatchMIMEHardCap
 	}
+	available := room - fast
+	// When no full-size copy fits, two independent smaller BODYs allow the
+	// first copy to complete and be reclaimed while a later copy is waiting
+	// for application/credit progress. One almost-full lease couples both.
+	if available >= 2*(128<<10) {
+		return available / (2 * (32 << 10)) * (32 << 10)
+	}
 	return (room - fast) / (32 << 10) * (32 << 10)
 }

@@ -715,7 +715,7 @@ func (g *stripeGroup) takeRemoteGrantForClass(ctx context.Context, avoid *lane, 
 	return g.takeRemoteGrantPreferred(ctx, avoid, nil, fast)
 }
 
-func (g *stripeGroup) takeRemoteGrantPreferred(ctx context.Context, avoid, preferred *lane, fast bool) (*lane, wire.QuotaKey, error) {
+func (g *stripeGroup) takeRemoteGrantPreferred(ctx context.Context, avoid, preferred *lane, fast bool, minimumBody ...uint64) (*lane, wire.QuotaKey, error) {
 	var grace <-chan time.Time
 	if fast {
 		g.mu.Lock()
@@ -786,6 +786,14 @@ func (g *stripeGroup) takeRemoteGrantPreferred(ctx context.Context, avoid, prefe
 					}
 					if availability, ok := l.mail.(interface{ DataAvailable() bool }); ok && !availability.DataAvailable() {
 						continue
+					}
+					if !fast && len(minimumBody) > 0 {
+						l.serviceMu.Lock()
+						bodyCap := l.remoteBodyCap
+						l.serviceMu.Unlock()
+						if bodyCap > 0 && bodyCap < dataBatchMIMEHardCap && minimumBody[0] > bodyCap {
+							continue
+						}
 					}
 					if key, ok := l.tryTakeRemoteGrant(fast); ok {
 						if fast {

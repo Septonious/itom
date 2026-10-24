@@ -1,4 +1,4 @@
-name: DEV9 true cold HTTPS without RPC warmup against DEV8 and RC2
+name: DEV9 final low-headroom source cold HTTPS against DEV8 and RC2
 on:
   push:
     branches: ["codex/v1.1.0-transport-rework"]
