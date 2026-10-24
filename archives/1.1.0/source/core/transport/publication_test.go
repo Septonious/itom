@@ -306,6 +306,10 @@ func selectedAccountPeer(t *testing.T, account, folder string, script func(net.C
 }
 
 func selectedAccountPeerWithLimits(t *testing.T, account, folder string, limits transport.IMAPLimits, script func(net.Conn)) *transport.Executor {
+	return selectedAccountPeerWithCapabilities(t, account, folder, limits, "", script)
+}
+
+func selectedAccountPeerWithCapabilities(t *testing.T, account, folder string, limits transport.IMAPLimits, capabilities string, script func(net.Conn)) *transport.Executor {
 	t.Helper()
 	cert, roots, err := certificate()
 	if err != nil {
@@ -331,7 +335,7 @@ func selectedAccountPeerWithLimits(t *testing.T, account, folder string, limits 
 		readLine(t, reader)
 		fmt.Fprint(conn, "BOOT1 OK\r\n")
 		readLine(t, reader)
-		fmt.Fprint(conn, "* CAPABILITY IMAP4rev1\r\nBOOT2 OK\r\n")
+		fmt.Fprintf(conn, "* CAPABILITY IMAP4rev1 %s\r\nBOOT2 OK\r\n", capabilities)
 		readLine(t, reader)
 		fmt.Fprint(conn, "* OK [UIDVALIDITY 9] selected\r\nBOOT3 OK\r\n")
 		script(&bufferedConn{Conn: conn, reader: reader})

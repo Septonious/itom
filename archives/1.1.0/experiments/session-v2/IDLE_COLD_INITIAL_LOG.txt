@@ -1,0 +1,8 @@
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (5.11s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (5.24s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (4.86s)
+PASS
+ok  	itom.local/core/transport	16.256s

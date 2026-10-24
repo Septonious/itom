@@ -30,7 +30,7 @@ import (
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
 func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
-	runColdAccountedHTTP(t, nil, nil)
+	runColdAccountedHTTP(t, nil, nil, false)
 }
 
 func TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService(t *testing.T) {
@@ -38,10 +38,16 @@ func TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService(t *testing.
 	// command-delay integrity checks, not equivalent raw path RTT measurements.
 	runColdAccountedHTTP(t,
 		[]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 18 * time.Millisecond, 42 * time.Millisecond, 27 * time.Millisecond},
-		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond})
+		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, false)
 }
 
-func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Duration) {
+func TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService(t *testing.T) {
+	runColdAccountedHTTP(t,
+		[]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 18 * time.Millisecond, 42 * time.Millisecond, 27 * time.Millisecond},
+		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, true)
+}
+
+func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Duration, idle bool) {
 	t.Helper()
 	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.Copy(w, r.Body) }))
 	defer upstream.Close()
@@ -116,7 +122,7 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			folder = "bulk"
 		}
 		box := &sharedMailbox{}
-		s := &service{plane: plane, box: box, client: box.selectedWithCommandService(t, folder, clientService), server: box.selectedWithCommandService(t, folder, serverService), routes: map[transport.LedgerClass]route{}}
+		s := &service{plane: plane, box: box, client: box.selectedWithIdleService(t, folder, clientService, idle, false), server: box.selectedWithIdleService(t, folder, serverService, idle, false), routes: map[transport.LedgerClass]route{}}
 		t.Cleanup(func() { s.client.Close(); s.server.Close() })
 		for _, class := range []transport.LedgerClass{transport.ControlLedger, transport.DataLedger} {
 			if plane == transport.Bulk && class == transport.ControlLedger {
@@ -162,7 +168,9 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			if err != nil {
 				t.Fatal(err)
 			}
-			reader, err := transport.NewInboxWorker(inbox, transport.DefaultInboxServiceLimits())
+			readLimits := transport.DefaultInboxServiceLimits()
+			readLimits.PreferIdle = plane == transport.Bulk
+			reader, err := transport.NewInboxWorker(inbox, readLimits)
 			if err != nil {
 				t.Fatal(err)
 			}

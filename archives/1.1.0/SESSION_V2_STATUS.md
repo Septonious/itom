@@ -153,7 +153,18 @@ mandatory independently of that implementation.
   drain under the original progress timeout; restarting the same worker waits
   for that command rather than replacing the socket. Repeated unchanged EXISTS
   and informational status replies no longer create self-poll notifications.
-  This polling alternative is not yet calibrated or a qualified IDLE replacement.
+  This polling alternative is not yet calibrated.
+* Verified CAPABILITY negotiation now enables bounded IDLE notification waits
+  for explicitly configured quiet bulk/standby readers. Active fast readers keep
+  their independent probe policy. An IDLE owner admits no pending tags or queued
+  writers, and holds the writer through continuation, DONE and tagged completion.
+  An arriving command requests immediate DONE even before the continuation;
+  cancellation drains framing under the original progress limit. A complete IDLE
+  refusal disables only that executor's notification mode and keeps UID polling
+  on the same selected socket. IDLE response bytes retain the original ceiling.
+  Missing notifications trigger an actual UID audit, never assumed delivery or
+  deletion. Default quiet-service audit is 250ms; this is not a light-RTT claim
+  or permission to enable IDLE on the active fast path without qualification.
 * Transient pending-command capacity now has a distinct internal error. Inbox
   inventory/body bounds and publication literal limits stop for explicit handling
   instead of becoming endless command-capacity retries. An unstarted publication
@@ -267,6 +278,14 @@ RTTs, provider parallelism or bandwidth. A default parallel-package race cohort
 missed the 1500ms OPEN deadline in this new case; that failure is retained and
 remains a qualification concern even when isolated repetitions pass. Timing
 profiles expose source-check overhead without authorizing a timeout increase.
+The [IDLE service checks](experiments/session-v2/IDLE_CHECK_RESULTS.json) cover
+writer preemption around the continuation, strict DONE/tag ordering, cancellation,
+initial/final refusal, missing notifications, pending-tag exclusion and response
+flood bounds. The cold HTTP fixture now also tests quiet bulk IDLE with actual
+unsolicited EXISTS on the selected connections; no test wake channel enters the
+receive worker. Original polling cases remain. The final default-parallel full
+race cohort passes, but does not prove the earlier OPEN miss was eliminated or
+establish application RTT/bandwidth targets.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -300,8 +319,8 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete
   status/NACK recovery for both publication/receive halves.
-* IDLE/DONE or a calibrated alternative, bounded proof-based
-  reclamation and migration/restart reconciliation using original stores and
+* Calibration and multi-account integration of IDLE/DONE and active probing,
+  bounded proof-based reclamation and migration/restart reconciliation using original stores and
   retained debt. The scoped receive/publication workers are not yet a complete
   multi-account mailbox coordinator. DATA pressure no longer consumes protocol delivery slots;
   capacity-free protocol progress now bypasses exhausted protocol slots too.

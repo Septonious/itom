@@ -5,7 +5,7 @@ Production startup returns `V2_NOT_READY`; packaging remains disabled. The
 250ms idle/light RTT and sustained 100Mbps targets are not established.
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/INBOX_WORKER_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/IDLE_CHECK_RESULTS.json).
 
 The DEV7 description and downloads below are historical evidence, not the current
 rewrite or its qualification results. Stable 1.0.0/RC2 remains separate.

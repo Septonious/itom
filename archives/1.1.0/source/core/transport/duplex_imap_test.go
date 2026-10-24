@@ -25,9 +25,19 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	mu     sync.Mutex
-	bodies [][]byte
-	bytes  int
+	mu      sync.Mutex
+	bodies  [][]byte
+	bytes   int
+	changed chan struct{}
+}
+
+func (m *sharedMailbox) changes() (int, <-chan struct{}) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.changed == nil {
+		m.changed = make(chan struct{})
+	}
+	return len(m.bodies), m.changed
 }
 
 func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executor {
@@ -38,20 +48,66 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 // continuation where applicable. They are NOT calibrated network RTT/bandwidth,
 // independent server CPU/disk load, or a model of concurrent Rambler service.
 func (m *sharedMailbox) selectedWithCommandService(t *testing.T, folder string, delays []time.Duration) *transport.Executor {
+	return m.selectedWithIdleService(t, folder, delays, false, false)
+}
+
+// Notifications travel as real unsolicited EXISTS on the selected connection.
+// No test-owned wake channel is exposed to InboxWorker. Silent notifications
+// exercise bounded audit discovery rather than an assumed perfect hint path.
+func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, delays []time.Duration, idle, silent bool) *transport.Executor {
 	t.Helper()
-	return selectedPeerOn(t, folder, func(conn net.Conn) {
+	capabilities := ""
+	if idle {
+		capabilities = "IDLE"
+	}
+	return selectedAccountPeerWithCapabilities(t, "account1", folder, transport.DefaultIMAPLimits(), capabilities, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
 		turn := 0
+		delay := func() {
+			if len(delays) > 0 {
+				time.Sleep(delays[turn%len(delays)])
+				turn++
+			}
+		}
 		for {
 			if _, err := r.Peek(1); err != nil {
 				return // executor closed by fixture owner
 			}
 			line := readLine(t, r)
-			if len(delays) > 0 {
-				time.Sleep(delays[turn%len(delays)])
-				turn++
-			}
+			delay()
 			fields := strings.Fields(line)
+			if len(fields) == 2 && fields[1] == "IDLE" && idle {
+				count, changed := m.changes()
+				if !silent {
+					fmt.Fprintf(conn, "* %d EXISTS\r\n", count)
+				}
+				fmt.Fprint(conn, "+ idling\r\n")
+				done := make(chan string, 1)
+				go func() { value, _ := r.ReadString('\n'); done <- value }()
+				waiting := true
+				for waiting {
+					select {
+					case value := <-done:
+						if value == "" {
+							return
+						}
+						if value != "DONE\r\n" {
+							t.Error("command before DONE", value)
+							return
+						}
+						delay() // DONE completion has the same scripted service cost
+						fmt.Fprintf(conn, "%s OK idle complete\r\n", fields[0])
+						waiting = false
+					case <-changed:
+						count, next := m.changes()
+						changed = next
+						if !silent {
+							fmt.Fprintf(conn, "* %d EXISTS\r\n", count)
+						}
+					}
+				}
+				continue
+			}
 			if len(fields) == 2 && fields[1] == "NOOP" {
 				fmt.Fprintf(conn, "%s OK alive\r\n", fields[0])
 				continue
@@ -75,6 +131,10 @@ func (m *sharedMailbox) selectedWithCommandService(t *testing.T, folder string, 
 				m.bodies = append(m.bodies, body)
 				m.bytes += len(body)
 				uid := len(m.bodies)
+				if m.changed != nil {
+					close(m.changed)
+					m.changed = make(chan struct{})
+				}
 				m.mu.Unlock()
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":

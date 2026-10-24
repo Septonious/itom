@@ -1,0 +1,152 @@
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.11s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.06s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.05s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.07s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.05s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.01s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.01s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.03s)
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false
+--- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications (0.27s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true (0.18s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false (0.09s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.07s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.04s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.01s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.01s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.01s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.02s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.01s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.01s)
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false
+--- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications (0.28s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true (0.19s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false (0.09s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.07s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.04s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.02s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.02s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.02s)
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false
+--- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications (0.26s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true (0.15s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false (0.11s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.07s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.03s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.01s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.03s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.02s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.01s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.01s)
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false
+--- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications (0.27s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true (0.18s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false (0.09s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.07s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.04s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.01s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.01s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.01s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.02s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.02s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.02s)
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true
+=== RUN   TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false
+--- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications (0.26s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_true (0.15s)
+    --- PASS: TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications/missing_notifications_false (0.11s)
+PASS
+ok  	itom.local/core/transport	3.753s

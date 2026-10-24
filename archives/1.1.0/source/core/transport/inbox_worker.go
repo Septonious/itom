@@ -9,11 +9,16 @@ import (
 
 // InboxServiceLimits bounds the discovery delay, not an IMAP/server latency
 // assumption or a release RTT threshold. Pending/response/body limits remain
-// those of the selected executor and Inbox. IDLE is not implemented here.
-type InboxServiceLimits struct{ MinProbe, MaxProbe time.Duration }
+// those of the selected executor and Inbox. PreferIdle is intended for quiet
+// bulk/standby service; active fast discovery remains independently configured.
+type InboxServiceLimits struct {
+	MinProbe, MaxProbe time.Duration
+	PreferIdle         bool
+	IdleAudit          time.Duration
+}
 
 func DefaultInboxServiceLimits() InboxServiceLimits {
-	return InboxServiceLimits{MinProbe: time.Millisecond, MaxProbe: 25 * time.Millisecond}
+	return InboxServiceLimits{MinProbe: time.Millisecond, MaxProbe: 25 * time.Millisecond, IdleAudit: 250 * time.Millisecond}
 }
 
 // InboxStats reports discovery work. Observed includes repeated inventory UIDs;
@@ -21,6 +26,8 @@ func DefaultInboxServiceLimits() InboxServiceLimits {
 type InboxStats struct {
 	Turns, Observed, Applied, Deferred, CapacityWaits uint64
 	ServiceTime, ProbeDelay                           time.Duration
+	IdleAttempts, IdleRefusals                        uint64
+	IdleTime                                          time.Duration
 }
 
 // InboxWorker owns independent receive service on an existing selected socket.
@@ -42,6 +49,9 @@ func NewInboxWorker(inbox *Inbox, limits InboxServiceLimits) (*InboxWorker, erro
 		return nil, ErrProtocol
 	}
 	x := inbox.executor
+	if limits.PreferIdle && (limits.IdleAudit <= 0 || limits.IdleAudit > time.Second || limits.IdleAudit > x.limits.ProgressTimeout/2) {
+		return nil, ErrProtocol
+	}
 	x.mu.Lock()
 	defer x.mu.Unlock()
 	if x.closed != nil {
@@ -154,6 +164,46 @@ func (w *InboxWorker) Run(ctx context.Context) error {
 			}
 		}
 		stagnant = 0
+		if w.limits.PreferIdle && p.Deferred == 0 && !p.More && x.IdleSupported() {
+			idleSpace := x.SpaceChanged()
+			begin := time.Now()
+			err := x.WaitIdle(ctx, work, w.limits.IdleAudit)
+			w.mu.Lock()
+			w.stats.IdleAttempts++
+			w.stats.IdleTime += time.Since(begin)
+			if errors.Is(err, ErrRefused) {
+				w.stats.IdleRefusals++
+			}
+			w.signalLocked()
+			w.mu.Unlock()
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			if err == nil {
+				continue
+			}
+			if errors.Is(err, errCommandCapacity) {
+				timer := time.NewTimer(delay)
+				select {
+				case <-ctx.Done():
+					timer.Stop()
+					return ctx.Err()
+				case <-x.done:
+					timer.Stop()
+					return ErrClosed
+				case <-idleSpace:
+				case <-work:
+				case <-timer.C:
+				}
+				timer.Stop()
+				continue
+			}
+			if !errors.Is(err, ErrRefused) {
+				return err
+			}
+			// Complete rejection disables IDLE only on this selected executor.
+			// Normal bounded UID discovery below preserves missing-hint liveness.
+		}
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():

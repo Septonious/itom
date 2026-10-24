@@ -95,6 +95,59 @@ func TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt(t *
 	}
 }
 
+func TestBulkInboxIdleUsesRealBodyProofAndAuditsMissingNotifications(t *testing.T) {
+	for _, silent := range []bool{true, false} {
+		t.Run(fmt.Sprintf("missing_notifications_%t", silent), func(t *testing.T) {
+			f := serverPublications(t, transport.Bulk, 4<<20)
+			box := &sharedMailbox{}
+			x := box.selectedWithIdleService(t, "bulk", nil, true, silent)
+			writer := box.selected(t, "bulk")
+			defer x.Close()
+			defer writer.Close()
+			inbox, err := transport.NewClientInbox(x, transport.DefaultInboxLimits(), f.incoming)
+			if err != nil {
+				t.Fatal(err)
+			}
+			limits := transport.DefaultInboxServiceLimits()
+			limits.PreferIdle, limits.IdleAudit = true, 25*time.Millisecond
+			w, err := transport.NewInboxWorker(inbox, limits)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			done := make(chan error, 1)
+			go func() { done <- w.Run(ctx) }()
+			defer func() { cancel(); <-done }()
+			waitInboxWorker(t, w, func(s transport.InboxStats) bool { return s.IdleAttempts > 0 })
+			payload := bytes.Repeat([]byte{23, 0, 0xff}, 32<<10)
+			p := serverBody(t, f, payload)
+			if outcome, err := p.Start(context.Background(), writer); err != nil || outcome != transport.Accepted {
+				t.Fatal(outcome, err)
+			}
+			held, err := f.store.Held(f.scope.Account, f.scope.User)
+			if err != nil {
+				t.Fatal(err)
+			}
+			conn, err := f.client.Conn(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			conn.SetReadDeadline(time.Now().Add(time.Second))
+			got := make([]byte, len(payload))
+			if _, err = io.ReadFull(conn, got); err != nil || !bytes.Equal(got, payload) {
+				t.Fatal("IDLE/audit did not deliver exact authenticated application bytes", err)
+			}
+			if after, err := f.store.Held(f.scope.Account, f.scope.User); err != nil || after != held {
+				t.Fatal("notification refunded physical debt", held, after, err)
+			}
+			if err = f.store.Audit(); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 func TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier(t *testing.T) {
 	f := serverPublications(t, transport.Fast, 4<<20)
 	entered, release := make(chan struct{}), make(chan struct{})

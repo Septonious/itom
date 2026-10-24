@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T18:15:38.559618+00:00",
+  "parent_commit": "fdc049878894350dcdaa5a629b90427e51e44fcd",
+  "status": "unqualified negotiated IDLE service component; V2_NOT_READY and packaging disabled",
+  "checks": [
+    {
+      "file": "IDLE_PROTOCOL_INITIAL_LOG.txt",
+      "sha256": "667559d828bb6215b312e8b793d3f4f04f2a5db20be91f6b37976946f56b6a5d",
+      "top_level_group_executions": 25,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "IDLE_COLD_INITIAL_LOG.txt",
+      "sha256": "eaf28756a1200cb3387f139bbb801c6d3eea4a2f166c99004237be25bc4196d0",
+      "top_level_group_executions": 3,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "IDLE_PROTOCOL_REPEATED_LOG.txt",
+      "sha256": "0967fcfd412b5c2362e0114c4e8ca5a1b92668473d6bb01b2b1afc0544bf4e2d",
+      "top_level_group_executions": 45,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "IDLE_CORE_RACE.jsonl",
+      "sha256": "96e6d1cc74e87728aa624175825fbb244eb4ccfdcd612c9962eb706fd02cd22e",
+      "top_level_group_executions": 144,
+      "failures": []
+    },
+    {
+      "file": "IDLE_NATIVE_RACE.jsonl",
+      "sha256": "a79959b92d4cdbe6d3f6c8e3b69fc7287f396f32fa1e3fe9d70a66db8ad70992",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "IDLE_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "top_level_group_executions": 0,
+      "failed_scenarios": 0
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=150s (core; default package concurrency)",
+    "go test -race -json ./... -count=1 -timeout=90s (native)",
+    "go vet ./... (core)",
+    "go test -race ./transport -run TestIdle|TestCanceledIdle|TestNoIdle|TestBulkInboxIdle -count=5 -v -timeout=120s",
+    "go test -race ./transport -run TestColdTLSHTTPWithQuietBulkIdle -count=3 -v -timeout=120s"
+  ],
+  "implemented": [
+    "IDLE capability comes only from verified TLS/LOGIN/CAPABILITY/SELECT bootstrap; low-level unbound executors do not assume support.",
+    "An IDLE turn starts only with no pending tags or queued writers. A waiting command requests DONE immediately; the IDLE owner retains writer ownership through the continuation and tagged completion.",
+    "Context cancellation drains framing under the original progress limit and does not close a healthy selected socket.",
+    "Complete initial/final IDLE refusal downgrades only that executor to actual UID discovery; no blind reconnect/LOGIN and no quota mutation.",
+    "IDLE response lines retain the original per-command byte ceiling, including unsolicited status floods.",
+    "Explicit quiet bulk/standby preference uses notifications plus bounded actual-UID audit; active fast default remains probing. The current default quiet-service audit is 250ms and is not an idle/light application RTT measurement.",
+    "The cold application fixture now compares existing polling scenarios with negotiated quiet bulk IDLE using real unsolicited EXISTS on the selected wire. No fixture-owned wake channel is passed into InboxWorker."
+  ],
+  "validation": [
+    "144 top-level core test groups pass with race detection and default package concurrency, including both variable-command-delay cold HTTP paths.",
+    "10 native groups pass with race detection; core vet passes.",
+    "45 final top-level protocol/accounted-service group repetitions pass (nine groups, five repetitions each), covering both preemption sides of the continuation, cancellation, no capability, initial/final refusal, real/silent hints, pending tags and response flood bounds.",
+    "Three initial quiet-bulk cold repetitions each complete four exact TLS/HTTP POST echoes and original journal/wallet audit. Final full suite also retains ordinary and variable polling cases.",
+    "Queued command wire bytes are observed while IDLE completion is withheld; none may cross DONE/tag ordering. Notification/audit reception still requires actual authenticated BODY delivery and cannot refund server debt."
+  ],
+  "retained_prior_failure": "The previous INBOX_WORKER_PARALLEL_RACE.jsonl OPEN deadline miss remains preserved and is not declared fixed by this passing cohort. No 1500ms OPEN/TLS/header deadline or release threshold was raised.",
+  "limitations": [
+    "IDLE protocol functionality is not calibrated provider command/network/CPU/storage service. Scripted command delays are not equivalent to raw path RTT or bandwidth.",
+    "No numeric claim of RTT or sustained bandwidth improvement from these source checks. Reduction of quiet discovery work still needs multi-account/provider calibration.",
+    "Full authenticated bootstrap/roster/grant/recovery exchange, integrated receiver-window leases, measured-service multi-account coordinator, reclamation, native TUN/Android qualification and primary performance gates remain incomplete.",
+    "No new APK/server binary release; production remains V2_NOT_READY."
+  ]
+}

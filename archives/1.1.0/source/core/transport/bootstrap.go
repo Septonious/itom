@@ -26,6 +26,7 @@ type Selected struct {
 	UIDValidity  uint32
 	LiteralPlus  bool
 	LiteralMinus bool
+	Idle         bool
 }
 
 // DialSelected performs a bounded verified TLS/LOGIN/SELECT bootstrap, then
@@ -101,7 +102,7 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	if err != nil {
 		return Selected{}, err
 	}
-	plus, minus := false, false
+	plus, minus, idle := false, false, false
 	for _, line := range lines {
 		f := strings.Fields(strings.ToUpper(line))
 		if len(f) > 2 && f[0] == "*" && f[1] == "CAPABILITY" {
@@ -111,6 +112,9 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 				}
 				if capability == "LITERAL-" {
 					minus = true
+				}
+				if capability == "IDLE" {
+					idle = true
 				}
 			}
 		}
@@ -152,13 +156,13 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	if err = conn.SetDeadline(time.Time{}); err != nil {
 		return Selected{}, ErrUnknown
 	}
-	executor, err := newSelectedExecutor(conn, x.reader, l, p.Mailbox, uint32(validity), plus, minus)
+	executor, err := newSelectedExecutor(conn, x.reader, l, p.Mailbox, uint32(validity), plus, minus, idle)
 	if err != nil {
 		return Selected{}, err
 	}
 	executor.account = p.AccountID
 	owned = true
-	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus}, nil
+	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus, Idle: idle}, nil
 }
 func bootstrapReply(x *Executor, tag string) ([]string, error) {
 	var out []string

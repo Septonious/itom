@@ -65,8 +65,8 @@ func DefaultIMAPLimits() IMAPLimits {
 // Executor pins one selected mailbox. It owns the only parser and serializes
 // bytes on the wire, but releases the writer before tagged completion. APPEND
 // and one UID FETCH may overlap. UID FETCH operations serialize because their
-// untagged responses have no command tag. SELECT/EXPUNGE/IDLE are deliberately
-// not issued concurrently; mailbox changes require a new executor.
+// untagged responses have no command tag. IDLE owns the writer until DONE and
+// its tag have drained. Mailbox selection changes require a new executor.
 type Executor struct {
 	literalPlus      bool
 	literalMinus     bool
@@ -91,19 +91,23 @@ type Executor struct {
 	space            chan struct{}
 	publicationOwner bool
 	inboxOwner       bool
+	idleSupported    bool
+	idle             *operation
+	idleStop         chan struct{}
+	writerWaiters    int
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
 // The bootstrap owner must hand over the reader too, including buffered bytes.
 // No caller may continue reading/writing the connection after this transfer.
 func NewSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits) (*Executor, error) {
-	return newSelectedExecutor(conn, reader, l, "", 0, false, false)
+	return newSelectedExecutor(conn, reader, l, "", 0, false, false, false)
 }
-func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mailbox string, validity uint32, plus, minus bool) (*Executor, error) {
+func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mailbox string, validity uint32, plus, minus, idle bool) (*Executor, error) {
 	if conn == nil || reader == nil || l.Pending < 2 || l.Pending > 128 || l.LineBytes < 128 || l.LineBytes > 64<<10 || l.LiteralBytes < 1 || l.LiteralBytes > 2<<20 || l.ResponseBytes < l.LiteralBytes || l.ResponseBytes > 8<<20 || l.ProgressTimeout <= 0 {
 		return nil, ErrCapacity
 	}
-	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
+	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, idleSupported: idle, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
 	go e.readLoop()
 	return e, nil
 }
@@ -361,6 +365,16 @@ func (e *Executor) readLoop() {
 			e.fail(ErrUnknown)
 			return
 		}
+		e.mu.Lock()
+		if e.idle != nil {
+			if len(line)+2 > e.limits.ResponseBytes-e.idle.bytes {
+				e.mu.Unlock()
+				e.fail(ErrCapacity)
+				return
+			}
+			e.idle.bytes += len(line) + 2
+		}
+		e.mu.Unlock()
 		if strings.HasPrefix(line, "+") {
 			e.mu.Lock()
 			op := e.literal
@@ -461,6 +475,9 @@ func (e *Executor) readLoop() {
 		}
 		if e.literal == op {
 			e.literal = nil
+		}
+		if e.idle == op {
+			e.idle = nil
 		}
 		close(op.done)
 		e.mu.Unlock()
@@ -612,6 +629,25 @@ func (e *Executor) noteSequenceChange(fields []string) (bool, error) {
 // Queued, unstarted commands obey application cancellation without waiting for
 // another operation's literal barrier. Started command draining is separate.
 func (e *Executor) lockWriter(ctx context.Context) error {
+	e.mu.Lock()
+	if e.closed != nil {
+		err := e.closed
+		e.mu.Unlock()
+		return err
+	}
+	if err := ctx.Err(); err != nil {
+		e.mu.Unlock()
+		return err
+	}
+	e.writerWaiters++
+	// Request DONE even if the IDLE continuation has not arrived yet. The
+	// IDLE owner drains that continuation and its tag before releasing bytes.
+	if e.idleStop != nil {
+		close(e.idleStop)
+		e.idleStop = nil
+	}
+	e.mu.Unlock()
+	defer func() { e.mu.Lock(); e.writerWaiters--; e.mu.Unlock() }()
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

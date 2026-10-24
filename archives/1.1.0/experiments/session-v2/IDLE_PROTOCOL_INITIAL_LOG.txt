@@ -1,0 +1,92 @@
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.08s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.05s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.03s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.03s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.07s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.03s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.04s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.03s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.02s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.02s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.03s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.02s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.02s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.01s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.02s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.02s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.02s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.05s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.01s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.02s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.02s)
+=== RUN   TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier
+--- PASS: TestCanceledIdleWaitDrainsFramingWithoutClosingASelectedCarrier (0.02s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.06s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.03s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.04s)
+=== RUN   TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor
+--- PASS: TestNoIdleCapabilitySendsNoCommandAndKeepsTheOrdinaryExecutor (0.01s)
+PASS
+ok  	itom.local/core/transport	2.097s
