@@ -146,6 +146,19 @@ mandatory independently of that implementation.
   quanta, or immediately at the peer's dispatched edge; DATA still piggybacks
   the latest credit. No collection sleep, quota increase or unbacked credit is
   introduced.
+* Each selected executor can now have one scoped receive worker, independent
+  of its publication worker. It discovers actual UIDs even if notifications
+  are absent, drains ready work immediately and adjusts its bounded probe delay
+  from measured idle command service. Cancellation leaves an issued FETCH to
+  drain under the original progress timeout; restarting the same worker waits
+  for that command rather than replacing the socket. Repeated unchanged EXISTS
+  and informational status replies no longer create self-poll notifications.
+  This polling alternative is not yet calibrated or a qualified IDLE replacement.
+* Transient pending-command capacity now has a distinct internal error. Inbox
+  inventory/body bounds and publication literal limits stop for explicit handling
+  instead of becoming endless command-capacity retries. An unstarted publication
+  retains its exact body and original charge; a genuinely full command queue
+  resumes that body after a tag drains without another spend.
 * Isolated versioned receive/send-window state machines now cover conservative
   growth, sender-fenced credit return, delayed old grants, duplicate controls and
   DATA which overtakes a fence. A consumption-demand model requests prompt bounded
@@ -246,6 +259,14 @@ broadcast fixture-only availability hint; bounded per-flow and journal timing
 diagnostics accompany failures. The subsequent 28 repetitions (112 HTTP requests)
 and full source race checks passed the unchanged bounds. The earlier intermittent
 deadline misses remain unexplained; these passes are not a real-world startup fix.
+The [independent receive-service checks](experiments/session-v2/INBOX_WORKER_CHECK_RESULTS.json)
+remove the fixture-only mailbox hint from the cold HTTP path. Added command-service
+variation uses 10–50ms client and 20–40ms server scripted delays, with unchanged
+OPEN/TLS/HTTP deadlines. These delays are not equivalent to calibrated network
+RTTs, provider parallelism or bandwidth. A default parallel-package race cohort
+missed the 1500ms OPEN deadline in this new case; that failure is retained and
+remains a qualification concern even when isolated repetitions pass. Timing
+profiles expose source-check overhead without authorizing a timeout increase.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -281,8 +302,8 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
   status/NACK recovery for both publication/receive halves.
 * IDLE/DONE or a calibrated alternative, bounded proof-based
   reclamation and migration/restart reconciliation using original stores and
-  retained debt. The bounded serialized Inbox is not yet a complete concurrent
-  mailbox service. DATA pressure no longer consumes protocol delivery slots;
+  retained debt. The scoped receive/publication workers are not yet a complete
+  multi-account mailbox coordinator. DATA pressure no longer consumes protocol delivery slots;
   capacity-free protocol progress now bypasses exhausted protocol slots too.
   Multi-account fairness/liveness and complete memory/service behavior still
   need integration and qualification with the coordinator and recovery paths.

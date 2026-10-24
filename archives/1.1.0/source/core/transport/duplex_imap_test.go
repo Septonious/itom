@@ -25,32 +25,32 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	mu      sync.Mutex
-	bodies  [][]byte
-	bytes   int
-	changed chan struct{}
-}
-
-// A fixture readiness hint, broadcast to both independently selected endpoints.
-// It is not an IMAP notification implementation or a latency calibration input.
-func (m *sharedMailbox) Changes() <-chan struct{} {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.changed == nil {
-		m.changed = make(chan struct{})
-	}
-	return m.changed
+	mu     sync.Mutex
+	bodies [][]byte
+	bytes  int
 }
 
 func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executor {
+	return m.selectedWithCommandService(t, folder, nil)
+}
+
+// Delays bound one command's scripted provider service, including its literal
+// continuation where applicable. They are NOT calibrated network RTT/bandwidth,
+// independent server CPU/disk load, or a model of concurrent Rambler service.
+func (m *sharedMailbox) selectedWithCommandService(t *testing.T, folder string, delays []time.Duration) *transport.Executor {
 	t.Helper()
 	return selectedPeerOn(t, folder, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
+		turn := 0
 		for {
 			if _, err := r.Peek(1); err != nil {
 				return // executor closed by fixture owner
 			}
 			line := readLine(t, r)
+			if len(delays) > 0 {
+				time.Sleep(delays[turn%len(delays)])
+				turn++
+			}
 			fields := strings.Fields(line)
 			if len(fields) == 2 && fields[1] == "NOOP" {
 				fmt.Fprintf(conn, "%s OK alive\r\n", fields[0])
@@ -75,10 +75,6 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 				m.bodies = append(m.bodies, body)
 				m.bytes += len(body)
 				uid := len(m.bodies)
-				if m.changed != nil {
-					close(m.changed)
-					m.changed = make(chan struct{})
-				}
 				m.mu.Unlock()
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":

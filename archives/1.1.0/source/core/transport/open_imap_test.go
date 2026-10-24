@@ -26,10 +26,23 @@ import (
 
 // Application-integrity fixture, NOT provider/rate qualification: Noise and
 // grants are pre-established. Independent read/publication workers use four
-// fixed scoped executors with a fixture readiness hint. Real target TCP,
+// fixed scoped executors without a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
 func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
+	runColdAccountedHTTP(t, nil, nil)
+}
+
+func TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService(t *testing.T) {
+	// The user's latency ranges motivate variable service, but these are
+	// command-delay integrity checks, not equivalent raw path RTT measurements.
+	runColdAccountedHTTP(t,
+		[]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 18 * time.Millisecond, 42 * time.Millisecond, 27 * time.Millisecond},
+		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond})
+}
+
+func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Duration) {
+	t.Helper()
 	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.Copy(w, r.Body) }))
 	defer upstream.Close()
 	address := netip.MustParseAddrPort(upstream.Listener.Addr().String())
@@ -92,9 +105,9 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		plane          transport.Plane
 		box            *sharedMailbox
 		client, server *transport.Executor
-		inboxes        []*transport.Inbox
 		routes         map[transport.LedgerClass]route
 		writers        []*transport.PublicationWorker
+		readers        []*transport.InboxWorker
 	}
 	var services []*service
 	for _, plane := range []transport.Plane{transport.Fast, transport.Bulk} {
@@ -102,8 +115,8 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		if plane == transport.Bulk {
 			folder = "bulk"
 		}
-		box := &sharedMailbox{changed: make(chan struct{}, 1)}
-		s := &service{plane: plane, box: box, client: box.selected(t, folder), server: box.selected(t, folder), routes: map[transport.LedgerClass]route{}}
+		box := &sharedMailbox{}
+		s := &service{plane: plane, box: box, client: box.selectedWithCommandService(t, folder, clientService), server: box.selectedWithCommandService(t, folder, serverService), routes: map[transport.LedgerClass]route{}}
 		t.Cleanup(func() { s.client.Close(); s.server.Close() })
 		for _, class := range []transport.LedgerClass{transport.ControlLedger, transport.DataLedger} {
 			if plane == transport.Bulk && class == transport.ControlLedger {
@@ -149,7 +162,11 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s.inboxes = append(s.inboxes, inbox)
+			reader, err := transport.NewInboxWorker(inbox, transport.DefaultInboxServiceLimits())
+			if err != nil {
+				t.Fatal(err)
+			}
+			s.readers = append(s.readers, reader)
 		}
 		var clientPublishers []*transport.ClientPublisher
 		var serverPublishers []*transport.ServerPublisher
@@ -187,42 +204,14 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		}
 	}
 	for _, s := range services {
-		for index, i := range s.inboxes {
-			owner := a
-			if index == 1 {
-				owner = b
-			}
+		for _, reader := range s.readers {
 			workers.Go(func() {
-				fail := func(err error) {
-					if ctx.Err() == nil {
-						select {
-						case failed <- err:
-						default:
-						}
-						cancel()
+				if err := reader.Run(ctx); err != nil && ctx.Err() == nil {
+					select {
+					case failed <- err:
+					default:
 					}
-				}
-				for ctx.Err() == nil {
-					work, hint := owner.WorkChanged(), s.box.Changes()
-					var p transport.InboxProgress
-					var err error
-					if s.plane == transport.Fast {
-						p, err = i.Poll(ctx)
-					} else {
-						p, err = i.Sweep(ctx)
-					}
-					if err != nil {
-						fail(err)
-						return
-					}
-					if p.Applied == 0 && !p.More {
-						select {
-						case <-ctx.Done():
-							return
-						case <-work:
-						case <-hint:
-						}
-					}
+					cancel()
 				}
 			})
 		}
@@ -271,6 +260,9 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			}
 			t.Logf("client state=%+v server state=%+v", a.Snapshot(), b.Snapshot())
 			for _, s := range services {
+				for side, r := range s.readers {
+					t.Logf("plane=%d side=%d reader=%+v", s.plane, side, r.Stats())
+				}
 				for side, w := range s.writers {
 					t.Logf("plane=%d side=%d writer=%+v", s.plane, side, w.Stats())
 				}

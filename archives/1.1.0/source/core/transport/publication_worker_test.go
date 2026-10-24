@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -130,6 +132,149 @@ func clientWorkerFixture(t *testing.T) (*serverFixture, *wallet.Wallet, *transpo
 		t.Fatal(err)
 	}
 	return f, w, p
+}
+
+func TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending(t *testing.T) {
+	f, wallet, p := clientWorkerFixture(t)
+	limits := transport.DefaultIMAPLimits()
+	limits.LiteralBytes = 128
+	x := selectedAccountPeerWithLimits(t, "account1", "fast", limits, func(c net.Conn) {
+		r := bufio.NewReader(c)
+		if _, err := r.Peek(1); err != nil {
+			return
+		}
+		line := readLine(t, r)
+		if !strings.Contains(line, "NOOP") {
+			t.Error("oversized body reached the wire", line)
+			return
+		}
+		fmt.Fprintf(c, "%s OK healthy\r\n", tag(line))
+	})
+	defer x.Close()
+	w, err := transport.NewClientPublicationWorker(x, transport.Fast, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = f.client.Queue(1, []byte("retain the exact definitely unstarted physical body"), time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err = w.Run(ctx); !errors.Is(err, transport.ErrCapacity) {
+		t.Fatal("permanent literal bound parked as transient command capacity", err)
+	}
+	pending := w.Pending()
+	if pending == nil || w.Stats().Prepared != 1 || w.Stats().Accepted != 0 || w.Stats().Uncertain != 0 {
+		t.Fatal(w.Stats())
+	}
+	entries, err := wallet.Entries()
+	if err != nil || len(entries) != 1 || entries[0].Used.Messages != 1 || len(entries[0].Pending) != 1 {
+		t.Fatal("original charge changed", entries, err)
+	}
+	cmd, err := x.Noop(context.Background())
+	if err != nil {
+		t.Fatal("body limit killed healthy carrier", err)
+	}
+	if _, err = cmd.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	box := &sharedMailbox{}
+	correct := box.selected(t, "fast")
+	defer correct.Close()
+	if outcome, err := pending.Start(context.Background(), correct); err != nil || outcome != transport.Accepted {
+		t.Fatal("exact unstarted body could not recover on eligible scope", outcome, err)
+	}
+	after, err := wallet.Entries()
+	if err != nil || len(after) != 1 || after[0].Used != entries[0].Used || len(after[0].Pending) != 1 {
+		t.Fatal("unstarted-body recovery respent/refunded original charge", entries, after, err)
+	}
+}
+
+func TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains(t *testing.T) {
+	f, wallet, p := clientWorkerFixture(t)
+	limits := transport.DefaultIMAPLimits()
+	limits.Pending = 2
+	filled, release := make(chan struct{}), make(chan struct{})
+	var releaseOnce sync.Once
+	defer releaseOnce.Do(func() { close(release) })
+	x := selectedAccountPeerWithLimits(t, "account1", "fast", limits, func(c net.Conn) {
+		r := bufio.NewReader(c)
+		first, second := readLine(t, r), readLine(t, r)
+		close(filled)
+		<-release
+		fmt.Fprintf(c, "%s OK free\r\n%s OK free\r\n", tag(first), tag(second))
+		line := readLine(t, r)
+		_, body := readAppendLiteral(t, c, r, line)
+		if body == nil {
+			return
+		}
+		fmt.Fprintf(c, "%s OK stored\r\n", tag(line))
+		if _, err := r.Peek(1); err != nil {
+			return
+		}
+		line = readLine(t, r)
+		if !strings.Contains(line, "NOOP") {
+			t.Error("prepared-body retry emitted another APPEND", line)
+			return
+		}
+		fmt.Fprintf(c, "%s OK healthy\r\n", tag(line))
+	})
+	defer x.Close()
+	var held []*transport.Command
+	for range 2 {
+		cmd, err := x.Noop(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		held = append(held, cmd)
+	}
+	select {
+	case <-filled:
+	case <-time.After(time.Second):
+		t.Fatal("fixture command queue not full")
+	}
+	w, err := transport.NewClientPublicationWorker(x, transport.Fast, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = f.client.Queue(1, []byte("one prepared body across a transient pending-tag wait"), time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- w.Run(ctx) }()
+	waitWorker(t, w, func(s transport.PublicationStats) bool { return s.Prepared == 1 && s.PublishTime > 0 })
+	pending := w.Pending()
+	before, err := wallet.Entries()
+	if err != nil || pending == nil || len(before) != 1 || before[0].Used.Messages != 1 || len(before[0].Pending) != 1 {
+		t.Fatal("command pressure rewrote original spend", before, err)
+	}
+	releaseOnce.Do(func() { close(release) })
+	for _, cmd := range held {
+		if _, err = cmd.Wait(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	waitWorker(t, w, func(s transport.PublicationStats) bool { return s.Accepted == 1 })
+	cancel()
+	if err = <-done; !errors.Is(err, context.Canceled) {
+		t.Fatal(err)
+	}
+	if w.Stats().Prepared != 1 || w.Stats().Uncertain != 0 || w.Pending() != nil {
+		t.Fatal("pending-tag wait recreated body", w.Stats())
+	}
+	after, err := wallet.Entries()
+	if err != nil || len(after) != 1 || after[0].Used != before[0].Used || len(after[0].Pending) != 1 {
+		t.Fatal("transient retry changed physical debt", before, after, err)
+	}
+	cmd, err := x.Noop(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = cmd.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestExhaustedPublicationWaitsForRealPermissionWithoutRespending(t *testing.T) {

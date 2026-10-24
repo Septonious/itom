@@ -87,6 +87,7 @@ type InboxScope struct {
 // cannot overflow the unchanged response budget and force a healthy reconnect.
 type Inbox struct {
 	mu                  sync.Mutex
+	session             *Session
 	executor            *Executor
 	scope               InboxScope
 	limits              InboxLimits
@@ -114,8 +115,8 @@ func NewInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode I
 	return &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass), examined: make(map[uint32]bool)}, nil
 }
 
-func newScopedInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode scopedInboxDecoder) (*Inbox, error) {
-	if decode == nil {
+func newScopedInbox(executor *Executor, session *Session, scope InboxScope, limits InboxLimits, decode scopedInboxDecoder) (*Inbox, error) {
+	if decode == nil || session == nil {
 		return nil, ErrProtocol
 	}
 	i, err := NewInbox(executor, scope, limits, standaloneInboxDecoder(decode))
@@ -123,6 +124,7 @@ func newScopedInbox(executor *Executor, scope InboxScope, limits InboxLimits, de
 		return nil, err
 	}
 	i.admit = decode
+	i.session = session
 	return i, nil
 }
 

@@ -16,6 +16,11 @@ import (
 var ErrUnknown = errors.New("V2_IMAP_OUTCOME_UNKNOWN")
 var ErrRefused = errors.New("V2_IMAP_TAGGED_REFUSAL")
 
+// Only command admission is transient on the pending-tag edge. Inventory,
+// literal and response bounds also match ErrCapacity but require explicit
+// handling; they must not become an unbounded discovery retry loop.
+var errCommandCapacity = fmt.Errorf("%w: pending IMAP command", ErrCapacity)
+
 type Body struct {
 	UID, Sequence uint32
 	Bytes         []byte
@@ -85,6 +90,7 @@ type Executor struct {
 	existsKnown      bool
 	space            chan struct{}
 	publicationOwner bool
+	inboxOwner       bool
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
@@ -140,7 +146,7 @@ func (e *Executor) begin(fetch, literal bool) (string, *operation, error) {
 		return "", nil, e.closed
 	}
 	if len(e.pending) >= e.limits.Pending || fetch && e.fetch != nil {
-		return "", nil, ErrCapacity
+		return "", nil, errCommandCapacity
 	}
 	e.sequence++
 	tag := fmt.Sprintf("V2%016x", e.sequence)
@@ -378,8 +384,9 @@ func (e *Executor) readLoop() {
 			return
 		}
 		if fields[0] == "*" {
-			if err = e.noteSequenceChange(fields); err != nil {
-				e.fail(err)
+			changed, noteErr := e.noteSequenceChange(fields)
+			if noteErr != nil {
+				e.fail(noteErr)
 				return
 			}
 			if e.validity != 0 {
@@ -429,7 +436,7 @@ func (e *Executor) readLoop() {
 					e.fail(err)
 					return
 				}
-			} else {
+			} else if changed {
 				select {
 				case e.changes <- struct{}{}:
 				default:
@@ -573,17 +580,18 @@ func fetchSequence(line string) (uint32, error) {
 	return uint32(n), nil
 }
 
-func (e *Executor) noteSequenceChange(fields []string) error {
+func (e *Executor) noteSequenceChange(fields []string) (bool, error) {
 	if len(fields) != 3 || !strings.EqualFold(fields[2], "EXISTS") && !strings.EqualFold(fields[2], "EXPUNGE") {
-		return nil
+		return false, nil
 	}
 	n, err := strconv.ParseUint(fields[1], 10, 32)
 	if err != nil || strings.EqualFold(fields[2], "EXPUNGE") && n == 0 {
-		return ErrProtocol
+		return false, ErrProtocol
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	invalidate := strings.EqualFold(fields[2], "EXPUNGE")
+	changed := invalidate || !e.existsKnown || e.exists != uint32(n)
 	if invalidate {
 		if e.existsKnown && e.exists > 0 {
 			e.exists--
@@ -594,11 +602,11 @@ func (e *Executor) noteSequenceChange(fields []string) error {
 	}
 	if invalidate {
 		if e.sequenceVersion == ^uint64(0) {
-			return ErrProtocol
+			return false, ErrProtocol
 		}
 		e.sequenceVersion++
 	}
-	return nil
+	return changed, nil
 }
 
 // Queued, unstarted commands obey application cancellation without waiting for

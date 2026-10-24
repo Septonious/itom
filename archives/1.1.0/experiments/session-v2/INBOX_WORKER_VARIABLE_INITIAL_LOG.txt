@@ -1,0 +1,8 @@
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (4.78s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (4.96s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (4.70s)
+PASS
+ok  	itom.local/core/transport	15.594s

@@ -1,0 +1,12 @@
+=== RUN   TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains
+--- PASS: TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains (0.07s)
+=== RUN   TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains
+--- PASS: TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains (0.05s)
+=== RUN   TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains
+--- PASS: TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains (0.03s)
+=== RUN   TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains
+--- PASS: TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains (0.03s)
+=== RUN   TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains
+--- PASS: TestFullCommandQueueResumesTheSamePreparedBodyAfterATagDrains (0.03s)
+PASS
+ok  	itom.local/core/transport	1.291s

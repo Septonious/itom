@@ -302,6 +302,10 @@ func selectedPeerOn(t *testing.T, folder string, script func(net.Conn)) *transpo
 }
 
 func selectedAccountPeer(t *testing.T, account, folder string, script func(net.Conn)) *transport.Executor {
+	return selectedAccountPeerWithLimits(t, account, folder, transport.DefaultIMAPLimits(), script)
+}
+
+func selectedAccountPeerWithLimits(t *testing.T, account, folder string, limits transport.IMAPLimits, script func(net.Conn)) *transport.Executor {
 	t.Helper()
 	cert, roots, err := certificate()
 	if err != nil {
@@ -334,7 +338,7 @@ func selectedAccountPeer(t *testing.T, account, folder string, script func(net.C
 	}()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), AccountID: account, ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, transport.DefaultIMAPLimits())
+	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), AccountID: account, ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, limits)
 	if err != nil {
 		listener.Close()
 		t.Fatal(err)

@@ -1,0 +1,52 @@
+=== RUN   TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt
+--- PASS: TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt (0.08s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.03s)
+=== RUN   TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop
+--- PASS: TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop (0.00s)
+=== RUN   TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund
+--- PASS: TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund (0.05s)
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+--- PASS: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (0.04s)
+=== RUN   TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt
+--- PASS: TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt (0.06s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.03s)
+=== RUN   TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop
+--- PASS: TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop (0.00s)
+=== RUN   TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund
+--- PASS: TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund (0.04s)
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+--- PASS: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (0.05s)
+=== RUN   TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt
+--- PASS: TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt (0.06s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.03s)
+=== RUN   TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop
+--- PASS: TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop (0.00s)
+=== RUN   TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund
+--- PASS: TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund (0.09s)
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+--- PASS: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (0.06s)
+=== RUN   TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt
+--- PASS: TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt (0.13s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.04s)
+=== RUN   TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop
+--- PASS: TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop (0.00s)
+=== RUN   TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund
+--- PASS: TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund (0.05s)
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+--- PASS: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (0.08s)
+=== RUN   TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt
+--- PASS: TestInboxWorkerFindsMailWithoutNotificationsAndRestartKeepsOriginalDebt (0.11s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.04s)
+=== RUN   TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop
+--- PASS: TestRepeatedExistsAndStatusCannotCreateASelfPollingNotificationLoop (0.01s)
+=== RUN   TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund
+--- PASS: TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund (0.06s)
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+--- PASS: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (0.08s)
+PASS
+ok  	itom.local/core/transport	2.510s

@@ -1,0 +1,163 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T15:40:33.409557+00:00",
+  "parent_commit": "2ceef7f532af7a732a9e60ca76b40ab43575101f",
+  "status": "unqualified receive-service source checkpoint; V2_NOT_READY; no package permitted",
+  "checks": [
+    {
+      "file": "INBOX_WORKER_FIRST_LOG.txt",
+      "sha256": "12f234418bc85edff6180a3c803b733ca4fb289381eab9f68ca16c8750adfcc2",
+      "passed_scenarios": 10,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_TARGETED_LOG.txt",
+      "sha256": "5b60fcbef3581798267ee9d14f6be019c76ed1bbb4a0be2ff1925d2979332fd9",
+      "passed_scenarios": 15,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_VARIABLE_INITIAL_LOG.txt",
+      "sha256": "ddee55ff539bcfd1ab701be1bff1be5f3d61c0102e24882801a83802c37404db",
+      "passed_scenarios": 3,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_INVENTORY_INITIAL.jsonl",
+      "sha256": "4bde926fb623f2e81a68b6261cdee71f5fb5d0bfd8552e2b05e6910c010b2939",
+      "top_level_group_executions": 131,
+      "failures": [
+        {
+          "Time": "2026-10-24T15:32:00.642637652Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestFullInboxInventoryStopsForRecoveryWithoutSpinReconnectOrRefund",
+          "Elapsed": 1.03
+        },
+        {
+          "Time": "2026-10-24T15:32:13.596824732Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 18.889
+        }
+      ]
+    },
+    {
+      "file": "INBOX_WORKER_BODY_LIMIT_INITIAL_LOG.txt",
+      "sha256": "bb8de34577277c5a1d10ada1a85b080257fb6f521114540956f1aed571269880",
+      "passed_scenarios": 0,
+      "failed_scenarios": 1
+    },
+    {
+      "file": "INBOX_WORKER_BOUNDS_LOG.txt",
+      "sha256": "a847f3d21b31cbafdd01ca776cc8bf54f337611ef7577e79b4c7c2e56451f896",
+      "passed_scenarios": 25,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_COMMAND_WAIT_LOG.txt",
+      "sha256": "88a2c01dacfd5d759b19673e7d8018be2e128015ed17a39b38dd15811818aa7e",
+      "passed_scenarios": 5,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_PARALLEL_RACE.jsonl",
+      "sha256": "62f4808b738a84e35092c52556b39a319d103aaa252d971c0a029f91931cdd83",
+      "top_level_group_executions": 133,
+      "failures": [
+        {
+          "Time": "2026-10-24T15:34:56.699805289Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+          "Elapsed": 2.65
+        },
+        {
+          "Time": "2026-10-24T15:35:08.469218687Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 28.333
+        }
+      ]
+    },
+    {
+      "file": "INBOX_WORKER_VARIABLE_PROFILE_LOG.txt",
+      "sha256": "19d0c4e5832c90895079f93edc2467d364114eefbb8ae4b1a621dbbb5fd78a0c",
+      "passed_scenarios": 5,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_PROFILE_TOP.txt",
+      "sha256": "194e8a889f270cc3c90264aaae73cba44363e9f77af6a5b0b0843895811eb082",
+      "passed_scenarios": 0,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "INBOX_WORKER_VARIABLE.cpu",
+      "sha256": "43b0c4cdff3e6da0ecf4adffbc26e3ef6bb5eaea53848342491f93e32a8c6966"
+    },
+    {
+      "file": "INBOX_WORKER_SERIAL_RACE.jsonl",
+      "sha256": "5503832ce10c4512e995bfcc43c14395a1fbcb5e3c4fe2b62167f74d2524499c",
+      "top_level_group_executions": 134,
+      "failures": []
+    },
+    {
+      "file": "INBOX_WORKER_CORE_NORMAL.jsonl",
+      "sha256": "1a5575df9a6ee222664e6af0cefd106efa403bf866831a162bf96cae6365af63",
+      "top_level_group_executions": 134,
+      "failures": []
+    },
+    {
+      "file": "INBOX_WORKER_NATIVE_RACE.jsonl",
+      "sha256": "02a3603115e694950ab22c805e74e64f56f22af7f5709b731eb6d75217dd6b11",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "INBOX_WORKER_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_scenarios": 0,
+      "failed_scenarios": 0
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=120s (core; default package concurrency; retained OPEN deadline failure)",
+    "go test -race -p 1 -json ./... -count=1 -timeout=120s (core; package-isolated source check)",
+    "go test -json ./... -count=1 -timeout=120s (core; normal default package concurrency)",
+    "go test -race -json ./... -count=1 -timeout=90s (native)",
+    "go vet ./... (core)",
+    "go test -race ./transport -run TestColdTLSHTTPAndWindowCrossing|TestSequenceMovement -count=5 -v -timeout=120s",
+    "go test -race ./transport -run TestColdTLSHTTPWithFluctuating -count=3 -v -timeout=120s",
+    "go test -race ./transport -run TestColdTLSHTTPWithFluctuating -count=5 -cpuprofile <retained profile> -v -timeout=120s",
+    "go test -race ./transport -run <five receive/notification/inventory/publication-bound groups> -count=5 -v -timeout=90s",
+    "go test -race ./transport -run TestFullCommandQueueResumes -count=5 -v -timeout=60s"
+  ],
+  "implemented": [
+    "One receive owner per actual selected executor, pinned by scoped Inbox factories to its Session; no new connections or account replacement.",
+    "Adaptive bounded discovery timer from actual idle command service, actual UID reads and inventory fallback; unsolicited notifications are hints, not liveness authority. Current source defaults bound added probe wait to 1-25ms, not a claim of measured provider RTT or qualification.",
+    "Independent read/publication service replaces the idealized mailbox hint in the cold TLS/HTTP path; even bulk uses the same safe next-UID/inventory path.",
+    "Cancellation detaches receive service while issued FETCH drains its original tag/progress timeout; restart waits actual pending-command capacity.",
+    "Unchanged EXISTS and informational status no longer create repeated change edges; real count changes and sequence invalidation remain hints.",
+    "Distinct transient command-admission capacity prevents permanent inventory/body bounds from becoming retry/spin loops. A definitely unstarted publication stays exact, charged and reusable under an eligible bound route; a genuinely full command queue resumes without respending."
+  ],
+  "retained_failures": [
+    "New full-inventory regression initially timed out: its own completed enumeration closed the sampled tag edge, so broad ErrCapacity handling retried forever. Fixed by distinct transient command-admission error, without raising any bound.",
+    "New publication literal-bound regression initially parked until context deadline. Fixed by retrying only transient pending-command capacity; original exact charged body remains retained. EOF/empty-line fixture cleanup messages in this initial log do not show an oversized APPEND.",
+    "A default parallel-package full race cohort missed the unchanged 1500ms OPEN deadline in the newly added variable-command-service scenario. The flow/journal/worker timeline is retained. Subsequent isolated five-run profile, package-serial full race check and normal full check pass; the intermittent timing concern is NOT established as fixed."
+  ],
+  "validation": [
+    "134 top-level core groups pass normal execution and package-isolated race execution; core vet passes.",
+    "10 native groups pass with race detection; DNS behavior remains intact.",
+    "Five repeats of each bounded receive/cancel/restart/notification/inventory/body-limit scenario and five transient publication-command-pressure repeats pass.",
+    "Variable service uses scripted client 10/50/18/42/27ms and server 20/40/24/36ms delays; three initial plus five profiled repetitions pass original OPEN/TLS/header deadlines and compare exact application echo bytes.",
+    "All source checks preserve original journal/wallet debt, physical response/body/count limits, fsync semantics, replay policy and Android identity."
+  ],
+  "limitations": [
+    "Scripted per-command service is not calibrated path RTT, packet bandwidth, provider concurrency, independent CPU/disk service or Android scheduling.",
+    "Profiling is race-instrumented on the two-CPU source host; it contains instrumentation overhead and incomplete local symbolization, not a production performance profile.",
+    "Package-isolated source checks do not override or replace the retained parallel race deadline miss or any primary performance gate.",
+    "No authenticated bootstrap/roster/grant exchange, integrated window leases, calibrated multi-account coordinator, IDLE/DONE, reclamation/recovery qualification or full native/TUN/Android validation yet.",
+    "No measured proof of every light RTT<=250ms, loaded RTT<=2000ms or sustained 100Mbps. No new RC/APK/binary released."
+  ]
+}

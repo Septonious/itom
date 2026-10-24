@@ -10,7 +10,7 @@ func NewClientInbox(executor *Executor, limits InboxLimits, receivers ...*Client
 		return nil, err
 	}
 	o := receivers[0].origin
-	return newScopedInbox(executor, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
+	return newScopedInbox(executor, receivers[0].session, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
 }
 
 // NewClientInboxDecoder demultiplexes peer DATA/protocol under negotiated scope.

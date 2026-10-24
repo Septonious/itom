@@ -1,0 +1,8 @@
+=== RUN   TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending
+    publication_worker_test.go:160: permanent literal bound parked as transient command capacity context deadline exceeded
+    publication_worker_test.go:142: EOF
+    publication_worker_test.go:144: oversized body reached the wire 
+--- FAIL: TestPublicationBodyLimitStopsWithoutWaitingForCommandCapacityOrRespending (1.05s)
+FAIL
+FAIL	itom.local/core/transport	1.163s
+FAIL

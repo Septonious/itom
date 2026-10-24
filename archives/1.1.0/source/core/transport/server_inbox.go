@@ -13,7 +13,7 @@ func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*Remote
 		return nil, err
 	}
 	r := receivers[0]
-	return newScopedInbox(executor, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+	return newScopedInbox(executor, r.session, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
 }
 
 // NewServerInboxDecoder pins the authenticated peer/session and physical

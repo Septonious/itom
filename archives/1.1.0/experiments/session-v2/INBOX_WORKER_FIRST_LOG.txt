@@ -1,0 +1,22 @@
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.05s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.41s)
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.03s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.41s)
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.02s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.75s)
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.02s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.16s)
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.02s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.57s)
+PASS
+ok  	itom.local/core/transport	15.753s

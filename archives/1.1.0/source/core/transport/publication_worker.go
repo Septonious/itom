@@ -269,7 +269,7 @@ func (w *PublicationWorker) Run(ctx context.Context) error {
 		}
 		w.signalLocked()
 		w.mu.Unlock()
-		if outcome == NotStarted && errors.Is(err, ErrCapacity) {
+		if outcome == NotStarted && errors.Is(err, errCommandCapacity) {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
