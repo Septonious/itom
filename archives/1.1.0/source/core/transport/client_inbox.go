@@ -10,7 +10,15 @@ func NewClientInbox(executor *Executor, limits InboxLimits, receivers ...*Client
 		return nil, err
 	}
 	o := receivers[0].origin
-	return newScopedInbox(executor, receivers[0].session, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
+	inbox, err := newScopedInbox(executor, receivers[0].session, InboxScope{Account: o.Account, Folder: o.Folder, UIDValidity: o.UIDValidity}, limits, decode)
+	if err != nil {
+		return nil, err
+	}
+	inbox.routes = make(map[LedgerClass]wire.ID, len(receivers))
+	for _, route := range receivers {
+		inbox.routes[route.class] = route.origin.Store
+	}
+	return inbox, nil
 }
 
 // NewClientInboxDecoder demultiplexes peer DATA/protocol under negotiated scope.

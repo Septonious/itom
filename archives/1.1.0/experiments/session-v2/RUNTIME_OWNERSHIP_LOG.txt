@@ -1,0 +1,30 @@
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.08s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.04s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.02s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.06s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.02s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.04s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.03s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.01s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.01s)
+=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier
+--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.04s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.99s)
+=== RUN   TestPublicationWorkerDoesNotBlockFetchBehindAnAppendCompletion
+--- PASS: TestPublicationWorkerDoesNotBlockFetchBehindAnAppendCompletion (0.03s)
+=== RUN   TestPublicationWorkerRejectsWrongAccountOrMailboxBeforeIO
+--- PASS: TestPublicationWorkerRejectsWrongAccountOrMailboxBeforeIO (0.05s)
+PASS
+ok  	itom.local/core/transport	4.405s

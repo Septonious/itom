@@ -1,0 +1,15 @@
+# itom.local/core/transport [itom.local/core/transport.test]
+transport/endpoint.go:55:6: Endpoint redeclared in this block
+	transport/bootstrap.go:17:6: other declaration of Endpoint
+transport/endpoint.go:162:17: unknown field session in struct literal of type Endpoint
+transport/endpoint.go:162:35: unknown field exit in struct literal of type Endpoint
+transport/endpoint.go:162:47: unknown field carriers in struct literal of type Endpoint
+transport/endpoint.go:162:102: unknown field phase in struct literal of type Endpoint
+transport/endpoint.go:162:126: unknown field changed in struct literal of type Endpoint
+transport/endpoint.go:165:23: e.status undefined (type *Endpoint has no field or method status)
+transport/endpoint.go:175:56: e.changed undefined (type *Endpoint has no field or method changed)
+transport/endpoint.go:176:50: e.mu undefined (type *Endpoint has no field or method mu)
+transport/endpoint.go:176:91: e.changed undefined (type *Endpoint has no field or method changed)
+transport/endpoint.go:176:91: too many errors
+FAIL	itom.local/core/transport [build failed]
+FAIL

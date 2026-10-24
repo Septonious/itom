@@ -6,6 +6,11 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+Preparation of a working field-test candidate is tracked in
+[the release preparation checklist](FIELD_RELEASE_PREPARATION.md). The new
+`transport.Runtime` now owns integrated session/carrier/exit service, but has not
+replaced the production API stubs or completed authenticated initialization.
+
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
 and SHA-256 hashes. Historical scheduling, timers and congestion behavior are
@@ -184,6 +189,17 @@ mandatory independently of that implementation.
   claim the session's role. Rejected routes do not spend/clear grants or mutate
   queues. Coordinated rekey still requires an explicit owner transition; binding
   is a prerequisite for scoped window integration, not automatic window growth.
+* A single Runtime now validates actual fast/bulk executors, matching ledger
+  routes, required protocol service and explicit socket/account budgets before
+  atomically claiming the Session and all actors. Already running or unlisted
+  workers cannot compete with runtime ownership. The TCP exit uses the same
+  owner. No sockets, quotas, grants or Noise keys are created by assembly.
+* Runtime supervision preserves receive service after a write failure and stops
+  new writing only on a failed reader's carrier. Other carriers continue; exact
+  charged publications remain reachable for explicit recovery. Cancellation
+  joins issued service; final Close owns session/socket shutdown and borrows
+  rather than closes or erases wallets/journals. Startup snapshots report actual
+  actor starts and service failure stages, never a fabricated peer READY.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -301,6 +317,14 @@ the corrected source rejects them before any spend, preserving original wallet
 and journal exposure and allowing a wrapper of the same original epoch. Full
 default-parallel core race checks pass with these guards. This is scope/counter
 ownership validation, not a measured RTT or bandwidth improvement.
+The [runtime integration checks](experiments/session-v2/RUNTIME_CHECK_RESULTS.json)
+replace the cold application's fixture supervisor with paired production runtime
+owners. Resource/ownership rejection, cancellation, healthy post-run sockets,
+partial service failure and retained exact body/charge are exercised. The first
+three-repeat cold cohort retains TLS/startup deadline misses; one failure's
+journal metrics show a commit of about 1.3 seconds. Subsequent full source checks
+pass unchanged deadlines, but no timing failure is declared eliminated. Source
+CI now preserves machine-readable passing/failing logs and environment metadata.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual

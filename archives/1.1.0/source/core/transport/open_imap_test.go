@@ -193,39 +193,63 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		s.writers = []*transport.PublicationWorker{clientWriter, serverWriter}
 		services = append(services, s)
 	}
+	var clientCarriers, serverCarriers []transport.RuntimeCarrier
+	for _, s := range services {
+		clientCarriers = append(clientCarriers, transport.RuntimeCarrier{Reader: s.readers[0], Writer: s.writers[0]})
+		serverCarriers = append(serverCarriers, transport.RuntimeCarrier{Reader: s.readers[1], Writer: s.writers[1]})
+	}
+	for name, candidates := range map[string][]transport.RuntimeCarrier{
+		"duplicate_socket": {clientCarriers[0], clientCarriers[0], clientCarriers[1]},
+		"mixed_halves":     {{Reader: clientCarriers[0].Reader, Writer: clientCarriers[1].Writer}, clientCarriers[1]},
+	} {
+		if _, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 3, PerAccount: 3}, candidates...); !errors.Is(err, transport.ErrProtocol) {
+			t.Fatal(name, "invalid carrier ownership accepted", err)
+		}
+	}
+	if _, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 1, PerAccount: 2}, clientCarriers...); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("runtime exceeded the explicit socket budget", err)
+	}
+	clientRuntime, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 2, PerAccount: 2}, clientCarriers...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	serverRuntime, err := transport.NewRuntime(b, exit, transport.RuntimeBudget{Connections: 3, PerAccount: 3}, serverCarriers...)
+	if err != nil {
+		clientRuntime.Close()
+		t.Fatal(err)
+	}
+	if _, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 2, PerAccount: 2}, clientCarriers...); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("second runtime claimed the same logical owner", err)
+	}
+	stopped, stop := context.WithCancel(context.Background())
+	stop()
+	if err := clientCarriers[0].Reader.Run(stopped); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("external read run stole runtime ownership", err)
+	}
+	if err := clientCarriers[0].Writer.Run(stopped); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("external write run stole runtime ownership", err)
+	}
+	if err := exit.Run(stopped); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("external exit run stole runtime ownership", err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var workers sync.WaitGroup
-	failed := make(chan error, 1)
-	workers.Go(func() { exit.Run(ctx) })
-	for _, s := range services {
-		for _, writer := range s.writers {
-			workers.Go(func() {
-				if err := writer.Run(ctx); err != nil && ctx.Err() == nil {
-					select {
-					case failed <- err:
-					default:
-					}
-					cancel()
+	failed := make(chan error, 2)
+	for _, runtime := range []*transport.Runtime{clientRuntime, serverRuntime} {
+		workers.Go(func() {
+			if err := runtime.Run(ctx); err != nil && ctx.Err() == nil {
+				select {
+				case failed <- err:
+				default:
 				}
-			})
-		}
+				cancel()
+			}
+		})
 	}
-	for _, s := range services {
-		for _, reader := range s.readers {
-			workers.Go(func() {
-				if err := reader.Run(ctx); err != nil && ctx.Err() == nil {
-					select {
-					case failed <- err:
-					default:
-					}
-					cancel()
-				}
-			})
-		}
-	}
-	// Stop application/exit work before closing the four fixed carrier sockets.
-	t.Cleanup(func() { cancel(); workers.Wait(); a.Close(); b.Close() })
+	// The runtime owns final session/carrier shutdown; original stores and
+	// wallets remain borrowed and available for the post-run debt audit.
+	t.Cleanup(func() { cancel(); clientRuntime.Close(); serverRuntime.Close(); workers.Wait() })
 	roots := x509.NewCertPool()
 	roots.AddCert(upstream.Certificate())
 	h := &http.Transport{DialContext: dialer.DialContext, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 1500 * time.Millisecond, ResponseHeaderTimeout: 1500 * time.Millisecond, DisableKeepAlives: true}
@@ -260,6 +284,7 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		stopTrace()
 		tracing.Wait()
 		if err != nil {
+			t.Logf("client runtime=%+v server runtime=%+v", clientRuntime.Snapshot(), serverRuntime.Snapshot())
 			for _, sample := range trace {
 				t.Log(sample)
 			}
@@ -288,6 +313,13 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			t.Fatal("application echo changed or stalled", run, err)
 		}
 	}
+	cancel()
+	workers.Wait()
+	for _, runtime := range []*transport.Runtime{clientRuntime, serverRuntime} {
+		if status := runtime.Snapshot(); status.Phase != transport.ServiceStopped || status.Session.Closed {
+			t.Fatal("normal cancellation destroyed logical owner or misreported a failure", status)
+		}
+	}
 	for _, s := range services {
 		for _, x := range []*transport.Executor{s.client, s.server} {
 			cmd, err := x.Noop(context.Background())
@@ -299,8 +331,6 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			}
 		}
 	}
-	cancel()
-	workers.Wait()
 	select {
 	case err := <-failed:
 		if !errors.Is(err, context.Canceled) {

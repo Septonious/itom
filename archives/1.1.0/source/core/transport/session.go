@@ -67,6 +67,8 @@ func (f *stream) signal() { close(f.notify); f.notify = make(chan struct{}) }
 type Session struct {
 	mu                           sync.Mutex
 	crypto                       *secure.Epoch
+	runtime                      *Runtime
+	services                     int
 	generation                   uint64
 	limits                       Limits
 	flows                        map[uint64]*stream

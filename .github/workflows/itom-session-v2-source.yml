@@ -19,7 +19,38 @@ jobs:
             archives/1.1.0/source/native/go.sum
       - name: Independent core scenarios and safety checks
         working-directory: archives/1.1.0/source/core
-        run: go test -race ./...
+        run: |
+          set -euo pipefail
+          go test -race -json ./... | tee "$RUNNER_TEMP/session-v2-core.jsonl"
       - name: Native source and OS TCP primitive checks
+        if: ${{ !cancelled() }}
         working-directory: archives/1.1.0/source/native
-        run: go test -race ./...
+        run: |
+          set -euo pipefail
+          go test -race -json ./... | tee "$RUNNER_TEMP/session-v2-native.jsonl"
+      - name: Vet both source modules
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          (cd archives/1.1.0/source/core && go vet ./...)
+          (cd archives/1.1.0/source/native && go vet ./...)
+      - name: Record source-check environment and release boundary
+        if: always()
+        run: |
+          {
+            git rev-parse HEAD
+            go version
+            go env GOOS GOARCH
+            getconf _NPROCESSORS_ONLN
+            if test -r /sys/fs/cgroup/cpu.max; then cat /sys/fs/cgroup/cpu.max; fi
+            printf '%s\n' 'SOURCE CHECKS ONLY. Production initialization remains incomplete; no APK/server package is authorized by this job.'
+          } > "$RUNNER_TEMP/session-v2-environment.txt"
+      - name: Preserve passing and failing source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: session-v2-source-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/session-v2-core.jsonl
+            ${{ runner.temp }}/session-v2-native.jsonl
+            ${{ runner.temp }}/session-v2-environment.txt

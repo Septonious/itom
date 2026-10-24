@@ -13,7 +13,15 @@ func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*Remote
 		return nil, err
 	}
 	r := receivers[0]
-	return newScopedInbox(executor, r.session, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+	inbox, err := newScopedInbox(executor, r.session, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+	if err != nil {
+		return nil, err
+	}
+	inbox.routes = make(map[LedgerClass]wire.ID, len(receivers))
+	for _, route := range receivers {
+		inbox.routes[route.class] = route.store.StoreID()
+	}
+	return inbox, nil
 }
 
 // NewServerInboxDecoder pins the authenticated peer/session and physical

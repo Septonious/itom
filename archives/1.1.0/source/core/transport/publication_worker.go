@@ -13,6 +13,7 @@ import (
 
 type publicationSource struct {
 	class   LedgerClass
+	store   wire.ID
 	prepare func(context.Context) (*PreparedPublication, error)
 }
 
@@ -43,6 +44,7 @@ type PublicationWorker struct {
 	changed     chan struct{}
 	epoch       uint64
 	stats       PublicationStats
+	runtime     *Runtime
 }
 
 func NewClientPublicationWorker(executor *Executor, plane Plane, publishers ...*ClientPublisher) (*PublicationWorker, error) {
@@ -65,7 +67,7 @@ func NewClientPublicationWorker(executor *Executor, plane Plane, publishers ...*
 			}
 			return p.Prepare(ctx, MaxPayload)
 		}
-		sources = append(sources, publicationSource{class: p.class, prepare: prepare})
+		sources = append(sources, publicationSource{class: p.class, store: p.wallet.Identity().Store, prepare: prepare})
 	}
 	return newPublicationWorker(executor, plane, first.session, first.account, first.folder, sources)
 }
@@ -90,7 +92,7 @@ func NewServerPublicationWorker(executor *Executor, plane Plane, publishers ...*
 			}
 			return p.Prepare(ctx, MaxPayload)
 		}
-		sources = append(sources, publicationSource{class: p.class, prepare: prepare})
+		sources = append(sources, publicationSource{class: p.class, store: p.store.StoreID(), prepare: prepare})
 	}
 	return newPublicationWorker(executor, plane, first.session, first.scope.Account, first.folder, sources)
 }
@@ -103,6 +105,11 @@ func newPublicationWorker(x *Executor, plane Plane, s *Session, account, folder 
 	// stream of receipts cannot permanently starve small DATA on the fast path.
 	if len(sources) == 2 && sources[1].class == ControlLedger {
 		sources[0], sources[1] = sources[1], sources[0]
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.runtime != nil || s.closed {
+		return nil, ErrProtocol
 	}
 	x.mu.Lock()
 	defer x.mu.Unlock()
@@ -155,15 +162,36 @@ func permissionUnavailable(err error) bool {
 // under the executor's unchanged progress limit; application cancellation must
 // not close its socket. The session/connection owner controls final shutdown.
 func (w *PublicationWorker) Run(ctx context.Context) error {
+	return w.run(ctx, nil)
+}
+
+func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+	w.session.mu.Lock()
+	if w.session.closed || w.session.runtime != runtime {
+		w.session.mu.Unlock()
+		return ErrProtocol
+	}
 	w.mu.Lock()
-	if w.running {
+	if w.running || w.runtime != runtime {
 		w.mu.Unlock()
+		w.session.mu.Unlock()
 		return ErrProtocol
 	}
 	w.running = true
+	w.session.services++
 	w.signalLocked()
 	w.mu.Unlock()
-	defer func() { w.mu.Lock(); w.running = false; w.signalLocked(); w.mu.Unlock() }()
+	w.session.mu.Unlock()
+	if runtime != nil { runtime.serviceStarted(w.executor, true) }
+	defer func() {
+		w.mu.Lock()
+		w.running = false
+		w.signalLocked()
+		w.mu.Unlock()
+		w.session.mu.Lock()
+		w.session.services--
+		w.session.mu.Unlock()
+	}()
 	blocked := map[LedgerClass]bool{}
 	var lastEpoch uint64
 	for {

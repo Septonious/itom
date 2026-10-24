@@ -42,6 +42,7 @@ type InboxWorker struct {
 	running bool
 	changed chan struct{}
 	stats   InboxStats
+	runtime *Runtime
 }
 
 func NewInboxWorker(inbox *Inbox, limits InboxServiceLimits) (*InboxWorker, error) {
@@ -50,6 +51,11 @@ func NewInboxWorker(inbox *Inbox, limits InboxServiceLimits) (*InboxWorker, erro
 	}
 	x := inbox.executor
 	if limits.PreferIdle && (limits.IdleAudit <= 0 || limits.IdleAudit > time.Second || limits.IdleAudit > x.limits.ProgressTimeout/2) {
+		return nil, ErrProtocol
+	}
+	inbox.session.mu.Lock()
+	defer inbox.session.mu.Unlock()
+	if inbox.session.runtime != nil || inbox.session.closed {
 		return nil, ErrProtocol
 	}
 	x.mu.Lock()
@@ -74,17 +80,38 @@ func (w *InboxWorker) signalLocked() { close(w.changed); w.changed = make(chan s
 
 // Run does not close the executor on cancellation. An issued FETCH still drains
 // under its original progress timeout, and a later Run waits for its tag before
-// issuing another. Only the endpoint owner may finally shut down the carrier.
+// issuing another. Only the runtime owner may finally shut down the carrier.
 // Once a worker is created, other callers must stop invoking Poll/Sweep directly.
 func (w *InboxWorker) Run(ctx context.Context) error {
+	return w.run(ctx, nil)
+}
+
+func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) error {
+	w.inbox.session.mu.Lock()
+	if w.inbox.session.closed || w.inbox.session.runtime != runtime {
+		w.inbox.session.mu.Unlock()
+		return ErrProtocol
+	}
 	w.mu.Lock()
-	if w.running {
+	if w.running || w.runtime != runtime {
 		w.mu.Unlock()
+		w.inbox.session.mu.Unlock()
 		return ErrProtocol
 	}
 	w.running = true
+	w.inbox.session.services++
 	w.mu.Unlock()
-	defer func() { w.mu.Lock(); w.running = false; w.signalLocked(); w.mu.Unlock() }()
+	w.inbox.session.mu.Unlock()
+	if runtime != nil { runtime.serviceStarted(w.inbox.executor, false) }
+	defer func() {
+		w.mu.Lock()
+		w.running = false
+		w.signalLocked()
+		w.mu.Unlock()
+		w.inbox.session.mu.Lock()
+		w.inbox.session.services--
+		w.inbox.session.mu.Unlock()
+	}()
 	x, s := w.inbox.executor, w.inbox.session
 	delay := w.limits.MinProbe
 	var emptyService time.Duration

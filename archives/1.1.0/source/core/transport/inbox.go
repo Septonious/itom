@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sort"
 	"sync"
+
+	"itom.local/core/wire"
 )
 
 // InboxDelivery owns plaintext authenticated once and, where required, durably
@@ -88,6 +90,7 @@ type InboxScope struct {
 type Inbox struct {
 	mu                  sync.Mutex
 	session             *Session
+	routes              map[LedgerClass]wire.ID
 	executor            *Executor
 	scope               InboxScope
 	limits              InboxLimits

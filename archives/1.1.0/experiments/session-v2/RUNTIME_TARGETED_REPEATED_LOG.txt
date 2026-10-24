@@ -1,0 +1,32 @@
+=== RUN   TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier
+--- PASS: TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier (0.08s)
+=== RUN   TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge
+--- PASS: TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge (0.06s)
+=== RUN   TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim
+--- PASS: TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim (0.07s)
+=== RUN   TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier
+--- PASS: TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier (0.08s)
+=== RUN   TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge
+--- PASS: TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge (0.06s)
+=== RUN   TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim
+--- PASS: TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim (0.06s)
+=== RUN   TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier
+--- PASS: TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier (0.04s)
+=== RUN   TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge
+--- PASS: TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge (0.06s)
+=== RUN   TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim
+--- PASS: TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim (0.07s)
+=== RUN   TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier
+--- PASS: TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier (0.05s)
+=== RUN   TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge
+--- PASS: TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge (0.06s)
+=== RUN   TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim
+--- PASS: TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim (0.06s)
+=== RUN   TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier
+--- PASS: TestRuntimeReadFailurePausesOnlyItsWriterAndPreservesOtherCarrier (0.07s)
+=== RUN   TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge
+--- PASS: TestRuntimeWriteFailureKeepsReceptionAndTheExactUnstartedCharge (0.05s)
+=== RUN   TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim
+--- PASS: TestRuntimeCannotAdoptRunningServicesOrStartUnlistedWorkersAfterClaim (0.06s)
+PASS
+ok  	itom.local/core/transport	1.991s

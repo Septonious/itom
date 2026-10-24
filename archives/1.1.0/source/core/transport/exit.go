@@ -31,6 +31,7 @@ type ExitServer struct {
 	running bool
 	active  map[*Conn]net.Conn
 	bridges sync.WaitGroup
+	runtime *Runtime
 }
 
 func NewExitServer(s *Session, cipher *Cipher, receiveWindow uint64, workers int, policy ExitPolicy, dialer NetworkDialer) (*ExitServer, error) {
@@ -108,13 +109,36 @@ func (r *incomingOpen) decide(failure OpenFailure) (*Conn, error) {
 // never performs DNS, target dialing or copying while holding the session lock.
 // Context cancellation closes exits/application streams, never IMAP carriers.
 func (e *ExitServer) Run(ctx context.Context) error {
+	return e.run(ctx, nil)
+}
+
+func (e *ExitServer) run(ctx context.Context, runtime *Runtime) error {
+	e.session.mu.Lock()
+	if e.session.closed || e.session.runtime != runtime {
+		e.session.mu.Unlock()
+		return ErrProtocol
+	}
 	e.mu.Lock()
-	if e.running {
+	if e.running || e.runtime != runtime {
 		e.mu.Unlock()
+		e.session.mu.Unlock()
 		return ErrProtocol
 	}
 	e.running = true
+	e.session.services++
 	e.mu.Unlock()
+	e.session.mu.Unlock()
+	if runtime != nil {
+		runtime.serviceStarted(nil, false)
+	}
+	defer func() {
+		e.mu.Lock()
+		e.running = false
+		e.mu.Unlock()
+		e.session.mu.Lock()
+		e.session.services--
+		e.session.mu.Unlock()
+	}()
 	var workers sync.WaitGroup
 	for range e.workers {
 		workers.Go(func() {
@@ -129,11 +153,19 @@ func (e *ExitServer) Run(ctx context.Context) error {
 	}
 	workers.Wait()
 	e.mu.Lock()
+	type activeExit struct {
+		stream   *Conn
+		upstream net.Conn
+	}
+	active := make([]activeExit, 0, len(e.active))
 	for stream, upstream := range e.active {
-		stream.Close()
-		upstream.Close()
+		active = append(active, activeExit{stream, upstream})
 	}
 	e.mu.Unlock()
+	for _, connection := range active {
+		connection.stream.Close()
+		connection.upstream.Close()
+	}
 	e.bridges.Wait()
 	return ctx.Err()
 }

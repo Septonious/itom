@@ -47,6 +47,7 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 
 type SessionSnapshot struct {
 	Streams, RetainedRecords, ActiveDispatches     int
+	ActiveServices                                 int
 	SendBuffered, ReceiveBuffered, ReceiveReserved uint64
 	Closed                                         bool
 }
@@ -54,7 +55,7 @@ type SessionSnapshot struct {
 func (s *Session) Snapshot() SessionSnapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed}
+	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed}
 }
 
 // FlowSnapshot separates application queues, receiver-backed credit and

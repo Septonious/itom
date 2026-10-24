@@ -1,0 +1,1 @@
+Workflow YAML parsed. Both race-test pipelines preserve pipe failures; no continue-on-error. Logs/environment upload uses always(). Validation is offline; not an executed GitHub Actions run or qualification.
