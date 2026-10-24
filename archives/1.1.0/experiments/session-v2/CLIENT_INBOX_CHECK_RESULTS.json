@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T12:45:23.320138+00:00",
+  "parent_commit": "047be3b9c6681769648010b4f97006a124320ce3",
+  "status": "unqualified source/component checkpoint; V2_NOT_READY and packaging guard unchanged",
+  "checks": [
+    {
+      "file": "CLIENT_INBOX_CORE_RACE.jsonl",
+      "raw_sha256": "4849c84f358f942875f26eb4b64eedf0b8497d7d87c3dc7c64af95667d16b049",
+      "normalized_sha256": "4849c84f358f942875f26eb4b64eedf0b8497d7d87c3dc7c64af95667d16b049",
+      "top_level_group_executions": 104,
+      "failures": []
+    },
+    {
+      "file": "CLIENT_INBOX_NATIVE_RACE.jsonl",
+      "raw_sha256": "b3d4499d5e8482fd32da4055dd5cfe5607a1d044cabb8ce95e5cb17b734a5b37",
+      "normalized_sha256": "b3d4499d5e8482fd32da4055dd5cfe5607a1d044cabb8ce95e5cb17b734a5b37",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "CLIENT_INBOX_REPEATED.jsonl",
+      "raw_sha256": "436f2cad1e9c5437d7020cd3edb3e7005e9a7c5fd826c291d633422b32f92adc",
+      "normalized_sha256": "436f2cad1e9c5437d7020cd3edb3e7005e9a7c5fd826c291d633422b32f92adc",
+      "top_level_group_executions": 20,
+      "failures": []
+    },
+    {
+      "file": "CLIENT_INBOX_CORE_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "CLIENT_INBOX_NATIVE_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go vet ./... (core and native)",
+    "go test -race -json ./transport -run <4 client inbox/scoped constructor/cold IMAP groups> -count=5 -timeout=90s"
+  ],
+  "implemented": [
+    "Client scoped origin/ledger classifier; own CLIENT bodies ignored without AEAD, logical receipt or wallet/journal write.",
+    "Bound client/server inbox factories reject a wrong physical account, selected mailbox or UIDVALIDITY before FETCH/delivery/proof.",
+    "Physical MIME/envelope validation performed once per receive; peer-only AEAD follows original scope/ledger/generation and durable accounting gates.",
+    "Cold OPEN/TLS/HTTP IMAP pipeline now uses production inbox constructors/decoders on both endpoints, without manual stream creation or fixture-owned classification."
+  ],
+  "validation": [
+    "Foreign store/run/account/folder/incarnation/ledger/session rejection leaves later authentic peer replay intact.",
+    "Own-body scanning cannot reconcile wallet history, release quota or advance peer replay.",
+    "Wrong physical routes and ambiguous decoder routes reject before mailbox I/O."
+  ],
+  "limits": [
+    "Noise/grants pre-established; one account and one in-process pump; no calibrated provider service.",
+    "Pending-DATA control progress, adaptive coordinator, IDLE/reclamation/recovery exchange and Android qualification remain incomplete.",
+    "No evidence of sustained 100Mbps or required idle/loaded RTT, no deployable package."
+  ],
+  "source_manifest_file": "CLIENT_INBOX_SOURCE_MANIFEST.json"
+}

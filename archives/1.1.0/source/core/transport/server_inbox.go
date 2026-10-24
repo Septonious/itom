@@ -2,15 +2,27 @@ package transport
 
 import (
 	"itom.local/core/journal"
-	"itom.local/core/mailbox"
 	"itom.local/core/wire"
 )
+
+// NewServerInbox couples selected physical scope with all peer/own routes.
+// A wrong account, folder or incarnation rejects before any mailbox command.
+func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*RemoteReceiver) (*Inbox, error) {
+	decode, err := NewServerInboxDecoder(receivers...)
+	if err != nil {
+		return nil, err
+	}
+	r := receivers[0]
+	return NewInbox(executor, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+}
 
 // NewServerInboxDecoder pins the authenticated peer/session and physical
 // account/folder/incarnation before any delivery or local observation. DATA and
 // protocol stores remain separate. Own SERVER bodies use the durable original
 // attempt index and full observation proof; they never enter peer decryption.
 // Other sessions/owners and malformed bodies fail closed, not as new traffic.
+// Direct decoder callers must supply actual BODY evidence from this scope;
+// NewServerInbox enforces the selected-executor binding automatically.
 func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 	if len(receivers) < 1 || len(receivers) > 2 || receivers[0] == nil {
 		return nil, ErrProtocol
@@ -29,32 +41,18 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 		if validity != first.validity || physical.UID == 0 {
 			return nil, ErrProtocol
 		}
-		charge, err := mailbox.CanonicalEncodedBytes(physical.Bytes)
+		envelope, err := openMailboxEnvelope(physical.Bytes, first.authenticationKey[:])
 		if err != nil {
 			return nil, err
 		}
-		body, err := mailbox.Decode(physical.Bytes)
-		if err != nil {
-			return nil, err
-		}
-		defer clear(body)
-		serverOrigin := len(body) >= 4 && (string(body[:4]) == "ISD2" || string(body[:4]) == "ISC2")
-		var usage wire.UsageReport
-		var class wire.ServerLedger
-		if serverOrigin {
-			class, usage, _, err = wire.OpenServerEnvelope(body, first.authenticationKey[:], charge)
-		} else {
-			usage, _, err = wire.OpenDataEnvelope(body, first.authenticationKey[:], charge)
-		}
-		if err != nil {
-			return nil, err
-		}
+		defer clear(envelope.body)
+		usage := envelope.usage
 		r := routes[usage.Key.Store]
 		if r == nil || usage.Attempt == nil || usage.Key.Account != r.account || usage.Key.User != r.user || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.folder {
 			return nil, ErrProtocol
 		}
-		if !serverOrigin {
-			delivery, err := r.Decode(validity, physical.UID, physical.Bytes)
+		if envelope.class == 0 {
+			delivery, err := r.receiveEnvelope(validity, physical.UID, envelope)
 			if delivery == nil {
 				return nil, err
 			}
@@ -64,7 +62,7 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 		if r.class == ControlLedger {
 			expected = wire.ServerControl
 		}
-		if class != expected {
+		if envelope.class != expected {
 			return nil, ErrProtocol
 		}
 		ref, err := r.store.LocalAttempt(usage.Key, usage.Attempt.Batch)
@@ -73,7 +71,7 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 		}
 		// Correlation is not ownership proof. The original journal validates the
 		// actual complete stored BODY against the persisted hash/size/folder.
-		err = r.store.Observe(ref, r.store.Run(), journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: charge, Location: journal.Location{UIDValidity: validity, UID: physical.UID}, Decoded: body})
+		err = r.store.Observe(ref, r.store.Run(), journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: validity, UID: physical.UID}, Decoded: envelope.body})
 		return nil, err
 	}, nil
 }

@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"itom.local/core/journal"
-	"itom.local/core/mailbox"
 	"itom.local/core/pool"
 	"itom.local/core/transport"
 	"itom.local/core/wallet"
@@ -130,56 +129,24 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			x      *transport.Executor
 			client bool
 		}{{s.client, true}, {s.server, false}} {
-			// Client classification remains fixture-owned. The server below uses
-			// the production scoped decoder and original persisted attempt index.
-			var decode transport.InboxDecoder = func(validity uint32, physical transport.Body) (transport.InboxDelivery, error) {
-				charge, err := mailbox.CanonicalEncodedBytes(physical.Bytes)
-				if err != nil {
-					return nil, err
+			var inbox *transport.Inbox
+			if end.client {
+				var receivers []*transport.ClientReceiver
+				for _, r := range s.routes {
+					receivers = append(receivers, r.down)
 				}
-				body, err := mailbox.Decode(physical.Bytes)
-				if err != nil {
-					return nil, err
-				}
-				serverOrigin := len(body) >= 4 && (string(body[:4]) == "ISD2" || string(body[:4]) == "ISC2")
-				var usage wire.UsageReport
-				if serverOrigin {
-					_, usage, _, err = wire.OpenServerEnvelope(body, key, charge)
-				} else {
-					usage, _, err = wire.OpenDataEnvelope(body, key, charge)
-				}
-				if err != nil {
-					return nil, err
-				}
-				var r route
-				for _, candidate := range s.routes {
-					if candidate.store.StoreID() == usage.Key.Store {
-						r = candidate
-					}
-				}
-				if r.store == nil || usage.Attempt == nil || usage.Key.Account != scope.Account || usage.Key.User != scope.User || usage.Key.Session != scope.Session || usage.Attempt.Folder != folder {
-					return nil, transport.ErrProtocol
-				}
-				if serverOrigin {
-					return r.down.Decode(validity, physical.UID, physical.Bytes)
-				}
-				return nil, nil // own BODY is neither peer application data nor GC proof
-			}
-			if !end.client {
+				inbox, err = transport.NewClientInbox(end.x, transport.DefaultInboxLimits(), receivers...)
+			} else {
 				var receivers []*transport.RemoteReceiver
 				for _, r := range s.routes {
 					receivers = append(receivers, r.up)
 				}
-				decode, err = transport.NewServerInboxDecoder(receivers...)
-				if err != nil {
-					t.Fatal(err)
-				}
+				inbox, err = transport.NewServerInbox(end.x, transport.DefaultInboxLimits(), receivers...)
 			}
-			i, err := transport.NewInbox(end.x, transport.InboxScope{Account: "account1", Folder: folder, UIDValidity: 9}, transport.DefaultInboxLimits(), decode)
 			if err != nil {
 				t.Fatal(err)
 			}
-			s.inboxes = append(s.inboxes, i)
+			s.inboxes = append(s.inboxes, inbox)
 		}
 		services = append(services, s)
 	}

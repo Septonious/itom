@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"itom.local/core/mailbox"
 	"itom.local/core/wire"
 )
 
@@ -49,27 +48,27 @@ func (r *ClientReceiver) Decode(validity, uid uint32, raw []byte) (*ClientDelive
 	if validity != r.origin.UIDValidity || uid == 0 {
 		return nil, ErrProtocol
 	}
-	charge, err := mailbox.CanonicalEncodedBytes(raw)
+	envelope, err := openMailboxEnvelope(raw, r.authenticationKey[:])
 	if err != nil {
 		return nil, err
 	}
-	body, err := mailbox.Decode(raw)
-	if err != nil {
-		return nil, err
+	defer clear(envelope.body)
+	return r.receiveEnvelope(validity, uid, envelope)
+}
+
+func (r *ClientReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxEnvelope) (*ClientDelivery, error) {
+	if validity != r.origin.UIDValidity || uid == 0 {
+		return nil, ErrProtocol
 	}
-	defer clear(body)
-	class, usage, packet, err := wire.OpenServerEnvelope(body, r.authenticationKey[:], charge)
-	if err != nil {
-		return nil, err
-	}
+	usage := envelope.usage
 	expectedClass := wire.ServerData
 	if r.class == ControlLedger {
 		expectedClass = wire.ServerControl
 	}
-	if class != expectedClass || usage.Key.Store != r.origin.Store || usage.Key.Epoch != r.origin.Run || usage.Key.Account != r.origin.Account || usage.Key.User != r.origin.User || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.origin.Folder {
+	if envelope.class != expectedClass || usage.Attempt == nil || usage.Key.Store != r.origin.Store || usage.Key.Epoch != r.origin.Run || usage.Key.Account != r.origin.Account || usage.Key.User != r.origin.User || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.origin.Folder {
 		return nil, ErrProtocol
 	}
-	records, err := r.cipher.openRecordsFor(packet, r.class, r.session.generation)
+	records, err := r.cipher.openRecordsFor(envelope.packet, r.class, r.session.generation)
 	if err != nil {
 		return nil, err
 	}

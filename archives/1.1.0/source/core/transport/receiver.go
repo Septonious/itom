@@ -3,7 +3,6 @@ package transport
 import (
 	"errors"
 	"itom.local/core/journal"
-	"itom.local/core/mailbox"
 	"itom.local/core/wire"
 	"sync"
 )
@@ -47,31 +46,31 @@ func (r *RemoteReceiver) Decode(validity, uid uint32, raw []byte) (*StoredDelive
 	if validity != r.validity || uid == 0 {
 		return nil, ErrProtocol
 	}
-	charge, err := mailbox.CanonicalEncodedBytes(raw)
+	envelope, err := openMailboxEnvelope(raw, r.authenticationKey[:])
 	if err != nil {
 		return nil, err
 	}
-	body, err := mailbox.Decode(raw)
-	if err != nil {
-		return nil, err
+	defer clear(envelope.body)
+	return r.receiveEnvelope(validity, uid, envelope)
+}
+
+func (r *RemoteReceiver) receiveEnvelope(validity, uid uint32, envelope mailboxEnvelope) (*StoredDelivery, error) {
+	if validity != r.validity || uid == 0 || envelope.class != 0 {
+		return nil, ErrProtocol
 	}
-	defer clear(body)
-	usage, packet, err := wire.OpenDataEnvelope(body, r.authenticationKey[:], charge)
-	if err != nil {
-		return nil, err
-	}
+	usage := envelope.usage
 	binding := r.cipher.epoch.Context()
 	if usage.Attempt == nil || usage.Key.Store != r.store.StoreID() || usage.Key.Account != r.account || usage.Key.User != r.user || usage.Key.Session != binding.Session || usage.Attempt.Folder != r.folder {
 		return nil, ErrProtocol
 	}
 	// ApplyRemote verifies the actual issued grant and contiguous descriptor
 	// prefix. A missing prefix returns ErrOrder before the replay counter moves.
-	proof := journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: charge, Location: journal.Location{UIDValidity: validity, UID: uid}, Decoded: body}
+	proof := journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: validity, UID: uid}, Decoded: envelope.body}
 	status, _, err := r.store.AcceptRemoteBody(r.user, r.store.Run(), usage, proof)
 	if err != nil {
 		return nil, err
 	}
-	records, err := r.cipher.openRecordsFor(packet, r.class, r.session.generation)
+	records, err := r.cipher.openRecordsFor(envelope.packet, r.class, r.session.generation)
 	if err != nil {
 		return nil, err
 	}
