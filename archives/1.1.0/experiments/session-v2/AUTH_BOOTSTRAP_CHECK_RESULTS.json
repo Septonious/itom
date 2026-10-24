@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T21:07:18.767221+00:00",
+  "parent_commit": "8cec0d23a955e0425ba2f999817f02938b603a6f",
+  "status": "accounted on-mail key establishment and guarded runtime handover; source only, production startup remains V2_NOT_READY",
+  "checks": [
+    {
+      "file": "AUTH_BOOTSTRAP_COLD_COMPILE_LOG.txt",
+      "sha256": "a8a484cd68d168598c6aac5a7205a3078a1944e86f2003c1872d370f045d274b",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_INITIAL_SAFETY_LOG.txt",
+      "sha256": "700b1a31611da4c89b1ffea16ce958fea8a235c14f9f75237676ad7f446c88b9",
+      "passed_top_level_groups": 18,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_INITIAL_COLD_LOG.txt",
+      "sha256": "79223be826af6331bdc85cd0eb108ac862472f6da0c36ca2f4669e6043cc8209",
+      "passed_top_level_groups": 2,
+      "failed_top_level_groups": 1
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_MAILBOX_DIAGNOSTIC_LOG.txt",
+      "sha256": "d9e4caaf0511ae6bdeb7abfe4da6708ddae217d52e7341956fc1a176104cc0dd",
+      "passed_top_level_groups": 8,
+      "failed_top_level_groups": 1
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_FEEDBACK_INITIAL_LOG.txt",
+      "sha256": "d5f5fd4ebb4397b056866999ede4b3e805b43ad9c9ae5b0c27191654d332285f",
+      "passed_top_level_groups": 20,
+      "failed_top_level_groups": 1
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_COLD_REPEATED_LOG.txt",
+      "sha256": "2bec9ac0fe2dad1a8031b003210855a4ac5a9e570068dd4a8afbdbbd1676ec2f",
+      "passed_top_level_groups": 11,
+      "failed_top_level_groups": 1
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_FEEDBACK_BEFORE_LOG.txt",
+      "sha256": "675b3b9b4a93b3210e08055d43f44cb9eec49e943c628c0717d466f729b27e43",
+      "passed_top_level_groups": 1,
+      "failed_top_level_groups": 2
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_INITIAL_CORE_RACE.jsonl",
+      "sha256": "fe42e6b18bb4f887fe722126e4b6334fdc00a05e76655b3de1b0d04c6d385015",
+      "top_level_group_executions": 159,
+      "failures": [
+        {
+          "package": "itom.local/core/transport",
+          "test": "TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "test": null
+        }
+      ]
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_TARGETED_LOG.txt",
+      "sha256": "1657309ba9e84abe88458dd5f9ebef382926746dccb86c8cce0a9c3a03dcab7f",
+      "passed_top_level_groups": 50,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_CORE_RACE.jsonl",
+      "sha256": "b56e66be4ab8dc75e4b744d333c87c0ab6ad45fce460eda31cbbda85481e902e",
+      "top_level_group_executions": 160,
+      "failures": []
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_NATIVE_RACE.jsonl",
+      "sha256": "34a9c231b6cde0df54ef997e20c16b9e34d43726f017c56be5e74cb209a73e61",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_CORE_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "AUTH_BOOTSTRAP_NATIVE_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    }
+  ],
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/session_bootstrap.go": "5e2020a0d4bdf8ab455ae218cc9321f65fee4ad074685fb8999902b1341ef374",
+    "archives/1.1.0/source/core/transport/bootstrap_publication.go": "f1a9d8c7b3402ba574e9126497e78b3905021a67698156500ade989b94b9f5c9",
+    "archives/1.1.0/source/core/transport/bootstrap_receive.go": "fec71034ad54542c0453c395c4012143ae481ebfc6266498fe4e955ca44d28fe",
+    "archives/1.1.0/source/core/transport/bootstrap_handoff.go": "79b9f833f2874eb7d2ee6d69113808ccf98aad22bb88646e6aff4333c5664451",
+    "archives/1.1.0/source/core/transport/inbox.go": "24311eeaab03de55a4ea7e1d5af9902ba4d8d1b378a4c374bc8bde579e94c7d3",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "b57277b5c1119b70d3745013373ab7c9715114c1b0b580dd542e591a4ea24aa2",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "632a4ff0be8a473952e6de35b60361da95f4d299c53aacdb2b80b51c102ab1a7",
+    "archives/1.1.0/source/core/transport/session.go": "e41774c6cfaad6832cffd672b0f62afd89eaaf96b38227192cae78452a03c96c",
+    "archives/1.1.0/source/core/transport/session_test.go": "a2407cf5e1adb428ab5a4ef06077e3b4ae0486e09bed061e12d83b5f4e19c13f",
+    "archives/1.1.0/source/core/transport/fragment_feedback_test.go": "2fec8eb73de0e52b2f84f447e4edb456203091cb73d5d220901a59f6fd2cb444",
+    "archives/1.1.0/source/core/transport/session_bootstrap_test.go": "c2b30e1c4de4c669ce677cdd0c8a2bc5e32af99fbdc126493056c438d993d9c8",
+    "archives/1.1.0/source/core/transport/publication_worker_test.go": "fc6d622b0ca2c423df0efc262124e0f6c2898f1e076bd61fcf4b4e4befc77892"
+  },
+  "commands": [
+    "go test -race ./transport -run TestColdTLSHTTP -count=3 -v -timeout=120s (before feedback changes; failures retained)",
+    "go test -race ./transport -run TestColdTLSHTTP|TestReorderedDelivery|Test.*HalfClose|Test.*Finish -count=3 -v -timeout=150s (after feedback changes; failure retained)",
+    "go test -race -overlay feedback-before-overlay.json ./transport -run TestReadingTLSFragments|TestOneWayFragmented|TestReorderedDelivery -count=1 -v -timeout=30s (prior Session source from parent commit, current regressions)",
+    "go test -race ./transport -run TestAccountedIMAPEstablishes|TestBootstrap|TestUnknownBootstrap|TestReadingTLS|TestOneWayFragmented|TestFastPublicationLedgers -count=5 -v -timeout=120s",
+    "go test -race -json ./... -count=1 -timeout=180s (final core, default package concurrency)",
+    "go test -race -json ./... -count=1 -timeout=120s (native)",
+    "go vet ./... (both modules)"
+  ],
+  "implemented": [
+    "Six canonical bounded CONTROL messages establish Noise keys and explicitly confirm a transcript-bound mutual exchange over actual accounted APPEND/FETCH. No fixture-precomputed epochs remain in cold HTTP scenarios.",
+    "An exact existing CONTROL permit is reserved before Noise output, committed before I/O and preserved on uncertainty. No DATA authority, uncharged HELLO, refund, extra connection or blind retry is introduced.",
+    "Handover requires confirmed keys, accepted/proven last publication and complete actual BODY observations of all six startup messages. Bounded scoped UID knowledge survives temporary replica absence without increasing the original Inbox bound. The old bootstrap actor stops admission.",
+    "Light fragmented reads retain prompt cumulative receipt but do not send unnecessary credit while backed permission remains. Input completion uses one cumulative FIN ACK instead of redundant receipt/credit. Credit-edge renewal remains immediate and one-way transfers cross multiple windows without timers/replies."
+  ],
+  "retained_failures": [
+    "Initial cold fixture refactor failed compilation on an unused wire import; corrected without changing any runtime limit.",
+    "Initial cold cohorts exceeded the unchanged 64-message fast mailbox cap. Small-fragment/terminal control amplification was reduced rather than increasing the mailbox or grant limit.",
+    "A repeated corrected cold cohort still missed a 1500ms response-header deadline. Source-host scheduling/journal service remains a concern; no timeout or fsync requirement was relaxed.",
+    "The first full suite revealed that the fairness fixture assumed a four-byte read must create credit. The revised fixture supplies an actual next peer request while DATA is exhausted and still requires prompt independent CONTROL service. Its original failure is retained."
+  ],
+  "validation": [
+    "Final full core race cohort passes; exact group counts and raw events appear in checks. Native race and both vet checks pass.",
+    "Ten targeted top-level groups execute five times each, covering mutual keys, missing permission, scope/ledger rejection, unknown writes, late own BODY, handover identity, small-fragment feedback and independent protocol permission.",
+    "Prior Session source fails the redundant-fragment-credit and terminal-feedback regressions; corrected source passes. This comparison establishes less control-mail amplification, not an RTT/rate claim.",
+    "Original socket budgets, mailbox bounds, concrete grants, debt audits, 1500ms OPEN/TLS/header and 5s HTTP limits remain unchanged."
+  ],
+  "limitations": [
+    "Initial CONTROL grant/store identity and later DATA offers are still explicit authority-fixture inputs. Production initial permission delivery, agreed READY/roster, dynamic grants, retirement and recovery remain incomplete.",
+    "The six-step fixture drives endpoint turns explicitly. Independent startup coordination and handover under concurrent application arrival still need production integration and tests.",
+    "Full window/controller, native TUN/Android integration and required calibrated multi-account/provider performance matrix remain incomplete.",
+    "These source integrity checks cannot establish <=250ms light RTT, <=2000ms loaded RTT or sustained >=100Mbps useful traffic, or improvement over RC2.",
+    "No APK/deployable server package. Remote GitHub source CI is not verified from this environment; API access was Forbidden at the preceding checkpoint."
+  ]
+}

@@ -1,0 +1,50 @@
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.38s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.39s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.37s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.36s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.17s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.18s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.12s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.25s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.28s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.33s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.33s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.15s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.07s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.07s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.06s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.11s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.13s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.13s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.14s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.16s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.07s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.09s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.05s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.15s)
+PASS
+ok  	itom.local/core/transport	5.645s

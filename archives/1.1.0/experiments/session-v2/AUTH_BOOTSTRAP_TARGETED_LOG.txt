@@ -1,0 +1,122 @@
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+--- PASS: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.01s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.07s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.15s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.13s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.18s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.19s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.10s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.09s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.07s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.16s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.17s)
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+--- PASS: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.01s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.06s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.16s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.22s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.17s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.34s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.10s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.24s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.08s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.23s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.13s)
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+--- PASS: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.01s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.05s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.14s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.14s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.17s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.17s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.07s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.10s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.09s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.15s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.12s)
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+--- PASS: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.01s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.06s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.16s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.16s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.16s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.22s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.10s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.13s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.08s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.12s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.15s)
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+--- PASS: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.01s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.07s)
+=== RUN   TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs
+--- PASS: TestAccountedIMAPEstablishesNoiseAndMutualKeyConfirmationWithoutPresetEpochs (0.20s)
+=== RUN   TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant
+--- PASS: TestBootstrapCannotWriteWithoutRealPermissionAndCanContinueAfterAnActualGrant (0.14s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.16s)
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request
+=== RUN   TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response
+--- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof (0.20s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/client_request (0.09s)
+    --- PASS: TestUnknownBootstrapAppendKeepsOneChargeAndRequiresExactStorageProof/server_response (0.11s)
+=== RUN   TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority
+--- PASS: TestBootstrapScopeMismatchCannotAdvanceKeysOrBorrowDataAuthority (0.07s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.18s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.18s)
+PASS
+ok  	itom.local/core/transport	7.256s

@@ -448,7 +448,13 @@ func TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns(t *testing.
 	buf := make([]byte, 4)
 	if n, err := f.client.Read(1, buf); err != nil || n != 4 {
 		t.Fatal(n, err)
-	} // creates receiver credit, not DATA permission
+	}
+	// Another peer request needs prompt receipt even while outgoing DATA has
+	// no permission. Reading four bytes alone no longer needs a credit mail:
+	// the peer still has almost the entire backed initial window available.
+	if err = f.client.Receive(incoming(transport.Data, 1, 4, []byte("next request"))); err != nil {
+		t.Fatal(err)
+	}
 	waitWorker(t, worker, func(s transport.PublicationStats) bool { return s.Accepted == 3 })
 	if !worker.Stats().DataBlocked {
 		t.Fatal("protocol service invented DATA allowance")

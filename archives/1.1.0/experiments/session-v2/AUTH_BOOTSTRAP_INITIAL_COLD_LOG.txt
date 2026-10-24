@@ -1,0 +1,11 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    duplex_imap_test.go:128: fixture mailbox bounds exceeded
+    open_imap_test.go:33: healthy carrier lost V2_IMAP_OUTCOME_UNKNOWN
+--- FAIL: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.68s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (5.55s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (5.77s)
+FAIL
+FAIL	itom.local/core/transport	15.080s
+FAIL

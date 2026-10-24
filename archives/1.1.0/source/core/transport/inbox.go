@@ -97,6 +97,7 @@ type Inbox struct {
 	decode              InboxDecoder
 	admit               scopedInboxDecoder
 	seen                map[uint32]bool
+	bootstrapUIDs       map[uint32]bool
 	pending             map[uint32]InboxDelivery
 	deferred            map[uint32]LedgerClass
 	examined            map[uint32]bool
@@ -176,10 +177,19 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	sort.Slice(uids, func(a, b int) bool { return uids[a] < uids[b] })
 	progress.Observed = len(uids)
 	for uid := range i.seen {
-		if !present[uid] {
+		if !present[uid] && !i.bootstrapUIDs[uid] {
 			delete(i.seen, uid)
 		}
 	} // discovery state only; NEVER a deletion/refund proof
+	retained := 0
+	for uid := range i.bootstrapUIDs {
+		if !present[uid] {
+			retained++
+		}
+	}
+	if len(metadata)+retained > i.limits.KnownUIDs {
+		return progress, ErrCapacity
+	}
 	for uid := range i.deferred {
 		if !present[uid] {
 			delete(i.deferred, uid)

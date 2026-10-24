@@ -207,6 +207,14 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 				if r.ReceiveLimit > f.creditSent {
 					f.creditSent = r.ReceiveLimit
 				}
+			case !f.stopped() && f.finishAckPending:
+				// The final cumulative acknowledgement subsumes the receipt.
+				// No new receive credit is needed after the peer's final byte.
+				f.finishAckPending = false
+				f.receiptPending = false
+				f.creditPending = false
+				r.Kind = FinishAck
+				r.Offset = f.final
 			case !f.stopped() && f.creditPending:
 				f.creditPending = false
 				f.receiptPending = false
@@ -220,10 +228,6 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 				f.receiptPending = false
 				r.Kind = Receipt
 				r.Offset = f.recv
-			case !f.stopped() && f.finishAckPending:
-				f.finishAckPending = false
-				r.Kind = FinishAck
-				r.Offset = f.final
 			case !f.stopped() && f.localFinish && f.tx.Len() == 0 && !f.finishSent:
 				f.finishSent = true
 				r.Kind = Finish
@@ -545,12 +549,13 @@ func (s *Session) readLocked(id uint64, b []byte) (int, error) {
 	if n > 0 {
 		f.consumed += uint64(n)
 		s.received -= uint64(n)
-		// Initial/light work keeps prompt feedback. Beyond that, consumption
-		// renews credit in useful window quanta, or immediately when the peer
-		// has reached the last dispatched edge. DATA replies still piggyback
-		// the latest limit regardless of this standalone-control threshold.
+		// Reading a small TLS fragment does not itself need a separate mail:
+		// the peer still owns the backed initial window, and receipt feedback
+		// is independently prompt. Renew in useful window quanta, or at the
+		// dispatched edge so a credit-bound sender resumes immediately. DATA
+		// replies piggyback the current limit without waiting for a quantum.
 		advance := f.receiveLimit() - min(f.receiveLimit(), f.creditSent)
-		if f.recv <= uint64(s.limits.InteractiveBytes) || f.remoteFinish || advance >= max(uint64(1), f.window/2) || f.recv >= f.creditSent {
+		if !f.remoteFinish && (advance >= max(uint64(1), f.window/2) || f.recv >= f.creditSent) {
 			f.creditPending = true
 			s.signalOutgoing()
 		}

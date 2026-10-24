@@ -124,8 +124,9 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				}
 				m.mu.Lock()
 				if len(m.bodies) >= 64 || len(body) > (16<<20)-m.bytes {
+					count, used := len(m.bodies), m.bytes
 					m.mu.Unlock()
-					t.Error("fixture mailbox bounds exceeded")
+					t.Errorf("fixture mailbox bounds exceeded: folder=%s messages=%d bytes=%d next=%d", folder, count, used, len(body))
 					return
 				}
 				m.bodies = append(m.bodies, body)

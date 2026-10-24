@@ -1,0 +1,11 @@
+=== RUN   TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains
+    fragment_feedback_test.go:35: reading a fragment spent redundant control permission 1
+--- FAIL: TestReadingTLSFragmentsDoesNotSpendAnotherControlMailWhileCreditRemains (0.00s)
+=== RUN   TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer
+--- PASS: TestOneWayFragmentedTransferRenewsCreditWithoutWaitingForAReplyOrTimer (0.03s)
+=== RUN   TestReorderedDeliveryAndHalfClosePreserveEveryByte
+    session_test.go:97: final cumulative acknowledgement missing {2 7 1 1048582 6 0 []}
+--- FAIL: TestReorderedDeliveryAndHalfClosePreserveEveryByte (0.00s)
+FAIL
+FAIL	itom.local/core/transport	0.245s
+FAIL

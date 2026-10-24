@@ -93,8 +93,11 @@ func TestReorderedDeliveryAndHalfClosePreserveEveryByte(t *testing.T) {
 		t.Fatal("half close lost", e)
 	}
 	r, ok := next(t, s, transport.Fast, 64)
-	if !ok || r.Kind != transport.Credit || r.Offset != 1<<20+6 || r.Acknowledged != 6 {
-		t.Fatal("consumed credit missing", r)
+	if !ok || r.Kind != transport.FinishAck || r.Offset != 6 {
+		t.Fatal("final cumulative acknowledgement missing", r)
+	}
+	if _, ok := next(t, s, transport.Fast, 64); ok {
+		t.Fatal("finished input generated redundant receipt or new credit")
 	}
 }
 func TestAdvertisedCreditHasActualMemoryBacking(t *testing.T) {

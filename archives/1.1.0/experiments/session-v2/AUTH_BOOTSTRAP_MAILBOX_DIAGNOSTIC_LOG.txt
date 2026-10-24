@@ -1,0 +1,23 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.57s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (5.78s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (5.66s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    duplex_imap_test.go:128: fixture mailbox bounds exceeded: folder=fast messages=64 bytes=66288 next=555
+    open_imap_test.go:33: healthy carrier lost V2_IMAP_OUTCOME_UNKNOWN
+--- FAIL: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.74s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (6.91s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (6.03s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (4.46s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (9.98s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (8.74s)
+FAIL
+FAIL	itom.local/core/transport	53.957s
+FAIL

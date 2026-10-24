@@ -28,13 +28,18 @@ and journal handles/state to their authority owner. Local `serving` state is not
 authenticated READY or VPN CONNECTED.
 
 The existing cold OPEN/TLS/HTTP scenarios now use this runtime rather than a
-fixture-owned supervisor. They still supply Noise epochs and concrete grants in
-advance, and therefore do not demonstrate production initialization.
+fixture-owned supervisor. They now establish and mutually confirm Noise keys through six physically
+accounted control APPEND/FETCH exchanges on the same fast sockets. Initial
+CONTROL permission and later DATA offers still come from the authority fixture;
+this is not complete production initialization. Runtime handover waits for actual
+BODY observation of every startup message, preserves bounded UID history across
+replica absence and freezes bootstrap admission. Unknown writes retain their
+exact charge and require storage proof; storage proof alone is not key confirmation.
 
 ## Integration required for the candidate
 
-1. Implement authenticated on-mail session establishment and agreed READY/roster
-   negotiation from the actual profile. Establish server/store/run identities
+1. Integrate the new accounted on-mail key establishment with initial CONTROL
+   permission delivery and agreed READY/roster negotiation from the actual profile. Establish server/store/run identities
    and real duplex permission before VPN CONNECTED. Account for bootstrap/control
    mail within the original separately reserved budget; neither an uncharged
    HELLO bypass nor fixture-issued grants can stand in for this protocol.

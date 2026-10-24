@@ -1,0 +1,4 @@
+# itom.local/core/transport_test [itom.local/core/transport.test]
+transport/open_imap_test.go:24:2: "itom.local/core/wire" imported and not used
+FAIL	itom.local/core/transport [build failed]
+FAIL

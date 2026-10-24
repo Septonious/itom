@@ -21,11 +21,11 @@ import (
 	"itom.local/core/pool"
 	"itom.local/core/transport"
 	"itom.local/core/wallet"
-	"itom.local/core/wire"
 )
 
-// Application-integrity fixture, NOT provider/rate qualification: Noise and
-// grants are pre-established. Independent read/publication workers use four
+// Application-integrity fixture, NOT provider/rate qualification: initial control
+// permission and later DATA offers come from the authority fixture. Noise keys
+// are established/confirmed over accounted IMAP. Independent workers use four
 // fixed scoped executors without a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
@@ -53,15 +53,30 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	defer upstream.Close()
 	address := netip.MustParseAddrPort(upstream.Listener.Addr().String())
 	a, b := session(t, transport.DefaultLimits()), session(t, transport.DefaultLimits())
-	ce, se := sessionEpochs(t, wire.ID{95})
-	ca, err := transport.NewCipher(ce)
+	bootstrap := bootstrapFixtureWithService(t, true, clientService, serverService, idle)
+	exchangeBootstrap(t, bootstrap.client, bootstrap.server, bootstrap.cx, bootstrap.sx)
+	ca, err := bootstrap.client.Cipher()
 	if err != nil {
 		t.Fatal(err)
 	}
-	cb, err := transport.NewCipher(se)
+	cb, err := bootstrap.server.Cipher()
 	if err != nil {
 		t.Fatal(err)
 	}
+	ce, err := bootstrap.client.Epoch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	clientHandoff, err := bootstrap.client.Handoff()
+	if err != nil {
+		t.Fatal(err)
+	}
+	serverHandoff, err := bootstrap.server.Handoff()
+	if err != nil {
+		t.Fatal(err)
+	}
+	bootstrap.client.Close()
+	bootstrap.server.Close()
 	dialer, err := transport.NewClientDialer(a, 256<<10)
 	if err != nil {
 		t.Fatal(err)
@@ -75,30 +90,30 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	if err != nil {
 		t.Fatal(err)
 	}
-	key := bytes.Repeat([]byte{17}, 32)
-	scope := journal.Scope{Account: "account1", User: "12345678", Session: wire.ID{95}}
-	stores := map[transport.LedgerClass]*journal.Store{}
-	wallets := map[transport.LedgerClass]*wallet.Wallet{}
-	for _, class := range []transport.LedgerClass{transport.DataLedger, transport.ControlLedger} {
-		store := issuer(t, filepath.Join(t.TempDir(), "issuer.db"), 64<<20, 128)
-		stores[class] = store
-		w, err := wallet.OpenBound(filepath.Join(t.TempDir(), "wallet.db"), store.StoreID(), ce)
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(func() { w.Close() })
-		wallets[class] = w
-		grant, err := store.IssueRemote(scope, pool.Amount{Bytes: 32 << 20, Messages: 32})
-		if err != nil {
-			t.Fatal(err)
-		}
-		offer, err := store.RemoteOffer(grant.Ref)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err = w.Accept(offer); err != nil {
-			t.Fatal(err)
-		}
+	key := bootstrap.key
+	scope := journal.Scope{Account: "account1", User: bootstrap.binding.User, Session: bootstrap.binding.Session}
+	stores := map[transport.LedgerClass]*journal.Store{transport.ControlLedger: bootstrap.store}
+	wallets := map[transport.LedgerClass]*wallet.Wallet{transport.ControlLedger: bootstrap.wallet}
+	dataStore := issuer(t, filepath.Join(t.TempDir(), "data.db"), 64<<20, 128)
+	stores[transport.DataLedger] = dataStore
+	dataWallet, err := wallet.OpenBound(filepath.Join(t.TempDir(), "data-wallet.db"), dataStore.StoreID(), ce)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { dataWallet.Close() })
+	wallets[transport.DataLedger] = dataWallet
+	// DATA grant delivery is still supplied by this authority fixture, not a
+	// claim that the production grant/bootstrap protocol has been completed.
+	grant, err := dataStore.IssueRemote(scope, pool.Amount{Bytes: 32 << 20, Messages: 32})
+	if err != nil {
+		t.Fatal(err)
+	}
+	offer, err := dataStore.RemoteOffer(grant.Ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = dataWallet.Accept(offer); err != nil {
+		t.Fatal(err)
 	}
 	type route struct {
 		client *transport.ClientPublisher
@@ -122,7 +137,13 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			folder = "bulk"
 		}
 		box := &sharedMailbox{}
-		s := &service{plane: plane, box: box, client: box.selectedWithIdleService(t, folder, clientService, idle, false), server: box.selectedWithIdleService(t, folder, serverService, idle, false), routes: map[transport.LedgerClass]route{}}
+		var clientExecutor, serverExecutor *transport.Executor
+		if plane == transport.Fast {
+			box, clientExecutor, serverExecutor = bootstrap.box, bootstrap.cx, bootstrap.sx
+		} else {
+			clientExecutor, serverExecutor = box.selectedWithIdleService(t, folder, clientService, idle, false), box.selectedWithIdleService(t, folder, serverService, idle, false)
+		}
+		s := &service{plane: plane, box: box, client: clientExecutor, server: serverExecutor, routes: map[transport.LedgerClass]route{}}
 		t.Cleanup(func() { s.client.Close(); s.server.Close() })
 		for _, class := range []transport.LedgerClass{transport.ControlLedger, transport.DataLedger} {
 			if plane == transport.Bulk && class == transport.ControlLedger {
@@ -157,13 +178,21 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 				for _, r := range s.routes {
 					receivers = append(receivers, r.down)
 				}
-				inbox, err = transport.NewClientInbox(end.x, transport.DefaultInboxLimits(), receivers...)
+				if plane == transport.Fast {
+					inbox, err = transport.NewClientInboxWithBootstrap(end.x, transport.DefaultInboxLimits(), clientHandoff, receivers...)
+				} else {
+					inbox, err = transport.NewClientInbox(end.x, transport.DefaultInboxLimits(), receivers...)
+				}
 			} else {
 				var receivers []*transport.RemoteReceiver
 				for _, r := range s.routes {
 					receivers = append(receivers, r.up)
 				}
-				inbox, err = transport.NewServerInbox(end.x, transport.DefaultInboxLimits(), receivers...)
+				if plane == transport.Fast {
+					inbox, err = transport.NewServerInboxWithBootstrap(end.x, transport.DefaultInboxLimits(), serverHandoff, receivers...)
+				} else {
+					inbox, err = transport.NewServerInbox(end.x, transport.DefaultInboxLimits(), receivers...)
+				}
 			}
 			if err != nil {
 				t.Fatal(err)

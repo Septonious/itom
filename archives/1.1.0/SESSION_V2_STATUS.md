@@ -9,7 +9,9 @@ series of intermediate timing releases.
 Preparation of a working field-test candidate is tracked in
 [the release preparation checklist](FIELD_RELEASE_PREPARATION.md). The new
 `transport.Runtime` now owns integrated session/carrier/exit service, but has not
-replaced the production API stubs or completed authenticated initialization.
+replaced the production API stubs or completed production initialization. Accounted
+on-mail Noise establishment and guarded runtime handover now exist; initial
+permission delivery and agreed READY/roster negotiation remain incomplete.
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -146,9 +148,9 @@ mandatory independently of that implementation.
   Physical prepare/publish timing and accepted MIME bytes are exposed separately
   and are never useful-delivery bandwidth or application-RTT samples.
 * A verified bounded BODY now applies in one session turn, preventing its
-  feedback from being published between records in that same body. Beyond
-  initial light traffic, small app reads renew standalone credit in window
-  quanta, or immediately at the peer's dispatched edge; DATA still piggybacks
+  feedback from being published between records in that same body. Small app
+  reads renew standalone credit in window quanta, or immediately at the peer's
+  dispatched edge; DATA still piggybacks
   the latest credit. No collection sleep, quota increase or unbacked credit is
   introduced.
 * Each selected executor can now have one scoped receive worker, independent
@@ -200,6 +202,20 @@ mandatory independently of that implementation.
   joins issued service; final Close owns session/socket shutdown and borrows
   rather than closes or erases wallets/journals. Startup snapshots report actual
   actor starts and service failure stages, never a fabricated peer READY.
+* A bounded session bootstrap now establishes Noise keys through physically
+  accounted CONTROL APPEND/FETCH, with exact transcript-bound encrypted mutual
+  key confirmation. Existing permission is reserved before Noise output and
+  durably charged before I/O; missing permission cannot emit an uncharged HELLO.
+  An uncertain write remains one exact body until trusted storage proof. Storage
+  proof grants neither peer confirmation nor quota release. Scoped handover
+  requires BODY observation of all six startup messages, retains bounded UID
+  history through replica absence and freezes the old bootstrap actor. No
+  initial grant, carrier roster or VPN CONNECTED state is manufactured.
+* Reading small TLS fragments no longer creates another standalone credit mail
+  while the peer has adequate backed credit. Prompt receipts remain independent;
+  DATA replies piggyback the newest credit. At input completion, one cumulative
+  FIN acknowledgement replaces redundant receipt/credit publications. The
+  sender still resumes immediately at its credit edge, without a timer or reply.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -326,6 +342,19 @@ journal metrics show a commit of about 1.3 seconds. Subsequent full source check
 pass unchanged deadlines, but no timing failure is declared eliminated. Source
 CI now preserves machine-readable passing/failing logs and environment metadata.
 
+The [accounted bootstrap checks](experiments/session-v2/AUTH_BOOTSTRAP_CHECK_RESULTS.json)
+replace pre-established Noise keys in the cold HTTP fixture with actual accounted
+on-mail establishment on the same sockets. Initial CONTROL permission and DATA
+offers are still authority-fixture inputs. New scope, unknown-write, handover and
+fragmented-feedback checks cover original debt and bounded state. Initial cold
+cohorts hit the unchanged 64-message mailbox bound; control amplification was
+reduced without increasing that bound. A subsequent repeated cohort still missed
+an HTTP header deadline. These retained failures prevent a field-release claim.
+The new feedback regressions also run against the preceding Session source;
+redundant fragment-credit and terminal-feedback assertions fail there. This is a
+measured control-message improvement, not proof of a latency or sustained-rate
+qualification improvement over RC2 or over real Rambler service.
+
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
 TCP fixture was then substituted. A later diagnostic timeout showed bytes still
@@ -350,10 +379,10 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 
 ## Still required before release
 
-* Authenticated transport bootstrap, READY/roster negotiation and concrete exit
-  authorization policy; wire/control exchange for grants, usage, retirement and
-  recovery. OPEN framing/dialing exists, but those authorities are pre-established
-  in the current integration fixture.
+* Initial CONTROL permission delivery, agreed READY/roster negotiation and
+  concrete exit authorization policy; wire/control exchange for grants, usage,
+  retirement and recovery. Accounted Noise establishment now executes over IMAP;
+  initial CONTROL permission and later DATA offers remain fixture supplied.
 * Per-carrier measured-service batch selection and its demand/supply coordinator;
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete
