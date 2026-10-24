@@ -47,6 +47,7 @@ object Validation {
         demand(s.networks.wifi || s.networks.mobile, "NETWORK_SELECTION_EMPTY")
         demand(s.socks.port in 1024..65535, "SOCKS_PORT")
         demand(s.traffic == TrafficPolicy(), "UNSUPPORTED_TRAFFIC_POLICY")
+        dns(s.dnsResolver)
         demand(s.routing.schemaVersion == 1 && s.routing.scope == "global" && s.routing.defaultAction == RouteAction.VPN &&
             s.routing.priority == listOf(RouteAction.VPN, RouteAction.BLOCK, RouteAction.DIRECT), "ROUTING_PRIORITY")
         demand(s.rttThresholds.greenMax in 1..5000 && s.rttThresholds.yellowMax in s.rttThresholds.greenMax + 1..10000, "RTT_THRESHOLDS")
@@ -56,6 +57,12 @@ object Validation {
         demand(s.appRouting.packages.all { it.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*")) }, "INVALID_PACKAGE")
         demand(s.appRouting.mode != AppMode.INCLUDE_SELECTED || s.appRouting.packages.isNotEmpty(), "EMPTY_INCLUDE")
         demand(s.appRouting.mode != AppMode.ALL || s.appRouting.packages.isEmpty(), "ALL_REQUIRES_EMPTY_LIST")
+    }
+    fun dns(s: DNSSettings) {
+        demand(s.primary.isNotEmpty() && Addresses.ip(s.primary) != null && validDialIP(s.primary), "DNS_ADDRESS")
+        demand(s.backup.isEmpty() || Addresses.ip(s.backup) != null && validDialIP(s.backup), "DNS_ADDRESS")
+        demand(s.backup.isEmpty() || !Addresses.ip(s.primary)!!.contentEquals(Addresses.ip(s.backup)!!), "DNS_DUPLICATE")
+        demand(!s.itomFallback || s.backup.isNotEmpty(), "DNS_BACKUP_REQUIRED")
     }
     private fun credential(c: MailCredential) {
         demand(c.username.isNotBlank() && c.username.length <= 512 && c.password.isNotEmpty() && c.password.length <= 4096, "CREDENTIAL_FORMAT")

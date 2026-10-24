@@ -1,7 +1,6 @@
 package mobile
 
 import (
-	"context"
 	"encoding/binary"
 	"errors"
 	bolt "go.etcd.io/bbolt"
@@ -93,41 +92,27 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 	if q.Type == dnsmessage.TypeAAAA {
 		return response.Pack()
 	}
+	if c.resolver == nil {
+		return nil, errors.New("DNS_CONFIG")
+	}
+	reply, err := c.resolver.exchange(c.ctx, raw)
+	if err != nil {
+		response.RCode = dnsmessage.RCodeServerFailure
+		return response.Pack()
+	}
 	if q.Type == dnsmessage.TypeA && q.Class == dnsmessage.ClassINET {
+		addresses, ttl := dnsAddresses(reply)
+		if len(addresses) == 0 {
+			return reply, nil
+		}
 		ip, e := c.dns.address(name)
 		if e != nil {
 			return nil, e
 		}
-		response.Answers = []dnsmessage.Resource{{Header: dnsmessage.ResourceHeader{Name: q.Name, Type: q.Type, Class: q.Class, TTL: 60}, Body: &dnsmessage.AResource{A: ip.As4()}}}
+		response.Answers = []dnsmessage.Resource{{Header: dnsmessage.ResourceHeader{Name: q.Name, Type: q.Type, Class: q.Class, TTL: uint32(min(ttl.Seconds(), 60))}, Body: &dnsmessage.AResource{A: ip.As4()}}}
 		return response.Pack()
 	}
-	// Other DNS types retain their real server-side resolution. No UDP escape.
-	ctx, cancel := context.WithTimeout(c.ctx, 30*time.Second)
-	defer cancel()
-	s, _, e := c.pool.Open(ctx, wire.Connect{Host: "1.1.1.1", Port: 53})
-	if e != nil {
-		return nil, e
-	}
-	defer s.Close()
-	stop := context.AfterFunc(ctx, func() { s.Close() })
-	defer stop()
-	b := make([]byte, 2+len(raw))
-	binary.BigEndian.PutUint16(b, uint16(len(raw)))
-	copy(b[2:], raw)
-	if _, e = io.Copy(s, strings.NewReader(string(b))); e != nil {
-		return nil, e
-	}
-	var h [2]byte
-	if _, e = io.ReadFull(s, h[:]); e != nil {
-		return nil, e
-	}
-	n := binary.BigEndian.Uint16(h[:])
-	if n < 12 || n > 4096 {
-		return nil, errors.New("DNS_SIZE")
-	}
-	reply := make([]byte, n)
-	_, e = io.ReadFull(s, reply)
-	return reply, e
+	return reply, nil
 }
 func (c *Client) udpDNS(conn net.Conn) {
 	buf := make([]byte, 4096)

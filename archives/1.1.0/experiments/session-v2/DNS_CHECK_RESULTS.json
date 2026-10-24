@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "status": "DNS source feature complete; complete session transport remains unqualified",
+  "defaults": {
+    "primary": "31.131.251.83",
+    "backup": "185.22.234.229",
+    "direct_strategy": "race both resolvers; first usable response wins",
+    "shared_direct_deadline_ms": 250,
+    "udp_port": 53,
+    "truncated_reply_retry": "protected direct TCP/53 within the same deadline",
+    "imap_fallback_default": false,
+    "doh_or_dot": false
+  },
+  "fallback": "Only when enabled and neither direct resolver succeeds: atomically latch IMAP for the rest of this native/VPN session. Future queries bypass direct probes. Cancellation does not latch. A fresh VPN generation resets it; line reconnects and underlying-network handovers keep the existing native client/resolver.",
+  "routing": "Sockets use the existing protected/bound physical-network dialer. Domain rules run before numeric destination substitution; persistent synthetic addresses retain domain identity. Bounded TTL-aware IPv4 cache prevents a second lookup when connecting.",
+  "ui": "Settings > DNS. Two resolver fields, one IMAP fallback switch, restore defaults and save. Existing MaterialTheme, InfoCard, ItomSwitch and GradientButton. Encrypted vault settings; saving restarts the active VPN.",
+  "native_checks": {
+    "command": "go test -race -count=1 -json ./...",
+    "exit_code": 0,
+    "groups": [
+      "TestApplicationCopyPreservesReplyAfterUploadHalfClose",
+      "TestUnqualifiedReplacementCannotMasqueradeAsARelease",
+      "TestBothDirectResolversRaceAndFirstValidAnswerNeverUsesIMAP",
+      "TestBoth250msTimeoutsLatchIMAPUntilANewVPNSession",
+      "TestDisabledFallbackOrCallerCancellationCannotLatchIMAP",
+      "TestDisabledFallbackKeepsFailuresOffMailAndRetriesDirectNextQuery",
+      "TestDNSDefaultsFailoverValidationAndCachedAddresses",
+      "TestTruncatedDirectDNSRetriesTCPAndNeverUsesMail",
+      "TestDirectResolverPreservesDomainRoutingWithSyntheticAddresses",
+      "TestCanceledDNSDoesNotLeaveAUDPRequestOrFallBackThroughMail"
+    ],
+    "count": 10
+  },
+  "kotlin_domain_checks": {
+    "tests": 85,
+    "failures": 0,
+    "source": "original domain module Kotlin sources/tests and declared dependencies",
+    "compiler": "Kotlin 2.2.10; JVM 17 output; JDK 21 host",
+    "standalone_gradle": "9.4.0; no APK packaging"
+  },
+  "limits": {
+    "android_ui_compiled_or_device_rendered": false,
+    "public_resolver_reachability_tested": false,
+    "complete_tunnel_enabled": false,
+    "apk_packaged": false,
+    "android_identity_or_signer_changed": false,
+    "quota_journal_or_qualification_limits_changed": false
+  },
+  "note": "DNS checkpoint excludes concurrent uncommitted core OPEN development.",
+  "repeated_checks": {
+    "command": "go test -race ./... -run 'TestBothDirectResolversRace|TestBoth250msTimeoutsLatch|TestDisabledFallback' -count=10 -timeout=45s",
+    "top_level_runs": 40,
+    "exit_code": 0
+  },
+  "native_vet": {
+    "command": "go vet ./...",
+    "exit_code": 0
+  },
+  "artifacts": {
+    "DNS_NATIVE_RACE.jsonl": {
+      "sha256": "48a7950cdf128904e819ac6c43740f573e8e5d6d43c694548df049e8c500a222",
+      "bytes": 10737
+    },
+    "DNS_DOMAIN_LOG.txt": {
+      "sha256": "77227e70333273334c531ea89c3aa94c6f30cf8a489910f0d9166117bd08286f",
+      "bytes": 803,
+      "original_sha256": "82ee00748b0042fb24772ccb63a68cea812efe430ebb5506ff0f2ac1588423f9",
+      "normalization": "Trailing console whitespace removed."
+    },
+    "DNS_REPEATED_LOG.txt": {
+      "sha256": "515c06493da3938eab13d00d6e8882e4c6ff75b5e011b637a8e8b16f038b2c51",
+      "bytes": 30
+    }
+  }
+}

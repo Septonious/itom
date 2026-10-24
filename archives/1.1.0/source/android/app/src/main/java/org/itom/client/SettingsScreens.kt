@@ -36,6 +36,7 @@ import org.itom.domain.*
         if (selected == 1 && admin.authorized) AdminScreen(backend, session, onMessage)
         else PageColumn {
             NavigationRow(Glyph.NETWORK, "VPN networks", "Choose Wi-Fi, mobile, or both") { navigate(Page.NETWORKS) }
+            NavigationRow(Glyph.NETWORK, "DNS", "Direct resolvers and IMAP fallback") { navigate(Page.DNS) }
             NavigationRow(Glyph.NETWORK, "SOCKS5", "Port and authentication") { navigate(Page.SOCKS) }
             NavigationRow(Glyph.BELL, "Notifications", "Android permission and notification settings") { navigate(Page.NOTIFICATION) }
             NavigationRow(Glyph.CHART, "Diagnostics", "Account metrics and full diagnostics export") { navigate(Page.DIAGNOSTICS) }

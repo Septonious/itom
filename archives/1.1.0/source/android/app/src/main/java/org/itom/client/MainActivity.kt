@@ -31,10 +31,13 @@ class MainActivity : ComponentActivity() {
 enum class Page(val title: String, val root: String) {
     HOME("ITOM", "home"), PROFILES("Profiles", "profiles"), RULES("Rules", "rules"), SETTINGS("Settings", "settings"),
     APPS("Applications", "rules"), IMPORT("Add server", "profiles"), EDIT_PROFILE("Profile editor", "profiles"), DASHBOARD("Statistics", "home"),
-    SOCKS("SOCKS5", "settings"), NETWORKS("VPN networks", "settings"), NOTIFICATION("Notification", "settings"), DIAGNOSTICS("Diagnostics", "settings")
+    SOCKS("SOCKS5", "settings"), NETWORKS("VPN networks", "settings"), DNS("DNS", "settings"), NOTIFICATION("Notification", "settings"), DIAGNOSTICS("Diagnostics", "settings")
 }
 
 fun errorText(code: String) = when (code) {
+    "DNS_ADDRESS" -> "Enter a valid resolver IP address. The backup may be empty."
+    "DNS_BACKUP_REQUIRED" -> "Set a backup resolver before enabling IMAP fallback."
+    "DNS_DUPLICATE" -> "Choose different primary and backup resolvers."
     "SOCKS_PORT" -> "SOCKS port must be a number from 1024 to 65535."
     "SOCKS_CREDENTIALS" -> "Username and password must contain 1 to 255 UTF-8 bytes with no line breaks."
     "SOCKS_EDIT_CONFLICT" -> "Settings changed. Reopen SOCKS5 before saving."
@@ -167,6 +170,7 @@ fun errorText(code: String) = when (code) {
                         Page.DASHBOARD, Page.DIAGNOSTICS -> DiagnosticsScreen(config, session, session.transport, { enabled -> perform { graph.vault.diagnostics(enabled); restartIfActive(); message(if (enabled) "Logs and tracing enabled." else "Logs and tracing disabled.") } }, ::message)
                         Page.SETTINGS -> SettingsScreen(graph.backend, session, ::message) { page = it }
                         Page.NETWORKS -> NetworkScreen(config, busy) { policy -> perform { graph.vault.networks(policy); message("Network selection saved.") } }
+                        Page.DNS -> DNSScreen(config, busy) { value -> perform { graph.vault.dns(value); restartIfActive(); page = Page.SETTINGS; message("DNS settings saved.") } }
                         Page.SOCKS -> SocksScreen(graph, onSaved = { restartIfActive(); page = Page.SETTINGS; message("SOCKS5 settings saved.") })
                         Page.NOTIFICATION -> NotificationScreen()
                     }

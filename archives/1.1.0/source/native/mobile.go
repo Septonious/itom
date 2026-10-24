@@ -39,6 +39,7 @@ type config struct {
 	DNS         []string
 	Socks       socks.Endpoint
 	Diagnostics bool
+	DNSResolver *dnsSettings
 }
 type Client struct {
 	admin    adminClientState
@@ -54,6 +55,7 @@ type Client struct {
 	wg       sync.WaitGroup
 	slots    chan struct{}
 	dns      *fakeDNS
+	resolver *dnsResolver
 	listener net.Listener
 	up, down atomic.Uint64
 	tcp      atomic.Int64
@@ -123,6 +125,34 @@ func New(raw, dir string, host Host) (*Client, error) {
 		}
 		return out, nil
 	}}
+	settings := defaultDNSSettings()
+	if cfg.DNSResolver != nil {
+		settings = *cfg.DNSResolver
+	}
+	var resolverErr error
+	c.resolver, resolverErr = newDNSResolver(settings, c.dialer.Socket.DialContext, func(ctx context.Context, network, address string) (net.Conn, error) {
+		if network != "tcp" || c.pool == nil {
+			return nil, errors.New("DNS_TUNNEL_UNAVAILABLE")
+		}
+		host, port, err := net.SplitHostPort(address)
+		if err != nil || port != "53" {
+			return nil, errors.New("DNS_ADDRESS")
+		}
+		stream, _, err := c.pool.Open(ctx, wire.Connect{Host: host, Port: 53})
+		if err != nil {
+			return nil, err
+		}
+		conn, ok := stream.(net.Conn)
+		if !ok {
+			stream.Close()
+			return nil, errors.New("DNS_TUNNEL_UNAVAILABLE")
+		}
+		return conn, nil
+	})
+	if resolverErr != nil {
+		cancel()
+		return nil, resolverErr
+	}
 	if e := os.MkdirAll(dir, 0700); e != nil {
 		cancel()
 		return nil, e
@@ -307,7 +337,22 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 			target.Host = name
 		}
 	}
-	switch c.host.Route(target.Host) {
+	route := c.host.Route(target.Host)
+	if route != "VPN" && route != "DIRECT" {
+		return nil, netip.AddrPort{}, socks.OpenError{Code: wire.ReasonPolicy}
+	}
+	// Apply domain rules BEFORE substituting the resolver's address. Synthetic
+	// DNS keeps this name association stable when multiple domains share an IP.
+	if c.resolver != nil {
+		if _, err := netip.ParseAddr(target.Host); err != nil {
+			addresses, err := c.resolver.lookup(ctx, target.Host)
+			if err != nil {
+				return nil, netip.AddrPort{}, err
+			}
+			target.Host = addresses[0].String()
+		}
+	}
+	switch route {
 	case "VPN":
 		return c.pool.Open(ctx, target)
 	case "DIRECT":

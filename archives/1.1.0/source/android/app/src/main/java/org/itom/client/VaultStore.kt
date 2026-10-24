@@ -97,6 +97,7 @@ class VaultStore(private val context: Context) {
         val socks = org.json.JSONObject().put("Port", v.settings.socks.port).put("Authentication", v.settings.socks.authentication)
             .put("Username", v.socksCredential?.username ?: "").put("Password", v.socksCredential?.password ?: "")
         RuntimeConfig(p, v.settings, org.json.JSONObject().put("Profile", profile).put("DNS", org.json.JSONArray(dns)).put("Socks", socks)
+            .put("DNSResolver", org.json.JSONObject(Codec.json.encodeToString(DNSSettings.serializer(), v.settings.dnsResolver)))
             .put("Diagnostics", v.settings.diagnosticsEnabled).toString())
     } }
     private fun publish(v: VaultDocument) {
@@ -151,6 +152,7 @@ class VaultStore(private val context: Context) {
     }
     suspend fun diagnostics(enabled: Boolean) = update { v -> v.copy(settings = v.settings.copy(diagnosticsEnabled = enabled)) }
     suspend fun networks(policy: NetworkPolicy) = update { v -> v.copy(settings = v.settings.copy(networks = policy)) }
+    suspend fun dns(settings: DNSSettings) = update { v -> v.copy(settings = v.settings.copy(dnsResolver = settings)) }
     suspend fun select(id: String) = update { v -> demand(v.profiles.any { it.profileId == id }, "PROFILE_MISSING"); v.copy(selectedProfileId = id) }
     suspend fun editSession(id: String) = withContext(Dispatchers.IO) { lock.withLock {
         ProfileEditing.open(document ?: throw DomainError("VAULT_UNAVAILABLE"), id)

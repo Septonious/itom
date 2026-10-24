@@ -52,7 +52,13 @@ data class AppPolicy(val mode: AppMode = AppMode.ALL, val packages: List<String>
 }
 data class InstalledApp(val packageName: String, val label: String, val system: Boolean, val uid: Int)
 @Serializable
-data class TrafficPolicy(val tcp: Boolean = true, val dns: String = "server-tcp", val udp: String = "blocked", val ipv6: String = "blocked", @SerialName("automatic_direct_fallback") val automaticDirectFallback: Boolean = false)
+data class TrafficPolicy(val tcp: Boolean = true, val dns: String = "configured", val udp: String = "blocked", val ipv6: String = "blocked", @SerialName("automatic_direct_fallback") val automaticDirectFallback: Boolean = false)
+@Serializable
+data class DNSSettings(
+    val primary: String = "31.131.251.83",
+    val backup: String = "185.22.234.229",
+    @SerialName("itom_fallback") val itomFallback: Boolean = false,
+)
 @Serializable
 data class RttThresholds(@SerialName("green_max") val greenMax: Int = 399, @SerialName("yellow_max") val yellowMax: Int = 799)
 @Serializable
@@ -63,6 +69,7 @@ data class AppSettings(
     @SerialName("diagnostics_enabled") val diagnosticsEnabled: Boolean = false,
     val socks: SocksSettings = SocksSettings(),
     @SerialName("allowed_networks") val networks: NetworkPolicy = NetworkPolicy(),
+    @SerialName("dns_resolver") val dnsResolver: DNSSettings = DNSSettings(),
 )
 enum class NetworkKind { WIFI, MOBILE, OTHER }
 @Serializable

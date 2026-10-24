@@ -137,7 +137,13 @@ object Codec {
                 "diagnostics_enabled" to JsonPrimitive(false),
             ))
         }
+        adapted = upgradeDNSTraffic(adapted)
         return if (adapted == settings) root else JsonObject(root + ("settings" to adapted))
+    }
+    private fun upgradeDNSTraffic(settings: JsonObject): JsonObject {
+        val traffic = settings["traffic"]?.jsonObject ?: return settings
+        if (traffic["dns"]?.jsonPrimitive?.content != "server-tcp") return settings
+        return JsonObject(settings + ("traffic" to JsonObject(traffic + ("dns" to JsonPrimitive("configured")))))
     }
     fun vault(text: String): VaultDocument = decodeVault(text).document
     fun settings(text: String): AppSettings {
@@ -159,7 +165,7 @@ object Codec {
                     "diagnostics_enabled" to JsonPrimitive(false),
                 ))
             }
-            json.decodeFromJsonElement<AppSettings>(migrated)
+            json.decodeFromJsonElement<AppSettings>(upgradeDNSTraffic(migrated))
         } catch (e: DomainError) { throw e } catch (_: Exception) { throw DomainError("SETTINGS_FORMAT") }
         Validation.settings(result); return result
     }
