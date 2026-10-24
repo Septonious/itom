@@ -5,9 +5,6 @@ import (
 	"errors"
 	"sort"
 	"sync"
-
-	"itom.local/core/journal"
-	"itom.local/core/secure"
 )
 
 // InboxDelivery owns plaintext authenticated once and, where required, durably
@@ -100,6 +97,10 @@ type Inbox struct {
 	deferred            map[uint32]LedgerClass
 	examined            map[uint32]bool
 	continuing, forward bool
+	tailReady           bool
+	tailUID             uint32
+	tailSequence        uint32
+	tailVersion         uint64
 }
 type InboxProgress struct {
 	Observed, Applied, Deferred int
@@ -140,6 +141,12 @@ func (i *Inbox) admission() inboxAdmission {
 func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
+	return i.sweepLocked(ctx)
+}
+
+func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
+	i.tailReady = false
+	version := i.executor.SequenceVersion()
 	var progress InboxProgress
 	command, err := i.executor.Enumerate(ctx)
 	if err != nil {
@@ -154,7 +161,10 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 	}
 	uids := make([]uint32, 0, len(metadata))
 	present := make(map[uint32]bool, len(metadata))
+	var tail, tailUID uint32
 	for _, body := range metadata {
+		tail = max(tail, body.Sequence)
+		tailUID = max(tailUID, body.UID)
 		uids = append(uids, body.UID)
 		present[body.UID] = true
 	}
@@ -257,61 +267,31 @@ func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
 			if len(bodies) != 1 || bodies[0].UID != uid {
 				return progress, ErrProtocol
 			}
-			var delivery InboxDelivery
-			if i.admit != nil {
-				delivery, err = i.admit(i.scope.UIDValidity, bodies[0], available)
-			} else {
-				delivery, err = i.decode(i.scope.UIDValidity, bodies[0])
-			}
-			if errors.Is(err, journal.ErrOrder) || errors.Is(err, ErrCapacity) {
-				if errors.Is(err, journal.ErrOrder) {
-					i.forward = true
-				}
-				var blocked *inboxDeferred
-				if errors.As(err, &blocked) && !blocked.transient {
-					i.deferred[uid] = blocked.class
-				}
-				progress.Deferred++
-				continue
-			}
-			if errors.Is(err, secure.ErrReplay) {
-				i.seen[uid] = true
-				advanced = true
-				continue
-			}
+			step, madeProgress, err := i.acceptBody(bodies[0], available)
 			if err != nil {
 				return progress, err
 			}
-			delete(i.deferred, uid)
-			if delivery != nil {
-				progressOnly := false
-				if tagged, ok := delivery.(*ledgerDelivery); ok {
-					progressOnly = tagged.progress
-				}
-				if progressOnly && (!available.progress || deliveryClass(delivery) != ControlLedger) || !progressOnly && !available.allows(deliveryClass(delivery)) {
-					return progress, ErrProtocol
-				}
-				if err = delivery.Apply(); errors.Is(err, ErrCapacity) {
-					// Progress-only records were admitted precisely because they
-					// cannot allocate receiver capacity. Never overrun either queue.
-					if progressOnly {
-						return progress, ErrProtocol
-					}
-					i.pending[uid] = delivery
-					progress.Deferred++
-					continue
-				} else if err != nil {
-					return progress, err
-				}
-			}
-			i.seen[uid] = true
-			progress.Applied++
-			advanced = true
+			progress.Applied += step.Applied
+			progress.Deferred += step.Deferred
+			advanced = advanced || madeProgress
 		}
 		if !advanced {
 			break
 		}
 		clear(i.examined)
+	}
+	ready := version == i.executor.SequenceVersion()
+	for _, uid := range uids {
+		if !i.seen[uid] {
+			ready = false
+			break
+		}
+	}
+	if ready {
+		i.tailReady = true
+		i.tailSequence = tail
+		i.tailUID = tailUID
+		i.tailVersion = version
 	}
 	return progress, nil
 }

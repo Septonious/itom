@@ -1,4 +1,18 @@
-# ITOM 1.1.0 DEV7 experimental testing RC
+# ITOM 1.1.0 replacement transport — unqualified source
+
+The current development branch contains an independent transport rewrite.
+Production startup returns `V2_NOT_READY`; packaging remains disabled. The
+250ms idle/light RTT and sustained 100Mbps targets are not established.
+See [implementation status](SESSION_V2_STATUS.md), the
+[structural plan](STRUCTURAL_REWORK_PLAN.md) and
+[latest source checks](experiments/session-v2/POLL_CHECK_RESULTS.json).
+
+The DEV7 description and downloads below are historical evidence, not the current
+rewrite or its qualification results. Stable 1.0.0/RC2 remains separate.
+
+---
+
+# Historical ITOM 1.1.0 DEV7 experimental testing RC
 
 DEV7 reduces shared IMAP command waits and makes two complete bulk bodies usable where retained quota capacity permits, preserving a complete FAST batch and every historical charge. It also fixes an admission diagnostic-snapshot data race. Stable 1.0.0/RC2 remains unchanged.
 

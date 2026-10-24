@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T13:35:07.623748+00:00",
+  "parent_commit": "9c29cfb52754c24e4800fe79990206a9eeff5e2f",
+  "status": "unqualified source/component checkpoint; production startup and packaging disabled",
+  "checks": [
+    {
+      "file": "POLL_TARGETED_LOG.txt",
+      "raw_sha256": "19e374cbf55d2a9ba8a74c2e0de31aa25b0456361aa35889a860560daa62a1c9",
+      "normalized_sha256": "19e374cbf55d2a9ba8a74c2e0de31aa25b0456361aa35889a860560daa62a1c9"
+    },
+    {
+      "file": "POLL_CORE_RACE.jsonl",
+      "raw_sha256": "1f1c813fca618622afea528390e7b53782e136b7fae337182ec4fd6658610c08",
+      "normalized_sha256": "1f1c813fca618622afea528390e7b53782e136b7fae337182ec4fd6658610c08",
+      "top_level_group_executions": 114,
+      "failures": []
+    },
+    {
+      "file": "POLL_NATIVE_RACE.jsonl",
+      "raw_sha256": "c497e47a00f6aedac621cda558a95500c46c7d60979c209304a8fc5aa74b0031",
+      "normalized_sha256": "c497e47a00f6aedac621cda558a95500c46c7d60979c209304a8fc5aa74b0031",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "POLL_REPEATED.jsonl",
+      "raw_sha256": "54d065f9fe6f2af2c7a71768f71138be2ffcbc8ad300912608bb0fde99278523",
+      "normalized_sha256": "54d065f9fe6f2af2c7a71768f71138be2ffcbc8ad300912608bb0fde99278523",
+      "top_level_group_executions": 20,
+      "failures": []
+    },
+    {
+      "file": "POLL_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go vet ./... (core)",
+    "go test -race -json ./transport -run <4 direct-read/movement/late-UID/cold-IMAP groups> -count=5 -timeout=90s"
+  ],
+  "implemented": [
+    "One bounded predicted UID BODY read after complete scoped inventory for the ordinary contiguous fast-message path, without a separate UID enumeration.",
+    "Empty/refused prediction, sequence movement, missing/later UID visibility and delivery pressure request inventory instead of silently advancing a UID cursor.",
+    "Actual sequence numbers and EXPUNGE/count invalidation are discovery hints only; stored proof remains pinned to actual UID/account/folder/UIDVALIDITY.",
+    "Inventory and direct read use the same scoped physical authentication, durable accounting, replay admission, delivery and quota limits.",
+    "Cold TLS/HTTP over accounted IMAP now uses direct read turns on fast and complete inventory on bulk."
+  ],
+  "measurement_boundary": "The command-count test observes one initial metadata query and one BODY query for the next contiguous message, with no intervening metadata query. This is not an application latency, raw-Rambler or sustained-bandwidth result.",
+  "implementation_choice": "The prototype considered numeric sequence FETCH, but production Poll uses exact UID FETCH: nonexistent UIDs are legal empty queries, whereas issuing a nonexistent sequence number can be refused as a bad message set. UID misses explicitly force inventory; no speculative range exceeds one BODY.",
+  "limits": [
+    "One account, one in-process pump and pre-established Noise/grants; no calibrated independent provider/client/server timing.",
+    "Adaptive carrier coordinator, receiver-window integration, roster/control bootstrap, reclamation/recovery and Android TUN qualification remain incomplete.",
+    "No sustained 100Mbps or <=250ms idle / <=2000ms loaded RTT proof; no deployable package."
+  ],
+  "source_manifest_file": "POLL_SOURCE_MANIFEST.json"
+}

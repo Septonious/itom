@@ -17,8 +17,8 @@ var ErrUnknown = errors.New("V2_IMAP_OUTCOME_UNKNOWN")
 var ErrRefused = errors.New("V2_IMAP_TAGGED_REFUSAL")
 
 type Body struct {
-	UID   uint32
-	Bytes []byte
+	UID, Sequence uint32
+	Bytes         []byte
 }
 type Result struct {
 	Bodies []Body
@@ -63,23 +63,26 @@ func DefaultIMAPLimits() IMAPLimits {
 // untagged responses have no command tag. SELECT/EXPUNGE/IDLE are deliberately
 // not issued concurrently; mailbox changes require a new executor.
 type Executor struct {
-	literalPlus  bool
-	literalMinus bool
-	mailbox      string
-	account      string
-	validity     uint32
-	conn         net.Conn
-	reader       *bufio.Reader
-	limits       IMAPLimits
-	writer       chan struct{}
-	mu           sync.Mutex
-	pending      map[string]*operation
-	sequence     uint64
-	literal      *operation
-	fetch        *operation
-	closed       error
-	done         chan struct{}
-	changes      chan struct{}
+	literalPlus     bool
+	literalMinus    bool
+	mailbox         string
+	account         string
+	validity        uint32
+	conn            net.Conn
+	reader          *bufio.Reader
+	limits          IMAPLimits
+	writer          chan struct{}
+	mu              sync.Mutex
+	pending         map[string]*operation
+	sequence        uint64
+	literal         *operation
+	fetch           *operation
+	closed          error
+	done            chan struct{}
+	changes         chan struct{}
+	sequenceVersion uint64
+	exists          uint32
+	existsKnown     bool
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
@@ -97,7 +100,15 @@ func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mail
 	return e, nil
 }
 func (e *Executor) Changes() <-chan struct{} { return e.changes }
-func (e *Executor) Close() error             { e.fail(ErrClosed); return nil }
+
+// SequenceVersion is only an invalidation hint. It cannot establish UID
+// ownership, deletion, absence, delivery or any financial release.
+func (e *Executor) SequenceVersion() uint64 {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.sequenceVersion
+}
+func (e *Executor) Close() error { e.fail(ErrClosed); return nil }
 func (e *Executor) fail(err error) {
 	e.mu.Lock()
 	if e.closed != nil {
@@ -288,7 +299,8 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata 
 	if metadata {
 		items = "UID"
 	}
-	if err = e.write([]byte(fmt.Sprintf("%s UID FETCH %d:%d (%s)\r\n", tag, first, last, items))); err != nil {
+	command := fmt.Sprintf("%s UID FETCH %d:%d (%s)\r\n", tag, first, last, items)
+	if err = e.write([]byte(command)); err != nil {
 		e.fail(ErrUnknown)
 		return &Command{op}, ErrUnknown
 	}
@@ -358,6 +370,10 @@ func (e *Executor) readLoop() {
 			return
 		}
 		if fields[0] == "*" {
+			if err = e.noteSequenceChange(fields); err != nil {
+				e.fail(err)
+				return
+			}
 			if e.validity != 0 {
 				upper := strings.ToUpper(line)
 				const marker = "[UIDVALIDITY "
@@ -461,11 +477,19 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 	op.bytes += len(line) + 2
 	if !op.uids[uint32(uid)] {
 		op.uids[uint32(uid)] = true
-		op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid)})
+		sequence, err := fetchSequence(line)
+		if err != nil {
+			return false, err
+		}
+		op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence})
 	}
 	return true, nil
 }
 func (e *Executor) readBody(line string) error {
+	sequence, err := fetchSequence(line)
+	if err != nil {
+		return err
+	}
 	// This executor requests one complete BODY per UID. Any partial/alternative
 	// FETCH form is rejected rather than ambiguously assigned to a pending tag.
 	start := strings.LastIndex(line, "{")
@@ -524,7 +548,47 @@ func (e *Executor) readBody(line string) error {
 	}
 	op.bytes += len(suffix)
 	op.uids[uint32(uid)] = true
-	op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Bytes: body})
+	op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence, Bytes: body})
+	return nil
+}
+
+func fetchSequence(line string) (uint32, error) {
+	fields := strings.Fields(line)
+	if len(fields) < 3 || fields[0] != "*" || !strings.EqualFold(fields[2], "FETCH") {
+		return 0, ErrProtocol
+	}
+	n, err := strconv.ParseUint(fields[1], 10, 32)
+	if err != nil || n == 0 {
+		return 0, ErrProtocol
+	}
+	return uint32(n), nil
+}
+
+func (e *Executor) noteSequenceChange(fields []string) error {
+	if len(fields) != 3 || !strings.EqualFold(fields[2], "EXISTS") && !strings.EqualFold(fields[2], "EXPUNGE") {
+		return nil
+	}
+	n, err := strconv.ParseUint(fields[1], 10, 32)
+	if err != nil || strings.EqualFold(fields[2], "EXPUNGE") && n == 0 {
+		return ErrProtocol
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	invalidate := strings.EqualFold(fields[2], "EXPUNGE")
+	if invalidate {
+		if e.existsKnown && e.exists > 0 {
+			e.exists--
+		}
+	} else {
+		invalidate = e.existsKnown && uint32(n) < e.exists
+		e.exists, e.existsKnown = uint32(n), true
+	}
+	if invalidate {
+		if e.sequenceVersion == ^uint64(0) {
+			return ErrProtocol
+		}
+		e.sequenceVersion++
+	}
 	return nil
 }
 

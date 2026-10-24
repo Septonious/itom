@@ -211,7 +211,13 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 					}
 				}
 				for _, i := range s.inboxes {
-					p, err := i.Sweep(ctx)
+					var p transport.InboxProgress
+					var err error
+					if s.plane == transport.Fast {
+						p, err = i.Poll(ctx)
+					} else {
+						p, err = i.Sweep(ctx)
+					}
 					if err != nil {
 						fail(err)
 						return

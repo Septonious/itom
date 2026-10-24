@@ -1,0 +1,10 @@
+=== RUN   TestContiguousFastReadUsesOneBodyCommandAndUIDGapForcesInventory
+--- PASS: TestContiguousFastReadUsesOneBodyCommandAndUIDGapForcesInventory (0.02s)
+=== RUN   TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof
+--- PASS: TestSequenceMovementInvalidatesPredictionWithoutInventingDeletionProof (0.02s)
+=== RUN   TestLateLowerUIDIsFoundWhenBodySequenceRevealsAHole
+--- PASS: TestLateLowerUIDIsFoundWhenBodySequenceRevealsAHole (0.01s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.49s)
+PASS
+ok  	itom.local/core/transport	2.596s

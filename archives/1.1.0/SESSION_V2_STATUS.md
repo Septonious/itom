@@ -126,6 +126,12 @@ mandatory independently of that implementation.
   and its original physical debt. Bounded probe continuations retain examined
   UIDs and switch to prefix order on dependency gaps instead of repeating the
   newest unresolved ordinals indefinitely.
+* The fast inbox can read a predicted single next UID after a complete inventory,
+  removing the separate enumeration command for a contiguous new message. It
+  never advances a missing UID silently: an empty/refused read, sequence gap,
+  EXPUNGE/count invalidation or deferred delivery requests full inventory. Actual
+  UID scope/proof, response ceilings and replay/accounting stay identical through
+  one shared delivery path. Sequence information is a discovery hint only.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -196,6 +202,11 @@ invariants; this is not a field performance reproduction or rate qualification.
 The [protocol progress continuation](experiments/session-v2/PROTOCOL_PROGRESS_CHECK_RESULTS.json)
 retains failing RESET/dependency reproducers and checks deferred OPEN replay,
 physical debt and bounded continuation progress after the fixes.
+The [direct read continuation](experiments/session-v2/POLL_CHECK_RESULTS.json)
+checks the one-command contiguous read, UID holes, late lower UID discovery and
+sequence movement. The cold IMAP application fixture now uses this path on fast
+and full inventory on bulk. No command-count saving is counted as measured
+application RTT or sustained bandwidth.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
