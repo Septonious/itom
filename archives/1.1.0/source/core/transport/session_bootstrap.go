@@ -56,8 +56,15 @@ func (f bootstrapFrame) encode() ([]byte, error) {
 	if f.generation == 0 || len(f.binding.User) != 8 || len(f.payload) != bootstrapPayloadSize(f.kind) || len(f.payload) == 0 {
 		return nil, ErrProtocol
 	}
+	return encodeSessionFrame("ISH2", f)
+}
+
+func encodeSessionFrame(magic string, f bootstrapFrame) ([]byte, error) {
+	if len(magic) != 4 || f.generation == 0 || len(f.binding.User) != 8 || len(f.payload) == 0 || len(f.payload) > wire.MaxHandshake {
+		return nil, ErrProtocol
+	}
 	b := make([]byte, bootstrapHeader+len(f.payload))
-	copy(b, "ISH2")
+	copy(b, magic)
 	b[4], b[5] = 2, byte(f.kind)
 	copy(b[8:24], f.binding.Server[:])
 	copy(b[24:32], f.binding.User)
@@ -73,14 +80,22 @@ func (f bootstrapFrame) encode() ([]byte, error) {
 }
 
 func decodeBootstrapFrame(raw []byte) (bootstrapFrame, error) {
+	f, err := decodeSessionFrame(raw, "ISH2")
+	if err != nil {
+		return f, err
+	}
+	if len(f.payload) != bootstrapPayloadSize(f.kind) || bootstrapPayloadSize(f.kind) == 0 {
+		return bootstrapFrame{}, ErrProtocol
+	}
+	return f, nil
+}
+
+func decodeSessionFrame(raw []byte, magic string) (bootstrapFrame, error) {
 	var f bootstrapFrame
-	if len(raw) < bootstrapHeader || len(raw) > bootstrapHeader+wire.MaxHandshake || string(raw[:4]) != "ISH2" || raw[4] != 2 || raw[6] != 0 || raw[7] != 0 || int(binary.BigEndian.Uint32(raw[124:128])) != len(raw)-bootstrapHeader {
+	if len(magic) != 4 || len(raw) <= bootstrapHeader || len(raw) > bootstrapHeader+wire.MaxHandshake || string(raw[:4]) != magic || raw[4] != 2 || raw[6] != 0 || raw[7] != 0 || int(binary.BigEndian.Uint32(raw[124:128])) != len(raw)-bootstrapHeader {
 		return f, ErrProtocol
 	}
 	f.kind = bootstrapKind(raw[5])
-	if len(raw)-bootstrapHeader != bootstrapPayloadSize(f.kind) || bootstrapPayloadSize(f.kind) == 0 {
-		return f, ErrProtocol
-	}
 	copy(f.binding.Server[:], raw[8:24])
 	f.binding.User = string(raw[24:32])
 	copy(f.binding.Pair[:], raw[32:48])
@@ -122,6 +137,7 @@ type SessionBootstrap struct {
 	observed                            [6]bool
 	knownUIDs                           map[uint32]bool
 	pending                             *PreparedPublication
+	driver                              *BootstrapDriver
 	complete, failed, closed, handedOff bool
 }
 

@@ -17,12 +17,33 @@ func (b *SessionBootstrap) Epoch() (*secure.Epoch, error) {
 // delivery action enforces bootstrap control accounting, not application DATA
 // permission. The startup owner must stop it before handing the executor over.
 func (b *SessionBootstrap) Inbox(executor *Executor, limits InboxLimits) (*Inbox, error) {
+	return b.inbox(executor, limits, nil)
+}
+
+func (b *SessionBootstrap) inbox(executor *Executor, limits InboxLimits, driver *BootstrapDriver) (*Inbox, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.driver != driver || b.closed || b.failed || b.handedOff {
+		return nil, ErrProtocol
+	}
 	if executor == nil || executor.account != b.origin.Account || executor.mailbox != b.origin.Folder || executor.validity != b.origin.UIDValidity {
 		return nil, ErrProtocol
 	}
-	return NewInbox(executor, InboxScope{Account: b.origin.Account, Folder: b.origin.Folder, UIDValidity: b.origin.UIDValidity}, limits, func(_ uint32, body Body) (InboxDelivery, error) {
-		return InboxAction(func() error { return b.Receive(executor, body) }), nil
+	i, err := NewInbox(executor, InboxScope{Account: b.origin.Account, Folder: b.origin.Folder, UIDValidity: b.origin.UIDValidity}, limits, func(_ uint32, body Body) (InboxDelivery, error) {
+		return InboxAction(func() error { return b.receiveBody(executor, body, driver) }), nil
 	})
+	if err != nil {
+		return nil, err
+	}
+	for uid := range b.knownUIDs {
+		i.seen[uid] = true
+	}
+	i.stopAfterApply = func() bool {
+		b.mu.Lock()
+		defer b.mu.Unlock()
+		return b.handoffReadyLocked() == nil
+	}
+	return i, nil
 }
 
 // BootstrapHandoff retains only scoped authenticated bootstrap UID knowledge.
@@ -40,15 +61,29 @@ type BootstrapHandoff struct {
 // including this endpoint's last write. APPEND acceptance alone supplies no
 // trustworthy UID history for the runtime's application decoder to skip.
 func (b *SessionBootstrap) Handoff() (*BootstrapHandoff, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+	return b.handoff(nil)
+}
+
+func (b *SessionBootstrap) handoffReadyLocked() error {
 	if _, err := b.confirmedLocked(); err != nil {
-		return nil, err
+		return err
 	}
 	for _, seen := range b.observed {
 		if !seen {
-			return nil, ErrBootstrapPending
+			return ErrBootstrapPending
 		}
+	}
+	return nil
+}
+
+func (b *SessionBootstrap) handoff(driver *BootstrapDriver) (*BootstrapHandoff, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.driver != driver {
+		return nil, ErrProtocol
+	}
+	if err := b.handoffReadyLocked(); err != nil {
+		return nil, err
 	}
 	h := &BootstrapHandoff{epoch: b.epoch, generation: b.generation, client: b.client, origin: b.origin}
 	for uid := range b.knownUIDs {

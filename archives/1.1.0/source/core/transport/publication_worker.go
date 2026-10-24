@@ -116,7 +116,7 @@ func newPublicationWorker(x *Executor, plane Plane, s *Session, account, folder 
 	if x.closed != nil {
 		return nil, ErrClosed
 	}
-	if x.publicationOwner {
+	if x.publicationOwner || x.bootstrapOwner {
 		return nil, ErrProtocol
 	}
 	x.publicationOwner = true
@@ -182,7 +182,9 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
 	w.signalLocked()
 	w.mu.Unlock()
 	w.session.mu.Unlock()
-	if runtime != nil { runtime.serviceStarted(w.executor, true) }
+	if runtime != nil {
+		runtime.serviceStarted(w.executor, true)
+	}
 	defer func() {
 		w.mu.Lock()
 		w.running = false

@@ -11,7 +11,8 @@ Preparation of a working field-test candidate is tracked in
 `transport.Runtime` now owns integrated session/carrier/exit service, but has not
 replaced the production API stubs or completed production initialization. Accounted
 on-mail Noise establishment and guarded runtime handover now exist; initial
-permission delivery and agreed READY/roster negotiation remain incomplete.
+permission now has an accounted rendezvous/invitation component. Production
+coordination and agreed READY/roster negotiation remain incomplete.
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -216,6 +217,24 @@ mandatory independently of that implementation.
   DATA replies piggyback the newest credit. At input completion, one cumulative
   FIN acknowledgement replaces redundant receipt/credit publications. The
   sender still resumes immediately at its credit edge, without a timer or reply.
+* Independent startup drivers now own the selected fast executor and advance
+  Noise establishment from actual outcomes. Cancellation keeps the same owner,
+  pending body and carrier; a real grant can resume startup. Issued reads drain
+  under the original command limit. Handover stops the startup inventory before
+  application mail can be mistaken for a handshake. Manual actors are excluded.
+* A charged standing CONTROL rendezvous now authenticates a bounded request via
+  negotiated permanent IMAP keywords. The request carries the freshly generated
+  original wallet Session; it is only a routing hint, never an APPEND permit or
+  refund. The issuer reserves real CONTROL quota and delivers a scoped offer by
+  charged mail. An old invitation cannot reset counters after wallet loss.
+  Repeated hints reuse one exact publication; issuer gates prevent duplicate
+  initial allocations/responders in a Run. Reopen advances Run and preserves
+  unknown original reservations. Writable keyword support remains unverified
+  on the real provider; unsupported service fails before attempting a write.
+* Bounded monotonic startup traces and per-command summaries now distinguish
+  writer wait, APPEND continuation/literal/tag, FETCH/inventory/FLAGS/STORE and
+  tagged refusal versus carrier failure. Maxima are separate from totals; raw
+  provider text, target/profile strings, body bytes and keys are excluded.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -355,6 +374,16 @@ redundant fragment-credit and terminal-feedback assertions fail there. This is a
 measured control-message improvement, not proof of a latency or sustained-rate
 qualification improvement over RC2 or over real Rambler service.
 
+The [startup/rendezvous checks](experiments/session-v2/STARTUP_CHECK_RESULTS.json)
+now acquire initial CONTROL authority over actual charged mail and a bounded
+MAC-authenticated metadata request. The client obtains its issuer identity from
+the verified standing body; no initial client APPEND is unaccounted. DATA grants
+remain fixture supplied, and a production long-lived rendezvous/roster owner is
+still missing. Initial source checks retain a quiet-bulk HTTP deadline miss;
+the latest full cohort retains a 64-message fast-mailbox overflow. These remain
+release blockers. Diagnostic/persistence and request-replay checks pass, but
+this checkpoint is not a working production client/server or performance RC.
+
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
 TCP fixture was then substituted. A later diagnostic timeout showed bytes still
@@ -379,10 +408,11 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 
 ## Still required before release
 
-* Initial CONTROL permission delivery, agreed READY/roster negotiation and
-  concrete exit authorization policy; wire/control exchange for grants, usage,
+* Production coordination of the new initial CONTROL rendezvous/invitation,
+  agreed READY/roster negotiation and concrete exit authorization policy; wire/control exchange for grants, usage,
   retirement and recovery. Accounted Noise establishment now executes over IMAP;
-  initial CONTROL permission and later DATA offers remain fixture supplied.
+  the initial grant now travels over accounted mail, while later DATA offers
+  remain fixture supplied.
 * Per-carrier measured-service batch selection and its demand/supply coordinator;
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete

@@ -1,0 +1,10 @@
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service
+--- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling (0.63s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate (0.13s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service (0.49s)
+=== RUN   TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite
+--- PASS: TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite (0.04s)
+PASS
+ok  	itom.local/core/transport	1.733s

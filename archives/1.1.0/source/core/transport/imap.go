@@ -24,18 +24,22 @@ var errCommandCapacity = fmt.Errorf("%w: pending IMAP command", ErrCapacity)
 type Body struct {
 	UID, Sequence uint32
 	Bytes         []byte
+	Flags         []string
 }
 type Result struct {
 	Bodies []Body
 	Err    error
 }
 type operation struct {
+	class        commandClass
+	started      time.Time
 	done         chan struct{}
 	continuation chan struct{}
 	result       Result
 	bytes        int
 	fetch        bool
 	metadata     bool
+	flags        bool
 	first, last  uint32
 	uids         map[uint32]bool
 }
@@ -91,10 +95,15 @@ type Executor struct {
 	space            chan struct{}
 	publicationOwner bool
 	inboxOwner       bool
+	bootstrapOwner   bool
+	keywords         bool
 	idleSupported    bool
 	idle             *operation
 	idleStop         chan struct{}
 	writerWaiters    int
+	timing           [commandClasses]CommandTiming
+	writerWait       TimingSummary
+	capacityRefusals uint64
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.
@@ -135,6 +144,7 @@ func (e *Executor) fail(err error) {
 	e.closed = err
 	for _, op := range e.pending {
 		op.result.Err = err
+		e.completedLocked(op, true)
 		close(op.done)
 	}
 	e.pending = map[string]*operation{}
@@ -143,18 +153,20 @@ func (e *Executor) fail(err error) {
 	e.mu.Unlock()
 	e.conn.Close()
 }
-func (e *Executor) begin(fetch, literal bool) (string, *operation, error) {
+func (e *Executor) begin(class commandClass, fetch, literal bool) (string, *operation, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.closed != nil {
 		return "", nil, e.closed
 	}
 	if len(e.pending) >= e.limits.Pending || fetch && e.fetch != nil {
+		e.capacityRefusals++
 		return "", nil, errCommandCapacity
 	}
 	e.sequence++
 	tag := fmt.Sprintf("V2%016x", e.sequence)
-	op := &operation{done: make(chan struct{}), continuation: make(chan struct{}, 1), fetch: fetch}
+	op := &operation{class: class, started: time.Now(), done: make(chan struct{}), continuation: make(chan struct{}, 1), fetch: fetch}
+	e.timing[class].Started++
 	e.pending[tag] = op
 	if fetch {
 		e.fetch = op
@@ -193,6 +205,7 @@ func (e *Executor) expire(op *operation) {
 	e.closed = ErrUnknown
 	for _, pending := range e.pending {
 		pending.result.Err = ErrUnknown
+		e.completedLocked(pending, true)
 		close(pending.done)
 	}
 	e.pending = map[string]*operation{}
@@ -246,7 +259,7 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 	// RFC 7888 LITERAL- permits non-synchronizing literals up to 4096
 	// wire bytes. Larger bodies retain the legal synchronizing barrier.
 	nonSync := e.literalPlus || e.literalMinus && len(body) <= 4096
-	tag, op, err := e.begin(false, !nonSync)
+	tag, op, err := e.begin(commandAppend, false, !nonSync)
 	if err != nil {
 		return nil, err
 	}
@@ -268,9 +281,13 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 			return cmd, ErrUnknown
 		}
 	}
+	literalBegin := time.Now()
 	if err = e.write(body); err == nil {
 		err = e.write([]byte("\r\n"))
 	}
+	e.mu.Lock()
+	e.timing[commandAppend].LiteralWrite.observe(time.Since(literalBegin))
+	e.mu.Unlock()
 	if err != nil {
 		e.fail(ErrUnknown)
 		return cmd, ErrUnknown
@@ -303,7 +320,11 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata 
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	tag, op, err := e.begin(true, false)
+	class := commandBody
+	if metadata {
+		class = commandInventory
+	}
+	tag, op, err := e.begin(class, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +353,7 @@ func (e *Executor) Noop(ctx context.Context) (*Command, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	tag, op, err := e.begin(false, false)
+	tag, op, err := e.begin(commandNoop, false, false)
 	if err != nil {
 		return nil, err
 	}
@@ -379,6 +400,9 @@ func (e *Executor) readLoop() {
 			e.mu.Lock()
 			op := e.literal
 			e.literal = nil
+			if op != nil && op.class == commandAppend {
+				e.timing[commandAppend].Continuation.observe(time.Since(op.started))
+			}
 			e.mu.Unlock()
 			if op == nil {
 				e.fail(ErrProtocol)
@@ -426,6 +450,14 @@ func (e *Executor) readLoop() {
 			}
 			if len(fields) >= 3 && strings.EqualFold(fields[2], "FETCH") {
 				if !strings.HasSuffix(line, "}") {
+					flags, err := e.readFlags(line)
+					if err != nil {
+						e.fail(err)
+						return
+					}
+					if flags {
+						continue
+					}
 					// Flags-only FETCH is a legal unsolicited update. It does
 					// not complete or supply a body for our pending UID FETCH.
 					if strings.Contains(strings.ToUpper(line), "BODY") {
@@ -479,6 +511,7 @@ func (e *Executor) readLoop() {
 		if e.idle == op {
 			e.idle = nil
 		}
+		e.completedLocked(op, false)
 		close(op.done)
 		e.mu.Unlock()
 	}
@@ -629,6 +662,12 @@ func (e *Executor) noteSequenceChange(fields []string) (bool, error) {
 // Queued, unstarted commands obey application cancellation without waiting for
 // another operation's literal barrier. Started command draining is separate.
 func (e *Executor) lockWriter(ctx context.Context) error {
+	begin := time.Now()
+	defer func() {
+		e.mu.Lock()
+		e.writerWait.observe(time.Since(begin))
+		e.mu.Unlock()
+	}()
 	e.mu.Lock()
 	if e.closed != nil {
 		err := e.closed

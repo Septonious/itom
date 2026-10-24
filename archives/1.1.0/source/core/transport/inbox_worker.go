@@ -63,7 +63,7 @@ func NewInboxWorker(inbox *Inbox, limits InboxServiceLimits) (*InboxWorker, erro
 	if x.closed != nil {
 		return nil, ErrClosed
 	}
-	if x.inboxOwner {
+	if x.inboxOwner || x.bootstrapOwner {
 		return nil, ErrProtocol
 	}
 	x.inboxOwner = true
@@ -102,7 +102,9 @@ func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) error {
 	w.inbox.session.services++
 	w.mu.Unlock()
 	w.inbox.session.mu.Unlock()
-	if runtime != nil { runtime.serviceStarted(w.inbox.executor, false) }
+	if runtime != nil {
+		runtime.serviceStarted(w.inbox.executor, false)
+	}
 	defer func() {
 		w.mu.Lock()
 		w.running = false

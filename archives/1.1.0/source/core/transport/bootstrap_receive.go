@@ -12,8 +12,15 @@ import (
 // before Noise processing/confirmation; own writes follow original full-body
 // observation. Physical proof and encrypted key confirmation remain separate.
 func (b *SessionBootstrap) Receive(executor *Executor, physical Body) error {
+	return b.receiveBody(executor, physical, nil)
+}
+
+func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver *BootstrapDriver) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	if b.driver != driver {
+		return ErrProtocol
+	}
 	if b.closed || b.failed || b.handedOff {
 		return ErrClosed
 	}

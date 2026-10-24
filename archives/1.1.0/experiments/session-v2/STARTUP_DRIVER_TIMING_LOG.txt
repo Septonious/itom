@@ -1,0 +1,36 @@
+=== RUN   TestCanceledBootstrapDriverKeepsCarrierAndResumesOnlyAfterARealGrant
+--- PASS: TestCanceledBootstrapDriverKeepsCarrierAndResumesOnlyAfterARealGrant (0.23s)
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service
+--- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling (0.61s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate (0.11s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service (0.50s)
+=== RUN   TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite
+--- PASS: TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite (0.03s)
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true
+=== RUN   TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false
+--- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand (0.08s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_true (0.04s)
+    --- PASS: TestIdleWriterPreemptionDrainsDoneAndTagBeforeTheNextCommand/request_before_continuation_false (0.04s)
+=== RUN   TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable
+--- PASS: TestIdleRefusalDisablesOnlyNotificationModeAndLeavesUIDDiscoveryUsable (0.01s)
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true
+=== RUN   TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false
+--- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit (0.04s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_true (0.01s)
+    --- PASS: TestIdleNotificationIsAHintAndSilentNotificationStillGetsBoundedAudit/notification_false (0.03s)
+=== RUN   TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection
+--- PASS: TestIdleDoneRefusalDowngradesWithoutPoisoningTheSelectedConnection (0.02s)
+=== RUN   TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound
+--- PASS: TestIdleResponseFloodKeepsTheOriginalPerCommandByteBound (0.03s)
+=== RUN   TestIdleCannotCrossAnExistingPendingTag
+--- PASS: TestIdleCannotCrossAnExistingPendingTag (0.01s)
+=== RUN   TestPublicationWorkerDoesNotBlockFetchBehindAnAppendCompletion
+--- PASS: TestPublicationWorkerDoesNotBlockFetchBehindAnAppendCompletion (0.04s)
+=== RUN   TestPublicationWorkerRejectsWrongAccountOrMailboxBeforeIO
+--- PASS: TestPublicationWorkerRejectsWrongAccountOrMailboxBeforeIO (0.05s)
+PASS
+ok  	itom.local/core/transport	2.374s

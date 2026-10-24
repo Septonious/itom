@@ -1,0 +1,8 @@
+=== RUN   TestReadOnlyRendezvousAndAuthenticatedMetadataAcquireRealInitialPermission
+--- PASS: TestReadOnlyRendezvousAndAuthenticatedMetadataAcquireRealInitialPermission (0.15s)
+=== RUN   TestRepeatedRendezvousHintCannotAllocateOrPublishAnotherInitialLease
+--- PASS: TestRepeatedRendezvousHintCannotAllocateOrPublishAnotherInitialLease (0.05s)
+=== RUN   TestRendezvousRequiresNegotiatedKeywordsAndAProfileMACBeforeAnyAllocation
+--- PASS: TestRendezvousRequiresNegotiatedKeywordsAndAProfileMACBeforeAnyAllocation (0.05s)
+PASS
+ok  	itom.local/core/transport	1.332s

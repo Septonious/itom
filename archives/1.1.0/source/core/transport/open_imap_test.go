@@ -23,9 +23,10 @@ import (
 	"itom.local/core/wallet"
 )
 
-// Application-integrity fixture, NOT provider/rate qualification: initial control
-// permission and later DATA offers come from the authority fixture. Noise keys
-// are established/confirmed over accounted IMAP. Independent workers use four
+// Application-integrity fixture, NOT provider/rate qualification: a real charged
+// rendezvous and authenticated metadata request deliver initial CONTROL grants
+// over IMAP. Later DATA offers still come from the authority fixture. Noise keys
+// are established/confirmed by independent startup drivers. Workers use four
 // fixed scoped executors without a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
@@ -53,8 +54,8 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	defer upstream.Close()
 	address := netip.MustParseAddrPort(upstream.Listener.Addr().String())
 	a, b := session(t, transport.DefaultLimits()), session(t, transport.DefaultLimits())
-	bootstrap := bootstrapFixtureWithService(t, true, clientService, serverService, idle)
-	exchangeBootstrap(t, bootstrap.client, bootstrap.server, bootstrap.cx, bootstrap.sx)
+	bootstrap := requestedInvitationFixture(t, clientService, serverService, idle)
+	clientHandoff, serverHandoff := exchangeDrivenBootstrap(t, bootstrap)
 	ca, err := bootstrap.client.Cipher()
 	if err != nil {
 		t.Fatal(err)
@@ -64,14 +65,6 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		t.Fatal(err)
 	}
 	ce, err := bootstrap.client.Epoch()
-	if err != nil {
-		t.Fatal(err)
-	}
-	clientHandoff, err := bootstrap.client.Handoff()
-	if err != nil {
-		t.Fatal(err)
-	}
-	serverHandoff, err := bootstrap.server.Handoff()
 	if err != nil {
 		t.Fatal(err)
 	}

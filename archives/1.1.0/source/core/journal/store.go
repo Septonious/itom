@@ -42,6 +42,8 @@ type Store struct {
 	originSnapshotID int
 	originSnapshot   map[string]originAmounts
 	originSessions   map[originSession]originAmounts
+	sessionClaims    map[Scope]bool // bounded exclusive startup ownership in this Run
+	initialSessions  map[Scope]bool // do not allocate another initial lease for a repeated request
 	// Fault hooks are package-private; tests simulate failure before commit
 	// and a lost commit acknowledgement. Production cannot disable fsync.
 	beforeCommit, afterCommit func() error
@@ -358,6 +360,8 @@ func (s *Store) Close() error {
 	}
 	s.closed = true
 	s.originGrants, s.originSnapshot, s.originSessions = nil, nil, nil
+	s.sessionClaims = nil
+	s.initialSessions = nil
 	return s.db.Close()
 }
 

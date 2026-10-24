@@ -27,6 +27,7 @@ type Selected struct {
 	LiteralPlus  bool
 	LiteralMinus bool
 	Idle         bool
+	Keywords     bool
 }
 
 // DialSelected performs a bounded verified TLS/LOGIN/SELECT bootstrap, then
@@ -127,8 +128,21 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 		return Selected{}, err
 	}
 	var validity uint64
+	keywords := false
 	for _, line := range lines {
 		upper := strings.ToUpper(line)
+		if at := strings.Index(upper, "[PERMANENTFLAGS ("); at >= 0 {
+			tail := upper[at+len("[PERMANENTFLAGS ("):]
+			end := strings.Index(tail, ")]")
+			if end < 0 {
+				return Selected{}, ErrProtocol
+			}
+			for _, flag := range strings.Fields(tail[:end]) {
+				if flag == `\*` {
+					keywords = true
+				}
+			}
+		}
 		const code = "[UIDVALIDITY "
 		i := strings.Index(upper, code)
 		if i >= 0 {
@@ -161,8 +175,9 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 		return Selected{}, err
 	}
 	executor.account = p.AccountID
+	executor.keywords = keywords
 	owned = true
-	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus, Idle: idle}, nil
+	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus, Idle: idle, Keywords: keywords}, nil
 }
 func bootstrapReply(x *Executor, tag string) ([]string, error) {
 	var out []string

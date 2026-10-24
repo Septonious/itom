@@ -1,0 +1,34 @@
+=== RUN   TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText
+--- PASS: TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText (0.02s)
+=== RUN   TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint
+--- PASS: TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint (0.02s)
+=== RUN   TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText
+--- PASS: TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText (0.01s)
+=== RUN   TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint
+--- PASS: TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint (0.01s)
+=== RUN   TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText
+--- PASS: TestCommandDiagnosticsSeparateTaggedRefusalFromCarrierFailureWithoutProviderText (0.01s)
+=== RUN   TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint
+--- PASS: TestFlagDiscoveryAcceptsUnsolicitedUpdatesAndKeepsOneBoundedLatestHint (0.01s)
+PASS
+ok  	itom.local/core/transport	1.175s
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack
+--- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt (0.01s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit (0.00s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack (0.00s)
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack
+--- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt (0.01s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit (0.00s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack (0.00s)
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit
+=== RUN   TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack
+--- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt (0.01s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/before_commit (0.00s)
+    --- PASS: TestInitialInvitationCommitFailureNeverReturnsPermissionAndReopenKeepsDebt/lost_commit_ack (0.01s)
+PASS
+ok  	itom.local/core/journal	1.060s

@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T22:00:11.017579+00:00",
+  "parent_commit": "67e9fd62af96feb4245a682782c8493d68aeab4a",
+  "status": "unqualified startup/control foundation; one cold scenario still fails, not an RC or a runnable production APK/server",
+  "checks": [
+    {
+      "file": "STARTUP_DRIVER_FIRST_LOG.txt",
+      "sha256": "09a7e95b723f649ec458878a28e5e7e257f18cd797687b0f270a15fd109baa2b",
+      "passed_top_level_groups": 2,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_DRIVER_COLD_LOG.txt",
+      "sha256": "fd5d7946ed2775c0b70b712ce792e7dbe2f1d6d06d0a39cf322c79fad40cc5f1",
+      "passed_top_level_groups": 8,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_DRIVER_TIMING_LOG.txt",
+      "sha256": "6077c7e6ee76674c7daa138e67c90dd2784538256394fa6a2da17c97c6b433cf",
+      "passed_top_level_groups": 11,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_INVITATION_LOG.txt",
+      "sha256": "c7e9e7f7b2da60152c9913bba81deee8324d3898c055a9a858757b678245c8cd",
+      "passed_top_level_groups": 4,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_RENDEZVOUS_LOG.txt",
+      "sha256": "b7ec032b0a70cf5225909ca603b74f2fd2980c46e9fba2b6c0748df4b0d35ecc",
+      "passed_top_level_groups": 3,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_DIAGNOSTIC_SAFETY_LOG.txt",
+      "sha256": "558d3cc3d59ff7d8cca7aa37300e1b9b2a40f89d25a5f967680a7ed54ffb8aca",
+      "passed_top_level_groups": 9,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "STARTUP_INITIAL_CORE_RACE.jsonl",
+      "sha256": "0e4c73017f0fc57b307685e078b4f9c7ae56f41b9a840051c7a4809398fe7ac8",
+      "top_level_group_executions": 170,
+      "failures": [
+        {
+          "package": "itom.local/core/transport",
+          "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "test": null
+        }
+      ]
+    },
+    {
+      "file": "STARTUP_CORE_RACE.jsonl",
+      "sha256": "0064579346e560288cab903e5f656b3ed59433842d370aa1661eeb24bc98943e",
+      "top_level_group_executions": 173,
+      "failures": [
+        {
+          "package": "itom.local/core/transport",
+          "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "test": null
+        }
+      ]
+    },
+    {
+      "file": "STARTUP_NATIVE_RACE.jsonl",
+      "sha256": "d37ef3b245dd59096f0df4e6a400c9bf29eeac540361c597a84466a0f32287b1",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "STARTUP_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    }
+  ],
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/target_test.go": "f8250b8a5b26dcfbbd50c2c8cfeb58b5841ac4acd22e35d89857b2f1f4534471",
+    "archives/1.1.0/source/core/transport/bulk_publication_test.go": "b4e3ed97614736b7f83d77b020b2a8fa2a7f36bce079bf69c395b7a762c0eab8",
+    "archives/1.1.0/source/core/transport/publication_scope_test.go": "dfc2538b51722bd5d678575d611a445180a6892a45b6e09671434a429b432a20",
+    "archives/1.1.0/source/core/transport/window_lease.go": "9c585c60d513ac050e8bc7c90c678ac93fe835833a0f0480c9a4a9ab0ccbc677",
+    "archives/1.1.0/source/core/transport/cipher_test.go": "f512b57ffebef422563f978d5454e9513fc5a0309f1e2bd2a0cde1a3d311ce96",
+    "archives/1.1.0/source/core/transport/session_test.go": "a2407cf5e1adb428ab5a4ef06077e3b4ae0486e09bed061e12d83b5f4e19c13f",
+    "archives/1.1.0/source/core/transport/inbox_poll_test.go": "4648ce2bf93bd9011d73b41c8e4678fa66fe6a9dade454868a965ebc9701b4fd",
+    "archives/1.1.0/source/core/transport/inbox_poll.go": "39ff68ed87141bb62f16649a65ed9a66b66fae9800ff9846a105274301960a17",
+    "archives/1.1.0/source/core/transport/session_bootstrap_test.go": "c2b30e1c4de4c669ce677cdd0c8a2bc5e32af99fbdc126493056c438d993d9c8",
+    "archives/1.1.0/source/core/transport/inbox_worker_test.go": "94d2f6de42e7d306d31851a7eeae874eb9e74ca643306bfa937aaaf61f3c6d05",
+    "archives/1.1.0/source/core/transport/fragment_feedback_test.go": "2fec8eb73de0e52b2f84f447e4edb456203091cb73d5d220901a59f6fd2cb444",
+    "archives/1.1.0/source/core/transport/client_inbox.go": "5e8f46c0050981e496224d6b0d2d55ebf0ec6d793a8d9a34097c3d586f6c76ae",
+    "archives/1.1.0/source/core/transport/rendezvous_test.go": "44442dab39acd5d18c512466276c85bc1096441f712cebb5556e2d448407fa0a",
+    "archives/1.1.0/source/core/transport/progress_controls.go": "c1bec4e579b317bfb2fb543aec50b054fc89643437d1df40b078e9852231c34b",
+    "archives/1.1.0/source/core/transport/mailbox_envelope.go": "84bfd757fe0052d2c526831ac555850c7fec90595cf61730dc4bf32ca9ab3465",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "230f05f2071e3597417458d4771b19cc32a1264b1b20dc6c11de728a749c0070",
+    "archives/1.1.0/source/core/transport/quantum.go": "e9cf24c7d790b8056a5182fa80e50c41507a5bc19a5931681ca939caf13a97bc",
+    "archives/1.1.0/source/core/transport/session.go": "e41774c6cfaad6832cffd672b0f62afd89eaaf96b38227192cae78452a03c96c",
+    "archives/1.1.0/source/core/transport/inbox_delivery.go": "a901498ea5a96914d575017aa4bf39d0ea8793ed845cc53da025f5da603028d4",
+    "archives/1.1.0/source/core/transport/control_mail.go": "c8ed7e373d9e60a689f8c30e639a74e9cc82fb3db02e7f2dcd3570ac94a49add",
+    "archives/1.1.0/source/core/transport/bootstrap_driver_test.go": "620be474418319cdbf79a2b4175cdc66b69905af5fa1e794fcdcbb36b7909b3b",
+    "archives/1.1.0/source/core/transport/server_inbox.go": "d070143272374257d5fc92af6b72ea8105654be10ab93d9c32ea637bf4aed635",
+    "archives/1.1.0/source/core/transport/bootstrap.go": "f36e5594e36530c08ef376280e718a6928177da22a68ccd542939325cf5e50a4",
+    "archives/1.1.0/source/core/transport/bulk_recovery_test.go": "fbbfcd71951379a178dccfed9ebcb4a2c136799c83412ae417b962b26dae6188",
+    "archives/1.1.0/source/core/transport/publication_worker_test.go": "fc6d622b0ca2c423df0efc262124e0f6c2898f1e076bd61fcf4b4e4befc77892",
+    "archives/1.1.0/source/core/transport/retry.go": "110e3fdde5fedb3e20fe24929522fc0b77dc642ccf0c7a2e8691e9e0fb0e6a7d",
+    "archives/1.1.0/source/core/transport/imap_idle_test.go": "2d952675a0d9bb3b50d7a1d659690e31c97ddd82d456379ece75d6d4a90edf7b",
+    "archives/1.1.0/source/core/transport/session_invitation.go": "d29114c83bb974decc2d3e55fa841f4bbd81247f1707b7a6fcfdb56e21ac5f93",
+    "archives/1.1.0/source/core/transport/open_test.go": "bc9176a2f3c32c51a1a5529b258cebf78493a0e6884b4c286a81f69efb9b3a82",
+    "archives/1.1.0/source/core/transport/window_lease_test.go": "71cd109c90d20d9bb40def818034edcaa8e5b72f88a7b731be95aa2e63bcdfd2",
+    "archives/1.1.0/source/core/transport/imap_diagnostics_test.go": "fa7b26d1d690071c432c6c54157ef5845cddc500ba1e1f93309edeea48096141",
+    "archives/1.1.0/source/core/transport/receiver.go": "52b896ac19c94cd3d5de1be948c708e9ba4658c024da2b110a0efabdd6ff4f85",
+    "archives/1.1.0/source/core/transport/ids.go": "ca6ee28082ec326475004a3d538f539b6611f21f635c4ea171bc98f6c0e6cdbe",
+    "archives/1.1.0/source/core/transport/bundle_test.go": "8848960d9d1061848667969b9bdfe7c9f4bf7e5d6f5f86969c614b65f39cd227",
+    "archives/1.1.0/source/core/transport/inbox_capacity_hook_test.go": "e27531d2f45075bf45be87871d53513b3f5fc1add88705b1d32f4eda32b0df43",
+    "archives/1.1.0/source/core/transport/session_bootstrap.go": "1e7b27746574262a839deecc3f0d4fc97cd169988f07238e1035c43c2095842d",
+    "archives/1.1.0/source/core/transport/inbox.go": "fed4f8eaa11fa76de72f5a45c8c8d18b7b169f48726df3f0161987950ce715d2",
+    "archives/1.1.0/source/core/transport/bundle.go": "132203b64d19d51674fb0016c1a118e67f16bdf654a4c6b59ef54c29dbeacc57",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "6a8f1e15850e2c019d54147b21225ace870ad62e3a1591d58cd3456201f6ea47",
+    "archives/1.1.0/source/core/transport/runtime_test.go": "55d65514a8d1547b0711d066418b52b17c08efd6714066bdda6588345f70f3a2",
+    "archives/1.1.0/source/core/transport/bootstrap_driver.go": "de31aad17cd3e56f2f4eeaf46bdee7bf0d57242a599b89c2ea3378672a602092",
+    "archives/1.1.0/source/core/transport/publisher.go": "46a14a6d24c7a89d3772c7173822d9e48571fac63060b9f41596e1ddbc79abdd",
+    "archives/1.1.0/source/core/transport/readiness.go": "aaf301af7d4a32ea2e7deb0ac84de6ba5ebc703a70e9894c285d42a2c995c38d",
+    "archives/1.1.0/source/core/transport/session_invitation_test.go": "0912a5f402f860d75baf4f9315340b15de3e9830427196b978562ca530e338bc",
+    "archives/1.1.0/source/core/transport/target.go": "1c3fa9452b326aa289cc7bdc1ac8f37a5b19b1665582c8a7ffe3ef087a818201",
+    "archives/1.1.0/source/core/transport/receive_demand.go": "ccb67256fc14d1b60863e77b857d9dd89c47db0b3b191515e003470c0579e4fd",
+    "archives/1.1.0/source/core/transport/publication_worker.go": "139d6601321d8f488f97232b9e2f190fa28aa7b3aafd078f2a86e8aec92445b3",
+    "archives/1.1.0/source/core/transport/open.go": "f5179666f5bcd882880f06ae51960e8b737cb3b6e01ffe5143dba8cf8ef82b4b",
+    "archives/1.1.0/source/core/transport/session_binding.go": "566228bbee93ac653b90ed5ea01cdfbffce717e65b46f3ae4a30ad265e8a3f81",
+    "archives/1.1.0/source/core/transport/inbox_test.go": "172257cd4be447af1193e9cbd3dd4411a1b809c2afc727dc1861e62b4cbef364",
+    "archives/1.1.0/source/core/transport/rendezvous.go": "4ebe60fe8ad483cb73d7ebbb5cfd8891961dba8f5c05b9f14db34617f9c03ff1",
+    "archives/1.1.0/source/core/transport/imap_keywords.go": "84f2ecac578cc154eda5eab1f7c0b459a9fa45e41c4c8b290ec2bc4bf4eb5fff",
+    "archives/1.1.0/source/core/transport/ledger.go": "75ece8a1798289a89323d881d2f6db75a03e81d67abe8a72790081cdd0a927d6",
+    "archives/1.1.0/source/core/transport/stream.go": "59babd382b7554ce2cff38d3d947b25668aef9d97765e59bc5f4cc894339a92a",
+    "archives/1.1.0/source/core/transport/session_network_test.go": "fcc45bbcac14c54d40c91fd3c053d653f40c9126f3fe8fb4a7cffb5103bc5c27",
+    "archives/1.1.0/source/core/transport/inbox_pressure_test.go": "ed29c55689b154d82a9fb1674a0af1564b6d04174df73f3822c5541507a52910",
+    "archives/1.1.0/source/core/transport/bootstrap_handoff.go": "cda44dee8ed2e94d2b8596422e500f0e8035cad7fb28a95c35402c054714c770",
+    "archives/1.1.0/source/core/transport/lifecycle_test.go": "e0c3715962f0917557006eefd24d670d12861e63214e12a57cf67da35999afff",
+    "archives/1.1.0/source/core/transport/bundle_fuzz_test.go": "effa5c5136c6dc0e8fbaef26e74a9d291eeac3d8583fe281bc4ecbfc6addfc48",
+    "archives/1.1.0/source/core/transport/retry_test.go": "6a12fd45957d0dc28ba3541a3887067f898770816f832bc0859c9c49a5d90950",
+    "archives/1.1.0/source/core/transport/client_inbox_test.go": "0b8013562b6b73c008785d824a3ba7dc0b1a2469115c3f8437ef7a3abd823b5e",
+    "archives/1.1.0/source/core/transport/bulk_imap_test.go": "0cef6a0721173bdc890c54ab13222f1d0135277635d383fb1afcbe1ebaaf6629",
+    "archives/1.1.0/source/core/transport/client_receiver.go": "ba25794c1535621b235b2ef624f1cb60c015e7bc62d623aa46e4a530faaa38fb",
+    "archives/1.1.0/source/core/transport/imap_diagnostics.go": "9a19eb9f0fd7cc62d1129f26b29dfabe86b8ee5f6b231f5d0e7a6b6e4a53ffbc",
+    "archives/1.1.0/source/core/transport/feedback_test.go": "e7fe471341cc2042c0a774c3675fa24406463a78e9f667552aef70f18b235f39",
+    "archives/1.1.0/source/core/transport/runtime.go": "1809e2d287f5ad39228af7f4ca7c5e8227c4dade9f5fe3bc8560ead8e1a6d288",
+    "archives/1.1.0/source/core/transport/server_publisher.go": "6cf1a6c1a1ecc84cb218d2885c99c76a865c0ad34677f893140ef609698f180f",
+    "archives/1.1.0/source/core/transport/bootstrap_receive.go": "b4210b5fe5c17531e4764079d7cd678aed49d2d652c47250d4dadca885be5d9e",
+    "archives/1.1.0/source/core/transport/exit.go": "8d3d3978f8602e975ef4d737c7cd63422bec42ccdcf4fbbff629d29707ce99e6",
+    "archives/1.1.0/source/core/transport/imap.go": "724e0b7c986d05a99573f38201897a434f173b1a69f82bdf5f223bc23493710b",
+    "archives/1.1.0/source/core/transport/record.go": "0f199d50f53fbc9abbe8e4b53d8421a456e0f766e363c41bb7f4c29bb589cdc7",
+    "archives/1.1.0/source/core/transport/inbox_worker.go": "5796e27226af41abf8c80ee14d4ccac960e7e2d96b8add71fa4c9c638768d542",
+    "archives/1.1.0/source/core/transport/classification.go": "32853cce25de8336dd2a56de06221e749dc881b68b8aaff0e90f4aa8220da6e2",
+    "archives/1.1.0/source/core/transport/bootstrap_publication.go": "b8eca8ca0b8159fc8b14e3e7b1fd0f5a056b42c404fb7141477c4ae4e3bd2e68",
+    "archives/1.1.0/source/core/transport/imap_idle.go": "e383b07d58fded79b8c610669e396e00c8ffabf1e2ab07efac03d653b5cdb344",
+    "archives/1.1.0/source/core/transport/controller.go": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a",
+    "archives/1.1.0/source/core/transport/publication_test.go": "6b9cb201c0f776601f51adf3701456dec1fba88925e1fd48276bac281084414c",
+    "archives/1.1.0/source/core/transport/bootstrap_test.go": "9fd413fe4c366ebfd554678812fe6b54b50cdda1f16b856af5306b6279ac70c5",
+    "archives/1.1.0/source/core/transport/cipher.go": "fa11adb003917b9981bc07cb41765566e2bed63d1909e4a7eff79d41a9413447",
+    "archives/1.1.0/source/core/transport/imap_test.go": "426b16340f62fa316f10fb70a51519411d4ce19468547792ceef8cffc5398d2d",
+    "archives/1.1.0/source/core/transport/server_publication_test.go": "15735c6ff618b1f5c91717b14aa2d3a833e1fb042403a9abf2c54e9a31934b10",
+    "archives/1.1.0/source/core/transport/bulk_dispatch.go": "780cee61c0458b1724be999207dc68b5aa9b27f95f53ef1abcd02de23a71bdba",
+    "archives/1.1.0/source/core/transport/session_binding_test.go": "e699dfa684ae8c2d229ae4eb903c37431d58bc86afe61476ce77bae83da94e3a",
+    "archives/1.1.0/source/core/transport/server_inbox_test.go": "726811d1007c8082011eabc4dd0e237e25c1decc452805aaf4c6ba6c42dc54ca",
+    "archives/1.1.0/source/core/transport/dispatch.go": "86f403d266e8f1550a4f5e9f65b238c9f5eadd6e19b053da2e015f103bb3f8da",
+    "archives/1.1.0/source/core/journal/store.go": "cc4f179ba83435f40fbc17a04c6bf11731a4d50ca8cae199afce3fa035164b15",
+    "archives/1.1.0/source/core/journal/session_claim.go": "8bf23011c68e561bd31e6e4d7896a4b048a0cf4cfed550aba0ed86f7cf3de8d5",
+    "archives/1.1.0/source/core/journal/session_claim_fault_test.go": "2e1ea9a1d5f7280ee25952b8505bf054238471f3b18a6cefa3cd2d80377d757c"
+  },
+  "implemented": [
+    "Independent bounded startup drivers own a real selected executor, serialize actual key establishment, retain uncertain publications and hand over only after full startup BODY observations. Manual actors and duplicate drivers cannot compete.",
+    "A normally charged standing CONTROL rendezvous can authenticate a bounded permanent-keyword request for the original freshly generated wallet Session. The client issues no uncharged APPEND to ask for a grant. Markers alone never grant or refund storage.",
+    "The real issuer reserves and publishes a CONTROL offer for that exact fresh Session. Client acceptance validates actual full BODY/MAC/profile/store/run/account/folder/incarnation/session. Cleared wallets cannot accept an old original-session invitation. No wallet creation, history or grant-spend contract was weakened.",
+    "Initial lease allocation and responder ownership have separate atomic per-Run gates under the existing store lock. Original reservation/slot bounds and inventory gates remain. Repeat hints return their exact original publication/error; a second observer cannot allocate another initial lease.",
+    "Bounded startup event history and provider command timings separate queue wait, APPEND continuation/literal/tag, FETCH/inventory/flag/store service and tagged refusal/carrier failure. Timings contain no body, key, destination or provider error text.",
+    "Cold TLS/HTTP fixtures now obtain issuer identity and initial grants through actual rendezvous/invitation IMAP service, and use independent key-exchange drivers on the same original sockets. DATA offers still come from an explicit authority fixture."
+  ],
+  "retained_failures": [
+    "The first full source cohort missed the unchanged HTTP header deadline in quiet-bulk IDLE variation.",
+    "The subsequent current-source full cohort exceeded the unchanged 64-message fast-mailbox cap in that same variation. No mailbox, grant, deadline, fsync or qualification limit was raised; control amplification and missing reclamation remain release concerns."
+  ],
+  "limitations": [
+    "Production APIs still return V2_NOT_READY. Agreed roster/READY, multi-account authority wiring, DATA/control grant turnover, retirement and proof reclamation, complete restart/legacy-folder integration, native/Android transport activation and required performance matrix remain incomplete.",
+    "Rendezvous requires actual SELECT PERMANENTFLAGS wildcard capability. The latest uploaded server trace contains no capability records, so Rambler support has not been established from field evidence. Unsupported providers fail explicitly before a metadata write.",
+    "Rendezvous server/client turn orchestration before Noise is still fixture supervised; only Noise startup itself runs independent production drivers. A production long-lived coordinator/selector remains needed.",
+    "This checkpoint has a failing cold case. No <=250ms light RTT, <=2000ms loaded RTT, sustained >=100Mbps or improvement over real RC2 is claimed. No APK/deployable server build or release."
+  ]
+}

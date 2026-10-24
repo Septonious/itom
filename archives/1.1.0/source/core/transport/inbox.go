@@ -88,16 +88,19 @@ type InboxScope struct {
 // make it advance past an unseen body. FETCH is one BODY per command: a burst
 // cannot overflow the unchanged response budget and force a healthy reconnect.
 type Inbox struct {
-	mu                  sync.Mutex
-	session             *Session
-	routes              map[LedgerClass]wire.ID
-	executor            *Executor
-	scope               InboxScope
-	limits              InboxLimits
-	decode              InboxDecoder
-	admit               scopedInboxDecoder
-	seen                map[uint32]bool
-	bootstrapUIDs       map[uint32]bool
+	mu            sync.Mutex
+	session       *Session
+	routes        map[LedgerClass]wire.ID
+	executor      *Executor
+	scope         InboxScope
+	limits        InboxLimits
+	decode        InboxDecoder
+	admit         scopedInboxDecoder
+	seen          map[uint32]bool
+	bootstrapUIDs map[uint32]bool
+	// Startup-only stop boundary: do not scan application mail after the last
+	// actual bootstrap BODY has made scoped runtime handover possible.
+	stopAfterApply      func() bool
 	pending             map[uint32]InboxDelivery
 	deferred            map[uint32]LedgerClass
 	examined            map[uint32]bool
@@ -236,6 +239,9 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	for pass := 0; pass < 2; pass++ {
 		advanced := false
 		for low, high := 0, len(uids)-1; low <= high; {
+			if i.stopAfterApply != nil && i.stopAfterApply() {
+				return progress, nil
+			}
 			available := i.admission()
 			var uid uint32
 			if !available.data && available.control && !i.forward {

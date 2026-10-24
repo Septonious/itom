@@ -61,7 +61,7 @@ func (e *Executor) WaitIdle(ctx context.Context, wake <-chan struct{}, maxWait t
 		e.mu.Unlock()
 		<-e.writer
 	}()
-	tag, op, err := e.begin(false, true)
+	tag, op, err := e.begin(commandIdle, false, true)
 	if err != nil {
 		return err
 	}

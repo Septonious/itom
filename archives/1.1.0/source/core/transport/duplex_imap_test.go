@@ -25,10 +25,12 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	mu      sync.Mutex
-	bodies  [][]byte
-	bytes   int
-	changed chan struct{}
+	mu       sync.Mutex
+	bodies   [][]byte
+	bytes    int
+	changed  chan struct{}
+	keywords bool
+	flags    map[uint32]map[string]bool
 }
 
 func (m *sharedMailbox) changes() (int, <-chan struct{}) {
@@ -60,7 +62,7 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 	if idle {
 		capabilities = "IDLE"
 	}
-	return selectedAccountPeerWithCapabilities(t, "account1", folder, transport.DefaultIMAPLimits(), capabilities, func(conn net.Conn) {
+	return selectedAccountPeerWithFeatures(t, "account1", folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
 		turn := 0
 		delay := func() {
@@ -139,6 +141,34 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				m.mu.Unlock()
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
+				if len(fields) == 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && m.keywords {
+					var uid uint32
+					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
+						t.Error("invalid STORE UID")
+						return
+					}
+					keyword := strings.TrimSuffix(strings.TrimPrefix(fields[5], "("), ")")
+					m.mu.Lock()
+					if uid > uint32(len(m.bodies)) {
+						m.mu.Unlock()
+						fmt.Fprintf(conn, "%s NO missing UID\r\n", tag(line))
+						continue
+					}
+					if m.flags == nil {
+						m.flags = make(map[uint32]map[string]bool)
+					}
+					if m.flags[uid] == nil {
+						m.flags[uid] = make(map[string]bool)
+					}
+					if fields[4] == "+FLAGS.SILENT" {
+						m.flags[uid][keyword] = true
+					} else {
+						delete(m.flags[uid], keyword)
+					}
+					m.mu.Unlock()
+					fmt.Fprintf(conn, "%s OK flags stored\r\n", tag(line))
+					continue
+				}
 				var first, last int
 				if len(fields) < 5 || fields[2] != "FETCH" {
 					t.Error("unsupported fixture UID command")
@@ -156,6 +186,16 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				}
 				m.mu.Unlock()
 				for i, body := range bodies {
+					if strings.Join(fields[4:], " ") == "(UID FLAGS)" {
+						m.mu.Lock()
+						var flags []string
+						for flag := range m.flags[uint32(first+i)] {
+							flags = append(flags, flag)
+						}
+						m.mu.Unlock()
+						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", first+i, first+i, strings.Join(flags, " "))
+						continue
+					}
 					if fields[4] == "(UID)" {
 						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", first+i, first+i)
 						continue

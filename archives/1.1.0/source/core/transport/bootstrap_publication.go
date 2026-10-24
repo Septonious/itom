@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"errors"
 	"sync"
@@ -34,8 +33,15 @@ func (w *bootstrapWork) complete(outcome PublicationOutcome, proof bool) error {
 // commits the original charge before any I/O. Waiting for a peer, missing quota,
 // or an unknown command never creates another bootstrap message or permission.
 func (b *SessionBootstrap) Prepare(ctx context.Context) (*PreparedPublication, error) {
+	return b.prepare(ctx, nil)
+}
+
+func (b *SessionBootstrap) prepare(ctx context.Context, driver *BootstrapDriver) (*PreparedPublication, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	if b.driver != driver {
+		return nil, ErrProtocol
+	}
 	if b.closed || b.failed || b.handedOff {
 		return nil, ErrClosed
 	}
@@ -105,25 +111,7 @@ func (b *SessionBootstrap) Prepare(ctx context.Context) (*PreparedPublication, e
 		}
 		cancel = ticket.Cancel
 		prepare = func(packet []byte) (*PreparedPublication, error) {
-			var batch wire.ID
-			if _, err := rand.Read(batch[:]); err != nil {
-				return nil, err
-			}
-			usage, body, err := wire.BindServerEnvelope(ticket.Key(), wire.ServerControl, batch, b.origin.Folder, packet, b.key[:], func(body []byte) (uint64, error) { return mailbox.EncodedSize(len(body)) })
-			if err != nil {
-				return nil, err
-			}
-			attempt, err := ticket.Commit(batch, usage.Attempt.EncodedBytes, body)
-			if err != nil {
-				clear(body)
-				return nil, err
-			}
-			p, err := finishPublication(&bootstrapWork{}, usage, body, b.origin.Folder)
-			if err != nil {
-				return nil, err
-			}
-			p.local = &localPublication{store: b.store, attempt: attempt.Ref}
-			return p, nil
+			return commitControlPacket(ticket, b.store, b.origin.Folder, packet, b.key[:])
 		}
 	}
 	if err := ctx.Err(); err != nil {

@@ -1,0 +1,22 @@
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate
+=== RUN   TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service
+--- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling (0.64s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/immediate (0.13s)
+    --- PASS: TestIndependentBootstrapDriversEstablishKeysWithoutFixturePhaseScheduling/variable_command_service (0.52s)
+=== RUN   TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite
+--- PASS: TestBootstrapDriverCannotCompeteWithManualAdmissionAndMissingPermissionDoesNotWrite (0.03s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.99s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (4.79s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (4.63s)
+=== RUN   TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic
+--- PASS: TestBootstrapHandoffSurvivesReplicaAbsenceWithoutReplayingHandshakeAsTraffic (0.13s)
+=== RUN   TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun
+--- PASS: TestBootstrapHandoffRejectsWrongRoleGenerationAndIssuerRun (0.14s)
+=== RUN   TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory
+--- PASS: TestBootstrapHandoffWaitsForLastOwnBODYInsteadOfAssumingAppendUIDHistory (0.11s)
+PASS
+ok  	itom.local/core/transport	14.518s

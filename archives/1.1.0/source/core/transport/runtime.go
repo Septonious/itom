@@ -37,6 +37,7 @@ type CarrierServiceSnapshot struct {
 	ReadFailure, WriteFailure string
 	Receive                   InboxStats
 	Publish                   PublicationStats
+	IMAP                      ExecutorSnapshot
 }
 
 // Serving reports local worker execution only. It is NOT authenticated READY,
@@ -187,6 +188,7 @@ func (e *Runtime) Snapshot() RuntimeSnapshot {
 	for i, c := range e.carriers {
 		snapshot.Carriers[i].Receive = c.Reader.Stats()
 		snapshot.Carriers[i].Publish = c.Writer.Stats()
+		snapshot.Carriers[i].IMAP = c.Writer.executor.Snapshot()
 	}
 	return snapshot
 }

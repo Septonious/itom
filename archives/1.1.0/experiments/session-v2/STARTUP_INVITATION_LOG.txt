@@ -1,0 +1,10 @@
+=== RUN   TestInitialPermissionTravelsAsAccountedMailBeforeIndependentNoiseStartup
+--- PASS: TestInitialPermissionTravelsAsAccountedMailBeforeIndependentNoiseStartup (0.20s)
+=== RUN   TestReinstalledWalletCannotTurnAnOldInvitationIntoFreshWriterPermission
+--- PASS: TestReinstalledWalletCannotTurnAnOldInvitationIntoFreshWriterPermission (0.19s)
+=== RUN   TestInitialInvitationCannotCrossProfileSessionOrActualMailboxScope
+--- PASS: TestInitialInvitationCannotCrossProfileSessionOrActualMailboxScope (0.07s)
+=== RUN   TestConcurrentInvitationObserversCannotCreateMultipleStartupOwners
+--- PASS: TestConcurrentInvitationObserversCannotCreateMultipleStartupOwners (0.07s)
+PASS
+ok  	itom.local/core/transport	1.638s
