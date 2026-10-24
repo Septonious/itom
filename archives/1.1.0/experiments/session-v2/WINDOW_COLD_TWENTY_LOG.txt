@@ -1,0 +1,42 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.00s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.52s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.54s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.82s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.61s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.66s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.83s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.72s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.66s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.78s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.66s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.74s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.64s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.52s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.33s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.65s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.56s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.65s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.69s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.61s)
+PASS
+ok  	itom.local/core/transport	35.340s

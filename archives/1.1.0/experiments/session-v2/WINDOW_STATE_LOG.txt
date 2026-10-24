@@ -1,0 +1,14 @@
+=== RUN   TestWindowRecallRetainsBackingForOldFlightUntilTheSenderFence
+--- PASS: TestWindowRecallRetainsBackingForOldFlightUntilTheSenderFence (0.00s)
+=== RUN   TestNewLeaseDataCanOvertakeFenceAndDuplicateRecallKeepsOriginalWatermark
+--- PASS: TestNewLeaseDataCanOvertakeFenceAndDuplicateRecallKeepsOriginalWatermark (0.00s)
+=== RUN   TestWindowLeaseScopeAndBadWatermarkCannotReleaseBackingOrCreateCredit
+--- PASS: TestWindowLeaseScopeAndBadWatermarkCannotReleaseBackingOrCreateCredit (0.00s)
+=== RUN   TestWindowGrowthCannotPromiseUnavailableMemoryOrBypassPendingRecall
+--- PASS: TestWindowGrowthCannotPromiseUnavailableMemoryOrBypassPendingRecall (0.00s)
+=== RUN   TestConsumptionDemandLeavesSparseTrafficSmallAndGrowsBulkPromptly
+--- PASS: TestConsumptionDemandLeavesSparseTrafficSmallAndGrowsBulkPromptly (0.00s)
+=== RUN   TestReorderedWindowControlAlwaysBacksTheSendersEntireRemainingPermission
+--- PASS: TestReorderedWindowControlAlwaysBacksTheSendersEntireRemainingPermission (0.03s)
+PASS
+ok  	itom.local/core/transport	1.183s

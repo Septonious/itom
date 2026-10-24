@@ -1,0 +1,14 @@
+=== RUN   TestWindowRecallRetainsBackingForOldFlightUntilTheSenderFence
+    window_lease_test.go:33: V2_PROTOCOL
+--- FAIL: TestWindowRecallRetainsBackingForOldFlightUntilTheSenderFence (0.00s)
+=== RUN   TestNewLeaseDataCanOvertakeFenceAndDuplicateRecallKeepsOriginalWatermark
+--- PASS: TestNewLeaseDataCanOvertakeFenceAndDuplicateRecallKeepsOriginalWatermark (0.00s)
+=== RUN   TestWindowLeaseScopeAndBadWatermarkCannotReleaseBackingOrCreateCredit
+--- PASS: TestWindowLeaseScopeAndBadWatermarkCannotReleaseBackingOrCreateCredit (0.00s)
+=== RUN   TestWindowGrowthCannotPromiseUnavailableMemoryOrBypassPendingRecall
+--- PASS: TestWindowGrowthCannotPromiseUnavailableMemoryOrBypassPendingRecall (0.00s)
+=== RUN   TestConsumptionDemandLeavesSparseTrafficSmallAndGrowsBulkPromptly
+--- PASS: TestConsumptionDemandLeavesSparseTrafficSmallAndGrowsBulkPromptly (0.00s)
+FAIL
+FAIL	itom.local/core/transport	0.209s
+FAIL

@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -24,8 +25,8 @@ import (
 )
 
 // Application-integrity fixture, NOT provider/rate qualification: Noise and
-// grants are pre-established. A fixture read pump and four independent scoped
-// publication workers serve the endpoints. Real target TCP,
+// grants are pre-established. Independent read/publication workers use four
+// fixed scoped executors with a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
 func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
@@ -168,6 +169,7 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 		services = append(services, s)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	var workers sync.WaitGroup
 	failed := make(chan error, 1)
 	workers.Go(func() { exit.Run(ctx) })
@@ -184,21 +186,24 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 			})
 		}
 	}
-	workers.Go(func() {
-		fail := func(err error) {
-			if ctx.Err() == nil {
-				select {
-				case failed <- err:
-				default:
-				}
-				cancel()
+	for _, s := range services {
+		for index, i := range s.inboxes {
+			owner := a
+			if index == 1 {
+				owner = b
 			}
-		}
-		for ctx.Err() == nil {
-			left, right := a.WorkChanged(), b.WorkChanged()
-			progress := false
-			for _, s := range services {
-				for _, i := range s.inboxes {
+			workers.Go(func() {
+				fail := func(err error) {
+					if ctx.Err() == nil {
+						select {
+						case failed <- err:
+						default:
+						}
+						cancel()
+					}
+				}
+				for ctx.Err() == nil {
+					work, hint := owner.WorkChanged(), s.box.Changes()
 					var p transport.InboxProgress
 					var err error
 					if s.plane == transport.Fast {
@@ -210,21 +215,18 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 						fail(err)
 						return
 					}
-					progress = progress || p.Applied > 0 || p.More
+					if p.Applied == 0 && !p.More {
+						select {
+						case <-ctx.Done():
+							return
+						case <-work:
+						case <-hint:
+						}
+					}
 				}
-			}
-			if !progress {
-				select {
-				case <-ctx.Done():
-					return
-				case <-left:
-				case <-right:
-				case <-services[0].box.changed:
-				case <-services[1].box.changed:
-				}
-			}
+			})
 		}
-	})
+	}
 	// Stop application/exit work before closing the four fixed carrier sockets.
 	t.Cleanup(func() { cancel(); workers.Wait(); a.Close(); b.Close() })
 	roots := x509.NewCertPool()
@@ -234,8 +236,45 @@ func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
 	client := &http.Client{Transport: h, Timeout: 5 * time.Second}
 	for run, size := range []int{29, (256 << 10) + 123, 71, (256 << 10) + 317} {
 		payload := bytes.Repeat([]byte{byte(run + 1)}, size)
+		var traceMu sync.Mutex
+		var trace []string
+		traceCtx, stopTrace := context.WithCancel(ctx)
+		var tracing sync.WaitGroup
+		start := time.Now()
+		tracing.Go(func() {
+			ticker := time.NewTicker(100 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-traceCtx.Done():
+					return
+				case <-ticker.C:
+					left, _ := a.FlowSnapshot(uint64(2*run + 1))
+					right, _ := b.FlowSnapshot(uint64(2*run + 1))
+					traceMu.Lock()
+					if len(trace) < 50 {
+						trace = append(trace, fmt.Sprintf("%s client=%+v server=%+v", time.Since(start), left, right))
+					}
+					traceMu.Unlock()
+				}
+			}
+		})
 		response, err := client.Post(upstream.URL, "application/octet-stream", bytes.NewReader(payload))
+		stopTrace()
+		tracing.Wait()
 		if err != nil {
+			for _, sample := range trace {
+				t.Log(sample)
+			}
+			for class, store := range stores {
+				t.Logf("class=%d commits=%+v", class, store.CommitSnapshot())
+			}
+			t.Logf("client state=%+v server state=%+v", a.Snapshot(), b.Snapshot())
+			for _, s := range services {
+				for side, w := range s.writers {
+					t.Logf("plane=%d side=%d writer=%+v", s.plane, side, w.Stats())
+				}
+			}
 			select {
 			case cause := <-failed:
 				t.Fatal("IMAP pump", cause)

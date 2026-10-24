@@ -31,6 +31,17 @@ type sharedMailbox struct {
 	changed chan struct{}
 }
 
+// A fixture readiness hint, broadcast to both independently selected endpoints.
+// It is not an IMAP notification implementation or a latency calibration input.
+func (m *sharedMailbox) Changes() <-chan struct{} {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.changed == nil {
+		m.changed = make(chan struct{})
+	}
+	return m.changed
+}
+
 func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executor {
 	t.Helper()
 	return selectedPeerOn(t, folder, func(conn net.Conn) {
@@ -64,11 +75,11 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 				m.bodies = append(m.bodies, body)
 				m.bytes += len(body)
 				uid := len(m.bodies)
-				m.mu.Unlock()
-				select {
-				case m.changed <- struct{}{}:
-				default:
+				if m.changed != nil {
+					close(m.changed)
+					m.changed = make(chan struct{})
 				}
+				m.mu.Unlock()
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
 				var first, last int

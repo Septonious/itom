@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T15:22:28.723461+00:00",
+  "parent_commit": "4f7eb366e36d87d19466559e828d822f4bb6840b",
+  "status": "unqualified isolated credit models and independent-reader fixture; V2_NOT_READY and packaging disabled",
+  "checks": [
+    {
+      "file": "WINDOW_CORE_INITIAL.jsonl",
+      "sha256": "f8e0b9c08f1547d659ced752c6771bc5707b5e6baa13df3075d6bb7ad00a7bf7",
+      "top_level_group_executions": 126,
+      "failures": [
+        {
+          "Time": "2026-10-24T15:07:52.186725309Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+          "Elapsed": 2.21
+        },
+        {
+          "Time": "2026-10-24T15:07:59.187650383Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 23.658
+        }
+      ]
+    },
+    {
+      "file": "WINDOW_REPEATED_INITIAL.jsonl",
+      "sha256": "6c6fa65a10931ea5e586771d041db33e408d18eee447d782c25522b36d73afdd",
+      "top_level_group_executions": 34,
+      "failures": [
+        {
+          "Time": "2026-10-24T15:07:36.4817279Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+          "Elapsed": 2.26
+        },
+        {
+          "Time": "2026-10-24T15:07:52.668638538Z",
+          "Action": "fail",
+          "Package": "itom.local/core/transport",
+          "Elapsed": 18.507
+        }
+      ]
+    },
+    {
+      "file": "WINDOW_FIXTURE_INITIAL_LOG.txt",
+      "sha256": "b6d07b2ce88a68d8c2bd5dd5ee372edee8bdd7d9f03660f109a43219319a0604",
+      "passed_scenarios": 4,
+      "failed_scenarios": 1
+    },
+    {
+      "file": "WINDOW_FIXTURE_CORRECTED_LOG.txt",
+      "sha256": "56106c6b4ed9cc8e21f8fbeeb77703c043530fa08f0cbe5c50914a958dcb0f6c",
+      "passed_scenarios": 5,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "WINDOW_STATE_LOG.txt",
+      "sha256": "ed3a705ccfd150230d4666bd38ba2d5824baa221688ea684e2f92735402aea1e",
+      "passed_scenarios": 6,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "WINDOW_READERS_INITIAL_LOG.txt",
+      "sha256": "314f4c8dab15fae1da578f109f18a52710c1e7a4e482e9ef685f1d162bea22b3",
+      "passed_scenarios": 4,
+      "failed_scenarios": 1
+    },
+    {
+      "file": "WINDOW_COLD_EIGHT_LOG.txt",
+      "sha256": "311a475f5f6b4dcf06d473cbbcee8e021422332c82b8bfc132debc7b1b389fd6",
+      "passed_scenarios": 8,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "WINDOW_COLD_TWENTY_LOG.txt",
+      "sha256": "460165b06e0b87f0d8ff6dd629231a8e05233cad6d6283cf91675f05c58a3d2f",
+      "passed_scenarios": 20,
+      "failed_scenarios": 0
+    },
+    {
+      "file": "WINDOW_CORE_RACE.jsonl",
+      "sha256": "0b96142d9e2cb51924384e2e6aa9fe4e023e6b9685d0fee75f821a9c67679b90",
+      "top_level_group_executions": 127,
+      "failures": []
+    },
+    {
+      "file": "WINDOW_NATIVE_RACE.jsonl",
+      "sha256": "0b09cb73fa219b32ac71db24306c2e4c581871cfc72d1d667df3e3642d525466",
+      "top_level_group_executions": 10,
+      "failures": []
+    },
+    {
+      "file": "WINDOW_STATES_REPEATED.jsonl",
+      "sha256": "4c215f63c0455fd0ce654251c5fb920745c4b8ecb9b209c3fb0fbb4ac1ae286e",
+      "top_level_group_executions": 30,
+      "failures": []
+    },
+    {
+      "file": "WINDOW_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_scenarios": 0,
+      "failed_scenarios": 0
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=120s (core)",
+    "go test -race -json ./... -count=1 -timeout=90s (native)",
+    "go vet ./... (core)",
+    "go test -race ./transport -run TestColdTLSHTTPAndWindowCrossing -count=8 then -count=20 -v -timeout=180s",
+    "go test -race -json ./transport -run Test(Window|NewLease|ConsumptionDemand|ReorderedWindow) -count=5 -timeout=60s"
+  ],
+  "implemented": [
+    "Isolated scoped receiver/sender credit epochs, conservative growth, sender-fenced return of old memory backing and delayed/duplicate control safety. Not connected to Session or wire codec.",
+    "Consumption-demand component requests bounded growth without accumulating sparse lifetime bytes; no rate or permission claim.",
+    "Cold application fixture now has four independent inbox readers and four publication workers on the same four selected sockets, with a broadcast fixture-only mailbox hint.",
+    "Bounded per-flow timeline and journal timings are reported on cold HTTP failure; all original deadlines, mailbox bounds, quotas and body limits remain unchanged."
+  ],
+  "retained_failures": [
+    "Initial window test fixture consumed receiver bytes before advancing sender SentTo; corrected chronology, no state invariant relaxed.",
+    "Initial full and repeat cohorts missed the unchanged 1500ms HTTP response-header deadline.",
+    "Independent-reader initial 5-repeat cohort still missed one header deadline. Later 8+20 repeats and full core run passed. Root cause of the earlier intermittent timing miss is NOT established; passing repetitions do not resolve real-world startup failures."
+  ],
+  "validation": [
+    "Six state-machine groups include 100 randomized schedules each repetition: every sender permission remains backed across delayed grants, recalls, fences and old/new DATA.",
+    "Wrong scope/generation/direction, unexpected epochs and invalid watermarks cannot change backing.",
+    "Duplicate recall retains original fence watermark after new DATA; a stale old grant cannot reopen released credit.",
+    "Growth requires actual free receiver memory; sparse synthetic consumption stays small and sustained synthetic consumption requests bounded prompt growth.",
+    "28 final cold fixture repetitions each perform four TLS/HTTP POSTs including two bodies crossing the initial receive window; exact application bytes and original journal/wallet debt audited. These are 112 fixture requests, not primary release attempts."
+  ],
+  "limitations": [
+    "No Session/wire lease integration, automatic growth, shared-budget arbitration or transport activation.",
+    "Fixture availability hint is idealized; no provider delay/rate/CPU/storage calibration. Source host is two-CPU quota.",
+    "Earlier intermittent header misses retained and unresolved; no network RTT or throughput improvement established.",
+    "No independent multi-account, TUN/Android, bootstrap/reclamation/recovery or release qualification. No APK built."
+  ]
+}

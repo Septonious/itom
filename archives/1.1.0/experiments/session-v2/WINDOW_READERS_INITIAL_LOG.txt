@@ -1,0 +1,19 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.05s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (6.74s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    open_imap_test.go:240: client state={Streams:1 RetainedRecords:0 ActiveDispatches:0 SendBuffered:0 ReceiveBuffered:0 ReceiveReserved:0 Closed:false} server state={Streams:1 RetainedRecords:5 ActiveDispatches:0 SendBuffered:263716 ReceiveBuffered:0 ReceiveReserved:262144 Closed:false}
+    open_imap_test.go:243: plane=0 side=0 writer={Prepared:24 Accepted:24 Uncertain:0 ConfirmedStored:0 AcceptedEncodedBytes:25148 PrepareTime:354.73266ms PublishTime:247.964221ms DataBlocked:false ControlBlocked:false}
+    open_imap_test.go:243: plane=0 side=1 writer={Prepared:29 Accepted:29 Uncertain:0 ConfirmedStored:0 AcceptedEncodedBytes:47781 PrepareTime:1.388327094s PublishTime:944.395103ms DataBlocked:false ControlBlocked:false}
+    open_imap_test.go:243: plane=1 side=0 writer={Prepared:4 Accepted:4 Uncertain:0 ConfirmedStored:0 AcceptedEncodedBytes:720832 PrepareTime:538.965898ms PublishTime:91.614985ms DataBlocked:false ControlBlocked:false}
+    open_imap_test.go:243: plane=1 side=1 writer={Prepared:4 Accepted:4 Uncertain:0 ConfirmedStored:0 AcceptedEncodedBytes:705202 PrepareTime:1.314755047s PublishTime:431.272717ms DataBlocked:false ControlBlocked:false}
+    open_imap_test.go:251: cold OPEN/TLS/HTTP 3 Post "https://127.0.0.1:46627": net/http: timeout awaiting response headers
+--- FAIL: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (5.54s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (3.35s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (4.86s)
+FAIL
+FAIL	itom.local/core/transport	23.582s
+FAIL

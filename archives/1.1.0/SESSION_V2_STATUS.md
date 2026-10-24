@@ -146,6 +146,12 @@ mandatory independently of that implementation.
   quanta, or immediately at the peer's dispatched edge; DATA still piggybacks
   the latest credit. No collection sleep, quota increase or unbacked credit is
   introduced.
+* Isolated versioned receive/send-window state machines now cover conservative
+  growth, sender-fenced credit return, delayed old grants, duplicate controls and
+  DATA which overtakes a fence. A consumption-demand model requests prompt bounded
+  growth without treating sparse lifetime traffic as bulk. These components are
+  NOT yet connected to Session/wire credit; they do not enable automatic growth.
+  See the [credit integration contract](WINDOW_CREDIT_DESIGN.md).
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;
@@ -229,6 +235,17 @@ parallel cold-application IMAP path. The initial repeated run exceeded the
 unchanged 64-message fixture bound after feedback amplification; its failure is
 retained. Coalesced feedback/body application passes that same bound. These are
 integrity/service tests, not independent multi-account performance qualification.
+The [window-state continuation](experiments/session-v2/WINDOW_CHECK_RESULTS.json)
+checks memory backing across 100 randomized control schedules and the short-work
+provisional grant. Its synthetic consumption timestamps and state transitions
+are not measured network RTT, throughput or ramp qualification.
+It also retains cold HTTP header-deadline misses from the initial full/repeated
+cohorts and one of five initial independent-reader repetitions. The fixture now
+uses four independent inbox readers on the same four selected sockets and a
+broadcast fixture-only availability hint; bounded per-flow and journal timing
+diagnostics accompany failures. The subsequent 28 repetitions (112 HTTP requests)
+and full source race checks passed the unchanged bounds. The earlier intermittent
+deadline misses remain unexplained; these passes are not a real-world startup fix.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
