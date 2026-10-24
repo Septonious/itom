@@ -104,3 +104,17 @@ Current startup source checks also retain an HTTP header-deadline miss and a
 64-message fast-mailbox overflow. The added command/stage diagnostics must help
 resolve these failures; increasing the mailbox/deadline or omitting failed
 scenarios cannot qualify an RC. No deployable package was produced.
+
+The latest control-container source checkpoint retains another overflow at the
+same 64-message bound. Progress batching works without fill sleeps and reduces
+three ready updates to one actual accounted mail in its regression, but cannot
+stand in for sustained permission turnover and proof reclamation. Final checks
+are 175/176 core groups, 10/10 native groups, 18/18 repeated targeted executions
+and passing core vet; failed timed/capacity cases are kept in the evidence.
+
+On resume, start with the production rendezvous/roster owner and original
+DATA/CONTROL grant lifecycle, then native activation. Do not replace API stubs
+with a superficially serving runtime lacking those authorities. Verify writable
+permanent keyword support on the actual provider; the supplied trace has no
+capability records. Keep the in-place journal/wallet paths, signing identity,
+original ten-folder bound, two/three primary socket budgets and DNS defaults.

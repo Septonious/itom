@@ -38,6 +38,10 @@ func (s *Session) TakeFor(plane Plane, max int, class LedgerClass) (*Dispatch, b
 	return s.takeForLocked(plane, max, class)
 }
 func (s *Session) takeForLocked(plane Plane, max int, class LedgerClass) (*Dispatch, bool) {
+	return s.takeFilteredLocked(plane, max, class, false)
+}
+
+func (s *Session) takeFilteredLocked(plane Plane, max int, class LedgerClass, progressOnly bool) (*Dispatch, bool) {
 	if len(s.dispatches) >= maxDispatches || s.nextToken == ^uint64(0) {
 		return nil, false
 	}
@@ -50,7 +54,7 @@ func (s *Session) takeForLocked(plane Plane, max int, class LedgerClass) (*Dispa
 		}
 	}
 	s.refillInteractiveLocked(time.Now())
-	r, ok := s.nextLocked(plane, max, class)
+	r, ok := s.nextFilteredLocked(plane, max, class, progressOnly)
 	if !ok {
 		return nil, false
 	}

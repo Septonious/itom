@@ -62,6 +62,9 @@ func NewClientPublicationWorker(executor *Executor, plane Plane, publishers ...*
 		classes[p.class] = true
 		stores[p.wallet.Identity().Store] = true
 		prepare := func(ctx context.Context) (*PreparedPublication, error) {
+			if p.class == ControlLedger {
+				return p.PrepareControls(ctx, MaxControlBytes)
+			}
 			if plane == Bulk {
 				return p.PrepareBulk(ctx, MaxBulkBytes)
 			}
@@ -87,6 +90,9 @@ func NewServerPublicationWorker(executor *Executor, plane Plane, publishers ...*
 		classes[p.class] = true
 		stores[p.store.StoreID()] = true
 		prepare := func(ctx context.Context) (*PreparedPublication, error) {
+			if p.class == ControlLedger {
+				return p.PrepareControls(ctx, MaxControlBytes)
+			}
 			if plane == Bulk {
 				return p.PrepareBulk(ctx, MaxBulkBytes)
 			}

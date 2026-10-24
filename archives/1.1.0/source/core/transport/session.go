@@ -161,6 +161,10 @@ func (s *Session) Finish(id uint64) error {
 	return nil
 }
 func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, bool) {
+	return s.nextFilteredLocked(plane, max, class, false)
+}
+
+func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, progressOnly bool) (Record, bool) {
 	if s.closed || plane > Bulk || max < 0 {
 		return Record{}, false
 	}
@@ -177,7 +181,7 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 		if r.Kind == Data && (f.stopped() || r.Offset+uint64(len(r.Payload)) <= f.receipt) {
 			continue
 		}
-		if !class.accepts(r.Kind) || len(r.Payload) > max {
+		if !class.accepts(r.Kind) || len(r.Payload) > max || progressOnly && (r.Kind == Open || r.Kind == Reset) {
 			s.retries[plane] = append(s.retries[plane], r)
 			continue
 		}
@@ -192,15 +196,18 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 		id := s.order[i]
 		f := s.flows[id]
 		r := Record{Generation: s.generation, Stream: id}
+		if progressOnly && f.openPending && f.openFrame.Kind == Open && !f.resetAckPending {
+			continue
+		}
 		if plane == Fast && class != DataLedger {
 			switch {
 			case f.resetAckPending:
 				f.resetAckPending = false
 				r.Kind = ResetAck
-			case f.localReset && !f.resetSent:
+			case !progressOnly && f.localReset && !f.resetSent:
 				f.resetSent = true
 				r.Kind = Reset
-			case !f.stopped() && f.openPending && len(f.openFrame.Payload) <= max:
+			case !f.stopped() && f.openPending && len(f.openFrame.Payload) <= max && (!progressOnly || f.openFrame.Kind != Open):
 				r = f.openFrame
 				f.openPending = false
 				f.openSent = true

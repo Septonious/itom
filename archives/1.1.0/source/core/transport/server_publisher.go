@@ -43,7 +43,7 @@ func (p *ServerPublisher) Prepare(ctx context.Context, maxPayload int) (*Prepare
 	if maxPayload < 0 || maxPayload > MaxPayload {
 		return nil, ErrCapacity
 	}
-	return p.prepare(ctx, maxPayload, false)
+	return p.prepare(ctx, maxPayload, false, false)
 }
 func (p *ServerPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int) (*PreparedPublication, error) {
 	if p.plane != Bulk || p.class != DataLedger || maxEncryptedBytes > MaxBulkBytes {
@@ -53,10 +53,21 @@ func (p *ServerPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int
 	if maxEncryptedBytes < bulkHeader+bulkEntryHeader+overhead+1 {
 		return nil, ErrCapacity
 	}
-	return p.prepare(ctx, maxEncryptedBytes, true)
+	return p.prepare(ctx, maxEncryptedBytes, true, false)
 }
 
-func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk bool) (*PreparedPublication, error) {
+func (p *ServerPublisher) PrepareControls(ctx context.Context, maxEncryptedBytes int) (*PreparedPublication, error) {
+	overhead, _ := secure.SessionPacketSize(headerSize)
+	if p.plane != Fast || p.class != ControlLedger || maxEncryptedBytes > MaxControlBytes {
+		return nil, ErrProtocol
+	}
+	if maxEncryptedBytes < overhead {
+		return nil, ErrCapacity
+	}
+	return p.prepare(ctx, maxEncryptedBytes, false, true)
+}
+
+func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk, controls bool) (*PreparedPublication, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -67,6 +78,10 @@ func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk bool) (
 	if bulk {
 		overhead, _ := secure.SessionPacketSize(headerSize)
 		minimum += bulkHeader + bulkEntryHeader + overhead
+	}
+	if controls {
+		overhead, _ := secure.SessionPacketSize(headerSize)
+		minimum += overhead
 	}
 	if maximum < minimum {
 		return nil, ErrCapacity
@@ -83,7 +98,7 @@ func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk bool) (
 	shape := wire.QuotaKey{Store: p.store.StoreID(), Grant: 1, Epoch: p.store.Run(), Session: p.scope.Session, Account: p.scope.Account, User: p.scope.User}
 	size := func(n int) (uint64, error) {
 		packetBytes := n
-		if !bulk {
+		if !bulk && !controls {
 			var err error
 			packetBytes, err = secure.SessionPacketSize(headerSize + n)
 			if err != nil {
@@ -102,14 +117,24 @@ func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk bool) (
 	}
 	var work publicationWork
 	var packet []byte
-	if bulk {
-		batch, ok := p.session.TakeBulk(limit)
+	if bulk || controls {
+		var batch *DispatchBatch
+		var ok bool
+		if controls {
+			batch, ok = p.session.TakeControls(limit)
+		} else {
+			batch, ok = p.session.TakeBulk(limit)
+		}
 		if !ok {
 			return nil, ticket.Cancel()
 		}
 		work = batch
 		records := batch.Records()
-		packet, err = p.cipher.SealRecords(records)
+		if controls {
+			packet, err = p.cipher.SealControls(records)
+		} else {
+			packet, err = p.cipher.SealRecords(records)
+		}
 		for _, r := range records {
 			clear(r.Payload)
 		}

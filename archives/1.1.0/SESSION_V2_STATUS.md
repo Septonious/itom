@@ -14,6 +14,12 @@ on-mail Noise establishment and guarded runtime handover now exist; initial
 permission now has an accounted rendezvous/invitation component. Production
 coordination and agreed READY/roster negotiation remain incomplete.
 
+The latest [control-container checkpoint](experiments/session-v2/CONTROL_CONTAINER_CHECK_RESULTS.json)
+passes 175/176 whole-core top-level race groups, 10/10 native groups, 18/18
+repeated targeted group executions and core vet. The remaining cold case still
+fills the unchanged 64-message fast mailbox. Earlier deadline/capacity failures
+remain retained. This is not an RC: no usable production APK/server is packaged.
+
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
 and SHA-256 hashes. Historical scheduling, timers and congestion behavior are
@@ -235,6 +241,15 @@ mandatory independently of that implementation.
   writer wait, APPEND continuation/literal/tag, FETCH/inventory/FLAGS/STORE and
   tagged refusal versus carrier failure. Maxima are separate from totals; raw
   provider text, target/profile strings, body bytes and keys are excluded.
+* Already-ready progress controls can now share one bounded, distinct CONTROL
+  container without a fill timer or DATA borrowing. A single record keeps its
+  original geometry so exact-size grants remain usable. OPEN and RESET stay
+  single to preserve independent allocation/tombstone versus progress admission.
+  Complete ledger/generation/AEAD/semantic validation precedes replay commit;
+  exact uncertain-body and original physical-debt rules apply to every member.
+  A regression delivers three ready credit updates in one real accounted mail.
+  This reduces control-mail amplification but has not fixed the cold mailbox
+  overflow or established field RTT/bandwidth improvement.
 * Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
   basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
   fail until user VPN restart. Native and domain checks are recorded separately;

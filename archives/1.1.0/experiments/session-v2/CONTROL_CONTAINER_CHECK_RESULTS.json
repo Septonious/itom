@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T22:13:05.867892+00:00",
+  "parent_commit": "a0bee5126857af0fb34fa4d7cbb90bf4f1072915",
+  "status": "unqualified checkpoint, not a testing RC; production APIs still V2_NOT_READY and cold mailbox-limit failure remains",
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/target_test.go": "f8250b8a5b26dcfbbd50c2c8cfeb58b5841ac4acd22e35d89857b2f1f4534471",
+    "archives/1.1.0/source/core/transport/bulk_publication_test.go": "b4e3ed97614736b7f83d77b020b2a8fa2a7f36bce079bf69c395b7a762c0eab8",
+    "archives/1.1.0/source/core/transport/publication_scope_test.go": "dfc2538b51722bd5d678575d611a445180a6892a45b6e09671434a429b432a20",
+    "archives/1.1.0/source/core/transport/window_lease.go": "9c585c60d513ac050e8bc7c90c678ac93fe835833a0f0480c9a4a9ab0ccbc677",
+    "archives/1.1.0/source/core/transport/cipher_test.go": "f512b57ffebef422563f978d5454e9513fc5a0309f1e2bd2a0cde1a3d311ce96",
+    "archives/1.1.0/source/core/transport/session_test.go": "a2407cf5e1adb428ab5a4ef06077e3b4ae0486e09bed061e12d83b5f4e19c13f",
+    "archives/1.1.0/source/core/transport/inbox_poll_test.go": "4648ce2bf93bd9011d73b41c8e4678fa66fe6a9dade454868a965ebc9701b4fd",
+    "archives/1.1.0/source/core/transport/inbox_poll.go": "39ff68ed87141bb62f16649a65ed9a66b66fae9800ff9846a105274301960a17",
+    "archives/1.1.0/source/core/transport/session_bootstrap_test.go": "c2b30e1c4de4c669ce677cdd0c8a2bc5e32af99fbdc126493056c438d993d9c8",
+    "archives/1.1.0/source/core/transport/inbox_worker_test.go": "94d2f6de42e7d306d31851a7eeae874eb9e74ca643306bfa937aaaf61f3c6d05",
+    "archives/1.1.0/source/core/transport/fragment_feedback_test.go": "2fec8eb73de0e52b2f84f447e4edb456203091cb73d5d220901a59f6fd2cb444",
+    "archives/1.1.0/source/core/transport/client_inbox.go": "5e8f46c0050981e496224d6b0d2d55ebf0ec6d793a8d9a34097c3d586f6c76ae",
+    "archives/1.1.0/source/core/transport/rendezvous_test.go": "44442dab39acd5d18c512466276c85bc1096441f712cebb5556e2d448407fa0a",
+    "archives/1.1.0/source/core/transport/progress_controls.go": "c1bec4e579b317bfb2fb543aec50b054fc89643437d1df40b078e9852231c34b",
+    "archives/1.1.0/source/core/transport/mailbox_envelope.go": "84bfd757fe0052d2c526831ac555850c7fec90595cf61730dc4bf32ca9ab3465",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "230f05f2071e3597417458d4771b19cc32a1264b1b20dc6c11de728a749c0070",
+    "archives/1.1.0/source/core/transport/quantum.go": "e9cf24c7d790b8056a5182fa80e50c41507a5bc19a5931681ca939caf13a97bc",
+    "archives/1.1.0/source/core/transport/session.go": "a1faa0af8d0cb5eb0de92680bfeccaf3bd061e43cc2a504445b0251837b224a3",
+    "archives/1.1.0/source/core/transport/inbox_delivery.go": "a901498ea5a96914d575017aa4bf39d0ea8793ed845cc53da025f5da603028d4",
+    "archives/1.1.0/source/core/transport/control_mail.go": "c8ed7e373d9e60a689f8c30e639a74e9cc82fb3db02e7f2dcd3570ac94a49add",
+    "archives/1.1.0/source/core/transport/bootstrap_driver_test.go": "620be474418319cdbf79a2b4175cdc66b69905af5fa1e794fcdcbb36b7909b3b",
+    "archives/1.1.0/source/core/transport/server_inbox.go": "d070143272374257d5fc92af6b72ea8105654be10ab93d9c32ea637bf4aed635",
+    "archives/1.1.0/source/core/transport/bootstrap.go": "f36e5594e36530c08ef376280e718a6928177da22a68ccd542939325cf5e50a4",
+    "archives/1.1.0/source/core/transport/bulk_recovery_test.go": "fbbfcd71951379a178dccfed9ebcb4a2c136799c83412ae417b962b26dae6188",
+    "archives/1.1.0/source/core/transport/publication_worker_test.go": "fc6d622b0ca2c423df0efc262124e0f6c2898f1e076bd61fcf4b4e4befc77892",
+    "archives/1.1.0/source/core/transport/retry.go": "110e3fdde5fedb3e20fe24929522fc0b77dc642ccf0c7a2e8691e9e0fb0e6a7d",
+    "archives/1.1.0/source/core/transport/imap_idle_test.go": "2d952675a0d9bb3b50d7a1d659690e31c97ddd82d456379ece75d6d4a90edf7b",
+    "archives/1.1.0/source/core/transport/session_invitation.go": "d29114c83bb974decc2d3e55fa841f4bbd81247f1707b7a6fcfdb56e21ac5f93",
+    "archives/1.1.0/source/core/transport/open_test.go": "bc9176a2f3c32c51a1a5529b258cebf78493a0e6884b4c286a81f69efb9b3a82",
+    "archives/1.1.0/source/core/transport/window_lease_test.go": "71cd109c90d20d9bb40def818034edcaa8e5b72f88a7b731be95aa2e63bcdfd2",
+    "archives/1.1.0/source/core/transport/imap_diagnostics_test.go": "fa7b26d1d690071c432c6c54157ef5845cddc500ba1e1f93309edeea48096141",
+    "archives/1.1.0/source/core/transport/control_publication_test.go": "6b649a16c0c0ca76ec36c06170edde3e41cf19c09d3c8db0d0b5b6bb179ca588",
+    "archives/1.1.0/source/core/transport/receiver.go": "52b896ac19c94cd3d5de1be948c708e9ba4658c024da2b110a0efabdd6ff4f85",
+    "archives/1.1.0/source/core/transport/ids.go": "ca6ee28082ec326475004a3d538f539b6611f21f635c4ea171bc98f6c0e6cdbe",
+    "archives/1.1.0/source/core/transport/bundle_test.go": "8848960d9d1061848667969b9bdfe7c9f4bf7e5d6f5f86969c614b65f39cd227",
+    "archives/1.1.0/source/core/transport/inbox_capacity_hook_test.go": "e27531d2f45075bf45be87871d53513b3f5fc1add88705b1d32f4eda32b0df43",
+    "archives/1.1.0/source/core/transport/session_bootstrap.go": "1e7b27746574262a839deecc3f0d4fc97cd169988f07238e1035c43c2095842d",
+    "archives/1.1.0/source/core/transport/inbox.go": "fed4f8eaa11fa76de72f5a45c8c8d18b7b169f48726df3f0161987950ce715d2",
+    "archives/1.1.0/source/core/transport/bundle.go": "d669196bb0a76bb4046c1017f0868bf9c70f8d5e0a0c379f84978be4171b44df",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "6a8f1e15850e2c019d54147b21225ace870ad62e3a1591d58cd3456201f6ea47",
+    "archives/1.1.0/source/core/transport/runtime_test.go": "55d65514a8d1547b0711d066418b52b17c08efd6714066bdda6588345f70f3a2",
+    "archives/1.1.0/source/core/transport/bootstrap_driver.go": "de31aad17cd3e56f2f4eeaf46bdee7bf0d57242a599b89c2ea3378672a602092",
+    "archives/1.1.0/source/core/transport/publisher.go": "30058a985773a2abe4d0300d428ae3b3c4b51f084d1451478dfd49bf191ad8b5",
+    "archives/1.1.0/source/core/transport/readiness.go": "aaf301af7d4a32ea2e7deb0ac84de6ba5ebc703a70e9894c285d42a2c995c38d",
+    "archives/1.1.0/source/core/transport/session_invitation_test.go": "0912a5f402f860d75baf4f9315340b15de3e9830427196b978562ca530e338bc",
+    "archives/1.1.0/source/core/transport/target.go": "1c3fa9452b326aa289cc7bdc1ac8f37a5b19b1665582c8a7ffe3ef087a818201",
+    "archives/1.1.0/source/core/transport/receive_demand.go": "ccb67256fc14d1b60863e77b857d9dd89c47db0b3b191515e003470c0579e4fd",
+    "archives/1.1.0/source/core/transport/publication_worker.go": "b8fc271c0d9d6df516910c6447713d6af50ef432f1d06c2da25519522e5f3bf2",
+    "archives/1.1.0/source/core/transport/open.go": "f5179666f5bcd882880f06ae51960e8b737cb3b6e01ffe5143dba8cf8ef82b4b",
+    "archives/1.1.0/source/core/transport/session_binding.go": "566228bbee93ac653b90ed5ea01cdfbffce717e65b46f3ae4a30ad265e8a3f81",
+    "archives/1.1.0/source/core/transport/inbox_test.go": "172257cd4be447af1193e9cbd3dd4411a1b809c2afc727dc1861e62b4cbef364",
+    "archives/1.1.0/source/core/transport/rendezvous.go": "4ebe60fe8ad483cb73d7ebbb5cfd8891961dba8f5c05b9f14db34617f9c03ff1",
+    "archives/1.1.0/source/core/transport/imap_keywords.go": "84f2ecac578cc154eda5eab1f7c0b459a9fa45e41c4c8b290ec2bc4bf4eb5fff",
+    "archives/1.1.0/source/core/transport/ledger.go": "75ece8a1798289a89323d881d2f6db75a03e81d67abe8a72790081cdd0a927d6",
+    "archives/1.1.0/source/core/transport/stream.go": "59babd382b7554ce2cff38d3d947b25668aef9d97765e59bc5f4cc894339a92a",
+    "archives/1.1.0/source/core/transport/session_network_test.go": "fcc45bbcac14c54d40c91fd3c053d653f40c9126f3fe8fb4a7cffb5103bc5c27",
+    "archives/1.1.0/source/core/transport/inbox_pressure_test.go": "ed29c55689b154d82a9fb1674a0af1564b6d04174df73f3822c5541507a52910",
+    "archives/1.1.0/source/core/transport/bootstrap_handoff.go": "cda44dee8ed2e94d2b8596422e500f0e8035cad7fb28a95c35402c054714c770",
+    "archives/1.1.0/source/core/transport/lifecycle_test.go": "e0c3715962f0917557006eefd24d670d12861e63214e12a57cf67da35999afff",
+    "archives/1.1.0/source/core/transport/bundle_fuzz_test.go": "effa5c5136c6dc0e8fbaef26e74a9d291eeac3d8583fe281bc4ecbfc6addfc48",
+    "archives/1.1.0/source/core/transport/retry_test.go": "6a12fd45957d0dc28ba3541a3887067f898770816f832bc0859c9c49a5d90950",
+    "archives/1.1.0/source/core/transport/client_inbox_test.go": "0b8013562b6b73c008785d824a3ba7dc0b1a2469115c3f8437ef7a3abd823b5e",
+    "archives/1.1.0/source/core/transport/bulk_imap_test.go": "0cef6a0721173bdc890c54ab13222f1d0135277635d383fb1afcbe1ebaaf6629",
+    "archives/1.1.0/source/core/transport/client_receiver.go": "ba25794c1535621b235b2ef624f1cb60c015e7bc62d623aa46e4a530faaa38fb",
+    "archives/1.1.0/source/core/transport/imap_diagnostics.go": "9a19eb9f0fd7cc62d1129f26b29dfabe86b8ee5f6b231f5d0e7a6b6e4a53ffbc",
+    "archives/1.1.0/source/core/transport/feedback_test.go": "e7fe471341cc2042c0a774c3675fa24406463a78e9f667552aef70f18b235f39",
+    "archives/1.1.0/source/core/transport/runtime.go": "1809e2d287f5ad39228af7f4ca7c5e8227c4dade9f5fe3bc8560ead8e1a6d288",
+    "archives/1.1.0/source/core/transport/server_publisher.go": "611cb97eda59c18535c85d66ab58a4f6c6438f76c8d9c6118953078d4206d1fe",
+    "archives/1.1.0/source/core/transport/bootstrap_receive.go": "b4210b5fe5c17531e4764079d7cd678aed49d2d652c47250d4dadca885be5d9e",
+    "archives/1.1.0/source/core/transport/exit.go": "8d3d3978f8602e975ef4d737c7cd63422bec42ccdcf4fbbff629d29707ce99e6",
+    "archives/1.1.0/source/core/transport/imap.go": "724e0b7c986d05a99573f38201897a434f173b1a69f82bdf5f223bc23493710b",
+    "archives/1.1.0/source/core/transport/record.go": "0f199d50f53fbc9abbe8e4b53d8421a456e0f766e363c41bb7f4c29bb589cdc7",
+    "archives/1.1.0/source/core/transport/inbox_worker.go": "5796e27226af41abf8c80ee14d4ccac960e7e2d96b8add71fa4c9c638768d542",
+    "archives/1.1.0/source/core/transport/classification.go": "32853cce25de8336dd2a56de06221e749dc881b68b8aaff0e90f4aa8220da6e2",
+    "archives/1.1.0/source/core/transport/bootstrap_publication.go": "b8eca8ca0b8159fc8b14e3e7b1fd0f5a056b42c404fb7141477c4ae4e3bd2e68",
+    "archives/1.1.0/source/core/transport/imap_idle.go": "e383b07d58fded79b8c610669e396e00c8ffabf1e2ab07efac03d653b5cdb344",
+    "archives/1.1.0/source/core/transport/control_dispatch.go": "24e4c9e5ba849c190dc65485a133badde24c36e264585a9f42b7afce5beae7c8",
+    "archives/1.1.0/source/core/transport/controller.go": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a",
+    "archives/1.1.0/source/core/transport/publication_test.go": "6b9cb201c0f776601f51adf3701456dec1fba88925e1fd48276bac281084414c",
+    "archives/1.1.0/source/core/transport/bootstrap_test.go": "9fd413fe4c366ebfd554678812fe6b54b50cdda1f16b856af5306b6279ac70c5",
+    "archives/1.1.0/source/core/transport/cipher.go": "7f29cfe937a290d5d976dfe4f7d63d4385c4c31ee63c5c92b117a747bcde4afc",
+    "archives/1.1.0/source/core/transport/imap_test.go": "426b16340f62fa316f10fb70a51519411d4ce19468547792ceef8cffc5398d2d",
+    "archives/1.1.0/source/core/transport/server_publication_test.go": "15735c6ff618b1f5c91717b14aa2d3a833e1fb042403a9abf2c54e9a31934b10",
+    "archives/1.1.0/source/core/transport/bulk_dispatch.go": "2ea99b131396b1e7bc9a44a5cb9d5e22ddac67f031268def167e56ad36439402",
+    "archives/1.1.0/source/core/transport/session_binding_test.go": "e699dfa684ae8c2d229ae4eb903c37431d58bc86afe61476ce77bae83da94e3a",
+    "archives/1.1.0/source/core/transport/server_inbox_test.go": "726811d1007c8082011eabc4dd0e237e25c1decc452805aaf4c6ba6c42dc54ca",
+    "archives/1.1.0/source/core/transport/dispatch.go": "1145d45f5025c05484b0013bee3fc079d37ece877d7001c6c5ba5ad418c5bdc8",
+    "archives/1.1.0/source/core/journal/store.go": "cc4f179ba83435f40fbc17a04c6bf11731a4d50ca8cae199afce3fa035164b15",
+    "archives/1.1.0/source/core/journal/session_claim.go": "8bf23011c68e561bd31e6e4d7896a4b048a0cf4cfed550aba0ed86f7cf3de8d5",
+    "archives/1.1.0/source/core/journal/session_claim_fault_test.go": "2e1ea9a1d5f7280ee25952b8505bf054238471f3b18a6cefa3cd2d80377d757c"
+  },
+  "checks": [
+    {
+      "file": "CONTROL_CONTAINER_INITIAL_LOG.txt",
+      "sha256": "3b0da8852b34b2559ba2da1993db244767d3c8da9fa0260f3d8aeeb79eb9b9ad",
+      "passed_top_level_groups": 6,
+      "failed_top_level_groups": 1
+    },
+    {
+      "file": "CONTROL_CONTAINER_SAFETY_LOG.txt",
+      "sha256": "70c746da8922daef38b5b7acfd7fca288a0140f1c355b06758a3b38249032aef",
+      "passed_top_level_groups": 18,
+      "failed_top_level_groups": 0
+    },
+    {
+      "file": "CONTROL_CONTAINER_CORE_RACE.jsonl",
+      "sha256": "997f0d3f27eff43bf24aefc506cb669fee7c2104db02581d913dada02a933230",
+      "top_level_group_executions": 176,
+      "passed_top_level_groups": 175,
+      "failures": [
+        {
+          "package": "itom.local/core/transport",
+          "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "test": null
+        }
+      ]
+    },
+    {
+      "file": "CONTROL_CONTAINER_NATIVE_RACE.jsonl",
+      "sha256": "e4d06b5d3927fe57cd6941675e88ba4b34fd2a3edf7a284230874d0798789df3",
+      "top_level_group_executions": 10,
+      "passed_top_level_groups": 10,
+      "failures": []
+    },
+    {
+      "file": "CONTROL_CONTAINER_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed_top_level_groups": 0,
+      "failed_top_level_groups": 0
+    }
+  ],
+  "commands": [
+    "go test -race ./transport -run TestColdTLSHTTP|TestFastPublicationLedgers|TestFailedBatch|TestInvalidRecordOrMixedLedger|TestMalformedContainer -count=1 -v -timeout=120s (retained initial failure)",
+    "go test -race ./transport -run TestReadyControlUpdates|TestControlGrantFitting|TestControlContainer|TestFullProtocolDelivery|TestOpenDeferredByProtocol -count=3 -v -timeout=90s",
+    "go test -race -json ./... -count=1 -timeout=180s (core; one failure retained)",
+    "go test -race -json ./... -count=1 -timeout=120s (native)",
+    "go vet ./... (core)"
+  ],
+  "implemented": [
+    "A bounded distinct CONTROL container drains only already-ready progress updates without collection sleeps or DATA borrowing. Three simultaneous credit updates execute as one actual accounted mail in the new integration regression.",
+    "A lone control keeps its original packet geometry, so an original exact-size one-message grant is not stranded by optional container overhead. Existing payload/response/crypto/account/grant/session bounds remain authoritative.",
+    "OPEN and RESET remain single publications; they cannot couple allocating/tombstone work to progress-only inbox admission. Whole-container generation, ledger, AEAD and semantic validation precede replay commit.",
+    "Exact prepared-body outcome/proof handling applies atomically to all live members. Physical acceptance does not become peer receipt or quota refund. Workers use the same actual selected sockets and CONTROL authority."
+  ],
+  "retained_failures": [
+    "The initial current-container cohort exceeds the unchanged 64-message fast-mailbox cap in the fluctuating command-service cold case.",
+    "The final whole-core cohort exceeds the same unchanged bound in the no-delay cold case. These cases remain failures; no scenario, first run, mailbox/grant limit, deadline, fsync requirement or performance threshold was changed to obtain a pass."
+  ],
+  "validation": [
+    "18/18 targeted top-level group executions pass with race detection, covering three new container/grant/authentication tests and three existing inbox-pressure/debt regressions.",
+    "The final whole-core source cohort passes 175 of 176 top-level groups. The one cold failure is retained with raw flow, command, journal and runtime evidence.",
+    "10 native top-level groups pass with race detection; core vet passes.",
+    "This demonstrates less physical control-mail amplification for simultaneously ready updates. It does not demonstrate elimination of cold failures, sustained bandwidth, RTT improvement, or improvement over field RC2."
+  ],
+  "remaining_for_first_rc": [
+    "Production long-lived rendezvous/selector and agreed roster/READY integration from the real profile, with actual permanent-keyword capability verification and original socket budgets.",
+    "DATA/CONTROL offer turnover, usage/retirement/proof reclamation and full in-place legacy journal/wallet recovery. Standing rendezvous, key establishment and finite initial permissions alone do not supply a sustained datapath.",
+    "Receiver-window/controller integration, native/TUN/Android API activation, and unchanged application/performance/stability qualification. StartClient and ServeManaged still fail closed; an APK compiled around them would not carry traffic."
+  ],
+  "artifacts": "No APK, deployable server binary or release tag. Source checkpoints are pushed to the existing development branch; signing identity and DNS behavior are unchanged."
+}

@@ -1,0 +1,38 @@
+=== RUN   TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill
+--- PASS: TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill (0.05s)
+=== RUN   TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead
+--- PASS: TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead (0.01s)
+=== RUN   TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay
+--- PASS: TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay (0.02s)
+=== RUN   TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt
+--- PASS: TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt (0.04s)
+=== RUN   TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream
+--- PASS: TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream (0.03s)
+=== RUN   TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt
+--- PASS: TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt (0.02s)
+=== RUN   TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill
+--- PASS: TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill (0.07s)
+=== RUN   TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead
+--- PASS: TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead (0.01s)
+=== RUN   TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay
+--- PASS: TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay (0.01s)
+=== RUN   TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt
+--- PASS: TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt (0.03s)
+=== RUN   TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream
+--- PASS: TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream (0.03s)
+=== RUN   TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt
+--- PASS: TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt (0.02s)
+=== RUN   TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill
+--- PASS: TestReadyControlUpdatesShareOneRealMailWithoutBorrowingDataOrWaitingForFill (0.04s)
+=== RUN   TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead
+--- PASS: TestControlGrantFittingOneOriginalPacketDoesNotRequireContainerOverhead (0.02s)
+=== RUN   TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay
+--- PASS: TestControlContainerAuthenticatesWholeBatchAndRejectsDataOpenAndResetBeforeReplay (0.02s)
+=== RUN   TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt
+--- PASS: TestOpenDeferredByProtocolPressureRetainsReplayAndOriginalPhysicalDebt (0.03s)
+=== RUN   TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream
+--- PASS: TestFullProtocolDeliveryQueueCannotHideResetOfExistingStream (0.03s)
+=== RUN   TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt
+--- PASS: TestFullProtocolDeliveryQueueStillAllowsAuthenticatedPeerReceipt (0.02s)
+PASS
+ok  	itom.local/core/transport	1.739s

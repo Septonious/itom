@@ -7,6 +7,7 @@ import (
 )
 
 const bulkMagic = "ISB2"
+const controlMagic = "ICB2"
 const bulkHeader = 8
 const bulkEntryHeader = 4
 const MaxBulkRecords = secure.SessionBatchMaxPackets
@@ -16,26 +17,50 @@ const MaxBulkBytes = secure.SessionBatchMaxBytes
 // physical ledger entry. Their framing is additionally covered by the physical
 // envelope MAC. They cannot contain control or cross-generation records.
 func (c *Cipher) SealRecords(records []Record) ([]byte, error) {
+	return c.sealContainer(records, false)
+}
+
+// SealControls groups progress-only controls under one CONTROL ledger entry.
+// OPEN/RESET remain single and DATA can never enter a control container.
+func (c *Cipher) SealControls(records []Record) ([]byte, error) {
+	if len(records) == 1 {
+		if records[0].Kind == Data {
+			return nil, ErrProtocol
+		}
+		return c.Seal(records[0])
+	}
+	return c.sealContainer(records, true)
+}
+
+func (c *Cipher) sealContainer(records []Record, control bool) ([]byte, error) {
 	if len(records) < 1 || len(records) > MaxBulkRecords {
 		return nil, ErrCapacity
 	}
 	total := bulkHeader
+	maximum, magic := MaxBulkBytes, bulkMagic
+	if control {
+		maximum, magic = MaxControlBytes, controlMagic
+	}
 	generation := records[0].Generation
 	for _, r := range records {
-		if !r.valid() || r.Kind != Data || r.Generation != generation {
+		validKind := r.Kind == Data
+		if control {
+			validKind = r.Kind != Data && r.Kind != Open && r.Kind != Reset
+		}
+		if !r.valid() || !validKind || r.Generation != generation {
 			return nil, ErrProtocol
 		}
 		size, err := secure.SessionPacketSize(headerSize + len(r.Payload))
 		if err != nil {
 			return nil, err
 		}
-		if size+bulkEntryHeader > MaxBulkBytes-total {
+		if size+bulkEntryHeader > maximum-total {
 			return nil, ErrCapacity
 		}
 		total += size + bulkEntryHeader
 	}
 	body := make([]byte, bulkHeader, total)
-	copy(body, bulkMagic)
+	copy(body, magic)
 	binary.BigEndian.PutUint16(body[4:6], uint16(len(records)))
 	for _, r := range records {
 		packet, err := c.Seal(r)
@@ -50,7 +75,11 @@ func (c *Cipher) SealRecords(records []Record) ([]byte, error) {
 	return body, nil
 }
 func parseBulk(body []byte) ([][]byte, error) {
-	if len(body) < bulkHeader || len(body) > MaxBulkBytes || !bytes.HasPrefix(body, []byte(bulkMagic)) || body[6] != 0 || body[7] != 0 {
+	return parseContainer(body, bulkMagic, MaxBulkBytes)
+}
+
+func parseContainer(body []byte, magic string, maximumBytes int) ([][]byte, error) {
+	if len(body) < bulkHeader || len(body) > maximumBytes || !bytes.HasPrefix(body, []byte(magic)) || body[6] != 0 || body[7] != 0 {
 		return nil, ErrProtocol
 	}
 	count := int(binary.BigEndian.Uint16(body[4:6]))
@@ -92,6 +121,7 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 		return nil, ErrProtocol
 	}
 	bundled := bytes.HasPrefix(body, []byte(bulkMagic))
+	controls := bytes.HasPrefix(body, []byte(controlMagic))
 	packets := [][]byte{body}
 	if bundled {
 		if class == ControlLedger {
@@ -102,6 +132,18 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 			return nil, err
 		}
 	}
+	if controls {
+		if class == DataLedger {
+			return nil, ErrProtocol
+		}
+		packets, err = parseContainer(body, controlMagic, MaxControlBytes)
+		if err != nil {
+			return nil, err
+		}
+		if len(packets) < 2 {
+			return nil, ErrProtocol // a lone control has canonical single framing
+		}
+	}
 	plains, err := c.epoch.OpenSessionBatch(packets, func(plains [][]byte) error {
 		var generation uint64
 		for _, plain := range plains {
@@ -110,6 +152,10 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 				return e
 			}
 			if expectedGeneration != 0 && r.Generation != expectedGeneration || !class.accepts(r.Kind) || bundled && (r.Kind != Data || generation != 0 && r.Generation != generation) {
+				clear(r.Payload)
+				return ErrProtocol
+			}
+			if controls && (r.Kind == Data || r.Kind == Open || r.Kind == Reset || generation != 0 && r.Generation != generation) {
 				clear(r.Payload)
 				return ErrProtocol
 			}

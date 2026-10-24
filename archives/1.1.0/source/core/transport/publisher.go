@@ -262,25 +262,40 @@ func (p *PreparedPublication) ConfirmStored(ctx context.Context, executor *Execu
 // or encrypting records. maxEncryptedBytes is a service/memory bound, not a
 // minimum fill size, so fresh demand does not wait to collect a larger BODY.
 func (p *ClientPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int) (*PreparedPublication, error) {
+	return p.prepareBatch(ctx, maxEncryptedBytes, false)
+}
+
+func (p *ClientPublisher) PrepareControls(ctx context.Context, maxEncryptedBytes int) (*PreparedPublication, error) {
+	return p.prepareBatch(ctx, maxEncryptedBytes, true)
+}
+
+func (p *ClientPublisher) prepareBatch(ctx context.Context, maxEncryptedBytes int, controls bool) (*PreparedPublication, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	if p.plane != Bulk || p.class != DataLedger || maxEncryptedBytes > MaxBulkBytes {
+	if !controls && (p.plane != Bulk || p.class != DataLedger || maxEncryptedBytes > MaxBulkBytes) || controls && (p.plane != Fast || p.class != ControlLedger || maxEncryptedBytes > MaxControlBytes) {
 		return nil, ErrProtocol
 	}
 	overhead, _ := secure.SessionPacketSize(headerSize)
-	if maxEncryptedBytes < bulkHeader+bulkEntryHeader+overhead+1 {
-		return nil, ErrCapacity
+	minimum := bulkHeader + bulkEntryHeader + overhead + 1
+	if controls {
+		minimum = overhead
 	}
-	payloadMinimum, ready := p.session.minimumPayloadFor(Bulk, DataLedger)
-	if !ready {
-		return nil, nil
-	}
-	minimum := bulkHeader + bulkEntryHeader + overhead + payloadMinimum
 	if maxEncryptedBytes < minimum {
 		return nil, ErrCapacity
 	}
-	if !p.session.ReadyFor(Bulk, DataLedger) {
+	payloadMinimum, ready := p.session.minimumPayloadFor(p.plane, p.class)
+	if !ready {
+		return nil, nil
+	}
+	minimum = bulkHeader + bulkEntryHeader + overhead + payloadMinimum
+	if controls {
+		minimum = overhead + payloadMinimum
+	}
+	if maxEncryptedBytes < minimum {
+		return nil, ErrCapacity
+	}
+	if !p.session.ReadyFor(p.plane, p.class) {
 		return nil, nil
 	}
 	size := func(key wire.QuotaKey, encryptedBytes int) (uint64, error) {
@@ -294,13 +309,24 @@ func (p *ClientPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int
 	if err != nil {
 		return nil, err
 	}
-	batch, ok := p.session.TakeBulk(limit)
+	var batch *DispatchBatch
+	var ok bool
+	if controls {
+		batch, ok = p.session.TakeControls(limit)
+	} else {
+		batch, ok = p.session.TakeBulk(limit)
+	}
 	if !ok {
 		ticket.Cancel()
 		return nil, nil
 	}
 	records := batch.Records()
-	packet, err := p.cipher.SealRecords(records)
+	var packet []byte
+	if controls {
+		packet, err = p.cipher.SealControls(records)
+	} else {
+		packet, err = p.cipher.SealRecords(records)
+	}
 	for _, record := range records {
 		clear(record.Payload)
 	}

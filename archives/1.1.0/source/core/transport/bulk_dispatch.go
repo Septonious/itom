@@ -6,7 +6,7 @@ type publicationWork interface {
 	complete(PublicationOutcome, bool) error
 }
 
-// DispatchBatch is one physical DATA publication. Every record remains part of
+// DispatchBatch is one physical single-ledger publication. Every record remains part of
 // its stream's independent receipt/credit state; there is no account owner.
 type DispatchBatch struct {
 	session    *Session

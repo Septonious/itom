@@ -1,0 +1,25 @@
+=== RUN   TestFailedBatchAuthenticationDoesNotConsumeEarlierRecordReplayCounters
+--- PASS: TestFailedBatchAuthenticationDoesNotConsumeEarlierRecordReplayCounters (0.01s)
+=== RUN   TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters
+=== RUN   TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/control
+=== RUN   TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/generation
+=== RUN   TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/duplicate
+--- PASS: TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters (0.02s)
+    --- PASS: TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/control (0.01s)
+    --- PASS: TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/generation (0.01s)
+    --- PASS: TestInvalidRecordOrMixedLedgerInBatchDoesNotAdvanceAnyReplayCounters/duplicate (0.01s)
+=== RUN   TestMalformedContainerIsBoundedAndSingleRecordAPIRejectsContainers
+--- PASS: TestMalformedContainerIsBoundedAndSingleRecordAPIRejectsContainers (0.01s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.19s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+    duplex_imap_test.go:131: fixture mailbox bounds exceeded: folder=fast messages=64 bytes=70198 next=555
+    open_imap_test.go:40: healthy carrier lost V2_IMAP_OUTCOME_UNKNOWN
+--- FAIL: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (5.25s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (6.41s)
+=== RUN   TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns
+--- PASS: TestFastPublicationLedgersHaveIndependentPermissionAndFairTurns (0.04s)
+FAIL
+FAIL	itom.local/core/transport	14.009s
+FAIL

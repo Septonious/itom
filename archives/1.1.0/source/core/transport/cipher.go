@@ -26,7 +26,7 @@ func (c *Cipher) Seal(r Record) ([]byte, error) {
 }
 func (c *Cipher) Open(packet []byte) (Record, error) {
 	// The single-record API must not silently drop records from a container.
-	if len(packet) >= 4 && string(packet[:4]) == bulkMagic {
+	if len(packet) >= 4 && (string(packet[:4]) == bulkMagic || string(packet[:4]) == controlMagic) {
 		return Record{}, ErrProtocol
 	}
 	records, err := c.OpenRecords(packet)
