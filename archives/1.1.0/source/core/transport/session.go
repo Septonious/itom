@@ -2,6 +2,7 @@ package transport
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"sync"
 	"time"
@@ -39,6 +40,13 @@ type stream struct {
 	notify                                                                 chan struct{}
 	connection                                                             *Conn
 	applicationClosed                                                      bool
+	opening                                                                openState
+	openFrame                                                              Record
+	openPending, openClaimed, openSent                                     bool
+	openFailure                                                            OpenFailure
+	openTarget                                                             Target
+	openCredit                                                             uint64
+	openCancel                                                             context.CancelFunc
 }
 
 func (f *stream) stopped() bool { return f.localReset || f.remoteReset }
@@ -69,6 +77,9 @@ type Session struct {
 	closed                       bool
 	ids                          idWindow
 	interactive                  interactiveBudget
+	openRole                     uint8
+	openWindow, nextOpenID       uint64
+	openChanged                  chan struct{}
 }
 
 func NewSession(generation uint64, l Limits) (*Session, error) {
@@ -86,6 +97,12 @@ func (s *Session) WorkChanged() <-chan struct{} { s.mu.Lock(); defer s.mu.Unlock
 func (s *Session) Add(id, initialCredit, receiveWindow uint64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.openRole != 0 {
+		return ErrProtocol
+	}
+	return s.addLocked(id, initialCredit, receiveWindow)
+}
+func (s *Session) addLocked(id, initialCredit, receiveWindow uint64) error {
 	if s.closed {
 		return ErrClosed
 	}
@@ -103,7 +120,7 @@ func (s *Session) Add(id, initialCredit, receiveWindow uint64) error {
 }
 func (s *Session) queueLocked(id uint64, b []byte, now time.Time) error {
 	f := s.flows[id]
-	if s.closed || f == nil || f.stopped() || f.localFinish || f.applicationClosed {
+	if s.closed || f == nil || f.stopped() || f.opening != openEstablished || f.localFinish || f.applicationClosed {
 		return ErrClosed
 	}
 	n := uint64(len(b))
@@ -154,7 +171,7 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 		if r.Kind == Data && (f.stopped() || r.Offset+uint64(len(r.Payload)) <= f.receipt) {
 			continue
 		}
-		if !class.accepts(r.Kind) || r.Kind == Data && len(r.Payload) > max {
+		if !class.accepts(r.Kind) || len(r.Payload) > max {
 			s.retries[plane] = append(s.retries[plane], r)
 			continue
 		}
@@ -177,6 +194,10 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 			case f.localReset && !f.resetSent:
 				f.resetSent = true
 				r.Kind = Reset
+			case !f.stopped() && f.openPending && len(f.openFrame.Payload) <= max:
+				r = f.openFrame
+				f.openPending = false
+				f.openSent = true
 			case !f.stopped() && f.creditPending:
 				f.creditPending = false
 				f.receiptPending = false
@@ -201,7 +222,7 @@ func (s *Session) nextLocked(plane Plane, max int, class LedgerClass) (Record, b
 				return r, true
 			}
 		}
-		if class == ControlLedger || max == 0 || f.stopped() || f.tx.Len() == 0 || f.sent >= f.peerCredit || len(f.pending) >= 4096 || s.records >= 16384 {
+		if class == ControlLedger || max == 0 || f.stopped() || f.opening != openEstablished || f.tx.Len() == 0 || f.sent >= f.peerCredit || len(f.pending) >= 4096 || s.records >= 16384 {
 			continue
 		}
 		short := s.shortLocked(f)
@@ -309,6 +330,10 @@ func (s *Session) receiptLocked(f *stream, end uint64) error {
 	return nil
 }
 func (s *Session) dropLocked(f *stream) {
+	if f.openCancel != nil {
+		f.openCancel()
+		f.openCancel = nil
+	}
 	s.buffered -= f.buffered
 	s.received -= uint64(f.rx.Len()) + f.reorderBytes
 	s.reserved -= f.window
@@ -338,12 +363,19 @@ func (s *Session) Receive(r Record) error {
 	if r.Generation != s.generation {
 		return ErrProtocol
 	}
+	if r.Kind == Open {
+		return s.receiveOpenLocked(r)
+	}
 	f := s.flows[r.Stream]
 	if f == nil {
+		if r.Kind == Reset && s.openRole == 2 && r.Stream&1 == 1 && s.ids.available(r.Stream) {
+			return s.receiveEarlyResetLocked(r.Stream)
+		}
 		return ErrClosed
 	}
 	switch r.Kind {
 	case Reset:
+		s.resolveOpenPublicationsLocked(r.Stream)
 		if !f.stopped() {
 			s.dropLocked(f)
 		}
@@ -355,6 +387,7 @@ func (s *Session) Receive(r Record) error {
 		if !f.localReset || !f.resetSent {
 			return ErrProtocol
 		}
+		s.resolveOpenPublicationsLocked(r.Stream)
 		f.resetAcked = true
 		f.signal()
 		if f.applicationClosed {
@@ -364,6 +397,12 @@ func (s *Session) Receive(r Record) error {
 	}
 	if f.stopped() {
 		return ErrClosed
+	}
+	if r.Kind == OpenOK || r.Kind == OpenError {
+		return s.receiveOpenResultLocked(f, r)
+	}
+	if f.opening == openAwaitExit || f.opening == openRejected {
+		return ErrProtocol
 	}
 	switch r.Kind {
 	case Receipt:
@@ -441,6 +480,9 @@ func (s *Session) Receive(r Record) error {
 		}
 		if r.ReceiveLimit != 0 {
 			s.applyPiggybackLocked(f, r.Acknowledged, r.ReceiveLimit)
+		}
+		if s.openRole == 2 {
+			s.resolveOpenPublicationsLocked(r.Stream)
 		}
 		f.reorder[r.Offset] = append([]byte(nil), r.Payload...)
 		f.reorderBytes += uint64(len(r.Payload))
@@ -574,6 +616,7 @@ func (s *Session) Close() error {
 		return nil
 	}
 	s.closed = true
+	s.signalOpenLocked()
 	for _, f := range s.flows {
 		if !f.stopped() {
 			s.dropLocked(f)

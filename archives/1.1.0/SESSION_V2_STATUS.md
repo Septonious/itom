@@ -84,6 +84,24 @@ mandatory independently of that implementation.
 * Receiver-trace checks retain the required full-phase/ramp/tail/rolling rate,
   no-stall and RTT-maximum assertions. No peak-only or successful-only score is
   accepted as qualification.
+* Authenticated OPEN/OPEN_OK/OPEN_ERROR replaces manual stream creation in the
+  new client dialer and bounded server exit workers. Targets have canonical
+  framing, authenticated-user authorization and a pinned numeric dial address.
+  The original 1500ms OPEN limit is unchanged. Cancellation, policy denial,
+  out-of-order early RESET and uncertain OPEN retirement do not replace carriers.
+* Exact grant admission includes variable OPEN payloads and immutable unstarted
+  retries. Neither can exceed its concrete payload allowance or spend DATA
+  authority for protocol work. A validated RESET_ACK can retire an uncertain
+  logical OPEN without refunding its physical publication.
+* Bounded scoped inbox enumeration uses actual UIDs rather than UIDNEXT or a
+  high-water cursor. UID holes and late lower UIDs remain discoverable. Dependency
+  gaps defer before decryption; a backpressured authenticated delivery is retained
+  without decrypting or fetching it twice. Solicited metadata produces no
+  self-poll notification. Inventory absence is never financial release evidence.
+* Direct DNS settings race 31.131.251.83 and 185.22.234.229 with one 250ms deadline,
+  basic UDP/TCP53 only. Optional IMAP failover latches after both direct paths
+  fail until user VPN restart. Native and domain checks are recorded separately;
+  full Android UI build/device validation and transport activation remain pending.
 
 ## Verification boundary
 
@@ -91,11 +109,11 @@ All old owned Go tests were removed after the first implementation, as requested
 Their manifests and immutable Git history remain; third-party tests and release
 archives were untouched. Fresh scenario and invariant tests are independent.
 
-Current application/TCP integration runs real TLS/HTTP and a real TCP exit over
-separate fast/bulk OS TCP carriers with the new framing and Noise. It manually
-establishes the logical streams. It does **not** execute transport OPEN over IMAP,
-provider mailbox polling/reclamation or Android TUN. Quota/IMAP/BODY tests cover
-those individual components separately; they do not yet form the full pipeline.
+Application/TCP integration runs real TLS/HTTP and a real TCP exit over separate
+fast/bulk OS TCP carriers with the new framing and Noise. New scenarios execute
+authenticated OPEN rather than manually adding streams, including 20 cold TLS
+connections, independent policy cancellation and denied targets. Existing manual
+stream scenarios still isolate their individual queue and accounting contracts.
 
 An additional one-way component scenario now transfers 1.5MiB across three
 streams through actual TLS/IMAP APPEND and UID FETCH, exact wallet admission,
@@ -127,6 +145,18 @@ work. These real persistence costs must be measured and included in the complete
 controller/provider fixture. Neither zero-cost journal service nor an assumed
 100Mbps rate follows from these component results.
 
+The newer cold-application IMAP scenario joins OPEN, a real TCP exit, real
+application TLS/HTTP, both quota authorities, persistent journals/wallets,
+TLS/IMAP APPEND/FETCH and the scoped Inbox. Four new HTTP connections echo both
+short and nonaligned bodies larger than the initial receive window. Four fixed
+IMAP sockets remain alive; no manual stream creation or synthetic application
+response bypasses the pipeline. Noise/grants are still pre-established, own-body
+correlation uses fixture-owned publication references, and a single test pump
+coordinates both endpoints without calibrated provider service. This is byte
+integrity, not a 250ms/100Mbps result. Five repetitions cover 20 such IMAP-backed
+HTTP requests, in addition to 100 cold TLS requests on the raw TCP carrier fixture.
+See [OPEN/inbox evidence](experiments/session-v2/OPEN_INBOX_CHECK_RESULTS.json).
+
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
 TCP fixture was then substituted. A later diagnostic timeout showed bytes still
@@ -143,16 +173,20 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 
 ## Still required before release
 
-* Authenticated transport bootstrap, OPEN/READY/roster negotiation and target
-  authorization; wire/control exchange for grants, usage, retirement and recovery.
-  The stream adapter currently starts after an externally established OPEN_OK.
+* Authenticated transport bootstrap, READY/roster negotiation and concrete exit
+  authorization policy; wire/control exchange for grants, usage, retirement and
+  recovery. OPEN framing/dialing exists, but those authorities are pre-established
+  in the current integration fixture.
 * Per-carrier measured-service batch selection and its demand/supply coordinator;
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete
   status/NACK recovery for both publication/receive halves.
-* Scoped bidirectional mailbox inventory/discovery, origin/ledger classification,
-  IDLE/DONE or a calibrated alternative, bounded proof-based reclamation and
-  migration/restart reconciliation using original stores and retained debt.
+* Production bidirectional origin/ledger classification and durable own-body
+  correlation, IDLE/DONE or a calibrated alternative, bounded proof-based
+  reclamation and migration/restart reconciliation using original stores and
+  retained debt. The bounded serialized Inbox is not yet a complete concurrent
+  mailbox service; control progress under full DATA pending queues must be
+  integrated and qualified before activation.
 * Independent provider/client/server processes with calibrated network, command,
   CPU and disk service; all required socket/account/state/workload/seed cases.
 * Real native TUN/TCP integration, Android validation, 300 cold TLS attempts per

@@ -27,6 +27,9 @@ const (
 	Receipt
 	FinishAck
 	ResetAck
+	Open
+	OpenOK
+	OpenError
 )
 
 type Record struct {
@@ -43,6 +46,13 @@ func (r Record) valid() bool {
 		return false
 	}
 	switch r.Kind {
+	case Open:
+		_, err := decodeTarget(r.Payload)
+		return err == nil && r.Offset == 0 && r.Acknowledged == 0 && r.ReceiveLimit > 0
+	case OpenOK:
+		return len(r.Payload) == 0 && r.Offset == 0 && r.Acknowledged == 0 && r.ReceiveLimit > 0
+	case OpenError:
+		return len(r.Payload) == 1 && r.Payload[0] >= byte(OpenDenied) && r.Payload[0] <= byte(OpenBusy) && r.Offset == 0 && r.Acknowledged == 0 && r.ReceiveLimit == 0
 	case Data:
 		return len(r.Payload) > 0 && r.Offset <= maxStreamID-uint64(len(r.Payload)) && ((r.ReceiveLimit == 0 && r.Acknowledged == 0) || (r.ReceiveLimit > 0 && r.Acknowledged <= r.ReceiveLimit))
 	case Credit:

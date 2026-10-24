@@ -31,10 +31,10 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 		}
 	}
 	for _, f := range s.flows {
-		if class != DataLedger && plane == Fast && (f.resetAckPending || f.localReset && !f.resetSent || !f.stopped() && (f.receiptPending || f.creditPending || f.finishAckPending || f.localFinish && f.tx.Len() == 0 && !f.finishSent)) {
+		if class != DataLedger && plane == Fast && (f.resetAckPending || f.localReset && !f.resetSent || !f.stopped() && (f.openPending || f.receiptPending || f.creditPending || f.finishAckPending || f.localFinish && f.tx.Len() == 0 && !f.finishSent)) {
 			return true
 		}
-		if class == ControlLedger || f.stopped() || f.tx.Len() == 0 || f.sent >= f.peerCredit || len(f.pending) >= 4096 || s.records >= 16384 {
+		if class == ControlLedger || f.stopped() || f.opening != openEstablished || f.tx.Len() == 0 || f.sent >= f.peerCredit || len(f.pending) >= 4096 || s.records >= 16384 {
 			continue
 		}
 		short := s.shortLocked(f)

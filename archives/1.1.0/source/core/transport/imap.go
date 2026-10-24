@@ -30,6 +30,7 @@ type operation struct {
 	result       Result
 	bytes        int
 	fetch        bool
+	metadata     bool
 	first, last  uint32
 	uids         map[uint32]bool
 }
@@ -253,6 +254,16 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 	return cmd, nil
 }
 func (e *Executor) Fetch(ctx context.Context, first, last uint32) (*Command, error) {
+	return e.fetchRange(ctx, first, last, false)
+}
+
+// Enumerate returns actual extant UIDs, not UIDNEXT/EXISTS allocation hints.
+// Its UID-only replies consume the original per-command response budget and
+// never produce their own change notifications/polling feedback loop.
+func (e *Executor) Enumerate(ctx context.Context) (*Command, error) {
+	return e.fetchRange(ctx, 1, ^uint32(0), true)
+}
+func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata bool) (*Command, error) {
 	if first == 0 || last < first {
 		return nil, ErrProtocol
 	}
@@ -271,8 +282,13 @@ func (e *Executor) Fetch(ctx context.Context, first, last uint32) (*Command, err
 	op.first = first
 	op.last = last
 	op.uids = make(map[uint32]bool)
+	op.metadata = metadata
 	e.mu.Unlock()
-	if err = e.write([]byte(fmt.Sprintf("%s UID FETCH %d:%d (UID BODY.PEEK[])\r\n", tag, first, last))); err != nil {
+	items := "UID BODY.PEEK[]"
+	if metadata {
+		items = "UID"
+	}
+	if err = e.write([]byte(fmt.Sprintf("%s UID FETCH %d:%d (%s)\r\n", tag, first, last, items))); err != nil {
 		e.fail(ErrUnknown)
 		return &Command{op}, ErrUnknown
 	}
@@ -371,6 +387,14 @@ func (e *Executor) readLoop() {
 						e.fail(ErrProtocol)
 						return
 					}
+					metadata, err := e.readMetadata(line)
+					if err != nil {
+						e.fail(err)
+						return
+					}
+					if metadata {
+						continue
+					}
 					select {
 					case e.changes <- struct{}{}:
 					default:
@@ -410,6 +434,37 @@ func (e *Executor) readLoop() {
 		e.mu.Unlock()
 	}
 }
+func (e *Executor) readMetadata(line string) (bool, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	op := e.fetch
+	if op == nil || !op.metadata {
+		return false, nil
+	}
+	fields := strings.Fields(strings.NewReplacer("(", " ", ")", " ").Replace(strings.ToUpper(line)))
+	var uid uint64
+	for i := 0; i+1 < len(fields); i++ {
+		if fields[i] == "UID" {
+			value, err := strconv.ParseUint(fields[i+1], 10, 32)
+			if err != nil || value == 0 || uid != 0 {
+				return false, ErrProtocol
+			}
+			uid = value
+		}
+	}
+	if uid == 0 || uint32(uid) < op.first || uint32(uid) > op.last {
+		return false, nil
+	}
+	if len(line)+2 > e.limits.ResponseBytes-op.bytes {
+		return false, ErrCapacity
+	}
+	op.bytes += len(line) + 2
+	if !op.uids[uint32(uid)] {
+		op.uids[uint32(uid)] = true
+		op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid)})
+	}
+	return true, nil
+}
 func (e *Executor) readBody(line string) error {
 	// This executor requests one complete BODY per UID. Any partial/alternative
 	// FETCH form is rejected rather than ambiguously assigned to a pending tag.
@@ -423,6 +478,10 @@ func (e *Executor) readBody(line string) error {
 	}
 	e.mu.Lock()
 	op := e.fetch
+	if op != nil && op.metadata {
+		e.mu.Unlock()
+		return ErrProtocol
+	}
 	if op == nil || int(size)+len(line) > e.limits.ResponseBytes-op.bytes {
 		e.mu.Unlock()
 		return ErrCapacity

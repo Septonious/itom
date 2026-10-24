@@ -25,9 +25,10 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	mu     sync.Mutex
-	bodies [][]byte
-	bytes  int
+	mu      sync.Mutex
+	bodies  [][]byte
+	bytes   int
+	changed chan struct{}
 }
 
 func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executor {
@@ -40,6 +41,10 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 			}
 			line := readLine(t, r)
 			fields := strings.Fields(line)
+			if len(fields) == 2 && fields[1] == "NOOP" {
+				fmt.Fprintf(conn, "%s OK alive\r\n", fields[0])
+				continue
+			}
 			if len(fields) < 3 {
 				t.Error("invalid fixture command")
 				return
@@ -60,6 +65,10 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 				m.bytes += len(body)
 				uid := len(m.bodies)
 				m.mu.Unlock()
+				select {
+				case m.changed <- struct{}{}:
+				default:
+				}
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
 				var first, last int
@@ -72,14 +81,17 @@ func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executo
 					return
 				}
 				m.mu.Lock()
-				if last > len(m.bodies) {
-					m.mu.Unlock()
-					t.Error("FETCH outside actual fixture inventory")
-					return
+				last = min(last, len(m.bodies))
+				var bodies [][]byte
+				if first <= last {
+					bodies = append(bodies, m.bodies[first-1:last]...)
 				}
-				bodies := append([][]byte(nil), m.bodies[first-1:last]...)
 				m.mu.Unlock()
 				for i, body := range bodies {
+					if fields[4] == "(UID)" {
+						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", first+i, first+i)
+						continue
+					}
 					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", first+i, first+i, len(body))
 					conn.Write(body)
 					fmt.Fprint(conn, ")\r\n")

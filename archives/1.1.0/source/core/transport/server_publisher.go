@@ -46,6 +46,10 @@ func (p *ServerPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int
 	if p.plane != Bulk || p.class != DataLedger || maxEncryptedBytes > MaxBulkBytes {
 		return nil, ErrProtocol
 	}
+	overhead, _ := secure.SessionPacketSize(headerSize)
+	if maxEncryptedBytes < bulkHeader+bulkEntryHeader+overhead+1 {
+		return nil, ErrCapacity
+	}
 	return p.prepare(ctx, maxEncryptedBytes, true)
 }
 
@@ -53,13 +57,13 @@ func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk bool) (
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	minimum := 0
-	if p.class == DataLedger {
-		minimum = 1
+	minimum, ready := p.session.minimumPayloadFor(p.plane, p.class)
+	if !ready {
+		return nil, nil
 	}
 	if bulk {
 		overhead, _ := secure.SessionPacketSize(headerSize)
-		minimum = bulkHeader + bulkEntryHeader + overhead + 1
+		minimum += bulkHeader + bulkEntryHeader + overhead
 	}
 	if maximum < minimum {
 		return nil, ErrCapacity

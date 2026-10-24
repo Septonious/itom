@@ -61,6 +61,11 @@ func logicalLink(t *testing.T) (*transport.Session, *transport.Session, context.
 	a := session(t, transport.DefaultLimits())
 	b := session(t, transport.DefaultLimits())
 	ca, cb := cipherPair(t, wire.ID{88})
+	ctx := linkSessions(t, a, b, ca, cb)
+	return a, b, ctx
+}
+func linkSessions(t *testing.T, a, b *transport.Session, ca, cb *transport.Cipher) context.Context {
+	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	var sockets []net.Conn
@@ -161,7 +166,7 @@ func logicalLink(t *testing.T) (*transport.Session, *transport.Session, context.
 		b.Close()
 		wg.Wait()
 	})
-	return a, b, ctx
+	return ctx
 }
 func TestRepeatedColdTLSHTTPRequestsReuseOneSessionAndRetireAllStreams(t *testing.T) {
 	upstream := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

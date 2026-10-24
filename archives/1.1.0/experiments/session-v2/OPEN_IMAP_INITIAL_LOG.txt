@@ -1,0 +1,7 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    duplex_imap_test.go:45: invalid fixture command
+    open_imap_test.go:304: V2_IMAP_OUTCOME_UNKNOWN
+--- FAIL: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.80s)
+FAIL
+FAIL	itom.local/core/transport	1.951s
+FAIL

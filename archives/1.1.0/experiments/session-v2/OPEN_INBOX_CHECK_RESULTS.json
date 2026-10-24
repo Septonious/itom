@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T12:30:52.564737+00:00",
+  "parent_commit": "deb6f7b045bf1ef60f62d95250cd7998bebdd245",
+  "branch": "codex/v1.1.0-session-transport-v2",
+  "status": "unqualified source/component checkpoint; V2_NOT_READY and packaging guard unchanged",
+  "toolchain": "go1.27.1 linux/amd64",
+  "cpu_quota": "2 CPUs; not the eight-core server profile",
+  "checks": [
+    {
+      "file": "OPEN_INBOX_CORE_RACE.jsonl",
+      "raw_sha256": "6304cc9fe19365264875326e187090b00bc8ac7d7a8ce12c4ae94ed3c5c867eb",
+      "normalized_sha256": "6304cc9fe19365264875326e187090b00bc8ac7d7a8ce12c4ae94ed3c5c867eb",
+      "top_level_group_executions": 96,
+      "failures": [],
+      "package_results": [
+        {
+          "package": "itom.local/core/journal",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/qualification",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/secure",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/wallet",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/wire",
+          "action": "pass"
+        },
+        {
+          "package": "itom.local/core/transport",
+          "action": "pass"
+        }
+      ]
+    },
+    {
+      "file": "OPEN_INBOX_NATIVE_RACE.jsonl",
+      "raw_sha256": "af04cc404817e8880343ce010d4f0c8ca224f9436a82a674d2b9ea70ff015c00",
+      "normalized_sha256": "af04cc404817e8880343ce010d4f0c8ca224f9436a82a674d2b9ea70ff015c00",
+      "top_level_group_executions": 10,
+      "failures": [],
+      "package_results": [
+        {
+          "package": "itom.local/mobile",
+          "action": "pass"
+        }
+      ]
+    },
+    {
+      "file": "OPEN_INBOX_REPEATED.jsonl",
+      "raw_sha256": "550ecb4c7640ee8a4d61e84ca5a8f0f0944ca09c3d54989652366982dd5ddd4c",
+      "normalized_sha256": "550ecb4c7640ee8a4d61e84ca5a8f0f0944ca09c3d54989652366982dd5ddd4c",
+      "top_level_group_executions": 50,
+      "failures": [],
+      "package_results": [
+        {
+          "package": "itom.local/core/transport",
+          "action": "pass"
+        }
+      ]
+    },
+    {
+      "file": "OPEN_IMAP_INITIAL_LOG.txt",
+      "raw_sha256": "cde02ca60ce93a259f70faee322ffb7db739095b1891b02e810cb0e627a98c3a",
+      "normalized_sha256": "cde02ca60ce93a259f70faee322ffb7db739095b1891b02e810cb0e627a98c3a"
+    },
+    {
+      "file": "OPEN_IMAP_CORRECTED_LOG.txt",
+      "raw_sha256": "01c959fcb64ab573314fe9c7acc554b2f4373fc41d07a4e7148e364505e725ad",
+      "normalized_sha256": "01c959fcb64ab573314fe9c7acc554b2f4373fc41d07a4e7148e364505e725ad"
+    },
+    {
+      "file": "OPEN_INBOX_VET_LOG.txt",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": [
+    "go test -race -json ./... -count=1 -timeout=90s (core)",
+    "go vet ./... (core)",
+    "go test -race -json ./... -count=1 -timeout=60s (native)",
+    "go test -race -json ./transport -run <10 OPEN/inbox scenario groups> -count=5 -timeout=90s"
+  ],
+  "initial_failure": "The first IMAP application scenario completed its HTTP transfers but failed its final carrier health check because the scripted provider did not implement NOOP. Added a tagged NOOP response; retained the failed output. No production timeout or qualification threshold changed.",
+  "implemented": [
+    "Authenticated target OPEN and original 1500ms establishment limit; bounded authorized/pinned server TCP exit and per-stream cancellation.",
+    "Exact OPEN/retry payload admission; validated RESET_ACK retires uncertain logical OPEN without refunding physical debt.",
+    "Scoped bounded actual-UID inventory with holes, late visibility, pre-decrypt ordinal deferral and retained backpressured delivery.",
+    "Cold TLS/HTTP over accounted TLS/IMAP with four fixed carrier sockets and four newly opened streams, including request/response bodies exceeding the receive window."
+  ],
+  "limits": [
+    "Noise/grants pre-established, one account and one in-process pump; no realistic multi-account timing or service calibration.",
+    "Own-body publication correlation is fixture-owned; production origin/ledger classifier and durable recovery index remain missing.",
+    "No full pending-queue control-progress solution or calibrated IDLE/poll coordinator yet.",
+    "No raw Rambler or Android TUN measurement. Neither sustained 100Mbps nor <=250ms idle or <=2000ms loaded RTT proven.",
+    "No APK/server package; thresholds and identity unchanged."
+  ],
+  "source_manifest_file": "OPEN_INBOX_SOURCE_MANIFEST.json"
+}

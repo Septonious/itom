@@ -1,0 +1,4 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (1.70s)
+PASS
+ok  	itom.local/core/transport	2.748s

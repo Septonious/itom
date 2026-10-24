@@ -81,9 +81,9 @@ func (p *ClientPublisher) Prepare(ctx context.Context, maxPayload int) (*Prepare
 		}
 		return mailbox.EncodedSize(body)
 	}
-	minimum := 0
-	if p.class == DataLedger {
-		minimum = 1
+	minimum, ready := p.session.minimumPayloadFor(p.plane, p.class)
+	if !ready {
+		return nil, nil
 	}
 	if maxPayload < minimum {
 		return nil, ErrCapacity
@@ -266,7 +266,14 @@ func (p *ClientPublisher) PrepareBulk(ctx context.Context, maxEncryptedBytes int
 		return nil, ErrProtocol
 	}
 	overhead, _ := secure.SessionPacketSize(headerSize)
-	minimum := bulkHeader + bulkEntryHeader + overhead + 1
+	if maxEncryptedBytes < bulkHeader+bulkEntryHeader+overhead+1 {
+		return nil, ErrCapacity
+	}
+	payloadMinimum, ready := p.session.minimumPayloadFor(Bulk, DataLedger)
+	if !ready {
+		return nil, nil
+	}
+	minimum := bulkHeader + bulkEntryHeader + overhead + payloadMinimum
 	if maxEncryptedBytes < minimum {
 		return nil, ErrCapacity
 	}

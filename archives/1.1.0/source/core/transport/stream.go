@@ -26,7 +26,7 @@ func (s *Session) Conn(id uint64) (*Conn, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	f := s.flows[id]
-	if s.closed || f == nil || f.stopped() {
+	if s.closed || f == nil || f.stopped() || f.opening != openEstablished {
 		return nil, ErrClosed
 	}
 	if f.connection == nil {
