@@ -92,3 +92,10 @@ Native client/server entry points remain `V2_NOT_READY`. Sustained independent
 process/provider tests and all original 250ms/2000ms/100Mbps and zero-failure gates
 remain unmet. No provider performance claim or installable RC follows from these
 integrity checks, and removed transport code is not reactivated.
+
+
+Production profile review additionally confirms separate installed issuer files
+per account/user. The current ten-account roster case uses shared stores and does
+not implement that identity mapping. The [profile planner](PROFILE_SERVICE_PLAN.md)
+retains each original identity and rejects flattening them into the anchor's
+stores. Per-account wire authority and wallet binding remain explicit blockers.

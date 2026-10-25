@@ -1,0 +1,96 @@
+{
+  "status": "unqualified source checkpoint; read-only original-profile planner; production startup remains V2_NOT_READY",
+  "parent": "549bf7b86e98109029507f81bd0e89cee806f471",
+  "checks": [
+    {
+      "file": "PROFILE_PLAN_CORE_RACE.JSONL",
+      "sha256": "0545d6a70a518d4c7fdf59b5c1b5a7a2d2956044c157612f9ffb4603941f40f5",
+      "top_level_group_executions": {
+        "pass": 209
+      },
+      "failed": []
+    },
+    {
+      "file": "PROFILE_PLAN_FIRST.JSONL",
+      "sha256": "8b86542dc1c407ee3f06daf11ffd2f8e6d3f15c6dd17828531e6d6e42d91268b",
+      "top_level_group_executions": {
+        "fail": 3
+      },
+      "failed": [
+        "TestProfilePlanUsesOriginalPerAccountIssuersAndAllTenRetainedFolders",
+        "TestProfilePlanRejectsMissingScopeSharedLoginOvercommitAndFolderOverflow",
+        "TestProfilePlanPreservesUnknownOldShardDebtAndInventoryFence",
+        "itom.local/core/tunnel"
+      ]
+    },
+    {
+      "file": "PROFILE_PLAN_NATIVE_RACE.JSONL",
+      "sha256": "7f9305dbefc3c96564f1f4fc39bd8efa8a69ccefefcad409314f2a5bda5bbdf5",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "failed": []
+    },
+    {
+      "file": "PROFILE_PLAN_REPEATED.JSONL",
+      "sha256": "2dd2577d935c66ec196bd19de6aad31c5efbd81df4b5b4bb1085172a6d9ccbdf",
+      "top_level_group_executions": {
+        "pass": 9
+      },
+      "failed": []
+    },
+    {
+      "file": "PROFILE_PLAN_SECOND.JSONL",
+      "sha256": "1a37618797d5d380a778b47563e1f2b26267011bc191f5621d6035689ef2747b",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "failed": []
+    },
+    {
+      "file": "PROFILE_PLAN_VET.TXT",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "final_results": {
+    "core_race_passed": 209,
+    "core_race_failed": 0,
+    "native_race_passed": 10,
+    "native_race_failed": 0,
+    "profile_targeted_group_executions_passed": 9,
+    "profile_targeted_failed": 0,
+    "core_vet": "pass"
+  },
+  "prior_roster_evidence": "ROSTER_CHECK_RESULTS.json",
+  "retained_failures": [
+    "PROFILE_PLAN_FIRST.JSONL contains initial fixture setup failures opening journals before creating their parent directories; fixture corrected, production planner creates no files",
+    "Earlier ROSTER_REPEATED_RACE.JSONL retains one intermittent original TLS startup timeout; neither these profile checks nor subsequent passing cohorts establish its resolution"
+  ],
+  "commands": {
+    "core": "go test -race -json ./... -count=1 -timeout=180s",
+    "native": "go test -race -json ./... -count=1 -timeout=120s",
+    "profile": "go test -race -json ./tunnel -count=3",
+    "vet": "go vet ./..."
+  },
+  "source_sha256": {
+    "archives/1.1.0/source/core/tunnel/profile_plan.go": "97885cb9d860f44dfc364f8c9df89e1db70636f63ad102dc66a87556abd9be60",
+    "archives/1.1.0/source/core/tunnel/profile_plan_test.go": "4ccfcfa5995163d77e5cd807077c19fb7f6c4a95acb151391067ff08cd2fdce7"
+  },
+  "behavior": [
+    "Validate exported profile against original already-open owner/provider/folder scopes",
+    "Preserve original per-account store identities and current runs; create/open/migrate no files",
+    "Retain complete union of all authorized CONTROL/DATA inventory folders, with original ten-folder bound",
+    "Require supplied endpoint budgets to cover all accounts and fit shared participant login and endpoint caps",
+    "Do not enable inventory-gated journal admission or change unknown attempts/held debt",
+    "Explicitly reject flattening separate per-account issuer identities into the current shared-store roster"
+  ],
+  "release_gates": "all original RTT, sustained throughput, ramp/tail/rolling/stall and zero failure thresholds unchanged; not qualified",
+  "remaining": [
+    "per-account issuer authority in roster wire and client wallet binding",
+    "production in-place journal/wallet reconciliation and full actual inventory",
+    "long-lived rendezvous/session owner and overlapping CONTROL/DATA policy",
+    "native production activation",
+    "intermittent TLS failure root cause and original sustained performance qualification"
+  ],
+  "artifacts": "no installable APK or deployable server release"
+}

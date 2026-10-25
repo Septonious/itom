@@ -215,3 +215,17 @@ Production profile/inventory coordination, missing-history recovery, automatic
 overlapping CONTROL/DATA policy, native activation and full sustained performance
 qualification remain required. Roster confirmation alone is not VPN CONNECTED or
 permission to send DATA. This checkpoint produces no APK/server RC.
+
+
+## Existing profile and issuer boundary
+
+The [profile planner](PROFILE_SERVICE_PLAN.md) now validates original per-account
+journal scopes, full retained folder inventory and shared participant budgets.
+It creates no files and enables no admission. Separate installed issuer IDs cannot
+be flattened into the current shared-store roster; the explicit adapter refuses
+that conversion. Supporting those identities in the wire authority and original
+client wallet paths is required before production startup can be activated.
+
+Ten-account roster success must not be reported as compatibility with installed
+per-account journals or as sustained multi-account DATA performance. Keep those
+cases in the real startup/qualification suite when that owner is integrated.

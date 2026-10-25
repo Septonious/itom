@@ -15,7 +15,7 @@ permission now has an accounted rendezvous/invitation component. Production
 coordination remains incomplete. Authenticated selected-lane roster negotiation
 now exists and runs before the cold runtime.
 
-The latest [roster checkpoint](experiments/session-v2/ROSTER_CHECK_RESULTS.json)
+The [roster checkpoint](experiments/session-v2/ROSTER_CHECK_RESULTS.json)
 passes 206/206 core race groups, 10/10 native groups, 39/39 final repeated
 roster/cold group executions and core vet. It adds authenticated selected-lane
 agreement and DATA issuer discovery before the runtime. The cold TLS/HTTP
@@ -31,6 +31,15 @@ permission, fencing, final cleanup and retirement. These are functional checks,
 not RTT/bandwidth qualification. The production lifecycle owner, overlapping
 multi-account authority policy, recovery and native activation remain incomplete.
 
+The newer [profile checkpoint](experiments/session-v2/PROFILE_PLAN_CHECK_RESULTS.json)
+passes 209/209 core race groups, 10/10 native groups, 9/9 repeated profile group
+executions and core vet. Its [planner](PROFILE_SERVICE_PLAN.md) preserves actual
+per-account journal identities, all retained inventory folders and shared login
+budgets without enabling admission. Installed per-account files require distinct
+wire authority mapping; the shared-store ten-account roster fixture does not yet
+provide that production compatibility. An explicit adapter rejects flattening
+those identities. See [profile checks](experiments/session-v2/PROFILE_PLAN_CHECK_RESULTS.json).
+
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
 and SHA-256 hashes. Historical scheduling, timers and congestion behavior are
@@ -38,6 +47,12 @@ not implementation or test oracles. Cryptographic/accounting contracts remain
 mandatory independently of that implementation.
 
 ## Implemented
+
+* A read-only profile/journal service planner retains each original account/user
+  issuer ID and run, complete legacy/shard inventory and explicit budgets. It
+  rejects missing scopes, closed journals, shared login/endpoint overcommit and
+  a combined eleventh folder without changing files, grants or readiness. A
+  separate-issuer plan cannot be passed off as the shared-store roster.
 
 * A three-message encrypted roster exchange binds agreed account/folder mapping,
   DATA/CONTROL issuer identities and runs, actual selected UIDVALIDITY and both
