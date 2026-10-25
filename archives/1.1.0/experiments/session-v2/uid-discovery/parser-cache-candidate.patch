@@ -1,0 +1,55 @@
+diff --git a/archives/1.1.0/source/core/transport/imap.go b/archives/1.1.0/source/core/transport/imap.go
+index ed47fff..f15f3d8 100644
+--- a/archives/1.1.0/source/core/transport/imap.go
++++ b/archives/1.1.0/source/core/transport/imap.go
+@@ -16,6 +16,10 @@ import (
+ var ErrUnknown = errors.New("V2_IMAP_OUTCOME_UNKNOWN")
+ var ErrRefused = errors.New("V2_IMAP_TAGGED_REFUSAL")
+ 
++// Replacer supports concurrent use. Reuse the immutable token mapping instead
++// of rebuilding it for every metadata/BODY response on every selected socket.
++var fetchWordSeparators = strings.NewReplacer("(", " ", ")", " ")
++
+ // Only command admission is transient on the pending-tag edge. Inventory,
+ // literal and response bounds also match ErrCapacity but require explicit
+ // handling; they must not become an unbounded discovery retry loop.
+@@ -553,7 +557,7 @@ func (e *Executor) readMetadata(line string) (bool, error) {
+ 	if op == nil || !op.metadata {
+ 		return false, nil
+ 	}
+-	fields := strings.Fields(strings.NewReplacer("(", " ", ")", " ").Replace(strings.ToUpper(line)))
++	fields := strings.Fields(fetchWordSeparators.Replace(strings.ToUpper(line)))
+ 	var uid uint64
+ 	var size uint32
+ 	sizeKnown := false
+@@ -626,7 +630,7 @@ func (e *Executor) readBody(line string) error {
+ 		return ErrUnknown
+ 	}
+ 	header := strings.ToUpper(line[:start] + " " + suffix)
+-	tokens := strings.Fields(strings.NewReplacer("(", " ", ")", " ").Replace(header))
++	tokens := strings.Fields(fetchWordSeparators.Replace(header))
+ 	var uid uint64
+ 	for i := 0; i+1 < len(tokens); i++ {
+ 		if tokens[i] == "UID" {
+diff --git a/archives/1.1.0/source/core/transport/imap_keywords.go b/archives/1.1.0/source/core/transport/imap_keywords.go
+index 1b9d809..f25b1fd 100644
+--- a/archives/1.1.0/source/core/transport/imap_keywords.go
++++ b/archives/1.1.0/source/core/transport/imap_keywords.go
+@@ -10,6 +10,8 @@ import (
+ 
+ var ErrKeywordsUnsupported = errors.New("V2_IMAP_PERMANENT_KEYWORDS_REQUIRED")
+ 
++var flagWordSeparators = strings.NewReplacer("(", " ( ", ")", " ) ")
++
+ func (e *Executor) KeywordsSupported() bool { return e.keywords }
+ 
+ func validKeyword(keyword string) bool {
+@@ -80,7 +82,7 @@ func (e *Executor) readFlags(line string) (bool, error) {
+ 	if len(line)+2 > e.limits.ResponseBytes-op.bytes {
+ 		return false, ErrCapacity
+ 	}
+-	parts := strings.Fields(strings.NewReplacer("(", " ( ", ")", " ) ").Replace(line))
++	parts := strings.Fields(flagWordSeparators.Replace(line))
+ 	if len(parts) < 7 || parts[3] != "(" || parts[len(parts)-1] != ")" {
+ 		return false, ErrProtocol
+ 	}

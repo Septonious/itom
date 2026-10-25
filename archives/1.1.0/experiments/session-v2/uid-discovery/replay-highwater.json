@@ -1,0 +1,6 @@
+{
+  "Replace": {
+    "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/inbox.go": "/workspace/work/rc8/repository/archives/1.1.0/experiments/session-v2/uid-discovery/highwater-inbox.go",
+    "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/inbox_highwater_candidate_test.go": "/workspace/work/rc8/repository/archives/1.1.0/experiments/session-v2/uid-discovery/inbox_highwater_candidate_test.go"
+  }
+}

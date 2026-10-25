@@ -238,6 +238,23 @@ func testAccountTLSHTTPWithWarmSamples(t *testing.T, clientService, serverServic
 	return testAccountTLSHTTPOnNetwork(t, clientService, serverService, warmSamples, nil, nil)
 }
 func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []time.Duration, warmSamples int, clientNetwork, serverNetwork transport.NetworkDialer) []qualification.Exchange {
+	return testAccountTLSHTTPScenario(t, clientService, serverService, warmSamples, clientNetwork, serverNetwork, accountHTTPScenario{})
+}
+
+type accountHTTPScenario struct {
+	// Only a new long-silence scenario extends total fixture lifetime. Every
+	// original OPEN/TLS/header/client/IMAP deadline remains unchanged.
+	lifetime  time.Duration
+	quietGaps []time.Duration
+}
+
+func testAccountTLSHTTPScenario(t *testing.T, clientService, serverService []time.Duration, warmSamples int, clientNetwork, serverNetwork transport.NetworkDialer, scenario accountHTTPScenario) []qualification.Exchange {
+	if scenario.lifetime == 0 {
+		scenario.lifetime = 30 * time.Second
+	}
+	if scenario.lifetime < 30*time.Second || scenario.lifetime > 60*time.Second {
+		t.Fatal("invalid explicit scenario lifetime")
+	}
 	p := distinctAccountRosterOnNetwork(t, 10, clientService, serverService, clientNetwork, serverNetwork)
 	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.Copy(w, r.Body) }))
 	defer upstream.Close()
@@ -264,7 +281,7 @@ func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []ti
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), scenario.lifetime)
 	defer cancel()
 	var workers sync.WaitGroup
 	failed := make(chan error, 2)
@@ -371,12 +388,31 @@ func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []ti
 	warmClient := &http.Client{Transport: warmTransport, Timeout: 5 * time.Second}
 	var samples []qualification.Exchange
 	for sample := 0; sample <= warmSamples; sample++ {
+		if sample > 0 && len(scenario.quietGaps) > 0 {
+			gap := scenario.quietGaps[(sample-1)%len(scenario.quietGaps)]
+			if gap <= 0 {
+				t.Fatal("invalid explicit quiet period")
+			}
+			quietStarted := time.Now()
+			timer := time.NewTimer(gap)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				t.Fatal("runtime stopped during application silence", sample, ctx.Err())
+			case err := <-failed:
+				timer.Stop()
+				t.Fatal("runtime failed during application silence", sample, err)
+			case <-timer.C:
+			}
+			t.Logf("quiet_before_sample=%d requested_ns=%d observed_ns=%d", sample, gap.Nanoseconds(), time.Since(quietStarted).Nanoseconds())
+		}
 		payload := []byte("warm small application exchange")
 		started := time.Now()
 		stopTrace, reportTrace := traceAccountRequest(t, ctx, p, a, b, client, server, 9)
 		response, err := warmClient.Post(upstream.URL, "application/octet-stream", bytes.NewReader(payload))
 		if err != nil {
 			reportTrace()
+			reportAccountRuntimeStall(t, client, server)
 			t.Fatal("warm account HTTP", sample, err)
 		}
 		got, readErr := io.ReadAll(response.Body)

@@ -20,3 +20,19 @@ func TestAccountWarmLightPropagationQualification(t *testing.T) {
 		t.Error(failure)
 	}
 }
+
+// The same complete accounting/runtime path must keep an existing TLS stream
+// responsive after real application silence. Slightly irregular gaps avoid
+// synchronizing requests with the deterministic link-profile period. A longer
+// total scenario lifetime accommodates 30s silence; request deadlines do not grow.
+func TestAccountQuietLightPropagationQualification(t *testing.T) {
+	client := newWireRoute([]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 20 * time.Millisecond, 40 * time.Millisecond}, 250*time.Millisecond, 62_500_000)
+	server := newWireRoute([]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 30 * time.Millisecond}, 250*time.Millisecond, 62_500_000)
+	samples := testAccountTLSHTTPScenario(t, nil, nil, 3, client, server, accountHTTPScenario{
+		lifetime:  60 * time.Second,
+		quietGaps: []time.Duration{1130 * time.Millisecond, 5070 * time.Millisecond, 30190 * time.Millisecond},
+	})
+	for _, failure := range qualification.CheckExchanges(samples) {
+		t.Error(failure)
+	}
+}

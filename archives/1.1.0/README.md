@@ -7,7 +7,11 @@ established. The preferred target remains 250ms; see the
 [user-directed temporary RTT policy](TEMPORARY_RTT_POLICY.md).
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/FETCH_SERVICE_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/UID_DISCOVERY_CHECK_RESULTS.json).
+
+[Cleanup/idle experiments](UID_DISCOVERY_WORK.md) retain a UID-exhaustion safety
+fix and new long-idle coverage. A faster UID prediction candidate is held back
+because stability is not established; the temporary 300ms target remains unqualified.
 
 [Shared FETCH service](FETCH_SERVICE_WORK.md) now queues cleanup/discovery turns
 and bounds unsuccessful maintenance probing. Sized read grouping is enabled

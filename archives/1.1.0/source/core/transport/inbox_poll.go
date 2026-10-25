@@ -37,7 +37,9 @@ func (i *Inbox) Poll(ctx context.Context) (InboxProgress, error) {
 	}
 	if i.tailUID == ^uint32(0) {
 		i.tailReady = false
-		return progress, ErrCapacity
+		// No numeric successor exists. Continue actual inventory for lower UID
+		// visibility; never wrap a selector or replace a healthy carrier.
+		return i.sweepLocked(ctx)
 	}
 	next := i.tailUID + 1
 	version := i.tailVersion

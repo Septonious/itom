@@ -3,6 +3,7 @@ package transport_test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -11,6 +12,27 @@ import (
 	"itom.local/core/transport"
 	"itom.local/core/wallet"
 )
+
+// Only actual application failure calls this, after the measured deadline.
+// A failed request must retain worker state and bounded stacks, rather than
+// being mistaken for a successful RTT sample or blamed on a coincident commit.
+func reportAccountRuntimeStall(t *testing.T, services ...*transport.RosterService) {
+	t.Helper()
+	var memory runtime.MemStats
+	runtime.ReadMemStats(&memory)
+	t.Logf("failed_request_runtime goroutines=%d gomaxprocs=%d heap_bytes=%d num_gc=%d gc_pause_total_ns=%d", runtime.NumGoroutine(), runtime.GOMAXPROCS(0), memory.HeapAlloc, memory.NumGC, memory.PauseTotalNs)
+	for side, svc := range services {
+		s := svc.Runtime.Snapshot()
+		t.Logf("failed_request side=%d phase=%s session=%+v", side, s.Phase, s.Session)
+		for _, c := range s.Carriers {
+			x := c.IMAP
+			t.Logf("failed_request side=%d account=%s plane=%d read=%s write=%s read_failure=%s write_failure=%s closed=%t failure=%s tags=%d fetch=%t literal=%t idle=%t fetch_waiters=%d body_started=%d body_completed=%d inventory_started=%d inventory_completed=%d", side, c.Account, c.Plane, c.Read, c.Write, c.ReadFailure, c.WriteFailure, x.Closed, x.Failure, x.PendingTags, x.FetchActive, x.LiteralActive, x.IdleActive, x.FetchWaiters, x.Fetch.Started, x.Fetch.Completed, x.Inventory.Started, x.Inventory.Completed)
+		}
+	}
+	stack := make([]byte, 512<<10)
+	n := runtime.Stack(stack, true)
+	t.Logf("failed_request_stacks bytes=%d capacity=%d truncated=%t\n%s", n, len(stack), n == len(stack), stack[:n])
+}
 
 // Bounded diagnostics cover the COMPLETE request, including response body reads.
 // Reporting happens after the measured request; it changes no request deadline.

@@ -1,0 +1,9 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/transport
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkRepeatedKnownUIDMetadata-3   	  824931	      1448 ns/op	     592 B/op	       6 allocs/op
+BenchmarkRepeatedKnownUIDMetadata-3   	 1000000	      1449 ns/op	     592 B/op	       6 allocs/op
+BenchmarkRepeatedKnownUIDMetadata-3   	  933854	      1496 ns/op	     592 B/op	       6 allocs/op
+PASS
+ok  	itom.local/core/transport	4.061s

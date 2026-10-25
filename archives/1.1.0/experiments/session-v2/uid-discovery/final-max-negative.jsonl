@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T19:49:06.574345352Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T19:49:06.58201536Z","Action":"run","Package":"itom.local/core/transport","Test":"TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier"}
+{"Time":"2026-10-25T19:49:06.58212023Z","Action":"output","Package":"itom.local/core/transport","Test":"TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier","Output":"=== RUN   TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier\n","OutputType":"frame"}
+{"Time":"2026-10-25T19:49:06.590940317Z","Action":"output","Package":"itom.local/core/transport","Test":"TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier","Output":"    inbox_highwater_test.go:52: UID exhaustion stopped healthy discovery {0 0 0 false} V2_CAPACITY\n","OutputType":"error"}
+{"Time":"2026-10-25T19:49:06.591097814Z","Action":"output","Package":"itom.local/core/transport","Test":"TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier","Output":"--- FAIL: TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T19:49:06.591108422Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestExhaustedUIDNumbersKeepInventoryAliveWithoutWrappingOrReplacingCarrier","Elapsed":0.01}
+{"Time":"2026-10-25T19:49:06.591131503Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T19:49:06.592571041Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.018s\n","OutputType":"frame"}
+{"Time":"2026-10-25T19:49:06.592629023Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.018}

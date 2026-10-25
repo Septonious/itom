@@ -8,6 +8,13 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+The [UID discovery continuation](UID_DISCOVERY_WORK.md) keeps inventory alive at
+numeric UID exhaustion and adds long-idle completion checks. The faster allocation
+high-water candidate is held back pending stability evidence. Misses above the
+temporary 300ms maximum and intermittent long-idle HTTP failures remain. Faster
+probe pacing and a parser-cache variant were also not activated. See
+[the current evidence](experiments/session-v2/UID_DISCOVERY_CHECK_RESULTS.json).
+
 The [FETCH service continuation](FETCH_SERVICE_WORK.md) queues discovery and
 cleanup on the original single parser, backs off unsuccessful receipt probes
 within the existing timing bounds, and groups at most two sized bulk BODY

@@ -7,6 +7,11 @@ cannot supply that pair yet: `tunnel.StartClient` and `ServeManaged` still retur
 Stable 1.0.0/RC2 remains separate; its removed runtime will not be reactivated as
 the replacement transport.
 
+The current [cleanup/idle coverage](UID_DISCOVERY_WORK.md) retains numeric UID
+exhaustion safety; a faster prediction candidate is held back. New 30s cases expose
+intermittent completion failures. Those failures remain release blockers under
+the temporary 300ms policy as well as the preferred 250ms target.
+
 The latest [FETCH service work](FETCH_SERVICE_WORK.md) improves bounded bulk
 discovery and command-service stress completion. Its final 64 warm application
 exchanges still include 19 misses of 250ms. Queued parser turns and bounded
