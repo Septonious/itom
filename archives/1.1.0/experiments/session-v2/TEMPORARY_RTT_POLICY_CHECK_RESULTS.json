@@ -1,0 +1,31 @@
+{
+  "status": "User-authorized temporary idle/light maximum 300ms; preferred250ms, loaded2000ms, sustained100Mbps and other criteria retained. Policy tests are not transport qualification.",
+  "parent": "a00787304e235074d5ad38945e5ed626d51fe037",
+  "qualification_groups": {
+    "pass": 8
+  },
+  "checks": [
+    {
+      "file": "light-policy/qualification-tests.jsonl",
+      "sha256": "496ff2ab2bb61921a57b36bcf2d25274182551d4c40690046982ec96b310bd01"
+    }
+  ],
+  "sources": [
+    {
+      "file": "archives/1.1.0/source/core/qualification/measure.go",
+      "sha256": "26b3d0c77ce72cf19f0ac1fdb09df06cbb8f43e0b07f8123baaff5e636921777"
+    },
+    {
+      "file": "archives/1.1.0/source/core/qualification/measure_test.go",
+      "sha256": "8993f74529ce18c97bed7ba2b9ea4c884ed5a3e601ab3623564036bba6fc747c"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/account_service_test.go",
+      "sha256": "83148368ef5cd3eeb1b78984953ae6f040b56876176eb1cd3ce5fd6afa219d59"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/account_light_itomtest_test.go",
+      "sha256": "472a9391dd7eaaa2d481c0878abc1a539866fddfd9c0f02d37e052dc4bd12761"
+    }
+  ]
+}

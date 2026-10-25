@@ -1,5 +1,9 @@
 # Shared FETCH service and bounded bulk reads
 
+This is the retained checkpoint report from before the
+[temporary 300ms user decision](TEMPORARY_RTT_POLICY.md). Its historical 250ms
+results and original source hashes are unchanged.
+
 This continues `96a1447`. It is an unqualified source checkpoint, not an APK or
 server release. Production entry points remain `V2_NOT_READY`. The final strict
 light-load run still misses 250ms; sustained 100Mbps is not established.

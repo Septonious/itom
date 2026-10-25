@@ -1,7 +1,9 @@
 # Replacement transport implementation status
 
 This branch is an **unqualified implementation in progress**, not a runnable RC
-or achievement of the 250ms/100Mbps targets. Production client/server startup
+or achievement of the temporary 300ms/100Mbps targets. The preferred idle/light
+target remains 250ms; the [current user decision](TEMPORARY_RTT_POLICY.md)
+supersedes historical 250ms acceptance references below. Production startup
 still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
@@ -536,7 +538,8 @@ failed full-suite output is preserved in the inbox-pressure evidence. Production
 progress timeout, 1500ms OPEN/TLS limits and all timed qualification gates are
 unchanged; this correction is not a measured transport speed improvement.
 
-The release contract is unchanged: 250ms light maximum, 2000ms loaded maximum,
+The current release contract is temporarily 300ms light maximum (250ms remains
+preferred; see [the user decision](TEMPORARY_RTT_POLICY.md)), 2000ms loaded maximum,
 100Mbps useful sustained traffic, fixed 12s/60s measurements, ramp/tail/stall gates,
 legacy OPEN/TLS/HTTP timeouts, zero unexpected TLS failures and zero load-induced
 carrier replacements. Component integrity tests cannot satisfy those gates.

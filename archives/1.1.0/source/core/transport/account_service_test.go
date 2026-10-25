@@ -363,7 +363,8 @@ func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []ti
 	t.Logf("account application cohort elapsed=%s fast_read_commands=%d", time.Since(applicationStarted), fastReads()-beforeReads)
 	// Warm HTTP exchanges isolate light-load application service from a cold
 	// OPEN/TLS handshake. This is a diagnostic sample, not a release gate:
-	// retain every value and report the unchanged 250ms target independently.
+	// retain every value and report both the temporary maximum and preferred
+	// 250ms target independently. Reporting misses never removes a sample.
 	warmTransport := tr.Clone()
 	warmTransport.DisableKeepAlives = false
 	defer warmTransport.CloseIdleConnections()
@@ -382,7 +383,7 @@ func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []ti
 		response.Body.Close()
 		elapsed := time.Since(started)
 		stopTrace()
-		if sample > 0 && elapsed > 250*time.Millisecond {
+		if sample > 0 && elapsed > qualification.PreferredLightRTT {
 			reportTrace()
 		}
 		if readErr != nil || !bytes.Equal(got, payload) {
@@ -391,7 +392,7 @@ func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []ti
 		}
 		if sample > 0 {
 			samples = append(samples, qualification.Exchange{Elapsed: elapsed, Bytes: len(payload)})
-			t.Logf("warm_light_sample=%d payload=%d elapsed_ns=%d target_ns=%d light_target_met=%t", sample, len(payload), elapsed.Nanoseconds(), (250 * time.Millisecond).Nanoseconds(), elapsed <= 250*time.Millisecond)
+			t.Logf("warm_light_sample=%d payload=%d elapsed_ns=%d target_ns=%d light_target_met=%t preferred_target_ns=%d preferred_light_target_met=%t", sample, len(payload), elapsed.Nanoseconds(), qualification.LightRTTLimit.Nanoseconds(), elapsed <= qualification.LightRTTLimit, qualification.PreferredLightRTT.Nanoseconds(), elapsed <= qualification.PreferredLightRTT)
 		}
 	}
 	for _, j := range p.journals {

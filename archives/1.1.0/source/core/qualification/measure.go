@@ -9,6 +9,13 @@ import (
 
 const RateBytesPerSecond uint64 = 12500000 // 100 decimal Mbps useful payload
 
+// LightRTTLimit is the user's temporary acceptance maximum while awaiting
+// field confirmation. PreferredLightRTT remains visible in diagnostics; it is
+// not silently substituted for the current maximum or treated as a percentile.
+const LightRTTLimit = 300 * time.Millisecond
+const PreferredLightRTT = 250 * time.Millisecond
+const LoadedRTTLimit = 2 * time.Second
+
 type Arrival struct {
 	At    time.Duration
 	Bytes uint64
@@ -143,12 +150,12 @@ func CheckExchanges(samples []Exchange) []string {
 	}
 	var out []string
 	for i, s := range samples {
-		ceiling := 250 * time.Millisecond
+		ceiling := LightRTTLimit
 		if s.Loaded {
-			ceiling = 2 * time.Second
+			ceiling = LoadedRTTLimit
 		}
 		if s.Err != "" || s.Elapsed <= 0 || s.Elapsed > ceiling || s.Bytes < 1 {
-			out = append(out, fmt.Sprintf("exchange %d exceeds application RTT/completion gate", i))
+			out = append(out, fmt.Sprintf("exchange %d fails application RTT/completion gate (elapsed=%s maximum=%s)", i, s.Elapsed, ceiling))
 		}
 	}
 	return out

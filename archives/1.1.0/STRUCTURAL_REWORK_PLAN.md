@@ -2,6 +2,8 @@
 
 Decision document, 24 October 2026 (Moscow). Implementation has begun on the isolated session-v2 branch; see [current implementation status](SESSION_V2_STATUS.md). This document is a contract, not a qualification result. The later user instruction replaces all owned active Go tests after the first implementation and rejects the old transport as an implementation or behavioral oracle.
 
+The [25 October user decision](TEMPORARY_RTT_POLICY.md) temporarily sets the idle/light maximum to 300ms; 250ms remains preferred pending real-world confirmation. Historical measurements below retain their original interpretation.
+
 ## Decision and acceptance boundary
 
 Replace the current per-account transport/stream-owner actors, socket borrowing, mailbox hot-window timers and overlapping placement/admission feedback loops with a **session-owned, two-plane message transport**. Accounts supply physically accounted mailbox service; an account no longer owns an application TCP connection. Fast messages and bulk bodies have separate persistent mailbox/command resources. A protocol-aware IMAP executor replaces whole-operation mutex scheduling. Publication is admitted against the exact remaining grant before batching and encryption.
@@ -12,14 +14,14 @@ User targets for client-to-IMAP RTT varying 10–50ms and server-to-IMAP RTT var
 
 | Criterion | New release gate |
 | --- | --- |
-| Idle/light application request/reply RTT | Every measured small exchange ≤250ms, including the first exchange after quiet periods |
+| Idle/light application request/reply RTT | Every measured small exchange ≤300ms (250ms preferred), including the first exchange after quiet periods |
 | Application RTT during heavy transfer | Every measured probe ≤2000ms |
 | Sustained useful bandwidth |≥ 100Mbps upload and≥ 100Mbps download, separately and simultaneously; SINGLE and MULTI both count |
 | TLS/Speedtest completion | Zero unexpected failures, including the first run after connection |
 | Connection stability | Zero load-induced IMAP socket replacements, line losses or unrelated application resets |
 | Accounting/recovery | All original quota, journal, wallet, cryptographic and crash-recovery invariants preserved |
 
-Maxima are gates. Means/p95/p99 remain useful diagnostics, but cannot hide a250ms violation. Internal recovery/cleanup/heartbeat work cannot relabel externally idle application traffic as heavy load. The original 17/20 rule is no longer an acceptance shortcut for this rewrite. Old criteria/results remain recorded separately; the user's new 2000ms heavy-load allowance is an explicit new target, not a retroactively passing old 750/1100ms result.
+Maxima are gates. Means/p95/p99 remain useful diagnostics, but cannot hide a 300ms violation. Internal recovery/cleanup/heartbeat work cannot relabel externally idle application traffic as heavy load. The original 17/20 rule is no longer an acceptance shortcut for this rewrite. Old criteria/results remain recorded separately; the user's new 2000ms heavy-load allowance is an explicit new target, not a retroactively passing old 750/1100ms result.
 
 ## What the evidence establishes
 
@@ -85,7 +87,7 @@ Each account gets two fixed, scoped v2 mailboxes: **fast** and **bulk**. They ar
 
 The primary topology remains the measured two phone/three server sockets per account. Phone: one persistent executor per plane. Server: the same planes plus its existing additional bulk service socket. Extra connections may be used only when explicitly configured and negotiated; they cannot be silently supplied by the laboratory. The fast executor never lends capacity to bulk. Every account's bulk plane remains usable, so protecting responsiveness does not permanently remove one or two whole accounts from bulk throughput.
 
-Two mutually agreed fast-plane carriers provide the ordinary short-traffic service; all accounts remain bulk carriers. Their roster/epoch is acknowledged by both endpoints before activation. A replacement roster retains the old working path until its replacement is usable. Per-endpoint RTT scores cannot independently move the return path onto an unprimed mailbox. Standby fast planes can wait for notifications; the active fast receive strategy is chosen against measured command service and the250ms budget. No pool-wide heartbeat/poll storm is required.
+Two mutually agreed fast-plane carriers provide the ordinary short-traffic service; all accounts remain bulk carriers. Their roster/epoch is acknowledged by both endpoints before activation. A replacement roster retains the old working path until its replacement is usable. Per-endpoint RTT scores cannot independently move the return path onto an unprimed mailbox. Standby fast planes can wait for notifications; the active fast receive strategy is chosen against measured command service and the temporary 300ms budget. No pool-wide heartbeat/poll storm is required.
 
 A physical mail has exactly one quota authority and ledger class. Mailbox inventory must classify authenticated store/profile ownership without double-charging, omitting or refunding an unknown body; shared fast-mailbox inventory receives explicit cross-ledger/cross-user negative tests. Control and small DATA can share the fast mailbox but are not mixed into one body charged against two different stores. Physical carrier routing never changes the account/store/key that owns a grant or the evidence needed to release it. Cross-carrier control routes retain authenticated origin scope; the outer transport wrapper is not refund authority.
 
@@ -139,7 +141,7 @@ The machine-readable [acceptance contract](experiments/structural-rework-2026102
 
 | Test family | Required coverage |
 | --- | --- |
-| Idle and light |32 B–16 KiB verified app echoes,1/5/30 s silence, periodic and irregular requests, fresh and retained state, no synthetic warm-up; max 250ms |
+| Idle and light |32 B–16 KiB verified app echoes,1/5/30 s silence, periodic and irregular requests, fresh and retained state, no synthetic warm-up; max 300ms, preferred 250ms |
 | Propagation variation | Extrema inside10–50ms client/20–40ms server, independent/opposite-phase and correlated traces, adverse command/audit phase alignment; not IID jitter only |
 | Actual socket budgets |10 and 15 accounts; primary two phone/three server sockets; stable physical IDs throughout load; no hidden extra LOGINs |
 | Cold TLS/HTTP | First ready path, SYN/first-byte races, certificate/record fragmentation, synchronizing literals, ordinary app behavior, DNS/IP-family paths;≥ 300 cold TLS attempts per primary case with zero unexpected failures |
@@ -159,7 +161,7 @@ Run the real APK/TUN path on Android too. A native Linux bridge simulation is ne
 
 100Mbps useful traffic requires at least 133Mbps encoded wire traffic before TLS, headers, proof reads and cleanup. The fixture must meter **all** of it and verify that the underlying client/provider capacity can supply it. The user's 500Mbps home reference and previous 100Mbps ITOM result make the target worth pursuing, but a bandwidth cap of 100Mbps on the raw uplink cannot provide 100Mbps base64 goodput.
 
-At the worst stated 50/40ms path, even a lean request/reply consumes much of the250ms budget. Additional IDLE/DONE/SELECT turns, a slow durable commit or an Android pause can consume the remainder. Raw IMAP/NOOP RTT alone therefore does not guarantee the target. The executor's exact command timeline must demonstrate it, including the first request after silence. If legal provider behavior or mandatory durability already exceeds the budget, report that blocker and fail the candidate; do not silently redefine the maximum as a percentile, raise the timeout or disable persistence.
+At the worst stated 50/40ms path, even a lean request/reply consumes much of the temporary 300ms budget. Additional IDLE/DONE/SELECT turns, a slow durable commit or an Android pause can consume the remainder. Raw IMAP/NOOP RTT alone therefore does not guarantee the target. The executor's exact command timeline must demonstrate it, including the first request after silence. If legal provider behavior or mandatory durability already exceeds the budget, report that blocker and fail the candidate; do not silently redefine the maximum as a percentile, raise the timeout or disable persistence.
 
 Diagnostics record one causal request chain: native TCP → logical queue/credit → exact quota ticket → commit queue/fsync → command queue/first byte/tagged completion → peer discovery/FETCH → delivery to the app. Use monotonic endpoint clocks and authenticated message IDs for cross-end correlation; do not subtract unsynchronized clocks for one-way latency. Record physical roles, configured and negotiated budgets, outstanding tags, body bytes and remaining grant allowance. Distinguish application RTT, provider NOOP, control echo, queue age and sample age in the UI.
 

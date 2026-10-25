@@ -68,7 +68,7 @@ func TestIdleMaximumCannotBecomeAPercentile(t *testing.T) {
 	for i := range samples {
 		samples[i] = qualification.Exchange{Elapsed: 190 * time.Millisecond, Bytes: 32}
 	}
-	samples[999].Elapsed = 251 * time.Millisecond
+	samples[999].Elapsed = qualification.LightRTTLimit + time.Nanosecond
 	if failures := qualification.CheckExchanges(samples); len(failures) != 1 {
 		t.Fatal("idle spike hidden", failures)
 	}
@@ -76,6 +76,31 @@ func TestIdleMaximumCannotBecomeAPercentile(t *testing.T) {
 	samples[999].Elapsed = 1900 * time.Millisecond
 	if failures := qualification.CheckExchanges(samples); len(failures) != 0 {
 		t.Fatal("acceptable loaded spike rejected", failures)
+	}
+}
+
+func TestTemporaryLightMaximumKeepsPreferredTargetAndLoadedFailuresSeparate(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		sample qualification.Exchange
+		pass   bool
+	}{
+		{"preferred", qualification.Exchange{Elapsed: 250 * time.Millisecond, Bytes: 32}, true},
+		{"temporary_boundary", qualification.Exchange{Elapsed: 300 * time.Millisecond, Bytes: 32}, true},
+		{"light_spike", qualification.Exchange{Elapsed: 300*time.Millisecond + time.Nanosecond, Bytes: 32}, false},
+		{"loaded_boundary", qualification.Exchange{Elapsed: 2 * time.Second, Bytes: 32, Loaded: true}, true},
+		{"loaded_spike", qualification.Exchange{Elapsed: 2*time.Second + time.Nanosecond, Bytes: 32, Loaded: true}, false},
+		{"failed_completion", qualification.Exchange{Elapsed: 290 * time.Millisecond, Bytes: 32, Err: "failed"}, false},
+		{"missing_payload", qualification.Exchange{Elapsed: 290 * time.Millisecond}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := len(qualification.CheckExchanges([]qualification.Exchange{tc.sample})) == 0; got != tc.pass {
+				t.Fatal("temporary maximum changed completion or loaded policy", tc.sample, got)
+			}
+		})
+	}
+	if qualification.PreferredLightRTT != 250*time.Millisecond {
+		t.Fatal("preferred target disappeared")
 	}
 }
 func TestMissingOrOutOfOrderRawEvidenceFails(t *testing.T) {

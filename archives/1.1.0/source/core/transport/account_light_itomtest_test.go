@@ -8,8 +8,9 @@ import (
 	"time"
 )
 
-// This gate retains every sample and fails on each original 250ms light-load
-// violation. Functional source passes cannot qualify these measurements.
+// This gate retains every sample and applies the user's temporary 300ms
+// maximum, with 250ms still reported as the preferred target. Functional source
+// passes cannot qualify these measurements.
 func TestAccountWarmLightQualification(t *testing.T) {
 	t.Run("loopback", func(t *testing.T) {
 		samples := testAccountTLSHTTPWithWarmSamples(t, nil, nil, 64)

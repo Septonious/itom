@@ -96,7 +96,8 @@ cannot authorize release by themselves.
 ## Acceptance and artifact boundary
 
 Retain every required maximum, full measurement window, ramp/tail/rolling-rate
-and useful-byte stall assertion. The targets remain <=250ms idle/light exchanges,
+and useful-byte stall assertion. Per the [temporary user decision](TEMPORARY_RTT_POLICY.md),
+the idle/light maximum is now <=300ms with 250ms still preferred. Other targets remain
 <=2000ms loaded probes and sustained >=100Mbps useful traffic in both directions,
 including SINGLE/MULTI/duplex. Keep the original OPEN/TLS/HTTP limits and zero
 unexpected TLS/Speedtest failures or load-induced carrier replacement. No failed

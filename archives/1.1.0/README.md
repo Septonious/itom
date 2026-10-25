@@ -2,7 +2,9 @@
 
 The current development branch contains an independent transport rewrite.
 Production startup returns `V2_NOT_READY`; packaging remains disabled. The
-250ms idle/light RTT and sustained 100Mbps targets are not established.
+temporary 300ms idle/light RTT maximum and sustained 100Mbps targets are not
+established. The preferred target remains 250ms; see the
+[user-directed temporary RTT policy](TEMPORARY_RTT_POLICY.md).
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
 [latest source checks](experiments/session-v2/FETCH_SERVICE_CHECK_RESULTS.json).
