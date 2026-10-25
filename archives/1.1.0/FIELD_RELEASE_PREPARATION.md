@@ -32,8 +32,10 @@ fixture-owned supervisor. They now establish and mutually confirm Noise keys thr
 accounted control APPEND/FETCH exchanges on the same fast sockets. The standing rendezvous and its invitation now deliver real initial CONTROL
 permission over accounted mail, using a bounded MAC-authenticated permanent
 keyword request for the freshly generated wallet Session. The client learns the
-issuer identity from the verified standing body. DATA offers still come from the
-authority fixture; this is not complete production initialization. Runtime handover waits for actual
+issuer identity from the verified standing body. DATA offers now arrive through
+the authenticated accounted session authority channel, rather than direct client
+fixture acceptance. Trusted DATA issuer/roster mapping remains fixture-supplied;
+this is not complete production initialization. Runtime handover waits for actual
 BODY observation of every startup message, preserves bounded UID history across
 replica absence and freezes bootstrap admission. Unknown writes retain their
 exact charge and require storage proof; storage proof alone is not key confirmation.
@@ -55,7 +57,9 @@ exact charge and require storage proof; storage proof alone is not key confirmat
    mapping or a proven safe capacity-neutral migration, rather than silently
    appending folders or creating empty replacement journals. Complete original
    trusted inventory before admission.
-3. Connect authenticated grant/usage/retirement/recovery exchange. Scoped
+3. Integrate the implemented grant/usage/fence/status/retirement channel with
+   production multi-account policy, overlapping CONTROL/DATA renewals and
+   old-session recovery. Scoped
    application-body proof reclamation and delivery receipts now exist and run
    under InboxWorker ownership. Cleanup now groups already-ready bodies into
    bounded original-proof transactions, reducing the variable-service backlog.
@@ -174,3 +178,22 @@ Efficient sustained receipt publication and cleanup scheduling still require
 qualification. Production initial DATA/CONTROL authority turnover, profile and
 READY/roster coordination, recovery, native integration and original performance
 gates remain release blockers. These checks do not authorize an APK/server RC.
+
+
+## Session authority integration
+
+[Authority evidence](experiments/session-v2/AUTHORITY_CHECK_RESULTS.json) records
+197/197 core race groups, 10/10 native groups, 33/33 repeated targeted executions
+and core vet. DATA offers now travel through accounted Noise CONTROL mail. A
+cold-runtime lifecycle fences a used grant, receives its replacement, observes
+actual final cleanup, retires metadata through the protocol, rejects the retired
+offer and continues serving TLS/HTTP. Descriptor pruning is checked against
+original registered prefixes and lifetime spend; it is not a physical refund.
+
+The [authority contract](SESSION_AUTHORITY.md) documents explicit policy APIs,
+sender admission fencing, bounded memory, direction/scope checks, idempotent
+issuance and retained uncertain work. Current routing pins one account and the
+actual trusted ledger identities; it does not yet negotiate a production roster
+or recover missing historical wallet state. Automatic overlapping CONTROL
+renewal, multi-account coordination, profile/journal reconciliation, native
+activation and all original performance gates still block an installable RC.

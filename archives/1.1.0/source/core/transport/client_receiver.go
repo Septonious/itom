@@ -76,7 +76,7 @@ func (r *ClientReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if envelope.class != expectedClass || usage.Attempt == nil || usage.Key.Store != r.origin.Store || usage.Key.Epoch != r.origin.Run || usage.Key.Account != r.origin.Account || usage.Key.User != r.origin.User || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.origin.Folder {
 		return nil, ErrProtocol
 	}
-	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, admit)
+	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, r.session.authorityAdmission(r.class, admit))
 	if err != nil {
 		return nil, err
 	}

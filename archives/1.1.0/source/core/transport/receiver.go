@@ -78,7 +78,7 @@ func (r *RemoteReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if err != nil {
 		return nil, err
 	}
-	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, admit)
+	records, err := r.cipher.openRecordsAdmitted(envelope.packet, r.class, r.session.generation, r.session.authorityAdmission(r.class, admit))
 	if err != nil {
 		return nil, err
 	}
@@ -93,18 +93,53 @@ func (d *StoredDelivery) Apply() error {
 	if d.finished {
 		return nil
 	}
-	d.session.mu.Lock()
-	defer d.session.mu.Unlock()
 	for d.next < len(d.records) {
 		record := &d.records[d.next]
-		err := d.session.receiveLocked(*record)
-		if errors.Is(err, ErrClosed) {
-			d.discarded = true
-		} else if err != nil {
-			return err
+		if record.Kind == Authority {
+			d.session.mu.Lock()
+			owner := d.session.authority
+			closed := d.session.closed
+			generation := d.session.generation
+			d.session.mu.Unlock()
+			if closed {
+				return ErrClosed
+			}
+			if owner == nil || record.Generation != generation {
+				return ErrProtocol
+			}
+			if err := owner.apply(record.Payload); err != nil {
+				return err
+			}
+			clear(record.Payload)
+			d.next++
+			continue
 		}
-		clear(record.Payload)
-		d.next++
+		// Coalesce ordinary feedback under one actor turn, but never hold this
+		// lock while an authority operation commits a wallet/journal change.
+		d.session.mu.Lock()
+		for d.next < len(d.records) && d.records[d.next].Kind != Authority {
+			record = &d.records[d.next]
+			err := d.session.receiveLocked(*record)
+			if errors.Is(err, ErrClosed) {
+				d.discarded = true
+			} else if err != nil {
+				d.session.mu.Unlock()
+				return err
+			}
+			clear(record.Payload)
+			d.next++
+		}
+		d.session.mu.Unlock()
+	}
+	if d.status.Key.Store != (wire.ID{}) {
+		d.session.mu.Lock()
+		owner := d.session.authority
+		d.session.mu.Unlock()
+		if owner != nil {
+			if err := owner.observeStoredStatus(d.status); err != nil {
+				return err
+			}
+		}
 	}
 	d.finished = true
 	return nil

@@ -31,7 +31,7 @@ func (w *Wallet) ReserveSized(account string, minimum, maximum int, size func(wi
 			if json.Unmarshal(v, &entry) != nil {
 				return ErrState
 			}
-			if entry.Fenced || entry.Retired || entry.Offer.Key.Session != w.session || entry.Offer.Key.Account != account {
+			if entry.Fenced || entry.Retired || w.fencing[entry.Offer.Key] || entry.Offer.Key.Session != w.session || entry.Offer.Key.Account != account {
 				return nil
 			}
 			if entry.Used.Bytes > entry.Offer.Limit.Bytes || entry.Used.Messages > entry.Offer.Limit.Messages {

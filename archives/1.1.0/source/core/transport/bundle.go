@@ -45,7 +45,7 @@ func (c *Cipher) sealContainer(records []Record, control bool) ([]byte, error) {
 	for _, r := range records {
 		validKind := r.Kind == Data
 		if control {
-			validKind = r.Kind != Data && r.Kind != Open && r.Kind != Reset
+			validKind = r.Kind != Data && r.Kind != Open && r.Kind != Reset && r.Kind != Authority
 		}
 		if !r.valid() || !validKind || r.Generation != generation {
 			return nil, ErrProtocol
@@ -155,7 +155,7 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 				clear(r.Payload)
 				return ErrProtocol
 			}
-			if controls && (r.Kind == Data || r.Kind == Open || r.Kind == Reset || generation != 0 && r.Generation != generation) {
+			if controls && (r.Kind == Data || r.Kind == Open || r.Kind == Reset || r.Kind == Authority || generation != 0 && r.Generation != generation) {
 				clear(r.Payload)
 				return ErrProtocol
 			}

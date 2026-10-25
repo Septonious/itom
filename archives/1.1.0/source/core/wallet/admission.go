@@ -50,7 +50,7 @@ func (w *Wallet) Reserve(encodedCeiling uint64) (*Ticket, error) {
 			if json.Unmarshal(v, &e) != nil {
 				return ErrState
 			}
-			if e.Fenced || e.Retired || e.Offer.Key.Session != w.session {
+			if e.Fenced || e.Retired || w.fencing[e.Offer.Key] || e.Offer.Key.Session != w.session {
 				return nil
 			}
 			r, m := w.reservedLocked(e.Offer.Key, 0)
@@ -91,7 +91,10 @@ func (t *Ticket) Cancel() {
 	}
 	w := t.wallet
 	w.mu.Lock()
-	delete(w.tickets, t.id)
+	if _, exists := w.tickets[t.id]; exists {
+		delete(w.tickets, t.id)
+		w.signalAdmissionLocked()
+	}
 	w.mu.Unlock()
 }
 func (t *Ticket) Commit(folder string, encrypted, authenticationKey []byte, encodedSize func([]byte) (uint64, error)) (wire.UsageReport, []byte, error) {

@@ -207,6 +207,9 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				if uid == 1 && m.appendRelease != nil {
 					<-m.appendRelease
 				}
+				if m.reclaimFault == "lost_append_tag" {
+					return
+				}
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
 				if len(fields) < 4 {

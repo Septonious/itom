@@ -24,6 +24,9 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 		}
 	}
 	s.refillInteractiveLocked(time.Now())
+	if plane == Fast && class != DataLedger && len(s.authorityOut) > 0 {
+		return true
+	}
 	for _, r := range s.retries[plane] {
 		f := s.flows[r.Stream]
 		if class.accepts(r.Kind) && f != nil && (!f.stopped() || r.Kind == Reset || r.Kind == ResetAck) && (r.Kind != Data || !f.stopped() && r.Offset+uint64(len(r.Payload)) > f.receipt) {
@@ -48,6 +51,8 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 type SessionSnapshot struct {
 	Streams, RetainedRecords, ActiveDispatches     int
 	ActiveServices                                 int
+	AuthorityOutstanding                           int
+	AuthorityBuffered                              uint64
 	SendBuffered, ReceiveBuffered, ReceiveReserved uint64
 	Closed                                         bool
 }
@@ -55,7 +60,7 @@ type SessionSnapshot struct {
 func (s *Session) Snapshot() SessionSnapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed}
+	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed}
 }
 
 // FlowSnapshot separates application queues, receiver-backed credit and

@@ -92,6 +92,24 @@ func (d *Dispatch) completeLocked(outcome PublicationOutcome, proofOfStorage boo
 	} else {
 		delete(s.dispatches, d.token)
 	}
+	if state.record.Kind == Authority {
+		if s.closed {
+			return ErrClosed
+		}
+		if outcome == NotStarted {
+			s.authorityOut = append([]Record{state.record}, s.authorityOut...)
+		}
+		if outcome == Accepted {
+			n := uint64(len(state.record.Payload))
+			s.buffered -= n
+			s.authorityBytes -= n
+			s.authorityCount--
+			clear(state.record.Payload)
+			s.signalSpace()
+		}
+		s.signalOutgoing()
+		return nil
+	}
 	f := s.flows[state.record.Stream]
 	if f == nil || s.closed {
 		return ErrClosed

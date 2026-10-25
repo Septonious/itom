@@ -14,14 +14,15 @@ on-mail Noise establishment and guarded runtime handover now exist; initial
 permission now has an accounted rendezvous/invitation component. Production
 coordination and agreed READY/roster negotiation remain incomplete.
 
-The latest [bounded-batch checkpoint](experiments/session-v2/BATCH_RECLAMATION_CHECK_RESULTS.json)
-passes 189/189 core race groups, 10/10 native groups, 21/21 repeated safety group
-executions and core vet. Matched cold cohorts pass 9/9 on both f7f6031 and the
-candidate with the same provider fixture. Median fast-mailbox peaks in the two
-variable-service cases fall from 53/52 messages to 24/23, within the unchanged
-64-message cap. Whole-case durations are mixed; this is a measured cleanup and
-occupancy improvement, not proof of general RTT/rate improvement or sustained
-steady state. Production startup and authority turnover remain incomplete.
+The latest [session-authority checkpoint](experiments/session-v2/AUTHORITY_CHECK_RESULTS.json)
+passes 197/197 core race groups, 10/10 native groups, 33/33 repeated targeted group
+executions and core vet. The cold runtime now receives DATA permission through
+accounted CONTROL mail and exercises on-mail fence, replacement, final cleanup
+acknowledgement and retirement while continuing TLS/HTTP service. Actor/ticket,
+foreign-scope, replay, unknown-write and queue-full checks preserve original debt.
+This is functional integration, not RTT/bandwidth qualification. The production
+identity/roster owner, multi-account policy, recovery and native activation remain
+incomplete. See [the authority contract](SESSION_AUTHORITY.md).
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -31,6 +32,22 @@ mandatory independently of that implementation.
 
 ## Implemented
 
+* An independent CONTROL authority channel now carries original grant/status,
+  usage/release and retirement messages under the confirmed Noise epoch. Pure
+  role/scope/ledger checks precede replay advancement. Durable wallet/journal
+  operations run outside the stream actor lock; bounded outgoing authority work
+  is charged to existing session memory and cannot carry DATA or bypass quota.
+* Trusted server issuance is idempotent by policy sequence, including queue-full
+  allocation gaps. Workers wake after real durable permission changes. Status
+  prunes only acknowledged descriptor history, preserving lifetime spend and the
+  original issuer's registration prefix. Uncertain control writes retain exact
+  work, and original proof/refund/replay limits are unchanged.
+* Sender fencing stops new grant admission while existing reserved tickets drain
+  before recording final spend. Cancellation removes only a volatile stop. The
+  on-mail lifecycle replaces and retires a DATA allocation without reopening its
+  old counters; retirement remains an explicit policy-owner action after final
+  cleanup acknowledgement. Progress-only incoming status never needs new outgoing
+  queue capacity. The lab still supplies trusted issuer mapping, not DATA offers.
 * Reclamation drains groups of already-ready candidates, up to the original
   32-proof journal transaction bound, without a fill delay. Explicit UID sets
   drive receipt discovery, mark/expunge and separate absence queries. Issuers
@@ -420,9 +437,9 @@ qualification improvement over RC2 or over real Rambler service.
 The [startup/rendezvous checks](experiments/session-v2/STARTUP_CHECK_RESULTS.json)
 now acquire initial CONTROL authority over actual charged mail and a bounded
 MAC-authenticated metadata request. The client obtains its issuer identity from
-the verified standing body; no initial client APPEND is unaccounted. DATA grants
-remain fixture supplied, and a production long-lived rendezvous/roster owner is
-still missing. Initial source checks retain a quiet-bulk HTTP deadline miss;
+the verified standing body; no initial client APPEND is unaccounted. DATA grants were still fixture-supplied at that historical checkpoint. The new
+authority channel above replaces that shortcut; a production long-lived
+rendezvous/roster owner is still missing. Initial source checks retain a quiet-bulk HTTP deadline miss;
 that historical cohort retains a 64-message fast-mailbox overflow. The newer
 reclamation cohort above passes the short cases without changing their cap or
 deadlines; efficient sustained cleanup and authority integration remain release
@@ -454,10 +471,11 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 ## Still required before release
 
 * Production coordination of the new initial CONTROL rendezvous/invitation,
-  agreed READY/roster negotiation and concrete exit authorization policy; wire/control exchange for grants, usage,
-  retirement and recovery. Accounted Noise establishment now executes over IMAP;
-  the initial grant now travels over accounted mail, while later DATA offers
-  remain fixture supplied.
+  agreed READY/roster negotiation and concrete exit authorization policy. The new
+  on-mail grant/usage/fence/status/retirement channel needs multi-account policy,
+  overlapping CONTROL renewal and old-session recovery. Accounted Noise and DATA
+  permission now execute over IMAP; trusted issuer/roster mapping remains
+  fixture-supplied, and no production API has been activated.
 * Per-carrier measured-service batch selection and its demand/supply coordinator;
   the new concrete-grant aggregation path is not yet throughput-qualified.
 * Active carrier selection, controller/receiver-window integration and complete

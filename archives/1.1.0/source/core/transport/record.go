@@ -30,6 +30,7 @@ const (
 	Open
 	OpenOK
 	OpenError
+	Authority
 )
 
 type Record struct {
@@ -42,10 +43,13 @@ type Record struct {
 }
 
 func (r Record) valid() bool {
-	if r.Generation == 0 || r.Stream == 0 || r.Stream > maxStreamID || len(r.Payload) > MaxPayload || r.Acknowledged > maxStreamID || r.ReceiveLimit > maxStreamID {
+	if r.Generation == 0 || r.Stream == 0 && r.Kind != Authority || r.Stream > maxStreamID || len(r.Payload) > MaxPayload || r.Acknowledged > maxStreamID || r.ReceiveLimit > maxStreamID {
 		return false
 	}
 	switch r.Kind {
+	case Authority:
+		_, _, err := decodeAuthority(r.Payload)
+		return err == nil && r.Stream == 0 && r.Offset > 0 && r.Offset <= maxStreamID && r.Acknowledged == 0 && r.ReceiveLimit == 0
 	case Open:
 		_, err := decodeTarget(r.Payload)
 		return err == nil && r.Offset == 0 && r.Acknowledged == 0 && r.ReceiveLimit > 0

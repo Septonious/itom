@@ -25,13 +25,13 @@ import (
 
 // Application-integrity fixture, NOT provider/rate qualification: a real charged
 // rendezvous and authenticated metadata request deliver initial CONTROL grants
-// over IMAP. Later DATA offers still come from the authority fixture. Noise keys
-// are established/confirmed by independent startup drivers. Workers use four
+// over IMAP. DATA permission travels through authenticated accounted CONTROL
+// mail; the issuer mapping is still supplied by the fixture. Noise keys are confirmed by independent startup drivers. Workers use four
 // fixed scoped executors without a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
 func TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP(t *testing.T) {
-	runColdAccountedHTTP(t, nil, nil, false)
+	runColdAccountedHTTP(t, nil, nil, false, false)
 }
 
 func TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService(t *testing.T) {
@@ -39,16 +39,16 @@ func TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService(t *testing.
 	// command-delay integrity checks, not equivalent raw path RTT measurements.
 	runColdAccountedHTTP(t,
 		[]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 18 * time.Millisecond, 42 * time.Millisecond, 27 * time.Millisecond},
-		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, false)
+		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, false, false)
 }
 
 func TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService(t *testing.T) {
 	runColdAccountedHTTP(t,
 		[]time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 18 * time.Millisecond, 42 * time.Millisecond, 27 * time.Millisecond},
-		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, true)
+		[]time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 24 * time.Millisecond, 36 * time.Millisecond}, true, false)
 }
 
-func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Duration, idle bool) {
+func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Duration, idle, rotate bool) {
 	t.Helper()
 	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.Copy(w, r.Body) }))
 	defer upstream.Close()
@@ -95,17 +95,21 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	}
 	t.Cleanup(func() { dataWallet.Close() })
 	wallets[transport.DataLedger] = dataWallet
-	// DATA grant delivery is still supplied by this authority fixture, not a
-	// claim that the production grant/bootstrap protocol has been completed.
-	grant, err := dataStore.IssueRemote(scope, pool.Amount{Bytes: 32 << 20, Messages: 32})
+	clientAuthority, err := transport.NewClientAuthority(a, ca, "account1",
+		transport.ClientAuthorityLedger{Class: transport.ControlLedger, Wallet: bootstrap.wallet, Run: bootstrap.store.Run()},
+		transport.ClientAuthorityLedger{Class: transport.DataLedger, Wallet: dataWallet, Run: dataStore.Run()})
 	if err != nil {
 		t.Fatal(err)
 	}
-	offer, err := dataStore.RemoteOffer(grant.Ref)
+	serverAuthority, err := transport.NewServerAuthority(b, cb, "account1",
+		transport.ServerAuthorityLedger{Class: transport.ControlLedger, Store: bootstrap.store},
+		transport.ServerAuthorityLedger{Class: transport.DataLedger, Store: dataStore})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = dataWallet.Accept(offer); err != nil {
+	// The server policy reserves the ORIGINAL grant; the client learns and
+	// accepts that offer only through Noise-authenticated accounted CONTROL mail.
+	if _, err := serverAuthority.Issue(context.Background(), transport.DataLedger, 1, pool.Amount{Bytes: 32 << 20, Messages: 32}); err != nil {
 		t.Fatal(err)
 	}
 	type route struct {
@@ -221,6 +225,12 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		if err != nil {
 			t.Fatal(err)
 		}
+		if err := clientAuthority.Watch(clientWriter); err != nil {
+			t.Fatal(err)
+		}
+		if err := serverAuthority.Watch(serverWriter); err != nil {
+			t.Fatal(err)
+		}
 		s.writers = []*transport.PublicationWorker{clientWriter, serverWriter}
 		services = append(services, s)
 	}
@@ -286,7 +296,11 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	h := &http.Transport{DialContext: dialer.DialContext, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 1500 * time.Millisecond, ResponseHeaderTimeout: 1500 * time.Millisecond, DisableKeepAlives: true}
 	defer h.CloseIdleConnections()
 	client := &http.Client{Transport: h, Timeout: 5 * time.Second}
-	for run, size := range []int{29, (256 << 10) + 123, 71, (256 << 10) + 317} {
+	sizes := []int{29, (256 << 10) + 123, 71, (256 << 10) + 317}
+	if rotate {
+		sizes = sizes[:2]
+	}
+	for run, size := range sizes {
 		payload := bytes.Repeat([]byte{byte(run + 1)}, size)
 		var traceMu sync.Mutex
 		var trace []string
@@ -344,6 +358,67 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		if err != nil || !bytes.Equal(got, payload) {
 			t.Fatal("application echo changed or stalled", run, err)
 		}
+		if rotate && run == 0 {
+			entries, err := dataWallet.Entries()
+			if err != nil || len(entries) != 1 || entries[0].Used.Messages == 0 {
+				t.Fatal("no real initial DATA spend", entries, err)
+			}
+			old := entries[0]
+			ref := journal.GrantRef{Store: old.Offer.Key.Store, ID: old.Offer.Key.Grant, Scope: scope}
+			if err := clientAuthority.Fence(context.Background(), transport.DataLedger, old.Offer.Key); err != nil {
+				t.Fatal(err)
+			}
+			awaitReclamation(t, func() bool { return serverAuthority.Stats(transport.DataLedger).AppliedFences > 0 })
+			next, err := serverAuthority.Issue(context.Background(), transport.DataLedger, 2, pool.Amount{Bytes: 32 << 20, Messages: 32})
+			if err != nil || next == ref {
+				t.Fatal("new grant allocation", next, err)
+			}
+			again, err := serverAuthority.Issue(context.Background(), transport.DataLedger, 2, pool.Amount{Bytes: 32 << 20, Messages: 32})
+			if err != nil || again != next {
+				t.Fatal("duplicate policy request allocated again", again, err)
+			}
+			awaitReclamation(t, func() bool {
+				entries, err := dataWallet.Entries()
+				if err != nil {
+					return false
+				}
+				for _, entry := range entries {
+					if entry.Offer.Key.Grant == next.ID && !entry.Fenced {
+						return true
+					}
+				}
+				return false
+			})
+			awaitReclamation(t, func() bool {
+				g, err := dataStore.GetGrant(ref)
+				return clientAuthority.Stats(transport.DataLedger).RetirementAcknowledgements > 0 || err == nil && g.Used == g.Registered && g.Used == g.Released
+			})
+			if err := serverAuthority.RefreshStatus(transport.DataLedger, ref); err != nil && !errors.Is(err, journal.ErrMissing) {
+				t.Fatal(err)
+			}
+			awaitReclamation(t, func() bool { r, err := dataWallet.Retirement(old.Offer.Key); return err == nil && r != nil })
+			if err := clientAuthority.Retire(transport.DataLedger, old.Offer.Key); err != nil {
+				t.Fatal(err)
+			}
+			awaitReclamation(t, func() bool {
+				entries, err := dataWallet.Entries()
+				if err != nil {
+					return false
+				}
+				for _, entry := range entries {
+					if entry.Offer.Key == old.Offer.Key {
+						return false
+					}
+				}
+				_, err = dataStore.GetGrant(ref)
+				return errors.Is(err, journal.ErrMissing) && clientAuthority.Stats(transport.DataLedger).RetirementAcknowledgements > 0
+			})
+			accepted, err := dataWallet.AcceptCurrentOffer(old.Offer)
+			if err != nil || accepted {
+				t.Fatal("retired offer revived old lifetime spend", accepted, err)
+			}
+			t.Logf("actual on-mail DATA fence/replacement/status/retirement completed: old_used_messages=%d", old.Used.Messages)
+		}
 	}
 	cancel()
 	workers.Wait()
@@ -378,8 +453,21 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			t.Fatal(err)
 		}
 		entries, err := wallets[class].Entries()
-		if err != nil || len(entries) != 1 || entries[0].Used.Messages == 0 || len(entries[0].Pending) == 0 {
-			t.Fatal("application success released physical debt", class, err)
+		if err != nil || len(entries) != 1 || entries[0].Used.Messages == 0 {
+			t.Fatal("application success reset original lifetime spend", class, err)
+		}
+		entry := entries[0]
+		if entry.Ack.Messages > entry.Used.Messages || entry.Ack.Bytes > entry.Used.Bytes || uint64(len(entry.Pending)) != entry.Used.Messages-entry.Ack.Messages {
+			t.Fatal("authenticated descriptor ACK reset spend or lost unacknowledged history", class, entry)
+		}
+		ref := journal.GrantRef{Store: entry.Offer.Key.Store, ID: entry.Offer.Key.Grant, Scope: scope}
+		grant, err := store.GetGrant(ref)
+		if err != nil || grant.Registered.Messages < entry.Ack.Messages || grant.Registered.Bytes < entry.Ack.Bytes {
+			t.Fatal("wallet ACK had no original durable issuer prefix", class, grant, entry.Ack, err)
 		}
 	}
+}
+
+func TestColdTLSHTTPKeepsServingThroughOnMailGrantTurnoverAndRetirement(t *testing.T) {
+	runColdAccountedHTTP(t, nil, nil, false, true)
 }

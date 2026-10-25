@@ -14,6 +14,9 @@ func (s *Session) minimumPayloadFor(plane Plane, class LedgerClass) (int, bool) 
 	s.refillInteractiveLocked(time.Now())
 	minimum, found := MaxPayload+1, false
 	consider := func(n int) { minimum, found = min(minimum, n), true }
+	if plane == Fast && class != DataLedger && len(s.authorityOut) > 0 {
+		consider(len(s.authorityOut[0].Payload))
+	}
 	for _, r := range s.retries[plane] {
 		f := s.flows[r.Stream]
 		if f == nil || !class.accepts(r.Kind) || f.stopped() && r.Kind != Reset && r.Kind != ResetAck || r.Kind == Data && r.Offset+uint64(len(r.Payload)) <= f.receipt {

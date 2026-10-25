@@ -18,6 +18,9 @@ func (s *Session) progressControlAdmission() func([]Record) error {
 			if r.Kind == Data {
 				return ErrProtocol
 			}
+			if r.Kind == Authority && !authorityProgress(r.Payload) {
+				return &inboxDeferred{class: ControlLedger}
+			}
 			if r.Kind == Open {
 				return &inboxDeferred{class: ControlLedger}
 			}

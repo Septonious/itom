@@ -47,15 +47,17 @@ type Entry struct {
 	Pending []wire.UsageReport
 }
 type Wallet struct {
-	mu             sync.Mutex
-	db             *bolt.DB
-	user           string
-	store, session wire.ID
-	failed         bool
-	recovered      bool // an existing authenticated store identity survived reopen
-	tickets        map[uint64]ticketReservation
-	nextTicket     uint64
-	oldSessions    map[wire.ID]bool
+	mu               sync.Mutex
+	db               *bolt.DB
+	user             string
+	store, session   wire.ID
+	failed           bool
+	recovered        bool // an existing authenticated store identity survived reopen
+	tickets          map[uint64]ticketReservation
+	nextTicket       uint64
+	fencing          map[wire.QuotaKey]bool
+	admissionChanged chan struct{}
+	oldSessions      map[wire.ID]bool
 }
 
 func key(n uint64) []byte         { b := make([]byte, 8); binary.BigEndian.PutUint64(b, n); return b }
@@ -298,6 +300,7 @@ func (w *Wallet) writeAfter(fn func(*bolt.Tx) error, after func()) error {
 	}
 	if e != nil && !errors.Is(e, ErrState) && !errors.Is(e, ErrMissing) && !errors.Is(e, ErrLimit) && !errors.Is(e, ErrExhausted) {
 		w.failed = true
+		w.signalAdmissionLocked()
 	}
 	return e
 }
@@ -389,6 +392,9 @@ func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authentication
 		if x.Fenced || k.Session != w.session {
 			return ErrState
 		}
+		if ticket == 0 && w.fencing[k] {
+			return ErrExhausted
+		}
 		if len(x.Pending) >= MaxPending {
 			return ErrLimit
 		}
@@ -442,6 +448,7 @@ func (w *Wallet) spend(k wire.QuotaKey, folder string, encrypted, authentication
 	}, func() {
 		if ticket != 0 {
 			delete(w.tickets, ticket)
+			w.signalAdmissionLocked()
 		}
 	})
 	if e != nil {

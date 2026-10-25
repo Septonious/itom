@@ -65,27 +65,32 @@ func (f *stream) signal() { close(f.notify); f.notify = make(chan struct{}) }
 // Bytes handed to a carrier remain charged to its bounded send memory until
 // authenticated cumulative peer receipt. No disk/provider I/O runs under mu.
 type Session struct {
-	mu                           sync.Mutex
-	crypto                       *secure.Epoch
-	runtime                      *Runtime
-	services                     int
-	generation                   uint64
-	limits                       Limits
-	flows                        map[uint64]*stream
-	order                        []uint64
-	cursor                       [2]int
-	buffered, received, reserved uint64
-	nextToken                    uint64
-	records                      int
-	dispatches                   map[uint64]*dispatchState
-	retries                      [2][]Record
-	outgoing, space              chan struct{}
-	closed                       bool
-	ids                          idWindow
-	interactive                  interactiveBudget
-	openRole                     uint8
-	openWindow, nextOpenID       uint64
-	openChanged                  chan struct{}
+	mu                            sync.Mutex
+	crypto                        *secure.Epoch
+	runtime                       *Runtime
+	services                      int
+	authority                     *AuthorityController
+	authorityOut                  []Record
+	authorityCount                int
+	authorityTurn                 bool
+	authorityBytes, nextAuthority uint64
+	generation                    uint64
+	limits                        Limits
+	flows                         map[uint64]*stream
+	order                         []uint64
+	cursor                        [2]int
+	buffered, received, reserved  uint64
+	nextToken                     uint64
+	records                       int
+	dispatches                    map[uint64]*dispatchState
+	retries                       [2][]Record
+	outgoing, space               chan struct{}
+	closed                        bool
+	ids                           idWindow
+	interactive                   interactiveBudget
+	openRole                      uint8
+	openWindow, nextOpenID        uint64
+	openChanged                   chan struct{}
 }
 
 func NewSession(generation uint64, l Limits) (*Session, error) {
@@ -171,6 +176,17 @@ func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, pr
 	if max > MaxPayload {
 		max = MaxPayload
 	}
+	authorityReady := plane == Fast && class != DataLedger && !progressOnly && len(s.authorityOut) > 0 && len(s.authorityOut[0].Payload) <= max
+	takeAuthority := func() (Record, bool) {
+		r := s.authorityOut[0]
+		s.authorityOut[0] = Record{}
+		s.authorityOut = s.authorityOut[1:]
+		s.authorityTurn = true
+		return r, true
+	}
+	if authorityReady && !s.authorityTurn {
+		return takeAuthority()
+	}
 	for attempts := len(s.retries[plane]); attempts > 0; attempts-- {
 		r := s.retries[plane][0]
 		s.retries[plane] = s.retries[plane][1:]
@@ -185,10 +201,16 @@ func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, pr
 			s.retries[plane] = append(s.retries[plane], r)
 			continue
 		}
+		if plane == Fast && class != DataLedger {
+			s.authorityTurn = false
+		}
 		return r, true
 	}
 	n := len(s.order)
 	if n == 0 {
+		if authorityReady {
+			return takeAuthority()
+		}
 		return Record{}, false
 	}
 	for j := 0; j < n; j++ {
@@ -241,6 +263,7 @@ func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, pr
 				r.Offset = f.sent
 			}
 			if r.Kind != 0 {
+				s.authorityTurn = false
 				s.cursor[plane] = (i + 1) % n
 				return r, true
 			}
@@ -280,6 +303,9 @@ func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, pr
 		}
 		s.cursor[plane] = (i + 1) % n
 		return r, true
+	}
+	if authorityReady {
+		return takeAuthority()
 	}
 	return Record{}, false
 }
@@ -396,6 +422,9 @@ func (s *Session) receiveLocked(r Record) error {
 	if r.Generation != s.generation {
 		return ErrProtocol
 	}
+	if r.Kind == Authority {
+		return ErrProtocol
+	} // only the accounted receiver can apply authority
 	if r.Kind == Open {
 		return s.receiveOpenLocked(r)
 	}
@@ -664,6 +693,13 @@ func (s *Session) Close() error {
 		}
 		f.signal()
 	}
+	for _, r := range s.authorityOut {
+		clear(r.Payload)
+	}
+	s.authorityOut = nil
+	s.authorityCount = 0
+	s.authorityBytes = 0
+	s.buffered = 0
 	s.dispatches = make(map[uint64]*dispatchState)
 	s.retries = [2][]Record{}
 	s.signalOutgoing()

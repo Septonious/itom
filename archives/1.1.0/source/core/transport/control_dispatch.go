@@ -23,7 +23,7 @@ func (s *Session) TakeControls(maxEncryptedBytes int) (*DispatchBatch, bool) {
 	}
 	packetBytes := overhead + len(first.Record.Payload)
 	batch := &DispatchBatch{session: s, dispatches: []*Dispatch{first}, bytes: packetBytes}
-	if first.Record.Kind == Open || first.Record.Kind == Reset {
+	if first.Record.Kind == Open || first.Record.Kind == Reset || first.Record.Kind == Authority {
 		return batch, true
 	}
 	for len(batch.dispatches) < MaxBulkRecords {
