@@ -19,6 +19,11 @@ their independent timeout, and verify that completed/refused commands cannot
 later invalidate healthy service. Together with existing FETCH/IDLE/literal
 cancellation tests, all 15 targeted repeated race groups pass.
 
+The complete default core race suite passes 237/237 top-level groups; native
+race checks pass 10/10 and both modules pass vet. The previously failing cold
+HTTP scenario passes in this source run. One pass does not erase its retained
+intermittent failures or establish field stability.
+
 Three isolated bookkeeping benchmarks reduce nine allocations to seven and
 2046–2442ns to 1060–1142ns per completed command. They do not measure useful
 transport bandwidth or application RTT. CPU/execution profiles of the parent
@@ -33,3 +38,5 @@ turnover and controller/window integration remain unfinished.
 
 Raw failures, benchmark comparisons and profile summaries are retained in
 [command-lifetime evidence](experiments/session-v2/command-lifetime/README.md).
+The [results manifest](experiments/session-v2/COMMAND_LIFETIME_CHECK_RESULTS.json)
+retains individual samples, incomplete cohorts and source/artifact hashes.

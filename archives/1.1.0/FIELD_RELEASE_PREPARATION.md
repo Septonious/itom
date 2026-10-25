@@ -7,6 +7,11 @@ cannot supply that pair yet: `tunnel.StartClient` and `ServeManaged` still retur
 Stable 1.0.0/RC2 remains separate; its removed runtime will not be reactivated as
 the replacement transport.
 
+[Command lifetime work](COMMAND_LIFETIME_WORK.md) reduces watchdog overhead while
+preserving the independent progress limit. All 237 core and ten native race
+groups pass, as do both vet checks. The warm and quiet application gates still
+exceed 300ms; this does not resolve the release blockers below.
+
 The current [cleanup/idle coverage](UID_DISCOVERY_WORK.md) retains numeric UID
 exhaustion safety; a faster prediction candidate is held back. New 30s cases expose
 intermittent completion failures. Those failures remain release blockers under

@@ -1,0 +1,1230 @@
+{
+  "schema": 1,
+  "parent_commit": "ac73392e6a71298901ec9e7e236636bba884b5dd",
+  "implementation_checkpoint": "54e6430",
+  "status": "source checks pass; application RTT qualification FAIL; production activation incomplete",
+  "policy": {
+    "light_max_ns": 300000000,
+    "preferred_light_ns": 250000000,
+    "loaded_max_ns": 2000000000,
+    "sustained_bits_per_second_each_direction": 100000000,
+    "production_imap_progress_ns": 30000000000,
+    "dns_timeout_ns": 250000000,
+    "deadlines_changed": false
+  },
+  "activation": {
+    "command_timers": true,
+    "highwater_candidate": false,
+    "parser_cache_candidate": false,
+    "faster_probe_candidate": false,
+    "working_rc": false,
+    "apk_or_binary_built": false,
+    "hosted_ci_verified": false
+  },
+  "source_checks": {
+    "core_race": {
+      "top_level_pass": 237,
+      "top_level_fail": 0,
+      "failed_groups": []
+    },
+    "native_race": {
+      "top_level_pass": 10,
+      "top_level_fail": 0,
+      "failed_groups": []
+    },
+    "targeted_race_count3": {
+      "top_level_pass": 15,
+      "top_level_fail": 0,
+      "failed_groups": []
+    },
+    "core_vet_exit": 0,
+    "native_vet_exit": 0,
+    "final_tls_race_count3": {
+      "top_level_pass": 6,
+      "top_level_fail": 0,
+      "failed_groups": []
+    },
+    "snapshot_note": "Full source suite precedes only benchmark import formatting and a bounded fixture-entry wait in the new TLS test. Final repeated TLS checks pass; production implementation unchanged."
+  },
+  "application_cohorts": {
+    "before-warm.jsonl": {
+      "artifact": "before-warm.jsonl",
+      "expected_samples": 64,
+      "completed_samples": 20,
+      "complete": false,
+      "samples": [
+        {
+          "sample": 1,
+          "bytes": 31,
+          "elapsed_ns": 313273658
+        },
+        {
+          "sample": 2,
+          "bytes": 31,
+          "elapsed_ns": 244402183
+        },
+        {
+          "sample": 3,
+          "bytes": 31,
+          "elapsed_ns": 220185850
+        },
+        {
+          "sample": 4,
+          "bytes": 31,
+          "elapsed_ns": 212919502
+        },
+        {
+          "sample": 5,
+          "bytes": 31,
+          "elapsed_ns": 341119375
+        },
+        {
+          "sample": 6,
+          "bytes": 31,
+          "elapsed_ns": 207385830
+        },
+        {
+          "sample": 7,
+          "bytes": 31,
+          "elapsed_ns": 233810951
+        },
+        {
+          "sample": 8,
+          "bytes": 31,
+          "elapsed_ns": 283173518
+        },
+        {
+          "sample": 9,
+          "bytes": 31,
+          "elapsed_ns": 228549782
+        },
+        {
+          "sample": 10,
+          "bytes": 31,
+          "elapsed_ns": 166627673
+        },
+        {
+          "sample": 11,
+          "bytes": 31,
+          "elapsed_ns": 164190348
+        },
+        {
+          "sample": 12,
+          "bytes": 31,
+          "elapsed_ns": 257181866
+        },
+        {
+          "sample": 13,
+          "bytes": 31,
+          "elapsed_ns": 208757799
+        },
+        {
+          "sample": 14,
+          "bytes": 31,
+          "elapsed_ns": 216249144
+        },
+        {
+          "sample": 15,
+          "bytes": 31,
+          "elapsed_ns": 225102688
+        },
+        {
+          "sample": 16,
+          "bytes": 31,
+          "elapsed_ns": 143617376
+        },
+        {
+          "sample": 17,
+          "bytes": 31,
+          "elapsed_ns": 308258149
+        },
+        {
+          "sample": 18,
+          "bytes": 31,
+          "elapsed_ns": 244447261
+        },
+        {
+          "sample": 19,
+          "bytes": 31,
+          "elapsed_ns": 212567884
+        },
+        {
+          "sample": 20,
+          "bytes": 31,
+          "elapsed_ns": 486821127
+        }
+      ],
+      "http_errors": [
+        "account_service_test.go:416: warm account HTTP 21 Post \"https://127.0.0.1:43823\": net/http: timeout awaiting response headers"
+      ],
+      "over_300ms": 4,
+      "over_preferred_250ms": 6,
+      "maximum_completed_ns": 486821127,
+      "full_cohort_mean_ns": null,
+      "qualified": false
+    },
+    "before-traced-warm.jsonl": {
+      "artifact": "before-traced-warm.jsonl",
+      "expected_samples": 64,
+      "completed_samples": 64,
+      "complete": true,
+      "samples": [
+        {
+          "sample": 1,
+          "bytes": 31,
+          "elapsed_ns": 242407379
+        },
+        {
+          "sample": 2,
+          "bytes": 31,
+          "elapsed_ns": 206239512
+        },
+        {
+          "sample": 3,
+          "bytes": 31,
+          "elapsed_ns": 186898722
+        },
+        {
+          "sample": 4,
+          "bytes": 31,
+          "elapsed_ns": 115367514
+        },
+        {
+          "sample": 5,
+          "bytes": 31,
+          "elapsed_ns": 272759514
+        },
+        {
+          "sample": 6,
+          "bytes": 31,
+          "elapsed_ns": 183880823
+        },
+        {
+          "sample": 7,
+          "bytes": 31,
+          "elapsed_ns": 135614264
+        },
+        {
+          "sample": 8,
+          "bytes": 31,
+          "elapsed_ns": 243035194
+        },
+        {
+          "sample": 9,
+          "bytes": 31,
+          "elapsed_ns": 314919504
+        },
+        {
+          "sample": 10,
+          "bytes": 31,
+          "elapsed_ns": 187006628
+        },
+        {
+          "sample": 11,
+          "bytes": 31,
+          "elapsed_ns": 118455819
+        },
+        {
+          "sample": 12,
+          "bytes": 31,
+          "elapsed_ns": 165414987
+        },
+        {
+          "sample": 13,
+          "bytes": 31,
+          "elapsed_ns": 277499304
+        },
+        {
+          "sample": 14,
+          "bytes": 31,
+          "elapsed_ns": 248869531
+        },
+        {
+          "sample": 15,
+          "bytes": 31,
+          "elapsed_ns": 159655705
+        },
+        {
+          "sample": 16,
+          "bytes": 31,
+          "elapsed_ns": 196705154
+        },
+        {
+          "sample": 17,
+          "bytes": 31,
+          "elapsed_ns": 306068609
+        },
+        {
+          "sample": 18,
+          "bytes": 31,
+          "elapsed_ns": 192651743
+        },
+        {
+          "sample": 19,
+          "bytes": 31,
+          "elapsed_ns": 276310877
+        },
+        {
+          "sample": 20,
+          "bytes": 31,
+          "elapsed_ns": 123332264
+        },
+        {
+          "sample": 21,
+          "bytes": 31,
+          "elapsed_ns": 187861328
+        },
+        {
+          "sample": 22,
+          "bytes": 31,
+          "elapsed_ns": 280349500
+        },
+        {
+          "sample": 23,
+          "bytes": 31,
+          "elapsed_ns": 311732681
+        },
+        {
+          "sample": 24,
+          "bytes": 31,
+          "elapsed_ns": 167118795
+        },
+        {
+          "sample": 25,
+          "bytes": 31,
+          "elapsed_ns": 118045647
+        },
+        {
+          "sample": 26,
+          "bytes": 31,
+          "elapsed_ns": 253479980
+        },
+        {
+          "sample": 27,
+          "bytes": 31,
+          "elapsed_ns": 252013254
+        },
+        {
+          "sample": 28,
+          "bytes": 31,
+          "elapsed_ns": 236300291
+        },
+        {
+          "sample": 29,
+          "bytes": 31,
+          "elapsed_ns": 208610095
+        },
+        {
+          "sample": 30,
+          "bytes": 31,
+          "elapsed_ns": 299946323
+        },
+        {
+          "sample": 31,
+          "bytes": 31,
+          "elapsed_ns": 200060639
+        },
+        {
+          "sample": 32,
+          "bytes": 31,
+          "elapsed_ns": 120207538
+        },
+        {
+          "sample": 33,
+          "bytes": 31,
+          "elapsed_ns": 309413093
+        },
+        {
+          "sample": 34,
+          "bytes": 31,
+          "elapsed_ns": 172479951
+        },
+        {
+          "sample": 35,
+          "bytes": 31,
+          "elapsed_ns": 287700780
+        },
+        {
+          "sample": 36,
+          "bytes": 31,
+          "elapsed_ns": 248334140
+        },
+        {
+          "sample": 37,
+          "bytes": 31,
+          "elapsed_ns": 254866639
+        },
+        {
+          "sample": 38,
+          "bytes": 31,
+          "elapsed_ns": 81072606
+        },
+        {
+          "sample": 39,
+          "bytes": 31,
+          "elapsed_ns": 105518176
+        },
+        {
+          "sample": 40,
+          "bytes": 31,
+          "elapsed_ns": 243849763
+        },
+        {
+          "sample": 41,
+          "bytes": 31,
+          "elapsed_ns": 185224992
+        },
+        {
+          "sample": 42,
+          "bytes": 31,
+          "elapsed_ns": 235129978
+        },
+        {
+          "sample": 43,
+          "bytes": 31,
+          "elapsed_ns": 248136726
+        },
+        {
+          "sample": 44,
+          "bytes": 31,
+          "elapsed_ns": 248969670
+        },
+        {
+          "sample": 45,
+          "bytes": 31,
+          "elapsed_ns": 228318138
+        },
+        {
+          "sample": 46,
+          "bytes": 31,
+          "elapsed_ns": 252465166
+        },
+        {
+          "sample": 47,
+          "bytes": 31,
+          "elapsed_ns": 235938531
+        },
+        {
+          "sample": 48,
+          "bytes": 31,
+          "elapsed_ns": 145552383
+        },
+        {
+          "sample": 49,
+          "bytes": 31,
+          "elapsed_ns": 218287722
+        },
+        {
+          "sample": 50,
+          "bytes": 31,
+          "elapsed_ns": 315063492
+        },
+        {
+          "sample": 51,
+          "bytes": 31,
+          "elapsed_ns": 192522980
+        },
+        {
+          "sample": 52,
+          "bytes": 31,
+          "elapsed_ns": 309443217
+        },
+        {
+          "sample": 53,
+          "bytes": 31,
+          "elapsed_ns": 269291426
+        },
+        {
+          "sample": 54,
+          "bytes": 31,
+          "elapsed_ns": 241753608
+        },
+        {
+          "sample": 55,
+          "bytes": 31,
+          "elapsed_ns": 220214735
+        },
+        {
+          "sample": 56,
+          "bytes": 31,
+          "elapsed_ns": 417547210
+        },
+        {
+          "sample": 57,
+          "bytes": 31,
+          "elapsed_ns": 442058753
+        },
+        {
+          "sample": 58,
+          "bytes": 31,
+          "elapsed_ns": 233867809
+        },
+        {
+          "sample": 59,
+          "bytes": 31,
+          "elapsed_ns": 139542972
+        },
+        {
+          "sample": 60,
+          "bytes": 31,
+          "elapsed_ns": 243670916
+        },
+        {
+          "sample": 61,
+          "bytes": 31,
+          "elapsed_ns": 242303211
+        },
+        {
+          "sample": 62,
+          "bytes": 31,
+          "elapsed_ns": 271627484
+        },
+        {
+          "sample": 63,
+          "bytes": 31,
+          "elapsed_ns": 154725058
+        },
+        {
+          "sample": 64,
+          "bytes": 31,
+          "elapsed_ns": 191129796
+        }
+      ],
+      "http_errors": [],
+      "over_300ms": 8,
+      "over_preferred_250ms": 20,
+      "maximum_completed_ns": 442058753,
+      "full_cohort_mean_ns": 224606878.734375,
+      "qualified": false
+    },
+    "original-unprofiled-warm.jsonl": {
+      "artifact": "original-unprofiled-warm.jsonl",
+      "expected_samples": 64,
+      "completed_samples": 64,
+      "complete": true,
+      "samples": [
+        {
+          "sample": 1,
+          "bytes": 31,
+          "elapsed_ns": 385075131
+        },
+        {
+          "sample": 2,
+          "bytes": 31,
+          "elapsed_ns": 388318821
+        },
+        {
+          "sample": 3,
+          "bytes": 31,
+          "elapsed_ns": 213699702
+        },
+        {
+          "sample": 4,
+          "bytes": 31,
+          "elapsed_ns": 157689656
+        },
+        {
+          "sample": 5,
+          "bytes": 31,
+          "elapsed_ns": 347097227
+        },
+        {
+          "sample": 6,
+          "bytes": 31,
+          "elapsed_ns": 282611803
+        },
+        {
+          "sample": 7,
+          "bytes": 31,
+          "elapsed_ns": 249750565
+        },
+        {
+          "sample": 8,
+          "bytes": 31,
+          "elapsed_ns": 400079681
+        },
+        {
+          "sample": 9,
+          "bytes": 31,
+          "elapsed_ns": 322856299
+        },
+        {
+          "sample": 10,
+          "bytes": 31,
+          "elapsed_ns": 706075995
+        },
+        {
+          "sample": 11,
+          "bytes": 31,
+          "elapsed_ns": 317496434
+        },
+        {
+          "sample": 12,
+          "bytes": 31,
+          "elapsed_ns": 146775300
+        },
+        {
+          "sample": 13,
+          "bytes": 31,
+          "elapsed_ns": 245639317
+        },
+        {
+          "sample": 14,
+          "bytes": 31,
+          "elapsed_ns": 306305537
+        },
+        {
+          "sample": 15,
+          "bytes": 31,
+          "elapsed_ns": 123958213
+        },
+        {
+          "sample": 16,
+          "bytes": 31,
+          "elapsed_ns": 206661431
+        },
+        {
+          "sample": 17,
+          "bytes": 31,
+          "elapsed_ns": 139942478
+        },
+        {
+          "sample": 18,
+          "bytes": 31,
+          "elapsed_ns": 332986714
+        },
+        {
+          "sample": 19,
+          "bytes": 31,
+          "elapsed_ns": 178580801
+        },
+        {
+          "sample": 20,
+          "bytes": 31,
+          "elapsed_ns": 238779090
+        },
+        {
+          "sample": 21,
+          "bytes": 31,
+          "elapsed_ns": 212033189
+        },
+        {
+          "sample": 22,
+          "bytes": 31,
+          "elapsed_ns": 306817055
+        },
+        {
+          "sample": 23,
+          "bytes": 31,
+          "elapsed_ns": 236820222
+        },
+        {
+          "sample": 24,
+          "bytes": 31,
+          "elapsed_ns": 271042243
+        },
+        {
+          "sample": 25,
+          "bytes": 31,
+          "elapsed_ns": 236060573
+        },
+        {
+          "sample": 26,
+          "bytes": 31,
+          "elapsed_ns": 234967717
+        },
+        {
+          "sample": 27,
+          "bytes": 31,
+          "elapsed_ns": 180340399
+        },
+        {
+          "sample": 28,
+          "bytes": 31,
+          "elapsed_ns": 268723522
+        },
+        {
+          "sample": 29,
+          "bytes": 31,
+          "elapsed_ns": 189916865
+        },
+        {
+          "sample": 30,
+          "bytes": 31,
+          "elapsed_ns": 132387080
+        },
+        {
+          "sample": 31,
+          "bytes": 31,
+          "elapsed_ns": 255223510
+        },
+        {
+          "sample": 32,
+          "bytes": 31,
+          "elapsed_ns": 210944128
+        },
+        {
+          "sample": 33,
+          "bytes": 31,
+          "elapsed_ns": 178033005
+        },
+        {
+          "sample": 34,
+          "bytes": 31,
+          "elapsed_ns": 179246280
+        },
+        {
+          "sample": 35,
+          "bytes": 31,
+          "elapsed_ns": 294489659
+        },
+        {
+          "sample": 36,
+          "bytes": 31,
+          "elapsed_ns": 249464687
+        },
+        {
+          "sample": 37,
+          "bytes": 31,
+          "elapsed_ns": 167761827
+        },
+        {
+          "sample": 38,
+          "bytes": 31,
+          "elapsed_ns": 282666452
+        },
+        {
+          "sample": 39,
+          "bytes": 31,
+          "elapsed_ns": 167023215
+        },
+        {
+          "sample": 40,
+          "bytes": 31,
+          "elapsed_ns": 263187518
+        },
+        {
+          "sample": 41,
+          "bytes": 31,
+          "elapsed_ns": 284484234
+        },
+        {
+          "sample": 42,
+          "bytes": 31,
+          "elapsed_ns": 277663435
+        },
+        {
+          "sample": 43,
+          "bytes": 31,
+          "elapsed_ns": 119076811
+        },
+        {
+          "sample": 44,
+          "bytes": 31,
+          "elapsed_ns": 93672083
+        },
+        {
+          "sample": 45,
+          "bytes": 31,
+          "elapsed_ns": 267727152
+        },
+        {
+          "sample": 46,
+          "bytes": 31,
+          "elapsed_ns": 175207464
+        },
+        {
+          "sample": 47,
+          "bytes": 31,
+          "elapsed_ns": 219287730
+        },
+        {
+          "sample": 48,
+          "bytes": 31,
+          "elapsed_ns": 249573787
+        },
+        {
+          "sample": 49,
+          "bytes": 31,
+          "elapsed_ns": 230493230
+        },
+        {
+          "sample": 50,
+          "bytes": 31,
+          "elapsed_ns": 200362414
+        },
+        {
+          "sample": 51,
+          "bytes": 31,
+          "elapsed_ns": 133854141
+        },
+        {
+          "sample": 52,
+          "bytes": 31,
+          "elapsed_ns": 297069737
+        },
+        {
+          "sample": 53,
+          "bytes": 31,
+          "elapsed_ns": 187759889
+        },
+        {
+          "sample": 54,
+          "bytes": 31,
+          "elapsed_ns": 155403736
+        },
+        {
+          "sample": 55,
+          "bytes": 31,
+          "elapsed_ns": 263832352
+        },
+        {
+          "sample": 56,
+          "bytes": 31,
+          "elapsed_ns": 221994012
+        },
+        {
+          "sample": 57,
+          "bytes": 31,
+          "elapsed_ns": 193835996
+        },
+        {
+          "sample": 58,
+          "bytes": 31,
+          "elapsed_ns": 115048796
+        },
+        {
+          "sample": 59,
+          "bytes": 31,
+          "elapsed_ns": 88070779
+        },
+        {
+          "sample": 60,
+          "bytes": 31,
+          "elapsed_ns": 341762876
+        },
+        {
+          "sample": 61,
+          "bytes": 31,
+          "elapsed_ns": 297163033
+        },
+        {
+          "sample": 62,
+          "bytes": 31,
+          "elapsed_ns": 184186327
+        },
+        {
+          "sample": 63,
+          "bytes": 31,
+          "elapsed_ns": 365706490
+        },
+        {
+          "sample": 64,
+          "bytes": 31,
+          "elapsed_ns": 184291889
+        }
+      ],
+      "http_errors": [],
+      "over_300ms": 12,
+      "over_preferred_250ms": 25,
+      "maximum_completed_ns": 706075995,
+      "full_cohort_mean_ns": 239922777.09375,
+      "qualified": false
+    },
+    "watchdog-warm.jsonl": {
+      "artifact": "watchdog-warm.jsonl",
+      "expected_samples": 64,
+      "completed_samples": 64,
+      "complete": true,
+      "samples": [
+        {
+          "sample": 1,
+          "bytes": 31,
+          "elapsed_ns": 318459255
+        },
+        {
+          "sample": 2,
+          "bytes": 31,
+          "elapsed_ns": 155529944
+        },
+        {
+          "sample": 3,
+          "bytes": 31,
+          "elapsed_ns": 241707272
+        },
+        {
+          "sample": 4,
+          "bytes": 31,
+          "elapsed_ns": 264113480
+        },
+        {
+          "sample": 5,
+          "bytes": 31,
+          "elapsed_ns": 287235527
+        },
+        {
+          "sample": 6,
+          "bytes": 31,
+          "elapsed_ns": 170037481
+        },
+        {
+          "sample": 7,
+          "bytes": 31,
+          "elapsed_ns": 236497390
+        },
+        {
+          "sample": 8,
+          "bytes": 31,
+          "elapsed_ns": 230864190
+        },
+        {
+          "sample": 9,
+          "bytes": 31,
+          "elapsed_ns": 274609301
+        },
+        {
+          "sample": 10,
+          "bytes": 31,
+          "elapsed_ns": 244663417
+        },
+        {
+          "sample": 11,
+          "bytes": 31,
+          "elapsed_ns": 284182153
+        },
+        {
+          "sample": 12,
+          "bytes": 31,
+          "elapsed_ns": 181266804
+        },
+        {
+          "sample": 13,
+          "bytes": 31,
+          "elapsed_ns": 223674673
+        },
+        {
+          "sample": 14,
+          "bytes": 31,
+          "elapsed_ns": 252563437
+        },
+        {
+          "sample": 15,
+          "bytes": 31,
+          "elapsed_ns": 337198374
+        },
+        {
+          "sample": 16,
+          "bytes": 31,
+          "elapsed_ns": 245018246
+        },
+        {
+          "sample": 17,
+          "bytes": 31,
+          "elapsed_ns": 277098919
+        },
+        {
+          "sample": 18,
+          "bytes": 31,
+          "elapsed_ns": 188867298
+        },
+        {
+          "sample": 19,
+          "bytes": 31,
+          "elapsed_ns": 255220240
+        },
+        {
+          "sample": 20,
+          "bytes": 31,
+          "elapsed_ns": 222965828
+        },
+        {
+          "sample": 21,
+          "bytes": 31,
+          "elapsed_ns": 362492485
+        },
+        {
+          "sample": 22,
+          "bytes": 31,
+          "elapsed_ns": 255680438
+        },
+        {
+          "sample": 23,
+          "bytes": 31,
+          "elapsed_ns": 267566581
+        },
+        {
+          "sample": 24,
+          "bytes": 31,
+          "elapsed_ns": 150406511
+        },
+        {
+          "sample": 25,
+          "bytes": 31,
+          "elapsed_ns": 169228796
+        },
+        {
+          "sample": 26,
+          "bytes": 31,
+          "elapsed_ns": 268821397
+        },
+        {
+          "sample": 27,
+          "bytes": 31,
+          "elapsed_ns": 273963810
+        },
+        {
+          "sample": 28,
+          "bytes": 31,
+          "elapsed_ns": 249861000
+        },
+        {
+          "sample": 29,
+          "bytes": 31,
+          "elapsed_ns": 256339008
+        },
+        {
+          "sample": 30,
+          "bytes": 31,
+          "elapsed_ns": 173707646
+        },
+        {
+          "sample": 31,
+          "bytes": 31,
+          "elapsed_ns": 250826986
+        },
+        {
+          "sample": 32,
+          "bytes": 31,
+          "elapsed_ns": 259532295
+        },
+        {
+          "sample": 33,
+          "bytes": 31,
+          "elapsed_ns": 148629792
+        },
+        {
+          "sample": 34,
+          "bytes": 31,
+          "elapsed_ns": 267144313
+        },
+        {
+          "sample": 35,
+          "bytes": 31,
+          "elapsed_ns": 278529085
+        },
+        {
+          "sample": 36,
+          "bytes": 31,
+          "elapsed_ns": 226293694
+        },
+        {
+          "sample": 37,
+          "bytes": 31,
+          "elapsed_ns": 107675059
+        },
+        {
+          "sample": 38,
+          "bytes": 31,
+          "elapsed_ns": 222563965
+        },
+        {
+          "sample": 39,
+          "bytes": 31,
+          "elapsed_ns": 231510288
+        },
+        {
+          "sample": 40,
+          "bytes": 31,
+          "elapsed_ns": 175315586
+        },
+        {
+          "sample": 41,
+          "bytes": 31,
+          "elapsed_ns": 252605204
+        },
+        {
+          "sample": 42,
+          "bytes": 31,
+          "elapsed_ns": 263630710
+        },
+        {
+          "sample": 43,
+          "bytes": 31,
+          "elapsed_ns": 250761326
+        },
+        {
+          "sample": 44,
+          "bytes": 31,
+          "elapsed_ns": 176400638
+        },
+        {
+          "sample": 45,
+          "bytes": 31,
+          "elapsed_ns": 305686641
+        },
+        {
+          "sample": 46,
+          "bytes": 31,
+          "elapsed_ns": 195360921
+        },
+        {
+          "sample": 47,
+          "bytes": 31,
+          "elapsed_ns": 227111322
+        },
+        {
+          "sample": 48,
+          "bytes": 31,
+          "elapsed_ns": 360793705
+        },
+        {
+          "sample": 49,
+          "bytes": 31,
+          "elapsed_ns": 244848150
+        },
+        {
+          "sample": 50,
+          "bytes": 31,
+          "elapsed_ns": 174084814
+        },
+        {
+          "sample": 51,
+          "bytes": 31,
+          "elapsed_ns": 449497383
+        },
+        {
+          "sample": 52,
+          "bytes": 31,
+          "elapsed_ns": 829444153
+        },
+        {
+          "sample": 53,
+          "bytes": 31,
+          "elapsed_ns": 174969335
+        },
+        {
+          "sample": 54,
+          "bytes": 31,
+          "elapsed_ns": 321798961
+        },
+        {
+          "sample": 55,
+          "bytes": 31,
+          "elapsed_ns": 156281060
+        },
+        {
+          "sample": 56,
+          "bytes": 31,
+          "elapsed_ns": 228606962
+        },
+        {
+          "sample": 57,
+          "bytes": 31,
+          "elapsed_ns": 443574486
+        },
+        {
+          "sample": 58,
+          "bytes": 31,
+          "elapsed_ns": 231666103
+        },
+        {
+          "sample": 59,
+          "bytes": 31,
+          "elapsed_ns": 145342531
+        },
+        {
+          "sample": 60,
+          "bytes": 31,
+          "elapsed_ns": 228621382
+        },
+        {
+          "sample": 61,
+          "bytes": 31,
+          "elapsed_ns": 255972659
+        },
+        {
+          "sample": 62,
+          "bytes": 31,
+          "elapsed_ns": 222367652
+        },
+        {
+          "sample": 63,
+          "bytes": 31,
+          "elapsed_ns": 185066145
+        },
+        {
+          "sample": 64,
+          "bytes": 31,
+          "elapsed_ns": 156563331
+        }
+      ],
+      "http_errors": [],
+      "over_300ms": 9,
+      "over_preferred_250ms": 29,
+      "maximum_completed_ns": 829444153,
+      "full_cohort_mean_ns": 249514336.53125,
+      "qualified": false
+    },
+    "watchdog-quiet.jsonl": {
+      "artifact": "watchdog-quiet.jsonl",
+      "expected_samples": 3,
+      "completed_samples": 3,
+      "complete": true,
+      "samples": [
+        {
+          "sample": 1,
+          "bytes": 31,
+          "elapsed_ns": 386311992
+        },
+        {
+          "sample": 2,
+          "bytes": 31,
+          "elapsed_ns": 108408151
+        },
+        {
+          "sample": 3,
+          "bytes": 31,
+          "elapsed_ns": 240905434
+        }
+      ],
+      "http_errors": [],
+      "over_300ms": 1,
+      "over_preferred_250ms": 1,
+      "maximum_completed_ns": 386311992,
+      "full_cohort_mean_ns": 245208525.66666666,
+      "qualified": false
+    }
+  },
+  "limitations": [
+    "First parent reproduction has CPU profiling, second execution tracing; do not treat those as matched unprofiled A/B trials.",
+    "Unprofiled parent/new warm measurements remain variable and both fail the same maximum; no established RTT improvement or eliminated stalls.",
+    "Bookkeeping benchmark excludes transport bandwidth, provider variation, useful delivery and fsync.",
+    "No sustained 100Mbps qualification or independent real-provider validation in this continuation."
+  ],
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/imap.go": "e6dafda7b9f91beeab10a1a0009b26eef58f4e3c439cf58758cbfeb7705ecd63",
+    "archives/1.1.0/source/core/transport/imap_diagnostics.go": "3fce923ba1160a956ed58080607f112bb3a39a8c587432feef3272a70f317d2f",
+    "archives/1.1.0/source/core/transport/imap_progress_test.go": "a3a9422b6ad1bccbdb0a313ce73da217f316f82651e9a9b78af8c1bd5e52af81",
+    "archives/1.1.0/source/core/transport/imap_lifetime_bench_test.go": "c9396156dbdb1d8d0fd0e6480dec15d4f6204f7cb84fdd39f77571f72a302275",
+    "archives/1.1.0/source/core/qualification/measure.go": "26b3d0c77ce72cf19f0ac1fdb09df06cbb8f43e0b07f8123baaff5e636921777"
+  },
+  "artifact_sha256": {
+    "experiments/session-v2/command-lifetime/README.md": "014cb27929cdb7ebafa8702ddcd6918cd7eb7b8ec74902f40a374a5a196b20bc",
+    "experiments/session-v2/command-lifetime/before-traced-warm.jsonl": "2d7a510e590c59ec3880367f9554f6f137697539cf1604c4cfee34bcbf1a6d56",
+    "experiments/session-v2/command-lifetime/before-warm.jsonl": "303ac14b27d47b855717e72419c317e32d8241405f629ae98855f88d1701e6d7",
+    "experiments/session-v2/command-lifetime/cpu-top.txt": "b9bdf448cc794211037c2fdf6db92166cb70c981a0c93e988a26cc728971c29e",
+    "experiments/session-v2/command-lifetime/original-unprofiled-warm.jsonl": "ff36a9af6e35186ba7759402ad4f63c9cc983f7c44a61ef4775c4c9a7ae04545",
+    "experiments/session-v2/command-lifetime/scheduler-top.txt": "b6f6f01d0fff9593534a32b06651519dbae09fa0d383f24e197c1bb608057e4d",
+    "experiments/session-v2/command-lifetime/syscall-top.txt": "60b3c748f1d61a93cafd6ee5ca0e9e3bce2ffe7ede61f8b7ea077de298a02bdb",
+    "experiments/session-v2/command-lifetime/watchdog-after-bench.txt": "fb2a9b75fd180baa4a999bea5278c526ec085e27363cf2ff67d0283258d943e7",
+    "experiments/session-v2/command-lifetime/watchdog-before-bench.txt": "161efc1df5b14f2cfaf02327a1db0329d57666f33d0c5ec72edc1e0b06d0555b",
+    "experiments/session-v2/command-lifetime/watchdog-core-race.jsonl": "c5104f6c6771fc17432e2dcf449a37eefcf97441c4f9abfcb243e71007558f1f",
+    "experiments/session-v2/command-lifetime/watchdog-core-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/session-v2/command-lifetime/watchdog-final-tls-race.jsonl": "fa8e952068d00528f9176c958b75588ca4500f2ca224bc15453d7c8fec7f85ca",
+    "experiments/session-v2/command-lifetime/watchdog-native-race.jsonl": "8776dc8aadb601d9f1aafc382081940aa3341adcb4bd8424b26630d048bc4b54",
+    "experiments/session-v2/command-lifetime/watchdog-native-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/session-v2/command-lifetime/watchdog-quiet.jsonl": "3293a13d0e08513ac43c81929f47e3a5d92b5dd6c80ab3f07b59f5a8635e1531",
+    "experiments/session-v2/command-lifetime/watchdog-race.jsonl": "bc5a93f0ab530d1e7979ed5aa2cc50e9603f521739f831e1920b6a05cdaf039e",
+    "experiments/session-v2/command-lifetime/watchdog-warm.jsonl": "8c99aa74a1661b4a3430d6b25b6ccc98aa2a909445785797b387cc7eebfeff64"
+  }
+}

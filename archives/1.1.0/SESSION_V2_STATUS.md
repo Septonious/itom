@@ -13,6 +13,8 @@ watchdog goroutine per IMAP command while preserving independent progress limits
 and cancellation semantics. Targeted TLS/race checks and isolated bookkeeping
 benchmarks pass, but the complete warm and quiet HTTP cohorts still fail the
 300ms maximum. This is not a field RTT or throughput improvement claim.
+The [source-check snapshot](experiments/session-v2/COMMAND_LIFETIME_CHECK_RESULTS.json)
+passes 237 core race groups, ten native groups and both module vet checks.
 
 The [UID discovery continuation](UID_DISCOVERY_WORK.md) keeps inventory alive at
 numeric UID exhaustion and adds long-idle completion checks. The faster allocation

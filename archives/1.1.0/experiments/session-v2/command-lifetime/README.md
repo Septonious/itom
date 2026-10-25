@@ -30,4 +30,22 @@ The quiet cohort completes all three but one exceeds 300ms (maximum 386.312ms).
 Both qualification gates FAIL. No claim of field RTT improvement, sustained
 100Mbps, resolved HTTP instability, or release readiness follows from these data.
 
-The full source race suite and vet results are recorded separately once complete.
+The full default source race suite passes 237 top-level groups, native race checks
+pass ten, and both module vet commands exit zero. Their raw output is retained.
+Those source checks do not override either failed application qualification gate.
+
+`original-unprofiled-warm.jsonl` is a further parent-source overlay run without
+profiling: all 64 complete, with 12 misses, mean 239.923ms and maximum 706.076ms.
+The new implementation's cohort has fewer misses but a higher mean and maximum.
+This mixed, shared-host observation cannot establish an application latency win
+or eliminated HTTP instability. Every cohort remains visible.
+
+For the parent implementation comparison, write `git show
+ac73392e6a71298901ec9e7e236636bba884b5dd:archives/1.1.0/source/core/transport/imap.go`
+and the corresponding `imap_diagnostics.go` to scratch files and map the two
+absolute current source paths to them in a Go overlay JSON `Replace` object.
+Run the same current bookkeeping benchmark with `go test -overlay=PATH
+./transport -run '^$' -bench '^BenchmarkCompletedIMAPCommandLifetime$'
+-benchtime=500ms -count=3`; repeat without the overlay for the new implementation.
+The current new tests/benchmark stay present in both variants; no source deadline
+or qualification threshold is substituted by the overlay.

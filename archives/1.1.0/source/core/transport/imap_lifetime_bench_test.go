@@ -1,8 +1,6 @@
 package transport
 
-import (
-	"testing"
-)
+import "testing"
 
 // Command-lifetime bookkeeping only: no socket, disk, RTT or Mbps claim. The
 // original completion mutex and tag lifecycle still execute on every iteration.

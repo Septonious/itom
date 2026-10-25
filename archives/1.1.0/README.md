@@ -7,7 +7,10 @@ established. The preferred target remains 250ms; see the
 [user-directed temporary RTT policy](TEMPORARY_RTT_POLICY.md).
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/UID_DISCOVERY_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/COMMAND_LIFETIME_CHECK_RESULTS.json).
+
+[Command lifetime work](COMMAND_LIFETIME_WORK.md) removes per-command waiting
+goroutines. Core/native race checks and vet pass; application RTT gates still fail.
 
 [Cleanup/idle experiments](UID_DISCOVERY_WORK.md) retain a UID-exhaustion safety
 fix and new long-idle coverage. A faster UID prediction candidate is held back

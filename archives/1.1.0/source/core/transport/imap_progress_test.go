@@ -42,7 +42,11 @@ func TestMissingProviderTagsExpireTogetherAfterApplicationDetaches(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-entered
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("provider never received both commands")
+	}
 	cancel()
 	if _, err := first.Wait(ctx); !errors.Is(err, context.Canceled) {
 		t.Fatal("application waiter did not detach", err)
