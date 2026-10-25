@@ -116,7 +116,7 @@ type Inbox struct {
 	reclaimQueue        map[uint32]*reclaimBody
 	reclaimStats        ReclamationStats
 	reclaimCursor       uint32
-	reclaimActive       uint32
+	reclaimBatch        *reclamationBatch
 	receiptEnabled      bool
 	receipts            map[uint32]*deliveryReceipt
 	receiptStats        DeliveryReceiptStats

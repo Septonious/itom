@@ -1,0 +1,1281 @@
+{
+  "meaning": "Matched cold integrity and scripted command-service comparison, not calibrated field RTT or sustained-bandwidth qualification. Pending cleanup counts are last worker diagnostic snapshots, not separately sampled steady-state occupancy.",
+  "baseline": [
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 98.577432
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1127.838649
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 296.932727
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 769.047309
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 11,
+          "peak": 23,
+          "total_uids": 68,
+          "bytes": 9141,
+          "reported_cleanup": {
+            "Queued": 58,
+            "Released": 55,
+            "Refused": 0,
+            "Probes": 56,
+            "ReceiptProbes": 29,
+            "PeerReceipts": 29,
+            "Pending": 3
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 2,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 8,
+            "Refused": 0,
+            "Probes": 8,
+            "ReceiptProbes": 12,
+            "PeerReceipts": 5,
+            "Pending": 0
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 2.45
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 930.374155
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1238.251522
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1184.2283229999998
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1492.519849
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 54,
+          "peak": 54,
+          "total_uids": 64,
+          "bytes": 52868,
+          "reported_cleanup": {
+            "Queued": 53,
+            "Released": 9,
+            "Refused": 0,
+            "Probes": 9,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 44
+          }
+        },
+        {
+          "plane": 1,
+          "live": 4,
+          "peak": 5,
+          "total_uids": 12,
+          "bytes": 361380,
+          "reported_cleanup": {
+            "Queued": 12,
+            "Released": 7,
+            "Refused": 0,
+            "Probes": 7,
+            "ReceiptProbes": 4,
+            "PeerReceipts": 4,
+            "Pending": 5
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.98
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 1086.5011319999999
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1570.631731
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1219.3862310000002
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1611.212937
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 54,
+          "peak": 54,
+          "total_uids": 64,
+          "bytes": 54754,
+          "reported_cleanup": {
+            "Queued": 52,
+            "Released": 10,
+            "Refused": 0,
+            "Probes": 10,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 42
+          }
+        },
+        {
+          "plane": 1,
+          "live": 4,
+          "peak": 5,
+          "total_uids": 11,
+          "bytes": 361376,
+          "reported_cleanup": {
+            "Queued": 11,
+            "Released": 6,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Pending": 5
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 6.86
+    },
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 87.834581
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 628.388402
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 122.713858
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 701.786745
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 9,
+          "peak": 20,
+          "total_uids": 65,
+          "bytes": 5879,
+          "reported_cleanup": {
+            "Queued": 57,
+            "Released": 55,
+            "Refused": 0,
+            "Probes": 55,
+            "ReceiptProbes": 35,
+            "PeerReceipts": 29,
+            "Pending": 2
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 3,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 8,
+            "Refused": 0,
+            "Probes": 8,
+            "ReceiptProbes": 7,
+            "PeerReceipts": 5,
+            "Pending": 0
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 1.69
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 876.401578
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1492.81352
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 987.632395
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1471.653948
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 53,
+          "peak": 53,
+          "total_uids": 65,
+          "bytes": 54181,
+          "reported_cleanup": {
+            "Queued": 55,
+            "Released": 12,
+            "Refused": 0,
+            "Probes": 12,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 43
+          }
+        },
+        {
+          "plane": 1,
+          "live": 4,
+          "peak": 5,
+          "total_uids": 11,
+          "bytes": 361560,
+          "reported_cleanup": {
+            "Queued": 11,
+            "Released": 6,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Pending": 5
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.97
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 878.623746
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1171.594207
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1200.263737
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1515.217548
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 51,
+          "peak": 51,
+          "total_uids": 61,
+          "bytes": 51203,
+          "reported_cleanup": {
+            "Queued": 50,
+            "Released": 10,
+            "Refused": 0,
+            "Probes": 10,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 40
+          }
+        },
+        {
+          "plane": 1,
+          "live": 5,
+          "peak": 5,
+          "total_uids": 11,
+          "bytes": 580587,
+          "reported_cleanup": {
+            "Queued": 11,
+            "Released": 5,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Pending": 6
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.91
+    },
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 71.590574
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 646.351101
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 80.874387
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 652.685348
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 11,
+          "peak": 20,
+          "total_uids": 64,
+          "bytes": 9141,
+          "reported_cleanup": {
+            "Queued": 55,
+            "Released": 53,
+            "Refused": 0,
+            "Probes": 53,
+            "ReceiptProbes": 32,
+            "PeerReceipts": 28,
+            "Pending": 2
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 3,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 8,
+            "Refused": 0,
+            "Probes": 8,
+            "ReceiptProbes": 16,
+            "PeerReceipts": 5,
+            "Pending": 0
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 1.6
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 859.814055
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1320.208122
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1004.4508940000001
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1309.985212
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 48,
+          "peak": 48,
+          "total_uids": 58,
+          "bytes": 65028,
+          "reported_cleanup": {
+            "Queued": 47,
+            "Released": 9,
+            "Refused": 0,
+            "Probes": 9,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 38
+          }
+        },
+        {
+          "plane": 1,
+          "live": 1,
+          "peak": 4,
+          "total_uids": 7,
+          "bytes": 344359,
+          "reported_cleanup": {
+            "Queued": 7,
+            "Released": 6,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Pending": 1
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.71
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 797.605677
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1377.292371
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1039.610597
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1627.972366
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 52,
+          "peak": 52,
+          "total_uids": 63,
+          "bytes": 69134,
+          "reported_cleanup": {
+            "Queued": 53,
+            "Released": 10,
+            "Refused": 0,
+            "Probes": 10,
+            "ReceiptProbes": 6,
+            "PeerReceipts": 6,
+            "Pending": 43
+          }
+        },
+        {
+          "plane": 1,
+          "live": 3,
+          "peak": 4,
+          "total_uids": 9,
+          "bytes": 360993,
+          "reported_cleanup": {
+            "Queued": 9,
+            "Released": 5,
+            "Refused": 0,
+            "Probes": 5,
+            "ReceiptProbes": 2,
+            "PeerReceipts": 2,
+            "Pending": 4
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.99
+    }
+  ],
+  "candidate": [
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 107.734576
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 587.877496
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 118.91929
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 659.956748
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 12,
+          "peak": 15,
+          "total_uids": 66,
+          "bytes": 9696,
+          "reported_cleanup": {
+            "Queued": 57,
+            "Released": 53,
+            "Refused": 0,
+            "Probes": 36,
+            "ReceiptProbes": 27,
+            "PeerReceipts": 28,
+            "Batches": 37,
+            "MaxBatch": 6,
+            "Pending": 4
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 3,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 8,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 11,
+            "PeerReceipts": 5,
+            "Batches": 6,
+            "MaxBatch": 2,
+            "Pending": 0
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 1.68
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 790.496883
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1137.307319
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1091.3277589999998
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1167.387339
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 20,
+          "peak": 30,
+          "total_uids": 59,
+          "bytes": 19708,
+          "reported_cleanup": {
+            "Queued": 48,
+            "Released": 23,
+            "Refused": 0,
+            "Probes": 6,
+            "ReceiptProbes": 5,
+            "PeerReceipts": 22,
+            "Batches": 6,
+            "MaxBatch": 16,
+            "Pending": 25
+          }
+        },
+        {
+          "plane": 1,
+          "live": 6,
+          "peak": 6,
+          "total_uids": 12,
+          "bytes": 723954,
+          "reported_cleanup": {
+            "Queued": 11,
+            "Released": 6,
+            "Refused": 0,
+            "Probes": 3,
+            "ReceiptProbes": 4,
+            "PeerReceipts": 4,
+            "Batches": 3,
+            "MaxBatch": 3,
+            "Pending": 5
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.24
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 877.186108
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1359.551469
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1172.414742
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1386.8230669999998
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 17,
+          "peak": 23,
+          "total_uids": 60,
+          "bytes": 34883,
+          "reported_cleanup": {
+            "Queued": 51,
+            "Released": 43,
+            "Refused": 0,
+            "Probes": 10,
+            "ReceiptProbes": 9,
+            "PeerReceipts": 24,
+            "Batches": 10,
+            "MaxBatch": 10,
+            "Pending": 8
+          }
+        },
+        {
+          "plane": 1,
+          "live": 2,
+          "peak": 4,
+          "total_uids": 9,
+          "bytes": 344748,
+          "reported_cleanup": {
+            "Queued": 9,
+            "Released": 7,
+            "Refused": 0,
+            "Probes": 3,
+            "ReceiptProbes": 4,
+            "PeerReceipts": 5,
+            "Batches": 3,
+            "MaxBatch": 3,
+            "Pending": 2
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.92
+    },
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 80.398165
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 615.667094
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 139.076303
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 541.897683
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 9,
+          "peak": 15,
+          "total_uids": 64,
+          "bytes": 5879,
+          "reported_cleanup": {
+            "Queued": 55,
+            "Released": 50,
+            "Refused": 0,
+            "Probes": 31,
+            "ReceiptProbes": 24,
+            "PeerReceipts": 27,
+            "Batches": 32,
+            "MaxBatch": 6,
+            "Pending": 5
+          }
+        },
+        {
+          "plane": 1,
+          "live": 3,
+          "peak": 6,
+          "total_uids": 10,
+          "bytes": 297513,
+          "reported_cleanup": {
+            "Queued": 10,
+            "Released": 4,
+            "Refused": 0,
+            "Probes": 2,
+            "ReceiptProbes": 7,
+            "PeerReceipts": 3,
+            "Batches": 2,
+            "MaxBatch": 2,
+            "Pending": 6
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 1.53
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 1020.524869
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1496.039007
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1041.7870520000001
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1445.877367
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 18,
+          "peak": 24,
+          "total_uids": 65,
+          "bytes": 33392,
+          "reported_cleanup": {
+            "Queued": 54,
+            "Released": 40,
+            "Refused": 0,
+            "Probes": 9,
+            "ReceiptProbes": 10,
+            "PeerReceipts": 26,
+            "Batches": 10,
+            "MaxBatch": 10,
+            "Pending": 14
+          }
+        },
+        {
+          "plane": 1,
+          "live": 2,
+          "peak": 5,
+          "total_uids": 9,
+          "bytes": 344930,
+          "reported_cleanup": {
+            "Queued": 9,
+            "Released": 7,
+            "Refused": 0,
+            "Probes": 3,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Batches": 3,
+            "MaxBatch": 3,
+            "Pending": 2
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 6.12
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 884.714838
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1385.752552
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 1196.251032
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1547.1303830000002
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 18,
+          "peak": 23,
+          "total_uids": 64,
+          "bytes": 19948,
+          "reported_cleanup": {
+            "Queued": 53,
+            "Released": 45,
+            "Refused": 0,
+            "Probes": 9,
+            "ReceiptProbes": 9,
+            "PeerReceipts": 26,
+            "Batches": 9,
+            "MaxBatch": 12,
+            "Pending": 8
+          }
+        },
+        {
+          "plane": 1,
+          "live": 2,
+          "peak": 5,
+          "total_uids": 10,
+          "bytes": 244870,
+          "reported_cleanup": {
+            "Queued": 10,
+            "Released": 6,
+            "Refused": 0,
+            "Probes": 3,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 4,
+            "Batches": 3,
+            "MaxBatch": 3,
+            "Pending": 4
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 6.14
+    },
+    {
+      "test": "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 80.317939
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 628.61435
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 133.849653
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 600.177075
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 11,
+          "peak": 16,
+          "total_uids": 68,
+          "bytes": 9141,
+          "reported_cleanup": {
+            "Queued": 58,
+            "Released": 55,
+            "Refused": 0,
+            "Probes": 35,
+            "ReceiptProbes": 31,
+            "PeerReceipts": 30,
+            "Batches": 35,
+            "MaxBatch": 6,
+            "Pending": 3
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 2,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 8,
+            "Refused": 0,
+            "Probes": 4,
+            "ReceiptProbes": 21,
+            "PeerReceipts": 4,
+            "Batches": 4,
+            "MaxBatch": 2,
+            "Pending": 0
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 1.58
+    },
+    {
+      "test": "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 892.119717
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1121.627395
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 980.723035
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1428.590955
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 19,
+          "peak": 23,
+          "total_uids": 60,
+          "bytes": 15073,
+          "reported_cleanup": {
+            "Queued": 49,
+            "Released": 38,
+            "Refused": 0,
+            "Probes": 7,
+            "ReceiptProbes": 8,
+            "PeerReceipts": 23,
+            "Batches": 8,
+            "MaxBatch": 12,
+            "Pending": 11
+          }
+        },
+        {
+          "plane": 1,
+          "live": 3,
+          "peak": 4,
+          "total_uids": 10,
+          "bytes": 360993,
+          "reported_cleanup": {
+            "Queued": 10,
+            "Released": 5,
+            "Refused": 0,
+            "Probes": 4,
+            "ReceiptProbes": 3,
+            "PeerReceipts": 3,
+            "Batches": 4,
+            "MaxBatch": 2,
+            "Pending": 5
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 5.55
+    },
+    {
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "http_ms": [
+        {
+          "run": 0,
+          "payload_bytes": 29,
+          "ms": 962.817795
+        },
+        {
+          "run": 1,
+          "payload_bytes": 262267,
+          "ms": 1542.2367729999999
+        },
+        {
+          "run": 2,
+          "payload_bytes": 71,
+          "ms": 976.615105
+        },
+        {
+          "run": 3,
+          "payload_bytes": 262461,
+          "ms": 1500.14977
+        }
+      ],
+      "mailboxes": [
+        {
+          "plane": 0,
+          "live": 17,
+          "peak": 21,
+          "total_uids": 61,
+          "bytes": 34883,
+          "reported_cleanup": {
+            "Queued": 51,
+            "Released": 44,
+            "Refused": 0,
+            "Probes": 9,
+            "ReceiptProbes": 8,
+            "PeerReceipts": 24,
+            "Batches": 9,
+            "MaxBatch": 10,
+            "Pending": 7
+          }
+        },
+        {
+          "plane": 1,
+          "live": 0,
+          "peak": 4,
+          "total_uids": 8,
+          "bytes": 0,
+          "reported_cleanup": {
+            "Queued": 8,
+            "Released": 5,
+            "Refused": 0,
+            "Probes": 3,
+            "ReceiptProbes": 1,
+            "PeerReceipts": 3,
+            "Batches": 3,
+            "MaxBatch": 3,
+            "Pending": 3
+          }
+        }
+      ],
+      "outcome": "pass",
+      "elapsed_seconds": 6.18
+    }
+  ],
+  "by_case": {
+    "TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP": {
+      "baseline": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          2.45,
+          1.69,
+          1.6
+        ],
+        "fast_peaks": [
+          23,
+          20,
+          20
+        ],
+        "fast_cleanup_pending_reported": [
+          3,
+          2,
+          2
+        ]
+      },
+      "candidate": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          1.68,
+          1.53,
+          1.58
+        ],
+        "fast_peaks": [
+          15,
+          15,
+          16
+        ],
+        "fast_cleanup_pending_reported": [
+          4,
+          5,
+          3
+        ]
+      }
+    },
+    "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService": {
+      "baseline": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          5.98,
+          5.97,
+          5.71
+        ],
+        "fast_peaks": [
+          54,
+          53,
+          48
+        ],
+        "fast_cleanup_pending_reported": [
+          44,
+          43,
+          38
+        ]
+      },
+      "candidate": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          5.24,
+          6.12,
+          5.55
+        ],
+        "fast_peaks": [
+          30,
+          24,
+          23
+        ],
+        "fast_cleanup_pending_reported": [
+          25,
+          14,
+          11
+        ]
+      }
+    },
+    "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService": {
+      "baseline": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          6.86,
+          5.91,
+          5.99
+        ],
+        "fast_peaks": [
+          54,
+          51,
+          52
+        ],
+        "fast_cleanup_pending_reported": [
+          42,
+          40,
+          43
+        ]
+      },
+      "candidate": {
+        "outcomes": [
+          "pass",
+          "pass",
+          "pass"
+        ],
+        "case_seconds": [
+          5.92,
+          6.14,
+          6.18
+        ],
+        "fast_peaks": [
+          23,
+          23,
+          21
+        ],
+        "fast_cleanup_pending_reported": [
+          8,
+          8,
+          7
+        ]
+      }
+    }
+  }
+}

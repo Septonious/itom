@@ -14,14 +14,14 @@ on-mail Noise establishment and guarded runtime handover now exist; initial
 permission now has an accounted rendezvous/invitation component. Production
 coordination and agreed READY/roster negotiation remain incomplete.
 
-The latest [reclamation checkpoint](experiments/session-v2/RECLAMATION_CHECK_RESULTS.json)
-passes 183/183 whole-core top-level race groups, 10/10 native groups, 30/30
-repeated targeted group executions and core vet. All three cold TLS/HTTP cases
-pass with the original deadlines and 64-message live mailbox cap; fast-mailbox
-peaks in the final cohort are 24, 52 and 55. Earlier failures remain retained.
-The fluctuating-service cases still leave 40/44 pending server cleanup candidates
-at cancellation. These short integrity runs do not establish sustained 100Mbps,
-<=250ms light-load RTT, or a working production APK/server pair.
+The latest [bounded-batch checkpoint](experiments/session-v2/BATCH_RECLAMATION_CHECK_RESULTS.json)
+passes 189/189 core race groups, 10/10 native groups, 21/21 repeated safety group
+executions and core vet. Matched cold cohorts pass 9/9 on both f7f6031 and the
+candidate with the same provider fixture. Median fast-mailbox peaks in the two
+variable-service cases fall from 53/52 messages to 24/23, within the unchanged
+64-message cap. Whole-case durations are mixed; this is a measured cleanup and
+occupancy improvement, not proof of general RTT/rate improvement or sustained
+steady state. Production startup and authority turnover remain incomplete.
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -31,6 +31,14 @@ mandatory independently of that implementation.
 
 ## Implemented
 
+* Reclamation drains groups of already-ready candidates, up to the original
+  32-proof journal transaction bound, without a fill delay. Explicit UID sets
+  drive receipt discovery, mark/expunge and separate absence queries. Issuers
+  remain separate, intervening UIDs cannot enter the set, and a still-visible
+  message stays charged without repeating a completed expunge. Detached tags
+  retain the exact batch across cancellation. One regression reclaims 49 real
+  charged/applied messages in two groups; sparse UID, partial absence, lost-tag,
+  mixed-ledger and cancellation cases retain original debt and healthy service.
 * Opt-in physical reclamation now uses actual CAPABILITY-advertised UIDPLUS.
   A received CLIENT body must be fully authenticated, durably observed and
   applied/discarded before it can become a cleanup candidate. SERVER bodies
@@ -455,9 +463,10 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 * Active carrier selection, controller/receiver-window integration and complete
   status/NACK recovery for both publication/receive halves.
 * Calibration and multi-account integration of IDLE/DONE and active probing,
-  efficient bounded reclamation batches and migration/restart reconciliation using
-  original stores and retained debt. Per-body proof reclamation is implemented;
-  its measured pending backlog still blocks sustained-service qualification. The scoped receive/publication workers are not yet a complete
+  sustained qualification of bounded reclamation batches, efficient receipt
+  publication, and migration/restart reconciliation using original stores and
+  retained debt. Group reclamation is implemented; a lower short-case backlog
+  does not establish stable long-lived service. The scoped receive/publication workers are not yet a complete
   multi-account mailbox coordinator. DATA pressure no longer consumes protocol delivery slots;
   capacity-free protocol progress now bypasses exhausted protocol slots too.
   Multi-account fairness/liveness and complete memory/service behavior still

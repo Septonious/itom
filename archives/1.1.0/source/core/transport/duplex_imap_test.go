@@ -15,6 +15,7 @@ import (
 	"itom.local/core/wire"
 	"net"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -38,6 +39,46 @@ type sharedMailbox struct {
 	appendEntered  chan struct{}
 	appendRelease  <-chan struct{}
 	flags          map[uint32]map[string]bool
+}
+
+// The fixture accepts explicit sets and ranges, but only walks its bounded
+// allocated UID inventory. Sequence numbers count LIVE messages, including
+// unrequested intervening UIDs; deleted UIDs are never reassigned.
+func fixtureUIDSelection(selector string, allocated int) ([]uint32, error) {
+	if len(selector) == 0 || len(selector) > 4096 {
+		return nil, fmt.Errorf("invalid bounded fixture UID set")
+	}
+	type span struct{ first, last uint32 }
+	var spans []span
+	for _, part := range strings.Split(selector, ",") {
+		ends := strings.Split(part, ":")
+		if len(ends) > 2 {
+			return nil, fmt.Errorf("invalid fixture UID range")
+		}
+		first, err := strconv.ParseUint(ends[0], 10, 32)
+		if err != nil || first == 0 {
+			return nil, fmt.Errorf("invalid fixture UID")
+		}
+		last := first
+		if len(ends) == 2 {
+			last, err = strconv.ParseUint(ends[1], 10, 32)
+			if err != nil || last < first {
+				return nil, fmt.Errorf("invalid fixture UID range")
+			}
+		}
+		spans = append(spans, span{uint32(first), uint32(last)})
+	}
+	var uids []uint32
+	for n := 1; n <= allocated; n++ {
+		uid := uint32(n)
+		for _, span := range spans {
+			if uid >= span.first && uid <= span.last {
+				uids = append(uids, uid)
+				break
+			}
+		}
+	}
+	return uids, nil
 }
 
 func (m *sharedMailbox) changes() (int, <-chan struct{}) {
@@ -168,38 +209,45 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				}
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
+				if len(fields) < 4 {
+					t.Error("invalid fixture UID command")
+					return
+				}
+				m.mu.Lock()
+				uids, err := fixtureUIDSelection(fields[3], len(m.bodies))
+				m.mu.Unlock()
+				if err != nil {
+					t.Error(err)
+					return
+				}
 				if len(fields) == 4 && fields[2] == "EXPUNGE" && m.reclamation {
 					if m.reclaimFault == "expunge_refused" {
 						fmt.Fprintf(conn, "%s NO expunge refused\r\n", tag(line))
 						continue
 					}
-					var uid uint32
-					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
-						t.Error("invalid EXPUNGE UID")
-						return
-					}
+					var removed []int
 					m.mu.Lock()
-					sequence := 0
-					deleted := false
-					if uid <= uint32(len(m.bodies)) {
+					for _, uid := range uids {
+						if m.bodies[uid-1] == nil || !m.flags[uid][`\Deleted`] || m.reclaimFault == "still_visible" || m.reclaimFault == "partial_visible" && uid == 2 {
+							continue
+						}
+						sequence := 0
 						for _, body := range m.bodies[:uid] {
 							if body != nil {
 								sequence++
 							}
 						}
-						if m.bodies[uid-1] != nil && m.flags[uid][`\Deleted`] && m.reclaimFault != "still_visible" {
-							m.bytes -= len(m.bodies[uid-1])
-							m.bodies[uid-1] = nil
-							delete(m.flags, uid)
-							deleted = true
-							if m.changed != nil {
-								close(m.changed)
-								m.changed = make(chan struct{})
-							}
-						}
+						m.bytes -= len(m.bodies[uid-1])
+						m.bodies[uid-1] = nil
+						delete(m.flags, uid)
+						removed = append(removed, sequence)
+					}
+					if len(removed) > 0 && m.changed != nil {
+						close(m.changed)
+						m.changed = make(chan struct{})
 					}
 					m.mu.Unlock()
-					if deleted {
+					for _, sequence := range removed {
 						fmt.Fprintf(conn, "* %d EXPUNGE\r\n", sequence)
 					}
 					if m.expungeEntered != nil {
@@ -214,36 +262,31 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 					if m.reclaimFault == "changed_incarnation" {
 						fmt.Fprint(conn, "* OK [UIDVALIDITY 10] reset\r\n")
 					}
-					fmt.Fprintf(conn, "%s OK exact UID expunged\r\n", tag(line))
+					fmt.Fprintf(conn, "%s OK exact UID set expunged\r\n", tag(line))
 					continue
 				}
 				if len(fields) == 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && (m.keywords || m.reclamation && fields[5] == `(\Deleted)`) {
-					var uid uint32
-					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
-						t.Error("invalid STORE UID")
-						return
-					}
 					if m.reclaimFault == "store_refused" && fields[5] == `(\Deleted)` {
 						fmt.Fprintf(conn, "%s NO store refused\r\n", tag(line))
 						continue
 					}
 					keyword := strings.TrimSuffix(strings.TrimPrefix(fields[5], "("), ")")
 					m.mu.Lock()
-					if uid > uint32(len(m.bodies)) {
-						m.mu.Unlock()
-						fmt.Fprintf(conn, "%s NO missing UID\r\n", tag(line))
-						continue
-					}
 					if m.flags == nil {
 						m.flags = make(map[uint32]map[string]bool)
 					}
-					if m.flags[uid] == nil {
-						m.flags[uid] = make(map[string]bool)
-					}
-					if fields[4] == "+FLAGS.SILENT" {
-						m.flags[uid][keyword] = true
-					} else {
-						delete(m.flags[uid], keyword)
+					for _, uid := range uids {
+						if m.bodies[uid-1] == nil {
+							continue
+						}
+						if m.flags[uid] == nil {
+							m.flags[uid] = make(map[string]bool)
+						}
+						if fields[4] == "+FLAGS.SILENT" {
+							m.flags[uid][keyword] = true
+						} else {
+							delete(m.flags[uid], keyword)
+						}
 					}
 					m.mu.Unlock()
 					if m.reclaimFault == "lost_store_tag" && fields[5] == `(\Deleted)` {
@@ -252,49 +295,44 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 					fmt.Fprintf(conn, "%s OK flags stored\r\n", tag(line))
 					continue
 				}
-				var first, last int
 				if len(fields) < 5 || fields[2] != "FETCH" {
 					t.Error("unsupported fixture UID command")
 					return
 				}
-				if n, err := fmt.Sscanf(fields[3], "%d:%d", &first, &last); err != nil || n != 2 || first < 1 || last < first {
-					t.Error("invalid fixture UID interval")
-					return
+				selected := make(map[uint32]bool, len(uids))
+				for _, uid := range uids {
+					selected[uid] = true
 				}
+				var replies []transport.Body
 				m.mu.Lock()
-				last = min(last, len(m.bodies))
-				var bodies [][]byte
-				var sequenceBefore int
-				for _, body := range m.bodies[:min(first-1, len(m.bodies))] {
-					if body != nil {
-						sequenceBefore++
-					}
-				}
-				if first <= last {
-					bodies = append(bodies, m.bodies[first-1:last]...)
-				}
-				m.mu.Unlock()
-				for i, body := range bodies {
+				sequence := uint32(0)
+				for n, body := range m.bodies {
 					if body == nil {
 						continue
 					}
-					sequenceBefore++
+					sequence++
+					uid := uint32(n + 1)
+					if !selected[uid] {
+						continue
+					}
+					var flags []string
+					for flag := range m.flags[uid] {
+						flags = append(flags, flag)
+					}
+					replies = append(replies, transport.Body{UID: uid, Sequence: sequence, Bytes: body, Flags: flags})
+				}
+				m.mu.Unlock()
+				for _, body := range replies {
 					if strings.Join(fields[4:], " ") == "(UID FLAGS)" {
-						m.mu.Lock()
-						var flags []string
-						for flag := range m.flags[uint32(first+i)] {
-							flags = append(flags, flag)
-						}
-						m.mu.Unlock()
-						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", sequenceBefore, first+i, strings.Join(flags, " "))
+						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", body.Sequence, body.UID, strings.Join(body.Flags, " "))
 						continue
 					}
 					if fields[4] == "(UID)" {
-						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", first+i, first+i)
+						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", body.Sequence, body.UID)
 						continue
 					}
-					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", sequenceBefore, first+i, len(body))
-					conn.Write(body)
+					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", body.Sequence, body.UID, len(body.Bytes))
+					conn.Write(body.Bytes)
 					fmt.Fprint(conn, ")\r\n")
 				}
 				fmt.Fprintf(conn, "%s OK fetched\r\n", tag(line))

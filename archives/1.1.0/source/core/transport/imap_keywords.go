@@ -61,26 +61,7 @@ func (e *Executor) FetchFlags(ctx context.Context, uid uint32) (*Command, error)
 	if uid == 0 {
 		return nil, ErrProtocol
 	}
-	if err := e.lockWriter(ctx); err != nil {
-		return nil, err
-	}
-	defer func() { <-e.writer }()
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	tag, op, err := e.begin(commandFlags, true, false)
-	if err != nil {
-		return nil, err
-	}
-	e.mu.Lock()
-	op.first, op.last, op.flags = uid, uid, true
-	op.uids = make(map[uint32]bool)
-	e.mu.Unlock()
-	if err = e.write([]byte(fmt.Sprintf("%s UID FETCH %d:%d (UID FLAGS)\r\n", tag, uid, uid))); err != nil {
-		e.fail(ErrUnknown)
-		return &Command{op}, ErrUnknown
-	}
-	return &Command{op}, nil
+	return e.fetchUIDSet(ctx, []uint32{uid}, true)
 }
 
 // Parse only the requested UID/FLAGS form. Unknown structures and response
@@ -145,14 +126,19 @@ func (e *Executor) readFlags(line string) (bool, error) {
 	if uid == 0 || !seenFlags {
 		return false, ErrProtocol
 	}
-	if uid != op.first {
+	if !op.requestsUID(uid) {
 		return false, nil // legal unsolicited update for another actual UID
 	}
 	op.bytes += len(line) + 2
 	if op.uids[uid] {
 		// A later unsolicited FLAGS update for this same UID can precede the
 		// tag. Preserve one bounded latest hint, not a second BODY/proof.
-		op.result.Bodies[0] = Body{UID: uid, Sequence: sequence, Flags: flags}
+		for n := range op.result.Bodies {
+			if op.result.Bodies[n].UID == uid {
+				op.result.Bodies[n] = Body{UID: uid, Sequence: sequence, Flags: flags}
+				break
+			}
+		}
 		return true, nil
 	}
 	op.uids[uid] = true

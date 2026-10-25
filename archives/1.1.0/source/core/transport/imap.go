@@ -42,6 +42,7 @@ type operation struct {
 	flags        bool
 	first, last  uint32
 	uids         map[uint32]bool
+	requested    map[uint32]bool
 }
 
 // Command is a completion handle. Wait cancellation detaches that waiter; it
@@ -535,7 +536,7 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 			uid = value
 		}
 	}
-	if uid == 0 || uint32(uid) < op.first || uint32(uid) > op.last {
+	if uid == 0 || !op.requestsUID(uint32(uid)) {
 		return false, nil
 	}
 	if len(line)+2 > e.limits.ResponseBytes-op.bytes {
@@ -607,7 +608,7 @@ func (e *Executor) readBody(line string) error {
 	if e.closed != nil {
 		return e.closed
 	}
-	if uint32(uid) < op.first || uint32(uid) > op.last || op.uids[uint32(uid)] {
+	if !op.requestsUID(uint32(uid)) || op.uids[uint32(uid)] {
 		return ErrProtocol
 	}
 	if len(suffix) > e.limits.ResponseBytes-op.bytes {

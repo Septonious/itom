@@ -1,0 +1,8 @@
+{
+  "baseline_commit": "f7f603148fdace7731144acf6539c8b837dbfe64",
+  "shared_fixture_sha256": "e14293112942a155a91cc7c1083edd1aa292573cf74eb40f35ef6f8d906b5c6b",
+  "machine": "x86_64",
+  "kernel": "6.18.55",
+  "cpu_max": "200000 100000",
+  "note": "Matched cold integrity/service workloads, run serially on one source host; not calibrated field RTT or sustained bandwidth. The baseline uses the same corrected sparse-UID provider fixture."
+}

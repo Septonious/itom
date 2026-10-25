@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 
 	"itom.local/core/journal"
 )
@@ -15,6 +16,7 @@ var ErrUIDPlusRequired = errors.New("V2_IMAP_UIDPLUS_REQUIRED")
 type ReclamationStats struct {
 	Queued, Released, Refused, Probes uint64
 	ReceiptProbes, PeerReceipts       uint64
+	Batches, MaxBatch                 uint64
 	Pending                           int
 	Disabled                          bool
 }
@@ -29,10 +31,8 @@ type reclaimBody struct {
 	ref             journal.AttemptRef
 	location        journal.Location
 	account, folder string
-	stage           uint8
-	command         *Command
+	absenceOnly     bool
 	receiptKeyword  string
-	receiptCommand  *Command
 	receiptVerified bool
 }
 
@@ -105,11 +105,27 @@ func (i *Inbox) queueReclaimToken(uid uint32, r *reclaimBody) {
 	}
 }
 
-// reclaimOne performs at most one candidate per receive turn. A detached Wait
-// retains its SAME command handle and stage across cancellation; no ambiguous
-// STORE/EXPUNGE is blindly reissued. A tagged refusal disables maintenance only,
-// leaving receive service and every original charge intact for recovery.
-func (i *Inbox) reclaimOne(ctx context.Context) (progress bool, resultErr error) {
+// A detached command belongs to this exact batch across cancellation. Scope,
+// original issuer and post-expunge state cannot change while a tag drains.
+type reclamationBatch struct {
+	bodies  []*reclaimBody
+	stage   uint8 // flags, STORE, EXPUNGE, exact-set absence
+	command *Command
+}
+
+func bodyUIDs(bodies []*reclaimBody, awaitingReceipt bool) []uint32 {
+	var uids []uint32
+	for _, r := range bodies {
+		if !awaitingReceipt || r.receiptKeyword != "" && !r.receiptVerified {
+			uids = append(uids, r.location.UID)
+		}
+	}
+	return uids
+}
+
+// reclaimOne drains at most one already-ready bounded group, without a fill
+// timer. It never combines issuers/ledgers or re-expunges a still-visible UID.
+func (i *Inbox) reclaimOne(ctx context.Context) (bool, error) {
 	i.maintenanceMu.Lock()
 	defer i.maintenanceMu.Unlock()
 	i.mu.Lock()
@@ -117,86 +133,66 @@ func (i *Inbox) reclaimOne(ctx context.Context) (progress bool, resultErr error)
 		i.mu.Unlock()
 		return false, nil
 	}
-	uid := i.reclaimActive
-	if uid == 0 {
-		var first uint32
-		for next := range i.reclaimQueue {
-			if first == 0 || next < first {
-				first = next
+	batch := i.reclaimBatch
+	if batch == nil {
+		var ordered []uint32
+		for uid := range i.reclaimQueue {
+			ordered = append(ordered, uid)
+		}
+		sort.Slice(ordered, func(a, b int) bool {
+			left, right := ordered[a] > i.reclaimCursor, ordered[b] > i.reclaimCursor
+			if left != right {
+				return left
 			}
-			if next > i.reclaimCursor && (uid == 0 || next < uid) {
-				uid = next
-			}
+			return ordered[a] < ordered[b]
+		})
+		candidates := make([]*reclaimBody, 0, len(ordered))
+		for _, uid := range ordered {
+			candidates = append(candidates, i.reclaimQueue[uid])
 		}
-		if uid == 0 {
-			uid = first
-		}
-	}
-	i.reclaimActive = uid
-	r := i.reclaimQueue[uid]
-	i.mu.Unlock()
-	defer func() {
-		i.mu.Lock()
-		defer i.mu.Unlock()
-		if resultErr == nil {
-			i.reclaimActive = 0
-			i.reclaimCursor = uid
-		}
-	}()
-	if r.receiptKeyword != "" && r.store.LocalPublicationActive(r.ref) {
-		return false, nil // BODY/peer visibility may precede the local APPEND tag
-	}
-	if r.receiptKeyword != "" && !r.receiptVerified {
-		if r.receiptCommand == nil {
-			var err error
-			r.receiptCommand, err = i.executor.FetchFlags(ctx, uid)
-			if err != nil {
-				return false, err
-			}
-		}
-		bodies, err := r.receiptCommand.Wait(ctx)
-		if err != nil {
-			if errors.Is(err, ErrRefused) {
-				i.mu.Lock()
-				i.reclamation = false
-				i.reclaimStats.Refused++
-				i.reclaimStats.Disabled = true
-				i.mu.Unlock()
-				return false, nil
-			}
-			return false, err
-		}
-		r.receiptCommand = nil
-		i.mu.Lock()
-		i.reclaimStats.ReceiptProbes++
 		i.mu.Unlock()
-		for _, body := range bodies {
-			for _, flag := range body.Flags {
-				if flag == r.receiptKeyword {
-					r.receiptVerified = true
-				}
+		batch = &reclamationBatch{}
+		for _, r := range candidates {
+			if r.receiptKeyword != "" && r.store.LocalPublicationActive(r.ref) {
+				continue
+			}
+			if len(batch.bodies) > 0 && (r.store != batch.bodies[0].store || r.absenceOnly != batch.bodies[0].absenceOnly) {
+				continue
+			}
+			batch.bodies = append(batch.bodies, r)
+			if len(batch.bodies) == journal.MaxProofBatch {
+				break
 			}
 		}
-		if !r.receiptVerified {
+		if len(batch.bodies) == 0 {
 			return false, nil
 		}
+		if batch.bodies[0].absenceOnly {
+			batch.stage = 3
+		}
 		i.mu.Lock()
-		i.reclaimStats.PeerReceipts++
-		i.mu.Unlock()
+		i.reclaimCursor = batch.bodies[len(batch.bodies)-1].location.UID
+		i.reclaimBatch = batch
 	}
+	i.mu.Unlock()
 	for {
 		if err := ctx.Err(); err != nil {
 			return false, err
 		}
-		if r.command == nil {
+		if batch.stage == 0 && len(bodyUIDs(batch.bodies, true)) == 0 {
+			batch.stage = 1
+		}
+		if batch.command == nil {
 			var err error
-			switch r.stage {
+			switch batch.stage {
 			case 0:
-				r.command, err = i.executor.deleteCommand(ctx, uid, false)
+				batch.command, err = i.executor.fetchUIDSet(ctx, bodyUIDs(batch.bodies, true), true)
 			case 1:
-				r.command, err = i.executor.deleteCommand(ctx, uid, true)
+				batch.command, err = i.executor.deleteUIDSet(ctx, bodyUIDs(batch.bodies, false), false)
 			case 2:
-				r.command, err = i.executor.fetchRange(ctx, uid, uid, true)
+				batch.command, err = i.executor.deleteUIDSet(ctx, bodyUIDs(batch.bodies, false), true)
+			case 3:
+				batch.command, err = i.executor.fetchUIDSet(ctx, bodyUIDs(batch.bodies, false), false)
 			default:
 				return false, ErrProtocol
 			}
@@ -204,7 +200,7 @@ func (i *Inbox) reclaimOne(ctx context.Context) (progress bool, resultErr error)
 				return false, err
 			}
 		}
-		bodies, err := r.command.Wait(ctx)
+		bodies, err := batch.command.Wait(ctx)
 		if err != nil {
 			if errors.Is(err, ErrRefused) {
 				i.mu.Lock()
@@ -216,38 +212,95 @@ func (i *Inbox) reclaimOne(ctx context.Context) (progress bool, resultErr error)
 			}
 			return false, err
 		}
-		r.command = nil
-		if r.stage < 2 {
-			r.stage++
-			continue
+		batch.command = nil
+		switch batch.stage {
+		case 0:
+			flags := make(map[uint32][]string, len(bodies))
+			for _, body := range bodies {
+				flags[body.UID] = body.Flags
+			}
+			ready := batch.bodies[:0]
+			var newlyVerified uint64
+			for _, r := range batch.bodies {
+				if r.receiptKeyword != "" && !r.receiptVerified {
+					for _, flag := range flags[r.location.UID] {
+						if flag == r.receiptKeyword {
+							r.receiptVerified = true
+							newlyVerified++
+							break
+						}
+					}
+				}
+				if r.receiptKeyword == "" || r.receiptVerified {
+					ready = append(ready, r)
+				}
+			}
+			batch.bodies = ready
+			i.mu.Lock()
+			i.reclaimStats.ReceiptProbes++
+			i.reclaimStats.PeerReceipts += newlyVerified
+			if len(ready) == 0 {
+				i.reclaimBatch = nil
+				i.mu.Unlock()
+				return false, nil
+			}
+			i.mu.Unlock()
+			batch.stage = 1
+		case 1:
+			batch.stage = 2
+		case 2:
+			for _, r := range batch.bodies {
+				r.absenceOnly = true
+			}
+			i.mu.Lock()
+			i.reclaimStats.Batches++
+			i.reclaimStats.MaxBatch = max(i.reclaimStats.MaxBatch, uint64(len(batch.bodies)))
+			i.mu.Unlock()
+			batch.stage = 3
+		case 3:
+			present := make(map[uint32]bool, len(bodies))
+			for _, body := range bodies {
+				present[body.UID] = true
+			}
+			var proofs []journal.Deletion
+			for _, r := range batch.bodies {
+				if !present[r.location.UID] {
+					proofs = append(proofs, journal.Deletion{Ref: r.ref, Location: r.location})
+				}
+			}
+			i.mu.Lock()
+			i.reclaimStats.Probes++
+			i.mu.Unlock()
+			if len(proofs) > 0 {
+				store := batch.bodies[0].store
+				if err := store.DeletedMany(store.Run(), proofs); err != nil {
+					return false, err
+				}
+			}
+			i.mu.Lock()
+			for _, proof := range proofs {
+				delete(i.reclaimQueue, proof.Location.UID)
+			}
+			i.reclaimStats.Released += uint64(len(proofs))
+			i.reclaimBatch = nil
+			i.mu.Unlock()
+			return len(proofs) > 0, nil
 		}
-		i.mu.Lock()
-		i.reclaimStats.Probes++
-		i.mu.Unlock()
-		if len(bodies) != 0 {
-			// A still-visible UID is NOT absence proof, even after tagged OK.
-			// Probe again on a later receive turn; never refund or re-expunge.
-			return false, nil
-		}
-		if err := r.store.Deleted(r.ref, r.store.Run(), r.location); err != nil {
-			return false, err // fsync/uncertain commit fences original authority
-		}
-		i.mu.Lock()
-		delete(i.reclaimQueue, uid)
-		i.reclaimStats.Released++
-		i.mu.Unlock()
-		return true, nil
 	}
 }
 
-// deleteCommand is private: only the scoped post-delivery reclamation owner
+// deleteUIDSet is private: only the scoped post-delivery reclamation owner
 // reaches it. UIDPLUS prevents unrelated messages flagged by another session
 // from being expunged. Physical absence must still be verified separately.
-func (e *Executor) deleteCommand(ctx context.Context, uid uint32, expunge bool) (*Command, error) {
+func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool) (*Command, error) {
+	_, set, err := checkedUIDSet(uids)
+	if err != nil {
+		return nil, err
+	}
 	if !e.uidPlus {
 		return nil, ErrUIDPlusRequired
 	}
-	if e.account == "" || e.mailbox == "" || e.validity == 0 || uid == 0 {
+	if e.account == "" || e.mailbox == "" || e.validity == 0 {
 		return nil, ErrProtocol
 	}
 	if err := e.lockWriter(ctx); err != nil {
@@ -257,9 +310,9 @@ func (e *Executor) deleteCommand(ctx context.Context, uid uint32, expunge bool) 
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	class, command := commandStore, fmt.Sprintf("UID STORE %d +FLAGS.SILENT (\\Deleted)", uid)
+	class, command := commandStore, fmt.Sprintf("UID STORE %s +FLAGS.SILENT (\\Deleted)", set)
 	if expunge {
-		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %d", uid)
+		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %s", set)
 	}
 	tag, op, err := e.begin(class, false, false)
 	if err != nil {

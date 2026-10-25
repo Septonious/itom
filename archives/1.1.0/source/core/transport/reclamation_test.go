@@ -331,6 +331,7 @@ func TestServerReclamationNeedsTheReceiptForThatExactBodyAndUID(t *testing.T) {
 	if err != nil || mid.Messages != 1 || si.ReclamationStats().Released != 1 {
 		t.Fatal("transplanted marker released another charge", mid, si.ReclamationStats(), err)
 	}
+	awaitReclamation(t, func() bool { return !sx.Snapshot().FetchActive })
 	if body := fetchAt(t, sx, 2); len(body.Bytes) == 0 {
 		t.Fatal("wrong receipt erased the second body")
 	}

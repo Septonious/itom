@@ -1,0 +1,191 @@
+diff --git a/archives/1.1.0/source/core/transport/duplex_imap_test.go b/archives/1.1.0/source/core/transport/duplex_imap_test.go
+index c1f26b0..2aafd70 100644
+--- a/archives/1.1.0/source/core/transport/duplex_imap_test.go
++++ b/archives/1.1.0/source/core/transport/duplex_imap_test.go
+@@ -17,0 +18 @@ import (
++	"strconv"
+@@ -42,0 +44,40 @@ type sharedMailbox struct {
++// The fixture accepts explicit sets and ranges, but only walks its bounded
++// allocated UID inventory. Sequence numbers count LIVE messages, including
++// unrequested intervening UIDs; deleted UIDs are never reassigned.
++func fixtureUIDSelection(selector string, allocated int) ([]uint32, error) {
++	if len(selector) == 0 || len(selector) > 4096 {
++		return nil, fmt.Errorf("invalid bounded fixture UID set")
++	}
++	type span struct{ first, last uint32 }
++	var spans []span
++	for _, part := range strings.Split(selector, ",") {
++		ends := strings.Split(part, ":")
++		if len(ends) > 2 {
++			return nil, fmt.Errorf("invalid fixture UID range")
++		}
++		first, err := strconv.ParseUint(ends[0], 10, 32)
++		if err != nil || first == 0 {
++			return nil, fmt.Errorf("invalid fixture UID")
++		}
++		last := first
++		if len(ends) == 2 {
++			last, err = strconv.ParseUint(ends[1], 10, 32)
++			if err != nil || last < first {
++				return nil, fmt.Errorf("invalid fixture UID range")
++			}
++		}
++		spans = append(spans, span{uint32(first), uint32(last)})
++	}
++	var uids []uint32
++	for n := 1; n <= allocated; n++ {
++		uid := uint32(n)
++		for _, span := range spans {
++			if uid >= span.first && uid <= span.last {
++				uids = append(uids, uid)
++				break
++			}
++		}
++	}
++	return uids, nil
++}
++
+@@ -170,0 +212,11 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
++				if len(fields) < 4 {
++					t.Error("invalid fixture UID command")
++					return
++				}
++				m.mu.Lock()
++				uids, err := fixtureUIDSelection(fields[3], len(m.bodies))
++				m.mu.Unlock()
++				if err != nil {
++					t.Error(err)
++					return
++				}
+@@ -176,5 +228 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					var uid uint32
+-					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
+-						t.Error("invalid EXPUNGE UID")
+-						return
+-					}
++					var removed []int
+@@ -182,3 +230,5 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					sequence := 0
+-					deleted := false
+-					if uid <= uint32(len(m.bodies)) {
++					for _, uid := range uids {
++						if m.bodies[uid-1] == nil || !m.flags[uid][`\Deleted`] || m.reclaimFault == "still_visible" || m.reclaimFault == "partial_visible" && uid == 2 {
++							continue
++						}
++						sequence := 0
+@@ -190,10 +240,8 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-						if m.bodies[uid-1] != nil && m.flags[uid][`\Deleted`] && m.reclaimFault != "still_visible" {
+-							m.bytes -= len(m.bodies[uid-1])
+-							m.bodies[uid-1] = nil
+-							delete(m.flags, uid)
+-							deleted = true
+-							if m.changed != nil {
+-								close(m.changed)
+-								m.changed = make(chan struct{})
+-							}
+-						}
++						m.bytes -= len(m.bodies[uid-1])
++						m.bodies[uid-1] = nil
++						delete(m.flags, uid)
++						removed = append(removed, sequence)
++					}
++					if len(removed) > 0 && m.changed != nil {
++						close(m.changed)
++						m.changed = make(chan struct{})
+@@ -202 +250 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					if deleted {
++					for _, sequence := range removed {
+@@ -217 +265 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					fmt.Fprintf(conn, "%s OK exact UID expunged\r\n", tag(line))
++					fmt.Fprintf(conn, "%s OK exact UID set expunged\r\n", tag(line))
+@@ -221,5 +268,0 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					var uid uint32
+-					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
+-						t.Error("invalid STORE UID")
+-						return
+-					}
+@@ -232,5 +274,0 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					if uid > uint32(len(m.bodies)) {
+-						m.mu.Unlock()
+-						fmt.Fprintf(conn, "%s NO missing UID\r\n", tag(line))
+-						continue
+-					}
+@@ -240,7 +278,12 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					if m.flags[uid] == nil {
+-						m.flags[uid] = make(map[string]bool)
+-					}
+-					if fields[4] == "+FLAGS.SILENT" {
+-						m.flags[uid][keyword] = true
+-					} else {
+-						delete(m.flags[uid], keyword)
++					for _, uid := range uids {
++						if m.bodies[uid-1] == nil {
++							continue
++						}
++						if m.flags[uid] == nil {
++							m.flags[uid] = make(map[string]bool)
++						}
++						if fields[4] == "+FLAGS.SILENT" {
++							m.flags[uid][keyword] = true
++						} else {
++							delete(m.flags[uid], keyword)
++						}
+@@ -255 +297,0 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-				var first, last int
+@@ -260,3 +302,3 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-				if n, err := fmt.Sscanf(fields[3], "%d:%d", &first, &last); err != nil || n != 2 || first < 1 || last < first {
+-					t.Error("invalid fixture UID interval")
+-					return
++				selected := make(map[uint32]bool, len(uids))
++				for _, uid := range uids {
++					selected[uid] = true
+@@ -263,0 +306 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
++				var replies []transport.Body
+@@ -265,13 +308,2 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-				last = min(last, len(m.bodies))
+-				var bodies [][]byte
+-				var sequenceBefore int
+-				for _, body := range m.bodies[:min(first-1, len(m.bodies))] {
+-					if body != nil {
+-						sequenceBefore++
+-					}
+-				}
+-				if first <= last {
+-					bodies = append(bodies, m.bodies[first-1:last]...)
+-				}
+-				m.mu.Unlock()
+-				for i, body := range bodies {
++				sequence := uint32(0)
++				for n, body := range m.bodies {
+@@ -281 +313,13 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					sequenceBefore++
++					sequence++
++					uid := uint32(n + 1)
++					if !selected[uid] {
++						continue
++					}
++					var flags []string
++					for flag := range m.flags[uid] {
++						flags = append(flags, flag)
++					}
++					replies = append(replies, transport.Body{UID: uid, Sequence: sequence, Bytes: body, Flags: flags})
++				}
++				m.mu.Unlock()
++				for _, body := range replies {
+@@ -283,7 +327 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-						m.mu.Lock()
+-						var flags []string
+-						for flag := range m.flags[uint32(first+i)] {
+-							flags = append(flags, flag)
+-						}
+-						m.mu.Unlock()
+-						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", sequenceBefore, first+i, strings.Join(flags, " "))
++						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", body.Sequence, body.UID, strings.Join(body.Flags, " "))
+@@ -293 +331 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", first+i, first+i)
++						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", body.Sequence, body.UID)
+@@ -296,2 +334,2 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
+-					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", sequenceBefore, first+i, len(body))
+-					conn.Write(body)
++					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", body.Sequence, body.UID, len(body.Bytes))
++					conn.Write(body.Bytes)

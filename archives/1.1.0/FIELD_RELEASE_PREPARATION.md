@@ -57,9 +57,10 @@ exact charge and require storage proof; storage proof alone is not key confirmat
    trusted inventory before admission.
 3. Connect authenticated grant/usage/retirement/recovery exchange. Scoped
    application-body proof reclamation and delivery receipts now exist and run
-   under InboxWorker ownership, but their per-body maintenance commands leave a
-   backlog under fluctuating service. Implement efficient bounded cleanup batches
-   without weakening original BODY/absence proof or blocking receive service. Exhaustion must wake only after an actual durable
+   under InboxWorker ownership. Cleanup now groups already-ready bodies into
+   bounded original-proof transactions, reducing the variable-service backlog.
+   Qualify sustained cleanup and receipt scheduling without weakening original
+   BODY/absence proof or blocking receive service. Exhaustion must wake only after an actual durable
    permission change. Unknown APPEND must retain its exact charged publication
    and use status/proof recovery, never a blind write retry.
 4. Connect sender-fenced receiver windows and the measured-service controller,
@@ -148,3 +149,28 @@ profile reconciliation, native activation and original performance qualification
 remain required. Efficient maintenance batching is now an explicit prerequisite
 for a field release. Actual provider UIDPLUS/permanent-keyword support must be
 verified. No RC, APK or deployable binary is produced by this checkpoint.
+
+
+## Bounded cleanup groups
+
+[Batch evidence](experiments/session-v2/BATCH_RECLAMATION_CHECK_RESULTS.json)
+records 189/189 core race groups, 10/10 native groups, 21/21 repeated safety group
+executions and core vet. With the same corrected provider fixture, both the
+f7f6031 baseline and candidate pass nine cold scenarios. Median fast-mailbox
+peaks in the variable-service cases improve from 53/52 to 24/23 messages.
+Durations are mixed, so no general RTT or throughput gain is claimed. The same
+64-message/16MiB live mailbox limit and application deadlines remain in force.
+
+The selected batch consists solely of already-owned/applied candidates from one
+issuer, capped at the original 32 proofs. Each original local publication pin
+and per-body authenticated client receipt still applies. Exact UID sets exclude
+intervening messages; only independently proven absent members can release
+journal debt. Stale visible members remain charged and receive only later
+absence probes. Uncertain or canceled commands retain their exact batch/handle.
+No metadata marker or batch completion resets wallet spend or releases logical
+DATA replay memory. Ready groups never wait to fill.
+
+Efficient sustained receipt publication and cleanup scheduling still require
+qualification. Production initial DATA/CONTROL authority turnover, profile and
+READY/roster coordination, recovery, native integration and original performance
+gates remain release blockers. These checks do not authorize an APK/server RC.
