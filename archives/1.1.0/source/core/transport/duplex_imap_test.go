@@ -353,6 +353,10 @@ func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder stri
 						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", body.Sequence, body.UID)
 						continue
 					}
+					if strings.Join(fields[4:], " ") == "(UID RFC822.SIZE)" {
+						fmt.Fprintf(conn, "* %d FETCH (UID %d RFC822.SIZE %d)\r\n", body.Sequence, body.UID, len(body.Bytes))
+						continue
+					}
 					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", body.Sequence, body.UID, len(body.Bytes))
 					conn.Write(body.Bytes)
 					fmt.Fprint(conn, ")\r\n")

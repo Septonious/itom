@@ -1,0 +1,16 @@
+{"Time":"2026-10-25T18:21:44.08713973Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T18:21:44.123587862Z","Action":"run","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier"}
+{"Time":"2026-10-25T18:21:44.123862949Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.1895585Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.07s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.189813357Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Elapsed":0.07}
+{"Time":"2026-10-25T18:21:44.190009184Z","Action":"run","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier"}
+{"Time":"2026-10-25T18:21:44.190013566Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.230833469Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.230870379Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Elapsed":0.04}
+{"Time":"2026-10-25T18:21:44.230878008Z","Action":"run","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier"}
+{"Time":"2026-10-25T18:21:44.230881165Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"=== RUN   TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.258690663Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Output":"--- PASS: TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:44.259206768Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier","Elapsed":0.03}
+{"Time":"2026-10-25T18:21:44.259724039Z","Action":"output","Package":"itom.local/core/transport","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:45.264208513Z","Action":"output","Package":"itom.local/core/transport","Output":"ok  \titom.local/core/transport\t1.176s\n"}
+{"Time":"2026-10-25T18:21:45.264412821Z","Action":"pass","Package":"itom.local/core/transport","Elapsed":1.177}

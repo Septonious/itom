@@ -1,0 +1,2779 @@
+{
+  "status": "Unqualified source checkpoint. Final ordinary/race source checks pass, strict 250ms light-load gate fails; sustained 100Mbps and production initialization remain incomplete. No APK/server release.",
+  "parent": "96a1447b2e3eb6e867e11605489638cec81c2f5c",
+  "created_utc": "2026-10-25T18:30:19.052655+00:00",
+  "final_source_checks": {
+    "ordinary_core_groups": 233,
+    "race_core_groups": 233,
+    "native_race_groups": 10,
+    "core_vet_exit_code": 0,
+    "native_vet_exit_code": 0,
+    "repeated_new_and_restart_groups": 30,
+    "tagged_preparation_race_groups": 6,
+    "hosted_ci_verified": false
+  },
+  "qualification": {
+    "light_limit_ns": 250000000,
+    "final_light_samples": 64,
+    "final_light_misses": 19,
+    "final_light_mean_ns": 227172127.546875,
+    "final_light_maximum_ns": 336091578,
+    "light_pass": false,
+    "loaded_limit_ns": 2000000000,
+    "sustained_required_mbps_each_direction": 100,
+    "sustained_bandwidth_qualified": false,
+    "tls_and_reconnect_failures_waived": false,
+    "thresholds_relaxed": false
+  },
+  "retained_changes": [
+    "FIFO internal FETCH admission retaining operation ownership until tag/failure; public fail-fast APIs unchanged",
+    "Unsuccessful maintenance probing backs off only within existing 1\u201325ms limits; actual progress resets it",
+    "Sized exact-UID grouping of at most two already-ready bulk BODY reads under original parser and delivery bounds"
+  ],
+  "rejected_changes": [
+    "Paired reads on fast carriers: isolated single 17/64 misses versus paired 27/64; final assembly keeps fast reads single"
+  ],
+  "counterfactuals": {
+    "cold_stress_before_maintenance_backoff": {
+      "competitive_passes": 3,
+      "queued_passes": 6,
+      "runs_each": 6,
+      "original_deadlines_preserved": true
+    },
+    "quiet_receipt_probes_per_200ms": {
+      "old_loop": 113,
+      "final_repeated": [
+        11,
+        11,
+        11
+      ]
+    },
+    "stored_bulk_component": {
+      "application_bytes_per_run": 2097152,
+      "final_single_elapsed_ns": [
+        813330074,
+        905846436,
+        828882214
+      ],
+      "final_paired_elapsed_ns": [
+        628235833,
+        632251428,
+        638608760
+      ],
+      "body_commands_single": 8,
+      "body_commands_paired": 4,
+      "scope": "Already stored real encrypted publications; APPEND/startup EXCLUDED. Not sustained tunnel throughput."
+    }
+  },
+  "history_notes": [
+    "before.jsonl and pprof files use the unmodified parent with profiling enabled",
+    "group-light-initial overlapped a race build and is confounded; isolated single/pair runs did not",
+    "Pilot source variants predate final source hashes; raw failures are retained, not relabeled final-source outcomes",
+    "Initial vanished-UID expectation was wrong: original second-pass retry remains required",
+    "final-core-race includes a legacy restart counter assertion; updated test observes queued ownership, original held tag, exactly one inventory and healthy socket without changing application deadlines",
+    "Earlier source/HTTP failures and all 250ms misses remain retained; no successful-only averaging"
+  ],
+  "fidelity_limits": [
+    "Client/server/provider/relay share a two-CPU host",
+    "User-space byte-level TLS propagation/rate fixture, no real Rambler or independent-host calibration",
+    "Original bbolt updates/fsync execute on tmpfs; no physical-disk crash qualification",
+    "Initial grant policy and fixed receiver windows do not qualify sustained throughput",
+    "Production APIs remain V2_NOT_READY"
+  ],
+  "sources": [
+    {
+      "file": "archives/1.1.0/source/core/transport/duplex_imap_test.go",
+      "sha256": "a2a6c03e89e359caf2ffd3a1b3c675f9f7efd6484bc3d8e992afb0c69ac52edc"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/imap.go",
+      "sha256": "dc187d091c5d9ec92a6cbfbdcdbf38d785b561ecf2abcf0e1c16c4fe081c2cc6"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/imap_diagnostics.go",
+      "sha256": "498fecdea82d49ce6a85195d2fee616cd4a39414764df0859beb8d78a2c08c72"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/imap_fetch_turn.go",
+      "sha256": "0c171d4d9064271f62b9fec4b4e4de313c0a4df6d3ae3468c1b2f824fd37fe67"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/imap_fetch_turn_test.go",
+      "sha256": "51ccfdb154f72980ee4d94e9705680d382c59f9be4fb3405458656982be67c95"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/imap_uid_set.go",
+      "sha256": "cedb76a9a0777b77ebe23975c4b438063a79c5c64cf6ab1b19b53460581e9567"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox.go",
+      "sha256": "815f871f8df6e3020b7e6940b7495a92a5efaf4307388f7b487d15dc7f1fa06e"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_bulk_read_test.go",
+      "sha256": "e833f8b77df8401c7d381d4644172c90440ae0e80e062629311aba5117b0d349"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_maintenance.go",
+      "sha256": "a57dfe4a37ba1be767e9b9caf99545eafc686d58832b583a8a03e0b4262c52f0"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_maintenance_backoff_test.go",
+      "sha256": "f58c86827a1a000c2d294b42202bbed3d4cdd886ad4358f793770593154fdae9"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_poll.go",
+      "sha256": "20167993c91af7c48411d4629fd4716be3dafd3a25790257fa433eb159a18ad8"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_read_group.go",
+      "sha256": "d67585a0c0a7d6a0d17072349fb9fe0b847ab11b9c21a3fd0c8a90cb318996b0"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_read_group_test.go",
+      "sha256": "7e13b937766041846379758db6074d9a496d3926bebdd7dbd74ef585e1ee18b3"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_test.go",
+      "sha256": "dcb2a84c77c9c1801d36721185b5e92be507c2370f239d4e534293ef1168dbac"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/inbox_worker_test.go",
+      "sha256": "83e666e7d6486418b093812ec7c4b26d79ac1b3ddc5f85679f468f9c47674be9"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/reclamation.go",
+      "sha256": "57cc846110de7bb0b2c7d24bb759d05f3bab136e9f6d581cf16bdeb174b95e03"
+    },
+    {
+      "file": "archives/1.1.0/source/core/transport/roster_service.go",
+      "sha256": "f4ba0bfbaa11d2445f402f6586a0bb859528eb40e73844f31bbd688ab4b19923"
+    }
+  ],
+  "checks": [
+    {
+      "file": "fetch-service/README.md",
+      "sha256": "45d073425ccba0465305b40d7308102ce6c6c60f1c71f37eed503610d008c390"
+    },
+    {
+      "file": "fetch-service/before.jsonl",
+      "sha256": "ac21fa6b75399e8f5f5b55f4193b61a49c55f9be38f38e9118155a8dffb0c963",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 25,
+          "mean_ns": 231161025.53125,
+          "maximum_ns": 363575462,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 260282364
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 360492020
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 176424645
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 241349425
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 181065602
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 293102272
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 268845509
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 245946670
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 159040281
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 125197114
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 170585738
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 210803217
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 225352512
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 226161428
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 363575462
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 217560404
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 254242323
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 185286087
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 172988944
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 196290513
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 292716429
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 257122723
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 140988905
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 285985211
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 278005371
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 179388109
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 206152225
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 350343875
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 204571892
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 265237844
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 248240621
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 256815178
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 345573412
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 211243075
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 173150694
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 247619939
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 279790380
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 259271123
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 201734251
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 306658778
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 197195085
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 239415077
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 241305222
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 319987539
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 297980308
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 272617569
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 97590894
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 105794299
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 267739329
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 249021265
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 229728028
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 205069527
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 339314651
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 201518213
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 260203544
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 184230135
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 197742873
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 166441469
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 187253162
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 260733736
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 169147091
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 92373317
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 206391880
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 280308856
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/block.pprof",
+      "sha256": "4f9e7226f6e74c6d35aa165890bf20dfbbf858d2a13d01043f5ec200a366d9df"
+    },
+    {
+      "file": "fetch-service/competitive-fetch-negative.jsonl",
+      "sha256": "43ac30b51fe93868ec6d860438c895fdbcab9c596c283473df2da7994466b755",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "fetch-service/competitive-fetch.overlay.json",
+      "sha256": "b72024209373835188b2b46586fa8649686ea5e907844a436882f1ab175dfe14"
+    },
+    {
+      "file": "fetch-service/cpu.pprof",
+      "sha256": "25c16cbb526836a47ea4afad6fcc38afbfdd4569901c89f668210f62d8a4c146"
+    },
+    {
+      "file": "fetch-service/fair-fetch-initial.jsonl",
+      "sha256": "789a70ca6c3c224f93580a854b6cb8e8f2dcb4d276790b2521465134c84aeb67",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=1530263198",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=633809171",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=729821655",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=410861168"
+      ]
+    },
+    {
+      "file": "fetch-service/fair-fetch-regressions.jsonl",
+      "sha256": "5b86882318f48eb548c3e12d4ce1020c481b224ab7bc1cda9683e254026c51bd",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/fair-light-isolated.jsonl",
+      "sha256": "fac9e43a71b3d4f8b574adaa64c57cc4491a18f03e56ecae2f31b9795221abe7",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 29,
+          "mean_ns": 249461531.5625,
+          "maximum_ns": 737773465,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 164265467
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 258637217
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 174721794
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 161163026
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 737773465
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 254252338
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 244100207
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 236867804
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 277616178
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 226987793
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 322081009
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 140291630
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 325653930
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 394955622
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 300396295
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 279986720
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 168560074
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 309135160
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 207652514
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 214509894
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 240338172
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 285774439
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 236711482
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 253983605
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 247120668
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 230823482
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 273979362
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 231190812
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 199406796
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 121323726
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 225543491
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 321498315
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 209961025
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 175872343
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 346468487
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 214254279
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 288156603
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 152949956
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 295521666
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 276550914
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 273742338
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 170326494
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 271978827
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 231651553
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 277949274
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 306071660
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 303924862
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 163809584
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 265393623
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 178890849
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 269010525
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 353139414
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 166694194
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 179143281
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 299563178
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 227558565
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 241620308
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 255718597
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 243050847
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 279501371
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 134604455
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 245498001
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 164113634
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 235544826
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/fair-stress-competitive.jsonl",
+      "sha256": "962d00a3937064a1e8ec5b0679c9de4252a0c38a71fa2ae4e7f414e0bf2a8844",
+      "top_level_group_executions": {
+        "pass": 3,
+        "fail": 3
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "fetch-service/fair-stress-queued.jsonl",
+      "sha256": "a3320b6ebab943ed542032f9aee540024fe6a94ba85f3943a70a8cb1820a817a",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/final-core-ordinary.jsonl",
+      "sha256": "d8cadce430827d52410475ddb550610d7eea901cc48e141e8318639eaf860822",
+      "top_level_group_executions": {
+        "pass": 233
+      },
+      "package_outcomes": {
+        "skip": 11,
+        "pass": 7
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=815276172",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=615166744",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=762787776",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=412176562"
+      ],
+      "warm_exchange_cohorts": {
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers": {
+          "count": 4,
+          "misses_250ms": 0,
+          "mean_ns": 10028915.5,
+          "maximum_ns": 13625315,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 13625315
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 5986063
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 11802311
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 8701973
+            }
+          ]
+        },
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService": {
+          "count": 4,
+          "misses_250ms": 2,
+          "mean_ns": 274633577.5,
+          "maximum_ns": 369993368,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 272120292
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 228817437
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 227603213
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 369993368
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/final-core-race.jsonl",
+      "sha256": "c6304d72c964566d60a34f886a2c830b126cf26539ebc19bfe752a8585aeba16",
+      "top_level_group_executions": {
+        "pass": 231,
+        "fail": 2
+      },
+      "package_outcomes": {
+        "skip": 11,
+        "pass": 6,
+        "fail": 1
+      },
+      "failed": [
+        "TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=1489185922",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=1072640851",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=734385149",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=413425230"
+      ],
+      "warm_exchange_cohorts": {
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers": {
+          "count": 4,
+          "misses_250ms": 0,
+          "mean_ns": 98954046.25,
+          "maximum_ns": 135396161,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 135396161
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 104333882
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 55652410
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 100433732
+            }
+          ]
+        },
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService": {
+          "count": 4,
+          "misses_250ms": 3,
+          "mean_ns": 310499225.25,
+          "maximum_ns": 403705032,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 316557411
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 332524265
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 189210193
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 403705032
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/final-core-updated-race.jsonl",
+      "sha256": "5c0dd27dcce3b5427ae127ddbf33e954ee4aba15fcd1030ff70bb999e667f520",
+      "top_level_group_executions": {
+        "pass": 233
+      },
+      "package_outcomes": {
+        "skip": 11,
+        "pass": 7
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=1414245312",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=1051758070",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=736539970",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=411324621"
+      ],
+      "warm_exchange_cohorts": {
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers": {
+          "count": 4,
+          "misses_250ms": 0,
+          "mean_ns": 117010684.75,
+          "maximum_ns": 148904973,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 148904973
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 104265305
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 112263870
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 102608591
+            }
+          ]
+        },
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService": {
+          "count": 4,
+          "misses_250ms": 1,
+          "mean_ns": 226673373.75,
+          "maximum_ns": 330279684,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 149906190
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 241459297
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 330279684
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 185048324
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/final-core-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "fetch-service/final-light-isolated.jsonl",
+      "sha256": "fc054148c6be64e127a99b330ef4ccf30aacf100fad568ccd5070a6a2a3f1d36",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 19,
+          "mean_ns": 227172127.546875,
+          "maximum_ns": 336091578,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 227634035
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 170372384
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 238245375
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 186091073
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 281750008
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 326196549
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 195818053
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 156141420
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 217015037
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 226880873
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 246148934
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 189443438
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 256112350
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 255246257
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 208259255
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 236122494
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 190252656
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 244662079
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 294692506
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 260698289
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 162641479
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 252782541
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 336091578
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 270130369
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 225885161
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 244726969
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 197852893
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 281100983
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 188835568
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 172818381
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 212319212
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 299273786
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 228543284
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 148827476
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 266801448
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 237286769
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 161345464
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 242279415
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 275887428
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 166813128
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 147939700
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 209242320
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 248537481
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 231995660
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 214100718
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 215820316
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 226387921
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 81250270
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 280690513
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 222041874
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 310146161
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 231147281
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 289652561
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 205872692
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 253225731
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 214001893
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 212519342
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 324698174
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 260374555
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 167768874
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 246848419
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 191208518
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 157320346
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 216198446
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/final-native-race.jsonl",
+      "sha256": "5dba2daba54783c2f66b0640b28889ec8cdf0dd953cd62a3b908d7e0fdad1fa2",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/final-native-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "fetch-service/final-preparation-race.jsonl",
+      "sha256": "6fe47d0a35af4a57de8d36f2197ec94f8bda41cbde49eb642a1b3d82c14df1d4",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "preparation_itomtest_test.go:73: plane=0 prepared=1 journal_updates=2",
+        "preparation_itomtest_test.go:159: bulk prepared=10 overlapping_journal_updates=10",
+        "preparation_itomtest_test.go:159: bulk prepared=6 overlapping_journal_updates=10",
+        "preparation_itomtest_test.go:73: plane=0 prepared=1 journal_updates=2",
+        "preparation_itomtest_test.go:159: bulk prepared=10 overlapping_journal_updates=10",
+        "preparation_itomtest_test.go:159: bulk prepared=6 overlapping_journal_updates=10",
+        "preparation_itomtest_test.go:73: plane=0 prepared=1 journal_updates=2",
+        "preparation_itomtest_test.go:159: bulk prepared=10 overlapping_journal_updates=10",
+        "preparation_itomtest_test.go:159: bulk prepared=6 overlapping_journal_updates=10"
+      ]
+    },
+    {
+      "file": "fetch-service/final-repeated-scenarios.jsonl",
+      "sha256": "4b86c80ed75ff4b0cef52ebb5d3f3522a32ea0957b90de8e6680303b61397ea5",
+      "top_level_group_executions": {
+        "pass": 30
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=813330074",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=628235833",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=740494202",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=410349775",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=905846436",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=632251428",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=734040271",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=410577060",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=828882214",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=638608760",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=733134495",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=414906457"
+      ]
+    },
+    {
+      "file": "fetch-service/group-bulk-isolated.jsonl",
+      "sha256": "f2c9f0fec2183ceb3f70045ebf75c911561cc66464e74b1db9e75c1b4d4021d0",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_bulk_read_test.go:71: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=848952749",
+        "inbox_bulk_read_test.go:71: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=621309114",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=729389515",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=405045356"
+      ]
+    },
+    {
+      "file": "fetch-service/group-core-final-race.jsonl",
+      "sha256": "9b38aa13b557169d2fc20cb36ed6f4b40090f211dd3abb88a79b41a5d95c871f",
+      "top_level_group_executions": {
+        "pass": 228,
+        "fail": 2
+      },
+      "package_outcomes": {
+        "skip": 11,
+        "pass": 6,
+        "fail": 1
+      },
+      "failed": [
+        "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ],
+      "measurements": [
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=1 consumed_bytes=2097152 body_commands=8 elapsed_ns=1591826407",
+        "inbox_bulk_read_test.go:86: stored_bulk_read batch=2 consumed_bytes=2097152 body_commands=4 elapsed_ns=1225690845",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=734894772",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=418388213"
+      ],
+      "warm_exchange_cohorts": {
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers": {
+          "count": 4,
+          "misses_250ms": 0,
+          "mean_ns": 87512787.0,
+          "maximum_ns": 109963118,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 92776369
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 58721367
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 88590294
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 109963118
+            }
+          ]
+        },
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService": {
+          "count": 4,
+          "misses_250ms": 1,
+          "mean_ns": 245045847.0,
+          "maximum_ns": 352036069,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 352036069
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 222011100
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 176203103
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 229933116
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-core-race.jsonl",
+      "sha256": "3136205fc0bdb79bd1c90f690fdab0f4e853b5d0888d6b3682b2da5d9e412637",
+      "top_level_group_executions": {
+        "pass": 225,
+        "fail": 3
+      },
+      "package_outcomes": {
+        "skip": 11,
+        "pass": 6,
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ],
+      "measurements": [
+        "inbox_read_group_test.go:57: batch=1 body_commands=8 complete_discovery_ns=736096532",
+        "inbox_read_group_test.go:57: batch=2 body_commands=4 complete_discovery_ns=421511806"
+      ],
+      "warm_exchange_cohorts": {
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService": {
+          "count": 4,
+          "misses_250ms": 1,
+          "mean_ns": 230013950.5,
+          "maximum_ns": 269319079,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 269319079
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 216495606
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 211620234
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 222620883
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-fixture-compatibility.jsonl",
+      "sha256": "3dec56a3fa23478656f76937c46086f4f4e58a34251074877e56637586d18489",
+      "top_level_group_executions": {
+        "pass": 4
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/group-functional-initial.jsonl",
+      "sha256": "0644c34f803d73e952a99fde01eacfc23c383371f0ff060a748b2dcfdfc0a31e",
+      "top_level_group_executions": {
+        "pass": 12
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/group-light-bulk-only.jsonl",
+      "sha256": "1767ee4d46d540202d06b23e28f150406f2edc99e44f992e2887caa76f93b85f",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 25,
+          "mean_ns": 229502854.65625,
+          "maximum_ns": 358851859,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 141578342
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 252526559
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 247228612
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 273714997
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 264278190
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 267274472
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 250252160
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 305579780
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 139084002
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 86957858
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 243208997
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 245071183
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 231178159
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 236411301
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 208961821
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 209642963
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 148590461
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 267406111
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 170474089
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 249522188
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 358851859
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 213242521
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 158239993
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 337063224
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 201082630
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 236082170
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 257560471
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 261988440
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 135851080
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 294899589
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 231775290
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 304927485
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 337310724
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 245292454
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 150274692
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 317659778
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 199493808
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 207009861
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 263258791
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 325452390
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 153852782
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 224508365
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 237017632
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 309214373
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 315440268
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 281733130
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 110395380
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 109203916
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 318837964
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 246620011
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 202751315
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 175393916
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 263199293
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 179547609
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 194564427
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 193643052
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 164609254
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 186156700
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 299213168
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 285919443
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 151856049
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 107073782
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 261439147
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 239732227
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-light-initial.jsonl",
+      "sha256": "193d08821da6ab31fff2c8bf7976aef37e2348adada34c318a3a40385eb86d3d",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 36,
+          "mean_ns": 287756319.609375,
+          "maximum_ns": 891493202,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 198286073
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 221080333
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 264770476
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 255963094
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 891493202
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 244533885
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 288528290
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 266381008
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 273813864
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 360329164
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 741024089
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 307110298
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 478299799
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 609230092
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 360239255
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 257180329
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 454828345
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 488710097
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 278626666
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 229975210
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 317583990
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 310219488
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 215800664
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 112057986
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 152737074
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 298258229
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 291489485
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 215278016
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 469667666
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 288666231
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 212927570
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 158971449
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 280910000
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 367354938
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 233321289
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 398284537
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 267771774
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 235935897
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 399914296
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 172411180
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 371736910
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 122560073
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 245043498
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 274573639
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 233305084
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 247255838
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 222387202
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 312581620
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 193766961
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 207980474
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 139278009
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 241359850
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 163579514
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 277819632
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 224527203
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 258382905
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 275007480
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 245136507
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 209478383
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 131522494
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 253420666
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 253559220
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 259401520
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 182774445
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-light-isolated-pair.jsonl",
+      "sha256": "5c4a4b94a28522b5f8b7514d59c443a603def2232925cfad8159908c4920cfd4",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 27,
+          "mean_ns": 235180324.125,
+          "maximum_ns": 399965486,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 246441835
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 358290008
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 399965486
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 274304956
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 212327147
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 259130195
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 174862474
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 157689863
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 189000968
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 217084219
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 150051962
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 227359685
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 223659672
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 293275950
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 231262763
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 277175049
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 122213361
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 121380034
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 323603230
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 322388229
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 231258503
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 307053569
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 163858736
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 209174193
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 258355631
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 300235683
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 335245285
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 278169581
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 122866574
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 262082283
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 291870714
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 194087618
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 193471523
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 133352323
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 271424976
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 215196277
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 135985643
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 214718305
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 163514407
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 289225230
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 200979620
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 251438440
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 192215187
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 247077265
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 250396546
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 219191505
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 199691517
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 303506286
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 276974306
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 304731030
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 220604776
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 118511969
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 281331347
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 248533302
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 223780962
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 174010911
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 292287776
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 312012930
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 199265900
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 339943460
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 252256706
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 222806232
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 218798861
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 148579770
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-light-isolated-single.jsonl",
+      "sha256": "8423bac3f4a826c07958d6d2ee8774489fee2be69f758f0107e907f604a7e341",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_exchange_cohorts": {
+        "TestAccountWarmLightPropagationQualification": {
+          "count": 64,
+          "misses_250ms": 17,
+          "mean_ns": 224530954.609375,
+          "maximum_ns": 442143797,
+          "all_samples": [
+            {
+              "sample": 1,
+              "elapsed_ns": 246302611
+            },
+            {
+              "sample": 2,
+              "elapsed_ns": 442143797
+            },
+            {
+              "sample": 3,
+              "elapsed_ns": 230644150
+            },
+            {
+              "sample": 4,
+              "elapsed_ns": 252319349
+            },
+            {
+              "sample": 5,
+              "elapsed_ns": 246210022
+            },
+            {
+              "sample": 6,
+              "elapsed_ns": 239897769
+            },
+            {
+              "sample": 7,
+              "elapsed_ns": 304991583
+            },
+            {
+              "sample": 8,
+              "elapsed_ns": 243654755
+            },
+            {
+              "sample": 9,
+              "elapsed_ns": 190404237
+            },
+            {
+              "sample": 10,
+              "elapsed_ns": 181466490
+            },
+            {
+              "sample": 11,
+              "elapsed_ns": 282047177
+            },
+            {
+              "sample": 12,
+              "elapsed_ns": 293266410
+            },
+            {
+              "sample": 13,
+              "elapsed_ns": 239257221
+            },
+            {
+              "sample": 14,
+              "elapsed_ns": 260886931
+            },
+            {
+              "sample": 15,
+              "elapsed_ns": 193145055
+            },
+            {
+              "sample": 16,
+              "elapsed_ns": 173182506
+            },
+            {
+              "sample": 17,
+              "elapsed_ns": 267474688
+            },
+            {
+              "sample": 18,
+              "elapsed_ns": 160540085
+            },
+            {
+              "sample": 19,
+              "elapsed_ns": 202951945
+            },
+            {
+              "sample": 20,
+              "elapsed_ns": 310592729
+            },
+            {
+              "sample": 21,
+              "elapsed_ns": 221141492
+            },
+            {
+              "sample": 22,
+              "elapsed_ns": 164457611
+            },
+            {
+              "sample": 23,
+              "elapsed_ns": 274639327
+            },
+            {
+              "sample": 24,
+              "elapsed_ns": 236241463
+            },
+            {
+              "sample": 25,
+              "elapsed_ns": 194801435
+            },
+            {
+              "sample": 26,
+              "elapsed_ns": 194438350
+            },
+            {
+              "sample": 27,
+              "elapsed_ns": 214299570
+            },
+            {
+              "sample": 28,
+              "elapsed_ns": 260795840
+            },
+            {
+              "sample": 29,
+              "elapsed_ns": 175629305
+            },
+            {
+              "sample": 30,
+              "elapsed_ns": 314448327
+            },
+            {
+              "sample": 31,
+              "elapsed_ns": 241031058
+            },
+            {
+              "sample": 32,
+              "elapsed_ns": 172041917
+            },
+            {
+              "sample": 33,
+              "elapsed_ns": 248936300
+            },
+            {
+              "sample": 34,
+              "elapsed_ns": 246443560
+            },
+            {
+              "sample": 35,
+              "elapsed_ns": 169389655
+            },
+            {
+              "sample": 36,
+              "elapsed_ns": 247796943
+            },
+            {
+              "sample": 37,
+              "elapsed_ns": 260230540
+            },
+            {
+              "sample": 38,
+              "elapsed_ns": 295142558
+            },
+            {
+              "sample": 39,
+              "elapsed_ns": 163367273
+            },
+            {
+              "sample": 40,
+              "elapsed_ns": 205696067
+            },
+            {
+              "sample": 41,
+              "elapsed_ns": 231432476
+            },
+            {
+              "sample": 42,
+              "elapsed_ns": 185116750
+            },
+            {
+              "sample": 43,
+              "elapsed_ns": 212087137
+            },
+            {
+              "sample": 44,
+              "elapsed_ns": 305088735
+            },
+            {
+              "sample": 45,
+              "elapsed_ns": 164708041
+            },
+            {
+              "sample": 46,
+              "elapsed_ns": 234194194
+            },
+            {
+              "sample": 47,
+              "elapsed_ns": 150721653
+            },
+            {
+              "sample": 48,
+              "elapsed_ns": 220617621
+            },
+            {
+              "sample": 49,
+              "elapsed_ns": 222209639
+            },
+            {
+              "sample": 50,
+              "elapsed_ns": 117427357
+            },
+            {
+              "sample": 51,
+              "elapsed_ns": 282085911
+            },
+            {
+              "sample": 52,
+              "elapsed_ns": 208421637
+            },
+            {
+              "sample": 53,
+              "elapsed_ns": 199400039
+            },
+            {
+              "sample": 54,
+              "elapsed_ns": 234964630
+            },
+            {
+              "sample": 55,
+              "elapsed_ns": 221572029
+            },
+            {
+              "sample": 56,
+              "elapsed_ns": 190076760
+            },
+            {
+              "sample": 57,
+              "elapsed_ns": 157504826
+            },
+            {
+              "sample": 58,
+              "elapsed_ns": 265278902
+            },
+            {
+              "sample": 59,
+              "elapsed_ns": 147416088
+            },
+            {
+              "sample": 60,
+              "elapsed_ns": 191908018
+            },
+            {
+              "sample": 61,
+              "elapsed_ns": 231123003
+            },
+            {
+              "sample": 62,
+              "elapsed_ns": 252293047
+            },
+            {
+              "sample": 63,
+              "elapsed_ns": 156947217
+            },
+            {
+              "sample": 64,
+              "elapsed_ns": 125037284
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "fetch-service/group-regressions-final.jsonl",
+      "sha256": "9c0b68003fec93c96ed87be535c4f2f97b7ba135380bba04f6a9d9ecaf416531",
+      "top_level_group_executions": {
+        "pass": 15
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=748037582",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=408222062",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=757969556",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=408139475",
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=735070255",
+        "inbox_read_group_test.go:58: batch=2 body_commands=4 complete_discovery_ns=686925819"
+      ]
+    },
+    {
+      "file": "fetch-service/group-regressions-initial.jsonl",
+      "sha256": "cc8016a2ed6f84ef2800b062d383ed2219ff2a736ab3b57af1f0893078ef2044",
+      "top_level_group_executions": {
+        "pass": 3,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestSizedDiscoveryMissingOrUnfittableHintsKeepSingleBodyBounds/vanished",
+        "TestSizedDiscoveryMissingOrUnfittableHintsKeepSingleBodyBounds",
+        "itom.local/core/transport"
+      ],
+      "measurements": [
+        "inbox_read_group_test.go:57: batch=1 body_commands=8 complete_discovery_ns=729284620",
+        "inbox_read_group_test.go:57: batch=2 body_commands=4 complete_discovery_ns=405170458"
+      ]
+    },
+    {
+      "file": "fetch-service/imap_fetch_turn-competitive.go",
+      "sha256": "7db984f2c47664a9380796c433aa16b1432b7fa771ac11718e79aac0b6f7e326"
+    },
+    {
+      "file": "fetch-service/inbox_maintenance-unbackedoff.go",
+      "sha256": "6ab53e4076a001274e1af0d584846480b2a7df88b5eac2d5e98d8104d0221557"
+    },
+    {
+      "file": "fetch-service/inbox_read_group-single.go",
+      "sha256": "2bbfe925980e26f58fd283cd1777ed0e40f06fe2454ce86692b5cbc93dd11f9a"
+    },
+    {
+      "file": "fetch-service/maintenance-regressions.jsonl",
+      "sha256": "28337e030d3465e9f0cf938c6fce4cedb7974e9fc8fc14d36f91c785d8a9f91d",
+      "top_level_group_executions": {
+        "pass": 9
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "measurements": [
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=11 original_max_probe_ms=25",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=10 original_max_probe_ms=25",
+        "inbox_maintenance_backoff_test.go:60: quiet_interval_ms=200 actual_receipt_probes=9 original_max_probe_ms=25"
+      ]
+    },
+    {
+      "file": "fetch-service/mutex.pprof",
+      "sha256": "2ad8325df4785561353c5a0deb04f5ffa1b4f308fc9cd0f6381498c339d1ee69"
+    },
+    {
+      "file": "fetch-service/queued-restart-final.jsonl",
+      "sha256": "4748656bcfb70f01051c4a2d06c3e96963f6e027bc344f6c4d31595c25445ce8",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "fetch-service/replay-overlays.py",
+      "sha256": "03de50de1dbef5a34e762b548d0ee890d0a49c35928e07f7ec20f6f29e02a25c"
+    },
+    {
+      "file": "fetch-service/roster_service-single.go",
+      "sha256": "e7cde912950279cf58b0db624f8821e66ff27f39465f881b6878ea7dee963a6a"
+    },
+    {
+      "file": "fetch-service/single-body-negative.jsonl",
+      "sha256": "814f8ba0c903565874c86dcf3f11e56c17d5c12ca99d633e14b7d1368bfa498e",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestSizedDiscoveryReadsSparseReadyMailWithHalfAsManyBodyTurns/batch_2",
+        "TestSizedDiscoveryReadsSparseReadyMailWithHalfAsManyBodyTurns",
+        "itom.local/core/transport"
+      ],
+      "measurements": [
+        "inbox_read_group_test.go:58: batch=1 body_commands=8 complete_discovery_ns=745997008"
+      ]
+    },
+    {
+      "file": "fetch-service/single-group.overlay.json",
+      "sha256": "e97405ced84de37ed669f5312d1bed965c2fe6081c871652e73431e6b11093eb"
+    },
+    {
+      "file": "fetch-service/single-service.overlay.json",
+      "sha256": "82f17af3905a82e16709e26a7c9e7512ab537481355e7263d60c3ec3a0abf125"
+    },
+    {
+      "file": "fetch-service/unbackedoff-maintenance.overlay.json",
+      "sha256": "ab95cf811bb89d019f35a82887218fcaf9923cd1d2575106bfce980eaffb7d15"
+    },
+    {
+      "file": "fetch-service/unbackedoff-negative.jsonl",
+      "sha256": "b9d049d8a9cb13e6f7b1c58676987a42a988044f09a8990f6d142afbbcfa8e10",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing",
+        "itom.local/core/transport"
+      ]
+    }
+  ]
+}

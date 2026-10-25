@@ -41,7 +41,7 @@ func (i *Inbox) Poll(ctx context.Context) (InboxProgress, error) {
 	}
 	next := i.tailUID + 1
 	version := i.tailVersion
-	command, err := i.executor.Fetch(ctx, next, next)
+	command, err := i.executor.fetchInbox(ctx, next)
 	if err != nil {
 		return progress, err
 	}

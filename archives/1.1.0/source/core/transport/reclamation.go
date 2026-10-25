@@ -193,13 +193,13 @@ func (i *Inbox) reclaimOne(ctx context.Context) (bool, error) {
 			var err error
 			switch batch.stage {
 			case 0:
-				batch.command, err = i.executor.fetchUIDSet(ctx, bodyUIDs(batch.bodies, true), true)
+				batch.command, err = i.executor.fetchMaintenance(ctx, bodyUIDs(batch.bodies, true), true)
 			case 1:
 				batch.command, err = i.executor.deleteUIDSet(ctx, bodyUIDs(batch.bodies, false), false)
 			case 2:
 				batch.command, err = i.executor.deleteUIDSet(ctx, bodyUIDs(batch.bodies, false), true)
 			case 3:
-				batch.command, err = i.executor.fetchUIDSet(ctx, bodyUIDs(batch.bodies, false), false)
+				batch.command, err = i.executor.fetchMaintenance(ctx, bodyUIDs(batch.bodies, false), false)
 			default:
 				return false, ErrProtocol
 			}

@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T18:21:55.004903095Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T18:21:55.030772194Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation"}
+{"Time":"2026-10-25T18:21:55.030868261Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation","Output":"=== RUN   TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:57.107910963Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation","Output":"    imap_fetch_turn_test.go:100: bounded reclamation condition did not become true\n","OutputType":"error"}
+{"Time":"2026-10-25T18:21:57.10990928Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation","Output":"--- FAIL: TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation (2.07s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:57.109934605Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation","Elapsed":2.07}
+{"Time":"2026-10-25T18:21:57.110137071Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:57.112454241Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t2.104s\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:21:57.113820918Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":2.109}

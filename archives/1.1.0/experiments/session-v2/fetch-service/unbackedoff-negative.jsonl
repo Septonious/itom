@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T18:22:07.474245439Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T18:22:07.487655923Z","Action":"run","Package":"itom.local/core/transport","Test":"TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing"}
+{"Time":"2026-10-25T18:22:07.487744224Z","Action":"output","Package":"itom.local/core/transport","Test":"TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing","Output":"=== RUN   TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:22:07.701020039Z","Action":"output","Package":"itom.local/core/transport","Test":"TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing","Output":"    inbox_maintenance_backoff_test.go:52: quiet retained debt caused a hot metadata loop or no probes {1 0 0 0 113 0 0 0 1 false}\n","OutputType":"error"}
+{"Time":"2026-10-25T18:22:07.701560116Z","Action":"output","Package":"itom.local/core/transport","Test":"TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing","Output":"--- FAIL: TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing (0.22s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:22:07.701572352Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestIdleUnreceiptedMailCannotDriveContinuousFlagsProbing","Elapsed":0.22}
+{"Time":"2026-10-25T18:22:07.701953924Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:22:07.703374059Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.228s\n","OutputType":"frame"}
+{"Time":"2026-10-25T18:22:07.703500432Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.229}

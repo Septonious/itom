@@ -13,6 +13,7 @@ import (
 // Run joins this helper before handing worker ownership back after cancellation.
 func (w *InboxWorker) maintain(ctx context.Context) error {
 	i, x := w.inbox, w.inbox.executor
+	idleDelay := w.limits.MinProbe
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -38,6 +39,7 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 			return err
 		}
 		if marked || reclaimed {
+			idleDelay = w.limits.MinProbe
 			continue
 		}
 		i.mu.Lock()
@@ -47,8 +49,13 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 		var timer *time.Timer
 		var tick <-chan time.Time
 		if pending {
-			delay := max(w.limits.MinProbe, min(w.limits.MaxProbe, time.Since(begin)/8))
-			timer = time.NewTimer(delay)
+			// Repeating an absent receipt/absence proof cannot create progress.
+			// Back off only these unsuccessful probes, within the ORIGINAL
+			// bounds. A new queued candidate wakes immediately; real marking or
+			// reclamation resets the delay and ready work drains without a timer.
+			serviceFloor := min(w.limits.MaxProbe, time.Since(begin)/8)
+			idleDelay = max(w.limits.MinProbe, serviceFloor, min(w.limits.MaxProbe, idleDelay*2))
+			timer = time.NewTimer(idleDelay)
 			tick = timer.C
 		}
 		select {

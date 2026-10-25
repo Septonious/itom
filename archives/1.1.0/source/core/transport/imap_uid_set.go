@@ -28,12 +28,34 @@ func checkedUIDSet(input []uint32) ([]uint32, string, error) {
 }
 
 func (e *Executor) fetchUIDSet(ctx context.Context, input []uint32, flags bool) (*Command, error) {
+	return e.fetchExact(ctx, input, flags, false, false)
+}
+
+// fetchBodies requests only a bounded, explicitly discovered set. The ordinary
+// literal and aggregate response limits still constrain the single parser.
+func (e *Executor) fetchBodies(ctx context.Context, input []uint32) (*Command, error) {
+	return e.fetchExact(ctx, input, false, true, true)
+}
+
+func (e *Executor) fetchMaintenance(ctx context.Context, input []uint32, flags bool) (*Command, error) {
+	return e.fetchExact(ctx, input, flags, false, true)
+}
+
+func (e *Executor) fetchExact(ctx context.Context, input []uint32, flags, bodies, queued bool) (*Command, error) {
 	uids, set, err := checkedUIDSet(input)
 	if err != nil {
 		return nil, err
 	}
 	if len(uids) == 1 {
 		set = fmt.Sprintf("%d:%d", uids[0], uids[0])
+	}
+	var turnOp *operation
+	if queued {
+		finish, err := e.acquireFetchTurn(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer func() { finish(turnOp) }()
 	}
 	if err = e.lockWriter(ctx); err != nil {
 		return nil, err
@@ -46,13 +68,17 @@ func (e *Executor) fetchUIDSet(ctx context.Context, input []uint32, flags bool) 
 	if flags {
 		class, items = commandFlags, "UID FLAGS"
 	}
+	if bodies {
+		class, items = commandBody, "UID BODY.PEEK[]"
+	}
 	tag, op, err := e.begin(class, true, false)
 	if err != nil {
 		return nil, err
 	}
+	turnOp = op
 	e.mu.Lock()
 	op.first, op.last = uids[0], uids[len(uids)-1]
-	op.flags, op.metadata = flags, !flags
+	op.flags, op.metadata = flags, !flags && !bodies
 	op.uids = make(map[uint32]bool)
 	op.requested = make(map[uint32]bool, len(uids))
 	for _, uid := range uids {

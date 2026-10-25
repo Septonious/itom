@@ -24,6 +24,8 @@ var errCommandCapacity = fmt.Errorf("%w: pending IMAP command", ErrCapacity)
 type Body struct {
 	sequenceVersion uint64 // parser position of this BODY, never authority
 	UID, Sequence   uint32
+	Size            uint32 // RFC822.SIZE discovery hint, never accounting authority
+	SizeKnown       bool
 	Bytes           []byte
 	Flags           []string
 }
@@ -32,6 +34,7 @@ type Result struct {
 	Err    error
 }
 type operation struct {
+	fetchTurn    chan struct{}
 	class        commandClass
 	started      time.Time
 	done         chan struct{}
@@ -88,6 +91,8 @@ type Executor struct {
 	sequence         uint64
 	literal          *operation
 	fetch            *operation
+	fetchTurn        chan struct{}
+	fetchWaiters     int
 	closed           error
 	done             chan struct{}
 	changes          chan struct{}
@@ -120,7 +125,7 @@ func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mail
 	if conn == nil || reader == nil || l.Pending < 2 || l.Pending > 128 || l.LineBytes < 128 || l.LineBytes > 64<<10 || l.LiteralBytes < 1 || l.LiteralBytes > 2<<20 || l.ResponseBytes < l.LiteralBytes || l.ResponseBytes > 8<<20 || l.ProgressTimeout <= 0 {
 		return nil, ErrCapacity
 	}
-	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, idleSupported: idle, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
+	e := &Executor{writer: make(chan struct{}, 1), fetchTurn: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, idleSupported: idle, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
 	go e.readLoop()
 	return e, nil
 }
@@ -147,6 +152,7 @@ func (e *Executor) fail(err error) {
 	}
 	e.closed = err
 	for _, op := range e.pending {
+		e.releaseFetchTurnLocked(op)
 		op.result.Err = err
 		e.completedLocked(op, true)
 		close(op.done)
@@ -208,6 +214,7 @@ func (e *Executor) expire(op *operation) {
 	}
 	e.closed = ErrUnknown
 	for _, pending := range e.pending {
+		e.releaseFetchTurnLocked(pending)
 		pending.result.Err = ErrUnknown
 		e.completedLocked(pending, true)
 		close(pending.done)
@@ -304,18 +311,32 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 	return cmd, nil
 }
 func (e *Executor) Fetch(ctx context.Context, first, last uint32) (*Command, error) {
-	return e.fetchRange(ctx, first, last, false)
+	return e.fetchRange(ctx, first, last, false, false, false)
 }
 
 // Enumerate returns actual extant UIDs, not UIDNEXT/EXISTS allocation hints.
 // Its UID-only replies consume the original per-command response budget and
 // never produce their own change notifications/polling feedback loop.
 func (e *Executor) Enumerate(ctx context.Context) (*Command, error) {
-	return e.fetchRange(ctx, 1, ^uint32(0), true)
+	return e.fetchRange(ctx, 1, ^uint32(0), true, false, false)
 }
-func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata bool) (*Command, error) {
+func (e *Executor) enumerateInbox(ctx context.Context, sizes bool) (*Command, error) {
+	return e.fetchRange(ctx, 1, ^uint32(0), true, sizes, true)
+}
+func (e *Executor) fetchInbox(ctx context.Context, uid uint32) (*Command, error) {
+	return e.fetchRange(ctx, uid, uid, false, false, true)
+}
+func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata, sizes, queued bool) (*Command, error) {
 	if first == 0 || last < first {
 		return nil, ErrProtocol
+	}
+	var turnOp *operation
+	if queued {
+		finish, err := e.acquireFetchTurn(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer func() { finish(turnOp) }()
 	}
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
@@ -332,6 +353,7 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata 
 	if err != nil {
 		return nil, err
 	}
+	turnOp = op
 	e.mu.Lock()
 	op.first = first
 	op.last = last
@@ -341,6 +363,9 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata 
 	items := "UID BODY.PEEK[]"
 	if metadata {
 		items = "UID"
+		if sizes {
+			items += " RFC822.SIZE"
+		}
 	}
 	command := fmt.Sprintf("%s UID FETCH %d:%d (%s)\r\n", tag, first, last, items)
 	if err = e.write([]byte(command)); err != nil {
@@ -509,6 +534,7 @@ func (e *Executor) readLoop() {
 		if e.fetch == op {
 			e.fetch = nil
 		}
+		e.releaseFetchTurnLocked(op)
 		if e.literal == op {
 			e.literal = nil
 		}
@@ -529,6 +555,8 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 	}
 	fields := strings.Fields(strings.NewReplacer("(", " ", ")", " ").Replace(strings.ToUpper(line)))
 	var uid uint64
+	var size uint32
+	sizeKnown := false
 	for i := 0; i+1 < len(fields); i++ {
 		if fields[i] == "UID" {
 			value, err := strconv.ParseUint(fields[i+1], 10, 32)
@@ -536,6 +564,13 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 				return false, ErrProtocol
 			}
 			uid = value
+		}
+		if fields[i] == "RFC822.SIZE" {
+			value, err := strconv.ParseUint(fields[i+1], 10, 32)
+			if err != nil || sizeKnown {
+				return false, ErrProtocol
+			}
+			size, sizeKnown = uint32(value), true
 		}
 	}
 	if uid == 0 || !op.requestsUID(uint32(uid)) {
@@ -551,7 +586,7 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence})
+		op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence, Size: size, SizeKnown: sizeKnown})
 	}
 	return true, nil
 }

@@ -6,6 +6,16 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+The [FETCH service continuation](FETCH_SERVICE_WORK.md) queues discovery and
+cleanup on the original single parser, backs off unsuccessful receipt probes
+within the existing timing bounds, and groups at most two sized bulk BODY
+reads. Fast-path grouping was rejected after a worse application miss count.
+Matched command-service stress checks improve from three to six successful
+cold TLS/HTTP runs out of six. The final 64-exchange light-load gate still has
+19 misses (336.092ms maximum); this is not release qualification or evidence
+of sustained 100Mbps. All historical and intermediate failures remain retained.
+See [the latest raw checks and source hashes](experiments/session-v2/FETCH_SERVICE_CHECK_RESULTS.json).
+
 Preparation of a working field-test candidate is tracked in
 [the release preparation checklist](FIELD_RELEASE_PREPARATION.md). The new
 `transport.Runtime` now owns integrated session/carrier/exit service, but has not

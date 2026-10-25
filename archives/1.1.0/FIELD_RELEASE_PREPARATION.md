@@ -7,6 +7,13 @@ cannot supply that pair yet: `tunnel.StartClient` and `ServeManaged` still retur
 Stable 1.0.0/RC2 remains separate; its removed runtime will not be reactivated as
 the replacement transport.
 
+The latest [FETCH service work](FETCH_SERVICE_WORK.md) improves bounded bulk
+discovery and command-service stress completion. Its final 64 warm application
+exchanges still include 19 misses of 250ms. Queued parser turns and bounded
+maintenance backoff do not complete the controller, authority policy, production
+startup or sustained-rate qualification required below. Raw passing and failing
+checks are retained in the [current manifest](experiments/session-v2/FETCH_SERVICE_CHECK_RESULTS.json).
+
 ## Runtime foundation now implemented
 
 `transport.Runtime` assembles already scoped receive/publication workers and the

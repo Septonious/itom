@@ -197,7 +197,12 @@ func TestCanceledInboxFetchDrainsBeforeRestartWithoutReplacingTheCarrier(t *test
 	defer cancel2()
 	second := make(chan error, 1)
 	go func() { second <- w.Run(ctx2) }()
-	waitInboxWorker(t, w, func(s transport.InboxStats) bool { return s.CapacityWaits > 0 })
+	// Internal receive service now queues instead of repeatedly losing command
+	// admission. The original undrained tag must still own the single parser.
+	awaitReclamation(t, func() bool { return x.Snapshot().FetchWaiters == 1 })
+	if snapshot := x.Snapshot(); !snapshot.FetchActive || snapshot.Inventory.Started != 1 || snapshot.Closed {
+		t.Fatal("restart crossed the original FETCH tag or replaced its carrier", snapshot)
+	}
 	if err = w.Run(context.Background()); !errors.Is(err, transport.ErrProtocol) {
 		t.Fatal("concurrent reader accepted", err)
 	}

@@ -5,7 +5,11 @@ Production startup returns `V2_NOT_READY`; packaging remains disabled. The
 250ms idle/light RTT and sustained 100Mbps targets are not established.
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/REQUEST_TRACE_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/FETCH_SERVICE_CHECK_RESULTS.json).
+
+[Shared FETCH service](FETCH_SERVICE_WORK.md) now queues cleanup/discovery turns
+and bounds unsuccessful maintenance probing. Sized read grouping is enabled
+only for bulk after fast-path activation worsened light-load misses.
 
 [Per-account runtime integration](PER_ACCOUNT_RUNTIME.md) now negotiates
 original issuer identities and assembles the multi-account TLS/HTTP service.

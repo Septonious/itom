@@ -25,13 +25,19 @@ type inboxInventory struct {
 	vanish          uint32
 	fetches         map[uint32]int
 	metadata        int
+	bodySets        []string
+	omitSizes       bool
+	sizes           map[uint32]uint32
 	notice          string
 	afterBodyNotice string
 }
 
 func (m *inboxInventory) selected(t *testing.T) *transport.Executor {
+	return m.selectedOnNetwork(t, nil)
+}
+func (m *inboxInventory) selectedOnNetwork(t *testing.T, network transport.NetworkDialer) *transport.Executor {
 	t.Helper()
-	return selectedPeerOn(t, "fast", func(c net.Conn) {
+	return selectedAccountPeerWithNetwork(t, "account1", "fast", transport.DefaultIMAPLimits(), "", false, network, func(c net.Conn) {
 		r := bufio.NewReader(c)
 		for {
 			if _, err := r.Peek(1); err != nil {
@@ -51,31 +57,47 @@ func (m *inboxInventory) selected(t *testing.T) *transport.Executor {
 				fmt.Fprint(c, m.notice)
 				m.notice = ""
 			}
-			if fields[4] == "(UID)" {
+			sized := strings.Join(fields[4:], " ") == "(UID RFC822.SIZE)"
+			if fields[4] == "(UID)" || sized {
 				m.metadata++
 				for index, uid := range m.uids {
-					fmt.Fprintf(c, "* %d FETCH (FLAGS () UID %d)\r\n", index+1, uid)
+					if sized && !m.omitSizes {
+						size := uint32(len(m.bodies[uid]))
+						if override, ok := m.sizes[uid]; ok {
+							size = override
+						}
+						fmt.Fprintf(c, "* %d FETCH (FLAGS () UID %d RFC822.SIZE %d)\r\n", index+1, uid, size)
+					} else {
+						fmt.Fprintf(c, "* %d FETCH (FLAGS () UID %d)\r\n", index+1, uid)
+					}
 				}
 			} else {
-				var uid, end uint32
-				if n, err := fmt.Sscanf(fields[3], "%d:%d", &uid, &end); err != nil || n != 2 || uid != end {
+				maxUID := 0
+				for uid := range m.bodies {
+					maxUID = max(maxUID, int(uid))
+				}
+				selected, err := fixtureUIDSelection(fields[3], maxUID)
+				if err != nil {
 					m.mu.Unlock()
-					t.Error("non-single BODY query")
+					t.Error("invalid exact BODY query", err)
 					return
 				}
-				m.fetches[uid]++
-				if body, ok := m.bodies[uid]; ok && uid != m.vanish {
-					sequence := 1
-					for index, current := range m.uids {
-						if current == uid {
-							sequence = index + 1
-							break
+				m.bodySets = append(m.bodySets, fields[3])
+				for _, uid := range selected {
+					m.fetches[uid]++
+					if body, ok := m.bodies[uid]; ok && uid != m.vanish {
+						sequence := 1
+						for index, current := range m.uids {
+							if current == uid {
+								sequence = index + 1
+								break
+							}
 						}
-					}
-					fmt.Fprintf(c, "* %d FETCH (UID %d BODY[] {%d}\r\n%s)\r\n", sequence, uid, len(body), body)
-					if m.afterBodyNotice != "" {
-						fmt.Fprint(c, m.afterBodyNotice)
-						m.afterBodyNotice = ""
+						fmt.Fprintf(c, "* %d FETCH (UID %d BODY[] {%d}\r\n%s)\r\n", sequence, uid, len(body), body)
+						if m.afterBodyNotice != "" {
+							fmt.Fprint(c, m.afterBodyNotice)
+							m.afterBodyNotice = ""
+						}
 					}
 				}
 			}

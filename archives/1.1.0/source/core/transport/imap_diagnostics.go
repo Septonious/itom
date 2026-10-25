@@ -48,6 +48,7 @@ type CommandTiming struct {
 type ExecutorSnapshot struct {
 	PendingTags       int           `json:"pending_tags"`
 	WriterWaiters     int           `json:"writer_waiters"`
+	FetchWaiters      int           `json:"fetch_waiters"`
 	FetchActive       bool          `json:"fetch_active"`
 	LiteralActive     bool          `json:"literal_active"`
 	IdleActive        bool          `json:"idle_active"`
@@ -73,7 +74,7 @@ type ExecutorSnapshot struct {
 func (e *Executor) Snapshot() ExecutorSnapshot {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	s := ExecutorSnapshot{PendingTags: len(e.pending), WriterWaiters: e.writerWaiters,
+	s := ExecutorSnapshot{PendingTags: len(e.pending), WriterWaiters: e.writerWaiters, FetchWaiters: e.fetchWaiters,
 		Closed: e.closed != nil, UIDPlusSupported: e.uidPlus, KeywordsSupported: e.keywords, IdleSupported: e.idleSupported, CapacityRefusals: e.capacityRefusals, WriterWait: e.writerWait,
 		Append: e.timing[commandAppend], Fetch: e.timing[commandBody], Inventory: e.timing[commandInventory], Noop: e.timing[commandNoop], Idle: e.timing[commandIdle], Flags: e.timing[commandFlags], Store: e.timing[commandStore], Expunge: e.timing[commandExpunge]}
 	if e.closed != nil {

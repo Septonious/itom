@@ -71,6 +71,9 @@ type InboxLimits struct {
 	// PendingDeliveries bounds decoded DATA; PendingControls reserves a separate
 	// bounded protocol queue in the scoped factories. Neither is quota authority.
 	KnownUIDs, PendingDeliveries, PendingControls int
+	// BodyReadBatch bounds an immediate exact-UID read after sized inventory.
+	// Zero/one preserves single-body discovery; no fill timer is introduced.
+	BodyReadBatch int
 }
 
 func DefaultInboxLimits() InboxLimits {
@@ -85,8 +88,9 @@ type InboxScope struct {
 // Inbox is a serialized, bounded inventory/delivery worker, not a refund
 // authority or timing controller. Notifications are hints only. Every sweep
 // enumerates actual UIDs, so holes, stale UIDNEXT and late visibility cannot
-// make it advance past an unseen body. FETCH is one BODY per command: a burst
-// cannot overflow the unchanged response budget and force a healthy reconnect.
+// make it advance past an unseen body. Fast prediction reads one BODY. Sized
+// inventory can group two known UIDs within the unchanged response budget;
+// accounting, replay and pending-delivery admission still run per BODY.
 type Inbox struct {
 	mu                 sync.Mutex // maintenance state only; never held over receive I/O
 	receiveMu          sync.Mutex // serial receiver state and parser turns
@@ -128,7 +132,7 @@ type InboxProgress struct {
 }
 
 func NewInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode InboxDecoder) (*Inbox, error) {
-	if executor == nil || scope.Account == "" || scope.Account != executor.account || scope.Folder != executor.mailbox || scope.UIDValidity == 0 || scope.UIDValidity != executor.validity || limits.KnownUIDs < 1 || limits.KnownUIDs > 65536 || limits.PendingDeliveries < 1 || limits.PendingDeliveries > 32 || limits.PendingControls < 1 || limits.PendingControls > 32 || decode == nil {
+	if executor == nil || scope.Account == "" || scope.Account != executor.account || scope.Folder != executor.mailbox || scope.UIDValidity == 0 || scope.UIDValidity != executor.validity || limits.KnownUIDs < 1 || limits.KnownUIDs > 65536 || limits.PendingDeliveries < 1 || limits.PendingDeliveries > 32 || limits.PendingControls < 1 || limits.PendingControls > 32 || limits.BodyReadBatch < 0 || limits.BodyReadBatch > min(2, limits.PendingDeliveries) || decode == nil {
 		return nil, ErrProtocol
 	}
 	return &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass), examined: make(map[uint32]bool)}, nil
@@ -169,7 +173,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	i.tailReady = false
 	version := i.executor.SequenceVersion()
 	var progress InboxProgress
-	command, err := i.executor.Enumerate(ctx)
+	command, err := i.executor.enumerateInbox(ctx, i.limits.BodyReadBatch > 1)
 	if err != nil {
 		return progress, err
 	}
@@ -182,12 +186,14 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	}
 	uids := make([]uint32, 0, len(metadata))
 	present := make(map[uint32]uint32, len(metadata))
+	sizes := make(map[uint32]Body, len(metadata))
 	var tail, tailUID uint32
 	for _, body := range metadata {
 		tail = max(tail, body.Sequence)
 		tailUID = max(tailUID, body.UID)
 		uids = append(uids, body.UID)
 		present[body.UID] = body.Sequence
+		sizes[body.UID] = body
 	}
 	sort.Slice(uids, func(a, b int) bool { return uids[a] < uids[b] })
 	progress.Observed = len(uids)
@@ -249,6 +255,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	// A later UID can carry the missing earlier grant ordinal. One second pass
 	// retries dependency gaps after progress, without an unbounded retry loop.
 	blockedProbes := 0
+	prefetched := make(map[uint32]Body)
 	for pass := 0; pass < 2; pass++ {
 		advanced := false
 		for low, high := 0, len(uids)-1; low <= high; {
@@ -287,21 +294,28 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 				blockedProbes++
 			}
 			i.examined[uid] = true
-			fetch, err := i.executor.Fetch(ctx, uid, uid)
-			if err != nil {
-				return progress, err
+			body, cached := prefetched[uid]
+			delete(prefetched, uid)
+			if !cached {
+				group := i.readGroup(uid, uids[low:high+1], sizes, available)
+				fetch, err := i.executor.fetchBodies(ctx, group)
+				if err != nil {
+					return progress, err
+				}
+				bodies, err := fetch.Wait(ctx)
+				if err != nil {
+					return progress, err
+				}
+				for _, received := range bodies {
+					prefetched[received.UID] = received
+				}
+				body, cached = prefetched[uid]
+				delete(prefetched, uid)
+				if !cached {
+					continue // raced with reclamation; never a refund proof
+				}
 			}
-			bodies, err := fetch.Wait(ctx)
-			if err != nil {
-				return progress, err
-			}
-			if len(bodies) == 0 {
-				continue
-			} // raced with reclamation; not refund evidence
-			if len(bodies) != 1 || bodies[0].UID != uid {
-				return progress, ErrProtocol
-			}
-			step, madeProgress, err := i.acceptBody(bodies[0], available)
+			step, madeProgress, err := i.acceptBody(body, available)
 			if err != nil {
 				return progress, err
 			}

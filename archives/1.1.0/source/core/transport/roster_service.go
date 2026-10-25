@@ -145,17 +145,23 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 			}
 		}
 		anchor := account == r.handoff.origin.Account && l.Plane == Fast
+		inboxLimits := DefaultInboxLimits()
+		// Light traffic keeps single-body completion. Grouping may hold the
+		// first body behind another literal; only bulk spends that latency.
+		if l.Plane == Bulk {
+			inboxLimits.BodyReadBatch = 2
+		}
 		if r.client {
 			if anchor {
-				inbox, err = NewClientInboxWithBootstrap(l.Executor, DefaultInboxLimits(), r.handoff, cr...)
+				inbox, err = NewClientInboxWithBootstrap(l.Executor, inboxLimits, r.handoff, cr...)
 			} else {
-				inbox, err = NewClientInbox(l.Executor, DefaultInboxLimits(), cr...)
+				inbox, err = NewClientInbox(l.Executor, inboxLimits, cr...)
 			}
 		} else {
 			if anchor {
-				inbox, err = NewServerInboxWithBootstrap(l.Executor, DefaultInboxLimits(), r.handoff, rr...)
+				inbox, err = NewServerInboxWithBootstrap(l.Executor, inboxLimits, r.handoff, rr...)
 			} else {
-				inbox, err = NewServerInbox(l.Executor, DefaultInboxLimits(), rr...)
+				inbox, err = NewServerInbox(l.Executor, inboxLimits, rr...)
 			}
 		}
 		if err != nil {
