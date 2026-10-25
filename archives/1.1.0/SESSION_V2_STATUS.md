@@ -31,14 +31,30 @@ permission, fencing, final cleanup and retirement. These are functional checks,
 not RTT/bandwidth qualification. The production lifecycle owner, overlapping
 multi-account authority policy, recovery and native activation remain incomplete.
 
-The newer [profile checkpoint](experiments/session-v2/PROFILE_PLAN_CHECK_RESULTS.json)
-passes 209/209 core race groups, 10/10 native groups, 9/9 repeated profile group
-executions and core vet. Its [planner](PROFILE_SERVICE_PLAN.md) preserves actual
-per-account journal identities, all retained inventory folders and shared login
-budgets without enabling admission. Installed per-account files require distinct
-wire authority mapping; the shared-store ten-account roster fixture does not yet
-provide that production compatibility. An explicit adapter rejects flattening
-those identities. See [profile checks](experiments/session-v2/PROFILE_PLAN_CHECK_RESULTS.json).
+The [per-account integration](PER_ACCOUNT_RUNTIME.md) now negotiates distinct
+installed issuer identities and binds their fixed local wallet paths in place.
+The common `NewRosterService` assembler carries actual TLS/HTTP through twenty
+distinct issuers for ten accounts, preserving old-session wallet spend. Shared
+64-record authority queue and original socket/folder/quota/replay limits remain.
+The previous quiet-IDLE TLS startup failure reproduced in 1/10 runs; bounded
+journal timelines now allow correlation without blocking on its database lock.
+Fast preparation now prevents multiple server accounts reserving/canceling
+grants for the same small flight: a deterministic regression reduces twenty
+durable updates to two, while a separate check preserves concurrent bulk
+preparation. Deadline failures remain retained; this is not full performance
+qualification. Successful original deletion proof now also wakes the matching
+quota-blocked server publisher without requiring unrelated traffic; a regression
+checks that EXPUNGE/tag state alone cannot do so. Quiet receive service also
+ignores unrelated outgoing work unless an incoming delivery is deferred. A
+bulk preparation guard was rejected after its partial-account-allowance
+regression exposed serialization. Warm light-load diagnostic samples retain
+every miss of the unchanged 250ms target separately from byte-integrity results.
+The retained source checks pass 215 core race groups, 10 native groups and both
+module vet checks. Final ordinary-build application byte-integrity checks pass,
+but five of twenty-four warm samples miss 250ms, including a 1119.979ms loopback
+spike. Neither the earlier deadline failures nor these light-load misses are
+resolved by the source-check pass.
+See [current check evidence](experiments/session-v2/ACCOUNT_RUNTIME_CHECK_RESULTS.json).
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -48,13 +64,21 @@ mandatory independently of that implementation.
 
 ## Implemented
 
+* Per-account issuer IDs/runs and fixed local wallet paths replace shared-store
+  assumptions in the roster. Canonical bounded OFFER parts keep packet and
+  startup UID ceilings intact at maximum selected capacity. Runtime assembly
+  consumes a completed roster once and creates all account-scoped services.
+* Authority routes are immutable per account within one session; semantic
+  validation precedes replay and durable updates remain outside the actor lock.
+  Bounded journal timelines remain readable during stalled durable updates.
+
 * A read-only profile/journal service planner retains each original account/user
   issuer ID and run, complete legacy/shard inventory and explicit budgets. It
   rejects missing scopes, closed journals, shared login/endpoint overcommit and
   a combined eleventh folder without changing files, grants or readiness. A
   separate-issuer plan cannot be passed off as the shared-store roster.
 
-* A three-message encrypted roster exchange binds agreed account/folder mapping,
+* A three-flight encrypted roster exchange (bounded OFFER chunks, ACCEPT, READY) binds agreed account/folder mapping,
   DATA/CONTROL issuer identities and runs, actual selected UIDVALIDITY and both
   explicit socket budgets. Original tickets are reserved before encryption and
   committed before I/O. Every actual roster BODY must be observed before

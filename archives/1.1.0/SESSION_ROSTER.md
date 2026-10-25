@@ -99,3 +99,10 @@ per account/user. The current ten-account roster case uses shared stores and doe
 not implement that identity mapping. The [profile planner](PROFILE_SERVICE_PLAN.md)
 retains each original identity and rejects flattening them into the anchor's
 stores. Per-account wire authority and wallet binding remain explicit blockers.
+
+
+The newer [per-account runtime integration](PER_ACCOUNT_RUNTIME.md) replaces the
+shared-only wire assumption with version 2 account issuer entries and canonical
+bounded OFFER chunks. Separate original wallet paths and issuer handles now feed
+the common runtime assembler. This supersedes the prior per-account wire blocker
+above; production long-lived ownership/native activation remain incomplete.

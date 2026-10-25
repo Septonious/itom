@@ -12,7 +12,8 @@ frame and an explicit DATA/CONTROL authority class. Its containing message alway
 uses an original CONTROL wallet/journal permit. DATA cannot enter this channel.
 Before replay advancement, pure validation checks peer direction, user, account,
 original issuer identity/Run, fresh writer Session and authority class. Current
-constructors pin one account and two distinct issuer stores. The actual trusted
+constructors pin one account and two distinct issuer stores each. A logical
+session now registers immutable independent routes for all selected accounts. The actual trusted
 issuer mapping is now learned through [authenticated roster negotiation](SESSION_ROSTER.md);
 it is not inferred from missing wallet history or an unauthenticated provider hint.
 
@@ -75,7 +76,9 @@ queue-full issuance idempotence, sender admission/fence cancellation and stream
 actor availability. See `experiments/session-v2/AUTHORITY_CHECK_RESULTS.json` for
 raw results, failures retained from the first lifecycle iteration and source hashes.
 
-Remaining integration includes production identity/profile/roster coordination,
+Per-account wire routing and common service assembly now exist; see
+[the integration contract](PER_ACCOUNT_RUNTIME.md). Remaining integration includes
+production identity/profile/roster coordination,
 existing-profile/journal reconciliation, multi-account authority coordination,
 automatic policy for overlapping CONTROL/DATA grants and retirement, old-session
 recovery, native activation and the full original performance gates. In particular,

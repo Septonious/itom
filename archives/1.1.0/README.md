@@ -5,7 +5,10 @@ Production startup returns `V2_NOT_READY`; packaging remains disabled. The
 250ms idle/light RTT and sustained 100Mbps targets are not established.
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/PROFILE_PLAN_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/ACCOUNT_RUNTIME_CHECK_RESULTS.json).
+
+[Per-account runtime integration](PER_ACCOUNT_RUNTIME.md) now negotiates
+original issuer identities and assembles the multi-account TLS/HTTP service.
 
 [Existing-profile planning](PROFILE_SERVICE_PLAN.md) preserves per-account
 journal identities and retained folder debt before service selection.

@@ -1,0 +1,8 @@
+{"Time":"2026-10-25T12:32:13.036869003Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T12:32:13.053028873Z","Action":"run","Package":"itom.local/core/transport","Test":"TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers"}
+{"Time":"2026-10-25T12:32:13.053174111Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers","Output":"=== RUN   TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:32:17.450448679Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers","Output":"--- PASS: TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers (4.40s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:32:17.450524536Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers","Elapsed":4.4}
+{"Time":"2026-10-25T12:32:17.451007203Z","Action":"output","Package":"itom.local/core/transport","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:32:18.463281252Z","Action":"output","Package":"itom.local/core/transport","Output":"ok  \titom.local/core/transport\t5.426s\n"}
+{"Time":"2026-10-25T12:32:18.463426292Z","Action":"pass","Package":"itom.local/core/transport","Elapsed":5.427}

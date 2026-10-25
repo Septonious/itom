@@ -55,12 +55,14 @@ type SessionSnapshot struct {
 	AuthorityBuffered                              uint64
 	SendBuffered, ReceiveBuffered, ReceiveReserved uint64
 	Closed                                         bool
+	FastPreparations                               int
+	PreparationContention                          uint64
 }
 
 func (s *Session) Snapshot() SessionSnapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed}
+	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed, FastPreparations: s.preparingFast[DataLedger] + s.preparingFast[ControlLedger], PreparationContention: s.preparationContention}
 }
 
 // FlowSnapshot separates application queues, receiver-backed credit and

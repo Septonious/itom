@@ -1,0 +1,34 @@
+File: account-normal-profile.test
+Build ID: ddb03752105f14f22cf54c1a2577d080442fda66
+Type: cpu
+Time: 2026-10-25 13:47:16 UTC
+Duration: 27.37s, Total samples = 11.76s (42.97%)
+Showing nodes accounting for 5.44s, 46.26% of 11.76s total
+Dropped 892 nodes (cum <= 0.06s)
+Showing top 25 nodes out of 456
+      flat  flat%   sum%        cum   cum%
+     2.42s 20.58% 20.58%      2.42s 20.58%  internal/runtime/syscall/linux.Syscall6
+     0.67s  5.70% 26.28%      0.67s  5.70%  runtime.futex
+     0.26s  2.21% 28.49%      0.26s  2.21%  runtime.memmove
+     0.22s  1.87% 30.36%      0.22s  1.87%  crypto/internal/fips140/sha256.blockSHANI
+     0.16s  1.36% 31.72%      0.16s  1.36%  runtime.memclrNoHeapPointers
+     0.12s  1.02% 32.74%      0.21s  1.79%  runtime.tryDeferToSpanScan
+     0.11s  0.94% 33.67%      0.11s  0.94%  crypto/internal/fips140/edwards25519/field.feMul
+     0.11s  0.94% 34.61%      0.13s  1.11%  runtime.lock2
+     0.11s  0.94% 35.54%      0.11s  0.94%  runtime.madvise
+     0.11s  0.94% 36.48%      0.16s  1.36%  runtime.unlock2
+     0.10s  0.85% 37.33%      0.24s  2.04%  runtime.(*unwinder).resolveInternal
+     0.10s  0.85% 38.18%      0.10s  0.85%  runtime.asyncPreempt
+     0.09s  0.77% 38.95%      0.09s  0.77%  runtime.gopark
+     0.09s  0.77% 39.71%      0.09s  0.77%  runtime.nanotime
+     0.09s  0.77% 40.48%      0.21s  1.79%  runtime.pcvalue
+     0.09s  0.77% 41.24%      0.14s  1.19%  strings.Fields
+     0.07s   0.6% 41.84%      0.20s  1.70%  encoding/base64.(*Encoding).Decode
+     0.07s   0.6% 42.43%      0.08s  0.68%  runtime.mallocgcSmallScanNoHeaderSC3
+     0.07s   0.6% 43.03%      0.07s   0.6%  runtime.spanClass.sizeclass (inline)
+     0.07s   0.6% 43.62%      0.09s  0.77%  runtime.step
+     0.07s   0.6% 44.22%      0.07s   0.6%  time.runtimeNow
+     0.06s  0.51% 44.73%      0.06s  0.51%  crypto/internal/fips140/bigmod.addMulVVW1024
+     0.06s  0.51% 45.24%      0.06s  0.51%  encoding/base64.(*Encoding).Encode
+     0.06s  0.51% 45.75%      0.32s  2.72%  encoding/json/jsontext.(*decoderState).consumeValue
+     0.06s  0.51% 46.26%      1.20s 10.20%  runtime.mallocgc

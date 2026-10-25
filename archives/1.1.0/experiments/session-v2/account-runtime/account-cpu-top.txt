@@ -1,0 +1,34 @@
+File: account-profile.test
+Build ID: 22fc4735d19b1c8f7166faa41743c58ca0f2036d
+Type: cpu
+Time: 2026-10-25 13:45:58 UTC
+Duration: 33.25s, Total samples = 48.32s (145.32%)
+Showing nodes accounting for 34.23s, 70.84% of 48.32s total
+Dropped 1141 nodes (cum <= 0.24s)
+Showing top 25 nodes out of 184
+      flat  flat%   sum%        cum   cum%
+     7.49s 15.50% 15.50%      7.49s 15.50%  __tsan_read
+     5.39s 11.15% 26.66%      5.39s 11.15%  __tsan::MemoryAccessRangeT
+     5.13s 10.62% 37.27%      5.13s 10.62%  racecall
+     3.67s  7.60% 44.87%      3.67s  7.60%  __tsan_write
+     3.04s  6.29% 51.16%      3.04s  6.29%  internal/runtime/syscall/linux.Syscall6
+     1.12s  2.32% 53.48%      1.12s  2.32%  racecalladdr
+     1.04s  2.15% 55.63%      1.04s  2.15%  __tsan::TraceSwitchPart
+     0.95s  1.97% 57.60%      0.95s  1.97%  __tsan::MetaMap::GetSync
+     0.70s  1.45% 59.04%      0.70s  1.45%  runtime.raceread
+     0.67s  1.39% 60.43%      0.67s  1.39%  __tsan::ShadowSet
+     0.51s  1.06% 61.49%      0.51s  1.06%  __tsan::SlotLock
+     0.43s  0.89% 62.38%      0.43s  0.89%  runtime.futex
+     0.42s  0.87% 63.25%      0.42s  0.87%  runtime.findObject
+     0.40s  0.83% 64.07%      0.40s  0.83%  runtime.memmove
+     0.39s  0.81% 64.88%      0.39s  0.81%  __tsan::VectorClock::ReleaseAcquire
+     0.37s  0.77% 65.65%      0.37s  0.77%  __tsan_func_enter
+     0.34s   0.7% 66.35%      0.34s   0.7%  __sanitizer::StackDepotBase::Put
+     0.32s  0.66% 67.01%      0.32s  0.66%  __tsan_go_atomic32_compare_exchange
+     0.31s  0.64% 67.65%      0.71s  1.47%  encoding/base64.(*Encoding).Decode
+     0.29s   0.6% 68.25%      0.29s   0.6%  __tsan::SlotUnlock
+     0.29s   0.6% 68.85%      0.29s   0.6%  __tsan::VectorClock::Acquire
+     0.27s  0.56% 69.41%      0.27s  0.56%  runtime.asyncPreempt
+     0.25s  0.52% 69.93%      0.62s  1.28%  runtime.checkptrBase
+     0.22s  0.46% 70.38%      0.98s  2.03%  encoding/json/jsontext.(*decoderState).consumeValue
+     0.22s  0.46% 70.84%      0.58s  1.20%  runtime.mallocgcSmallNoscan

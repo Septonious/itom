@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T13:25:43.289639366Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T13:25:43.308944967Z","Action":"run","Package":"itom.local/core/transport","Test":"TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic"}
+{"Time":"2026-10-25T13:25:43.309180098Z","Action":"output","Package":"itom.local/core/transport","Test":"TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic","Output":"=== RUN   TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:25:46.363214893Z","Action":"output","Package":"itom.local/core/transport","Test":"TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic","Output":"    reclamation_wakeup_test.go:119: publication worker made no expected progress {0 0 0 0 0 420.971µs 0s true false}\n","OutputType":"error"}
+{"Time":"2026-10-25T13:25:46.36500598Z","Action":"output","Package":"itom.local/core/transport","Test":"TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic","Output":"--- FAIL: TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic (3.06s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:25:46.36503744Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic","Elapsed":3.06}
+{"Time":"2026-10-25T13:25:46.36509785Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:25:46.36810913Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t3.077s\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:25:46.36816153Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":3.079}

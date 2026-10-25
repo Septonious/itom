@@ -1,0 +1,18 @@
+{"Time":"2026-10-25T13:45:01.824002566Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T13:45:01.850338646Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst"}
+{"Time":"2026-10-25T13:45:01.850438325Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:01.850502819Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0"}
+{"Time":"2026-10-25T13:45:01.850507862Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.090633735Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0","Output":"    preparation_itomtest_test.go:91: losing writers reserved/canceled durable grants 20\n","OutputType":"error"}
+{"Time":"2026-10-25T13:45:02.092431971Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0","Output":"--- FAIL: TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0 (0.24s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.092575224Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0","Elapsed":0.24}
+{"Time":"2026-10-25T13:45:02.092661322Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1"}
+{"Time":"2026-10-25T13:45:02.092665136Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.428876553Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1","Output":"    preparation_itomtest_test.go:91: losing writers reserved/canceled durable grants 20\n","OutputType":"error"}
+{"Time":"2026-10-25T13:45:02.42933091Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1","Output":"--- FAIL: TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1 (0.34s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.429676356Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1","Elapsed":0.34}
+{"Time":"2026-10-25T13:45:02.429841342Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst","Output":"--- FAIL: TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst (0.58s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.429847588Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst","Elapsed":0.58}
+{"Time":"2026-10-25T13:45:02.431738645Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.436857543Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.612s\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:45:02.436893989Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.613}

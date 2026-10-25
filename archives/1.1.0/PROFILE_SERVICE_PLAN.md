@@ -35,13 +35,12 @@ The current two/three per-account primary budgets fit a five-session profile for
 one participant, or ten sessions for two participants.
 
 `SharedRosterPlan` adapts only scopes which really share BOTH original issuer
-identities and runs. It explicitly returns `V2_PER_ACCOUNT_ROSTER_REQUIRED` for
-separate per-account files. This is a remaining production wire integration gap:
-the existing ten-account roster test uses shared CONTROL/DATA stores. It proves
-selected-lane negotiation, not compatibility with twenty distinct installed
-issuer files. Per-account authority identity negotiation and client wallet paths
-must be added before production activation; replacing those files with shared
-stores is not an acceptable shortcut.
+identities and runs, returning `V2_PER_ACCOUNT_ROSTER_REQUIRED` otherwise. The
+new `RosterSelection` retains all account/folder selections for
+`NewServerAccountRoster`, which accepts each original account's journal handles.
+[Per-account runtime integration](PER_ACCOUNT_RUNTIME.md) now negotiates those
+identities and opens the corresponding client wallet paths in place. The original
+shared-store test remains separate from the new twenty-issuer application case.
 
 Tests use twenty distinct original stores for ten accounts, cover all ten retained
 folders, reject foreign owners/providers, shared-login/endpoint overcommit and
@@ -52,6 +51,6 @@ The earlier [roster evidence](experiments/session-v2/ROSTER_CHECK_RESULTS.json),
 including its retained intermittent cold TLS timeout, remains unchanged.
 
 Production entry points remain `V2_NOT_READY`. This planner does not supply
-inventory/recovery, a long-lived rendezvous owner, per-account wire authority,
+inventory/recovery, a long-lived rendezvous owner, production service ownership,
 CONTROL/DATA renewal policy or native activation. None of these source checks
 establishes the original 250ms/2000ms/100Mbps and zero-failure release gates.

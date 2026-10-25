@@ -67,13 +67,18 @@ func (s *Session) queueAuthority(class LedgerClass, message wire.Control) error 
 
 func (s *Session) authorityAdmission(class LedgerClass, admit func([]Record) error) func([]Record) error {
 	s.mu.Lock()
-	owner := s.authority
+	owners := s.authorities
 	s.mu.Unlock()
 	return func(records []Record) error {
 		for _, r := range records {
 			if r.Kind != Authority {
 				continue
 			}
+			_, message, err := decodeAuthority(r.Payload)
+			if err != nil {
+				return err
+			}
+			owner := owners[authorityKey(message).Account]
 			if class != ControlLedger || owner == nil {
 				return ErrProtocol
 			}

@@ -164,3 +164,14 @@ func (p ProfileServicePlan) SharedRosterPlan() (transport.RosterPlan, error) {
 	r.ClientBudget, r.ServerBudget = p.ClientBudget, p.ServerBudget
 	return r, nil
 }
+
+// RosterSelection retains all accounts even when their original issuers differ.
+// NewServerAccountRoster consumes the matching original journal bindings; no
+// identity is represented by substituting an anchor store for another file.
+func (p ProfileServicePlan) RosterSelection() transport.RosterPlan {
+	r := transport.RosterPlan{ClientBudget: p.ClientBudget, ServerBudget: p.ServerBudget}
+	for _, a := range p.Accounts {
+		r.Accounts = append(r.Accounts, a.RosterAccount)
+	}
+	return r
+}

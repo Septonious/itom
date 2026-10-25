@@ -1,0 +1,16 @@
+{"Time":"2026-10-25T12:41:35.329384773Z","Action":"start","Package":"itom.local/core/journal"}
+{"Time":"2026-10-25T12:41:35.347098274Z","Action":"run","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure"}
+{"Time":"2026-10-25T12:41:35.347209204Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"=== RUN   TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.380468788Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"--- PASS: TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.380530569Z","Action":"pass","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Elapsed":0.03}
+{"Time":"2026-10-25T12:41:35.380762366Z","Action":"run","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure"}
+{"Time":"2026-10-25T12:41:35.380772183Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"=== RUN   TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.409815612Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"--- PASS: TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.409869511Z","Action":"pass","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Elapsed":0.03}
+{"Time":"2026-10-25T12:41:35.410188089Z","Action":"run","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure"}
+{"Time":"2026-10-25T12:41:35.410200311Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"=== RUN   TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.431863703Z","Action":"output","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Output":"--- PASS: TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:35.431897377Z","Action":"pass","Package":"itom.local/core/journal","Test":"TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure","Elapsed":0.02}
+{"Time":"2026-10-25T12:41:35.431905603Z","Action":"output","Package":"itom.local/core/journal","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:41:36.433680063Z","Action":"output","Package":"itom.local/core/journal","Output":"ok  \titom.local/core/journal\t1.104s\n"}
+{"Time":"2026-10-25T12:41:36.43397063Z","Action":"pass","Package":"itom.local/core/journal","Elapsed":1.105}

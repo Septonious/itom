@@ -11,7 +11,10 @@ import (
 const maxRosterAccounts = 4096 / 2 // bounded selected service, not configured accounts
 const maxRosterBytes = 32 << 10
 const rosterHeader = 100
-const rosterEntry = 12
+const rosterEntry = 60
+const maxRosterManifestBytes = rosterHeader + rosterEntry*maxRosterAccounts
+const rosterChunkHeader = 40
+const maxRosterChunk = maxRosterBytes - rosterChunkHeader
 
 type RosterAccount struct{ Account, FastFolder, BulkFolder string }
 type RosterPlan struct {
@@ -22,9 +25,15 @@ type RosterLane struct {
 	Plane    Plane
 	Executor *Executor
 }
+type RosterIssuer struct {
+	ControlStore, DataStore wire.ID
+	ControlRun, DataRun     uint64
+}
+
 type RosterAccountState struct {
 	RosterAccount
 	FastUIDValidity, BulkUIDValidity uint32
+	RosterIssuer
 }
 type RosterManifest struct {
 	ControlStore, DataStore    wire.ID
@@ -73,12 +82,12 @@ func encodeRoster(m RosterManifest, plan RosterPlan, hash [32]byte) ([]byte, err
 		return nil, ErrProtocol
 	}
 	size := rosterHeader + rosterEntry*len(plan.Accounts)
-	if size > maxRosterBytes {
+	if size > maxRosterManifestBytes {
 		return nil, ErrCapacity
 	}
 	raw := make([]byte, size)
 	copy(raw, "IRS2")
-	raw[4] = 1
+	raw[4] = 2
 	copy(raw[8:40], hash[:])
 	copy(raw[40:56], m.ControlStore[:])
 	binary.BigEndian.PutUint64(raw[56:64], m.ControlRun)
@@ -90,11 +99,38 @@ func encodeRoster(m RosterManifest, plan RosterPlan, hash [32]byte) ([]byte, err
 		binary.BigEndian.PutUint16(raw[at+2:at+4], uint16(b.PerAccount))
 	}
 	binary.BigEndian.PutUint16(raw[96:98], uint16(len(m.Accounts)))
+	classes := map[wire.ID]LedgerClass{}
+	runs := map[wire.ID]uint64{}
 	for n, a := range m.Accounts {
 		if a.RosterAccount != plan.Accounts[n] || a.FastUIDValidity == 0 || a.BulkUIDValidity == 0 {
 			return nil, ErrProtocol
 		}
+		issuer := a.RosterIssuer
+		if issuer == (RosterIssuer{}) {
+			issuer = RosterIssuer{ControlStore: m.ControlStore, ControlRun: m.ControlRun, DataStore: m.DataStore, DataRun: m.DataRun}
+		}
+		if issuer.ControlStore == (wire.ID{}) || issuer.DataStore == (wire.ID{}) || issuer.ControlStore == issuer.DataStore || issuer.ControlRun == 0 || issuer.DataRun == 0 {
+			return nil, ErrProtocol
+		}
+		for _, scope := range []struct {
+			id    wire.ID
+			run   uint64
+			class LedgerClass
+		}{{issuer.ControlStore, issuer.ControlRun, ControlLedger}, {issuer.DataStore, issuer.DataRun, DataLedger}} {
+			if old, ok := classes[scope.id]; ok && old != scope.class {
+				return nil, ErrProtocol
+			}
+			if old, ok := runs[scope.id]; ok && old != scope.run {
+				return nil, ErrProtocol
+			}
+			classes[scope.id] = scope.class
+			runs[scope.id] = scope.run
+		}
 		at := rosterHeader + n*rosterEntry
+		copy(raw[at+12:at+28], issuer.ControlStore[:])
+		binary.BigEndian.PutUint64(raw[at+28:at+36], issuer.ControlRun)
+		copy(raw[at+36:at+52], issuer.DataStore[:])
+		binary.BigEndian.PutUint64(raw[at+52:at+60], issuer.DataRun)
 		binary.BigEndian.PutUint16(raw[at:at+2], uint16(n))
 		binary.BigEndian.PutUint16(raw[at+2:at+4], 15) // actual writable keywords + UIDPLUS, both planes
 		binary.BigEndian.PutUint32(raw[at+4:at+8], a.FastUIDValidity)
@@ -104,7 +140,7 @@ func encodeRoster(m RosterManifest, plan RosterPlan, hash [32]byte) ([]byte, err
 }
 func decodeRoster(raw []byte, plan RosterPlan, hash [32]byte) (RosterManifest, error) {
 	var m RosterManifest
-	if len(raw) < rosterHeader || len(raw) > maxRosterBytes || string(raw[:4]) != "IRS2" || raw[4] != 1 || raw[5] != 0 || raw[6] != 0 || raw[7] != 0 || raw[98] != 0 || raw[99] != 0 || string(raw[8:40]) != string(hash[:]) || int(binary.BigEndian.Uint16(raw[96:98])) != len(plan.Accounts) || len(raw) != rosterHeader+rosterEntry*len(plan.Accounts) {
+	if len(raw) < rosterHeader || len(raw) > maxRosterManifestBytes || string(raw[:4]) != "IRS2" || raw[4] != 2 || raw[5] != 0 || raw[6] != 0 || raw[7] != 0 || raw[98] != 0 || raw[99] != 0 || string(raw[8:40]) != string(hash[:]) || int(binary.BigEndian.Uint16(raw[96:98])) != len(plan.Accounts) || len(raw) != rosterHeader+rosterEntry*len(plan.Accounts) {
 		return m, ErrProtocol
 	}
 	copy(m.ControlStore[:], raw[40:56])
@@ -118,10 +154,28 @@ func decodeRoster(raw []byte, plan RosterPlan, hash [32]byte) (RosterManifest, e
 		if binary.BigEndian.Uint16(raw[at:at+2]) != uint16(n) || binary.BigEndian.Uint16(raw[at+2:at+4]) != 15 {
 			return RosterManifest{}, ErrProtocol
 		}
-		m.Accounts = append(m.Accounts, RosterAccountState{a, binary.BigEndian.Uint32(raw[at+4 : at+8]), binary.BigEndian.Uint32(raw[at+8 : at+12])})
+		entry := RosterAccountState{RosterAccount: a, FastUIDValidity: binary.BigEndian.Uint32(raw[at+4 : at+8]), BulkUIDValidity: binary.BigEndian.Uint32(raw[at+8 : at+12])}
+		copy(entry.ControlStore[:], raw[at+12:at+28])
+		entry.ControlRun = binary.BigEndian.Uint64(raw[at+28 : at+36])
+		copy(entry.DataStore[:], raw[at+36:at+52])
+		entry.DataRun = binary.BigEndian.Uint64(raw[at+52 : at+60])
+		// Zero wire identities may never invoke the internal encoder shorthand.
+		if entry.RosterIssuer == (RosterIssuer{}) {
+			return RosterManifest{}, ErrProtocol
+		}
+		m.Accounts = append(m.Accounts, entry)
 	}
 	if _, err := encodeRoster(m, plan, hash); err != nil {
 		return RosterManifest{}, err
 	}
 	return m, nil
+}
+
+func (m RosterManifest) Account(account string) (RosterAccountState, bool) {
+	for _, a := range m.Accounts {
+		if a.Account == account {
+			return a, true
+		}
+	}
+	return RosterAccountState{}, false
 }

@@ -214,6 +214,11 @@ func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) (resultErr erro
 			}
 		}
 		stagnant = 0
+		// Outgoing publication/completion on another account cannot reveal
+		// inbound mail. Only a deferred receive needs application-space wakes.
+		if p.Deferred == 0 && !p.More {
+			work = nil
+		}
 		if w.limits.PreferIdle && p.Deferred == 0 && !p.More && x.IdleSupported() {
 			idleSpace := x.SpaceChanged()
 			begin := time.Now()

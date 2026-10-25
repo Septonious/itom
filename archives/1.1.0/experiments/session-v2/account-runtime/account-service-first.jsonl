@@ -1,0 +1,8 @@
+{"ImportPath":"itom.local/core/transport_test [itom.local/core/transport.test]","Action":"build-output","Output":"# itom.local/core/transport_test [itom.local/core/transport.test]\n"}
+{"ImportPath":"itom.local/core/transport_test [itom.local/core/transport.test]","Action":"build-output","Output":"transport/account_service_test.go:25:2: \"itom.local/core/wire\" imported and not used\n"}
+{"ImportPath":"itom.local/core/transport_test [itom.local/core/transport.test]","Action":"build-output","Output":"transport/account_service_test.go:243:24: e.Key undefined (type wallet.Entry has no field or method Key)\n"}
+{"ImportPath":"itom.local/core/transport_test [itom.local/core/transport.test]","Action":"build-output","Output":"transport/account_service_test.go:243:86: e.Limit undefined (type wallet.Entry has no field or method Limit)\n"}
+{"ImportPath":"itom.local/core/transport_test [itom.local/core/transport.test]","Action":"build-fail"}
+{"Time":"2026-10-25T12:31:25.569314801Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T12:31:25.569515444Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport [build failed]\n","OutputType":"frame"}
+{"Time":"2026-10-25T12:31:25.569540772Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0,"FailedBuild":"itom.local/core/transport_test [itom.local/core/transport.test]"}

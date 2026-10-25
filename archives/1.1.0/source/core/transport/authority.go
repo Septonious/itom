@@ -87,6 +87,9 @@ func NewServerAuthority(s *Session, c *Cipher, account string, ledgers ...Server
 		if l.Class != DataLedger && l.Class != ControlLedger || l.Store == nil {
 			return nil, ErrProtocol
 		}
+		if _, err := l.Store.Limit(account, b.User); err != nil {
+			return nil, ErrProtocol
+		}
 		id := l.Store.StoreID()
 		if ids[id] || a.routes[l.Class].store != nil {
 			return nil, ErrProtocol
@@ -100,13 +103,20 @@ func attachAuthority(a *AuthorityController, c *Cipher, direction wire.Direction
 	s := a.session
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.closed || s.authority != nil || s.runtime != nil || s.services != 0 {
+	if s.closed || s.authorities[a.account] != nil || len(s.authorities) >= maxRosterAccounts || s.runtime != nil || s.services != 0 {
 		return nil, ErrProtocol
 	}
 	if err := s.bindCipherLocked(c, direction); err != nil {
 		return nil, err
 	}
-	s.authority = a
+	// Registration publishes a fresh immutable routing view. Receive admission
+	// captures it once without copying every account on every encrypted body.
+	next := make(map[string]*AuthorityController, len(s.authorities)+1)
+	for account, owner := range s.authorities {
+		next[account] = owner
+	}
+	next[a.account] = a
+	s.authorities = next
 	return a, nil
 }
 
@@ -433,4 +443,23 @@ func (a *AuthorityController) Retire(class LedgerClass, key wire.QuotaKey) error
 	}
 	a.retiring[key] = true
 	return nil
+}
+
+// notifyReclaimed follows an ACTUAL successful original deletion-proof commit.
+// It wakes local publisher admission only; wallet spend and grants are not
+// replenished, and no status/permission is inferred from an EXPUNGE tag alone.
+func (s *Session) notifyReclaimed(account string, store wire.ID) {
+	s.mu.Lock()
+	owner := s.authorities[account]
+	s.mu.Unlock()
+	if owner == nil {
+		return
+	}
+	owner.mu.Lock()
+	defer owner.mu.Unlock()
+	for class, route := range owner.routes {
+		if route.id == store {
+			owner.wake(class)
+		}
+	}
 }

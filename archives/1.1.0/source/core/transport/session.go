@@ -69,7 +69,9 @@ type Session struct {
 	crypto                        *secure.Epoch
 	runtime                       *Runtime
 	services                      int
-	authority                     *AuthorityController
+	authorities                   map[string]*AuthorityController
+	preparingFast                 [3]int
+	preparationContention         uint64
 	authorityOut                  []Record
 	authorityCount                int
 	authorityTurn                 bool

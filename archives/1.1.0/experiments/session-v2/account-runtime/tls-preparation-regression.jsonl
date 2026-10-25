@@ -1,0 +1,16 @@
+{"Time":"2026-10-25T13:01:51.215093657Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T13:01:51.308442716Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight"}
+{"Time":"2026-10-25T13:01:51.308813963Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:51.589781409Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"--- PASS: TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight (0.28s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:51.590305461Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Elapsed":0.28}
+{"Time":"2026-10-25T13:01:51.590528198Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight"}
+{"Time":"2026-10-25T13:01:51.59058865Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:52.166919149Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"--- PASS: TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight (0.58s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:52.168857951Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Elapsed":0.58}
+{"Time":"2026-10-25T13:01:52.169352154Z","Action":"run","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight"}
+{"Time":"2026-10-25T13:01:52.169394076Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"=== RUN   TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:52.421794164Z","Action":"output","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Output":"--- PASS: TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight (0.25s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:52.422460263Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight","Elapsed":0.25}
+{"Time":"2026-10-25T13:01:52.422506348Z","Action":"output","Package":"itom.local/core/transport","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-25T13:01:53.439728309Z","Action":"output","Package":"itom.local/core/transport","Output":"ok  \titom.local/core/transport\t2.224s\n"}
+{"Time":"2026-10-25T13:01:53.440002989Z","Action":"pass","Package":"itom.local/core/transport","Elapsed":2.225}

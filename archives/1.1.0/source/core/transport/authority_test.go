@@ -452,3 +452,68 @@ func TestAuthorityFenceWaitDoesNotBlockTheSessionActorAndQueuesOnlyOnce(t *testi
 		t.Fatal("retirement bypassed durable final cleanup", ref, err)
 	}
 }
+
+func TestAccountAuthorityRoutesIndependentIssuersWithoutPoisoningPeerReplay(t *testing.T) {
+	a := authorityPair(t)
+	data := accountIssuer(t, filepath.Join(t.TempDir(), "account2-data.db"), "account2", []string{"fast", "bulk"})
+	control := accountIssuer(t, filepath.Join(t.TempDir(), "account2-control.db"), "account2", []string{"fast"})
+	dw, err := wallet.OpenBound(filepath.Join(t.TempDir(), "account2-data-wallet.db"), data.StoreID(), a.f.clientEpoch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dw.Close()
+	cw, err := wallet.OpenBound(filepath.Join(t.TempDir(), "account2-control-wallet.db"), control.StoreID(), a.f.clientEpoch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cw.Close()
+	client, err := transport.NewClientAuthority(a.f.client, a.f.clientKey, "account2", transport.ClientAuthorityLedger{Class: transport.ControlLedger, Wallet: cw, Run: control.Run()}, transport.ClientAuthorityLedger{Class: transport.DataLedger, Wallet: dw, Run: data.Run()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server, err := transport.NewServerAuthority(a.f.server, a.f.serverKey, "account2", transport.ServerAuthorityLedger{Class: transport.ControlLedger, Store: control}, transport.ServerAuthorityLedger{Class: transport.DataLedger, Store: data})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := server.Issue(context.Background(), transport.DataLedger, 1, pool.Amount{Bytes: 1 << 20, Messages: 8}); err != nil {
+		t.Fatal(err)
+	}
+	p, err := a.serverControl.PrepareControls(context.Background(), transport.MaxControlBytes)
+	if err != nil || p == nil {
+		t.Fatal(err)
+	}
+	box := &sharedMailbox{}
+	x := box.selected(t, "fast")
+	if _, err = p.Start(context.Background(), x); err != nil {
+		t.Fatal(err)
+	}
+	body := fetchAt(t, x, 1)
+	wrong := session(t, transport.DefaultLimits())
+	if _, err = transport.NewClientAuthority(wrong, a.f.clientKey, "account2", transport.ClientAuthorityLedger{Class: transport.ControlLedger, Wallet: a.controlWallet, Run: a.control.Run()}, transport.ClientAuthorityLedger{Class: transport.DataLedger, Wallet: a.dataWallet, Run: a.f.store.Run()}); err != nil {
+		t.Fatal(err)
+	}
+	origin := transport.ServerOrigin{Store: a.control.StoreID(), Run: a.control.Run(), Account: "account1", User: "12345678", Folder: "fast", UIDValidity: 9}
+	receive, err := transport.NewClientReceiver(wrong, transport.ControlLedger, a.f.clientKey, origin, a.f.key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = receive.Decode(9, body.UID, body.Bytes); !errors.Is(err, transport.ErrProtocol) {
+		t.Fatal("foreign account issuer crossed authority map", err)
+	}
+	delivery, err := a.clientControlReceiver.Decode(9, body.UID, body.Bytes)
+	if err != nil {
+		t.Fatal("wrong issuer mapping poisoned shared Noise replay", err)
+	}
+	if err = delivery.Apply(); err != nil {
+		t.Fatal(err)
+	}
+	if rows, err := dw.Entries(); err != nil || len(rows) != 1 || rows[0].Offer.Key.Account != "account2" {
+		t.Fatal("account2 grant misrouted", rows, err)
+	}
+	if rows, err := a.dataWallet.Entries(); err != nil || len(rows) != 0 {
+		t.Fatal("account1 wallet modified by account2 permission", rows, err)
+	}
+	if client.Stats(transport.DataLedger).AcceptedOffers != 1 || a.client.Stats(transport.DataLedger).AcceptedOffers != 0 {
+		t.Fatal("account counters flattened")
+	}
+}

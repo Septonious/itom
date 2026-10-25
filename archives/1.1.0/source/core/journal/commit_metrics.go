@@ -2,7 +2,10 @@ package journal
 
 import "sync/atomic"
 
-type commitMetrics struct{ count, failures, queueNS, commitNS, maxNS atomic.Uint64 }
+type commitMetrics struct {
+	count, failures, queueNS, commitNS, maxNS atomic.Uint64
+	timeline                                  commitTimeline
+}
 type CommitSnapshot struct{ Count, Failures, QueueNS, CommitNS, MaxCommitNS uint64 }
 
 // No database lock or IO: safe to call while reporting carrier health.

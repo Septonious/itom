@@ -44,7 +44,8 @@ func (d *RosterDriver) prepare(ctx context.Context) (*PreparedPublication, error
 	stage := d.send
 	body := d.digest[:]
 	if stage == 1 {
-		body = d.encoded
+		body = rosterChunk(d.encoded, d.sentOffset, d.digest)
+		defer clear(body)
 	}
 	size, err := secure.SessionPacketSize(9 + len(body))
 	if err != nil {
@@ -118,9 +119,16 @@ func (d *RosterDriver) prepare(ctx context.Context) (*PreparedPublication, error
 		return nil, errors.Join(err, cancel())
 	}
 	d.pending, d.send = p, 0
-	d.own[stage] = sha256.Sum256(packet)
+	d.own[sha256.Sum256(packet)] = stage
 	d.status.Prepared++
-	if stage < 3 {
+	if stage == 1 {
+		d.sentOffset += len(body) - rosterChunkHeader
+		if d.sentOffset < len(d.encoded) {
+			d.send = 1
+		} else {
+			d.receive = 2
+		}
+	} else if stage < 3 {
 		d.receive = stage + 1
 	}
 	return p, nil

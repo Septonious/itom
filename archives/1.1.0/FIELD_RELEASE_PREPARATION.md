@@ -229,3 +229,30 @@ client wallet paths is required before production startup can be activated.
 Ten-account roster success must not be reported as compatibility with installed
 per-account journals or as sustained multi-account DATA performance. Keep those
 cases in the real startup/qualification suite when that owner is integrated.
+
+
+## Distinct-issuer runtime assembly
+
+[Per-account integration](PER_ACCOUNT_RUNTIME.md) now negotiates all original
+account issuer IDs/runs, opens fixed local wallet paths in place and assembles
+per-account authority/receive/publication/exit service under one runtime. The new
+ten-account TLS/HTTP case uses twenty distinct stores and preserves old-session
+wallet spend. Canonical OFFER chunks retain original packet/UID limits. This
+resolves the shared-only wire/assembly gap; it does not activate production APIs.
+
+The quiet-IDLE TLS failure reproduced in 1/10 runs. Bounded monotonic journal
+update timelines are now available for causal correlation, including in-progress
+updates without taking the database lock. Fsync and original deadlines remain.
+Production persistent ownership/full inventory, missing-history recovery,
+automatic overlapping CONTROL/DATA policy, native activation and all original
+performance gates still block a working test release. Do not mark that TLS issue
+resolved merely because a later cohort passes.
+
+
+Fast server preparation now coordinates intent before durable grant reservation,
+preventing redundant reservations/cancellations for one short flight. A retained
+overlay baseline performs twenty metadata updates; the candidate performs two.
+Bulk journal preparation remains concurrent in its separate regression. Source
+CI runs these tests with real fsync and an explicit test-only delay hook. The
+reported deadline failures remain part of the qualification boundary; this fix
+and source checks do not enable packaging by themselves.

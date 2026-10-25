@@ -89,6 +89,13 @@ func (p *ServerPublisher) prepare(ctx context.Context, maximum int, bulk, contro
 	if !p.session.ReadyFor(p.plane, p.class) {
 		return nil, nil
 	}
+	if p.plane == Fast {
+		release, ok := p.session.claimFastPreparation(p.class)
+		if !ok {
+			return nil, nil
+		}
+		defer release()
+	}
 	class := wire.ServerData
 	if p.class == ControlLedger {
 		class = wire.ServerControl

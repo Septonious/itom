@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 
 	"itom.local/core/journal"
-	"itom.local/core/wallet"
 	"itom.local/core/wire"
 )
 
@@ -58,23 +57,33 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 	}
 	digest := sha256.Sum256(envelope.packet)
 	if own {
-		for stage, expected := range d.own {
-			if digest == expected {
-				d.observed[stage-1] = true
-				d.known[physical.UID] = true
-				return nil
+		stage, ok := d.own[digest]
+		if !ok {
+			return ErrProtocol
+		}
+		d.ownSeen[digest] = true
+		d.known[physical.UID] = true
+		if stage == 1 {
+			count := 0
+			for digest, kind := range d.own {
+				if kind == 1 && d.ownSeen[digest] {
+					count++
+				}
 			}
+			d.observed[0] = count == (len(d.encoded)+maxRosterChunk-1)/maxRosterChunk
+		} else {
+			d.observed[stage-1] = true
 		}
-		return ErrProtocol
+		return nil
 	}
-	for _, previous := range d.peer {
-		if previous == digest {
-			d.known[physical.UID] = true
-			return nil
-		}
+	if d.peer[digest] {
+		d.known[physical.UID] = true
+		return nil
 	}
 	var stage uint8
 	var manifest RosterManifest
+	var candidate []byte
+	var complete bool
 	plains, err := d.input.epoch.OpenSessionBatch([][]byte{envelope.packet[4:]}, func(plains [][]byte) error {
 		p := plains[0]
 		if len(p) < 9 || binary.BigEndian.Uint64(p[1:9]) != d.input.generation {
@@ -86,18 +95,9 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 		}
 		if stage == 1 {
 			var err error
-			manifest, err = decodeRoster(p[9:], d.plan, d.planHash)
+			candidate, manifest, complete, err = d.validateOfferChunk(p[9:])
 			if err != nil {
 				return err
-			}
-			if manifest.ControlStore != origin.Store || manifest.ControlRun != origin.Run {
-				return ErrProtocol
-			}
-			// Both sides selected these exact physical incarnations, not merely names.
-			for n, a := range manifest.Accounts {
-				if a.FastUIDValidity != d.lanes[2*n].Executor.validity || a.BulkUIDValidity != d.lanes[2*n+1].Executor.validity {
-					return ErrProtocol
-				}
 			}
 		} else if !bytes.Equal(p[9:], d.digest[:]) {
 			return ErrProtocol
@@ -109,17 +109,33 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 	}
 	defer clear(plains[0])
 	if stage == 1 {
-		w, err := wallet.OpenBound(d.dataPath, manifest.DataStore, d.input.epoch)
-		if err != nil {
+		raw := plains[0][9:]
+		if !complete {
+			if d.offerTotal == 0 {
+				d.offerTotal = int(binary.BigEndian.Uint32(raw[4:8]))
+				copy(d.offerDigest[:], raw[8:40])
+			}
+			if d.offerParts == nil {
+				d.offerParts = map[int][]byte{}
+			}
+			d.offerParts[int(binary.BigEndian.Uint32(raw[:4]))] = append([]byte(nil), raw[40:]...)
+			d.peer[digest], d.known[physical.UID] = true, true
+			return nil
+		}
+		if err := d.openWallets(manifest); err != nil {
 			d.failed = true
+			clear(candidate)
 			return err
 		}
-		d.dataWallet = w
 		d.manifest = manifest
-		d.encoded = append([]byte(nil), plains[0][9:]...)
+		d.encoded = candidate
+		for _, part := range d.offerParts {
+			clear(part)
+		}
+		d.offerParts = nil
 		d.digest = sha256.Sum256(d.encoded)
 	}
-	d.peer[stage], d.known[physical.UID] = digest, true
+	d.peer[digest], d.known[physical.UID] = true, true
 	d.observed[stage-1] = true
 	d.receive = 0
 	if stage < 3 {

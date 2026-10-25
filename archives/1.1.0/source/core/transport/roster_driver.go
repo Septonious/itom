@@ -36,7 +36,7 @@ type RosterSnapshot struct {
 
 // RosterDriver owns already selected lanes between key establishment and
 // runtime construction. It creates no sockets, folders, grants or new identity.
-// Its three messages are an encrypted OFFER, client ACCEPT and server READY.
+// Its exchange is bounded encrypted OFFER chunks, client ACCEPT and server READY.
 // READY requires full actual BODY observation, not just APPEND acceptance.
 type RosterDriver struct {
 	mu                      sync.Mutex
@@ -56,7 +56,16 @@ type RosterDriver struct {
 	digest                  [32]byte
 	send, receive           uint8
 	observed                [3]bool
-	own, peer               map[uint8][32]byte
+	own                     map[[32]byte]uint8
+	ownSeen, peer           map[[32]byte]bool
+	sentOffset              int
+	offerParts              map[int][]byte
+	offerDigest             [32]byte
+	offerTotal              int
+	walletPaths             map[string]RosterWalletPaths
+	wallets                 map[string]RosterWallets
+	ownedWallets            []*wallet.Wallet
+	journals                map[string]RosterJournals
 	known                   map[uint32]bool
 	pending                 *PreparedPublication
 	inbox                   *Inbox
@@ -66,11 +75,18 @@ type RosterDriver struct {
 }
 
 type RosterResult struct {
-	client     bool
-	manifest   RosterManifest
-	handoff    *BootstrapHandoff
-	lanes      []RosterLane
-	dataWallet *wallet.Wallet
+	client         bool
+	manifest       RosterManifest
+	handoff        *BootstrapHandoff
+	lanes          []RosterLane
+	dataWallet     *wallet.Wallet
+	wallets        map[string]RosterWallets
+	journals       map[string]RosterJournals
+	ownedWallets   []*wallet.Wallet
+	walletClose    sync.Once
+	walletCloseErr error
+	serviceMu      sync.Mutex
+	serviceClaimed bool
 }
 
 // Manifest returns a detached copy of authenticated metadata. It is not a grant.
@@ -98,37 +114,11 @@ func NewClientRoster(h *BootstrapHandoff, plan RosterPlan, lanes []RosterLane, w
 	return newRoster(d, plan, lanes, key)
 }
 func NewServerRoster(h *BootstrapHandoff, plan RosterPlan, lanes []RosterLane, control, data *journal.Store, key []byte) (*RosterDriver, error) {
-	if h == nil || h.epoch == nil || h.client || control == nil || data == nil || control.StoreID() != h.origin.Store || control.Run() != h.origin.Run || data.StoreID() == control.StoreID() {
-		return nil, ErrProtocol
+	var bindings []RosterJournals
+	for _, a := range plan.Accounts {
+		bindings = append(bindings, RosterJournals{Account: a.Account, Control: control, Data: data})
 	}
-	d := &RosterDriver{input: h, store: control, send: 1}
-	d.manifest = RosterManifest{ControlStore: control.StoreID(), ControlRun: control.Run(), DataStore: data.StoreID(), DataRun: data.Run(), ClientBudget: plan.ClientBudget, ServerBudget: plan.ServerBudget}
-	// A roster cannot authorize new folders or silently omit original owners.
-	for _, store := range []*journal.Store{control, data} {
-		cfg := store.Config()
-		for _, account := range plan.Accounts {
-			found := false
-			for _, a := range cfg.Accounts {
-				if a.ID != account.Account {
-					continue
-				}
-				for _, u := range a.Users {
-					if u.ID != h.origin.User {
-						continue
-					}
-					folders := map[string]bool{}
-					for _, f := range u.Folders {
-						folders[f] = true
-					}
-					found = folders[account.FastFolder] && folders[account.BulkFolder]
-				}
-			}
-			if !found {
-				return nil, ErrProtocol
-			}
-		}
-	}
-	return newRoster(d, plan, lanes, key)
+	return NewServerAccountRoster(h, plan, lanes, bindings, key)
 }
 func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte) (*RosterDriver, error) {
 	if len(key) != 32 || sha256.Sum256(key) != d.input.keyHash {
@@ -168,7 +158,12 @@ func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte)
 				return nil, ErrUIDPlusRequired
 			}
 		}
-		d.manifest.Accounts = append(d.manifest.Accounts, RosterAccountState{a, fast.Executor.validity, bulk.Executor.validity})
+		state := RosterAccountState{RosterAccount: a, FastUIDValidity: fast.Executor.validity, BulkUIDValidity: bulk.Executor.validity}
+		if !d.client {
+			j := d.journals[a.Account]
+			state.RosterIssuer = RosterIssuer{ControlStore: j.Control.StoreID(), ControlRun: j.Control.Run(), DataStore: j.Data.StoreID(), DataRun: j.Data.Run()}
+		}
+		d.manifest.Accounts = append(d.manifest.Accounts, state)
 		if a.Account == d.input.origin.Account && a.FastFolder == d.input.origin.Folder && fast.Executor.validity == d.input.origin.UIDValidity {
 			d.anchor = fast.Executor
 		}
@@ -185,7 +180,7 @@ func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte)
 		}
 		d.digest = sha256.Sum256(d.encoded)
 	}
-	d.own, d.peer, d.known = map[uint8][32]byte{}, map[uint8][32]byte{}, map[uint32]bool{}
+	d.own, d.ownSeen, d.peer, d.known = map[[32]byte]uint8{}, map[[32]byte]bool{}, map[[32]byte]bool{}, map[uint32]bool{}
 	for _, uid := range d.input.uids {
 		d.known[uid] = true
 	}
@@ -233,15 +228,8 @@ func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte)
 func (d *RosterDriver) Snapshot() RosterSnapshot {
 	d.mu.Lock()
 	s := d.status
-	for n, seen := range d.observed {
-		if seen {
-			if (n%2 == 1) == d.client {
-				s.OwnObserved++
-			} else {
-				s.PeerObserved++
-			}
-		}
-	}
+	s.OwnObserved = len(d.ownSeen)
+	s.PeerObserved = len(d.peer)
 	d.mu.Unlock()
 	s.IMAP = d.anchor.Snapshot()
 	return s
@@ -314,7 +302,7 @@ func (d *RosterDriver) Run(ctx context.Context) (result *RosterResult, err error
 			for uid := range d.known {
 				h.uids = append(h.uids, uid)
 			}
-			r := &RosterResult{client: d.client, manifest: d.manifest, handoff: h, lanes: d.lanes, dataWallet: d.dataWallet}
+			r := &RosterResult{client: d.client, manifest: d.manifest, handoff: h, lanes: d.lanes, dataWallet: d.dataWallet, wallets: d.wallets, journals: d.journals, ownedWallets: d.ownedWallets}
 			d.result = r
 			d.status.Phase = ServiceStopped
 			d.status.RosterConfirmed = true
@@ -401,9 +389,12 @@ func (d *RosterDriver) Close() error {
 		for _, l := range d.lanes {
 			l.Executor.Close()
 		}
-		if d.dataWallet != nil {
-			return d.dataWallet.Close()
+		var err error
+		for _, w := range d.ownedWallets {
+			err = errors.Join(err, w.Close())
 		}
+		d.ownedWallets = nil
+		return err
 	}
 	return nil
 }
@@ -426,9 +417,10 @@ func NewRosterRuntime(result *RosterResult, s *Session, exit *ExitServer, carrie
 			return nil, ErrProtocol
 		}
 		i.mu.Lock()
-		matches := i.routes[DataLedger] == result.manifest.DataStore
+		entry, ok := result.manifest.Account(i.scope.Account)
+		matches := ok && i.routes[DataLedger] == entry.DataStore
 		if plane == Fast {
-			matches = matches && i.routes[ControlLedger] == result.manifest.ControlStore
+			matches = matches && i.routes[ControlLedger] == entry.ControlStore
 		}
 		if i.scope == (InboxScope{result.handoff.origin.Account, result.handoff.origin.Folder, result.handoff.origin.UIDValidity}) {
 			for _, uid := range result.handoff.uids {

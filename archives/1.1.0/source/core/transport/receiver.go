@@ -97,7 +97,12 @@ func (d *StoredDelivery) Apply() error {
 		record := &d.records[d.next]
 		if record.Kind == Authority {
 			d.session.mu.Lock()
-			owner := d.session.authority
+			_, message, err := decodeAuthority(record.Payload)
+			if err != nil {
+				d.session.mu.Unlock()
+				return err
+			}
+			owner := d.session.authorities[authorityKey(message).Account]
 			closed := d.session.closed
 			generation := d.session.generation
 			d.session.mu.Unlock()
@@ -133,7 +138,7 @@ func (d *StoredDelivery) Apply() error {
 	}
 	if d.status.Key.Store != (wire.ID{}) {
 		d.session.mu.Lock()
-		owner := d.session.authority
+		owner := d.session.authorities[d.status.Key.Account]
 		d.session.mu.Unlock()
 		if owner != nil {
 			if err := owner.observeStoredStatus(d.status); err != nil {

@@ -311,6 +311,10 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		traceCtx, stopTrace := context.WithCancel(ctx)
 		var tracing sync.WaitGroup
 		start := time.Now()
+		journalStart := map[transport.LedgerClass]int64{}
+		for class, store := range stores {
+			journalStart[class] = store.CommitTimeline().SampledAtNS
+		}
 		tracing.Go(func() {
 			ticker := time.NewTicker(100 * time.Millisecond)
 			defer ticker.Stop()
@@ -338,7 +342,7 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 				t.Log(sample)
 			}
 			for class, store := range stores {
-				t.Logf("class=%d commits=%+v", class, store.CommitSnapshot())
+				t.Logf("class=%d commits=%+v request_started_ns=%d timeline=%+v", class, store.CommitSnapshot(), journalStart[class], store.CommitTimeline())
 			}
 			t.Logf("client state=%+v server state=%+v", a.Snapshot(), b.Snapshot())
 			for _, s := range services {

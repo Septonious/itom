@@ -1,0 +1,1203 @@
+{
+  "status": "Unqualified source implementation; production startup remains V2_NOT_READY. All retained deadline and light-target failures remain disqualifying.",
+  "parent": "6c49370653841198e101176019965cb53b5e72b0",
+  "checks": [
+    {
+      "file": "account-runtime/account-authority-initial.log",
+      "sha256": "d8dcdc4a9ae8a329bf66dbdbfa69c49885cd91ea42175c08a75d6de6c5839a5c"
+    },
+    {
+      "file": "account-runtime/account-complete-core-race.jsonl",
+      "sha256": "b8268bbd7e4963b7b44a8e74fc2a1300c882a72f65984f0d3360b2802d18e8e1",
+      "top_level_group_executions": {
+        "pass": 212
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-core-race.jsonl",
+      "sha256": "9e65ff3fa9143e6adea8e734991e63e42ab6b614e5282e4389262f7502ded6d4",
+      "top_level_group_executions": {
+        "pass": 212
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-core-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "account-runtime/account-cpu-top.txt",
+      "sha256": "8a8c68daf713eb62f3aec65452b27b5045ece5b1003cbe7e74bddccb400456ef"
+    },
+    {
+      "file": "account-runtime/account-cpu.pprof",
+      "sha256": "1536753dd2145c308f77e761e58f8010926aef1730baed9fd3476c2a3166984d"
+    },
+    {
+      "file": "account-runtime/account-current-core-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "account-runtime/account-current-native-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "account-runtime/account-current-native.jsonl",
+      "sha256": "be37245ef85aef08e495a9f9df3b334b591b18caffed73cdcd5025ce80a5792d",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-final-all-core.jsonl",
+      "sha256": "895d1f7e4b10bef12f119947e4afbc80cae21dfa7109c1eca6549daf6bef7c01",
+      "top_level_group_executions": {
+        "pass": 212,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "pass": 6,
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-final-core-all.jsonl",
+      "sha256": "89df02da819d82a6d18266b604ec211feb1d7aa70fa7a6e0eedf07728f254d2d",
+      "top_level_group_executions": {
+        "pass": 215
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": [],
+      "warm_light_diagnostic_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 102416557,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 93274421,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 101234920,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 97802663,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 180395295,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 286957484,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 213475726,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 264565635,
+          "target_ns": 250000000,
+          "target_met": false
+        }
+      ]
+    },
+    {
+      "file": "account-runtime/account-final-core-race.jsonl",
+      "sha256": "b8b6bd97d44deb90377729edfa193f84a10c8cc411a9c937fcdd61f5d1738e82",
+      "top_level_group_executions": {
+        "pass": 212
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-final-core-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "account-runtime/account-final-native-all.jsonl",
+      "sha256": "6adbb4e6816534056bc3b82f0dcfdf64aad1507260e1d990967a08b48e10f6ab",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-final-native-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "account-runtime/account-final-native.jsonl",
+      "sha256": "ea4211c993f316166440b4b8e27857f212c63aaf333c9308606caedc3f3ca173",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-final-normal-light.jsonl",
+      "sha256": "d14504d3a728f5e6ec4d51abf55144270c504b814705145dcd375e75848ef5fe",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "warm_light_diagnostic_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 9652139,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 7281215,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 10515866,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 4113331,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 149030204,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 269659570,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 199793180,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 305436774,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 20874419,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 29636559,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 16129093,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 21948078,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 217152750,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 189641854,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 195386468,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 250618053,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 6587571,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 35566752,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 1119978837,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 29832432,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 184095048,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 210482291,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 259138752,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 193644700,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ]
+    },
+    {
+      "file": "account-runtime/account-final-preparation.jsonl",
+      "sha256": "56d8d49ae85868ce801d2fbe3e0094a5692b8a881a61b34b7af0d0314b63f8ae",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-final-repeated.jsonl",
+      "sha256": "09d3721d6aebdbe52d9b342399bf712d8a35d9cc5b80156f60a48e0a51999d6b",
+      "top_level_group_executions": {
+        "pass": 32,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-fluctuating-service.jsonl",
+      "sha256": "d2fb64b2097bf2e13ab6d199a16988034648a1438aed16df20dbbcad76f8d58d",
+      "top_level_group_executions": {
+        "fail": 1,
+        "pass": 2
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-native-race.jsonl",
+      "sha256": "08c9a70baf1c7d7864bf6e2795adc55f419c7ab345e10ae19dce49d890a9120c",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-normal-cpu-top.txt",
+      "sha256": "cd7b65fe1d4ff0372aaa13c90cc5fd25134d03e44624b0c1373d55af5b2495ad"
+    },
+    {
+      "file": "account-runtime/account-normal-cpu.pprof",
+      "sha256": "633b60bdc2c674fe6b9dafbfa0b7864c85930c1e456d4878cb5eb852e0895a84"
+    },
+    {
+      "file": "account-runtime/account-normal-profile-runs.jsonl",
+      "sha256": "df2ba7c753de7e44f2de575497b80b808a564ea07fb21f21ccf9e4593eb98d90",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-profile-runs.jsonl",
+      "sha256": "75676478b7aae5daf06191899304c849663f97ae51e5fa330bbfc59e88df6d9a",
+      "top_level_group_executions": {
+        "pass": 2,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-release-boundary-core.jsonl",
+      "sha256": "b64d592b0f115df0db992d83c2b797c88a74e723120dd3bf6885381dfce03134",
+      "top_level_group_executions": {
+        "pass": 212
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-roster-initial.log",
+      "sha256": "745a82dc1f11e27662d21857113ede59ce21fcd0090d4f77ca2f7c6deb1ed60d"
+    },
+    {
+      "file": "account-runtime/account-safety-first.jsonl",
+      "sha256": "c1dcc87af9b3644cf6187ae91dfb4a95ba402d1ab63ae9179d4ecefa1101f02c",
+      "top_level_group_executions": {
+        "pass": 14
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-service-compile.log",
+      "sha256": "bdb56aca6ace8cb4b8ec1b86ef7d605924d6fdd28be6bbb030fac9054a5a3149"
+    },
+    {
+      "file": "account-runtime/account-service-first.jsonl",
+      "sha256": "a5aedf685452bd72c547d9c16807bc528614b99a982c78ebe3542fe48855cb85",
+      "top_level_group_executions": {},
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-service-repeated.jsonl",
+      "sha256": "292cadfbec13beb6ae8c3ea0a9924383f2f7781060cb555f79ed0f4a104affbf",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-service-second.jsonl",
+      "sha256": "c345740d697307557a82e641019f00173aa36a22572eb3bdd53058012e8d25c0",
+      "top_level_group_executions": {},
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/account-service-third.jsonl",
+      "sha256": "88916e216f636615d52503cad6f03a9c210ca813974a2a7b8aadd673216fa42d",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/account-warm-light-normal.jsonl",
+      "sha256": "4a44fd9f0b9e7f884931349e0f5bb58bf9fcb4229f61c1fa8092a9b75a4b17b8",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "warm_light_diagnostic_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 19743494,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 6236310,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 28503545,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 25770277,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 303015935,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 168937370,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 204272645,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 144743798,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 10832303,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 11844121,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 5597065,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 33093101,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 230450883,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 165192407,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 138050659,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 185066136,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 14606679,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 30009292,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 9900763,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 9283637,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 190958961,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 262447045,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 261713453,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 233452858,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ]
+    },
+    {
+      "file": "account-runtime/bulk-guard-partial-grant.jsonl",
+      "sha256": "bb8da38a85b471346bd2b29e4d13f53ab39476ad3588444e7f029a0ee7f854cd",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestFastPreparationCoordinationKeepsBulkJournalPreparationConcurrent/partial_account_allowance",
+        "TestFastPreparationCoordinationKeepsBulkJournalPreparationConcurrent",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/bulk-preparation-coordination.jsonl",
+      "sha256": "f748a72e0afcc4882623e1ac2a0bd2286730d25afe73e36522c261010154b4f0",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/fast-idle-trial.jsonl",
+      "sha256": "dc8233f57bd884d138590e66d8568d43118844b602b80b16f5a43b1c9d30c615",
+      "top_level_group_executions": {
+        "pass": 4,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/fast-poll-baseline.jsonl",
+      "sha256": "0f9ba7d55f9f18e5f68bca4a0657153e39a35182e260638740864f562fbe3d20",
+      "top_level_group_executions": {
+        "pass": 4,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/inbox-wake-baseline.jsonl",
+      "sha256": "723af0b478ad453ba394e3c493bc8d0f95bd5007e0d4a22a8abccedb2a4828b7",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQuietInboxDoesNotExitIdleForUnrelatedOutgoingWork",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/inbox-wake-regression-fixed.jsonl",
+      "sha256": "590c1936a8c5666bb5b66f6c7f17dcbc8c88998c98bbaac573d626421a279409",
+      "top_level_group_executions": {
+        "pass": 15
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/inbox-wake-regression.jsonl",
+      "sha256": "274cf3ddf81f1bbdf0ab09da263e51630b172334723e7c9b1eadc46bcb6470f4",
+      "top_level_group_executions": {
+        "pass": 12,
+        "fail": 3
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQuietInboxDoesNotExitIdleForUnrelatedOutgoingWork",
+        "TestQuietInboxDoesNotExitIdleForUnrelatedOutgoingWork",
+        "TestQuietInboxDoesNotExitIdleForUnrelatedOutgoingWork",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/preparation-all-baseline.jsonl",
+      "sha256": "9e416473bad403746107615f8aaa055ed2557cf667a4f52cef159e35d0824994",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/0",
+        "TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst/1",
+        "TestTenServerWritersDoNotFsyncUnusedGrantsForOneBurst",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/preparation-final-race.jsonl",
+      "sha256": "8bdf08edf9c38aacc988e92215fb8ec36e08294764b477b1778dc9977d18dacc",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/quiet-notification-trial.jsonl",
+      "sha256": "81f7685529d53c6ea419a2100a7a2809b746e3c88bf01aeaf41c42da9994dcb3",
+      "top_level_group_executions": {
+        "pass": 5
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/receive-wake-trial.jsonl",
+      "sha256": "69809a17889bd86a4475f7952c723670b6041196643cb48d5be7390395f9a406",
+      "top_level_group_executions": {
+        "pass": 5
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/reclamation-wakeup-after-fix.jsonl",
+      "sha256": "1a714e18354cea4c720a171761768715ca41e79f4c7c3d8e6678c5c1858b3a91",
+      "top_level_group_executions": {
+        "pass": 5
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/reclamation-wakeup-baseline-corrected.jsonl",
+      "sha256": "88c20c9bcc6c4393232ff7d21eadd1825d802699bb3a51c0937f45177a5614ae",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestProvenReclamationWakesQuotaBlockedServerWithoutUnrelatedTraffic",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/reclamation-wakeup-before-fix.jsonl",
+      "sha256": "788fe5f4ea3f92175dd8575ec7e5a498429ad446fdcbfe053f280df10ab31c2b",
+      "top_level_group_executions": {},
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/reclamation-wakeup-fixed.jsonl",
+      "sha256": "11203fb5b922b202e37a47419a078ff3870aa27eefda5fac638c588b88058685",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/tls-after-bulk-coordination.jsonl",
+      "sha256": "ae9c5bebc22b1c9514ed3ca833a8ebcc45a1de16ea4771c7eb322048adf25627",
+      "top_level_group_executions": {
+        "fail": 3,
+        "pass": 7
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/tls-after-preparation-coordination.jsonl",
+      "sha256": "f94c9646b0a7e7c26a56f343dbfb27a5c8bfcf5da70e52065b700aeadce67366",
+      "top_level_group_executions": {
+        "pass": 19,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/tls-preparation-after-fix.jsonl",
+      "sha256": "e4b7e42c8e21d3bbb8e2430296f2adfb2441d7b5e8e6ea14fe97f7d09a5634f4",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/tls-preparation-before-fix.jsonl",
+      "sha256": "dc0a3426cb4bcb220c1de42930954414eb4647f82fec037cc61f295899c4a95e",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/tls-preparation-regression.jsonl",
+      "sha256": "1e447653e8f191ad7d4b2ebc4e488471243d22ee3a8d978cadea3e0a2c028b38",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/tls-quiet-before.jsonl",
+      "sha256": "0328a92fed01669301efdaeadceadca8abd4923a1ac6410dab840e33daa5a861",
+      "top_level_group_executions": {
+        "pass": 9,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "account-runtime/tls-quiet-with-timeline.jsonl",
+      "sha256": "eac2e520b2e61a6184d15df3527f10d736aed964e0130dbd4484d2b2e92db2d4",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/tls-timeline-regression-fixed.jsonl",
+      "sha256": "5c6bf3d03a6fa15a8f3d389ddfeed67b32373f18a9405f145e7d76884a841d4f",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "account-runtime/tls-timeline-regression.jsonl",
+      "sha256": "e2ecdfc78e1d0506fcabc6b4012392ab4de90cb7627c1f69f24a038cdabdec75",
+      "top_level_group_executions": {
+        "fail": 3
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure",
+        "TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure",
+        "TestCommitTimelineRemainsObservableDuringBlockedUpdateAndRetainsFailure",
+        "itom.local/core/journal"
+      ]
+    }
+  ],
+  "overlays": [
+    {
+      "name": "without-fast-preparation",
+      "replace": {
+        "archives/1.1.0/source/core/transport/server_publisher.go": {
+          "file": "account-runtime/overlays/without-fast-preparation/server_publisher.go",
+          "sha256": "640bc4b14318feed0da7107b58bf929f4dade75d288d0837907810196b785243"
+        }
+      }
+    },
+    {
+      "name": "without-reclamation-wake",
+      "replace": {
+        "archives/1.1.0/source/core/transport/reclamation.go": {
+          "file": "account-runtime/overlays/without-reclamation-wake/reclamation.go",
+          "sha256": "c82aff170721dc38694a339cd760cc8e303adefe3c9a5b2ad82564718e8daeea"
+        }
+      }
+    },
+    {
+      "name": "with-global-receive-wake",
+      "replace": {
+        "archives/1.1.0/source/core/transport/inbox_worker.go": {
+          "file": "account-runtime/overlays/with-global-receive-wake/inbox_worker.go",
+          "sha256": "4d05f997d7525d69181f97156edc6ee05382fbf97581a6cb72cb0b557fa1a909"
+        }
+      }
+    },
+    {
+      "name": "fast-idle-trial",
+      "replace": {
+        "archives/1.1.0/source/core/transport/roster_service.go": {
+          "file": "account-runtime/overlays/fast-idle-trial/roster_service.go",
+          "sha256": "92a2cc8b9814815f4e91d2dfcf83fac0503fb51e22951b93e5a12ba4be2abae4"
+        }
+      }
+    },
+    {
+      "name": "filtered-receive-wake",
+      "replace": {
+        "archives/1.1.0/source/core/transport/inbox_worker.go": {
+          "file": "account-runtime/overlays/filtered-receive-wake/inbox_worker.go",
+          "sha256": "e1b0920e135ac0b5eadbf8e78ff190c26ad094094871f3d2f09ac123929eca7d"
+        }
+      }
+    },
+    {
+      "name": "rejected-bulk-guard",
+      "replace": {
+        "archives/1.1.0/source/core/transport/preparation.go": {
+          "file": "account-runtime/overlays/rejected-bulk-guard/preparation.go",
+          "sha256": "90c6a9d8c83e4e3baaeeb33dc87e041430e5037938560ad432b287cf4d335e68"
+        },
+        "archives/1.1.0/source/core/transport/session.go": {
+          "file": "account-runtime/overlays/rejected-bulk-guard/session.go",
+          "sha256": "a6360e2678b3d038d7f0d90f0b31b7ba18e60ce5aceb6ccae1b1c0f824bb1573"
+        },
+        "archives/1.1.0/source/core/transport/readiness.go": {
+          "file": "account-runtime/overlays/rejected-bulk-guard/readiness.go",
+          "sha256": "b5bb1c182ad520223bd6ff6a6c6cf7e02c2c621783ab152d3cf758dfddd2a5c0"
+        },
+        "archives/1.1.0/source/core/transport/server_publisher.go": {
+          "file": "account-runtime/overlays/rejected-bulk-guard/server_publisher.go",
+          "sha256": "63b72c2a7a3312333dc445d2262ecdcc72e633f965e65856003c7fbc626e43e5"
+        }
+      }
+    }
+  ],
+  "source_sha256": {
+    ".github/workflows/itom-session-v2-source.yml": "fc35a4b1e6c90ab543d8e5bfee1c23a0ea5a619b2db5a1fddef7dc48b81e502b",
+    "archives/1.1.0/source/core/journal/commit_metrics.go": "d4dc41b0836cfc473ced26e3da7db4d5fc4df9f3a3f9e7dd2f87a0725e1acc11",
+    "archives/1.1.0/source/core/journal/commit_timeline.go": "1121e1ab6639f78c6114def4f4e43c914105417bcabd671eebc549ec7829bf81",
+    "archives/1.1.0/source/core/journal/commit_timeline_test.go": "25eb8925a750bf59e91365aaa4958f4768c950ddd65709763c1b24452da8a1c7",
+    "archives/1.1.0/source/core/journal/store.go": "c338b4d0b8ba45d37aa4649b0e3484fd016c1efbff270811edf4c54ef6a4690f",
+    "archives/1.1.0/source/core/transport/account_service_test.go": "97ea7cb3176402253ed6c971fcf87c9f01168b0953e2f527792e378afb5a2795",
+    "archives/1.1.0/source/core/transport/authority.go": "1bef4689863a5bd54367d373850a80d4b81e048c7d4270f820886e87eb112a76",
+    "archives/1.1.0/source/core/transport/authority_queue.go": "5a91f4cb5c469bb6f461dbc60f4e91169f67c64096b9186a49d08b99944ab1f4",
+    "archives/1.1.0/source/core/transport/authority_test.go": "df9cf30cbc64bf41c9800a155c50d19bed6bdc157b8ee35ff8949c9b26e1bd44",
+    "archives/1.1.0/source/core/transport/inbox_wakeup_test.go": "e0912ef1bc9caf8618044ce7ee28e73952308be315aa39b8b9e46be6ede070a6",
+    "archives/1.1.0/source/core/transport/inbox_worker.go": "cbd4cdb720e41139e1b6af83b791dc90067e31acc5ff4c99b3a6b4510c11c3ab",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "52425a1507890e8ccebc8e02e5a6c6751c0870033fbf31b6395722ed194b99bb",
+    "archives/1.1.0/source/core/transport/preparation.go": "793f3dde1c8ac51d3fa5577ed4f46a87e89d5c7be7080d1d943fc9e739f85fde",
+    "archives/1.1.0/source/core/transport/preparation_itomtest_test.go": "b3de1e0d236cb8229b6e9d0e06ff26b866a1566de2c185d5ab3fe428533efde6",
+    "archives/1.1.0/source/core/transport/readiness.go": "2af1776c8542fbefdf85551aa539e71c43194f9ac61ab38d93f9abbaf78541be",
+    "archives/1.1.0/source/core/transport/receiver.go": "eb84e31def83bc9b978dfe60d11a3188767e356d5bf44c74dd3a6ce53d528c68",
+    "archives/1.1.0/source/core/transport/reclamation.go": "b06d45794f50d6de518fde0cbd67b0c996ffccd5ba9294c5297b6d2dc176c8f3",
+    "archives/1.1.0/source/core/transport/reclamation_wakeup_test.go": "f1f6637f070b321a8c1d22edd5f591161404b16335ebd6659d7b78c1407f1fbf",
+    "archives/1.1.0/source/core/transport/roster.go": "d0c79a051a22102932df5a6108e0feeb60f4c939b7239eaba1a608bdddd79748",
+    "archives/1.1.0/source/core/transport/roster_bindings.go": "c1d2958246cbb96f33196125e81826b0b1d80b247185939ca80bf5826a924a97",
+    "archives/1.1.0/source/core/transport/roster_chunks.go": "c12dd0def6972de035449733b71a8507758771e9d530e9654603b06d8ee75997",
+    "archives/1.1.0/source/core/transport/roster_codec_test.go": "bca2aacc78af808655184d3655a08befa1f5477fef4ddcde1dc378e3dbfc1492",
+    "archives/1.1.0/source/core/transport/roster_driver.go": "de2b34f30f88dd118ee32e6a2dfd31ca72b1653f830e099de35083e41282816b",
+    "archives/1.1.0/source/core/transport/roster_publication.go": "59b60bb2bf492365e5ca253e83a1a25120f35f3c78a921892489bab65051e8c2",
+    "archives/1.1.0/source/core/transport/roster_receive.go": "d60b7549f0de11cc389e6f046882e9ebca2dc0953166ee44d46d56668409c36d",
+    "archives/1.1.0/source/core/transport/roster_service.go": "92a52558d396659ec29b48dcbe5196d3d06d336640f75fb60dd82c5dfa720253",
+    "archives/1.1.0/source/core/transport/server_publisher.go": "cf54df5bdb0df23694b04d590795fa319021a0087055b7a88ce726603a1dc85f",
+    "archives/1.1.0/source/core/transport/session.go": "c84858afc16ba112a81c90440cb0be1af1b2ee47f0e38a676d5d4e9d83fa0be8",
+    "archives/1.1.0/source/core/tunnel/profile_plan.go": "60b09636184015b1d444f865a6e40811a9cdd2fa3b9f502359a88ee1b2be5ac9"
+  },
+  "final_results": {
+    "core_race_top_level_groups_passed": 215,
+    "core_race_failed": 0,
+    "native_race_top_level_groups_passed": 10,
+    "native_race_failed": 0,
+    "core_vet": "pass",
+    "native_vet": "pass",
+    "tagged_preparation_top_level_executions_passed": 6,
+    "tagged_preparation_subcase_executions_passed": 6,
+    "normal_application_top_level_executions_passed": 6,
+    "normal_application_failed": 0,
+    "normal_warm_diagnostic_samples": 24,
+    "normal_warm_target_misses": 5,
+    "normal_warm_loopback_maximum_ns": 1119978837,
+    "normal_warm_fluctuating_maximum_ns": 305436774
+  },
+  "qualification": {
+    "ready_for_apk_or_server_release": false,
+    "idle_light_maximum_ms": 250,
+    "loaded_maximum_ms": 2000,
+    "useful_sustained_up_down_mbps": 100,
+    "all_light_samples_pass": false,
+    "zero_application_deadline_failures_established": false,
+    "sustained_rate_tested": false,
+    "real_provider_tested": false,
+    "production_native_startup_activated": false
+  },
+  "accepted_changes": [
+    "Authenticated per-account original issuer IDs/runs and fixed persistent wallet paths; complete chunk validation before wallet opens",
+    "One immutable authority route per account, original shared 64-record queue",
+    "Common roster-to-client/server runtime assembly; no grant/readiness fabricated",
+    "Proof-only local capacity-release wake for correct account/ledger writer",
+    "Fast preparation intent reduces one-flight ten-writer journal updates from 20 to 2 without removing fsync",
+    "Quiet receive ignores unrelated outgoing work only when no incoming delivery is deferred",
+    "Bounded monotonic journal update diagnostics and ten-account real TCP/TLS/HTTP integrity plus warm diagnostics"
+  ],
+  "rejected_experiments": [
+    {
+      "name": "bulk preparation guard",
+      "reason": "partial_account_allowance regression prepares only one body, serializing usable independent account capacity; retained code prepares six with ten overlapping first updates. Large-backlog regression prepares ten. No bulk guard is retained."
+    },
+    {
+      "name": "fast-lane IDLE default",
+      "reason": "fewer empty fast queries did not establish reliability/latency benefit; first trial 4/5 with header timeout, later combined trial had a long cohort outlier. Fast default remains polling."
+    }
+  ],
+  "retained_failure_interpretation": [
+    "Quiet TLS and distinct-account header failures in intermediate cohorts are retained; successful repetitions do not erase them.",
+    "Fluctuating account command-service model passes 2/3 before profiling; the failed case has a response-header timeout. The largest aggregate journal update predates that failed request and cannot explain its pause.",
+    "Race CPU-profile cohort passes 2/3; its failure expires the original 5s HTTP body deadline. Race instrumentation dominates the profile, but this is not a qualification waiver.",
+    "Initial timeline regression repeatedly closed a collected grant and got ErrMissing; corrected caller issues fresh grants.",
+    "Initial reclamation diagnostic caller blocked on Inbox.mu while deliberately holding an EXPUNGE tag. The corrected no-wake baseline reproduces the actual parked publisher with a 3s liveness deadline.",
+    "Initial quiet-wake test counted a legitimate initial EXISTS transition. Corrected test settles before generating unrelated outgoing work.",
+    "Warm HTTP checks assert byte integrity; each measured 250ms miss is separately retained and qualification is false. Do not count these source passes as a light RTT gate pass."
+  ],
+  "commands": {
+    "core": "go test -race -json ./... -count=1 -timeout=240s",
+    "native": "go test -race -json ./... -count=1 -timeout=120s",
+    "tagged_preparation": "go test -race -tags itomtest -json ./transport -run 'Test(TenServerWritersDoNotFsync|FastPreparationCoordination)' -count=3 -timeout=90s",
+    "normal_application": "go test -json ./transport -run '^TestDistinctAccountRoster' -count=3 -timeout=120s",
+    "vet": "go vet ./... (core and native modules)"
+  },
+  "limits_and_environment": [
+    "Primary actual application case uses 10 accounts, 20 original distinct issuer files, 40 actual selected TLS/IMAP executors total; explicit phone20/server30 socket budgets",
+    "Maximum selected wire unit case is a pure validator, not 4096 live provider sockets",
+    "Manifest total startup metadata explicitly changes from shared-only 32768 to at most 122980 bytes, split into at most four 32768-byte bounded bodies; original packet and 16-startup-UID ceilings remain",
+    "Initial grant32 message ceilings, quota, full BODY/absence proofs, fsync, old wallet spend, nonce/replay and folder bounds remain unchanged",
+    "Source host has two shared CPUs; provider/client/server share this process. Command-service delays are not calibrated independent network latency",
+    "Go1.27.1, real bbolt fsync, explicit 100ms journal delay only in tagged deterministic regression",
+    "Raw TCP provider access unavailable under current environment policy; no live Rambler test or persistent production capability inferred"
+  ],
+  "unchanged": [
+    "stable 1.0.0/RC2",
+    "Android org.itom.client and signing material",
+    "direct DNS race 31.131.251.83 / 185.22.234.229, shared250ms, optional IMAP latch only after both fail, no DoH/DoT"
+  ]
+}
