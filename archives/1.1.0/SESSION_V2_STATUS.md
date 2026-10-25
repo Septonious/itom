@@ -8,6 +8,12 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+The [command-lifetime continuation](COMMAND_LIFETIME_WORK.md) removes a sleeping
+watchdog goroutine per IMAP command while preserving independent progress limits
+and cancellation semantics. Targeted TLS/race checks and isolated bookkeeping
+benchmarks pass, but the complete warm and quiet HTTP cohorts still fail the
+300ms maximum. This is not a field RTT or throughput improvement claim.
+
 The [UID discovery continuation](UID_DISCOVERY_WORK.md) keeps inventory alive at
 numeric UID exhaustion and adds long-idle completion checks. The faster allocation
 high-water candidate is held back pending stability evidence. Misses above the

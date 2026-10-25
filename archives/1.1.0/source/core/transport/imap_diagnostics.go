@@ -86,6 +86,10 @@ func (e *Executor) Snapshot() ExecutorSnapshot {
 }
 
 func (e *Executor) completedLocked(op *operation, failed bool) {
+	if op.watchdog != nil {
+		op.watchdog.Stop()
+		op.watchdog = nil
+	}
 	m := &e.timing[op.class]
 	m.Elapsed.observe(time.Since(op.started))
 	if failed {

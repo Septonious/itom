@@ -1,0 +1,30 @@
+Type: delay
+Showing nodes accounting for 6207.18ms, 55.79% of 11125.38ms total
+Dropped 488 nodes (cum <= 55.63ms)
+Showing top 25 nodes out of 77
+      flat  flat%   sum%        cum   cum%
+ 3595.33ms 32.32% 32.32%  3595.33ms 32.32%  itom.local/core/transport.(*Session).signalOutgoing
+ 1800.02ms 16.18% 48.50%  2021.87ms 18.17%  itom.local/core/transport.(*Executor).readLoop
+  202.81ms  1.82% 50.32%   212.81ms  1.91%  runtime.selectgo
+  162.88ms  1.46% 51.78%   162.88ms  1.46%  runtime.systemstack_switch
+  129.68ms  1.17% 52.95%   129.68ms  1.17%  runtime.chanrecv1
+  113.22ms  1.02% 53.97%   113.22ms  1.02%  runtime.selectnbsend
+   90.70ms  0.82% 54.78%    92.18ms  0.83%  sync.(*Mutex).Unlock
+   56.34ms  0.51% 55.29%    56.34ms  0.51%  itom.local/core/transport.(*stream).signal
+   33.11ms   0.3% 55.59%    33.18ms   0.3%  itom.local/core/transport.(*PublicationWorker).NotifyPermission
+   16.30ms  0.15% 55.73%    59.79ms  0.54%  runtime.gcMarkDone
+    5.42ms 0.049% 55.78%    84.76ms  0.76%  itom.local/core/transport.(*Executor).line
+    0.83ms 0.0075% 55.79%    49.27ms  0.44%  runtime.gcStart
+    0.36ms 0.0033% 55.79%   135.46ms  1.22%  runtime.mallocgc
+    0.13ms 0.0011% 55.79%    71.72ms  0.64%  net/http.(*persistConn).closeLocked
+    0.04ms 0.0004% 55.79%   205.04ms  1.84%  itom.local/core/transport_test.(*wireRoute).DialContext.func2.func1
+         0     0% 55.79%   141.06ms  1.27%  bufio.(*Writer).Flush
+         0     0% 55.79%    72.62ms  0.65%  crypto/tls.(*Conn).Close
+         0     0% 55.79%   144.08ms  1.30%  crypto/tls.(*Conn).Write
+         0     0% 55.79%    71.60ms  0.64%  crypto/tls.(*Conn).closeNotify
+         0     0% 55.79%    71.45ms  0.64%  crypto/tls.(*Conn).sendAlertLocked
+         0     0% 55.79%   225.13ms  2.02%  crypto/tls.(*Conn).write
+         0     0% 55.79%   225.13ms  2.02%  crypto/tls.(*Conn).writeRecordLocked
+         0     0% 55.79%   225.68ms  2.03%  io.Copy
+         0     0% 55.79%   232.23ms  2.09%  io.copyBuffer
+         0     0% 55.79%   389.84ms  3.50%  itom.local/core/transport.(*AuthorityController).observeStoredStatus

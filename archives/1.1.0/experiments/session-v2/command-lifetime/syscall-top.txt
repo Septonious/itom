@@ -1,0 +1,30 @@
+Type: delay
+Showing nodes accounting for 1534.36ms, 98.38% of 1559.57ms total
+Dropped 346 nodes (cum <= 7.80ms)
+Showing top 25 nodes out of 96
+      flat  flat%   sum%        cum   cum%
+ 1141.29ms 73.18% 73.18%  1141.29ms 73.18%  syscall.write
+  337.13ms 21.62% 94.80%   337.13ms 21.62%  syscall.read
+   33.02ms  2.12% 96.91%    33.02ms  2.12%  syscall.pwrite
+   22.91ms  1.47% 98.38%    22.91ms  1.47%  syscall.accept4
+         0     0% 98.38%    57.39ms  3.68%  bufio.(*Reader).Peek
+         0     0% 98.38%    65.56ms  4.20%  bufio.(*Reader).Read
+         0     0% 98.38%    85.20ms  5.46%  bufio.(*Reader).ReadLine
+         0     0% 98.38%    89.19ms  5.72%  bufio.(*Reader).ReadSlice
+         0     0% 98.38%   146.58ms  9.40%  bufio.(*Reader).fill
+         0     0% 98.38%   151.54ms  9.72%  crypto/tls.(*Conn).Read
+         0     0% 98.38%   516.88ms 33.14%  crypto/tls.(*Conn).Write
+         0     0% 98.38%   152.73ms  9.79%  crypto/tls.(*Conn).readFromUntil
+         0     0% 98.38%   152.73ms  9.79%  crypto/tls.(*Conn).readRecord
+         0     0% 98.38%   152.73ms  9.79%  crypto/tls.(*Conn).readRecordOrCCS
+         0     0% 98.38%   517.60ms 33.19%  crypto/tls.(*Conn).write
+         0     0% 98.38%   517.60ms 33.19%  crypto/tls.(*Conn).writeRecordLocked
+         0     0% 98.38%     9.93ms  0.64%  crypto/tls.(*listener).Accept
+         0     0% 98.38%    17.18ms  1.10%  fmt.Fprint
+         0     0% 98.38%   234.03ms 15.01%  fmt.Fprintf
+         0     0% 98.38%    40.06ms  2.57%  go.etcd.io/bbolt.(*DB).Update
+         0     0% 98.38%    40.06ms  2.57%  go.etcd.io/bbolt.(*Tx).Commit
+         0     0% 98.38%    27.91ms  1.79%  go.etcd.io/bbolt.(*Tx).write
+         0     0% 98.38%     7.87ms   0.5%  go.etcd.io/bbolt.(*Tx).writeMeta
+         0     0% 98.38%    22.91ms  1.47%  internal/poll.(*FD).Accept
+         0     0% 98.38%    33.02ms  2.12%  internal/poll.(*FD).Pwrite

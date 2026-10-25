@@ -1,0 +1,34 @@
+File: transport.test
+Build ID: a2becc75b3d5ad499986580c52175d6758169151
+Type: cpu
+Time: 2026-10-25 20:19:25 UTC
+Duration: 14.30s, Total samples = 3.68s (25.74%)
+Showing nodes accounting for 2.37s, 64.40% of 3.68s total
+Dropped 337 nodes (cum <= 0.02s)
+Showing top 25 nodes out of 365
+      flat  flat%   sum%        cum   cum%
+     1.23s 33.42% 33.42%      1.23s 33.42%  internal/runtime/syscall/linux.Syscall6
+     0.30s  8.15% 41.58%      0.30s  8.15%  runtime.futex
+     0.09s  2.45% 44.02%      0.09s  2.45%  runtime.memmove
+     0.08s  2.17% 46.20%      0.25s  6.79%  runtime.selectgo
+     0.07s  1.90% 48.10%      0.07s  1.90%  runtime.memclrNoHeapPointers
+     0.06s  1.63% 49.73%      0.06s  1.63%  runtime.gopark
+     0.05s  1.36% 51.09%      0.05s  1.36%  runtime.nanotime (inline)
+     0.04s  1.09% 52.17%      0.08s  2.17%  runtime.(*timers).run
+     0.04s  1.09% 53.26%      0.04s  1.09%  runtime.(*waitq).dequeue (inline)
+     0.04s  1.09% 54.35%      0.27s  7.34%  runtime.mallocgc
+     0.03s  0.82% 55.16%      0.03s  0.82%  bytes.(*Buffer).Write
+     0.03s  0.82% 55.98%      0.03s  0.82%  internal/runtime/maps.(*Map).getWithoutKeySmallFastStr
+     0.03s  0.82% 56.79%      0.03s  0.82%  runtime.asyncPreempt
+     0.03s  0.82% 57.61%      0.04s  1.09%  runtime.execute
+     0.03s  0.82% 58.42%      0.74s 20.11%  runtime.mcall
+     0.03s  0.82% 59.24%      0.05s  1.36%  runtime.pcvalue
+     0.03s  0.82% 60.05%      0.03s  0.82%  runtime.releasem (inline)
+     0.02s  0.54% 60.60%      0.05s  1.36%  crypto/internal/fips140/aes/gcm.(*GCMWithXORCounterNonce).Open
+     0.02s  0.54% 61.14%      0.02s  0.54%  itom.local/core/transport.(*Executor).Snapshot
+     0.02s  0.54% 61.68%      0.50s 13.59%  itom.local/core/transport_test.(*sharedMailbox).prepareAccountService.func1
+     0.02s  0.54% 62.23%      0.02s  0.54%  runtime.(*m).snapshotAllp
+     0.02s  0.54% 62.77%      0.02s  0.54%  runtime.(*timeHistogram).record
+     0.02s  0.54% 63.32%      0.04s  1.09%  runtime.(*unwinder).resolveInternal
+     0.02s  0.54% 63.86%      0.04s  1.09%  runtime.mallocgcSmallScanNoHeaderSC3
+     0.02s  0.54% 64.40%      0.02s  0.54%  runtime.runqget (inline)

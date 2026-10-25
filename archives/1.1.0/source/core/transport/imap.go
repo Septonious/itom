@@ -34,6 +34,7 @@ type Result struct {
 	Err    error
 }
 type operation struct {
+	watchdog     *time.Timer // stopped under Executor.mu on every terminal path
 	fetchTurn    chan struct{}
 	class        commandClass
 	started      time.Time
@@ -186,15 +187,11 @@ func (e *Executor) begin(class commandClass, fetch, literal bool) (string, *oper
 	}
 	// Independent bounded completion lifetime, not caller context. A stalled
 	// provider invalidates the socket once and leaves publication outcome unknown.
-	go func() {
-		timer := time.NewTimer(e.limits.ProgressTimeout)
-		defer timer.Stop()
-		select {
-		case <-op.done:
-		case <-timer.C:
-			e.expire(op)
-		}
-	}()
+	// Register while holding the completion lock: even an immediate tag or
+	// Close must see and stop the timer. A callback that already fired still
+	// checks op.done under that same lock before invalidating the carrier.
+	// Healthy commands need no dedicated sleeping goroutine.
+	op.watchdog = time.AfterFunc(e.limits.ProgressTimeout, func() { e.expire(op) })
 	return tag, op, nil
 }
 

@@ -1,0 +1,9 @@
+goos: linux
+goarch: amd64
+pkg: itom.local/core/transport
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+BenchmarkCompletedIMAPCommandLifetime-3   	  230506	      2442 ns/op	     677 B/op	       9 allocs/op
+BenchmarkCompletedIMAPCommandLifetime-3   	  391869	      2112 ns/op	     672 B/op	       9 allocs/op
+BenchmarkCompletedIMAPCommandLifetime-3   	  360290	      2046 ns/op	     672 B/op	       9 allocs/op
+PASS
+ok  	itom.local/core/transport	2.141s
