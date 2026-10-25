@@ -1,22 +1,13 @@
 --- a/archives/1.1.0/source/core/transport/inbox.go
 +++ b/archives/1.1.0/source/core/transport/inbox.go
-@@ -187,7 +187,12 @@
- 	uids := make([]uint32, 0, len(metadata))
- 	present := make(map[uint32]uint32, len(metadata))
- 	sizes := make(map[uint32]Body, len(metadata))
+@@ -190 +190,3 @@
 -	var tail, tailUID uint32
 +	var tail uint32
-+	// UID allocation does not rewind when cleanup removes the current tail.
-+	// Keep the highest actually observed UID as the speculative next selector;
-+	// the live sequence prefix below still comes from this complete inventory.
-+	// Misses/sequence gaps continue to force inventory, including late lower UIDs.
++	// Candidate only: preserve the observed allocation across cleanup.
 +	tailUID := i.tailUID
- 	for _, body := range metadata {
- 		tail = max(tail, body.Sequence)
- 		tailUID = max(tailUID, body.UID)
 --- /dev/null
 +++ b/archives/1.1.0/source/core/transport/inbox_highwater_candidate_test.go
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,84 @@
 +package transport_test
 +
 +import (
@@ -101,4 +92,3 @@
 +		t.Fatal(delivered)
 +	}
 +}
-+

@@ -82,4 +82,3 @@ func TestPreservedNextUIDStillFindsLateLowerMailThroughSequenceGap(t *testing.T)
 		t.Fatal(delivered)
 	}
 }
-

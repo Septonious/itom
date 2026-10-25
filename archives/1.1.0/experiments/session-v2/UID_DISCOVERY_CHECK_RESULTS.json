@@ -60,7 +60,8 @@
     "The final independent maximum-UID regression keeps MAX live and adds a lower UID, avoiding dependence on the held high-water optimization",
     "Startup failure in the faster-probe trial occurs before probe service; causation by that tuning is not established",
     "The parser microbenchmark measures CPU/allocations only, not RTT or throughput",
-    "One new quiet scenario has60s total runtime to accommodate30s silence; original64-sample scenario remains30s and all original per-request/IMAP deadlines are unchanged"
+    "One new quiet scenario has60s total runtime to accommodate30s silence; original64-sample scenario remains30s and all original per-request/IMAP deadlines are unchanged",
+    "Archived patches were normalized to zero-context format; use git apply --unidiff-zero. Raw logs and active source were not modified."
   ],
   "fidelity_limits": [
     "Client/server/provider/TLS byte relays share a two-CPU cgroup; automatic GOMAXPROCS3 observed; no CPU setting changed",
@@ -118,7 +119,7 @@
   "checks": [
     {
       "file": "uid-discovery/README.md",
-      "sha256": "32635e11865cac639cfb4d11d14cf16b6d548b35a1a85bd67a386848df3a0fff"
+      "sha256": "864004f658776db932ff0c0e9cbf4489e8d212da60f928fcdf89ee5fcfcc9d01"
     },
     {
       "file": "uid-discovery/eighth-inbox_worker.go",
@@ -1151,7 +1152,7 @@
     },
     {
       "file": "uid-discovery/highwater-candidate.patch",
-      "sha256": "a9f8b2762970e3970d9fec0152348b99038da72469f2412410818b48d2dec9b8"
+      "sha256": "462615abd1870ee0370d42d21cbc5127916849b4ef9ff684737c17a8302ee4eb"
     },
     {
       "file": "uid-discovery/highwater-inbox.go",
@@ -1557,11 +1558,11 @@
     },
     {
       "file": "uid-discovery/inbox_highwater_candidate_test.go",
-      "sha256": "b3f1e374a264fa42eefcaa6f02a3cc598c35e4771a609c34ced38c35c5b304d2"
+      "sha256": "219c3cc90b5e656cade263bf411e105c30983a910ac543a0902dbc8083033e33"
     },
     {
       "file": "uid-discovery/parser-cache-candidate.patch",
-      "sha256": "255c7200e09c110bd2b11930dec2c955e1c41b64c21e8aff4b6ba77744b0aa4b"
+      "sha256": "9beb0940333dfe5064d94dcdba86acef07ef4b5819b436ff1f8d9b313a283af0"
     },
     {
       "file": "uid-discovery/parser-cached.txt",

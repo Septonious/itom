@@ -61,3 +61,7 @@ obtain a result. Original durable updates/fsync run on tmpfs; neither coincident
 long commits nor runnable stack frames prove the cause of a timeout. Provider
 commands, role-specific accounting and actual encrypted application exchanges
 execute, but this is not real Rambler, Android or independent-host qualification.
+
+Archived patches use zero-context format to keep literal diff-context whitespace
+out of repository whitespace checks. Apply them only in a separate checkout
+with `git apply --unidiff-zero <candidate.patch>`. Active source is unchanged.
