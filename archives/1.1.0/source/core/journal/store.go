@@ -312,8 +312,7 @@ func (s *Store) writeLocked(fn func(*bolt.Tx) error) error {
 		return ErrPoisoned
 	}
 	begin := time.Now()
-	timelineStart := commitNow()
-	s.metrics.timeline.active.Store(timelineStart)
+	timelineStart := s.metrics.timeline.Begin()
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		if e := fn(tx); e != nil {
 			return e
@@ -328,7 +327,7 @@ func (s *Store) writeLocked(fn func(*bolt.Tx) error) error {
 	}
 	elapsed := uint64(time.Since(begin))
 	sequence := s.metrics.count.Add(1)
-	s.metrics.timeline.finish(sequence, timelineStart, err != nil)
+	s.metrics.timeline.Finish(sequence, timelineStart, err != nil)
 	s.metrics.commitNS.Add(elapsed)
 	for old := s.metrics.maxNS.Load(); elapsed > old; old = s.metrics.maxNS.Load() {
 		if s.metrics.maxNS.CompareAndSwap(old, elapsed) {

@@ -314,6 +314,20 @@ func selectedAccountPeerWithCapabilities(t *testing.T, account, folder string, l
 }
 
 func selectedAccountPeerWithFeatures(t *testing.T, account, folder string, limits transport.IMAPLimits, capabilities string, keywords bool, script func(net.Conn)) *transport.Executor {
+	return selectedAccountPeerWithNetwork(t, account, folder, limits, capabilities, keywords, nil, script)
+}
+func selectedAccountPeerWithNetwork(t *testing.T, account, folder string, limits transport.IMAPLimits, capabilities string, keywords bool, network transport.NetworkDialer, script func(net.Conn)) *transport.Executor {
+	t.Helper()
+	open := prepareSelectedAccountPeer(t, account, folder, limits, capabilities, keywords, script)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	x, err := open(ctx, network)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return x
+}
+func prepareSelectedAccountPeer(t *testing.T, account, folder string, limits transport.IMAPLimits, capabilities string, keywords bool, script func(net.Conn)) func(context.Context, transport.NetworkDialer) (*transport.Executor, error) {
 	t.Helper()
 	cert, roots, err := certificate()
 	if err != nil {
@@ -347,23 +361,32 @@ func selectedAccountPeerWithFeatures(t *testing.T, account, folder string, limit
 		fmt.Fprint(conn, "* OK [UIDVALIDITY 9] selected\r\nBOOT3 OK\r\n")
 		script(&bufferedConn{Conn: conn, reader: reader})
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	selected, err := transport.DialSelected(ctx, &net.Dialer{}, transport.Endpoint{Address: listener.Addr().String(), AccountID: account, ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, limits)
-	if err != nil {
-		listener.Close()
-		t.Fatal(err)
-	}
-	listener.Close()
+
+	var opened *transport.Executor
 	t.Cleanup(func() {
-		selected.Executor.Close()
+		listener.Close()
+		if opened != nil {
+			opened.Close()
+		}
 		select {
 		case <-done:
 		case <-time.After(5 * time.Second):
 			t.Error("proof provider did not stop")
 		}
 	})
-	return selected.Executor
+	return func(ctx context.Context, network transport.NetworkDialer) (*transport.Executor, error) {
+		if network == nil {
+			network = &net.Dialer{}
+		}
+		selected, err := transport.DialSelected(ctx, network, transport.Endpoint{Address: listener.Addr().String(), AccountID: account, ServerName: "fixture.local", Username: "fixture", Password: "test-only", Mailbox: folder, TLS: &tls.Config{RootCAs: roots}}, limits)
+		listener.Close()
+		if err != nil {
+			return nil, err
+		}
+		opened = selected.Executor
+		return opened, nil
+	}
+
 }
 
 type bufferedConn struct {

@@ -256,3 +256,14 @@ Bulk journal preparation remains concurrent in its separate regression. Source
 CI runs these tests with real fsync and an explicit test-only delay hook. The
 reported deadline failures remain part of the qualification boundary; this fix
 and source checks do not enable packaging by themselves.
+
+
+## Receive ownership and latency gate continuation
+
+[Request-latency work](REQUEST_LATENCY_WORK.md) lets receipt/cleanup maintenance
+progress while a receiver waits on IMAP, preserves exact bounded discovery hints
+through cleanup and observes wallet/journal updates on one clock. A bounded
+byte-level TCP/TLS route adds propagation/pipelining coverage to existing serial
+command-service stress. A strict propagation light-load gate now runs in source
+CI and retains failures. It is currently failed; production activation and all
+original qualification requirements still block packaging.

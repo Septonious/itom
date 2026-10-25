@@ -14,7 +14,7 @@ func SeedInboxBlockedControlsForTest(i *Inbox, uids ...uint32) func() {
 
 func seedBlockedInbox(i *Inbox, class LedgerClass, uids ...uint32) func() {
 	var released atomic.Bool
-	i.mu.Lock()
+	i.receiveMu.Lock()
 	for _, uid := range uids {
 		action := InboxAction(func() error {
 			if !released.Load() {
@@ -24,6 +24,6 @@ func seedBlockedInbox(i *Inbox, class LedgerClass, uids ...uint32) func() {
 		})
 		i.pending[uid] = &ledgerDelivery{InboxDelivery: action, class: class}
 	}
-	i.mu.Unlock()
+	i.receiveMu.Unlock()
 	return func() { released.Store(true) }
 }

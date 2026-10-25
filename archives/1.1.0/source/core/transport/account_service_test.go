@@ -20,6 +20,7 @@ import (
 
 	"itom.local/core/journal"
 	"itom.local/core/pool"
+	"itom.local/core/qualification"
 	"itom.local/core/transport"
 	"itom.local/core/wallet"
 	"itom.local/core/wire"
@@ -51,12 +52,22 @@ func distinctAccountRoster(t *testing.T, n int) *accountRosterPair {
 	return distinctAccountRosterWithService(t, n, nil, nil)
 }
 func distinctAccountRosterWithService(t *testing.T, n int, clientService, serverService []time.Duration) *accountRosterPair {
+	return distinctAccountRosterOnNetwork(t, n, clientService, serverService, nil, nil)
+}
+func distinctAccountRosterOnNetwork(t *testing.T, n int, clientService, serverService []time.Duration, clientNetwork, serverNetwork transport.NetworkDialer) *accountRosterPair {
 	t.Helper()
-	f := requestedInvitationFixture(t, clientService, serverService, true)
+	f := requestedInvitationNetworkFixture(t, clientService, serverService, true, clientNetwork, serverNetwork)
 	ch, sh := exchangeDrivenBootstrap(t, f)
 	plan := transport.RosterPlan{ClientBudget: transport.RuntimeBudget{Connections: 2 * n, PerAccount: 2}, ServerBudget: transport.RuntimeBudget{Connections: 3 * n, PerAccount: 3}}
 	var cl, sl []transport.RosterLane
 	var paths []transport.RosterWalletPaths
+	type pendingLane struct {
+		index   int
+		client  bool
+		network transport.NetworkDialer
+		open    func(context.Context, transport.NetworkDialer) (*transport.Executor, error)
+	}
+	var pending []pendingLane
 	var journals []transport.RosterJournals
 	root := t.TempDir()
 	for index := 1; index <= n; index++ {
@@ -113,12 +124,45 @@ func distinctAccountRosterWithService(t *testing.T, n int, clientService, server
 			cx, sx := f.cx, f.sx
 			if index != 1 || plane != transport.Fast {
 				box := &sharedMailbox{keywords: true, reclamation: true}
-				cx, sx = box.selectedAccountService(t, account, folder, clientService, true, false), box.selectedAccountService(t, account, folder, serverService, true, false)
-				t.Cleanup(func() { cx.Close(); sx.Close() })
+				cx, sx = nil, nil
+				pending = append(pending, pendingLane{len(cl), true, clientNetwork, box.prepareAccountService(t, account, folder, clientService, true, false)}, pendingLane{len(sl), false, serverNetwork, box.prepareAccountService(t, account, folder, serverService, true, false)})
 			}
 			cl = append(cl, transport.RosterLane{Plane: plane, Executor: cx})
 			sl = append(sl, transport.RosterLane{Plane: plane, Executor: sx})
 		}
+	}
+	// Setup is bounded and parallel across the already listed lanes. Serial
+	// setup under a real path delay can consume the fixture's original 4s idle
+	// guard on early sockets before the rest of the roster is selected.
+	jobs := make(chan pendingLane, len(pending))
+	failed := make(chan error, len(pending))
+	for _, lane := range pending {
+		jobs <- lane
+	}
+	close(jobs)
+	var opening sync.WaitGroup
+	for range min(8, len(pending)) {
+		opening.Go(func() {
+			for lane := range jobs {
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				x, err := lane.open(ctx, lane.network)
+				cancel()
+				if err != nil {
+					failed <- err
+					continue
+				}
+				if lane.client {
+					cl[lane.index].Executor = x
+				} else {
+					sl[lane.index].Executor = x
+				}
+			}
+		})
+	}
+	opening.Wait()
+	close(failed)
+	for err := range failed {
+		t.Fatal("bounded listed-lane setup", err)
 	}
 	c, err := transport.NewClientAccountRoster(ch, plan, cl, f.wallet, paths, f.key)
 	if err != nil {
@@ -188,7 +232,13 @@ func TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService(t *te
 	testAccountTLSHTTP(t, []time.Duration{10 * time.Millisecond, 50 * time.Millisecond, 20 * time.Millisecond, 40 * time.Millisecond}, []time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 30 * time.Millisecond})
 }
 func testAccountTLSHTTP(t *testing.T, clientService, serverService []time.Duration) {
-	p := distinctAccountRosterWithService(t, 10, clientService, serverService)
+	testAccountTLSHTTPWithWarmSamples(t, clientService, serverService, 4)
+}
+func testAccountTLSHTTPWithWarmSamples(t *testing.T, clientService, serverService []time.Duration, warmSamples int) []qualification.Exchange {
+	return testAccountTLSHTTPOnNetwork(t, clientService, serverService, warmSamples, nil, nil)
+}
+func testAccountTLSHTTPOnNetwork(t *testing.T, clientService, serverService []time.Duration, warmSamples int, clientNetwork, serverNetwork transport.NetworkDialer) []qualification.Exchange {
+	p := distinctAccountRosterOnNetwork(t, 10, clientService, serverService, clientNetwork, serverNetwork)
 	upstream := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.Copy(w, r.Body) }))
 	defer upstream.Close()
 	address := netip.MustParseAddrPort(upstream.Listener.Addr().String())
@@ -295,43 +345,17 @@ func testAccountTLSHTTP(t *testing.T, clientService, serverService []time.Durati
 	for run, size := range []int{29, 256<<10 + 123, 71, 256<<10 + 317} {
 		body := bytes.Repeat([]byte{byte(run + 1)}, size)
 		started := time.Now()
-		requestNS := p.journals[0].Control.CommitTimeline().SampledAtNS
-		traceCtx, stopTrace := context.WithCancel(ctx)
-		var tracing sync.WaitGroup
-		var trace []string
-		tracing.Go(func() {
-			ticker := time.NewTicker(100 * time.Millisecond)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-traceCtx.Done():
-					return
-				case <-ticker.C:
-					left, _ := a.FlowSnapshot(uint64(2*run + 1))
-					right, _ := b.FlowSnapshot(uint64(2*run + 1))
-					if len(trace) < 50 {
-						trace = append(trace, fmt.Sprintf("%s client=%+v server=%+v", time.Since(started), left, right))
-					}
-				}
-			}
-		})
+		stopTrace, reportTrace := traceAccountRequest(t, ctx, p, a, b, client, server, uint64(2*run+1))
 		response, err := hc.Post(upstream.URL, "application/octet-stream", bytes.NewReader(body))
-		stopTrace()
-		tracing.Wait()
 		if err != nil {
-			for _, sample := range trace {
-				t.Log(sample)
-			}
-			for _, j := range p.journals {
-				for _, store := range []*journal.Store{j.Control, j.Data} {
-					t.Logf("account=%s request_started_ns=%d commits=%+v timeline=%+v", j.Account, requestNS, store.CommitSnapshot(), store.CommitTimeline())
-				}
-			}
+			reportTrace()
 			t.Fatal("actual multi-account TLS/HTTP", run, err, client.Runtime.Snapshot(), server.Runtime.Snapshot())
 		}
 		got, err := io.ReadAll(response.Body)
 		response.Body.Close()
+		stopTrace()
 		if err != nil || !bytes.Equal(body, got) {
+			reportTrace()
 			t.Fatal("application integrity", run, len(got), err)
 		}
 		t.Logf("per-account HTTP integrity run=%d payload=%d elapsed=%s", run, size, time.Since(started))
@@ -344,20 +368,29 @@ func testAccountTLSHTTP(t *testing.T, clientService, serverService []time.Durati
 	warmTransport.DisableKeepAlives = false
 	defer warmTransport.CloseIdleConnections()
 	warmClient := &http.Client{Transport: warmTransport, Timeout: 5 * time.Second}
-	for sample := 0; sample < 5; sample++ {
+	var samples []qualification.Exchange
+	for sample := 0; sample <= warmSamples; sample++ {
 		payload := []byte("warm small application exchange")
 		started := time.Now()
+		stopTrace, reportTrace := traceAccountRequest(t, ctx, p, a, b, client, server, 9)
 		response, err := warmClient.Post(upstream.URL, "application/octet-stream", bytes.NewReader(payload))
 		if err != nil {
+			reportTrace()
 			t.Fatal("warm account HTTP", sample, err)
 		}
 		got, readErr := io.ReadAll(response.Body)
 		response.Body.Close()
 		elapsed := time.Since(started)
+		stopTrace()
+		if sample > 0 && elapsed > 250*time.Millisecond {
+			reportTrace()
+		}
 		if readErr != nil || !bytes.Equal(got, payload) {
+			reportTrace()
 			t.Fatal("warm application integrity", sample, readErr)
 		}
 		if sample > 0 {
+			samples = append(samples, qualification.Exchange{Elapsed: elapsed, Bytes: len(payload)})
 			t.Logf("warm_light_sample=%d payload=%d elapsed_ns=%d target_ns=%d light_target_met=%t", sample, len(payload), elapsed.Nanoseconds(), (250 * time.Millisecond).Nanoseconds(), elapsed <= 250*time.Millisecond)
 		}
 	}
@@ -397,4 +430,5 @@ func testAccountTLSHTTP(t *testing.T, clientService, serverService []time.Durati
 			}
 		}
 	}
+	return samples
 }

@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T14:45:35.131856028Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T14:45:35.141581386Z","Action":"run","Package":"itom.local/core/transport","Test":"TestAccountWarmLightPropagationQualification"}
+{"Time":"2026-10-25T14:45:35.141866394Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAccountWarmLightPropagationQualification","Output":"=== RUN   TestAccountWarmLightPropagationQualification\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:45:42.793385324Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAccountWarmLightPropagationQualification","Output":"    account_service_test.go:201: V2_PROTOCOL\n","OutputType":"error"}
+{"Time":"2026-10-25T14:45:42.811781775Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAccountWarmLightPropagationQualification","Output":"--- FAIL: TestAccountWarmLightPropagationQualification (7.67s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:45:42.811827696Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestAccountWarmLightPropagationQualification","Elapsed":7.67}
+{"Time":"2026-10-25T14:45:42.811858158Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:45:42.815459668Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t7.683s\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:45:42.815531056Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":7.684}

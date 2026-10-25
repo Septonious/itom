@@ -5,7 +5,7 @@ Production startup returns `V2_NOT_READY`; packaging remains disabled. The
 250ms idle/light RTT and sustained 100Mbps targets are not established.
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/ACCOUNT_RUNTIME_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/REQUEST_TRACE_CHECK_RESULTS.json).
 
 [Per-account runtime integration](PER_ACCOUNT_RUNTIME.md) now negotiates
 original issuer identities and assembles the multi-account TLS/HTTP service.
@@ -38,3 +38,7 @@ The captured-capacity test averages improve from DEV6's 92.7/68.7 to **119.1/91.
 Full normal Go/vet, accounting/mailbox races, new concurrent admission regression, original mixed-load race test in CI, Android unit tests/lint and native builds pass. The original throughput, loaded RTT and stall failures remain intact; local race-instrumented loaded chat also has a deadline miss without a data race. This is not fully qualified or a guarantee of real-provider 100 Mbps or improved idle RTT. No numerical qualification threshold was relaxed.
 
 Update both the signed APK and server in place. Preserve app wallets, server identity and journals. Published DEV5/DEV6/DEV7 APKs use the same persistent signing certificate.
+
+[Request latency work](REQUEST_LATENCY_WORK.md) separates receive and maintenance
+ownership and adds bounded wire propagation tests. The light-load gate remains
+failed; source integrity success does not qualify an APK/server release.

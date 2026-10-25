@@ -47,6 +47,7 @@ type Entry struct {
 	Pending []wire.UsageReport
 }
 type Wallet struct {
+	metrics          commitMetrics
 	mu               sync.Mutex
 	db               *bolt.DB
 	user             string
@@ -289,14 +290,30 @@ func (w *Wallet) Close() error {
 }
 func (w *Wallet) write(fn func(*bolt.Tx) error) error { return w.writeAfter(fn, nil) }
 func (w *Wallet) writeAfter(fn func(*bolt.Tx) error, after func()) error {
+	queued := time.Now()
 	w.mu.Lock()
+	w.metrics.queueNS.Add(uint64(time.Since(queued)))
 	defer w.mu.Unlock()
 	if w.failed {
 		return ErrIO
 	}
+	started := w.metrics.timeline.Begin()
+	begin := time.Now()
 	e := w.db.Update(fn)
 	if e == nil && after != nil {
 		after()
+	}
+	sequence := w.metrics.count.Add(1)
+	w.metrics.timeline.Finish(sequence, started, e != nil)
+	elapsed := uint64(time.Since(begin))
+	w.metrics.commitNS.Add(elapsed)
+	for old := w.metrics.maxNS.Load(); elapsed > old; old = w.metrics.maxNS.Load() {
+		if w.metrics.maxNS.CompareAndSwap(old, elapsed) {
+			break
+		}
+	}
+	if e != nil {
+		w.metrics.failures.Add(1)
 	}
 	if e != nil && !errors.Is(e, ErrState) && !errors.Is(e, ErrMissing) && !errors.Is(e, ErrLimit) && !errors.Is(e, ErrExhausted) {
 		w.failed = true

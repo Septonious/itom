@@ -1,0 +1,20 @@
+File: request-trace-profile.test
+Build ID: 044faada350055b5d95127128f815132cf8cf89b
+Type: delay
+Time: 2026-10-25 14:27:44 UTC
+Showing nodes accounting for 3641.86s, 100% of 3641.86s total
+Dropped 218 nodes (cum <= 18.21s)
+Showing top 12 nodes out of 56
+      flat  flat%   sum%        cum   cum%
+  3458.77s 94.97% 94.97%   3458.77s 94.97%  runtime.selectgo
+   118.94s  3.27% 98.24%    118.94s  3.27%  sync.(*Mutex).Lock
+    43.54s  1.20% 99.43%     43.54s  1.20%  runtime.chanrecv1
+    20.60s  0.57%   100%     20.60s  0.57%  sync.(*WaitGroup).Wait
+         0     0%   100%     19.04s  0.52%  io.Copy (inline)
+         0     0%   100%     19.04s  0.52%  io.copyBuffer
+         0     0%   100%    491.96s 13.51%  itom.local/core/transport.(*Command).Wait
+         0     0%   100%     36.94s  1.01%  itom.local/core/transport.(*Conn).Read
+         0     0%   100%     36.93s  1.01%  itom.local/core/transport.(*Conn).wait
+         0     0%   100%     28.05s  0.77%  itom.local/core/transport.(*Executor).Append
+         0     0%   100%    324.18s  8.90%  itom.local/core/transport.(*Executor).WaitIdle
+         0     0%   100%    810.62s 22.26%  itom.local/core/transport.(*Executor).begin.func1

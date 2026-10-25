@@ -111,7 +111,7 @@ func (i *Inbox) markReceiptOne(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-// The inbox turn holds mu when queuing. Wakes are bounded hints, not authority.
+// The short maintenance-state lock is held when queuing. Wakes are bounded hints, not authority.
 func (i *Inbox) ensureMaintenanceWake() {
 	if i.maintenanceChanged == nil {
 		i.maintenanceChanged = make(chan struct{}, 1)

@@ -22,9 +22,10 @@ var ErrRefused = errors.New("V2_IMAP_TAGGED_REFUSAL")
 var errCommandCapacity = fmt.Errorf("%w: pending IMAP command", ErrCapacity)
 
 type Body struct {
-	UID, Sequence uint32
-	Bytes         []byte
-	Flags         []string
+	sequenceVersion uint64 // parser position of this BODY, never authority
+	UID, Sequence   uint32
+	Bytes           []byte
+	Flags           []string
 }
 type Result struct {
 	Bodies []Body
@@ -91,6 +92,7 @@ type Executor struct {
 	done             chan struct{}
 	changes          chan struct{}
 	sequenceVersion  uint64
+	sequenceChanges  [maxSequenceChanges]sequenceChange
 	exists           uint32
 	existsKnown      bool
 	space            chan struct{}
@@ -616,7 +618,7 @@ func (e *Executor) readBody(line string) error {
 	}
 	op.bytes += len(suffix)
 	op.uids[uint32(uid)] = true
-	op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence, Bytes: body})
+	op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence, Bytes: body, sequenceVersion: e.sequenceVersion})
 	return nil
 }
 
@@ -657,6 +659,11 @@ func (e *Executor) noteSequenceChange(fields []string) (bool, error) {
 			return false, ErrProtocol
 		}
 		e.sequenceVersion++
+		event := sequenceChange{version: e.sequenceVersion}
+		if strings.EqualFold(fields[2], "EXPUNGE") {
+			event.expunged = uint32(n)
+		}
+		e.sequenceChanges[e.sequenceVersion%maxSequenceChanges] = event
 	}
 	return changed, nil
 }

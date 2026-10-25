@@ -19,13 +19,14 @@ import (
 // The scripted inventory deliberately includes UID holes, late lower UIDs and
 // out-of-order replies. No UIDNEXT/cursor knowledge is given to the worker.
 type inboxInventory struct {
-	mu       sync.Mutex
-	uids     []uint32
-	bodies   map[uint32]string
-	vanish   uint32
-	fetches  map[uint32]int
-	metadata int
-	notice   string
+	mu              sync.Mutex
+	uids            []uint32
+	bodies          map[uint32]string
+	vanish          uint32
+	fetches         map[uint32]int
+	metadata        int
+	notice          string
+	afterBodyNotice string
 }
 
 func (m *inboxInventory) selected(t *testing.T) *transport.Executor {
@@ -72,6 +73,10 @@ func (m *inboxInventory) selected(t *testing.T) *transport.Executor {
 						}
 					}
 					fmt.Fprintf(c, "* %d FETCH (UID %d BODY[] {%d}\r\n%s)\r\n", sequence, uid, len(body), body)
+					if m.afterBodyNotice != "" {
+						fmt.Fprint(c, m.afterBodyNotice)
+						m.afterBodyNotice = ""
+					}
 				}
 			}
 			m.mu.Unlock()

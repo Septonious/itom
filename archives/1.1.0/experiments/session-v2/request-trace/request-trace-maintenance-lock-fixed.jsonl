@@ -1,0 +1,16 @@
+{"Time":"2026-10-25T14:35:11.812645438Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T14:35:11.834108155Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld"}
+{"Time":"2026-10-25T14:35:11.834200661Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"=== RUN   TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.869308151Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"--- PASS: TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.869383Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Elapsed":0.03}
+{"Time":"2026-10-25T14:35:11.87083776Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld"}
+{"Time":"2026-10-25T14:35:11.870853963Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"=== RUN   TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.900601474Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"--- PASS: TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.901042671Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Elapsed":0.03}
+{"Time":"2026-10-25T14:35:11.901496191Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld"}
+{"Time":"2026-10-25T14:35:11.901673148Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"=== RUN   TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.931466058Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"--- PASS: TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:11.931513047Z","Action":"pass","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Elapsed":0.03}
+{"Time":"2026-10-25T14:35:11.932101186Z","Action":"output","Package":"itom.local/core/transport","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:12.93997049Z","Action":"output","Package":"itom.local/core/transport","Output":"ok  \titom.local/core/transport\t1.126s\n"}
+{"Time":"2026-10-25T14:35:12.941062642Z","Action":"pass","Package":"itom.local/core/transport","Elapsed":1.1280000000000001}

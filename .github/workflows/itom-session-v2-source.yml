@@ -28,6 +28,12 @@ jobs:
         run: |
           set -euo pipefail
           go test -race -tags itomtest -json ./transport -run '^(TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight|TestFastPreparationCoordinationKeepsBulkJournalPreparationConcurrent)$' -count=3 -timeout=60s | tee "$RUNNER_TEMP/session-v2-preparation.jsonl"
+      - name: Light-load TCP propagation gate
+        if: ${{ !cancelled() }}
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          go test -tags itomtest -json ./transport -run '^TestAccountWarmLightPropagationQualification$' -count=1 -timeout=120s | tee "$RUNNER_TEMP/session-v2-light.jsonl"
       - name: Native source and OS TCP primitive checks
         if: ${{ !cancelled() }}
         working-directory: archives/1.1.0/source/native
@@ -60,4 +66,5 @@ jobs:
             ${{ runner.temp }}/session-v2-core.jsonl
             ${{ runner.temp }}/session-v2-native.jsonl
             ${{ runner.temp }}/session-v2-preparation.jsonl
+            ${{ runner.temp }}/session-v2-light.jsonl
             ${{ runner.temp }}/session-v2-environment.txt

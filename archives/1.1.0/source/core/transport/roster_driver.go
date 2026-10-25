@@ -416,7 +416,7 @@ func NewRosterRuntime(result *RosterResult, s *Session, exit *ExitServer, carrie
 		if !ok || plane != c.Writer.plane {
 			return nil, ErrProtocol
 		}
-		i.mu.Lock()
+		i.receiveMu.Lock()
 		entry, ok := result.manifest.Account(i.scope.Account)
 		matches := ok && i.routes[DataLedger] == entry.DataStore
 		if plane == Fast {
@@ -427,7 +427,7 @@ func NewRosterRuntime(result *RosterResult, s *Session, exit *ExitServer, carrie
 				matches = matches && i.bootstrapUIDs[uid]
 			}
 		}
-		i.mu.Unlock()
+		i.receiveMu.Unlock()
 		if !matches {
 			return nil, ErrProtocol
 		}

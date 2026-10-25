@@ -62,6 +62,14 @@ and SHA-256 hashes. Historical scheduling, timers and congestion behavior are
 not implementation or test oracles. Cryptographic/accounting contracts remain
 mandatory independently of that implementation.
 
+The [request-latency continuation](REQUEST_LATENCY_WORK.md) separates receive and
+maintenance locks, retains exact bounded sequence hints through cleanup, and adds
+client-wallet timing on the journal clock. It also introduces a bounded TCP/TLS
+propagation model rather than interpreting serial command sleeps as raw RTT.
+The new propagation gate still fails an HTTP header deadline, with a long journal
+update observed during that request. Original thresholds and all failures remain.
+See [the newer evidence](experiments/session-v2/REQUEST_TRACE_CHECK_RESULTS.json).
+
 ## Implemented
 
 * Per-account issuer IDs/runs and fixed local wallet paths replace shared-store

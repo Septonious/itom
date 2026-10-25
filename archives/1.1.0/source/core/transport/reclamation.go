@@ -71,6 +71,8 @@ func (i *Inbox) ReclamationStats() ReclamationStats {
 }
 
 func (i *Inbox) queueReclamation(uid uint32, delivery InboxDelivery) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
 	if tagged, ok := delivery.(*ledgerDelivery); ok {
 		delivery = tagged.InboxDelivery
 	}
@@ -88,10 +90,15 @@ func (i *Inbox) queueReclamation(uid uint32, delivery InboxDelivery) {
 	}
 	// The enclosing inbox turn owns the delivery; Apply already finished. The
 	// queue is bounded by the existing actual-UID inventory, not a new allowance.
-	i.queueReclaimToken(uid, d.reclaim)
+	i.queueReclaimTokenLocked(uid, d.reclaim)
 }
 
 func (i *Inbox) queueReclaimToken(uid uint32, r *reclaimBody) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	i.queueReclaimTokenLocked(uid, r)
+}
+func (i *Inbox) queueReclaimTokenLocked(uid uint32, r *reclaimBody) {
 	if !i.reclamation {
 		return
 	}

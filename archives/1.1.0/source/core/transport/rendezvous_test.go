@@ -16,10 +16,13 @@ import (
 )
 
 func rendezvousFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool, extraAccounts ...string) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
+	return rendezvousNetworkFixture(t, keywords, clientService, serverService, idle, nil, nil, extraAccounts...)
+}
+func rendezvousNetworkFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool, clientNetwork, serverNetwork transport.NetworkDialer, extraAccounts ...string) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
 	t.Helper()
 	f := &bootstrapFixture{store: issuer(t, filepath.Join(t.TempDir(), "control.db"), 64<<20, 128, extraAccounts...), key: bytes.Repeat([]byte{17}, 32), box: &sharedMailbox{keywords: keywords, reclamation: true}}
-	f.cx = f.box.selectedWithIdleService(t, "fast", clientService, idle, false)
-	f.sx = f.box.selectedWithIdleService(t, "fast", serverService, idle, false)
+	f.cx = f.box.selectedAccountNetworkService(t, "account1", "fast", clientService, idle, false, clientNetwork)
+	f.sx = f.box.selectedAccountNetworkService(t, "account1", "fast", serverService, idle, false, serverNetwork)
 	t.Cleanup(func() { f.cx.Close(); f.sx.Close() })
 	template := transport.InvitationTemplate{Binding: secure.Binding{Server: wire.ID{1}, User: "12345678", Pair: wire.ID{2}, Epoch: 1, ConfigHash: [32]byte{5}}, Generation: 7}
 	p, err := transport.PrepareRendezvous(context.Background(), f.store, template, "account1", "fast", 9, f.key)
@@ -62,8 +65,11 @@ func fetchAt(t *testing.T, x *transport.Executor, uid uint32) transport.Body {
 }
 
 func requestedInvitationFixture(t *testing.T, clientService, serverService []time.Duration, idle bool, extraAccounts ...string) *bootstrapFixture {
+	return requestedInvitationNetworkFixture(t, clientService, serverService, idle, nil, nil, extraAccounts...)
+}
+func requestedInvitationNetworkFixture(t *testing.T, clientService, serverService []time.Duration, idle bool, clientNetwork, serverNetwork transport.NetworkDialer, extraAccounts ...string) *bootstrapFixture {
 	t.Helper()
-	f, client, server := rendezvousFixture(t, true, clientService, serverService, idle, extraAccounts...)
+	f, client, server := rendezvousNetworkFixture(t, true, clientService, serverService, idle, clientNetwork, serverNetwork, extraAccounts...)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := client.Submit(ctx, f.cx, f.wallet, f.key); err != nil {

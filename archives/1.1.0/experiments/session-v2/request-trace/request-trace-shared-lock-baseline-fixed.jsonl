@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T14:35:19.719311314Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T14:35:19.741430741Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld"}
+{"Time":"2026-10-25T14:35:19.741703687Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"=== RUN   TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:19.980601415Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"    inbox_maintenance_lock_test.go:90: receipt snapshot waited on future BODY I/O\n","OutputType":"error"}
+{"Time":"2026-10-25T14:35:19.981791579Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"--- FAIL: TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld (0.24s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:19.981824298Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Elapsed":0.24}
+{"Time":"2026-10-25T14:35:19.98393424Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:19.987615339Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.267s\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:35:19.987654217Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.268}

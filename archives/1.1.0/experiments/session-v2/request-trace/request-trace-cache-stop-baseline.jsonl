@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T15:09:05.594267171Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T15:09:05.614686216Z","Action":"run","Package":"itom.local/core/transport","Test":"TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone"}
+{"Time":"2026-10-25T15:09:05.614826912Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone","Output":"=== RUN   TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone\n","OutputType":"frame"}
+{"Time":"2026-10-25T15:09:05.637052535Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone","Output":"    inbox_sequence_test.go:151: discovery cache stopped after ordinary cleanup 4 {0 0 0 false} V2_CAPACITY\n","OutputType":"error"}
+{"Time":"2026-10-25T15:09:05.637784217Z","Action":"output","Package":"itom.local/core/transport","Test":"TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone","Output":"--- FAIL: TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T15:09:05.637835863Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone","Elapsed":0.02}
+{"Time":"2026-10-25T15:09:05.638769576Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T15:09:05.639550432Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.043s\n","OutputType":"frame"}
+{"Time":"2026-10-25T15:09:05.63957447Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.045}

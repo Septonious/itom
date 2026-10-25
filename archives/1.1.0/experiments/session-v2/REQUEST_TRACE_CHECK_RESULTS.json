@@ -1,0 +1,4368 @@
+{
+  "status": "Unqualified source continuation. Functional checks pass; strict light-load application gates remain failed. Production APIs still V2_NOT_READY; no deployable APK/server release.",
+  "parent": "cc0c7930c25465c440ddae5085c8e41296253d60",
+  "checks": [
+    {
+      "file": "request-trace/request-trace-block-top.txt",
+      "sha256": "e51fb30e0c98ba0798db62fec473dfb0dc3f8dee56c1718bc8ef85edf4c40b03"
+    },
+    {
+      "file": "request-trace/request-trace-block.pprof",
+      "sha256": "6a20e784f60a8bd48f7ae5a8e2b9c3a9a703ee3fec7fe7c58eaca161dc34a179"
+    },
+    {
+      "file": "request-trace/request-trace-cache-stop-baseline.jsonl",
+      "sha256": "d89be319ac763c988e762e4169bb90c9c025681a76cc3a64636e2ef8395831f5",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestCleanupPredictionCannotExhaustRememberedUIDsAfterPhysicalMailIsGone",
+        "itom.local/core/transport"
+      ],
+      "failure_excerpts": [
+        "inbox_sequence_test.go:151: discovery cache stopped after ordinary cleanup 4 {0 0 0 false} V2_CAPACITY"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-compatible-old-baseline.jsonl",
+      "sha256": "e09cfdb100aba74d212c3d6c17e8dfb8e37b02e7786a1400d0a830368c1d14be",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery/expunge_after_body_false",
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery/expunge_after_body_true",
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-complete-core-race.jsonl",
+      "sha256": "7b56292479f49347f242a4a5f7e4e25bb9f04b3627124464058ea48c775e3cbd",
+      "top_level_group_executions": {
+        "pass": 223
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": [],
+      "warm_light_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 98699876,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 59621444,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 98336377,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 85988718,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 597500568,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 323557539,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 300827353,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 161190805,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ],
+      "target_misses": 3
+    },
+    {
+      "file": "request-trace/request-trace-core-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "request-trace/request-trace-durable-race.jsonl",
+      "sha256": "eebfdcbd6c1401685ed29d2c978bbcba7bdce37f58a71198e86502bc8f11a5d4",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 2
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-final-all-core.jsonl",
+      "sha256": "35f256afff093e58ed0727ca5f431eff4d74fb13f5cab7ccee21fa20f55dfa24",
+      "top_level_group_executions": {
+        "pass": 224
+      },
+      "package_outcomes": {
+        "pass": 7
+      },
+      "failed": [],
+      "warm_light_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 84206986,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 49606972,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 91016105,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 88500951,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 296443982,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 321121112,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 271683192,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 367586100,
+          "target_ns": 250000000,
+          "target_met": false
+        }
+      ],
+      "target_misses": 4
+    },
+    {
+      "file": "request-trace/request-trace-final-core-race.jsonl",
+      "sha256": "9ebf1461268625ca3ac0f32e8412c39c33915d3d8ddcff276710437c09f9e7a3",
+      "top_level_group_executions": {
+        "pass": 220,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "pass": 6,
+        "fail": 1
+      },
+      "failed": [
+        "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+        "itom.local/core/transport"
+      ],
+      "warm_light_samples": [
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 1,
+          "elapsed_ns": 129852361,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 2,
+          "elapsed_ns": 101099096,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 3,
+          "elapsed_ns": 94855675,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers",
+          "sample": 4,
+          "elapsed_ns": 130222070,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 1,
+          "elapsed_ns": 279425558,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 2,
+          "elapsed_ns": 180117847,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 3,
+          "elapsed_ns": 226052502,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+          "sample": 4,
+          "elapsed_ns": 337639077,
+          "target_ns": 250000000,
+          "target_met": false
+        }
+      ],
+      "target_misses": 2,
+      "failure_excerpts": [
+        "open_imap_test.go:41: cold OPEN/TLS/HTTP 2 Post \"https://127.0.0.1:35607\": context deadline exceeded"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-final-native-race.jsonl",
+      "sha256": "adba3815c5047d99a43db904e3debb191e79c1b505090446f8d7aad307e35491",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-final-preparation.jsonl",
+      "sha256": "64743ebd683fdeab9edb7804f493c58a857d422a0506827d7cdf80effc198c6d",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-light-gate.jsonl",
+      "sha256": "251f264d5740b45d62c2371727b957f1b03b130193335b0653ade253f4a4092d",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightQualification/fluctuating_command_service",
+        "TestAccountWarmLightQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_light_samples": [
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 1,
+          "elapsed_ns": 7567917,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 2,
+          "elapsed_ns": 9561571,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 3,
+          "elapsed_ns": 8400029,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 4,
+          "elapsed_ns": 10359305,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 5,
+          "elapsed_ns": 12300263,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 6,
+          "elapsed_ns": 11155114,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 7,
+          "elapsed_ns": 24766709,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 8,
+          "elapsed_ns": 10952085,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 9,
+          "elapsed_ns": 9637966,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 10,
+          "elapsed_ns": 5113269,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 11,
+          "elapsed_ns": 9431403,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 12,
+          "elapsed_ns": 16772050,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 13,
+          "elapsed_ns": 7732487,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 14,
+          "elapsed_ns": 10358720,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 15,
+          "elapsed_ns": 39179892,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 16,
+          "elapsed_ns": 10793521,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 17,
+          "elapsed_ns": 9235022,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 18,
+          "elapsed_ns": 14323393,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 19,
+          "elapsed_ns": 9010233,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 20,
+          "elapsed_ns": 44271566,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 21,
+          "elapsed_ns": 13462205,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 22,
+          "elapsed_ns": 7160749,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 23,
+          "elapsed_ns": 12085667,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 24,
+          "elapsed_ns": 8251193,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 25,
+          "elapsed_ns": 17000534,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 26,
+          "elapsed_ns": 17209963,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 27,
+          "elapsed_ns": 20937327,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 28,
+          "elapsed_ns": 14417022,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 29,
+          "elapsed_ns": 7028720,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 30,
+          "elapsed_ns": 7031675,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 31,
+          "elapsed_ns": 19634321,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 32,
+          "elapsed_ns": 11860265,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 33,
+          "elapsed_ns": 43548180,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 34,
+          "elapsed_ns": 12085854,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 35,
+          "elapsed_ns": 9812084,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 36,
+          "elapsed_ns": 12926989,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 37,
+          "elapsed_ns": 11975101,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 38,
+          "elapsed_ns": 9630822,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 39,
+          "elapsed_ns": 13509017,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 40,
+          "elapsed_ns": 8724586,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 41,
+          "elapsed_ns": 25826949,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 42,
+          "elapsed_ns": 8170734,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 43,
+          "elapsed_ns": 6758756,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 44,
+          "elapsed_ns": 6035018,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 45,
+          "elapsed_ns": 24850530,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 46,
+          "elapsed_ns": 7154706,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 47,
+          "elapsed_ns": 40433825,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 48,
+          "elapsed_ns": 12568941,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 49,
+          "elapsed_ns": 19537433,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 50,
+          "elapsed_ns": 8236076,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 51,
+          "elapsed_ns": 6114872,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 52,
+          "elapsed_ns": 4578176,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 53,
+          "elapsed_ns": 10239283,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 54,
+          "elapsed_ns": 7114114,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 55,
+          "elapsed_ns": 31466204,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 56,
+          "elapsed_ns": 8608304,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 57,
+          "elapsed_ns": 10471055,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 58,
+          "elapsed_ns": 10341614,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 59,
+          "elapsed_ns": 10190414,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 60,
+          "elapsed_ns": 8935831,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 61,
+          "elapsed_ns": 7404099,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 62,
+          "elapsed_ns": 9954726,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 63,
+          "elapsed_ns": 6128486,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/loopback",
+          "sample": 64,
+          "elapsed_ns": 12578872,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 1,
+          "elapsed_ns": 128689913,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 2,
+          "elapsed_ns": 198757529,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 3,
+          "elapsed_ns": 203738664,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 4,
+          "elapsed_ns": 151797890,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 5,
+          "elapsed_ns": 221736041,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 6,
+          "elapsed_ns": 235757165,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 7,
+          "elapsed_ns": 423667102,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 8,
+          "elapsed_ns": 195310868,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 9,
+          "elapsed_ns": 230833014,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 10,
+          "elapsed_ns": 280273261,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 11,
+          "elapsed_ns": 203686586,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 12,
+          "elapsed_ns": 191429226,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 13,
+          "elapsed_ns": 124908279,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 14,
+          "elapsed_ns": 260921062,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 15,
+          "elapsed_ns": 143221119,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 16,
+          "elapsed_ns": 227076462,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 17,
+          "elapsed_ns": 266876750,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 18,
+          "elapsed_ns": 183462186,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 19,
+          "elapsed_ns": 214558697,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 20,
+          "elapsed_ns": 186067983,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 21,
+          "elapsed_ns": 195415600,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 22,
+          "elapsed_ns": 251230221,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 23,
+          "elapsed_ns": 251400891,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 24,
+          "elapsed_ns": 222861017,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 25,
+          "elapsed_ns": 77083034,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 26,
+          "elapsed_ns": 167791043,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 27,
+          "elapsed_ns": 201625300,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 28,
+          "elapsed_ns": 248383407,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 29,
+          "elapsed_ns": 206589815,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 30,
+          "elapsed_ns": 181955020,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 31,
+          "elapsed_ns": 255144282,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 32,
+          "elapsed_ns": 171418596,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 33,
+          "elapsed_ns": 272167509,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 34,
+          "elapsed_ns": 170687529,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 35,
+          "elapsed_ns": 155334010,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 36,
+          "elapsed_ns": 213001176,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 37,
+          "elapsed_ns": 889061866,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 38,
+          "elapsed_ns": 162948306,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 39,
+          "elapsed_ns": 376714798,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 40,
+          "elapsed_ns": 233232703,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 41,
+          "elapsed_ns": 334887007,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 42,
+          "elapsed_ns": 190877906,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 43,
+          "elapsed_ns": 141852717,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 44,
+          "elapsed_ns": 217036096,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 45,
+          "elapsed_ns": 188521631,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 46,
+          "elapsed_ns": 190185250,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 47,
+          "elapsed_ns": 205049504,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 48,
+          "elapsed_ns": 172933427,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 49,
+          "elapsed_ns": 204728520,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 50,
+          "elapsed_ns": 197166753,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 51,
+          "elapsed_ns": 210959206,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 52,
+          "elapsed_ns": 292105461,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 53,
+          "elapsed_ns": 281686100,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 54,
+          "elapsed_ns": 297328701,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 55,
+          "elapsed_ns": 190499867,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 56,
+          "elapsed_ns": 257694977,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 57,
+          "elapsed_ns": 290027693,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 58,
+          "elapsed_ns": 245231367,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 59,
+          "elapsed_ns": 212133808,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 60,
+          "elapsed_ns": 258098097,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 61,
+          "elapsed_ns": 240287354,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 62,
+          "elapsed_ns": 218552185,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 63,
+          "elapsed_ns": 158849239,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightQualification/fluctuating_command_service",
+          "sample": 64,
+          "elapsed_ns": 226362545,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ],
+      "target_misses": 17
+    },
+    {
+      "file": "request-trace/request-trace-lock-profile.jsonl",
+      "sha256": "6e2b758b7e09fb1aa6c53ce4f25c1c7370ee355174e2b868f37e0c9fed7179c5",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "warm_light_samples": [
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 1,
+          "elapsed_ns": 6917400,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 2,
+          "elapsed_ns": 38398349,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 3,
+          "elapsed_ns": 14331396,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 4,
+          "elapsed_ns": 9026586,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 5,
+          "elapsed_ns": 8011906,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 6,
+          "elapsed_ns": 7669025,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 7,
+          "elapsed_ns": 7720344,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 8,
+          "elapsed_ns": 5453434,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 9,
+          "elapsed_ns": 3150961,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 10,
+          "elapsed_ns": 10180304,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 11,
+          "elapsed_ns": 6218710,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 12,
+          "elapsed_ns": 30946916,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 13,
+          "elapsed_ns": 7801957,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 14,
+          "elapsed_ns": 5577936,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 15,
+          "elapsed_ns": 11447112,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 16,
+          "elapsed_ns": 7097680,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 17,
+          "elapsed_ns": 6317371,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 18,
+          "elapsed_ns": 16854317,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 19,
+          "elapsed_ns": 11740493,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 20,
+          "elapsed_ns": 35626678,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 21,
+          "elapsed_ns": 8764869,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 22,
+          "elapsed_ns": 7057390,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 23,
+          "elapsed_ns": 11801815,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 24,
+          "elapsed_ns": 7226599,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 25,
+          "elapsed_ns": 5541086,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 26,
+          "elapsed_ns": 8832769,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 27,
+          "elapsed_ns": 38982505,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 28,
+          "elapsed_ns": 10520705,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 29,
+          "elapsed_ns": 9092959,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 30,
+          "elapsed_ns": 6365047,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 31,
+          "elapsed_ns": 9497415,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 32,
+          "elapsed_ns": 11518150,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 33,
+          "elapsed_ns": 6933567,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 34,
+          "elapsed_ns": 11450835,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 35,
+          "elapsed_ns": 5265822,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 36,
+          "elapsed_ns": 9360131,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 37,
+          "elapsed_ns": 32869871,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 38,
+          "elapsed_ns": 7029435,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 39,
+          "elapsed_ns": 10861706,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 40,
+          "elapsed_ns": 6900826,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 41,
+          "elapsed_ns": 15864394,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 42,
+          "elapsed_ns": 16405014,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 43,
+          "elapsed_ns": 29433607,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 44,
+          "elapsed_ns": 8028211,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 45,
+          "elapsed_ns": 8452055,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 46,
+          "elapsed_ns": 9686888,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 47,
+          "elapsed_ns": 5118036,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 48,
+          "elapsed_ns": 12242161,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 49,
+          "elapsed_ns": 8611360,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 50,
+          "elapsed_ns": 5186340,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 51,
+          "elapsed_ns": 11797473,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 52,
+          "elapsed_ns": 4481494,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 53,
+          "elapsed_ns": 28747904,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 54,
+          "elapsed_ns": 12441470,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 55,
+          "elapsed_ns": 4303074,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 56,
+          "elapsed_ns": 5438990,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 57,
+          "elapsed_ns": 10751998,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 58,
+          "elapsed_ns": 12582471,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 59,
+          "elapsed_ns": 6437070,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 60,
+          "elapsed_ns": 11311309,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 61,
+          "elapsed_ns": 7417634,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 62,
+          "elapsed_ns": 6942964,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 63,
+          "elapsed_ns": 23830211,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 64,
+          "elapsed_ns": 11301090,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 1,
+          "elapsed_ns": 227895187,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 2,
+          "elapsed_ns": 250068019,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 3,
+          "elapsed_ns": 256882903,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 4,
+          "elapsed_ns": 270257768,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 5,
+          "elapsed_ns": 238138845,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 6,
+          "elapsed_ns": 201002741,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 7,
+          "elapsed_ns": 241016761,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 8,
+          "elapsed_ns": 365163202,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 9,
+          "elapsed_ns": 262507644,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 10,
+          "elapsed_ns": 181457629,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 11,
+          "elapsed_ns": 197045883,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 12,
+          "elapsed_ns": 173688139,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 13,
+          "elapsed_ns": 205423586,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 14,
+          "elapsed_ns": 238215875,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 15,
+          "elapsed_ns": 186191286,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 16,
+          "elapsed_ns": 223913561,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 17,
+          "elapsed_ns": 224981673,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 18,
+          "elapsed_ns": 257422831,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 19,
+          "elapsed_ns": 200503962,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 20,
+          "elapsed_ns": 196510599,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 21,
+          "elapsed_ns": 188081225,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 22,
+          "elapsed_ns": 186884763,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 23,
+          "elapsed_ns": 335249364,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 24,
+          "elapsed_ns": 179829438,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 25,
+          "elapsed_ns": 236570378,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 26,
+          "elapsed_ns": 172490523,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 27,
+          "elapsed_ns": 153755666,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 28,
+          "elapsed_ns": 191790640,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 29,
+          "elapsed_ns": 286733885,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 30,
+          "elapsed_ns": 253248643,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 31,
+          "elapsed_ns": 288917576,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 32,
+          "elapsed_ns": 218028751,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 33,
+          "elapsed_ns": 225428184,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 34,
+          "elapsed_ns": 126385821,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 35,
+          "elapsed_ns": 218227112,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 36,
+          "elapsed_ns": 196572657,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 37,
+          "elapsed_ns": 238322496,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 38,
+          "elapsed_ns": 189943604,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 39,
+          "elapsed_ns": 188191932,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 40,
+          "elapsed_ns": 155426897,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 41,
+          "elapsed_ns": 226678804,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 42,
+          "elapsed_ns": 256534281,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 43,
+          "elapsed_ns": 134395577,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 44,
+          "elapsed_ns": 286937055,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 45,
+          "elapsed_ns": 249694052,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 46,
+          "elapsed_ns": 155464021,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 47,
+          "elapsed_ns": 199685276,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 48,
+          "elapsed_ns": 251831324,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 49,
+          "elapsed_ns": 190698725,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 50,
+          "elapsed_ns": 181696785,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 51,
+          "elapsed_ns": 381012329,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 52,
+          "elapsed_ns": 266823703,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 53,
+          "elapsed_ns": 180340816,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 54,
+          "elapsed_ns": 253348202,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 55,
+          "elapsed_ns": 189700122,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 56,
+          "elapsed_ns": 173458910,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 57,
+          "elapsed_ns": 262185115,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 58,
+          "elapsed_ns": 255635411,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 59,
+          "elapsed_ns": 263064226,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 60,
+          "elapsed_ns": 181063789,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 61,
+          "elapsed_ns": 203318460,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 62,
+          "elapsed_ns": 188430844,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 63,
+          "elapsed_ns": 151277227,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 64,
+          "elapsed_ns": 184764167,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ],
+      "target_misses": 19
+    },
+    {
+      "file": "request-trace/request-trace-maintenance-lock-fixed.jsonl",
+      "sha256": "d9daeb8f77d966c6f9d0ea2d4a8256879933915f09ec2bc1df0131c27ca86644",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-maintenance-lock.jsonl",
+      "sha256": "a5a253bfb42d741f6f5efaa7813c50ceb5662a250ed77060ea749f673e9011ce",
+      "top_level_group_executions": {
+        "fail": 3
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld",
+        "TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld",
+        "TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-mutex-top.txt",
+      "sha256": "55f689cab0119430e38de878578b469e3f4e7f7a9758333ba26075b693e3374a"
+    },
+    {
+      "file": "request-trace/request-trace-mutex.pprof",
+      "sha256": "0a824c7fb1e97692874b03b95215784d7612bf7aa6aac79bfd477cce2fa715ae"
+    },
+    {
+      "file": "request-trace/request-trace-native-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "request-trace/request-trace-old-poll-baseline.jsonl",
+      "sha256": "c4a836d826618010194af4d37272426bb146e2d03c922d924d0747053dab842e",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery/expunge_after_body_false",
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery/expunge_after_body_true",
+        "TestExactCleanupSequenceChangesKeepContiguousBodyDiscovery",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-propagation-light-gate.jsonl",
+      "sha256": "65cf639c05f57066b2b9964ec87981ce03422f8b8ca3eacfb6b0920845a3a9f5",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-propagation-parallel-gate.jsonl",
+      "sha256": "f0542762332fd37dc54b3875138dabb1d706ae8fb202555d833d5099b2c3145e",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAccountWarmLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "warm_light_samples": [
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 1,
+          "elapsed_ns": 189369066,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 2,
+          "elapsed_ns": 148583725,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 3,
+          "elapsed_ns": 241492353,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 4,
+          "elapsed_ns": 216601073,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 5,
+          "elapsed_ns": 206534465,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 6,
+          "elapsed_ns": 253138076,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightPropagationQualification",
+          "sample": 7,
+          "elapsed_ns": 145481796,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ],
+      "target_misses": 1,
+      "failure_excerpts": [
+        "account_service_test.go:379: warm account HTTP 8 Post \"https://127.0.0.1:37757\": net/http: timeout awaiting response headers"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-rebased-warm.jsonl",
+      "sha256": "a9cba265ff8d2a54ad822f09f1542a8cb780807f6e31393d910f8b286c9fb36c",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "warm_light_samples": [
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 1,
+          "elapsed_ns": 10976538,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 2,
+          "elapsed_ns": 7292463,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 3,
+          "elapsed_ns": 7779980,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 4,
+          "elapsed_ns": 45702663,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 5,
+          "elapsed_ns": 8718088,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 6,
+          "elapsed_ns": 20505786,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 7,
+          "elapsed_ns": 9399005,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 8,
+          "elapsed_ns": 13590225,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 9,
+          "elapsed_ns": 9570633,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 10,
+          "elapsed_ns": 36335803,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 11,
+          "elapsed_ns": 8369106,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 12,
+          "elapsed_ns": 14357859,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 13,
+          "elapsed_ns": 5666634,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 14,
+          "elapsed_ns": 14578646,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 15,
+          "elapsed_ns": 11030365,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 16,
+          "elapsed_ns": 43955742,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 17,
+          "elapsed_ns": 7935048,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 18,
+          "elapsed_ns": 4783050,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 19,
+          "elapsed_ns": 12854165,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 20,
+          "elapsed_ns": 8038852,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 21,
+          "elapsed_ns": 13301369,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 22,
+          "elapsed_ns": 6393890,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 23,
+          "elapsed_ns": 9007753,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 24,
+          "elapsed_ns": 40067581,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 25,
+          "elapsed_ns": 25776266,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 26,
+          "elapsed_ns": 10143639,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 27,
+          "elapsed_ns": 16954281,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 28,
+          "elapsed_ns": 9730420,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 29,
+          "elapsed_ns": 13314879,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 30,
+          "elapsed_ns": 22991766,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 31,
+          "elapsed_ns": 17269241,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 32,
+          "elapsed_ns": 4725504,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 33,
+          "elapsed_ns": 7195009,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 34,
+          "elapsed_ns": 19845666,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 35,
+          "elapsed_ns": 9470341,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 36,
+          "elapsed_ns": 6448675,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 37,
+          "elapsed_ns": 31356671,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 38,
+          "elapsed_ns": 9394586,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 39,
+          "elapsed_ns": 5743139,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 40,
+          "elapsed_ns": 9881379,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 41,
+          "elapsed_ns": 14908145,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 42,
+          "elapsed_ns": 10308685,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 43,
+          "elapsed_ns": 20046528,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 44,
+          "elapsed_ns": 39650533,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 45,
+          "elapsed_ns": 16923197,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 46,
+          "elapsed_ns": 8643095,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 47,
+          "elapsed_ns": 5828655,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 48,
+          "elapsed_ns": 9210248,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 49,
+          "elapsed_ns": 15204829,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 50,
+          "elapsed_ns": 28665316,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 51,
+          "elapsed_ns": 29924396,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 52,
+          "elapsed_ns": 12696903,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 53,
+          "elapsed_ns": 20545743,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 54,
+          "elapsed_ns": 12607847,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 55,
+          "elapsed_ns": 28400836,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 56,
+          "elapsed_ns": 19457865,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 57,
+          "elapsed_ns": 17128605,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 58,
+          "elapsed_ns": 5965533,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 59,
+          "elapsed_ns": 14045433,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 60,
+          "elapsed_ns": 36645318,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 61,
+          "elapsed_ns": 11463338,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 62,
+          "elapsed_ns": 10139919,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 63,
+          "elapsed_ns": 9634983,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 64,
+          "elapsed_ns": 15113672,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 1,
+          "elapsed_ns": 239478995,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 2,
+          "elapsed_ns": 246334956,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 3,
+          "elapsed_ns": 252228419,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 4,
+          "elapsed_ns": 153231351,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 5,
+          "elapsed_ns": 186435113,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 6,
+          "elapsed_ns": 252305485,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 7,
+          "elapsed_ns": 209181342,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 8,
+          "elapsed_ns": 213496509,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 9,
+          "elapsed_ns": 137345362,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 10,
+          "elapsed_ns": 233386690,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 11,
+          "elapsed_ns": 150135313,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 12,
+          "elapsed_ns": 153789641,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 13,
+          "elapsed_ns": 178041296,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 14,
+          "elapsed_ns": 176619039,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 15,
+          "elapsed_ns": 140329996,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 16,
+          "elapsed_ns": 184521438,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 17,
+          "elapsed_ns": 239201481,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 18,
+          "elapsed_ns": 194261994,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 19,
+          "elapsed_ns": 176284284,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 20,
+          "elapsed_ns": 251350300,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 21,
+          "elapsed_ns": 187760101,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 22,
+          "elapsed_ns": 142653368,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 23,
+          "elapsed_ns": 224223193,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 24,
+          "elapsed_ns": 211905984,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 25,
+          "elapsed_ns": 238918506,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 26,
+          "elapsed_ns": 258137036,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 27,
+          "elapsed_ns": 163522512,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 28,
+          "elapsed_ns": 118683658,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 29,
+          "elapsed_ns": 224204773,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 30,
+          "elapsed_ns": 174742329,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 31,
+          "elapsed_ns": 235060594,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 32,
+          "elapsed_ns": 200936738,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 33,
+          "elapsed_ns": 209792623,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 34,
+          "elapsed_ns": 158094240,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 35,
+          "elapsed_ns": 238332782,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 36,
+          "elapsed_ns": 285278430,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 37,
+          "elapsed_ns": 156945461,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 38,
+          "elapsed_ns": 262555052,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 39,
+          "elapsed_ns": 235785145,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 40,
+          "elapsed_ns": 200098275,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 41,
+          "elapsed_ns": 233656712,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 42,
+          "elapsed_ns": 174286534,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 43,
+          "elapsed_ns": 192440197,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 44,
+          "elapsed_ns": 230210840,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 45,
+          "elapsed_ns": 210232518,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 46,
+          "elapsed_ns": 180353865,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 47,
+          "elapsed_ns": 198884943,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 48,
+          "elapsed_ns": 189034637,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 49,
+          "elapsed_ns": 761005659,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 50,
+          "elapsed_ns": 306310859,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 51,
+          "elapsed_ns": 253301774,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 52,
+          "elapsed_ns": 137389750,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 53,
+          "elapsed_ns": 261665899,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 54,
+          "elapsed_ns": 184923549,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 55,
+          "elapsed_ns": 138721175,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 56,
+          "elapsed_ns": 194793276,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 57,
+          "elapsed_ns": 252505359,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 58,
+          "elapsed_ns": 139027061,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 59,
+          "elapsed_ns": 277469588,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 60,
+          "elapsed_ns": 187097019,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 61,
+          "elapsed_ns": 189446506,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 62,
+          "elapsed_ns": 253347642,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 63,
+          "elapsed_ns": 181540918,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 64,
+          "elapsed_ns": 255628073,
+          "target_ns": 250000000,
+          "target_met": false
+        }
+      ],
+      "target_misses": 14
+    },
+    {
+      "file": "request-trace/request-trace-sequence-initial.jsonl",
+      "sha256": "881c8bebac08e79af341b6a9db3ed5501844bc1d92a7cd1944b843eaeaef1c9f",
+      "top_level_group_executions": {
+        "pass": 15
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-sequence-regressions.jsonl",
+      "sha256": "4a3a47a7f29e1d573c44725bc2efb8be6931db49d93afc919f35b0d4a83dee22",
+      "top_level_group_executions": {
+        "pass": 12
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-shared-lock-baseline-fixed.jsonl",
+      "sha256": "64b1a1e0aa0a205a098e7ef985b37ed8d01a342b1070e81f4317cfcffa57bfd5",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld",
+        "itom.local/core/transport"
+      ],
+      "failure_excerpts": [
+        "inbox_maintenance_lock_test.go:90: receipt snapshot waited on future BODY I/O"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-shared-lock-baseline.jsonl",
+      "sha256": "56bba127e76aef32f0d8458e2063a43ed77cf9d4683b2bd96ecdbb6ef0322ce3",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-split-lock-initial.jsonl",
+      "sha256": "5842b1287d60f2a2584a182dc9e5cac43f41bd86af879e1fc2e4a669c05e1e30",
+      "top_level_group_executions": {
+        "pass": 22
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-unsafe-tail-baseline.jsonl",
+      "sha256": "cb93ddd4f307a3b476195599b21b8803378719f4df345427e316f051562a6952",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestAmbiguousTailDeletionCannotMaskALateLowerUID",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-warm-wallet.jsonl",
+      "sha256": "c644c54f42f91f35543d18a8b6182fbd7a3f346c471e4838bd32b798a2e9d20c",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": [],
+      "warm_light_samples": [
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 1,
+          "elapsed_ns": 5127820,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 2,
+          "elapsed_ns": 12627180,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 3,
+          "elapsed_ns": 17523604,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 4,
+          "elapsed_ns": 8962208,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 5,
+          "elapsed_ns": 4358824,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 6,
+          "elapsed_ns": 7304591,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 7,
+          "elapsed_ns": 41091628,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 8,
+          "elapsed_ns": 27806835,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 9,
+          "elapsed_ns": 12783903,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 10,
+          "elapsed_ns": 10189605,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 11,
+          "elapsed_ns": 5708517,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 12,
+          "elapsed_ns": 14121659,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 13,
+          "elapsed_ns": 25156983,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 14,
+          "elapsed_ns": 18791160,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 15,
+          "elapsed_ns": 6679437,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 16,
+          "elapsed_ns": 12292074,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 17,
+          "elapsed_ns": 6853439,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 18,
+          "elapsed_ns": 11212079,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 19,
+          "elapsed_ns": 6257251,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 20,
+          "elapsed_ns": 8518462,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 21,
+          "elapsed_ns": 29668218,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 22,
+          "elapsed_ns": 13229426,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 23,
+          "elapsed_ns": 9234963,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 24,
+          "elapsed_ns": 4663865,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 25,
+          "elapsed_ns": 13956123,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 26,
+          "elapsed_ns": 8600285,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 27,
+          "elapsed_ns": 4304382,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 28,
+          "elapsed_ns": 15087167,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 29,
+          "elapsed_ns": 27056888,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 30,
+          "elapsed_ns": 13637561,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 31,
+          "elapsed_ns": 13135195,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 32,
+          "elapsed_ns": 6807073,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 33,
+          "elapsed_ns": 5683216,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 34,
+          "elapsed_ns": 17838427,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 35,
+          "elapsed_ns": 13852134,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 36,
+          "elapsed_ns": 40267068,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 37,
+          "elapsed_ns": 12095659,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 38,
+          "elapsed_ns": 8800578,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 39,
+          "elapsed_ns": 15562746,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 40,
+          "elapsed_ns": 7894109,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 41,
+          "elapsed_ns": 14648185,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 42,
+          "elapsed_ns": 27680082,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 43,
+          "elapsed_ns": 8404010,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 44,
+          "elapsed_ns": 7419162,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 45,
+          "elapsed_ns": 18614545,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 46,
+          "elapsed_ns": 6943002,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 47,
+          "elapsed_ns": 22186610,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 48,
+          "elapsed_ns": 9158147,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 49,
+          "elapsed_ns": 29744772,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 50,
+          "elapsed_ns": 10480550,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 51,
+          "elapsed_ns": 6275170,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 52,
+          "elapsed_ns": 9695535,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 53,
+          "elapsed_ns": 11312801,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 54,
+          "elapsed_ns": 5762200,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 55,
+          "elapsed_ns": 7092819,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 56,
+          "elapsed_ns": 10508861,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 57,
+          "elapsed_ns": 37160800,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 58,
+          "elapsed_ns": 4872657,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 59,
+          "elapsed_ns": 12792940,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 60,
+          "elapsed_ns": 5934246,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 61,
+          "elapsed_ns": 8104748,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 62,
+          "elapsed_ns": 12586602,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 63,
+          "elapsed_ns": 11428345,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/loopback",
+          "sample": 64,
+          "elapsed_ns": 51110402,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 1,
+          "elapsed_ns": 175827145,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 2,
+          "elapsed_ns": 211055393,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 3,
+          "elapsed_ns": 227257985,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 4,
+          "elapsed_ns": 247528054,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 5,
+          "elapsed_ns": 204555741,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 6,
+          "elapsed_ns": 231551130,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 7,
+          "elapsed_ns": 195804345,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 8,
+          "elapsed_ns": 182421220,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 9,
+          "elapsed_ns": 190738852,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 10,
+          "elapsed_ns": 189950160,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 11,
+          "elapsed_ns": 243227872,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 12,
+          "elapsed_ns": 269914124,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 13,
+          "elapsed_ns": 239942202,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 14,
+          "elapsed_ns": 241797666,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 15,
+          "elapsed_ns": 124937151,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 16,
+          "elapsed_ns": 264592158,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 17,
+          "elapsed_ns": 194027482,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 18,
+          "elapsed_ns": 242264424,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 19,
+          "elapsed_ns": 284559886,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 20,
+          "elapsed_ns": 120972861,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 21,
+          "elapsed_ns": 195320761,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 22,
+          "elapsed_ns": 336185340,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 23,
+          "elapsed_ns": 238995401,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 24,
+          "elapsed_ns": 179410356,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 25,
+          "elapsed_ns": 227833058,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 26,
+          "elapsed_ns": 158155293,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 27,
+          "elapsed_ns": 249683782,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 28,
+          "elapsed_ns": 187156521,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 29,
+          "elapsed_ns": 124588518,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 30,
+          "elapsed_ns": 229478016,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 31,
+          "elapsed_ns": 252806070,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 32,
+          "elapsed_ns": 215214469,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 33,
+          "elapsed_ns": 165811247,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 34,
+          "elapsed_ns": 245681830,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 35,
+          "elapsed_ns": 325537965,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 36,
+          "elapsed_ns": 162170798,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 37,
+          "elapsed_ns": 189339603,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 38,
+          "elapsed_ns": 216777185,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 39,
+          "elapsed_ns": 250023761,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 40,
+          "elapsed_ns": 166527890,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 41,
+          "elapsed_ns": 258096167,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 42,
+          "elapsed_ns": 238715033,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 43,
+          "elapsed_ns": 144641164,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 44,
+          "elapsed_ns": 257141519,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 45,
+          "elapsed_ns": 242475003,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 46,
+          "elapsed_ns": 217062864,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 47,
+          "elapsed_ns": 132574427,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 48,
+          "elapsed_ns": 271432251,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 49,
+          "elapsed_ns": 159357258,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 50,
+          "elapsed_ns": 255459400,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 51,
+          "elapsed_ns": 126483258,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 52,
+          "elapsed_ns": 200839199,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 53,
+          "elapsed_ns": 188725116,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 54,
+          "elapsed_ns": 182257271,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 55,
+          "elapsed_ns": 123787924,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 56,
+          "elapsed_ns": 204255557,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 57,
+          "elapsed_ns": 259567003,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 58,
+          "elapsed_ns": 256674527,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 59,
+          "elapsed_ns": 165474005,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 60,
+          "elapsed_ns": 217071990,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 61,
+          "elapsed_ns": 227871168,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 62,
+          "elapsed_ns": 143394487,
+          "target_ns": 250000000,
+          "target_met": true
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 63,
+          "elapsed_ns": 271682156,
+          "target_ns": 250000000,
+          "target_met": false
+        },
+        {
+          "test": "TestAccountWarmLightRequestDiagnostics/fluctuating_command_service",
+          "sample": 64,
+          "elapsed_ns": 181204703,
+          "target_ns": 250000000,
+          "target_met": true
+        }
+      ],
+      "target_misses": 14
+    },
+    {
+      "file": "request-trace/request-trace-wire-calibration-fixed.jsonl",
+      "sha256": "6511030bb2c0b9be0fe3c0c01ae4a2628b429778269805d74d562658f4d43074",
+      "top_level_group_executions": {
+        "pass": 6
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/request-trace-wire-calibration.jsonl",
+      "sha256": "51c224d60586a90c6f79d580bafb72f6864f6b55ea2e099216508fbf7a581e8b",
+      "top_level_group_executions": {
+        "pass": 5,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestWireRoutePropagatesHalfCloseAndSurvivesDialContextCancellation",
+        "itom.local/core/transport"
+      ],
+      "failure_excerpts": [
+        "wire_link_calibration_test.go:52: wire route lost reverse bytes at half close 0 read tcp 127.0.0.1:37814->127.0.0.1:44757: use of closed network connection"
+      ]
+    },
+    {
+      "file": "request-trace/request-trace-wire-tls-calibration.jsonl",
+      "sha256": "27506c7d6b701f8dc1028fbbf12602ee55cbc4d5c86fbe7b61a283472010726a",
+      "top_level_group_executions": {
+        "pass": 1
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "request-trace/account-warm-spike-trace.jsonl",
+      "sha256": "bb3a6eae06486014e5267014585fff82e7ac9200d9f1eb31016ec4f914c65759",
+      "kind": "Initial 128 warm byte-integrity diagnostics before explicit latency assertions; all measured misses remain unqualified",
+      "top_level_group_executions": {
+        "pass": 1
+      }
+    }
+  ],
+  "overlays": [
+    {
+      "name": "previous-poll-compatible",
+      "replace": {
+        "archives/1.1.0/source/core/transport/inbox_poll.go": {
+          "file": "request-trace/overlays/previous-poll-compatible/inbox_poll.go",
+          "sha256": "82b11ea11bf71bb25eeb6931eacebcdc84c4b3d61a0d7185983f21cb5e4665c7"
+        }
+      }
+    },
+    {
+      "name": "unsafe-tail-rebase",
+      "replace": {
+        "archives/1.1.0/source/core/transport/imap_sequence.go": {
+          "file": "request-trace/overlays/unsafe-tail-rebase/imap_sequence.go",
+          "sha256": "cd72739ca3f16b1f7fccac7addc3bebe58950a8f4cc9b80e8d91beb933dc3e6c"
+        }
+      }
+    },
+    {
+      "name": "cache-stop",
+      "replace": {
+        "archives/1.1.0/source/core/transport/inbox_poll.go": {
+          "file": "request-trace/overlays/cache-stop/inbox_poll.go",
+          "sha256": "da1ed8d996b19e16de1bd4464868eaef24bd26d8780695713df5e7127f8eb775"
+        }
+      }
+    },
+    {
+      "name": "shared-receive-maintenance-lock",
+      "replace": {
+        "archives/1.1.0/source/core/transport/inbox.go": {
+          "file": "request-trace/overlays/shared-receive-maintenance-lock/inbox.go",
+          "sha256": "2563d991a2e12ea3f5c771955ae985d7cc2771c062b21e9725b38056969a3e52"
+        },
+        "archives/1.1.0/source/core/transport/inbox_poll.go": {
+          "file": "request-trace/overlays/shared-receive-maintenance-lock/inbox_poll.go",
+          "sha256": "d82fb698df429bf0cfdf5f5775f1af300ed973b4d0937da811080b873a4bab80"
+        },
+        "archives/1.1.0/source/core/transport/reclamation.go": {
+          "file": "request-trace/overlays/shared-receive-maintenance-lock/reclamation.go",
+          "sha256": "43abc6a8520675e9ab7d35e4b43e4afe89a29497d08e8adf747606a79f61a356"
+        }
+      }
+    }
+  ],
+  "source_sha256": {
+    ".github/workflows/itom-session-v2-source.yml": "53597f35e1b8bcbd2ea4de7b4346d4f8439754e10608a1b9d752f2b44711c73c",
+    "archives/1.1.0/source/core/internal/commitdiag/timeline.go": "9db4d5762aa861469a924ae88f2158c67c66da5623368711c7446f918d2450fa",
+    "archives/1.1.0/source/core/journal/commit_timeline.go": "9af2f9fba29ebaeacf5e3cd7c9956b07f3fbdb19c16a88a2dc473d2a1f88547c",
+    "archives/1.1.0/source/core/journal/store.go": "93cc8aef56f23015b09a5eb0d4ee72180d02d9f91d57671e0231cd444c034234",
+    "archives/1.1.0/source/core/transport/account_light_itomtest_test.go": "94ff3b16b3f11e38752cde198d676652bd4d6d74c15805f6acf130a40d77d333",
+    "archives/1.1.0/source/core/transport/account_propagation_itomtest_test.go": "de3575d72c81ac817cc1b98158fd7d59b4b690b0389a1bebebe83b4e5c2f443e",
+    "archives/1.1.0/source/core/transport/account_service_test.go": "b1aa43d9f7481a57308c504b1f111dfa67882bbf19bed9f286adf5ac32939e3f",
+    "archives/1.1.0/source/core/transport/account_trace_test.go": "480689f93667858b8902332be5faef1ffd6bbd23695d357a5a8bdaed35a6a5a6",
+    "archives/1.1.0/source/core/transport/delivery_receipt.go": "ced7e4f4e3a571b382fbe7d8b1d9d26bc272a38561991963f58055b07986175f",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "cc035146bf18c5f248e4c835137d5517cea9bd0c0119e755f62e59e2e6f7f00e",
+    "archives/1.1.0/source/core/transport/imap.go": "2952a28a53a70a822465800150ae02810da2f390624d869241f5a382d533f86f",
+    "archives/1.1.0/source/core/transport/imap_sequence.go": "28856fbae248145e5bb23328784a74b421e4eaf8e7785a723034b9855d39e188",
+    "archives/1.1.0/source/core/transport/inbox.go": "6a97ebcb4ce58e345dab49a141288b9a67812fbbc61d7bef964ca0cf8bd6106e",
+    "archives/1.1.0/source/core/transport/inbox_capacity_hook_test.go": "421cce9afb48a61660bb17e694b576f8a1dcf3d710bc72811afc153f029b6b73",
+    "archives/1.1.0/source/core/transport/inbox_maintenance_lock_test.go": "4240964071aa695d7c2368ef66ee8908c2a201444a28361fbd3e8dbbdd832431",
+    "archives/1.1.0/source/core/transport/inbox_poll.go": "79dc9a91f25fe3d084eeb98226d46c406f8608e0a2174522ff02123de306033c",
+    "archives/1.1.0/source/core/transport/inbox_sequence_test.go": "caac1f051a9b0e7d038c96f95ce1ba5a7457a2f42c3a879e18a9f131aa40fc11",
+    "archives/1.1.0/source/core/transport/inbox_test.go": "920e46f721a105089de604089a11e624f3ea949528bfa8138c23a9f6d8f9c4a2",
+    "archives/1.1.0/source/core/transport/publication_test.go": "7dcb569cd2a292116d6ab55be276f24fa53b6397df3efd9e6cefbc2644614acc",
+    "archives/1.1.0/source/core/transport/reclamation.go": "f4efe8f6ccafed702cbb4f7752f171a9f3a6a6144d8cefcf8f121de66006919f",
+    "archives/1.1.0/source/core/transport/rendezvous_test.go": "d487708f0aa7ec1f06b6837e94431673655e98025830351a4dd93efb82ef204e",
+    "archives/1.1.0/source/core/transport/roster_driver.go": "4a5fa7057a1df7fc0feac45e368246da58eee404bf84f15080c550fb9403d0fb",
+    "archives/1.1.0/source/core/transport/wire_link_calibration_test.go": "b5adb041033d6ddeb596cf5fe0a6608db6a743e8d597ba1b0a5a9b980063ba6d",
+    "archives/1.1.0/source/core/transport/wire_link_test.go": "a23d505cb44c2fa73431203eba20f12e2cb97d6fa5dd7579bcb7037429ce359b",
+    "archives/1.1.0/source/core/transport/wire_tls_calibration_test.go": "e42c53e0f97022eebfce8ca198365556e746814035c316070ad8ac75d796924d",
+    "archives/1.1.0/source/core/wallet/commit_metrics.go": "02ad4d227032d8f783a53d870e60bba0923b0b7e05b827c1eb1b26a28b462ada",
+    "archives/1.1.0/source/core/wallet/commit_metrics_test.go": "aa6adaf49924c0ee8ee6d7de96928c85b65efa0bcc67171fa1c42efa6cbed45c",
+    "archives/1.1.0/source/core/wallet/wallet.go": "a8de60cea89e503675291f31bd084fe82b46d1251a2dece9cb791b0031b4e975"
+  },
+  "final_results": {
+    "core_race_top_level_groups_passed": 224,
+    "core_race_failed": 0,
+    "native_race_top_level_groups_passed": 10,
+    "native_race_failed": 0,
+    "core_vet": "pass",
+    "native_vet": "pass",
+    "tagged_preparation_top_level_executions_passed": 6,
+    "tagged_preparation_subcases_passed": 6,
+    "durable_timeline_targeted_executions_passed": 6,
+    "sequence_targeted_top_level_executions_passed": 12,
+    "sequence_targeted_subcases_passed": 12,
+    "maintenance_lock_targeted_executions_passed": 3,
+    "fixed_wire_calibration_executions_passed": 6,
+    "encrypted_noop_calibration_executions_passed": 1
+  },
+  "gates": {
+    "light_maximum_ms": 250,
+    "loaded_maximum_ms": 2000,
+    "useful_sustained_up_down_mbps": 100,
+    "propagation_light_gate": "FAIL",
+    "propagation_requested_warm_samples": 64,
+    "propagation_complete": false,
+    "propagation_successful_measured_warm_samples": 7,
+    "propagation_measured_250ms_misses": 1,
+    "propagation_next_warm_attempt": "HTTP response-header timeout; original deadline unchanged",
+    "command_service_stress_light_gate": "FAIL",
+    "command_service_stress_loopback_warm_samples": 64,
+    "command_service_stress_loopback_misses": 0,
+    "command_service_stress_fluctuating_warm_samples": 64,
+    "command_service_stress_fluctuating_misses": 17,
+    "command_service_stress_fluctuating_maximum_ns": 889061866,
+    "sustained_bandwidth_qualification": "not run; not established",
+    "real_provider_qualification": "not available under current network policy",
+    "production_startup_activation": false,
+    "ready_for_release": false
+  },
+  "implemented_properties": [
+    "Separate serialized receive ownership from short maintenance-state locking; receipt marking can proceed while a later BODY tag is held",
+    "Thirty-two exact parser sequence changes may retain contiguous UID discovery; ambiguous/missing history still forces inventory",
+    "Cache-bound inventory can prune absent discovery entries without increasing bound or refunding physical debt",
+    "Journal and client-wallet update diagnostics share one monotonic origin with eight detached longest events and in-progress state; no sync/authority changes",
+    "Request diagnostics cover complete response bodies and retain timer lateness, actor snapshot time and overlapping durable updates",
+    "Bounded asynchronous TCP/TLS byte relay models propagation separately from provider command cost; directions share explicit endpoint serialization budgets",
+    "Only listed fixture lanes are selected using eight bounded workers; original dial/idle guards and authenticated endpoint budgets unchanged",
+    "Light propagation CI gate fails any original 250ms miss or HTTP failure; functional success cannot qualify it"
+  ],
+  "retained_failure_notes": [
+    "Earlier full core cohort request-trace-final-core-race has 220 passes and one original cold TLS/HTTP failure; not erased by latest 224/224 functional result.",
+    "The request-trace-rebased-warm diagnostic cohort completes but retains fourteen fluctuating-service 250ms misses including a 761ms sample; it is not a passing latency gate.",
+    "The initial maintenance regression used a nonmatching textual inventory selector; both candidate and baseline failed before exercising the lock. Corrected candidate passes three times and corrected shared-lock baseline fails snapshot progress while the future tag is held.",
+    "The first wire relay closed the application socket when both relays ended, dropping unread reverse bytes after half-close. Initial calibration is retained; fixed relay closes only relay-owned sockets at that boundary and leaves application ownership intact.",
+    "Initial propagation attempt failed during roster construction. Sequential fixture setup under raw delay can exceed the early sockets original four-second guard; bounded parallel fixture setup retains the guards and lets the workload start.",
+    "Later propagation attempt still fails a warm HTTP header deadline and is incomplete. A journal update overlaps that request for about one second; whole-update timing on tmpfs does not establish isolated disk/fsync latency or a sole cause.",
+    "Command-service sleeps are serial provider processing costs, not raw network RTT. Old stress cases and failures are preserved while the new byte-level propagation model is added.",
+    "Profiling/diagnostic cohorts that only asserted byte integrity retain each light target miss. The newer qualification tests explicitly fail on these misses; no successful-only mean is used to qualify incomplete cohorts."
+  ],
+  "commands": {
+    "core": "go test -race -json ./... -count=1 -timeout=240s",
+    "native": "go test -race -json ./... -count=1 -timeout=120s",
+    "vet": "go vet ./... (both modules)",
+    "propagation_gate": "go test -tags itomtest -json ./transport -run '^TestAccountWarmLightPropagationQualification$' -count=1 -timeout=120s",
+    "service_stress_gate": "go test -tags itomtest -json ./transport -run '^TestAccountWarmLightQualification$' -count=1 -timeout=120s",
+    "preparation": "go test -race -tags itomtest -json ./transport -run '^(TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight|TestFastPreparationCoordinationKeepsBulkJournalPreparationConcurrent)$' -count=3 -timeout=90s"
+  },
+  "environment_and_model": [
+    "Go1.27.1; shared two-CPU source host; real Go TCP/TLS/HTTP and bbolt synchronous updates",
+    "Temporary test files reside on tmpfs; fsync calls are retained, but these tests are not physical crash/power-loss durability or a production disk benchmark",
+    "Private-namespace netem probe returned qdisc kind unknown; byte relay is user-space and not kernel netem",
+    "Relay packets <=16384 bytes, 32 queued packets per direction per connection, plus bounded reader/writer buffers; shared directional byte budget across endpoint sockets",
+    "Propagation model client RTT 10/50/20/40ms, server20/40/30ms, phase250ms, explicit62500000 bytes/s each direction; no synthetic provider command sleeps",
+    "All ten accounts including anchor traverse their endpoint route; selected executors stay forty total within explicit phone20/server30 budgets. Relay TCP sockets add no provider logins",
+    "Encrypted NOOP sanity run20 observed11.157\u201362.075ms; configuration and observations are kept separately, without relabeling exact path bounds",
+    "Maximum light/loaded RTT, rate, full mean/ramp/tail/rolling/stall, TLS failure and load-reconnect requirements unchanged; 300 primary cold TLS attempts,20 full Speedtests,60s SINGLE/MULTI/duplex and soak are not replaced by these source checks"
+  ],
+  "unchanged": [
+    "Original quota and persistent issuer identity, wallet lifetime Used and missing-history debt",
+    "Exact full BODY, client MAC receipt, exact UID EXPUNGE and separate absence proofs",
+    "Original literal/response/queue/replay/nonce/folder ceilings; one BODY per FETCH",
+    "Stable 1.0.0/RC2 and Android org.itom.client/signing material",
+    "Direct UDP/TCP DNS race31.131.251.83 /185.22.234.229, shared250ms, optional session-latched IMAP only after both fail, no DoH/DoT"
+  ]
+}

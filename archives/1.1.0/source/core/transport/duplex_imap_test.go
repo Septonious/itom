@@ -120,6 +120,20 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 }
 
 func (m *sharedMailbox) selectedAccountService(t *testing.T, account, folder string, delays []time.Duration, idle, silent bool) *transport.Executor {
+	return m.selectedAccountNetworkService(t, account, folder, delays, idle, silent, nil)
+}
+func (m *sharedMailbox) selectedAccountNetworkService(t *testing.T, account, folder string, delays []time.Duration, idle, silent bool, network transport.NetworkDialer) *transport.Executor {
+	t.Helper()
+	open := m.prepareAccountService(t, account, folder, delays, idle, silent)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	x, err := open(ctx, network)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return x
+}
+func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder string, delays []time.Duration, idle, silent bool) func(context.Context, transport.NetworkDialer) (*transport.Executor, error) {
 	t.Helper()
 	capabilities := ""
 	if idle {
@@ -128,7 +142,7 @@ func (m *sharedMailbox) selectedAccountService(t *testing.T, account, folder str
 	if m.reclamation {
 		capabilities += " UIDPLUS"
 	}
-	return selectedAccountPeerWithFeatures(t, account, folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
+	return prepareSelectedAccountPeer(t, account, folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
 		turn := 0
 		delay := func() {

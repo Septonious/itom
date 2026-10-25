@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T14:27:17.628788979Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T14:27:17.682835717Z","Action":"run","Package":"itom.local/core/transport","Test":"TestAmbiguousTailDeletionCannotMaskALateLowerUID"}
+{"Time":"2026-10-25T14:27:17.682926821Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAmbiguousTailDeletionCannotMaskALateLowerUID","Output":"=== RUN   TestAmbiguousTailDeletionCannotMaskALateLowerUID\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:27:17.720386586Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAmbiguousTailDeletionCannotMaskALateLowerUID","Output":"    inbox_sequence_test.go:73: ambiguous sequence was accepted as complete prefix {1 1 0 false} \u003cnil\u003e\n","OutputType":"error"}
+{"Time":"2026-10-25T14:27:17.720843238Z","Action":"output","Package":"itom.local/core/transport","Test":"TestAmbiguousTailDeletionCannotMaskALateLowerUID","Output":"--- FAIL: TestAmbiguousTailDeletionCannotMaskALateLowerUID (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:27:17.720859197Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestAmbiguousTailDeletionCannotMaskALateLowerUID","Elapsed":0.04}
+{"Time":"2026-10-25T14:27:17.721638411Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:27:17.722986647Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.094s\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:27:17.72301744Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.094}

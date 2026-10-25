@@ -88,7 +88,8 @@ type InboxScope struct {
 // make it advance past an unseen body. FETCH is one BODY per command: a burst
 // cannot overflow the unchanged response budget and force a healthy reconnect.
 type Inbox struct {
-	mu                 sync.Mutex
+	mu                 sync.Mutex // maintenance state only; never held over receive I/O
+	receiveMu          sync.Mutex // serial receiver state and parser turns
 	maintenanceMu      sync.Mutex
 	maintenanceChanged chan struct{}
 	session            *Session
@@ -159,8 +160,8 @@ func (i *Inbox) admission() inboxAdmission {
 }
 
 func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
+	i.receiveMu.Lock()
+	defer i.receiveMu.Unlock()
 	return i.sweepLocked(ctx)
 }
 
@@ -180,24 +181,24 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 		return progress, ErrCapacity
 	}
 	uids := make([]uint32, 0, len(metadata))
-	present := make(map[uint32]bool, len(metadata))
+	present := make(map[uint32]uint32, len(metadata))
 	var tail, tailUID uint32
 	for _, body := range metadata {
 		tail = max(tail, body.Sequence)
 		tailUID = max(tailUID, body.UID)
 		uids = append(uids, body.UID)
-		present[body.UID] = true
+		present[body.UID] = body.Sequence
 	}
 	sort.Slice(uids, func(a, b int) bool { return uids[a] < uids[b] })
 	progress.Observed = len(uids)
 	for uid := range i.seen {
-		if !present[uid] && !i.bootstrapUIDs[uid] {
+		if present[uid] == 0 && !i.bootstrapUIDs[uid] {
 			delete(i.seen, uid)
 		}
 	} // discovery state only; NEVER a deletion/refund proof
 	retained := 0
 	for uid := range i.bootstrapUIDs {
-		if !present[uid] {
+		if present[uid] == 0 {
 			retained++
 		}
 	}
@@ -205,7 +206,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 		return progress, ErrCapacity
 	}
 	for uid := range i.deferred {
-		if !present[uid] {
+		if present[uid] == 0 {
 			delete(i.deferred, uid)
 		}
 	}
@@ -215,7 +216,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	}
 	i.continuing = false
 	for uid := range i.examined {
-		if !present[uid] {
+		if present[uid] == 0 {
 			delete(i.examined, uid)
 		}
 	}
@@ -314,6 +315,12 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 		clear(i.examined)
 	}
 	ready := version == i.executor.SequenceVersion()
+	for index, uid := range uids {
+		if present[uid] != uint32(index+1) {
+			ready = false
+			break
+		}
+	}
 	for _, uid := range uids {
 		if !i.seen[uid] {
 			ready = false

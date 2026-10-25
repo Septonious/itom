@@ -1,0 +1,9 @@
+{"Time":"2026-10-25T14:34:30.742450075Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-25T14:34:30.763427095Z","Action":"run","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld"}
+{"Time":"2026-10-25T14:34:30.763777574Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"=== RUN   TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:34:30.838537715Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"    inbox_maintenance_lock_test.go:64: {0 0 0 false} \u003cnil\u003e\n","OutputType":"error"}
+{"Time":"2026-10-25T14:34:30.839949845Z","Action":"output","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Output":"--- FAIL: TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld (0.07s)\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:34:30.839962433Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestQueuedPeerReceiptAndStatsProgressWhileFutureBodyTagIsHeld","Elapsed":0.07}
+{"Time":"2026-10-25T14:34:30.840036982Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:34:30.840230271Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.097s\n","OutputType":"frame"}
+{"Time":"2026-10-25T14:34:30.840240733Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.098}
