@@ -1,0 +1,10 @@
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    open_imap_test.go:35: HTTP integrity sample run=0 payload_bytes=29 elapsed=24.368984ms
+    open_imap_test.go:35: HTTP integrity sample run=1 payload_bytes=262267 elapsed=107.031908ms
+    open_imap_test.go:35: HTTP integrity sample run=2 payload_bytes=71 elapsed=36.059453ms
+    open_imap_test.go:35: HTTP integrity sample run=3 payload_bytes=262461 elapsed=69.150872ms
+    open_imap_test.go:35: physical mailbox plane=0 live=18 peak=24 total_uids=95 bytes=11568 client_receipts={Queued:55 Marked:53 Refused:0 Pending:2 Disabled:false} server_reclamation={Queued:81 Released:77 Refused:0 Probes:28 ReceiptProbes:31 PeerReceipts:51 Batches:28 MaxBatch:9 Pending:4 Disabled:false}
+    open_imap_test.go:35: physical mailbox plane=1 live=1 peak=2 total_uids=7 bytes=2723 client_receipts={Queued:5 Marked:4 Refused:0 Pending:1 Disabled:false} server_reclamation={Queued:7 Released:6 Refused:0 Probes:5 ReceiptProbes:8 PeerReceipts:4 Batches:5 MaxBatch:2 Pending:1 Disabled:false}
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (0.29s)
+PASS
+ok  	itom.local/core/transport	0.304s

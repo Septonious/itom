@@ -17,16 +17,21 @@ import (
 	"time"
 )
 
-func issuer(t *testing.T, path string, limit uint64, messages uint64) *journal.Store {
+func issuer(t *testing.T, path string, limit uint64, messages uint64, extraAccounts ...string) *journal.Store {
 	t.Helper()
 	cfg := journal.Config{Accounts: []journal.Account{{ID: "account1", Provider: "fixture", Limit: pool.Amount{Bytes: limit, Messages: messages}, Users: []journal.User{{ID: "12345678", Limit: pool.Amount{Bytes: limit, Messages: messages}, Folders: []string{"fast", "bulk"}}}}}, MaxGrants: 128, MaxAttempts: 256}
+	for _, id := range extraAccounts {
+		cfg.Accounts = append(cfg.Accounts, journal.Account{ID: id, Provider: "fixture", Limit: pool.Amount{Bytes: limit, Messages: messages}, Users: []journal.User{{ID: "12345678", Limit: pool.Amount{Bytes: limit, Messages: messages}, Folders: []string{"fast", "bulk"}}}})
+	}
 	s, err := journal.Open(path, cfg, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { s.Close() })
-	if err = s.EnableAfterInventory("account1", "12345678", s.Run()); err != nil {
-		t.Fatal(err)
+	for _, a := range cfg.Accounts {
+		if err = s.EnableAfterInventory(a.ID, "12345678", s.Run()); err != nil {
+			t.Fatal(err)
+		}
 	}
 	return s
 }

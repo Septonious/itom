@@ -26,7 +26,8 @@ import (
 // Application-integrity fixture, NOT provider/rate qualification: a real charged
 // rendezvous and authenticated metadata request deliver initial CONTROL grants
 // over IMAP. DATA permission travels through authenticated accounted CONTROL
-// mail; the issuer mapping is still supplied by the fixture. Noise keys are confirmed by independent startup drivers. Workers use four
+// mail; issuer mapping and selected lanes are confirmed by independent roster
+// drivers. Noise keys are confirmed by independent startup drivers. Workers use four
 // fixed scoped executors without a fixture readiness hint. Real target TCP,
 // TLS/HTTP, authenticated OPEN, quota persistence, TLS/IMAP and UID discovery do
 // execute. No streams are manually added and own mailbox writes reach both ends.
@@ -64,10 +65,6 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	if err != nil {
 		t.Fatal(err)
 	}
-	ce, err := bootstrap.client.Epoch()
-	if err != nil {
-		t.Fatal(err)
-	}
 	bootstrap.client.Close()
 	bootstrap.server.Close()
 	dialer, err := transport.NewClientDialer(a, 256<<10)
@@ -89,15 +86,18 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	wallets := map[transport.LedgerClass]*wallet.Wallet{transport.ControlLedger: bootstrap.wallet}
 	dataStore := issuer(t, filepath.Join(t.TempDir(), "data.db"), 64<<20, 128)
 	stores[transport.DataLedger] = dataStore
-	dataWallet, err := wallet.OpenBound(filepath.Join(t.TempDir(), "data-wallet.db"), dataStore.StoreID(), ce)
-	if err != nil {
-		t.Fatal(err)
-	}
+	bulkBox := &sharedMailbox{reclamation: true, keywords: true}
+	bulkClient := bulkBox.selectedWithIdleService(t, "bulk", clientService, idle, false)
+	bulkServer := bulkBox.selectedWithIdleService(t, "bulk", serverService, idle, false)
+	clientRoster, serverRoster := exchangeDrivenRoster(t, bootstrap, clientHandoff, serverHandoff, dataStore, bulkClient, bulkServer)
+	clientHandoff, serverHandoff = clientRoster.Handoff(), serverRoster.Handoff()
+	dataWallet := clientRoster.DataWallet()
+	learned := clientRoster.Manifest()
 	t.Cleanup(func() { dataWallet.Close() })
 	wallets[transport.DataLedger] = dataWallet
 	clientAuthority, err := transport.NewClientAuthority(a, ca, "account1",
 		transport.ClientAuthorityLedger{Class: transport.ControlLedger, Wallet: bootstrap.wallet, Run: bootstrap.store.Run()},
-		transport.ClientAuthorityLedger{Class: transport.DataLedger, Wallet: dataWallet, Run: dataStore.Run()})
+		transport.ClientAuthorityLedger{Class: transport.DataLedger, Wallet: dataWallet, Run: learned.DataRun})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,12 +133,12 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		if plane == transport.Bulk {
 			folder = "bulk"
 		}
-		box := &sharedMailbox{reclamation: true, keywords: true}
+		var box *sharedMailbox
 		var clientExecutor, serverExecutor *transport.Executor
 		if plane == transport.Fast {
 			box, clientExecutor, serverExecutor = bootstrap.box, bootstrap.cx, bootstrap.sx
 		} else {
-			clientExecutor, serverExecutor = box.selectedWithIdleService(t, folder, clientService, idle, false), box.selectedWithIdleService(t, folder, serverService, idle, false)
+			box, clientExecutor, serverExecutor = bulkBox, bulkClient, bulkServer
 		}
 		s := &service{plane: plane, box: box, client: clientExecutor, server: serverExecutor, routes: map[transport.LedgerClass]route{}}
 		t.Cleanup(func() { s.client.Close(); s.server.Close() })
@@ -159,7 +159,11 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			if err != nil {
 				t.Fatal(err)
 			}
-			r.down, err = transport.NewClientReceiver(a, class, ca, transport.ServerOrigin{Store: r.store.StoreID(), Run: r.store.Run(), Account: "account1", User: "12345678", Folder: folder, UIDValidity: 9}, key)
+			origin := transport.ServerOrigin{Store: learned.ControlStore, Run: learned.ControlRun, Account: "account1", User: "12345678", Folder: folder, UIDValidity: 9}
+			if class == transport.DataLedger {
+				origin.Store, origin.Run = learned.DataStore, learned.DataRun
+			}
+			r.down, err = transport.NewClientReceiver(a, class, ca, origin, key)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -250,11 +254,11 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 	if _, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 1, PerAccount: 2}, clientCarriers...); !errors.Is(err, transport.ErrProtocol) {
 		t.Fatal("runtime exceeded the explicit socket budget", err)
 	}
-	clientRuntime, err := transport.NewRuntime(a, nil, transport.RuntimeBudget{Connections: 2, PerAccount: 2}, clientCarriers...)
+	clientRuntime, err := transport.NewRosterRuntime(clientRoster, a, nil, clientCarriers...)
 	if err != nil {
 		t.Fatal(err)
 	}
-	serverRuntime, err := transport.NewRuntime(b, exit, transport.RuntimeBudget{Connections: 3, PerAccount: 3}, serverCarriers...)
+	serverRuntime, err := transport.NewRosterRuntime(serverRoster, b, exit, serverCarriers...)
 	if err != nil {
 		clientRuntime.Close()
 		t.Fatal(err)

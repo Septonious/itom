@@ -1,6 +1,11 @@
 package transport
 
-import "itom.local/core/secure"
+import (
+	"crypto/sha256"
+	"sync"
+
+	"itom.local/core/secure"
+)
 
 // Epoch exposes the confirmed secure counter authority needed by the original
 // wallet's OpenBound API. It exposes no raw keys or mutable Noise cipher state.
@@ -50,11 +55,15 @@ func (b *SessionBootstrap) inbox(executor *Executor, limits InboxLimits, driver 
 // It conveys no deletion/refund authority, grant, payload or secret keys. Fields
 // are private so only completed key establishment can mint a handoff.
 type BootstrapHandoff struct {
-	epoch      *secure.Epoch
-	generation uint64
-	client     bool
-	origin     ServerOrigin
-	uids       []uint32
+	mu             sync.Mutex
+	rosterConsumed bool
+	rosterComplete bool
+	keyHash        [32]byte
+	epoch          *secure.Epoch
+	generation     uint64
+	client         bool
+	origin         ServerOrigin
+	uids           []uint32
 }
 
 // Handoff also requires actual BODY observation of all six startup messages,
@@ -82,10 +91,13 @@ func (b *SessionBootstrap) handoff(driver *BootstrapDriver) (*BootstrapHandoff, 
 	if b.driver != driver {
 		return nil, ErrProtocol
 	}
+	if b.handedOff {
+		return nil, ErrProtocol
+	}
 	if err := b.handoffReadyLocked(); err != nil {
 		return nil, err
 	}
-	h := &BootstrapHandoff{epoch: b.epoch, generation: b.generation, client: b.client, origin: b.origin}
+	h := &BootstrapHandoff{epoch: b.epoch, generation: b.generation, client: b.client, origin: b.origin, keyHash: sha256.Sum256(b.key[:])}
 	for uid := range b.knownUIDs {
 		h.uids = append(h.uids, uid)
 	}
@@ -126,6 +138,11 @@ func NewServerInboxWithBootstrap(executor *Executor, limits InboxLimits, handoff
 }
 
 func (i *Inbox) adoptBootstrap(h *BootstrapHandoff) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.rosterConsumed {
+		return ErrProtocol
+	}
 	if i.session.generation != h.generation || i.scope != (InboxScope{Account: h.origin.Account, Folder: h.origin.Folder, UIDValidity: h.origin.UIDValidity}) || i.routes[ControlLedger] != h.origin.Store || len(h.uids) > i.limits.KnownUIDs {
 		return ErrProtocol
 	}

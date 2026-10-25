@@ -1,0 +1,55 @@
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/wrong_plan
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/same_issuer
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_run
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reordered_entry
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/larger_budget
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_account
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_keywords
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_incarnation
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reserved_bit
+--- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan (0.01s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/wrong_plan (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/same_issuer (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_run (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reordered_entry (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/larger_budget (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_account (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_keywords (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_incarnation (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reserved_bit (0.00s)
+=== RUN   TestRosterSelectedCapacityFitsOriginalSecurePacketBound
+--- PASS: TestRosterSelectedCapacityFitsOriginalSecurePacketBound (0.07s)
+=== RUN   TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP
+    open_imap_test.go:35: HTTP integrity sample run=0 payload_bytes=29 elapsed=163.985974ms
+    open_imap_test.go:35: HTTP integrity sample run=1 payload_bytes=262267 elapsed=1.00230428s
+    open_imap_test.go:35: HTTP integrity sample run=2 payload_bytes=71 elapsed=182.065137ms
+    open_imap_test.go:35: HTTP integrity sample run=3 payload_bytes=262461 elapsed=942.277305ms
+    open_imap_test.go:35: physical mailbox plane=0 live=16 peak=28 total_uids=100 bytes=12206 client_receipts={Queued:58 Marked:56 Refused:0 Pending:2 Disabled:false} server_reclamation={Queued:87 Released:82 Refused:0 Probes:24 ReceiptProbes:23 PeerReceipts:55 Batches:25 MaxBatch:14 Pending:5 Disabled:false}
+    open_imap_test.go:35: physical mailbox plane=1 live=0 peak=2 total_uids=8 bytes=0 client_receipts={Queued:4 Marked:4 Refused:0 Pending:0 Disabled:false} server_reclamation={Queued:8 Released:6 Refused:0 Probes:3 ReceiptProbes:10 PeerReceipts:4 Batches:4 MaxBatch:2 Pending:2 Disabled:false}
+--- PASS: TestColdTLSHTTPAndWindowCrossingBodiesThroughAccountedIMAP (2.58s)
+=== RUN   TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService
+    open_imap_test.go:41: HTTP integrity sample run=0 payload_bytes=29 elapsed=884.460618ms
+    open_imap_test.go:41: HTTP integrity sample run=1 payload_bytes=262267 elapsed=1.880573576s
+    open_imap_test.go:41: HTTP integrity sample run=2 payload_bytes=71 elapsed=1.248987066s
+    open_imap_test.go:41: HTTP integrity sample run=3 payload_bytes=262461 elapsed=2.17614043s
+    open_imap_test.go:41: physical mailbox plane=0 live=29 peak=34 total_uids=85 bytes=25547 client_receipts={Queued:49 Marked:42 Refused:0 Pending:7 Disabled:false} server_reclamation={Queued:71 Released:56 Refused:0 Probes:8 ReceiptProbes:8 PeerReceipts:36 Batches:8 MaxBatch:14 Pending:15 Disabled:false}
+    open_imap_test.go:41: physical mailbox plane=1 live=4 peak=4 total_uids=9 bytes=627100 client_receipts={Queued:5 Marked:3 Refused:0 Pending:2 Disabled:false} server_reclamation={Queued:9 Released:4 Refused:0 Probes:3 ReceiptProbes:2 PeerReceipts:2 Batches:3 MaxBatch:2 Pending:5 Disabled:false}
+--- PASS: TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService (7.78s)
+=== RUN   TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService
+    open_imap_test.go:47: HTTP integrity sample run=0 payload_bytes=29 elapsed=889.689211ms
+    open_imap_test.go:47: HTTP integrity sample run=1 payload_bytes=262267 elapsed=1.471996224s
+    open_imap_test.go:47: HTTP integrity sample run=2 payload_bytes=71 elapsed=1.394096985s
+    open_imap_test.go:47: HTTP integrity sample run=3 payload_bytes=262461 elapsed=1.436812127s
+    open_imap_test.go:47: physical mailbox plane=0 live=34 peak=37 total_uids=82 bytes=26756 client_receipts={Queued:46 Marked:39 Refused:0 Pending:7 Disabled:false} server_reclamation={Queued:66 Released:43 Refused:0 Probes:6 ReceiptProbes:7 PeerReceipts:31 Batches:7 MaxBatch:16 Pending:23 Disabled:false}
+    open_imap_test.go:47: physical mailbox plane=1 live=4 peak=6 total_uids=12 bytes=363716 client_receipts={Queued:8 Marked:5 Refused:0 Pending:3 Disabled:false} server_reclamation={Queued:10 Released:6 Refused:0 Probes:2 ReceiptProbes:2 PeerReceipts:4 Batches:3 MaxBatch:4 Pending:4 Disabled:false}
+--- PASS: TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService (6.83s)
+=== RUN   TestColdTLSHTTPKeepsServingThroughOnMailGrantTurnoverAndRetirement
+    open_imap_test.go:476: HTTP integrity sample run=0 payload_bytes=29 elapsed=141.299252ms
+    open_imap_test.go:476: actual on-mail DATA fence/replacement/status/retirement completed: old_used_messages=2
+    open_imap_test.go:476: HTTP integrity sample run=1 payload_bytes=262267 elapsed=923.390236ms
+    open_imap_test.go:476: physical mailbox plane=0 live=15 peak=21 total_uids=60 bytes=11183 client_receipts={Queued:32 Marked:31 Refused:0 Pending:1 Disabled:false} server_reclamation={Queued:46 Released:45 Refused:0 Probes:19 ReceiptProbes:17 PeerReceipts:31 Batches:19 MaxBatch:7 Pending:1 Disabled:false}
+    open_imap_test.go:476: physical mailbox plane=1 live=0 peak=3 total_uids=5 bytes=0 client_receipts={Queued:3 Marked:3 Refused:0 Pending:0 Disabled:false} server_reclamation={Queued:5 Released:5 Refused:0 Probes:4 ReceiptProbes:4 PeerReceipts:3 Batches:4 MaxBatch:2 Pending:0 Disabled:false}
+--- PASS: TestColdTLSHTTPKeepsServingThroughOnMailGrantTurnoverAndRetirement (1.43s)
+PASS
+ok  	itom.local/core/transport	19.837s

@@ -1,0 +1,4 @@
+# itom.local/core/transport [itom.local/core/transport.test]
+transport/roster_driver.go:13:2: "itom.local/core/wire" imported and not used
+FAIL	itom.local/core/transport [build failed]
+FAIL

@@ -1,0 +1,36 @@
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/wrong_plan
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reserved_bit
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/same_issuer
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_run
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/larger_budget
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_account
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_keywords
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_incarnation
+=== RUN   TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reordered_entry
+--- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/wrong_plan (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reserved_bit (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/same_issuer (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_run (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/larger_budget (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_account (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/missing_keywords (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/zero_incarnation (0.00s)
+    --- PASS: TestRosterWireRejectsChangedBudgetsIncarnationsOrderAndPlan/reordered_entry (0.00s)
+=== RUN   TestRosterSelectedCapacityFitsOriginalSecurePacketBound
+--- PASS: TestRosterSelectedCapacityFitsOriginalSecurePacketBound (0.03s)
+=== RUN   TestRosterCancellationPreservesSelectedLanesAndResumesOriginalExchange
+--- PASS: TestRosterCancellationPreservesSelectedLanesAndResumesOriginalExchange (0.20s)
+=== RUN   TestRosterLostAppendReplyKeepsExactChargedPublicationAndCannotBecomeReady
+--- PASS: TestRosterLostAppendReplyKeepsExactChargedPublicationAndCannotBecomeReady (0.16s)
+=== RUN   TestRosterForeignExistingWalletIsRetainedAndNeverAcknowledged
+--- PASS: TestRosterForeignExistingWalletIsRetainedAndNeverAcknowledged (0.16s)
+=== RUN   TestRosterTenSelectedAccountsAgreeOnActualIncarnationsWithinPhoneServerBudgets
+--- PASS: TestRosterTenSelectedAccountsAgreeOnActualIncarnationsWithinPhoneServerBudgets (0.69s)
+=== RUN   TestRosterDisagreementCannotOpenDataWalletOrSendAccept
+--- PASS: TestRosterDisagreementCannotOpenDataWalletOrSendAccept (0.16s)
+=== RUN   TestRosterRejectsInvalidOwnershipBeforeConsumingBootstrapCapability
+--- PASS: TestRosterRejectsInvalidOwnershipBeforeConsumingBootstrapCapability (0.16s)
+PASS
+ok  	itom.local/core/transport	2.597s

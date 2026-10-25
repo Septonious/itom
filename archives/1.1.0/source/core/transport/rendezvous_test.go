@@ -15,9 +15,9 @@ import (
 	"itom.local/core/wire"
 )
 
-func rendezvousFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
+func rendezvousFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool, extraAccounts ...string) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
 	t.Helper()
-	f := &bootstrapFixture{store: issuer(t, filepath.Join(t.TempDir(), "control.db"), 64<<20, 128), key: bytes.Repeat([]byte{17}, 32), box: &sharedMailbox{keywords: keywords, reclamation: true}}
+	f := &bootstrapFixture{store: issuer(t, filepath.Join(t.TempDir(), "control.db"), 64<<20, 128, extraAccounts...), key: bytes.Repeat([]byte{17}, 32), box: &sharedMailbox{keywords: keywords, reclamation: true}}
 	f.cx = f.box.selectedWithIdleService(t, "fast", clientService, idle, false)
 	f.sx = f.box.selectedWithIdleService(t, "fast", serverService, idle, false)
 	t.Cleanup(func() { f.cx.Close(); f.sx.Close() })
@@ -61,9 +61,9 @@ func fetchAt(t *testing.T, x *transport.Executor, uid uint32) transport.Body {
 	return bodies[0]
 }
 
-func requestedInvitationFixture(t *testing.T, clientService, serverService []time.Duration, idle bool) *bootstrapFixture {
+func requestedInvitationFixture(t *testing.T, clientService, serverService []time.Duration, idle bool, extraAccounts ...string) *bootstrapFixture {
 	t.Helper()
-	f, client, server := rendezvousFixture(t, true, clientService, serverService, idle)
+	f, client, server := rendezvousFixture(t, true, clientService, serverService, idle, extraAccounts...)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := client.Submit(ctx, f.cx, f.wallet, f.key); err != nil {

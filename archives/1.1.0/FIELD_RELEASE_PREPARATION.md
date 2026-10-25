@@ -34,8 +34,9 @@ permission over accounted mail, using a bounded MAC-authenticated permanent
 keyword request for the freshly generated wallet Session. The client learns the
 issuer identity from the verified standing body. DATA offers now arrive through
 the authenticated accounted session authority channel, rather than direct client
-fixture acceptance. Trusted DATA issuer/roster mapping remains fixture-supplied;
-this is not complete production initialization. Runtime handover waits for actual
+fixture acceptance. DATA issuer identities and selected-lane mapping now arrive
+through authenticated roster negotiation; this is not complete production
+initialization. Runtime handover waits for actual
 BODY observation of every startup message, preserves bounded UID history across
 replica absence and freezes bootstrap admission. Unknown writes retain their
 exact charge and require storage proof; storage proof alone is not key confirmation.
@@ -43,8 +44,8 @@ exact charge and require storage proof; storage proof alone is not key confirmat
 ## Integration required for the candidate
 
 1. Connect the accounted rendezvous/invitation and independent key-exchange
-   drivers to a production long-lived coordinator and agreed READY/roster
-   negotiation from the actual profile. Verify actual writable permanent keyword
+   drivers and the implemented authenticated roster exchange to a production
+   long-lived coordinator using the actual profile. Verify actual writable permanent keyword
    support; the uploaded field trace does not establish this capability. Establish server/store/run identities
    and real duplex permission before VPN CONNECTED. Account for bootstrap/control
    mail within the original separately reserved budget; neither an uncharged
@@ -197,3 +198,20 @@ actual trusted ledger identities; it does not yet negotiate a production roster
 or recover missing historical wallet state. Automatic overlapping CONTROL
 renewal, multi-account coordination, profile/journal reconciliation, native
 activation and all original performance gates still block an installable RC.
+
+
+## Selected-lane roster integration
+
+The [roster contract](SESSION_ROSTER.md) and [source check evidence](experiments/session-v2/ROSTER_CHECK_RESULTS.json)
+replace the cold runtime's out-of-band DATA issuer mapping with an accounted,
+Noise-authenticated offer/accept/READY exchange. Every actual message and the
+final own publication must be observed/accepted before handover. Wallets open in
+place; mismatched historical identity is retained and rejected, not reset.
+Runtime adoption checks the exact negotiated lanes, ledgers and startup UID
+history. Ten-account agreement keeps the original phone/server twenty/thirty
+socket budgets and selects only the two implemented lanes per account.
+
+Production profile/inventory coordination, missing-history recovery, automatic
+overlapping CONTROL/DATA policy, native activation and full sustained performance
+qualification remain required. Roster confirmation alone is not VPN CONNECTED or
+permission to send DATA. This checkpoint produces no APK/server RC.

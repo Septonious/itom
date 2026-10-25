@@ -1,0 +1,244 @@
+{
+  "status": "unqualified source checkpoint; production startup remains V2_NOT_READY; intermediate repeated TLS timeout retained",
+  "parent": "d93fe0f9e9c38af48cb69119b2be3daf6a948359",
+  "checks": [
+    {
+      "file": "ROSTER_COLD_FIRST.LOG",
+      "sha256": "7e8ed328c0e67e29afda9ea3701d5aebc982948f2a75cfe512d0d98f8063dfa0",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_COLD_RACE_FIRST.LOG",
+      "sha256": "7b3ec7458c2f96b6a37ff5ce238f4a60e78fe3c34e90b222f8d809048baf6beb",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_CORE_RACE.JSONL",
+      "sha256": "6765290d6ee984306ab3db15bf1c58d434f49038a77de049488bf1c3a6fb09e1",
+      "top_level_group_executions": {
+        "pass": 205
+      },
+      "package_outcomes": {
+        "pass": 6
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_CORE_VET.TXT",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ROSTER_FAILURE_FIRST.LOG",
+      "sha256": "4c2767b5bcf5cfea2f375a560b39940f42afd7833452a9bec0c9fab38f4d1e64",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_FAILURE_FOURTH.LOG",
+      "sha256": "f412e95c052e64f2153447ff36164408a90f47212e29a3ea329bbe6330bab274",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_FAILURE_SECOND.LOG",
+      "sha256": "13bd24392941d7d88d5b4bc2b33a28d987c7c9cf4dbc3da336469595c75390af",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_FAILURE_THIRD.LOG",
+      "sha256": "a9e7975b47c639fe362bdb8bb8e471b1cf23e9a819069277016df208c9579b26",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_FINAL_CORE_RACE.JSONL",
+      "sha256": "98464d411f7c94bec23f911822dea3508cae77f415c5fa2ca8d391cb6648560a",
+      "top_level_group_executions": {
+        "pass": 206
+      },
+      "package_outcomes": {
+        "pass": 6
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_FINAL_CORE_VET.TXT",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ROSTER_FINAL_NATIVE_RACE.JSONL",
+      "sha256": "c291a37a794f979c17eb7c077da0079409a2da17ac5c9db5a4ff0e6c3215b11d",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_FINAL_REPEATED_RACE.JSONL",
+      "sha256": "24a706c942898ba4b0cc2e756e0889fc4b952cd1fb8e132693bd52bcc80eb171",
+      "top_level_group_executions": {
+        "pass": 39
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_INITIAL_COMPILE.LOG",
+      "sha256": "5c31db4459922e1a9b0d8ba11f58b655db977041483680fd9c1443e5e11d5d00",
+      "kind": "retained intermediate diagnostic output; includes initial build errors"
+    },
+    {
+      "file": "ROSTER_INTEGRATED_FIRST.JSONL",
+      "sha256": "862cceac4ce604631ba0e8fa5636ee95a27d57c77b584934478f3d081d099a0a",
+      "top_level_group_executions": {
+        "pass": 22
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_NATIVE_RACE.JSONL",
+      "sha256": "ca6770d83e1c900123a9bcb0c29677b8c888e5fe83d5a0e02238842f8f5723be",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_REPEATED_RACE.JSONL",
+      "sha256": "040153a99449c2c4e766229d8596a1aeed7ec023922e9489009bcc281d843bd0",
+      "top_level_group_executions": {
+        "pass": 35,
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "ROSTER_REPLICA_AFTER_FIX.JSONL",
+      "sha256": "5fc022ef688c99b9823b891e2aa2cf134daaf4e9f79af7a6b25e67c9971e2cdd",
+      "top_level_group_executions": {
+        "pass": 5
+      },
+      "package_outcomes": {
+        "pass": 1
+      },
+      "failed": []
+    },
+    {
+      "file": "ROSTER_REPLICA_BEFORE_FIX.JSONL",
+      "sha256": "e9fce6cea4a0bf9667df0d151927839c99e5519def9e00b3b3766e52810324a0",
+      "top_level_group_executions": {
+        "fail": 1
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "ROSTER_REPLICA_UNPATCHED_REPEAT.JSONL",
+      "sha256": "06e03c4fedc67e745373af09333274f7b05c83376af5fb1f98005083314284e4",
+      "top_level_group_executions": {
+        "fail": 5
+      },
+      "package_outcomes": {
+        "fail": 1
+      },
+      "failed": [
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "TestRosterRetainsBootstrapUIDKnowledgeAcrossTemporaryReplicaAbsence",
+        "itom.local/core/transport"
+      ]
+    }
+  ],
+  "final_results": {
+    "core_race_passed": 206,
+    "core_race_failed": 0,
+    "native_race_passed": 10,
+    "native_race_failed": 0,
+    "repeated_targeted_group_executions_passed": 39,
+    "repeated_targeted_failed": 0,
+    "replica_regression_after_fix_passed": 5,
+    "core_vet": "pass"
+  },
+  "retained_failures": [
+    {
+      "file": "ROSTER_REPEATED_RACE.JSONL",
+      "passed": 35,
+      "failed": 1,
+      "test": "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService",
+      "reason": "original TLS handshake deadline missed; retained command/journal diagnostics do not establish a root cause; not explained or qualified away by the UID-visibility fix"
+    },
+    {
+      "files": [
+        "ROSTER_REPLICA_BEFORE_FIX.JSONL",
+        "ROSTER_REPLICA_UNPATCHED_REPEAT.JSONL"
+      ],
+      "reason": "temporary replica absence discarded known bootstrap UIDs, causing old startup frames to enter roster decoding; fixed by retaining bounded original startup UID knowledge"
+    }
+  ],
+  "commands": {
+    "core": "go test -race -json ./... -count=1 -timeout=180s",
+    "native": "go test -race -json ./... -count=1 -timeout=120s",
+    "repeated": "go test -race -json ./transport -run 'TestRoster|TestCold' -count=3 -timeout=180s",
+    "replica": "go test -race -json ./transport -run '^TestRosterRetainsBootstrap' -count=5 -timeout=60s",
+    "vet": "go vet ./..."
+  },
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/bootstrap_handoff.go": "4c1ae37e0fe9b5052aac6eb4839113366eb47ba3b8b499570029c91b4dace373",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "8c240f7909e369ad58bada77635393576e19c8c43c9fbcdb2febaa87ce325caf",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "6540f0bc2699f2ace6869e80dbb71cf12890aeae66cf1fcd42e818fc7ddf8d86",
+    "archives/1.1.0/source/core/transport/rendezvous_test.go": "e696dab7f17fd019c3c105615c2f909fdb793c6f0f6fcc807a3c7fcfb97c45f0",
+    "archives/1.1.0/source/core/transport/roster.go": "29f10d58c877f7b8b72ce57c2b5de0522a5da25ec57feb58018a138432e69256",
+    "archives/1.1.0/source/core/transport/roster_codec_test.go": "e7aaf8ee83622dcf255311c9f03b5b732c07505dfe594a56d995e6584794eda3",
+    "archives/1.1.0/source/core/transport/roster_driver.go": "19d8af904b6e6404f0afdb4323b97ba080f5ce9fb6d86c733efeaa1a6fad5e19",
+    "archives/1.1.0/source/core/transport/roster_driver_test.go": "db56bed440f00fe9ba2f85c6e4c83276cafb51a05fd47fcdb4b4a02262d6131c",
+    "archives/1.1.0/source/core/transport/roster_publication.go": "ce9f9dbce1ddf3361fa94db53fdf55f5c16c847fe9c50eaecb50d503e11f24d5",
+    "archives/1.1.0/source/core/transport/roster_receive.go": "a27bde6efec87db74a4bc2f621524c3826c6d0ad70258df5577415a0da53452d",
+    "archives/1.1.0/source/core/transport/server_publication_test.go": "6fd03427fd4d859880c2c46110a5357a4d8c0adf8a32c5b7722538a392989418"
+  },
+  "unchanged_constraints": [
+    "initial cold CONTROL grant 32 messages",
+    "64 live messages / 16 MiB fixture mailbox",
+    "1500ms OPEN/TLS/header and 5-second HTTP deadlines",
+    "original wallet/journal spend, cleanup proof, replay, nonce and key usage limits",
+    "configured per-user folder bound",
+    "primary phone/server per-account budgets two/three",
+    "Android identity/signing and completed DNS behavior",
+    "250ms idle/light, 2000ms loaded, sustained 100Mbps each way plus original ramp/tail/rolling/stall/failure gates"
+  ],
+  "qualification": {
+    "rambler_provider_rates": "not measured by these fixtures",
+    "application_RTT_targets": "not established",
+    "all_observed_cold_attempts_passed": false,
+    "ten_account_case": "roster agreement on forty actual TLS/IMAP selected executors, twenty each endpoint, budgets twenty/thirty; not a multi-account DATA throughput result",
+    "production_native_entry_points": "V2_NOT_READY",
+    "APK_or_deployable_server_release": false
+  },
+  "remaining": [
+    "production persistent profile/rendezvous/inventory owner",
+    "in-place existing journal/wallet reconciliation, including missing client history",
+    "multi-account authority policy and overlapping CONTROL/DATA renewal",
+    "native TUN and production API activation",
+    "resolve intermittent cold TLS timeout and perform original sustained qualification"
+  ]
+}

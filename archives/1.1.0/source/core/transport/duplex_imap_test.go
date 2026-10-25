@@ -116,6 +116,11 @@ func (m *sharedMailbox) selectedWithCommandService(t *testing.T, folder string, 
 // exercise bounded audit discovery rather than an assumed perfect hint path.
 func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, delays []time.Duration, idle, silent bool) *transport.Executor {
 	t.Helper()
+	return m.selectedAccountService(t, "account1", folder, delays, idle, silent)
+}
+
+func (m *sharedMailbox) selectedAccountService(t *testing.T, account, folder string, delays []time.Duration, idle, silent bool) *transport.Executor {
+	t.Helper()
 	capabilities := ""
 	if idle {
 		capabilities = "IDLE"
@@ -123,7 +128,7 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 	if m.reclamation {
 		capabilities += " UIDPLUS"
 	}
-	return selectedAccountPeerWithFeatures(t, "account1", folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
+	return selectedAccountPeerWithFeatures(t, account, folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
 		turn := 0
 		delay := func() {

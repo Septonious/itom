@@ -5,7 +5,10 @@ Production startup returns `V2_NOT_READY`; packaging remains disabled. The
 250ms idle/light RTT and sustained 100Mbps targets are not established.
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/AUTHORITY_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/ROSTER_CHECK_RESULTS.json).
+
+[Selected-lane roster negotiation](SESSION_ROSTER.md) now discovers DATA issuer
+identity through accounted mail before the runtime.
 
 [Session authority integration](SESSION_AUTHORITY.md) describes the accounted
 grant/fence/status/retirement channel now used by the lab runtime.

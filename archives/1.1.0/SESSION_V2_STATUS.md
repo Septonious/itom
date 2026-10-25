@@ -12,17 +12,24 @@ Preparation of a working field-test candidate is tracked in
 replaced the production API stubs or completed production initialization. Accounted
 on-mail Noise establishment and guarded runtime handover now exist; initial
 permission now has an accounted rendezvous/invitation component. Production
-coordination and agreed READY/roster negotiation remain incomplete.
+coordination remains incomplete. Authenticated selected-lane roster negotiation
+now exists and runs before the cold runtime.
 
-The latest [session-authority checkpoint](experiments/session-v2/AUTHORITY_CHECK_RESULTS.json)
-passes 197/197 core race groups, 10/10 native groups, 33/33 repeated targeted group
-executions and core vet. The cold runtime now receives DATA permission through
-accounted CONTROL mail and exercises on-mail fence, replacement, final cleanup
-acknowledgement and retirement while continuing TLS/HTTP service. Actor/ticket,
-foreign-scope, replay, unknown-write and queue-full checks preserve original debt.
-This is functional integration, not RTT/bandwidth qualification. The production
-identity/roster owner, multi-account policy, recovery and native activation remain
-incomplete. See [the authority contract](SESSION_AUTHORITY.md).
+The latest [roster checkpoint](experiments/session-v2/ROSTER_CHECK_RESULTS.json)
+passes 206/206 core race groups, 10/10 native groups, 39/39 final repeated
+roster/cold group executions and core vet. It adds authenticated selected-lane
+agreement and DATA issuer discovery before the runtime. The cold TLS/HTTP
+fixture now opens its original DATA wallet against the
+on-mail identity, rather than a fixture-supplied issuer. Ten-account agreement,
+cancellation, uncertain writes, foreign wallet state, malformed metadata and
+ownership rejection have dedicated checks. See [the roster contract](SESSION_ROSTER.md).
+A reproduced temporary-replica startup-history bug is fixed. An intermediate
+repeated quiet-IDLE cohort still missed one original TLS startup deadline; that
+failure remains retained and is not treated as performance qualification.
+The existing [authority contract](SESSION_AUTHORITY.md) still governs real DATA
+permission, fencing, final cleanup and retirement. These are functional checks,
+not RTT/bandwidth qualification. The production lifecycle owner, overlapping
+multi-account authority policy, recovery and native activation remain incomplete.
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -31,6 +38,15 @@ not implementation or test oracles. Cryptographic/accounting contracts remain
 mandatory independently of that implementation.
 
 ## Implemented
+
+* A three-message encrypted roster exchange binds agreed account/folder mapping,
+  DATA/CONTROL issuer identities and runs, actual selected UIDVALIDITY and both
+  explicit socket budgets. Original tickets are reserved before encryption and
+  committed before I/O. Every actual roster BODY must be observed before
+  handover; DATA wallets open in place before client acceptance. A foreign
+  existing wallet fails closed without replacement or acceptance. Ten-account
+  selection uses twenty physical lanes per endpoint within twenty/thirty budgets.
+  Runtime adoption enforces the negotiated lanes, ledgers and anchor UID history.
 
 * An independent CONTROL authority channel now carries original grant/status,
   usage/release and retirement messages under the confirmed Noise epoch. Pure
@@ -47,7 +63,8 @@ mandatory independently of that implementation.
   on-mail lifecycle replaces and retires a DATA allocation without reopening its
   old counters; retirement remains an explicit policy-owner action after final
   cleanup acknowledgement. Progress-only incoming status never needs new outgoing
-  queue capacity. The lab still supplies trusted issuer mapping, not DATA offers.
+  queue capacity. The lab now learns issuer mapping through the authenticated roster and DATA
+  offers through the separate authority channel.
 * Reclamation drains groups of already-ready candidates, up to the original
   32-proof journal transaction bound, without a fill delay. Explicit UID sets
   drive receipt discovery, mark/expunge and separate absence queries. Issuers

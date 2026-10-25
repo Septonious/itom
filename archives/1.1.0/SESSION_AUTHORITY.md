@@ -13,8 +13,8 @@ uses an original CONTROL wallet/journal permit. DATA cannot enter this channel.
 Before replay advancement, pure validation checks peer direction, user, account,
 original issuer identity/Run, fresh writer Session and authority class. Current
 constructors pin one account and two distinct issuer stores. The actual trusted
-issuer/roster mapping is still fixture-supplied; it is not inferred from missing
-wallet history or an unauthenticated provider hint.
+issuer mapping is now learned through [authenticated roster negotiation](SESSION_ROSTER.md);
+it is not inferred from missing wallet history or an unauthenticated provider hint.
 
 The logical queue is bounded at 64 outstanding records of at most 4096 payload
 bytes each, within the existing Session byte limit. Undispatched cumulative
@@ -75,7 +75,7 @@ queue-full issuance idempotence, sender admission/fence cancellation and stream
 actor availability. See `experiments/session-v2/AUTHORITY_CHECK_RESULTS.json` for
 raw results, failures retained from the first lifecycle iteration and source hashes.
 
-Remaining integration includes production identity/READY/roster negotiation,
+Remaining integration includes production identity/profile/roster coordination,
 existing-profile/journal reconciliation, multi-account authority coordination,
 automatic policy for overlapping CONTROL/DATA grants and retirement, old-session
 recovery, native activation and the full original performance gates. In particular,

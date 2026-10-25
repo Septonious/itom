@@ -1,0 +1,5 @@
+# itom.local/core/transport_test [itom.local/core/transport.test]
+transport/roster_driver_test.go:185:79: after.IMAP.CommandsStarted undefined (type transport.ExecutorSnapshot has no field or method CommandsStarted)
+transport/roster_driver_test.go:185:110: before.IMAP.CommandsStarted undefined (type transport.ExecutorSnapshot has no field or method CommandsStarted)
+FAIL	itom.local/core/transport [build failed]
+FAIL
