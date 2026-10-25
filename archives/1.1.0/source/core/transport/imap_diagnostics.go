@@ -12,6 +12,7 @@ const (
 	commandIdle
 	commandFlags
 	commandStore
+	commandExpunge
 	commandClasses
 )
 
@@ -51,6 +52,7 @@ type ExecutorSnapshot struct {
 	LiteralActive     bool          `json:"literal_active"`
 	IdleActive        bool          `json:"idle_active"`
 	Closed            bool          `json:"closed"`
+	UIDPlusSupported  bool          `json:"uidplus_supported"`
 	KeywordsSupported bool          `json:"keywords_supported"`
 	IdleSupported     bool          `json:"idle_supported"`
 	Failure           string        `json:"failure,omitempty"`
@@ -63,6 +65,7 @@ type ExecutorSnapshot struct {
 	Idle              CommandTiming `json:"idle"`
 	Flags             CommandTiming `json:"flags"`
 	Store             CommandTiming `json:"store"`
+	Expunge           CommandTiming `json:"expunge"`
 }
 
 // Snapshot reads counters only. It neither issues a probe nor spends mailbox
@@ -71,8 +74,8 @@ func (e *Executor) Snapshot() ExecutorSnapshot {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	s := ExecutorSnapshot{PendingTags: len(e.pending), WriterWaiters: e.writerWaiters,
-		Closed: e.closed != nil, KeywordsSupported: e.keywords, IdleSupported: e.idleSupported, CapacityRefusals: e.capacityRefusals, WriterWait: e.writerWait,
-		Append: e.timing[commandAppend], Fetch: e.timing[commandBody], Inventory: e.timing[commandInventory], Noop: e.timing[commandNoop], Idle: e.timing[commandIdle], Flags: e.timing[commandFlags], Store: e.timing[commandStore]}
+		Closed: e.closed != nil, UIDPlusSupported: e.uidPlus, KeywordsSupported: e.keywords, IdleSupported: e.idleSupported, CapacityRefusals: e.capacityRefusals, WriterWait: e.writerWait,
+		Append: e.timing[commandAppend], Fetch: e.timing[commandBody], Inventory: e.timing[commandInventory], Noop: e.timing[commandNoop], Idle: e.timing[commandIdle], Flags: e.timing[commandFlags], Store: e.timing[commandStore], Expunge: e.timing[commandExpunge]}
 	if e.closed != nil {
 		s.Failure = serviceFailure(e.closed)
 	} else {

@@ -26,24 +26,25 @@ var (
 )
 
 type Store struct {
-	mu               sync.Mutex
-	metrics          commitMetrics
-	db               *bolt.DB
-	config           Config
-	accounts         map[string]Account
-	users            map[string]User
-	userIDs          map[string]bool
-	id               wire.ID
-	run              uint64
-	ready            map[string]bool
-	poisoned, closed bool
-	existing         bool
-	originGrants     map[uint64]originGrantView
-	originSnapshotID int
-	originSnapshot   map[string]originAmounts
-	originSessions   map[originSession]originAmounts
-	sessionClaims    map[Scope]bool // bounded exclusive startup ownership in this Run
-	initialSessions  map[Scope]bool // do not allocate another initial lease for a repeated request
+	mu                sync.Mutex
+	metrics           commitMetrics
+	db                *bolt.DB
+	config            Config
+	accounts          map[string]Account
+	users             map[string]User
+	userIDs           map[string]bool
+	id                wire.ID
+	run               uint64
+	ready             map[string]bool
+	poisoned, closed  bool
+	existing          bool
+	originGrants      map[uint64]originGrantView
+	originSnapshotID  int
+	originSnapshot    map[string]originAmounts
+	originSessions    map[originSession]originAmounts
+	localPublications map[AttemptRef]bool // volatile exclusion while an actual APPEND drains
+	sessionClaims     map[Scope]bool      // bounded exclusive startup ownership in this Run
+	initialSessions   map[Scope]bool      // do not allocate another initial lease for a repeated request
 	// Fault hooks are package-private; tests simulate failure before commit
 	// and a lost commit acknowledgement. Production cannot disable fsync.
 	beforeCommit, afterCommit func() error

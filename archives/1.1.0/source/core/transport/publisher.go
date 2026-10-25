@@ -141,6 +141,16 @@ func (p *PreparedPublication) Start(ctx context.Context, executor *Executor) (Pu
 	}
 	p.started = true
 	p.mu.Unlock()
+	if p.local != nil {
+		release, err := p.local.store.PinLocalPublication(p.local.attempt)
+		if err != nil {
+			p.mu.Lock()
+			p.started = false
+			p.mu.Unlock()
+			return NotStarted, err
+		}
+		defer release()
+	}
 	command, err := executor.Append(ctx, p.folder, p.mime)
 	if command == nil {
 		// No command was issued and the durable permit is still unused. Retain it

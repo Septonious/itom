@@ -96,6 +96,7 @@ type Executor struct {
 	publicationOwner bool
 	inboxOwner       bool
 	bootstrapOwner   bool
+	uidPlus          bool
 	keywords         bool
 	idleSupported    bool
 	idle             *operation

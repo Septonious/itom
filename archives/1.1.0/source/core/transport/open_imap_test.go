@@ -129,7 +129,7 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		if plane == transport.Bulk {
 			folder = "bulk"
 		}
-		box := &sharedMailbox{}
+		box := &sharedMailbox{reclamation: true, keywords: true}
 		var clientExecutor, serverExecutor *transport.Executor
 		if plane == transport.Fast {
 			box, clientExecutor, serverExecutor = bootstrap.box, bootstrap.cx, bootstrap.sx
@@ -189,6 +189,15 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 			}
 			if err != nil {
 				t.Fatal(err)
+			}
+			if !end.client {
+				if err := inbox.EnableReclamation(); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if err := inbox.EnableDeliveryReceipts(); err != nil {
+					t.Fatal(err)
+				}
 			}
 			readLimits := transport.DefaultInboxServiceLimits()
 			readLimits.PreferIdle = plane == transport.Bulk
@@ -331,6 +340,7 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		}
 		got, err := io.ReadAll(response.Body)
 		response.Body.Close()
+		t.Logf("HTTP integrity sample run=%d payload_bytes=%d elapsed=%s", run, size, time.Since(start))
 		if err != nil || !bytes.Equal(got, payload) {
 			t.Fatal("application echo changed or stalled", run, err)
 		}
@@ -343,6 +353,9 @@ func runColdAccountedHTTP(t *testing.T, clientService, serverService []time.Dura
 		}
 	}
 	for _, s := range services {
+		s.box.mu.Lock()
+		t.Logf("physical mailbox plane=%d live=%d peak=%d total_uids=%d bytes=%d client_receipts=%+v server_reclamation=%+v", s.plane, s.box.liveCountLocked(), s.box.peakMessages, len(s.box.bodies), s.box.bytes, s.readers[0].Stats().DeliveryReceipts, s.readers[1].Stats().Reclamation)
+		s.box.mu.Unlock()
 		for _, x := range []*transport.Executor{s.client, s.server} {
 			cmd, err := x.Noop(context.Background())
 			if err != nil {

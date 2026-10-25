@@ -17,7 +17,7 @@ import (
 
 func rendezvousFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
 	t.Helper()
-	f := &bootstrapFixture{store: issuer(t, filepath.Join(t.TempDir(), "control.db"), 64<<20, 128), key: bytes.Repeat([]byte{17}, 32), box: &sharedMailbox{keywords: keywords}}
+	f := &bootstrapFixture{store: issuer(t, filepath.Join(t.TempDir(), "control.db"), 64<<20, 128), key: bytes.Repeat([]byte{17}, 32), box: &sharedMailbox{keywords: keywords, reclamation: true}}
 	f.cx = f.box.selectedWithIdleService(t, "fast", clientService, idle, false)
 	f.sx = f.box.selectedWithIdleService(t, "fast", serverService, idle, false)
 	t.Cleanup(func() { f.cx.Close(); f.sx.Close() })

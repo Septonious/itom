@@ -25,12 +25,19 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	mu       sync.Mutex
-	bodies   [][]byte
-	bytes    int
-	changed  chan struct{}
-	keywords bool
-	flags    map[uint32]map[string]bool
+	mu             sync.Mutex
+	bodies         [][]byte
+	bytes          int
+	peakMessages   int
+	changed        chan struct{}
+	keywords       bool
+	reclamation    bool
+	reclaimFault   string // explicit maintenance fault; ordinary traffic is unchanged
+	expungeEntered chan struct{}
+	expungeRelease <-chan struct{}
+	appendEntered  chan struct{}
+	appendRelease  <-chan struct{}
+	flags          map[uint32]map[string]bool
 }
 
 func (m *sharedMailbox) changes() (int, <-chan struct{}) {
@@ -39,7 +46,17 @@ func (m *sharedMailbox) changes() (int, <-chan struct{}) {
 	if m.changed == nil {
 		m.changed = make(chan struct{})
 	}
-	return len(m.bodies), m.changed
+	return m.liveCountLocked(), m.changed
+}
+
+func (m *sharedMailbox) liveCountLocked() int {
+	n := 0
+	for _, body := range m.bodies {
+		if body != nil {
+			n++
+		}
+	}
+	return n
 }
 
 func (m *sharedMailbox) selected(t *testing.T, folder string) *transport.Executor {
@@ -61,6 +78,9 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 	capabilities := ""
 	if idle {
 		capabilities = "IDLE"
+	}
+	if m.reclamation {
+		capabilities += " UIDPLUS"
 	}
 	return selectedAccountPeerWithFeatures(t, "account1", folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
 		r := bufio.NewReader(conn)
@@ -125,13 +145,14 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 					return
 				}
 				m.mu.Lock()
-				if len(m.bodies) >= 64 || len(body) > (16<<20)-m.bytes {
-					count, used := len(m.bodies), m.bytes
+				if m.liveCountLocked() >= 64 || len(body) > (16<<20)-m.bytes || len(m.bodies) >= 8192 {
+					count, used := m.liveCountLocked(), m.bytes
 					m.mu.Unlock()
 					t.Errorf("fixture mailbox bounds exceeded: folder=%s messages=%d bytes=%d next=%d", folder, count, used, len(body))
 					return
 				}
 				m.bodies = append(m.bodies, body)
+				m.peakMessages = max(m.peakMessages, m.liveCountLocked())
 				m.bytes += len(body)
 				uid := len(m.bodies)
 				if m.changed != nil {
@@ -139,13 +160,72 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 					m.changed = make(chan struct{})
 				}
 				m.mu.Unlock()
+				if uid == 1 && m.appendEntered != nil {
+					close(m.appendEntered)
+				}
+				if uid == 1 && m.appendRelease != nil {
+					<-m.appendRelease
+				}
 				fmt.Fprintf(conn, "%s OK [APPENDUID 9 %d] stored\r\n", tag(line), uid)
 			case "UID":
-				if len(fields) == 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && m.keywords {
+				if len(fields) == 4 && fields[2] == "EXPUNGE" && m.reclamation {
+					if m.reclaimFault == "expunge_refused" {
+						fmt.Fprintf(conn, "%s NO expunge refused\r\n", tag(line))
+						continue
+					}
+					var uid uint32
+					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
+						t.Error("invalid EXPUNGE UID")
+						return
+					}
+					m.mu.Lock()
+					sequence := 0
+					deleted := false
+					if uid <= uint32(len(m.bodies)) {
+						for _, body := range m.bodies[:uid] {
+							if body != nil {
+								sequence++
+							}
+						}
+						if m.bodies[uid-1] != nil && m.flags[uid][`\Deleted`] && m.reclaimFault != "still_visible" {
+							m.bytes -= len(m.bodies[uid-1])
+							m.bodies[uid-1] = nil
+							delete(m.flags, uid)
+							deleted = true
+							if m.changed != nil {
+								close(m.changed)
+								m.changed = make(chan struct{})
+							}
+						}
+					}
+					m.mu.Unlock()
+					if deleted {
+						fmt.Fprintf(conn, "* %d EXPUNGE\r\n", sequence)
+					}
+					if m.expungeEntered != nil {
+						close(m.expungeEntered)
+					}
+					if m.expungeRelease != nil {
+						<-m.expungeRelease
+					}
+					if m.reclaimFault == "lost_expunge_tag" {
+						return
+					}
+					if m.reclaimFault == "changed_incarnation" {
+						fmt.Fprint(conn, "* OK [UIDVALIDITY 10] reset\r\n")
+					}
+					fmt.Fprintf(conn, "%s OK exact UID expunged\r\n", tag(line))
+					continue
+				}
+				if len(fields) == 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && (m.keywords || m.reclamation && fields[5] == `(\Deleted)`) {
 					var uid uint32
 					if _, err := fmt.Sscan(fields[3], &uid); err != nil || uid == 0 {
 						t.Error("invalid STORE UID")
 						return
+					}
+					if m.reclaimFault == "store_refused" && fields[5] == `(\Deleted)` {
+						fmt.Fprintf(conn, "%s NO store refused\r\n", tag(line))
+						continue
 					}
 					keyword := strings.TrimSuffix(strings.TrimPrefix(fields[5], "("), ")")
 					m.mu.Lock()
@@ -166,6 +246,9 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 						delete(m.flags[uid], keyword)
 					}
 					m.mu.Unlock()
+					if m.reclaimFault == "lost_store_tag" && fields[5] == `(\Deleted)` {
+						return
+					}
 					fmt.Fprintf(conn, "%s OK flags stored\r\n", tag(line))
 					continue
 				}
@@ -181,11 +264,21 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 				m.mu.Lock()
 				last = min(last, len(m.bodies))
 				var bodies [][]byte
+				var sequenceBefore int
+				for _, body := range m.bodies[:min(first-1, len(m.bodies))] {
+					if body != nil {
+						sequenceBefore++
+					}
+				}
 				if first <= last {
 					bodies = append(bodies, m.bodies[first-1:last]...)
 				}
 				m.mu.Unlock()
 				for i, body := range bodies {
+					if body == nil {
+						continue
+					}
+					sequenceBefore++
 					if strings.Join(fields[4:], " ") == "(UID FLAGS)" {
 						m.mu.Lock()
 						var flags []string
@@ -193,14 +286,14 @@ func (m *sharedMailbox) selectedWithIdleService(t *testing.T, folder string, del
 							flags = append(flags, flag)
 						}
 						m.mu.Unlock()
-						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", first+i, first+i, strings.Join(flags, " "))
+						fmt.Fprintf(conn, "* %d FETCH (UID %d FLAGS (%s))\r\n", sequenceBefore, first+i, strings.Join(flags, " "))
 						continue
 					}
 					if fields[4] == "(UID)" {
 						fmt.Fprintf(conn, "* %d FETCH (UID %d)\r\n", first+i, first+i)
 						continue
 					}
-					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", first+i, first+i, len(body))
+					fmt.Fprintf(conn, "* %d FETCH (UID %d BODY[] {%d}\r\n", sequenceBefore, first+i, len(body))
 					conn.Write(body)
 					fmt.Fprint(conn, ")\r\n")
 				}

@@ -8,15 +8,17 @@ import (
 // NewServerInbox couples selected physical scope with all peer/own routes.
 // A wrong account, folder or incarnation rejects before any mailbox command.
 func NewServerInbox(executor *Executor, limits InboxLimits, receivers ...*RemoteReceiver) (*Inbox, error) {
-	decode, err := serverInboxDecoder(receivers...)
+	var inbox *Inbox
+	decode, err := serverInboxDecoderWithReclamation(func(r *reclaimBody) { inbox.queueReclaimToken(r.location.UID, r) }, receivers...)
 	if err != nil {
 		return nil, err
 	}
 	r := receivers[0]
-	inbox, err := newScopedInbox(executor, r.session, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
+	inbox, err = newScopedInbox(executor, r.session, InboxScope{Account: r.account, Folder: r.folder, UIDValidity: r.validity}, limits, decode)
 	if err != nil {
 		return nil, err
 	}
+	inbox.server = true
 	inbox.routes = make(map[LedgerClass]wire.ID, len(receivers))
 	for _, route := range receivers {
 		inbox.routes[route.class] = route.store.StoreID()
@@ -40,6 +42,10 @@ func NewServerInboxDecoder(receivers ...*RemoteReceiver) (InboxDecoder, error) {
 }
 
 func serverInboxDecoder(receivers ...*RemoteReceiver) (scopedInboxDecoder, error) {
+	return serverInboxDecoderWithReclamation(nil, receivers...)
+}
+
+func serverInboxDecoderWithReclamation(reclaim func(*reclaimBody), receivers ...*RemoteReceiver) (scopedInboxDecoder, error) {
 	if len(receivers) < 1 || len(receivers) > 2 || receivers[0] == nil {
 		return nil, ErrProtocol
 	}
@@ -92,6 +98,9 @@ func serverInboxDecoder(receivers ...*RemoteReceiver) (scopedInboxDecoder, error
 		// Correlation is not ownership proof. The original journal validates the
 		// actual complete stored BODY against the persisted hash/size/folder.
 		err = r.store.Observe(ref, r.store.Run(), journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: validity, UID: physical.UID}, Decoded: envelope.body})
+		if err == nil && reclaim != nil {
+			reclaim(&reclaimBody{store: r.store, ref: ref, location: journal.Location{UIDValidity: validity, UID: physical.UID}, account: r.account, folder: r.folder, receiptKeyword: receiptKeyword(envelope.body, validity, physical.UID, r.authenticationKey[:])})
+		}
 		return nil, err
 	}, nil
 }

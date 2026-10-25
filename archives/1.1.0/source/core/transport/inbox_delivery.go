@@ -57,6 +57,7 @@ func (i *Inbox) acceptBody(body Body, available inboxAdmission) (InboxProgress, 
 		}
 	}
 	i.seen[uid] = true
+	i.queueReclamation(uid, delivery)
 	progress.Applied++
 	return progress, true, nil
 }

@@ -43,6 +43,7 @@ type StoredDelivery struct {
 	status    wire.CleanupStatus
 	finished  bool
 	discarded bool
+	reclaim   *reclaimBody
 }
 
 func (r *RemoteReceiver) Decode(validity, uid uint32, raw []byte) (*StoredDelivery, error) {
@@ -73,7 +74,7 @@ func (r *RemoteReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	// ApplyRemote verifies the actual issued grant and contiguous descriptor
 	// prefix. A missing prefix returns ErrOrder before the replay counter moves.
 	proof := journal.Observation{Account: r.account, Folder: r.folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: validity, UID: uid}, Decoded: envelope.body}
-	status, _, err := r.store.AcceptRemoteBody(r.user, r.store.Run(), usage, proof)
+	status, ref, err := r.store.AcceptRemoteBody(r.user, r.store.Run(), usage, proof)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (r *RemoteReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if err != nil {
 		return nil, err
 	}
-	return &StoredDelivery{session: r.session, records: records, status: status}, nil
+	return &StoredDelivery{session: r.session, records: records, status: status, reclaim: &reclaimBody{store: r.store, ref: ref, location: proof.Location, account: r.account, folder: r.folder}}, nil
 }
 func (d *StoredDelivery) Apply() error {
 	if d == nil {

@@ -456,6 +456,9 @@ func (s *Store) DeletedMany(run uint64, proofs []Deletion) error {
 		}
 		for _, proof := range proofs {
 			ref, location := proof.Ref, proof.Location
+			if s.localPublications[ref] {
+				return ErrState
+			}
 			a, g, e := s.attempt(tx, ref)
 			if e != nil {
 				return e
@@ -482,6 +485,9 @@ func (s *Store) DeletedMany(run uint64, proofs []Deletion) error {
 // admission limit after the mailbox is already empty.
 func (s *Store) AbsentFromCompleteInventory(ref AttemptRef, run uint64, folder string) error {
 	return s.write(func(tx *bolt.Tx) error {
+		if s.localPublications[ref] {
+			return ErrState
+		}
 		if run != s.run {
 			return ErrGeneration
 		}

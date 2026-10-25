@@ -28,6 +28,8 @@ type InboxStats struct {
 	ServiceTime, ProbeDelay                           time.Duration
 	IdleAttempts, IdleRefusals                        uint64
 	IdleTime                                          time.Duration
+	Reclamation                                       ReclamationStats
+	DeliveryReceipts                                  DeliveryReceiptStats
 }
 
 // InboxWorker owns independent receive service on an existing selected socket.
@@ -86,7 +88,7 @@ func (w *InboxWorker) Run(ctx context.Context) error {
 	return w.run(ctx, nil)
 }
 
-func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) error {
+func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) (resultErr error) {
 	w.inbox.session.mu.Lock()
 	if w.inbox.session.closed || w.inbox.session.runtime != runtime {
 		w.inbox.session.mu.Unlock()
@@ -114,6 +116,23 @@ func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) error {
 		w.inbox.session.services--
 		w.inbox.session.mu.Unlock()
 	}()
+	w.inbox.mu.Lock()
+	maintenance := w.inbox.maintenanceChanged != nil
+	w.inbox.mu.Unlock()
+	if maintenance {
+		parent := ctx
+		service, stop := context.WithCancel(ctx)
+		ctx = service
+		done := make(chan error, 1)
+		go func() { err := w.maintain(service); done <- err; stop() }()
+		defer func() {
+			stop()
+			err := <-done
+			if parent.Err() == nil && err != nil && !errors.Is(err, context.Canceled) {
+				resultErr = err
+			}
+		}()
+	}
 	x, s := w.inbox.executor, w.inbox.session
 	delay := w.limits.MinProbe
 	var emptyService time.Duration
@@ -180,6 +199,8 @@ func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) error {
 		w.stats.Deferred += uint64(p.Deferred)
 		w.stats.ServiceTime += elapsed
 		w.stats.ProbeDelay = delay
+		w.stats.Reclamation = w.inbox.ReclamationStats()
+		w.stats.DeliveryReceipts = w.inbox.DeliveryReceiptStats()
 		w.signalLocked()
 		w.mu.Unlock()
 		if p.Applied > 0 {

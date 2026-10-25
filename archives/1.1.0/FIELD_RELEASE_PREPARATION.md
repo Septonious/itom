@@ -55,8 +55,11 @@ exact charge and require storage proof; storage proof alone is not key confirmat
    mapping or a proven safe capacity-neutral migration, rather than silently
    appending folders or creating empty replacement journals. Complete original
    trusted inventory before admission.
-3. Connect authenticated grant/usage/retirement/recovery exchange and proof-based
-   reclamation to the runtime. Exhaustion must wake only after an actual durable
+3. Connect authenticated grant/usage/retirement/recovery exchange. Scoped
+   application-body proof reclamation and delivery receipts now exist and run
+   under InboxWorker ownership, but their per-body maintenance commands leave a
+   backlog under fluctuating service. Implement efficient bounded cleanup batches
+   without weakening original BODY/absence proof or blocking receive service. Exhaustion must wake only after an actual durable
    permission change. Unknown APPEND must retain its exact charged publication
    and use status/proof recovery, never a blind write retry.
 4. Connect sender-fenced receiver windows and the measured-service controller,
@@ -118,3 +121,30 @@ with a superficially serving runtime lacking those authorities. Verify writable
 permanent keyword support on the actual provider; the supplied trace has no
 capability records. Keep the in-place journal/wallet paths, signing identity,
 original ten-folder bound, two/three primary socket budgets and DNS defaults.
+
+
+## Reclamation checkpoint
+
+[Latest evidence](experiments/session-v2/RECLAMATION_CHECK_RESULTS.json) records
+183/183 core race groups, 10/10 native groups, 30/30 repeated targeted executions
+and core vet. All three original cold TLS/HTTP integrity cases pass. Their live
+mailbox limit remains 64 messages/16MiB; deleted UIDs remain unreused holes and
+actual inventory/sequence handling still executes. Peak fast-mailbox occupancy
+is 24/52/55 in the final cohort. This resolves that observed short-case overflow,
+not sustained operation: fluctuating cases still have 40/44 pending reclamations
+at cancellation, and initial wallet grants retain original lifetime spend.
+
+Reclamation requires original full BODY observation, successful logical delivery
+(or discard of a closed stream), exact-set UID EXPUNGE, and a separate successful
+same-UIDVALIDITY absence query. Server-origin mail also waits for an exact-body
+client receipt; startup mail is excluded. Receipt keywords grant no quota and
+cannot free logical send memory. Publication lifetime pins prevent an early
+BODY/receipt from deleting a still-draining APPEND's completion row. The old
+source failures and the intermediate test caller's undrained-FETCH-slot failure
+are retained; the final caller respects the executor's existing tag-drain contract.
+
+Production startup/roster, authenticated DATA/CONTROL grant turnover, persistent
+profile reconciliation, native activation and original performance qualification
+remain required. Efficient maintenance batching is now an explicit prerequisite
+for a field release. Actual provider UIDPLUS/permanent-keyword support must be
+verified. No RC, APK or deployable binary is produced by this checkpoint.

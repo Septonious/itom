@@ -1,0 +1,255 @@
+{
+  "status": "unqualified source checkpoint; no deployable APK/server pair",
+  "parent": "4ce0c0c",
+  "checks": [
+    {
+      "file": "RECLAMATION_INITIAL_COLD_LOG.txt",
+      "sha256": "209251a62c1e7e21fe6b2827ce5876d8b96f09cc8ce45412e4cb347430520984"
+    },
+    {
+      "file": "RECLAMATION_INITIAL_SAFETY.jsonl",
+      "sha256": "fb0cadda8b24f9982b2e4bcce45e17f7c6b4b0020dd575073ff33e622d2b9eb7",
+      "top_level_group_executions": {
+        "pass": 3
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_INITIAL_CORE.jsonl",
+      "sha256": "379dccda564156becb8907729ba2edf17438d32ca5862aebf7cd52c50ca94677",
+      "top_level_group_executions": {
+        "pass": 179
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_INITIAL_REPEATED.jsonl",
+      "sha256": "f007ad97d734a20d3d30613317270e696bd6f7651bbe84e177ead973919d43e9",
+      "top_level_group_executions": {
+        "pass": 21
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_DUPLEX_SERIAL.jsonl",
+      "sha256": "7d2c7e55507ed466d824865bbaf9aedbf6b08a8401ab6b7bfd5ecdeeb6428959",
+      "top_level_group_executions": {
+        "pass": 7
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_INTERMEDIATE_ORDERING.jsonl",
+      "sha256": "29a8db20b702634bcb81f67c4af48e4b25edf955feeca23fcc15eb7f68068aca",
+      "top_level_group_executions": {
+        "pass": 7,
+        "fail": 1
+      },
+      "failed": [
+        "TestOwnServerBodyObservationWaitsForAuthenticatedClientReceipt",
+        "itom.local/core/transport"
+      ]
+    },
+    {
+      "file": "RECLAMATION_TARGETED_RACE.jsonl",
+      "sha256": "0054a7bb30c3eaf37a7f4a5ac2714b2c4b03e1dd82735a3480cb8485dc22ccd4",
+      "top_level_group_executions": {
+        "pass": 30
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_CORE_RACE.jsonl",
+      "sha256": "502ae6ca4bceaaeef320e660f002773dcfb166bb3213fe5b1b7619b64dc9a899",
+      "top_level_group_executions": {
+        "pass": 183
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_NATIVE_RACE.jsonl",
+      "sha256": "fbdd2fd8c98422ee286869ab3c5e5d5c155a661a3570ad0cd2c2844be39b5139",
+      "top_level_group_executions": {
+        "pass": 10
+      },
+      "failed": []
+    },
+    {
+      "file": "RECLAMATION_VET_LOG.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "commands": {
+    "core": "go test -race -json ./... -count=1 -timeout=180s",
+    "native": "go test -race -json ./... -count=1 -timeout=120s",
+    "targeted": "go test -race -json ./journal ./transport -run 'Test(LiveLocalPublication|PeerBodyReclamation|Reclamation|OwnServerBodyObservation|ServerReclamation|ClientReceipt|Cold)' -count=3 -timeout=180s",
+    "vet": "go vet ./..."
+  },
+  "final_results": {
+    "core_passed": 183,
+    "core_failed": 0,
+    "native_passed": 10,
+    "native_failed": 0,
+    "targeted_group_executions_passed": 30,
+    "targeted_failed": 0,
+    "core_vet": "pass"
+  },
+  "source_sha256": {
+    "archives/1.1.0/source/core/journal/audit.go": "5a7abcc95038cf294e8b39fbc05cabce86a8d87639420367010e5455c6197e7b",
+    "archives/1.1.0/source/core/journal/commit_metrics.go": "dde60fb66269cd67fb96e8089af611a002a7af5607e5f30d869e1651b7eb5dbb",
+    "archives/1.1.0/source/core/journal/latency_itomtest.go": "9bcd931cbde9a072ecda90c156a84fb870464afd16f96ee84df9129b87151e50",
+    "archives/1.1.0/source/core/journal/ledger.go": "1514e2b2655d2ac437d06fabad12a20482ee7aca752b82919c615252891a8438",
+    "archives/1.1.0/source/core/journal/local_index.go": "642ca85d066b447dfda92e27a87af3b915c65c59832cb978ca2c6cc95cdb5868",
+    "archives/1.1.0/source/core/journal/local_index_fault_test.go": "779d74c2016af64012d3168c6a555b764f7b8b3ae4cd5d78109715c2baf0e470",
+    "archives/1.1.0/source/core/journal/local_index_test.go": "c62ca9cd54d16bca965e3de7442c6846bc129e7ee44f96955eb7b5ba03c0f372",
+    "archives/1.1.0/source/core/journal/local_ticket.go": "aa76bdd034201d1b80a0e843cb240669aa33631c0644ca0006c8d1dabcb78ec4",
+    "archives/1.1.0/source/core/journal/local_ticket_fault_test.go": "0f6ccca12a4b917907f6d62a37d740d434be12bc56f93270aef8d17a88f95ea8",
+    "archives/1.1.0/source/core/journal/local_ticket_test.go": "485fb396e65dbd4552f2bbf897cec40702c5442a7b5b5c1c132a467127a67031",
+    "archives/1.1.0/source/core/journal/model.go": "83722f3f7a7a1cc6591a1a0b3472bd8d2e99b5dd844a9bc9ca3aab2c3e09c532",
+    "archives/1.1.0/source/core/journal/origin_view.go": "097656fcef7d3db609a3b62d6b8296a4c1c96761775d39efa17e077f0fc2033a",
+    "archives/1.1.0/source/core/journal/profile.go": "2a546b9559e11267cd8a5e5db365c9e0ae104bfdbdac906021b30c710e4724e9",
+    "archives/1.1.0/source/core/journal/publication_pin.go": "731571685053b42806682820cfb7df45700be4278109cb50c5604ef7526036ed",
+    "archives/1.1.0/source/core/journal/publication_pin_test.go": "cd0309c5ad00d6bb091e0dff1e264d7543939caa45a685070b57d77cd54d9142",
+    "archives/1.1.0/source/core/journal/recovery_test.go": "659f9498d12cd8c9113cffa47f083f3ad92ef5a40fbedbcdd0700c1138e911ab",
+    "archives/1.1.0/source/core/journal/remote.go": "16f39d5dfc47f8c1c67c6d0d623bc6ddbf0eb19dde9dd66266858ac8e94625ad",
+    "archives/1.1.0/source/core/journal/remote_body.go": "fc34db889dfaa4a844391209f59b9ec36a183192b9ae439c570c540a21b67ed5",
+    "archives/1.1.0/source/core/journal/remote_body_fault_test.go": "ad0371fe3f0149dc4d3972cf8986ffc99e5057b2ecff0cff7cfdd6af3d989aeb",
+    "archives/1.1.0/source/core/journal/remote_body_test.go": "08231c568e7aee99e19a4bb009b0ba39f7ab0fb7e021f66ea0be64c03dd86bea",
+    "archives/1.1.0/source/core/journal/remote_index.go": "aba722a22b19a0ee39d056af591445df8e4d1103e75f80fb1fa57513d842e53e",
+    "archives/1.1.0/source/core/journal/session_claim.go": "8bf23011c68e561bd31e6e4d7896a4b048a0cf4cfed550aba0ed86f7cf3de8d5",
+    "archives/1.1.0/source/core/journal/session_claim_fault_test.go": "2e1ea9a1d5f7280ee25952b8505bf054238471f3b18a6cefa3cd2d80377d757c",
+    "archives/1.1.0/source/core/journal/store.go": "38a348badc7bdf19af4f5172345e78df92e85681dfcfc273290fe1e5f53298bd",
+    "archives/1.1.0/source/core/transport/bootstrap.go": "a782b454d508326c8ca3b01c068aa937572693e99996a9246db835f6237f086d",
+    "archives/1.1.0/source/core/transport/bootstrap_driver.go": "de31aad17cd3e56f2f4eeaf46bdee7bf0d57242a599b89c2ea3378672a602092",
+    "archives/1.1.0/source/core/transport/bootstrap_driver_test.go": "620be474418319cdbf79a2b4175cdc66b69905af5fa1e794fcdcbb36b7909b3b",
+    "archives/1.1.0/source/core/transport/bootstrap_handoff.go": "cda44dee8ed2e94d2b8596422e500f0e8035cad7fb28a95c35402c054714c770",
+    "archives/1.1.0/source/core/transport/bootstrap_publication.go": "b8eca8ca0b8159fc8b14e3e7b1fd0f5a056b42c404fb7141477c4ae4e3bd2e68",
+    "archives/1.1.0/source/core/transport/bootstrap_receive.go": "b4210b5fe5c17531e4764079d7cd678aed49d2d652c47250d4dadca885be5d9e",
+    "archives/1.1.0/source/core/transport/bootstrap_test.go": "9fd413fe4c366ebfd554678812fe6b54b50cdda1f16b856af5306b6279ac70c5",
+    "archives/1.1.0/source/core/transport/bulk_dispatch.go": "2ea99b131396b1e7bc9a44a5cb9d5e22ddac67f031268def167e56ad36439402",
+    "archives/1.1.0/source/core/transport/bulk_imap_test.go": "0cef6a0721173bdc890c54ab13222f1d0135277635d383fb1afcbe1ebaaf6629",
+    "archives/1.1.0/source/core/transport/bulk_publication_test.go": "b4e3ed97614736b7f83d77b020b2a8fa2a7f36bce079bf69c395b7a762c0eab8",
+    "archives/1.1.0/source/core/transport/bulk_recovery_test.go": "fbbfcd71951379a178dccfed9ebcb4a2c136799c83412ae417b962b26dae6188",
+    "archives/1.1.0/source/core/transport/bundle.go": "d669196bb0a76bb4046c1017f0868bf9c70f8d5e0a0c379f84978be4171b44df",
+    "archives/1.1.0/source/core/transport/bundle_fuzz_test.go": "effa5c5136c6dc0e8fbaef26e74a9d291eeac3d8583fe281bc4ecbfc6addfc48",
+    "archives/1.1.0/source/core/transport/bundle_test.go": "8848960d9d1061848667969b9bdfe7c9f4bf7e5d6f5f86969c614b65f39cd227",
+    "archives/1.1.0/source/core/transport/cipher.go": "7f29cfe937a290d5d976dfe4f7d63d4385c4c31ee63c5c92b117a747bcde4afc",
+    "archives/1.1.0/source/core/transport/cipher_test.go": "f512b57ffebef422563f978d5454e9513fc5a0309f1e2bd2a0cde1a3d311ce96",
+    "archives/1.1.0/source/core/transport/classification.go": "32853cce25de8336dd2a56de06221e749dc881b68b8aaff0e90f4aa8220da6e2",
+    "archives/1.1.0/source/core/transport/client_inbox.go": "5e8f46c0050981e496224d6b0d2d55ebf0ec6d793a8d9a34097c3d586f6c76ae",
+    "archives/1.1.0/source/core/transport/client_inbox_test.go": "0b8013562b6b73c008785d824a3ba7dc0b1a2469115c3f8437ef7a3abd823b5e",
+    "archives/1.1.0/source/core/transport/client_receiver.go": "fd125e776a7d94fc3f7e4e4790a6280807cf14a1833424e535a03db199ef6402",
+    "archives/1.1.0/source/core/transport/control_dispatch.go": "24e4c9e5ba849c190dc65485a133badde24c36e264585a9f42b7afce5beae7c8",
+    "archives/1.1.0/source/core/transport/control_mail.go": "c8ed7e373d9e60a689f8c30e639a74e9cc82fb3db02e7f2dcd3570ac94a49add",
+    "archives/1.1.0/source/core/transport/control_publication_test.go": "6b649a16c0c0ca76ec36c06170edde3e41cf19c09d3c8db0d0b5b6bb179ca588",
+    "archives/1.1.0/source/core/transport/controller.go": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a",
+    "archives/1.1.0/source/core/transport/delivery_receipt.go": "0263b531abd40241a46fe65b474ab60bd21bf71b6c7f27476a016c30b07404f0",
+    "archives/1.1.0/source/core/transport/dispatch.go": "1145d45f5025c05484b0013bee3fc079d37ece877d7001c6c5ba5ad418c5bdc8",
+    "archives/1.1.0/source/core/transport/duplex_imap_test.go": "7057d43c067ff917ddf2e5d6b25cb8965562c4e9fc6e69b6238501255aaf60d5",
+    "archives/1.1.0/source/core/transport/exit.go": "8d3d3978f8602e975ef4d737c7cd63422bec42ccdcf4fbbff629d29707ce99e6",
+    "archives/1.1.0/source/core/transport/feedback_test.go": "e7fe471341cc2042c0a774c3675fa24406463a78e9f667552aef70f18b235f39",
+    "archives/1.1.0/source/core/transport/fragment_feedback_test.go": "2fec8eb73de0e52b2f84f447e4edb456203091cb73d5d220901a59f6fd2cb444",
+    "archives/1.1.0/source/core/transport/ids.go": "ca6ee28082ec326475004a3d538f539b6611f21f635c4ea171bc98f6c0e6cdbe",
+    "archives/1.1.0/source/core/transport/imap.go": "5b24bf0a5eac9f5e164b9a6fdb71c8b73292373a42eac5cd6d85562318024306",
+    "archives/1.1.0/source/core/transport/imap_diagnostics.go": "9fe98a78feaf9e642982984a3109df95876bbd33705bd81e024b75d5e34d5b9e",
+    "archives/1.1.0/source/core/transport/imap_diagnostics_test.go": "fa7b26d1d690071c432c6c54157ef5845cddc500ba1e1f93309edeea48096141",
+    "archives/1.1.0/source/core/transport/imap_idle.go": "e383b07d58fded79b8c610669e396e00c8ffabf1e2ab07efac03d653b5cdb344",
+    "archives/1.1.0/source/core/transport/imap_idle_test.go": "2d952675a0d9bb3b50d7a1d659690e31c97ddd82d456379ece75d6d4a90edf7b",
+    "archives/1.1.0/source/core/transport/imap_keywords.go": "84f2ecac578cc154eda5eab1f7c0b459a9fa45e41c4c8b290ec2bc4bf4eb5fff",
+    "archives/1.1.0/source/core/transport/imap_test.go": "426b16340f62fa316f10fb70a51519411d4ce19468547792ceef8cffc5398d2d",
+    "archives/1.1.0/source/core/transport/inbox.go": "c98d521461567398041591f7bda0b8e329e43fb4cbddc9c487baed8f08283177",
+    "archives/1.1.0/source/core/transport/inbox_capacity_hook_test.go": "e27531d2f45075bf45be87871d53513b3f5fc1add88705b1d32f4eda32b0df43",
+    "archives/1.1.0/source/core/transport/inbox_delivery.go": "f55949cbd5c19902bf0fb79e40eb140cc9434bf0615dde339b47c52a4678bebf",
+    "archives/1.1.0/source/core/transport/inbox_maintenance.go": "6ab53e4076a001274e1af0d584846480b2a7df88b5eac2d5e98d8104d0221557",
+    "archives/1.1.0/source/core/transport/inbox_poll.go": "39ff68ed87141bb62f16649a65ed9a66b66fae9800ff9846a105274301960a17",
+    "archives/1.1.0/source/core/transport/inbox_poll_test.go": "4648ce2bf93bd9011d73b41c8e4678fa66fe6a9dade454868a965ebc9701b4fd",
+    "archives/1.1.0/source/core/transport/inbox_pressure_test.go": "ed29c55689b154d82a9fb1674a0af1564b6d04174df73f3822c5541507a52910",
+    "archives/1.1.0/source/core/transport/inbox_test.go": "172257cd4be447af1193e9cbd3dd4411a1b809c2afc727dc1861e62b4cbef364",
+    "archives/1.1.0/source/core/transport/inbox_worker.go": "d5755f12d6a2d0c88fa2e5bd2a5aa233e1bf09c209298e02ae3bdc062d161811",
+    "archives/1.1.0/source/core/transport/inbox_worker_test.go": "94d2f6de42e7d306d31851a7eeae874eb9e74ca643306bfa937aaaf61f3c6d05",
+    "archives/1.1.0/source/core/transport/ledger.go": "75ece8a1798289a89323d881d2f6db75a03e81d67abe8a72790081cdd0a927d6",
+    "archives/1.1.0/source/core/transport/lifecycle_test.go": "e0c3715962f0917557006eefd24d670d12861e63214e12a57cf67da35999afff",
+    "archives/1.1.0/source/core/transport/mailbox_envelope.go": "84bfd757fe0052d2c526831ac555850c7fec90595cf61730dc4bf32ca9ab3465",
+    "archives/1.1.0/source/core/transport/open.go": "f5179666f5bcd882880f06ae51960e8b737cb3b6e01ffe5143dba8cf8ef82b4b",
+    "archives/1.1.0/source/core/transport/open_imap_test.go": "6e559334a188721630770f2e20ca15f6cc81a3b18d54e34de1b6446e1ce109c0",
+    "archives/1.1.0/source/core/transport/open_test.go": "bc9176a2f3c32c51a1a5529b258cebf78493a0e6884b4c286a81f69efb9b3a82",
+    "archives/1.1.0/source/core/transport/progress_controls.go": "c1bec4e579b317bfb2fb543aec50b054fc89643437d1df40b078e9852231c34b",
+    "archives/1.1.0/source/core/transport/publication_scope_test.go": "dfc2538b51722bd5d678575d611a445180a6892a45b6e09671434a429b432a20",
+    "archives/1.1.0/source/core/transport/publication_test.go": "6b9cb201c0f776601f51adf3701456dec1fba88925e1fd48276bac281084414c",
+    "archives/1.1.0/source/core/transport/publication_worker.go": "b8fc271c0d9d6df516910c6447713d6af50ef432f1d06c2da25519522e5f3bf2",
+    "archives/1.1.0/source/core/transport/publication_worker_test.go": "fc6d622b0ca2c423df0efc262124e0f6c2898f1e076bd61fcf4b4e4befc77892",
+    "archives/1.1.0/source/core/transport/publisher.go": "e84a42365e4780e6733004d959f9940ed74d2915d6acdfa67c320ceb2e3d310a",
+    "archives/1.1.0/source/core/transport/quantum.go": "e9cf24c7d790b8056a5182fa80e50c41507a5bc19a5931681ca939caf13a97bc",
+    "archives/1.1.0/source/core/transport/readiness.go": "aaf301af7d4a32ea2e7deb0ac84de6ba5ebc703a70e9894c285d42a2c995c38d",
+    "archives/1.1.0/source/core/transport/receive_demand.go": "ccb67256fc14d1b60863e77b857d9dd89c47db0b3b191515e003470c0579e4fd",
+    "archives/1.1.0/source/core/transport/receiver.go": "bf8d2d2b0b26e60ffa39010e381d3c8f0d6775881faecbcdff0870ec83309abf",
+    "archives/1.1.0/source/core/transport/reclamation.go": "bd347c2ab0bf530843340a368118287ae0825c62d78434fd8682113afb737e6c",
+    "archives/1.1.0/source/core/transport/reclamation_test.go": "4a679ddea3cd487384f5a5401e58770ff2288f529aa4347646bd100d6165d185",
+    "archives/1.1.0/source/core/transport/record.go": "0f199d50f53fbc9abbe8e4b53d8421a456e0f766e363c41bb7f4c29bb589cdc7",
+    "archives/1.1.0/source/core/transport/rendezvous.go": "4ebe60fe8ad483cb73d7ebbb5cfd8891961dba8f5c05b9f14db34617f9c03ff1",
+    "archives/1.1.0/source/core/transport/rendezvous_test.go": "bea732092908d3ab633201e5b8406a1fe409bb66ec47581a41f6f6af7e238cf5",
+    "archives/1.1.0/source/core/transport/retry.go": "110e3fdde5fedb3e20fe24929522fc0b77dc642ccf0c7a2e8691e9e0fb0e6a7d",
+    "archives/1.1.0/source/core/transport/retry_test.go": "6a12fd45957d0dc28ba3541a3887067f898770816f832bc0859c9c49a5d90950",
+    "archives/1.1.0/source/core/transport/runtime.go": "1809e2d287f5ad39228af7f4ca7c5e8227c4dade9f5fe3bc8560ead8e1a6d288",
+    "archives/1.1.0/source/core/transport/runtime_test.go": "55d65514a8d1547b0711d066418b52b17c08efd6714066bdda6588345f70f3a2",
+    "archives/1.1.0/source/core/transport/server_inbox.go": "7836bcde4acfe530203ba0f2224ef1ee3107be9133f3c07413e00667144cdb90",
+    "archives/1.1.0/source/core/transport/server_inbox_test.go": "726811d1007c8082011eabc4dd0e237e25c1decc452805aaf4c6ba6c42dc54ca",
+    "archives/1.1.0/source/core/transport/server_publication_test.go": "15735c6ff618b1f5c91717b14aa2d3a833e1fb042403a9abf2c54e9a31934b10",
+    "archives/1.1.0/source/core/transport/server_publisher.go": "611cb97eda59c18535c85d66ab58a4f6c6438f76c8d9c6118953078d4206d1fe",
+    "archives/1.1.0/source/core/transport/session.go": "a1faa0af8d0cb5eb0de92680bfeccaf3bd061e43cc2a504445b0251837b224a3",
+    "archives/1.1.0/source/core/transport/session_binding.go": "566228bbee93ac653b90ed5ea01cdfbffce717e65b46f3ae4a30ad265e8a3f81",
+    "archives/1.1.0/source/core/transport/session_binding_test.go": "e699dfa684ae8c2d229ae4eb903c37431d58bc86afe61476ce77bae83da94e3a",
+    "archives/1.1.0/source/core/transport/session_bootstrap.go": "1e7b27746574262a839deecc3f0d4fc97cd169988f07238e1035c43c2095842d",
+    "archives/1.1.0/source/core/transport/session_bootstrap_test.go": "c2b30e1c4de4c669ce677cdd0c8a2bc5e32af99fbdc126493056c438d993d9c8",
+    "archives/1.1.0/source/core/transport/session_invitation.go": "d29114c83bb974decc2d3e55fa841f4bbd81247f1707b7a6fcfdb56e21ac5f93",
+    "archives/1.1.0/source/core/transport/session_invitation_test.go": "0912a5f402f860d75baf4f9315340b15de3e9830427196b978562ca530e338bc",
+    "archives/1.1.0/source/core/transport/session_network_test.go": "fcc45bbcac14c54d40c91fd3c053d653f40c9126f3fe8fb4a7cffb5103bc5c27",
+    "archives/1.1.0/source/core/transport/session_test.go": "a2407cf5e1adb428ab5a4ef06077e3b4ae0486e09bed061e12d83b5f4e19c13f",
+    "archives/1.1.0/source/core/transport/stream.go": "59babd382b7554ce2cff38d3d947b25668aef9d97765e59bc5f4cc894339a92a",
+    "archives/1.1.0/source/core/transport/target.go": "1c3fa9452b326aa289cc7bdc1ac8f37a5b19b1665582c8a7ffe3ef087a818201",
+    "archives/1.1.0/source/core/transport/target_test.go": "f8250b8a5b26dcfbbd50c2c8cfeb58b5841ac4acd22e35d89857b2f1f4534471",
+    "archives/1.1.0/source/core/transport/window_lease.go": "9c585c60d513ac050e8bc7c90c678ac93fe835833a0f0480c9a4a9ab0ccbc677",
+    "archives/1.1.0/source/core/transport/window_lease_test.go": "71cd109c90d20d9bb40def818034edcaa8e5b72f88a7b731be95aa2e63bcdfd2",
+    "archives/1.1.0/source/core/wallet/admission.go": "3fbeb93636376468748ee8518470af41d6584b8b1c23e986d52ad93b6121a902",
+    "archives/1.1.0/source/core/wallet/admission_test.go": "575f526297f71eff91033266d1f3534cdd343204ae69458478666f72b2bcc340",
+    "archives/1.1.0/source/core/wallet/reconcile.go": "44c5057cc3b0c905782ed94ed785c7f80c9cfd7ef1a483a5bd7d7a6ecf0f8165",
+    "archives/1.1.0/source/core/wallet/sized_admission.go": "b07dc0a22dfeddca9e3d868bebc170f8eb207833d6c5cd29bbc23eef0cbb60c7",
+    "archives/1.1.0/source/core/wallet/wallet.go": "548ba003e474006481b687c649fb98a030e8e54f20e775644cdde4ff0fc00d56"
+  },
+  "limits_unchanged": {
+    "live_mailbox_messages": 64,
+    "live_mailbox_bytes": 16777216,
+    "open_tls_header_ms": 1500,
+    "http_seconds": 5,
+    "initial_client_messages_per_ledger": 32,
+    "primary_client_sockets_per_account": 2,
+    "primary_server_sockets_per_account": 3
+  },
+  "observations": {
+    "fast_peak_messages_final_cohort": [
+      24,
+      52,
+      55
+    ],
+    "fast_cleanup_pending_at_cancellation": [
+      2,
+      40,
+      44
+    ],
+    "meaning": "Correctness/integrity scenarios only. Scripted per-command delays are not calibrated path RTT/bandwidth. Cleanup backlogs remain; this is not sustained-rate or idle-RTT qualification.",
+    "intermediate_failure": "RECLAMATION_INTERMEDIATE_ORDERING.jsonl retains a direct test FETCH attempted while a canceled helper FETCH tag remained pending. Final test waits for the original parser slot; cancellation never discards tags or replaces its connection."
+  },
+  "blockers": [
+    "Production tunnel APIs still return V2_NOT_READY.",
+    "Initial DATA grant and subsequent grant/usage/fence/status/retirement exchange are not yet integrated with a production authority coordinator.",
+    "Per-body cleanup command backlog must be addressed with bounded efficient maintenance while preserving exact proof.",
+    "Profile folder reconciliation, READY/roster/native integration and full original performance qualification remain incomplete.",
+    "Provider UIDPLUS and permanent-keyword capability need actual field verification."
+  ],
+  "preserved": [
+    "Original financial identity, durable debt, fsync, replay and hard crypto limits.",
+    "Stable 1.0.0/RC2 sources.",
+    "Android org.itom.client and signing identity.",
+    "UDP/TCP53 resolver race and optional session-latched IMAP fallback."
+  ]
+}

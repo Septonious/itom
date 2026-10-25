@@ -45,6 +45,7 @@ func NewClientReceiver(s *Session, class LedgerClass, cipher *Cipher, origin Ser
 type ClientDelivery struct {
 	delivery   *StoredDelivery
 	descriptor wire.UsageReport
+	receipt    *deliveryReceipt
 }
 
 func (r *ClientReceiver) Decode(validity, uid uint32, raw []byte) (*ClientDelivery, error) {
@@ -79,7 +80,7 @@ func (r *ClientReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if err != nil {
 		return nil, err
 	}
-	return &ClientDelivery{delivery: &StoredDelivery{session: r.session, records: records}, descriptor: usage}, nil
+	return &ClientDelivery{delivery: &StoredDelivery{session: r.session, records: records}, descriptor: usage, receipt: &deliveryReceipt{uid: uid, keyword: receiptKeyword(envelope.body, validity, uid, r.authenticationKey[:])}}, nil
 }
 
 func (d *ClientDelivery) Apply() error {

@@ -14,11 +14,14 @@ on-mail Noise establishment and guarded runtime handover now exist; initial
 permission now has an accounted rendezvous/invitation component. Production
 coordination and agreed READY/roster negotiation remain incomplete.
 
-The latest [control-container checkpoint](experiments/session-v2/CONTROL_CONTAINER_CHECK_RESULTS.json)
-passes 175/176 whole-core top-level race groups, 10/10 native groups, 18/18
-repeated targeted group executions and core vet. The remaining cold case still
-fills the unchanged 64-message fast mailbox. Earlier deadline/capacity failures
-remain retained. This is not an RC: no usable production APK/server is packaged.
+The latest [reclamation checkpoint](experiments/session-v2/RECLAMATION_CHECK_RESULTS.json)
+passes 183/183 whole-core top-level race groups, 10/10 native groups, 30/30
+repeated targeted group executions and core vet. All three cold TLS/HTTP cases
+pass with the original deadlines and 64-message live mailbox cap; fast-mailbox
+peaks in the final cohort are 24, 52 and 55. Earlier failures remain retained.
+The fluctuating-service cases still leave 40/44 pending server cleanup candidates
+at cancellation. These short integrity runs do not establish sustained 100Mbps,
+<=250ms light-load RTT, or a working production APK/server pair.
 
 The removed runtime is preserved at `d16796d85b91b1bfe091ad0f24c151ba2f0429a3`.
 The first independent implementation is `fb22eba`. Removal manifests retain paths
@@ -28,6 +31,23 @@ mandatory independently of that implementation.
 
 ## Implemented
 
+* Opt-in physical reclamation now uses actual CAPABILITY-advertised UIDPLUS.
+  A received CLIENT body must be fully authenticated, durably observed and
+  applied/discarded before it can become a cleanup candidate. SERVER bodies
+  additionally require a client delivery keyword MAC bound to the exact body,
+  UID and mailbox incarnation. Copied metadata cannot authorize another body.
+  STORE/EXPUNGE acceptance alone never releases debt: a separate successful
+  same-incarnation UID absence query precedes original journal `Deleted`.
+* Delivery receipts consume bounded metadata rather than another physical
+  message. They cannot release logical replay/send memory or reset wallet spend.
+  Maintenance runs independently of receive service on the same fixed executor,
+  retaining exact command handles across cancellation; known tagged refusal
+  disables maintenance while preserving receiver service and all unresolved debt.
+* Local publications pin their original attempt until APPEND completion and
+  journal completion drain. An early own BODY observation/client receipt cannot
+  race deletion of that row. Original deletion/inventory APIs enforce the pin.
+  Tests include delayed APPEND tags, lost STORE/EXPUNGE tags, stale visibility,
+  incarnation changes, receipt transplantation and cancellation/resume.
 * Session-owned bounded send/reorder queues, separate fast/bulk dispatch and
   receiver-backed memory credit. Dispatched bytes stay retained until cumulative
   authenticated peer receipt, rather than disappearing on APPEND acceptance.
@@ -395,9 +415,11 @@ MAC-authenticated metadata request. The client obtains its issuer identity from
 the verified standing body; no initial client APPEND is unaccounted. DATA grants
 remain fixture supplied, and a production long-lived rendezvous/roster owner is
 still missing. Initial source checks retain a quiet-bulk HTTP deadline miss;
-the latest full cohort retains a 64-message fast-mailbox overflow. These remain
-release blockers. Diagnostic/persistence and request-replay checks pass, but
-this checkpoint is not a working production client/server or performance RC.
+that historical cohort retains a 64-message fast-mailbox overflow. The newer
+reclamation cohort above passes the short cases without changing their cap or
+deadlines; efficient sustained cleanup and authority integration remain release
+blockers. Diagnostic/persistence and request-replay checks pass, but this is not
+a working production client/server or performance RC.
 
 Earlier versions of this component fixture used a zero-I/O in-memory carrier
 loop. One mixed stress cohort timed out. Isolated repetitions passed; an actual
@@ -433,8 +455,9 @@ The source-test host has a two-CPU quota; it is not the eight-core server profil
 * Active carrier selection, controller/receiver-window integration and complete
   status/NACK recovery for both publication/receive halves.
 * Calibration and multi-account integration of IDLE/DONE and active probing,
-  bounded proof-based reclamation and migration/restart reconciliation using original stores and
-  retained debt. The scoped receive/publication workers are not yet a complete
+  efficient bounded reclamation batches and migration/restart reconciliation using
+  original stores and retained debt. Per-body proof reclamation is implemented;
+  its measured pending backlog still blocks sustained-service qualification. The scoped receive/publication workers are not yet a complete
   multi-account mailbox coordinator. DATA pressure no longer consumes protocol delivery slots;
   capacity-free protocol progress now bypasses exhausted protocol slots too.
   Multi-account fairness/liveness and complete memory/service behavior still
