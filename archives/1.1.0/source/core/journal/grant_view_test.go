@@ -27,11 +27,18 @@ func TestPolicyGrantScanUsesCurrentCommittedRowsAndDetachedValues(t *testing.T) 
 	if err != nil || again[0] != g {
 		t.Fatal("inspection mutated cached grant", again, err)
 	}
+	a, err := s.PrepareStarted(g.Ref, "bulk", wire.ID{2}, 4000, []byte("unknown physical body"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Complete(a.Ref, journal.Uncertain); err != nil {
+		t.Fatal(err)
+	}
 	if err = s.CloseGrant(g.Ref); err != nil {
 		t.Fatal(err)
 	}
 	now, err := s.ScanGrants(0, 20)
-	if err != nil || !now[0].Closed || now[0].Limit != g.Limit {
+	if err != nil || len(now) != 1 || !now[0].Closed || now[0].Limit != g.Limit || now[0].Used.Messages != 1 {
 		t.Fatal("committed row did not invalidate policy view", now, err)
 	}
 	if again[0] != g {

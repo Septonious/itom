@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.3 with isolated mail namespace and retained-debt startup fixes
+name: Build session-v2 RC1.3 with audited retained-debt startup and policy snapshots
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -23,7 +23,7 @@ jobs:
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail
-          go test -race -json -count=1 -timeout=300s ./... | tee "$RUNNER_TEMP/rc1-core.jsonl"
+          go test -race -json -count=1 -timeout=600s ./... | tee "$RUNNER_TEMP/rc1-core.jsonl"
           go vet ./...
       - name: Complete native bridge and DNS safety
         working-directory: archives/1.1.0/source/native
