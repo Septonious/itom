@@ -66,7 +66,7 @@ def run(root: Path, cache: Path, sdk: Path, environment: dict, accept: bool, met
         # Host-only cross-module bridge fixture is explicitly enabled for tests,
         # never for gomobile bind or the production server.
         command([go, "test", "-mod=readonly", "-tags=itomtest", "-count=1", "-timeout=100s", "./..."])
-        command([tools / ("gomobile" + suffix), "bind", "-trimpath", "-target=android/arm64,android/arm",
+        command([tools / ("gomobile" + suffix), "bind", "-trimpath", "-ldflags=-s -w", "-target=android/arm64,android/arm",
                  "-androidapi=29", "-javapkg=org.itom.nativecore", "-o", out, "."])
     if not out.is_file():
         raise RuntimeError("Native builder did not produce itom.aar")

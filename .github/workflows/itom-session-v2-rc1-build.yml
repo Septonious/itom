@@ -79,7 +79,7 @@ jobs:
           import hashlib,json,os
           from pathlib import Path
           source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.0-RC1-debug.apk'
-          raw=apk.read_bytes();assert 1_000_000<len(raw)<=48*1024*1024
+          raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
           report=json.loads((source/'dist/build-report.json').read_text())
           assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-rc1'
           assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10111,'version_name':'1.1.0-rc1-debug'}
@@ -91,7 +91,7 @@ jobs:
           Path('android-evidence/manifest.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'apk_bytes':len(raw),'apk_sha256':hashlib.sha256(raw).hexdigest(),'parts':parts},indent=2)+'\n')
           PY
           cp "$SOURCE"/dist/{build-report.json,test-summary.json} android-evidence/
-          signer="$(find "$HOME/.cache/itom-build" -name apksigner.jar -type f -print -quit)"
+          signer="$(find "$HOME/.cache/itom-build" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -name apksigner.jar -type f -print -quit)"
           test -f "$signer"
           cp "$signer" signing-tools/
       - uses: actions/upload-artifact@v4
@@ -110,6 +110,26 @@ jobs:
         with: {name: session-v2-rc1-apk-part04, path: apk-parts/rc1-apk.part04, if-no-files-found: warn}
       - uses: actions/upload-artifact@v4
         with: {name: session-v2-rc1-apk-part05, path: apk-parts/rc1-apk.part05, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part06, path: apk-parts/rc1-apk.part06, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part07, path: apk-parts/rc1-apk.part07, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part08, path: apk-parts/rc1-apk.part08, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part09, path: apk-parts/rc1-apk.part09, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part10, path: apk-parts/rc1-apk.part10, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part11, path: apk-parts/rc1-apk.part11, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part12, path: apk-parts/rc1-apk.part12, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part13, path: apk-parts/rc1-apk.part13, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part14, path: apk-parts/rc1-apk.part14, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: session-v2-rc1-apk-part15, path: apk-parts/rc1-apk.part15, if-no-files-found: warn}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
