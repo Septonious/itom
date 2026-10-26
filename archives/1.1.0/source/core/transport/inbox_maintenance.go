@@ -8,8 +8,9 @@ import (
 
 // Maintenance shares the SAME selected executor, but never holds Inbox.mu while
 // waiting on STORE/EXPUNGE/proof tags. Reception and application replies keep
-// progressing. UID FETCH still uses the executor's single bounded parser slot;
-// no second reader, connection, inventory assumption or allowance is introduced.
+// progressing. Disjoint singleton BODY/FLAGS can share the one bounded parser;
+// inventory/absence remain exclusive. No second reader, connection, inventory
+// assumption or allowance is introduced.
 // Run joins this helper before handing worker ownership back after cancellation.
 func (w *InboxWorker) maintain(ctx context.Context) error {
 	i, x := w.inbox, w.inbox.executor

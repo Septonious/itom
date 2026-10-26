@@ -69,7 +69,7 @@ func (e *Executor) FetchFlags(ctx context.Context, uid uint32) (*Command, error)
 func (e *Executor) readFlags(line string) (bool, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	op := e.fetch
+	op := e.flagFetch
 	if op == nil || !op.flags {
 		return false, nil
 	}
@@ -77,7 +77,7 @@ func (e *Executor) readFlags(line string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if len(line)+2 > e.limits.ResponseBytes-op.bytes {
+	if len(line)+2 > e.limits.ResponseBytes-op.bytes || len(line)+2 > e.limits.ResponseBytes-e.fetchBytes {
 		return false, ErrCapacity
 	}
 	parts := strings.Fields(strings.NewReplacer("(", " ( ", ")", " ) ").Replace(line))
@@ -129,7 +129,9 @@ func (e *Executor) readFlags(line string) (bool, error) {
 	if !op.requestsUID(uid) {
 		return false, nil // legal unsolicited update for another actual UID
 	}
-	op.bytes += len(line) + 2
+	if err := e.chargeFetchLocked(op, len(line)+2); err != nil {
+		return false, err
+	}
 	if op.uids[uid] {
 		// A later unsolicited FLAGS update for this same UID can precede the
 		// tag. Preserve one bounded latest hint, not a second BODY/proof.

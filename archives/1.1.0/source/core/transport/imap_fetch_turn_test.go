@@ -14,7 +14,7 @@ import (
 	"itom.local/core/transport"
 )
 
-func TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation(t *testing.T) {
+func TestCompatibleFlagsPipelineWithoutStarvingExclusiveInventory(t *testing.T) {
 	f := serverPublications(t, transport.Fast, 4<<20)
 	body := serverBody(t, f, []byte("actual original SERVER body awaiting client MAC"))
 	bodyEntered, flagsEntered, inventoryEntered := make(chan struct{}), make(chan struct{}), make(chan struct{})
@@ -97,9 +97,11 @@ func TestQueuedMaintenanceAndDiscoveryShareOneFetchWithoutPollingStarvation(t *t
 		}
 	}
 	wait(bodyEntered)
-	awaitReclamation(t, func() bool { return x.Snapshot().FetchWaiters == 1 })
+	// Disjoint FLAGS may reach the wire while BODY2 still owns its tag. The
+	// scripted provider processes it after the held BODY completion is released.
+	awaitReclamation(t, func() bool { return x.Snapshot().Flags.Started > 0 && x.Snapshot().PendingTags == 2 })
 	bodyOnce.Do(func() { close(bodyRelease) })
-	wait(flagsEntered) // already waiting maintenance goes before a new poll
+	wait(flagsEntered)
 	awaitReclamation(t, func() bool { return x.Snapshot().FetchWaiters == 1 })
 	flagsOnce.Do(func() { close(flagsRelease) })
 	wait(inventoryEntered) // already waiting discovery goes before another probe

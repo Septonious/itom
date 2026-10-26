@@ -7,6 +7,12 @@ cannot supply that pair yet: `tunnel.StartClient` and `ServeManaged` still retur
 Stable 1.0.0/RC2 remains separate; its removed runtime will not be reactivated as
 the replacement transport.
 
+[Bounded FETCH overlap](FETCH_OVERLAP_WORK.md) removes eligible BODY/FLAGS
+serialization without increasing connections or the response-byte allowance.
+Final source checks pass, but maximum RTT qualification and production startup
+remain incomplete. A faster parser-service component is not sustained bandwidth
+or field readiness.
+
 The [allocation-tail continuation](ALLOCATION_TAIL_WORK.md) improves typical
 source-host light exchanges while retaining the failed maximum RTT gates and
 the original cold HTTP failure. Constant upper-range propagation is now tested

@@ -1,0 +1,13 @@
+{"Time":"2026-10-26T05:07:50.325204938Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-26T05:07:50.346697222Z","Action":"run","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket"}
+{"Time":"2026-10-26T05:07:50.346864412Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"=== RUN   TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket\n","OutputType":"frame"}
+{"Time":"2026-10-26T05:07:54.369214294Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"    imap_overlap_test.go:35: read tcp 127.0.0.1:35625-\u003e127.0.0.1:42954: i/o timeout\n","OutputType":"error"}
+{"Time":"2026-10-26T05:07:54.37118903Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"    imap_overlap_test.go:35: wrong FETCH turn: \"\"\n","OutputType":"error"}
+{"Time":"2026-10-26T05:07:54.371322008Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"    imap_overlap_test.go:52: V2_PROTOCOL\n","OutputType":"error"}
+{"Time":"2026-10-26T05:07:54.372560936Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"    imap_overlap_test.go:37: EOF\n","OutputType":"error"}
+{"Time":"2026-10-26T05:07:54.372590393Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"    imap_overlap_test.go:39: unrelated command lost progress \n","OutputType":"error"}
+{"Time":"2026-10-26T05:07:54.37457348Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Output":"--- FAIL: TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket (4.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-26T05:07:54.374593293Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket","Elapsed":4.03}
+{"Time":"2026-10-26T05:07:54.375502412Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-26T05:07:54.383654223Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t4.057s\n","OutputType":"frame"}
+{"Time":"2026-10-26T05:07:54.383682753Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":4.059}

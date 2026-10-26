@@ -28,12 +28,24 @@ jobs:
         run: |
           set -euo pipefail
           go test -race -tags itomtest -json ./transport -run '^(TestTenServerWritersDoNotFsyncUnusedGrantsForOneTLSFlight|TestFastPreparationCoordinationKeepsBulkJournalPreparationConcurrent)$' -count=3 -timeout=60s | tee "$RUNNER_TEMP/session-v2-preparation.jsonl"
+      - name: Bounded same-socket FETCH overlap and exclusive proof reads
+        if: ${{ !cancelled() }}
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          go test -race -json ./transport -run '^Test(DisjointBody|SameUIDBody|PipelinedFetches|PipelinedMissing|CompatibleFlags|CanceledFetch|BodyCompletion|ExclusiveInventory|PipelinedBody|GroupedBulkAndNarrow)' -count=3 -timeout=90s | tee "$RUNNER_TEMP/session-v2-fetch-overlap.jsonl"
       - name: Light-load TCP propagation gate
         if: ${{ !cancelled() }}
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail
           go test -tags itomtest -json ./transport -run '^TestAccountWarmLightPropagationQualification$' -count=1 -timeout=120s | tee "$RUNNER_TEMP/session-v2-light.jsonl"
+      - name: Observe one-socket parser service (not transport qualification)
+        if: ${{ !cancelled() }}
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          go test -tags itomtest -json ./transport -run '^TestMeasuredDisjointFetchServiceOnOneTLSCarrier$' -count=1 -timeout=30s | tee "$RUNNER_TEMP/session-v2-parser-service.jsonl"
       - name: Upper-range client and server propagation gate
         if: ${{ !cancelled() }}
         working-directory: archives/1.1.0/source/core
@@ -79,6 +91,8 @@ jobs:
             ${{ runner.temp }}/session-v2-core.jsonl
             ${{ runner.temp }}/session-v2-native.jsonl
             ${{ runner.temp }}/session-v2-preparation.jsonl
+            ${{ runner.temp }}/session-v2-fetch-overlap.jsonl
+            ${{ runner.temp }}/session-v2-parser-service.jsonl
             ${{ runner.temp }}/session-v2-light.jsonl
             ${{ runner.temp }}/session-v2-quiet-light.jsonl
             ${{ runner.temp }}/session-v2-upper-light.jsonl

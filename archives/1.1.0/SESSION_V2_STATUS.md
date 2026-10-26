@@ -8,6 +8,14 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+The [FETCH overlap continuation](FETCH_OVERLAP_WORK.md) permits disjoint singleton
+BODY/FLAGS queries on one selected connection, with FIFO exclusive inventory/proof
+admission and the original shared response-byte budget. Thirty repeated safety
+groups, all 249 final core race groups, ten native groups and both vet checks pass.
+An earlier 503.779ms plain NOOP calibration failure remains retained. The new
+quiet cohort meets 300ms, while warm and fixed upper-range cohorts still fail.
+The isolated two-query service reduction does not establish tunnel throughput.
+
 The [allocation-tail continuation](ALLOCATION_TAIL_WORK.md) retains observed UID
 allocation through cleanup and a BODY vanishing after inventory. Two warm cohorts
 improve average RTT by about 17% against the parent source cohort, but maximum RTT

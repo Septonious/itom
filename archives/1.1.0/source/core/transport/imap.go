@@ -35,7 +35,7 @@ type Result struct {
 }
 type operation struct {
 	watchdog     *time.Timer // stopped under Executor.mu on every terminal path
-	fetchTurn    chan struct{}
+	fetchTurn    *fetchRequest
 	class        commandClass
 	started      time.Time
 	done         chan struct{}
@@ -74,8 +74,9 @@ func DefaultIMAPLimits() IMAPLimits {
 
 // Executor pins one selected mailbox. It owns the only parser and serializes
 // bytes on the wire, but releases the writer before tagged completion. APPEND
-// and one UID FETCH may overlap. UID FETCH operations serialize because their
-// untagged responses have no command tag. IDLE owns the writer until DONE and
+// and bounded UID FETCH may overlap. Internal singleton BODY and disjoint FLAGS
+// reads may share the parser; inventory, absence proof, grouped bodies and the
+// public FETCH API retain exclusive admission. IDLE owns the writer until DONE and
 // its tag have drained. Mailbox selection changes require a new executor.
 type Executor struct {
 	literalPlus      bool
@@ -92,7 +93,11 @@ type Executor struct {
 	sequence         uint64
 	literal          *operation
 	fetch            *operation
-	fetchTurn        chan struct{}
+	flagFetch        *operation
+	fetchTurns       [2]*fetchRequest
+	fetchQueue       []*fetchRequest
+	fetchBytes       int
+	fetchPairs       uint64
 	fetchWaiters     int
 	closed           error
 	done             chan struct{}
@@ -126,7 +131,7 @@ func newSelectedExecutor(conn net.Conn, reader *bufio.Reader, l IMAPLimits, mail
 	if conn == nil || reader == nil || l.Pending < 2 || l.Pending > 128 || l.LineBytes < 128 || l.LineBytes > 64<<10 || l.LiteralBytes < 1 || l.LiteralBytes > 2<<20 || l.ResponseBytes < l.LiteralBytes || l.ResponseBytes > 8<<20 || l.ProgressTimeout <= 0 {
 		return nil, ErrCapacity
 	}
-	e := &Executor{writer: make(chan struct{}, 1), fetchTurn: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, idleSupported: idle, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
+	e := &Executor{writer: make(chan struct{}, 1), mailbox: mailbox, validity: validity, literalPlus: plus, literalMinus: minus, idleSupported: idle, conn: conn, reader: reader, limits: l, pending: map[string]*operation{}, done: make(chan struct{}), changes: make(chan struct{}, 1), space: make(chan struct{})}
 	go e.readLoop()
 	return e, nil
 }
@@ -159,28 +164,53 @@ func (e *Executor) fail(err error) {
 		close(op.done)
 	}
 	e.pending = map[string]*operation{}
+	e.fetch, e.flagFetch, e.literal, e.idle = nil, nil, nil, nil
 	close(e.done)
 	e.signalSpaceLocked()
 	e.mu.Unlock()
 	e.conn.Close()
 }
 func (e *Executor) begin(class commandClass, fetch, literal bool) (string, *operation, error) {
+	return e.beginOperation(&operation{class: class, fetch: fetch, metadata: class == commandInventory, flags: class == commandFlags}, literal)
+}
+
+func (e *Executor) beginOperation(op *operation, literal bool) (string, *operation, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.closed != nil {
 		return "", nil, e.closed
 	}
-	if len(e.pending) >= e.limits.Pending || fetch && e.fetch != nil {
+	blocked := false
+	if op.fetch {
+		if r := op.fetchTurn; r != nil {
+			if !r.granted || r.finished || r.started || r.op != op {
+				return "", nil, ErrProtocol
+			}
+		} else {
+			blocked = e.fetch != nil || e.flagFetch != nil || e.fetchTurns[0] != nil || e.fetchTurns[1] != nil
+		}
+	}
+	if len(e.pending) >= e.limits.Pending || blocked {
 		e.capacityRefusals++
 		return "", nil, errCommandCapacity
 	}
 	e.sequence++
 	tag := fmt.Sprintf("V2%016x", e.sequence)
-	op := &operation{class: class, started: time.Now(), done: make(chan struct{}), continuation: make(chan struct{}, 1), fetch: fetch}
-	e.timing[class].Started++
+	op.started, op.done, op.continuation = time.Now(), make(chan struct{}), make(chan struct{}, 1)
+	e.timing[op.class].Started++
 	e.pending[tag] = op
-	if fetch {
-		e.fetch = op
+	if op.fetch {
+		if op.flags {
+			e.flagFetch = op
+		} else {
+			e.fetch = op
+		}
+		if op.fetchTurn != nil {
+			op.fetchTurn.started = true
+		}
+		if e.fetch != nil && e.flagFetch != nil {
+			e.fetchPairs++
+		}
 	}
 	if literal {
 		e.literal = op
@@ -217,7 +247,9 @@ func (e *Executor) expire(op *operation) {
 		close(pending.done)
 	}
 	e.pending = map[string]*operation{}
+	e.fetch, e.flagFetch, e.literal, e.idle = nil, nil, nil, nil
 	close(e.done)
+	e.signalSpaceLocked()
 	e.mu.Unlock()
 	e.conn.Close()
 }
@@ -327,13 +359,17 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata,
 	if first == 0 || last < first {
 		return nil, ErrProtocol
 	}
-	var turnOp *operation
+	class := commandBody
+	if metadata {
+		class = commandInventory
+	}
+	op := &operation{class: class, fetch: true, first: first, last: last, metadata: metadata, uids: make(map[uint32]bool)}
 	if queued {
-		finish, err := e.acquireFetchTurn(ctx)
+		turn, err := e.acquireFetchTurn(ctx, op)
 		if err != nil {
 			return nil, err
 		}
-		defer func() { finish(turnOp) }()
+		defer e.releaseUnstartedFetch(turn)
 	}
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
@@ -342,21 +378,10 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata,
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	class := commandBody
-	if metadata {
-		class = commandInventory
-	}
-	tag, op, err := e.begin(class, true, false)
+	tag, op, err := e.beginOperation(op, false)
 	if err != nil {
 		return nil, err
 	}
-	turnOp = op
-	e.mu.Lock()
-	op.first = first
-	op.last = last
-	op.uids = make(map[uint32]bool)
-	op.metadata = metadata
-	e.mu.Unlock()
 	items := "UID BODY.PEEK[]"
 	if metadata {
 		items = "UID"
@@ -531,6 +556,9 @@ func (e *Executor) readLoop() {
 		if e.fetch == op {
 			e.fetch = nil
 		}
+		if e.flagFetch == op {
+			e.flagFetch = nil
+		}
 		e.releaseFetchTurnLocked(op)
 		if e.literal == op {
 			e.literal = nil
@@ -573,10 +601,9 @@ func (e *Executor) readMetadata(line string) (bool, error) {
 	if uid == 0 || !op.requestsUID(uint32(uid)) {
 		return false, nil
 	}
-	if len(line)+2 > e.limits.ResponseBytes-op.bytes {
-		return false, ErrCapacity
+	if err := e.chargeFetchLocked(op, len(line)+2); err != nil {
+		return false, err
 	}
-	op.bytes += len(line) + 2
 	if !op.uids[uint32(uid)] {
 		op.uids[uint32(uid)] = true
 		sequence, err := fetchSequence(line)
@@ -608,11 +635,14 @@ func (e *Executor) readBody(line string) error {
 		e.mu.Unlock()
 		return ErrProtocol
 	}
-	if op == nil || int(size)+len(line) > e.limits.ResponseBytes-op.bytes {
+	if op == nil {
 		e.mu.Unlock()
 		return ErrCapacity
 	}
-	op.bytes += int(size) + len(line)
+	if err := e.chargeFetchLocked(op, int(size)+len(line)); err != nil {
+		e.mu.Unlock()
+		return err
+	}
 	e.mu.Unlock()
 	body := make([]byte, int(size))
 	if _, err = io.ReadFull(e.reader, body); err != nil {
@@ -645,10 +675,9 @@ func (e *Executor) readBody(line string) error {
 	if !op.requestsUID(uint32(uid)) || op.uids[uint32(uid)] {
 		return ErrProtocol
 	}
-	if len(suffix) > e.limits.ResponseBytes-op.bytes {
-		return ErrCapacity
+	if err := e.chargeFetchLocked(op, len(suffix)); err != nil {
+		return err
 	}
-	op.bytes += len(suffix)
 	op.uids[uint32(uid)] = true
 	op.result.Bodies = append(op.result.Bodies, Body{UID: uint32(uid), Sequence: sequence, Bytes: body, sequenceVersion: e.sequenceVersion})
 	return nil

@@ -386,6 +386,16 @@ func testAccountTLSHTTPScenario(t *testing.T, clientService, serverService []tim
 	warmTransport.DisableKeepAlives = false
 	defer warmTransport.CloseIdleConnections()
 	warmClient := &http.Client{Transport: warmTransport, Timeout: 5 * time.Second}
+	pairedFetches := func() uint64 {
+		var pairs uint64
+		for _, svc := range []*transport.RosterService{client, server} {
+			for _, carrier := range svc.Runtime.Snapshot().Carriers {
+				pairs += carrier.IMAP.ConcurrentFetchPairs
+			}
+		}
+		return pairs
+	}
+	pairsBefore := pairedFetches()
 	var samples []qualification.Exchange
 	for sample := 0; sample <= warmSamples; sample++ {
 		if sample > 0 && len(scenario.quietGaps) > 0 {
@@ -431,6 +441,7 @@ func testAccountTLSHTTPScenario(t *testing.T, clientService, serverService []tim
 			t.Logf("warm_light_sample=%d payload=%d elapsed_ns=%d target_ns=%d light_target_met=%t preferred_target_ns=%d preferred_light_target_met=%t", sample, len(payload), elapsed.Nanoseconds(), qualification.LightRTTLimit.Nanoseconds(), elapsed <= qualification.LightRTTLimit, qualification.PreferredLightRTT.Nanoseconds(), elapsed <= qualification.PreferredLightRTT)
 		}
 	}
+	t.Logf("completed_warm_exchanges=%d concurrent_fetch_pairs=%d", len(samples), pairedFetches()-pairsBefore)
 	for _, j := range p.journals {
 		if err := j.Control.Audit(); err != nil {
 			t.Fatal(j.Account, err)

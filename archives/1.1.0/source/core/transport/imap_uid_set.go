@@ -49,13 +49,23 @@ func (e *Executor) fetchExact(ctx context.Context, input []uint32, flags, bodies
 	if len(uids) == 1 {
 		set = fmt.Sprintf("%d:%d", uids[0], uids[0])
 	}
-	var turnOp *operation
+	class, items := commandInventory, "UID"
+	if flags {
+		class, items = commandFlags, "UID FLAGS"
+	}
+	if bodies {
+		class, items = commandBody, "UID BODY.PEEK[]"
+	}
+	op := &operation{class: class, fetch: true, first: uids[0], last: uids[len(uids)-1], flags: flags, metadata: !flags && !bodies, uids: make(map[uint32]bool), requested: make(map[uint32]bool, len(uids))}
+	for _, uid := range uids {
+		op.requested[uid] = true
+	}
 	if queued {
-		finish, err := e.acquireFetchTurn(ctx)
+		turn, err := e.acquireFetchTurn(ctx, op)
 		if err != nil {
 			return nil, err
 		}
-		defer func() { finish(turnOp) }()
+		defer e.releaseUnstartedFetch(turn)
 	}
 	if err = e.lockWriter(ctx); err != nil {
 		return nil, err
@@ -64,27 +74,10 @@ func (e *Executor) fetchExact(ctx context.Context, input []uint32, flags, bodies
 	if err = ctx.Err(); err != nil {
 		return nil, err
 	}
-	class, items := commandInventory, "UID"
-	if flags {
-		class, items = commandFlags, "UID FLAGS"
-	}
-	if bodies {
-		class, items = commandBody, "UID BODY.PEEK[]"
-	}
-	tag, op, err := e.begin(class, true, false)
+	tag, op, err := e.beginOperation(op, false)
 	if err != nil {
 		return nil, err
 	}
-	turnOp = op
-	e.mu.Lock()
-	op.first, op.last = uids[0], uids[len(uids)-1]
-	op.flags, op.metadata = flags, !flags && !bodies
-	op.uids = make(map[uint32]bool)
-	op.requested = make(map[uint32]bool, len(uids))
-	for _, uid := range uids {
-		op.requested[uid] = true
-	}
-	e.mu.Unlock()
 	if err = e.write([]byte(fmt.Sprintf("%s UID FETCH %s (%s)\r\n", tag, set, items))); err != nil {
 		e.fail(ErrUnknown)
 		return &Command{op}, ErrUnknown

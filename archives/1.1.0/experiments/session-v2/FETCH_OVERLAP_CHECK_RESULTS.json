@@ -1,0 +1,2149 @@
+{
+  "schema": 1,
+  "parent_commit": "8456731d97b21cc0aa150098f240a93e0d1a520d",
+  "status": "unqualified implementation; final source checks pass; warm and upper-range maximum RTT gates still FAIL",
+  "policy": {
+    "light_max_ns": 300000000,
+    "preferred_light_ns": 250000000,
+    "loaded_max_ns": 2000000000,
+    "sustained_required_bps_each_direction": 100000000,
+    "production_imap_progress_ns": 30000000000,
+    "response_bound_grew": false,
+    "connection_budget_grew": false,
+    "request_deadlines_changed": false,
+    "dns_changed": false
+  },
+  "activation": {
+    "one_singleton_BODY_and_disjoint_FLAGS_may_overlap": true,
+    "grouped_bulk_public_fetch_inventory_absence_same_UID_and_narrow_budgets_exclusive": true,
+    "original_shared_response_cap_enforced": true,
+    "faster_probe_or_parser_cache": false,
+    "production_startup_ready": false,
+    "apk_or_binary_built": false,
+    "hosted_ci_verified": false
+  },
+  "final_source_checks": {
+    "core_race": {
+      "pass": 249,
+      "fail": 0,
+      "failed_groups": []
+    },
+    "native_race": {
+      "pass": 10,
+      "fail": 0,
+      "failed_groups": []
+    },
+    "overlap_guards_race_count3": {
+      "pass": 30,
+      "fail": 0,
+      "failed_groups": []
+    },
+    "core_vet_exit": 0,
+    "native_vet_exit": 0,
+    "workflow_steps_valid": 13
+  },
+  "retained_intermediate_transport_failure": {
+    "pass": 208,
+    "fail": 1,
+    "failed_groups": [
+      "TestSelectedTLSNoopSamplesTheWireRouteWithoutCommandSleeps"
+    ]
+  },
+  "calibration_diagnostics": {
+    "overlap-calibration-repeated.jsonl": {
+      "groups": {
+        "pass": 3,
+        "fail": 0,
+        "failed_groups": []
+      },
+      "samples": [
+        {
+          "probe": 0,
+          "elapsed_ns": 11991269
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 10866461
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 11037266
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 11232828
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 11274768
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10831723
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 10828739
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 11349331
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 11599380
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 10936284
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 11360839
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 11614632
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 10857024
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 11031413
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 11242984
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 11984206
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 50963937
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 51371136
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 51052954
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51266007
+        },
+        {
+          "probe": 0,
+          "elapsed_ns": 10964476
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 10809428
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 11026647
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 10768101
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 11093979
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10873361
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 10896527
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 10855237
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 11856532
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 12802188
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 11094352
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 11561571
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 11135828
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 11388845
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 10968862
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 10891045
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 31672148
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 51389558
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 50833129
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51090699
+        },
+        {
+          "probe": 0,
+          "elapsed_ns": 10931061
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 11028705
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 10848740
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 10872897
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 10881412
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10852620
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 10994006
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 11044672
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 11168597
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 11404698
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 11264061
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 10947178
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 11156257
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 11413634
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 10887789
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 11287964
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 50892186
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 50775501
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 52304687
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51168500
+        }
+      ],
+      "maximum_ns": 52304687
+    },
+    "parent-calibration-repeated.jsonl": {
+      "groups": {
+        "pass": 3,
+        "fail": 0,
+        "failed_groups": []
+      },
+      "samples": [
+        {
+          "probe": 0,
+          "elapsed_ns": 10768606
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 13353861
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 11133943
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 11163608
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 11390132
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10848810
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 10890457
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 11144699
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 11612206
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 10726666
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 11070667
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 10836069
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 11160549
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 10965987
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 11054323
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 11162304
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 30891130
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 51010501
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 51167272
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51319285
+        },
+        {
+          "probe": 0,
+          "elapsed_ns": 11011407
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 11216838
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 11005631
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 10934131
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 11348654
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10855781
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 11022999
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 11278543
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 10797611
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 11009553
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 10920574
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 11005168
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 10839955
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 11371129
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 11401291
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 10857740
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 10993313
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 51224207
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 51119289
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51219618
+        },
+        {
+          "probe": 0,
+          "elapsed_ns": 10996020
+        },
+        {
+          "probe": 1,
+          "elapsed_ns": 11027174
+        },
+        {
+          "probe": 2,
+          "elapsed_ns": 10754795
+        },
+        {
+          "probe": 3,
+          "elapsed_ns": 11194991
+        },
+        {
+          "probe": 4,
+          "elapsed_ns": 10871646
+        },
+        {
+          "probe": 5,
+          "elapsed_ns": 10755791
+        },
+        {
+          "probe": 6,
+          "elapsed_ns": 10893179
+        },
+        {
+          "probe": 7,
+          "elapsed_ns": 11042059
+        },
+        {
+          "probe": 8,
+          "elapsed_ns": 14511714
+        },
+        {
+          "probe": 9,
+          "elapsed_ns": 11044517
+        },
+        {
+          "probe": 10,
+          "elapsed_ns": 11041760
+        },
+        {
+          "probe": 11,
+          "elapsed_ns": 10905385
+        },
+        {
+          "probe": 12,
+          "elapsed_ns": 11199899
+        },
+        {
+          "probe": 13,
+          "elapsed_ns": 11118324
+        },
+        {
+          "probe": 14,
+          "elapsed_ns": 10881823
+        },
+        {
+          "probe": 15,
+          "elapsed_ns": 41180562
+        },
+        {
+          "probe": 16,
+          "elapsed_ns": 52064152
+        },
+        {
+          "probe": 17,
+          "elapsed_ns": 51053359
+        },
+        {
+          "probe": 18,
+          "elapsed_ns": 51228894
+        },
+        {
+          "probe": 19,
+          "elapsed_ns": 51065237
+        }
+      ],
+      "maximum_ns": 52064152
+    }
+  },
+  "expected_parent_counterfactual_failure": {
+    "pass": 0,
+    "fail": 1,
+    "failed_groups": [
+      "TestDisjointBodyAndFlagsCompleteIndependentlyWithoutExtraSocket"
+    ]
+  },
+  "application_and_component_cohorts": {
+    "overlap-warm-repeated.jsonl": [
+      {
+        "test": "TestAccountWarmLightPropagationQualification",
+        "expected_samples": 64,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 174565568
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 268301935
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 253020144
+          },
+          {
+            "sample": 4,
+            "bytes": 31,
+            "elapsed_ns": 177758171
+          },
+          {
+            "sample": 5,
+            "bytes": 31,
+            "elapsed_ns": 189012277
+          },
+          {
+            "sample": 6,
+            "bytes": 31,
+            "elapsed_ns": 191476134
+          },
+          {
+            "sample": 7,
+            "bytes": 31,
+            "elapsed_ns": 239599604
+          },
+          {
+            "sample": 8,
+            "bytes": 31,
+            "elapsed_ns": 200554503
+          },
+          {
+            "sample": 9,
+            "bytes": 31,
+            "elapsed_ns": 114250988
+          },
+          {
+            "sample": 10,
+            "bytes": 31,
+            "elapsed_ns": 170656358
+          },
+          {
+            "sample": 11,
+            "bytes": 31,
+            "elapsed_ns": 204993748
+          },
+          {
+            "sample": 12,
+            "bytes": 31,
+            "elapsed_ns": 135785474
+          },
+          {
+            "sample": 13,
+            "bytes": 31,
+            "elapsed_ns": 201532609
+          },
+          {
+            "sample": 14,
+            "bytes": 31,
+            "elapsed_ns": 205375060
+          },
+          {
+            "sample": 15,
+            "bytes": 31,
+            "elapsed_ns": 277254151
+          },
+          {
+            "sample": 16,
+            "bytes": 31,
+            "elapsed_ns": 169706007
+          },
+          {
+            "sample": 17,
+            "bytes": 31,
+            "elapsed_ns": 80659141
+          },
+          {
+            "sample": 18,
+            "bytes": 31,
+            "elapsed_ns": 105560613
+          },
+          {
+            "sample": 19,
+            "bytes": 31,
+            "elapsed_ns": 191987448
+          },
+          {
+            "sample": 20,
+            "bytes": 31,
+            "elapsed_ns": 202357916
+          },
+          {
+            "sample": 21,
+            "bytes": 31,
+            "elapsed_ns": 181410793
+          },
+          {
+            "sample": 22,
+            "bytes": 31,
+            "elapsed_ns": 162258041
+          },
+          {
+            "sample": 23,
+            "bytes": 31,
+            "elapsed_ns": 180815405
+          },
+          {
+            "sample": 24,
+            "bytes": 31,
+            "elapsed_ns": 265741005
+          },
+          {
+            "sample": 25,
+            "bytes": 31,
+            "elapsed_ns": 172208329
+          },
+          {
+            "sample": 26,
+            "bytes": 31,
+            "elapsed_ns": 114417218
+          },
+          {
+            "sample": 27,
+            "bytes": 31,
+            "elapsed_ns": 221325479
+          },
+          {
+            "sample": 28,
+            "bytes": 31,
+            "elapsed_ns": 189788438
+          },
+          {
+            "sample": 29,
+            "bytes": 31,
+            "elapsed_ns": 140948582
+          },
+          {
+            "sample": 30,
+            "bytes": 31,
+            "elapsed_ns": 186772370
+          },
+          {
+            "sample": 31,
+            "bytes": 31,
+            "elapsed_ns": 249734053
+          },
+          {
+            "sample": 32,
+            "bytes": 31,
+            "elapsed_ns": 176689752
+          },
+          {
+            "sample": 33,
+            "bytes": 31,
+            "elapsed_ns": 175066795
+          },
+          {
+            "sample": 34,
+            "bytes": 31,
+            "elapsed_ns": 92501673
+          },
+          {
+            "sample": 35,
+            "bytes": 31,
+            "elapsed_ns": 108380660
+          },
+          {
+            "sample": 36,
+            "bytes": 31,
+            "elapsed_ns": 274162901
+          },
+          {
+            "sample": 37,
+            "bytes": 31,
+            "elapsed_ns": 174901649
+          },
+          {
+            "sample": 38,
+            "bytes": 31,
+            "elapsed_ns": 156556651
+          },
+          {
+            "sample": 39,
+            "bytes": 31,
+            "elapsed_ns": 167393834
+          },
+          {
+            "sample": 40,
+            "bytes": 31,
+            "elapsed_ns": 151976193
+          },
+          {
+            "sample": 41,
+            "bytes": 31,
+            "elapsed_ns": 168326172
+          },
+          {
+            "sample": 42,
+            "bytes": 31,
+            "elapsed_ns": 217432015
+          },
+          {
+            "sample": 43,
+            "bytes": 31,
+            "elapsed_ns": 120774067
+          },
+          {
+            "sample": 44,
+            "bytes": 31,
+            "elapsed_ns": 190069890
+          },
+          {
+            "sample": 45,
+            "bytes": 31,
+            "elapsed_ns": 191899928
+          },
+          {
+            "sample": 46,
+            "bytes": 31,
+            "elapsed_ns": 329495595
+          },
+          {
+            "sample": 47,
+            "bytes": 31,
+            "elapsed_ns": 226039960
+          },
+          {
+            "sample": 48,
+            "bytes": 31,
+            "elapsed_ns": 296176800
+          },
+          {
+            "sample": 49,
+            "bytes": 31,
+            "elapsed_ns": 158273647
+          },
+          {
+            "sample": 50,
+            "bytes": 31,
+            "elapsed_ns": 124516314
+          },
+          {
+            "sample": 51,
+            "bytes": 31,
+            "elapsed_ns": 145216444
+          },
+          {
+            "sample": 52,
+            "bytes": 31,
+            "elapsed_ns": 232084136
+          },
+          {
+            "sample": 53,
+            "bytes": 31,
+            "elapsed_ns": 126816268
+          },
+          {
+            "sample": 54,
+            "bytes": 31,
+            "elapsed_ns": 153395526
+          },
+          {
+            "sample": 55,
+            "bytes": 31,
+            "elapsed_ns": 167487996
+          },
+          {
+            "sample": 56,
+            "bytes": 31,
+            "elapsed_ns": 200670176
+          },
+          {
+            "sample": 57,
+            "bytes": 31,
+            "elapsed_ns": 196778531
+          },
+          {
+            "sample": 58,
+            "bytes": 31,
+            "elapsed_ns": 207560185
+          },
+          {
+            "sample": 59,
+            "bytes": 31,
+            "elapsed_ns": 131460991
+          },
+          {
+            "sample": 60,
+            "bytes": 31,
+            "elapsed_ns": 269040446
+          },
+          {
+            "sample": 61,
+            "bytes": 31,
+            "elapsed_ns": 119570694
+          },
+          {
+            "sample": 62,
+            "bytes": 31,
+            "elapsed_ns": 216995509
+          },
+          {
+            "sample": 63,
+            "bytes": 31,
+            "elapsed_ns": 192590335
+          },
+          {
+            "sample": 64,
+            "bytes": 31,
+            "elapsed_ns": 193190014
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 382,
+        "completed": 64,
+        "complete": true,
+        "mean_ns": 185520614.203125,
+        "maximum_ns": 329495595,
+        "misses_300ms": 1,
+        "misses_preferred_250ms": 8,
+        "qualified": false
+      },
+      {
+        "test": "TestAccountWarmLightPropagationQualification",
+        "expected_samples": 64,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 179053375
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 85734279
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 237635302
+          },
+          {
+            "sample": 4,
+            "bytes": 31,
+            "elapsed_ns": 215659057
+          },
+          {
+            "sample": 5,
+            "bytes": 31,
+            "elapsed_ns": 216325027
+          },
+          {
+            "sample": 6,
+            "bytes": 31,
+            "elapsed_ns": 191988209
+          },
+          {
+            "sample": 7,
+            "bytes": 31,
+            "elapsed_ns": 163318147
+          },
+          {
+            "sample": 8,
+            "bytes": 31,
+            "elapsed_ns": 208834431
+          },
+          {
+            "sample": 9,
+            "bytes": 31,
+            "elapsed_ns": 194090250
+          },
+          {
+            "sample": 10,
+            "bytes": 31,
+            "elapsed_ns": 147435823
+          },
+          {
+            "sample": 11,
+            "bytes": 31,
+            "elapsed_ns": 223785292
+          },
+          {
+            "sample": 12,
+            "bytes": 31,
+            "elapsed_ns": 232179747
+          },
+          {
+            "sample": 13,
+            "bytes": 31,
+            "elapsed_ns": 180344088
+          },
+          {
+            "sample": 14,
+            "bytes": 31,
+            "elapsed_ns": 199506277
+          },
+          {
+            "sample": 15,
+            "bytes": 31,
+            "elapsed_ns": 300177603
+          },
+          {
+            "sample": 16,
+            "bytes": 31,
+            "elapsed_ns": 172804332
+          },
+          {
+            "sample": 17,
+            "bytes": 31,
+            "elapsed_ns": 119039655
+          },
+          {
+            "sample": 18,
+            "bytes": 31,
+            "elapsed_ns": 229681754
+          },
+          {
+            "sample": 19,
+            "bytes": 31,
+            "elapsed_ns": 228515876
+          },
+          {
+            "sample": 20,
+            "bytes": 31,
+            "elapsed_ns": 205543125
+          },
+          {
+            "sample": 21,
+            "bytes": 31,
+            "elapsed_ns": 203680191
+          },
+          {
+            "sample": 22,
+            "bytes": 31,
+            "elapsed_ns": 160281807
+          },
+          {
+            "sample": 23,
+            "bytes": 31,
+            "elapsed_ns": 149409953
+          },
+          {
+            "sample": 24,
+            "bytes": 31,
+            "elapsed_ns": 194717624
+          },
+          {
+            "sample": 25,
+            "bytes": 31,
+            "elapsed_ns": 137421419
+          },
+          {
+            "sample": 26,
+            "bytes": 31,
+            "elapsed_ns": 169704730
+          },
+          {
+            "sample": 27,
+            "bytes": 31,
+            "elapsed_ns": 215483592
+          },
+          {
+            "sample": 28,
+            "bytes": 31,
+            "elapsed_ns": 133139973
+          },
+          {
+            "sample": 29,
+            "bytes": 31,
+            "elapsed_ns": 175382478
+          },
+          {
+            "sample": 30,
+            "bytes": 31,
+            "elapsed_ns": 174690415
+          },
+          {
+            "sample": 31,
+            "bytes": 31,
+            "elapsed_ns": 169067553
+          },
+          {
+            "sample": 32,
+            "bytes": 31,
+            "elapsed_ns": 242298540
+          },
+          {
+            "sample": 33,
+            "bytes": 31,
+            "elapsed_ns": 155565844
+          },
+          {
+            "sample": 34,
+            "bytes": 31,
+            "elapsed_ns": 131049446
+          },
+          {
+            "sample": 35,
+            "bytes": 31,
+            "elapsed_ns": 175511649
+          },
+          {
+            "sample": 36,
+            "bytes": 31,
+            "elapsed_ns": 185580384
+          },
+          {
+            "sample": 37,
+            "bytes": 31,
+            "elapsed_ns": 202993767
+          },
+          {
+            "sample": 38,
+            "bytes": 31,
+            "elapsed_ns": 166161296
+          },
+          {
+            "sample": 39,
+            "bytes": 31,
+            "elapsed_ns": 228912600
+          },
+          {
+            "sample": 40,
+            "bytes": 31,
+            "elapsed_ns": 169661354
+          },
+          {
+            "sample": 41,
+            "bytes": 31,
+            "elapsed_ns": 177991087
+          },
+          {
+            "sample": 42,
+            "bytes": 31,
+            "elapsed_ns": 128326085
+          },
+          {
+            "sample": 43,
+            "bytes": 31,
+            "elapsed_ns": 132926022
+          },
+          {
+            "sample": 44,
+            "bytes": 31,
+            "elapsed_ns": 234491310
+          },
+          {
+            "sample": 45,
+            "bytes": 31,
+            "elapsed_ns": 128247183
+          },
+          {
+            "sample": 46,
+            "bytes": 31,
+            "elapsed_ns": 244758273
+          },
+          {
+            "sample": 47,
+            "bytes": 31,
+            "elapsed_ns": 226836653
+          },
+          {
+            "sample": 48,
+            "bytes": 31,
+            "elapsed_ns": 228461404
+          },
+          {
+            "sample": 49,
+            "bytes": 31,
+            "elapsed_ns": 177725808
+          },
+          {
+            "sample": 50,
+            "bytes": 31,
+            "elapsed_ns": 111094996
+          },
+          {
+            "sample": 51,
+            "bytes": 31,
+            "elapsed_ns": 228959354
+          },
+          {
+            "sample": 52,
+            "bytes": 31,
+            "elapsed_ns": 197120004
+          },
+          {
+            "sample": 53,
+            "bytes": 31,
+            "elapsed_ns": 144273568
+          },
+          {
+            "sample": 54,
+            "bytes": 31,
+            "elapsed_ns": 181827212
+          },
+          {
+            "sample": 55,
+            "bytes": 31,
+            "elapsed_ns": 176138644
+          },
+          {
+            "sample": 56,
+            "bytes": 31,
+            "elapsed_ns": 140850093
+          },
+          {
+            "sample": 57,
+            "bytes": 31,
+            "elapsed_ns": 185218555
+          },
+          {
+            "sample": 58,
+            "bytes": 31,
+            "elapsed_ns": 191122964
+          },
+          {
+            "sample": 59,
+            "bytes": 31,
+            "elapsed_ns": 112910270
+          },
+          {
+            "sample": 60,
+            "bytes": 31,
+            "elapsed_ns": 171511214
+          },
+          {
+            "sample": 61,
+            "bytes": 31,
+            "elapsed_ns": 226354377
+          },
+          {
+            "sample": 62,
+            "bytes": 31,
+            "elapsed_ns": 125396136
+          },
+          {
+            "sample": 63,
+            "bytes": 31,
+            "elapsed_ns": 142680958
+          },
+          {
+            "sample": 64,
+            "bytes": 31,
+            "elapsed_ns": 212368879
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 387,
+        "completed": 64,
+        "complete": true,
+        "mean_ns": 182811833.015625,
+        "maximum_ns": 300177603,
+        "misses_300ms": 1,
+        "misses_preferred_250ms": 1,
+        "qualified": false
+      }
+    ],
+    "overlap-upper-and-quiet.jsonl": [
+      {
+        "test": "TestAccountUpperLatencyLightPropagationQualification",
+        "expected_samples": 16,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 612321189
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 303404298
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 311076659
+          },
+          {
+            "sample": 4,
+            "bytes": 31,
+            "elapsed_ns": 271913358
+          },
+          {
+            "sample": 5,
+            "bytes": 31,
+            "elapsed_ns": 257795299
+          },
+          {
+            "sample": 6,
+            "bytes": 31,
+            "elapsed_ns": 306485455
+          },
+          {
+            "sample": 7,
+            "bytes": 31,
+            "elapsed_ns": 250627513
+          },
+          {
+            "sample": 8,
+            "bytes": 31,
+            "elapsed_ns": 276300809
+          },
+          {
+            "sample": 9,
+            "bytes": 31,
+            "elapsed_ns": 253741817
+          },
+          {
+            "sample": 10,
+            "bytes": 31,
+            "elapsed_ns": 272015004
+          },
+          {
+            "sample": 11,
+            "bytes": 31,
+            "elapsed_ns": 298726695
+          },
+          {
+            "sample": 12,
+            "bytes": 31,
+            "elapsed_ns": 292645201
+          },
+          {
+            "sample": 13,
+            "bytes": 31,
+            "elapsed_ns": 229262240
+          },
+          {
+            "sample": 14,
+            "bytes": 31,
+            "elapsed_ns": 271000539
+          },
+          {
+            "sample": 15,
+            "bytes": 31,
+            "elapsed_ns": 228135878
+          },
+          {
+            "sample": 16,
+            "bytes": 31,
+            "elapsed_ns": 255592318
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 121,
+        "completed": 16,
+        "complete": true,
+        "mean_ns": 293190267.0,
+        "maximum_ns": 612321189,
+        "misses_300ms": 4,
+        "misses_preferred_250ms": 14,
+        "qualified": false
+      },
+      {
+        "test": "TestAccountQuietLightPropagationQualification",
+        "expected_samples": 3,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 163980276
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 155037349
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 268635066
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 42,
+        "completed": 3,
+        "complete": true,
+        "mean_ns": 195884230.33333334,
+        "maximum_ns": 268635066,
+        "misses_300ms": 0,
+        "misses_preferred_250ms": 1,
+        "qualified": true
+      }
+    ],
+    "parent-light-cohorts.jsonl": [
+      {
+        "test": "TestAccountWarmLightPropagationQualification",
+        "expected_samples": 64,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 257386277
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 156278691
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 168769345
+          },
+          {
+            "sample": 4,
+            "bytes": 31,
+            "elapsed_ns": 166400837
+          },
+          {
+            "sample": 5,
+            "bytes": 31,
+            "elapsed_ns": 133427805
+          },
+          {
+            "sample": 6,
+            "bytes": 31,
+            "elapsed_ns": 169904258
+          },
+          {
+            "sample": 7,
+            "bytes": 31,
+            "elapsed_ns": 241103823
+          },
+          {
+            "sample": 8,
+            "bytes": 31,
+            "elapsed_ns": 130573167
+          },
+          {
+            "sample": 9,
+            "bytes": 31,
+            "elapsed_ns": 244337745
+          },
+          {
+            "sample": 10,
+            "bytes": 31,
+            "elapsed_ns": 190668177
+          },
+          {
+            "sample": 11,
+            "bytes": 31,
+            "elapsed_ns": 118581772
+          },
+          {
+            "sample": 12,
+            "bytes": 31,
+            "elapsed_ns": 253979438
+          },
+          {
+            "sample": 13,
+            "bytes": 31,
+            "elapsed_ns": 156886222
+          },
+          {
+            "sample": 14,
+            "bytes": 31,
+            "elapsed_ns": 252086439
+          },
+          {
+            "sample": 15,
+            "bytes": 31,
+            "elapsed_ns": 192788335
+          },
+          {
+            "sample": 16,
+            "bytes": 31,
+            "elapsed_ns": 264420022
+          },
+          {
+            "sample": 17,
+            "bytes": 31,
+            "elapsed_ns": 208045969
+          },
+          {
+            "sample": 18,
+            "bytes": 31,
+            "elapsed_ns": 246665385
+          },
+          {
+            "sample": 19,
+            "bytes": 31,
+            "elapsed_ns": 182325408
+          },
+          {
+            "sample": 20,
+            "bytes": 31,
+            "elapsed_ns": 146279372
+          },
+          {
+            "sample": 21,
+            "bytes": 31,
+            "elapsed_ns": 217896387
+          },
+          {
+            "sample": 22,
+            "bytes": 31,
+            "elapsed_ns": 221765169
+          },
+          {
+            "sample": 23,
+            "bytes": 31,
+            "elapsed_ns": 144407435
+          },
+          {
+            "sample": 24,
+            "bytes": 31,
+            "elapsed_ns": 257655973
+          },
+          {
+            "sample": 25,
+            "bytes": 31,
+            "elapsed_ns": 167227283
+          },
+          {
+            "sample": 26,
+            "bytes": 31,
+            "elapsed_ns": 158865175
+          },
+          {
+            "sample": 27,
+            "bytes": 31,
+            "elapsed_ns": 224205581
+          },
+          {
+            "sample": 28,
+            "bytes": 31,
+            "elapsed_ns": 240678627
+          },
+          {
+            "sample": 29,
+            "bytes": 31,
+            "elapsed_ns": 198862504
+          },
+          {
+            "sample": 30,
+            "bytes": 31,
+            "elapsed_ns": 128832321
+          },
+          {
+            "sample": 31,
+            "bytes": 31,
+            "elapsed_ns": 89616388
+          },
+          {
+            "sample": 32,
+            "bytes": 31,
+            "elapsed_ns": 245177922
+          },
+          {
+            "sample": 33,
+            "bytes": 31,
+            "elapsed_ns": 241397497
+          },
+          {
+            "sample": 34,
+            "bytes": 31,
+            "elapsed_ns": 135461862
+          },
+          {
+            "sample": 35,
+            "bytes": 31,
+            "elapsed_ns": 181846240
+          },
+          {
+            "sample": 36,
+            "bytes": 31,
+            "elapsed_ns": 209041013
+          },
+          {
+            "sample": 37,
+            "bytes": 31,
+            "elapsed_ns": 309631137
+          },
+          {
+            "sample": 38,
+            "bytes": 31,
+            "elapsed_ns": 140285976
+          },
+          {
+            "sample": 39,
+            "bytes": 31,
+            "elapsed_ns": 181364163
+          },
+          {
+            "sample": 40,
+            "bytes": 31,
+            "elapsed_ns": 226317245
+          },
+          {
+            "sample": 41,
+            "bytes": 31,
+            "elapsed_ns": 128751815
+          },
+          {
+            "sample": 42,
+            "bytes": 31,
+            "elapsed_ns": 139392247
+          },
+          {
+            "sample": 43,
+            "bytes": 31,
+            "elapsed_ns": 202235825
+          },
+          {
+            "sample": 44,
+            "bytes": 31,
+            "elapsed_ns": 140173944
+          },
+          {
+            "sample": 45,
+            "bytes": 31,
+            "elapsed_ns": 185423498
+          },
+          {
+            "sample": 46,
+            "bytes": 31,
+            "elapsed_ns": 176520064
+          },
+          {
+            "sample": 47,
+            "bytes": 31,
+            "elapsed_ns": 132307217
+          },
+          {
+            "sample": 48,
+            "bytes": 31,
+            "elapsed_ns": 185707010
+          },
+          {
+            "sample": 49,
+            "bytes": 31,
+            "elapsed_ns": 215783390
+          },
+          {
+            "sample": 50,
+            "bytes": 31,
+            "elapsed_ns": 156353414
+          },
+          {
+            "sample": 51,
+            "bytes": 31,
+            "elapsed_ns": 205012659
+          },
+          {
+            "sample": 52,
+            "bytes": 31,
+            "elapsed_ns": 191800394
+          },
+          {
+            "sample": 53,
+            "bytes": 31,
+            "elapsed_ns": 232785723
+          },
+          {
+            "sample": 54,
+            "bytes": 31,
+            "elapsed_ns": 190609398
+          },
+          {
+            "sample": 55,
+            "bytes": 31,
+            "elapsed_ns": 175301022
+          },
+          {
+            "sample": 56,
+            "bytes": 31,
+            "elapsed_ns": 225567949
+          },
+          {
+            "sample": 57,
+            "bytes": 31,
+            "elapsed_ns": 138383019
+          },
+          {
+            "sample": 58,
+            "bytes": 31,
+            "elapsed_ns": 238078965
+          },
+          {
+            "sample": 59,
+            "bytes": 31,
+            "elapsed_ns": 188750125
+          },
+          {
+            "sample": 60,
+            "bytes": 31,
+            "elapsed_ns": 276948687
+          },
+          {
+            "sample": 61,
+            "bytes": 31,
+            "elapsed_ns": 217787863
+          },
+          {
+            "sample": 62,
+            "bytes": 31,
+            "elapsed_ns": 81450016
+          },
+          {
+            "sample": 63,
+            "bytes": 31,
+            "elapsed_ns": 118256346
+          },
+          {
+            "sample": 64,
+            "bytes": 31,
+            "elapsed_ns": 176600553
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 0,
+        "completed": 64,
+        "complete": true,
+        "mean_ns": 189397273.875,
+        "maximum_ns": 309631137,
+        "misses_300ms": 1,
+        "misses_preferred_250ms": 7,
+        "qualified": false
+      },
+      {
+        "test": "TestAccountUpperLatencyLightPropagationQualification",
+        "expected_samples": 16,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 259262531
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 294541336
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 328650340
+          },
+          {
+            "sample": 4,
+            "bytes": 31,
+            "elapsed_ns": 270501235
+          },
+          {
+            "sample": 5,
+            "bytes": 31,
+            "elapsed_ns": 787060134
+          },
+          {
+            "sample": 6,
+            "bytes": 31,
+            "elapsed_ns": 266027000
+          },
+          {
+            "sample": 7,
+            "bytes": 31,
+            "elapsed_ns": 202789194
+          },
+          {
+            "sample": 8,
+            "bytes": 31,
+            "elapsed_ns": 272055870
+          },
+          {
+            "sample": 9,
+            "bytes": 31,
+            "elapsed_ns": 254651977
+          },
+          {
+            "sample": 10,
+            "bytes": 31,
+            "elapsed_ns": 312681845
+          },
+          {
+            "sample": 11,
+            "bytes": 31,
+            "elapsed_ns": 281345826
+          },
+          {
+            "sample": 12,
+            "bytes": 31,
+            "elapsed_ns": 270399588
+          },
+          {
+            "sample": 13,
+            "bytes": 31,
+            "elapsed_ns": 268253399
+          },
+          {
+            "sample": 14,
+            "bytes": 31,
+            "elapsed_ns": 326245637
+          },
+          {
+            "sample": 15,
+            "bytes": 31,
+            "elapsed_ns": 209470352
+          },
+          {
+            "sample": 16,
+            "bytes": 31,
+            "elapsed_ns": 317971211
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 0,
+        "completed": 16,
+        "complete": true,
+        "mean_ns": 307619217.1875,
+        "maximum_ns": 787060134,
+        "misses_300ms": 5,
+        "misses_preferred_250ms": 14,
+        "qualified": false
+      },
+      {
+        "test": "TestAccountQuietLightPropagationQualification",
+        "expected_samples": 3,
+        "samples": [
+          {
+            "sample": 1,
+            "bytes": 31,
+            "elapsed_ns": 239516494
+          },
+          {
+            "sample": 2,
+            "bytes": 31,
+            "elapsed_ns": 227338066
+          },
+          {
+            "sample": 3,
+            "bytes": 31,
+            "elapsed_ns": 641267215
+          }
+        ],
+        "request_errors": [],
+        "concurrent_pairs_including_priming_and_background": 0,
+        "completed": 3,
+        "complete": true,
+        "mean_ns": 369373925.0,
+        "maximum_ns": 641267215,
+        "misses_300ms": 1,
+        "misses_preferred_250ms": 1,
+        "qualified": false
+      }
+    ],
+    "overlap-parser-service.jsonl": [
+      {
+        "test": "TestMeasuredDisjointFetchServiceOnOneTLSCarrier",
+        "expected_samples": 20,
+        "samples": [
+          {
+            "sample": 0,
+            "elapsed_ns": 51198287,
+            "cumulative_concurrent_pairs": 1
+          },
+          {
+            "sample": 1,
+            "elapsed_ns": 50984357,
+            "cumulative_concurrent_pairs": 2
+          },
+          {
+            "sample": 2,
+            "elapsed_ns": 50709538,
+            "cumulative_concurrent_pairs": 3
+          },
+          {
+            "sample": 3,
+            "elapsed_ns": 51833362,
+            "cumulative_concurrent_pairs": 4
+          },
+          {
+            "sample": 4,
+            "elapsed_ns": 50908599,
+            "cumulative_concurrent_pairs": 5
+          },
+          {
+            "sample": 5,
+            "elapsed_ns": 50774214,
+            "cumulative_concurrent_pairs": 6
+          },
+          {
+            "sample": 6,
+            "elapsed_ns": 50996883,
+            "cumulative_concurrent_pairs": 7
+          },
+          {
+            "sample": 7,
+            "elapsed_ns": 51011984,
+            "cumulative_concurrent_pairs": 8
+          },
+          {
+            "sample": 8,
+            "elapsed_ns": 51191704,
+            "cumulative_concurrent_pairs": 9
+          },
+          {
+            "sample": 9,
+            "elapsed_ns": 50970541,
+            "cumulative_concurrent_pairs": 10
+          },
+          {
+            "sample": 10,
+            "elapsed_ns": 50837349,
+            "cumulative_concurrent_pairs": 11
+          },
+          {
+            "sample": 11,
+            "elapsed_ns": 51151823,
+            "cumulative_concurrent_pairs": 12
+          },
+          {
+            "sample": 12,
+            "elapsed_ns": 51552975,
+            "cumulative_concurrent_pairs": 13
+          },
+          {
+            "sample": 13,
+            "elapsed_ns": 56691758,
+            "cumulative_concurrent_pairs": 14
+          },
+          {
+            "sample": 14,
+            "elapsed_ns": 51535198,
+            "cumulative_concurrent_pairs": 15
+          },
+          {
+            "sample": 15,
+            "elapsed_ns": 51333380,
+            "cumulative_concurrent_pairs": 16
+          },
+          {
+            "sample": 16,
+            "elapsed_ns": 51392394,
+            "cumulative_concurrent_pairs": 17
+          },
+          {
+            "sample": 17,
+            "elapsed_ns": 50931007,
+            "cumulative_concurrent_pairs": 18
+          },
+          {
+            "sample": 18,
+            "elapsed_ns": 50870297,
+            "cumulative_concurrent_pairs": 19
+          },
+          {
+            "sample": 19,
+            "elapsed_ns": 50759571,
+            "cumulative_concurrent_pairs": 20
+          }
+        ],
+        "request_errors": [],
+        "completed": 20,
+        "complete": true,
+        "mean_ns": 51381761.05,
+        "maximum_ns": 56691758,
+        "qualified": false,
+        "kind": "parser service observation; not application qualification"
+      }
+    ],
+    "parent-parser-service.jsonl": [
+      {
+        "test": "TestMeasuredDisjointFetchServiceOnOneTLSCarrier",
+        "expected_samples": 20,
+        "samples": [
+          {
+            "sample": 0,
+            "elapsed_ns": 101974736,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 1,
+            "elapsed_ns": 102331643,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 2,
+            "elapsed_ns": 101992667,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 3,
+            "elapsed_ns": 101670757,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 4,
+            "elapsed_ns": 102027298,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 5,
+            "elapsed_ns": 102258896,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 6,
+            "elapsed_ns": 101743479,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 7,
+            "elapsed_ns": 101991938,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 8,
+            "elapsed_ns": 102327386,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 9,
+            "elapsed_ns": 101318187,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 10,
+            "elapsed_ns": 108115469,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 11,
+            "elapsed_ns": 101758612,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 12,
+            "elapsed_ns": 101970929,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 13,
+            "elapsed_ns": 102124179,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 14,
+            "elapsed_ns": 102178498,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 15,
+            "elapsed_ns": 101476251,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 16,
+            "elapsed_ns": 101678809,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 17,
+            "elapsed_ns": 101882969,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 18,
+            "elapsed_ns": 101374894,
+            "cumulative_concurrent_pairs": 0
+          },
+          {
+            "sample": 19,
+            "elapsed_ns": 101816176,
+            "cumulative_concurrent_pairs": 0
+          }
+        ],
+        "request_errors": [],
+        "completed": 20,
+        "complete": true,
+        "mean_ns": 102200688.65,
+        "maximum_ns": 108115469,
+        "qualified": false,
+        "kind": "parser service observation; not application qualification"
+      }
+    ]
+  },
+  "comparison_overlay": {
+    "files": [
+      "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/imap.go",
+      "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/imap_fetch_turn.go",
+      "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/imap_uid_set.go",
+      "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/imap_keywords.go",
+      "/workspace/work/rc8/repository/archives/1.1.0/source/core/transport/imap_diagnostics.go"
+    ],
+    "diagnostic_type_only_zero_valued_fields": [
+      "FlagsFetchActive",
+      "FetchResponseBytes",
+      "ConcurrentFetchPairs"
+    ],
+    "parent_implementation_unchanged": true,
+    "replayed_file_sha256": {
+      "parent-imap.go": "e6dafda7b9f91beeab10a1a0009b26eef58f4e3c439cf58758cbfeb7705ecd63",
+      "parent-imap_fetch_turn.go": "0c171d4d9064271f62b9fec4b4e4de313c0a4df6d3ae3468c1b2f824fd37fe67",
+      "parent-imap_uid_set.go": "cedb76a9a0777b77ebe23975c4b438063a79c5c64cf6ab1b19b53460581e9567",
+      "parent-imap_keywords.go": "3cff5e9a085430dc7894e7457ee00d790966c60d74e9ae7bc93f72a3a8f04319",
+      "parent-imap_diagnostics.go": "2c7563aa203241924a5d8818aa13f44c83381119ddb9e49f1fcd655c7b11c1ec"
+    }
+  },
+  "unchanged_from_parent": [
+    "qualification/measure.go",
+    "transport/inbox.go",
+    "transport/inbox_poll.go",
+    "transport/inbox_worker.go",
+    "transport/reclamation.go",
+    "transport/publisher.go",
+    "transport/server_publisher.go",
+    "transport/roster_service.go",
+    "transport/session.go",
+    "transport/controller.go",
+    "transport/window_lease.go",
+    "journal/store.go",
+    "wallet/admission.go",
+    "tunnel/api.go"
+  ],
+  "limitations": [
+    "Parser service excludes Noise, journal, application window and useful bandwidth.",
+    "Warm parent has 64 samples, new has 128; shared-host observations are not independent-provider qualification or a universal RTT claim.",
+    "All strict 300ms misses, including 300.177603ms, remain failed; worse new warm maximum retained.",
+    "Intermediate 503.778619ms plain NOOP calibration failure remains failed; standalone repeats do not erase it or prove a sole cause.",
+    "No sustained 100Mbps test or field improvement is claimed; production/native/controller/window/renewal integration remains incomplete."
+  ],
+  "source_sha256": {
+    "archives/1.1.0/source/core/transport/imap_overlap_hook_test.go": "4a7060205fa4224bbf28626ee21157f67aa03d0ad2d3ee42f25974f1bd509e17",
+    "archives/1.1.0/source/core/transport/imap_overlap_itomtest_test.go": "0dedbf7bf64f18f7c2bb8780cb7f1a0138e5b04da42591bdd52f525cdb6e0469",
+    "archives/1.1.0/source/core/transport/imap_overlap_test.go": "7603d75d8613bf00dc44c5427905ef1317542e789f386916ddb64359723aebf2",
+    "archives/1.1.0/source/core/transport/imap.go": "d1be4050760c222e73fdb0c8c301ef9df597d24e27acee299595c540cfdcef92",
+    "archives/1.1.0/source/core/transport/imap_fetch_turn.go": "45ae39795691cdf92533c5c538d4d3ecfc9389cc35d416a315416064484dfcb0",
+    "archives/1.1.0/source/core/transport/imap_uid_set.go": "4f33d66423237e1c98ac5d556f2e02845a9b38677c526dbc801fc887b61b1700",
+    "archives/1.1.0/source/core/transport/imap_keywords.go": "75a4af315590f28094c69dc1ca9f2345feb7be1a317189f544897d4712b04f6e",
+    "archives/1.1.0/source/core/transport/imap_diagnostics.go": "03867377b7309837de55a320f9ca9fe9328109f5abc309aa808e6d7e8d061312",
+    "archives/1.1.0/source/core/transport/imap_fetch_turn_test.go": "6ce5ed83b0896ed7380ecf94e2da213ac0f0b3dbf4f5d4516a1a36897847c976",
+    "archives/1.1.0/source/core/transport/account_service_test.go": "9bfbb067e5ad4685f78f6e13718554c3b840ab1c91aca0aa84360f3fbce5d4fa",
+    "archives/1.1.0/source/core/transport/account_trace_test.go": "c83ad60156df6d817dbe2a7e847c03e0fdcbac5fd959349f51624696adb3c1b8",
+    "archives/1.1.0/source/core/transport/inbox_maintenance.go": "a9c698a6c5c268cc006819aa02592eeeb9e470bac11d3742a573a30491946de6",
+    ".github/workflows/itom-session-v2-source.yml": "c57f60eb948b388db25c5080f5393d37c6a7502a7350a77fc7d6736f6c603cd9",
+    "archives/1.1.0/source/core/qualification/measure.go": "26b3d0c77ce72cf19f0ac1fdb09df06cbb8f43e0b07f8123baaff5e636921777",
+    "archives/1.1.0/source/core/transport/inbox.go": "811b199bc1adae530540ba8fc371a00572ca8e0210dd0069fc25a3537eb390a4",
+    "archives/1.1.0/source/core/transport/inbox_poll.go": "ac363559cab24d90542c94b9fc0dff08ca2ab6aed325fe89d483bb562f7c0d5f",
+    "archives/1.1.0/source/core/transport/inbox_worker.go": "cbd4cdb720e41139e1b6af83b791dc90067e31acc5ff4c99b3a6b4510c11c3ab",
+    "archives/1.1.0/source/core/transport/reclamation.go": "57cc846110de7bb0b2c7d24bb759d05f3bab136e9f6d581cf16bdeb174b95e03",
+    "archives/1.1.0/source/core/transport/publisher.go": "e84a42365e4780e6733004d959f9940ed74d2915d6acdfa67c320ceb2e3d310a",
+    "archives/1.1.0/source/core/transport/server_publisher.go": "cf54df5bdb0df23694b04d590795fa319021a0087055b7a88ce726603a1dc85f",
+    "archives/1.1.0/source/core/transport/roster_service.go": "f4ba0bfbaa11d2445f402f6586a0bb859528eb40e73844f31bbd688ab4b19923",
+    "archives/1.1.0/source/core/transport/session.go": "c84858afc16ba112a81c90440cb0be1af1b2ee47f0e38a676d5d4e9d83fa0be8",
+    "archives/1.1.0/source/core/transport/controller.go": "7d239836313ba56613a0b6f992c83510b768de56ec81dae5e56e97eb4e2b420a",
+    "archives/1.1.0/source/core/transport/window_lease.go": "9c585c60d513ac050e8bc7c90c678ac93fe835833a0f0480c9a4a9ab0ccbc677",
+    "archives/1.1.0/source/core/journal/store.go": "93cc8aef56f23015b09a5eb0d4ee72180d02d9f91d57671e0231cd444c034234",
+    "archives/1.1.0/source/core/wallet/admission.go": "1f47b18a4ea53722174100f5ddcc9bcb0ea2566831c17f398b8b954d854eca73",
+    "archives/1.1.0/source/core/tunnel/api.go": "3f97672b1781fef2ee83fe8f6907e0b0b66af7fc5f531c0a903892947f98d065"
+  },
+  "artifact_sha256": {
+    "experiments/session-v2/fetch-overlap/README.md": "3b7ae2139f05ddc7bc4dcb9769386a32e5a4a0485cfdc9c5f8523bccef3d8d69",
+    "experiments/session-v2/fetch-overlap/first-compile-tests.jsonl": "a8960daf15875fcce305682b7d152a6cc39aa9a789eeb2875f3ee0aab81cce82",
+    "experiments/session-v2/fetch-overlap/overlap-calibration-repeated.jsonl": "ff0ee4decf58aa1c8139a3838b840a948ef40915d369ba719b74c99de172e674",
+    "experiments/session-v2/fetch-overlap/overlap-core-race.jsonl": "2ba4e9760f31566145457f31ed8fd8fe4ba47f651eb4a5dfb3f6773f13c03cf1",
+    "experiments/session-v2/fetch-overlap/overlap-core-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/session-v2/fetch-overlap/overlap-final-race-repeated.jsonl": "07453a16fbdc748160ee3482a4ca61fa15b4193ad6298fe8eaec900641785a8d",
+    "experiments/session-v2/fetch-overlap/overlap-native-race.jsonl": "30bd880df5e9d0a0e09cc732b90dc66799ff94b464d25fcf443f35cdb6b77229",
+    "experiments/session-v2/fetch-overlap/overlap-native-vet.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/session-v2/fetch-overlap/overlap-parser-service.jsonl": "47ff8430d24b650e83ba2e25dee321f1d7174d45bf313565c31f71d493952446",
+    "experiments/session-v2/fetch-overlap/overlap-race-first.jsonl": "af9211379ae37835b491f365518d1cf61b12cb130f0f562df7f0766281e80be4",
+    "experiments/session-v2/fetch-overlap/overlap-race-repeated.jsonl": "031a3233a3072c88a02d403836422d411ba65bde7067cc4a63823af38a24039d",
+    "experiments/session-v2/fetch-overlap/overlap-transport-race.jsonl": "1ed6b36fe690b966d0988bd935ba70bf57ffc2fc299ce7991a130e8b4e8538bf",
+    "experiments/session-v2/fetch-overlap/overlap-upper-and-quiet.jsonl": "f1c9ff7d88cdd7757740e1b0c19157dd2ab59f13711cbeb61d139a160773ec39",
+    "experiments/session-v2/fetch-overlap/overlap-warm-repeated.jsonl": "3c1de5e5136c4ab74e1a1e3fa578496b5bca5d826f7b228e499f73425def9362",
+    "experiments/session-v2/fetch-overlap/parent-calibration-repeated.jsonl": "a221ce8e030cf53c4442e3e0beef79e98eab2afd5b02ae1abc59e453c20d5508",
+    "experiments/session-v2/fetch-overlap/parent-light-cohorts.jsonl": "abce25050bb91e53fb552c3617a2902d8136c39186ef43a7ac80d2118815da4c",
+    "experiments/session-v2/fetch-overlap/parent-negative.jsonl": "10601ebad05abfbc445af7ce6bd0fad2655e13dfdcf8326a24bb9b2a8eaf252c",
+    "experiments/session-v2/fetch-overlap/parent-parser-service.jsonl": "0021782847bcb24ffbd217a577e7bc0bf69738ffd296216bc5fc3a43760e9f0d",
+    "experiments/session-v2/fetch-overlap/replay-parent.py": "a30bafb5ff34a10991fb1c1d0188a8a6e3d0d2976ccd9effe9ccfa0404008501"
+  }
+}

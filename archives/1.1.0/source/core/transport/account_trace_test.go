@@ -26,6 +26,7 @@ func reportAccountRuntimeStall(t *testing.T, services ...*transport.RosterServic
 		t.Logf("failed_request side=%d phase=%s session=%+v", side, s.Phase, s.Session)
 		for _, c := range s.Carriers {
 			x := c.IMAP
+			t.Logf("failed_request_fetch side=%d account=%s plane=%d flags_active=%t response_bytes=%d pairs=%d", side, c.Account, c.Plane, x.FlagsFetchActive, x.FetchResponseBytes, x.ConcurrentFetchPairs)
 			t.Logf("failed_request side=%d account=%s plane=%d read=%s write=%s read_failure=%s write_failure=%s closed=%t failure=%s tags=%d fetch=%t literal=%t idle=%t fetch_waiters=%d body_started=%d body_completed=%d inventory_started=%d inventory_completed=%d", side, c.Account, c.Plane, c.Read, c.Write, c.ReadFailure, c.WriteFailure, x.Closed, x.Failure, x.PendingTags, x.FetchActive, x.LiteralActive, x.IdleActive, x.FetchWaiters, x.Fetch.Started, x.Fetch.Completed, x.Inventory.Started, x.Inventory.Completed)
 		}
 	}

@@ -7,7 +7,11 @@ established. The preferred target remains 250ms; see the
 [user-directed temporary RTT policy](TEMPORARY_RTT_POLICY.md).
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/ALLOCATION_TAIL_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/FETCH_OVERLAP_CHECK_RESULTS.json).
+
+[Bounded FETCH overlap](FETCH_OVERLAP_WORK.md) lets disjoint singleton BODY/FLAGS
+queries share a selected socket while inventory and proof reads remain exclusive.
+Source checks pass, but warm and upper-range RTT qualification still fails.
 
 [Allocation-tail discovery](ALLOCATION_TAIL_WORK.md) preserves an observed UID
 prediction through cleanup. Local warm averages improve, but maximum RTT and
