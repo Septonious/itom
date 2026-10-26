@@ -55,7 +55,16 @@ func writeTraceBundle(dir, path string) (err error) {
 		}
 	}()
 	// Keep descriptors open through rotation and copy only the snapshotted length.
-	for _, name := range []string{"transport-trace.jsonl.2", "transport-trace.jsonl.1", "transport-trace.jsonl"} {
+	names := []string{"transport-trace.jsonl.2", "transport-trace.jsonl.1", "transport-trace.jsonl"}
+	current, err := filepath.Glob(filepath.Join(dir, "v2-????????.json"))
+	if err != nil {
+		return err
+	}
+	// At most two configured users. Bound bundle size even with unexpected files.
+	for _, path := range current[:min(2, len(current))] {
+		names = append(names, filepath.Base(path))
+	}
+	for _, name := range names {
 		f, e := os.Open(filepath.Join(dir, name))
 		if os.IsNotExist(e) {
 			continue
@@ -90,7 +99,7 @@ func writeTraceBundle(dir, path string) (err error) {
 	if e != nil {
 		return e
 	}
-	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-dev9", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
+	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-rc1", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
 		return e
 	}
 	for _, s := range sources {

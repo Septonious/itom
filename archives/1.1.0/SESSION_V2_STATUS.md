@@ -1,3 +1,9 @@
+> Current update: [RC1 testing preparation](RC1_TESTING.md) wires the production
+> entry points and bounded grant renewal. The user has authorized an experimental
+> field candidate with current average results. The source-only packaging
+> prohibition below describes earlier checkpoints; outstanding maximum RTT,
+> controller/window and sustained-bandwidth targets remain unqualified.
+
 # Replacement transport implementation status
 
 This branch is an **unqualified implementation in progress**, not a runnable RC

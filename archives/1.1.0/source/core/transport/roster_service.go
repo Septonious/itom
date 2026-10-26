@@ -1,7 +1,9 @@
 package transport
 
 import (
+	"context"
 	"crypto/sha256"
+	"net"
 
 	"itom.local/core/journal"
 )
@@ -16,10 +18,14 @@ type RosterService struct {
 }
 
 type RosterServiceOptions struct {
-	ReceiveWindow uint64
-	ExitWorkers   int
-	Policy        ExitPolicy
-	Dialer        NetworkDialer
+	ReconcileHistory bool
+	ReceiveWindow    uint64
+	ExitWorkers      int
+	Policy           ExitPolicy
+	Dialer           NetworkDialer
+	// ManagedDial handles a trusted local virtual service after peer
+	// authentication. Ordinary destinations still require pinned ExitPolicy.
+	ManagedDial func(context.Context, string, Target) (net.Conn, bool, error)
 }
 
 // Stateful assembly consumes the completed roster once. A failed assembly
@@ -40,7 +46,7 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 	if !fresh {
 		return nil, ErrProtocol
 	}
-	if options.ReceiveWindow == 0 || options.ReceiveWindow > s.limits.StreamBytes || r.client && (options.Policy != nil || options.Dialer != nil) || !r.client && (options.Policy == nil || options.Dialer == nil || options.ExitWorkers < 1 || options.ExitWorkers > 64) {
+	if options.ReceiveWindow == 0 || options.ReceiveWindow > s.limits.StreamBytes || r.client && (options.Policy != nil || options.Dialer != nil || options.ManagedDial != nil) || !r.client && (options.Policy == nil || options.Dialer == nil || options.ExitWorkers < 1 || options.ExitWorkers > 64) {
 		return nil, ErrProtocol
 	}
 	r.serviceClaimed = true
@@ -62,6 +68,9 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 		svc.Dialer, err = NewClientDialer(s, options.ReceiveWindow)
 	} else {
 		exit, err = NewExitServer(s, c, options.ReceiveWindow, options.ExitWorkers, options.Policy, options.Dialer)
+		if err == nil {
+			exit.managed = options.ManagedDial
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -85,6 +94,7 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 			return nil, err
 		}
 		svc.Authorities[a.Account] = owner
+		owner.recovery = options.ReconcileHistory
 	}
 	var carriers []RuntimeCarrier
 	for _, l := range r.lanes {
@@ -122,6 +132,7 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 				if err != nil {
 					return nil, err
 				}
+				receive.history = l.Executor.history
 				cr = append(cr, receive)
 			} else {
 				stores := r.journals[account]
@@ -141,6 +152,7 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 				if err != nil {
 					return nil, err
 				}
+				receive.history = l.Executor.history
 				rr = append(rr, receive)
 			}
 		}

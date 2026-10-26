@@ -1,14 +1,18 @@
-# Session transport v2: unqualified source
+# ITOM 1.1.0 RC1 — experimental field test
 
-The old runtime has been removed. This branch contains the independent
-replacement implementation in progress and new tests. It cannot carry live traffic yet:
-client/server startup returns `V2_NOT_READY`, and packaging is disabled.
+The independent replacement transport now has working client/server startup,
+authenticated rendezvous/Noise/roster, bounded grant renewal and persistent wallet
+reconciliation. Read [testing notes](../RC1_TESTING.md) before installing the
+matched APK/server pair. Keep server state and update the app in place.
 
-See [implementation status](../SESSION_V2_STATUS.md) and
-[current source check results](../experiments/session-v2/WORKER_CHECK_RESULTS.json)
-([first iteration](../experiments/session-v2/SOURCE_CHECK_RESULTS.json)).
-Use `python3 tools/check_session_v2.py --go /path/to/pinned/go` for source checks.
-These checks do not establish the application latency/throughput release gates.
+This candidate is authorized for field testing with the current average lab
+results. Maximum RTT and sustained 100Mbps remain unqualified; failed timing
+cohorts are retained. It is not a stable release. Both sides require verified
+TLS IMAP, UIDPLUS and writable permanent keywords. Ten accounts use20 selected
+lines per endpoint, not30 placeholder lines. DNS settings are unchanged.
+
+Run `python3 tools/check_session_v2.py --go /path/to/pinned/go` for source safety
+checks. They are separate from performance qualification and device testing.
 
 The text below describes the historical DEV9 build, not this replacement.
 

@@ -48,8 +48,8 @@ def read_source_info(root: Path = ROOT) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
     if info["version"] == "1.1.0":
-        expected = dict(release="DEV9", revision="itom-1-1-0-dev9", archive_name="ITOM-1.1.0-DEV9-sources.zip",
-                        android_version_name="1.1.0-dev9", android_version_code=10109, android_application_id="org.itom.client")
+        expected = dict(release="RC1", revision="itom-1-1-0-rc1", archive_name="ITOM-1.1.0-RC1-sources.zip",
+                        android_version_name="1.1.0-rc1", android_version_code=10111, android_application_id="org.itom.client")
         if any(info.get(k) != v for k, v in expected.items()):
             fail("Inconsistent ITOM 1.1.0 development identity")
         return info

@@ -58,6 +58,9 @@ func clientInboxDecoder(receivers ...*ClientReceiver) (scopedInboxDecoder, error
 			return nil, err
 		}
 		defer clear(envelope.body)
+		if old, err := first.history.historical(first.origin.Account, first.origin.Folder, envelope); err != nil || old {
+			return nil, err
+		}
 		usage := envelope.usage
 		r := routes[usage.Key.Store]
 		if r == nil || usage.Attempt == nil || usage.Key.Epoch != r.origin.Run || usage.Key.Account != r.origin.Account || usage.Key.User != r.origin.User || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.origin.Folder {

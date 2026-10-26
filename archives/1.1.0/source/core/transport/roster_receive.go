@@ -28,6 +28,9 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 		return err
 	}
 	defer clear(envelope.body)
+	if old, err := d.anchor.history.historical(d.anchor.account, d.anchor.mailbox, envelope); err != nil || old {
+		return err
+	}
 	usage := envelope.usage
 	if usage.Attempt == nil || usage.Key.Store != origin.Store || usage.Key.Epoch != origin.Run || usage.Key.Account != origin.Account || usage.Key.User != binding.User || usage.Key.Session != binding.Session || usage.Attempt.Folder != origin.Folder || envelope.class != 0 && envelope.class != wire.ServerControl {
 		return ErrProtocol

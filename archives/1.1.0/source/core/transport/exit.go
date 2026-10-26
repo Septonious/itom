@@ -22,6 +22,7 @@ func (f ExitPolicyFunc) Authorize(ctx context.Context, user string, target Targe
 }
 
 type ExitServer struct {
+	managed func(context.Context, string, Target) (net.Conn, bool, error)
 	session *Session
 	user    string
 	policy  ExitPolicy
@@ -172,6 +173,25 @@ func (e *ExitServer) run(ctx context.Context, runtime *Runtime) error {
 
 func (e *ExitServer) connect(r *incomingOpen) {
 	defer r.cancel() // establishment context is independent of the TCP lifetime
+	if e.managed != nil {
+		conn, handled, err := e.managed(r.ctx, e.user, r.flow.openTarget)
+		if handled {
+			if err != nil || conn == nil {
+				if conn != nil {
+					conn.Close()
+				}
+				r.decide(OpenDenied)
+				return
+			}
+			e.bridge(r, conn)
+			return
+		}
+		if conn != nil {
+			conn.Close()
+			r.decide(OpenDenied)
+			return
+		}
+	}
 	address, err := e.policy.Authorize(r.ctx, e.user, r.flow.openTarget)
 	if err != nil || !address.IsValid() || address.Port() != r.flow.openTarget.Port || address.Addr().Zone() != "" {
 		r.decide(OpenDenied)
@@ -185,6 +205,10 @@ func (e *ExitServer) connect(r *incomingOpen) {
 		r.decide(OpenUnreachable)
 		return
 	}
+	e.bridge(r, upstream)
+}
+
+func (e *ExitServer) bridge(r *incomingOpen, upstream net.Conn) {
 	conn, err := r.decide(0)
 	if err != nil {
 		upstream.Close()

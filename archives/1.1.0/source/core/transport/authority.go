@@ -43,6 +43,7 @@ type authorityIssue struct {
 // Noise replay window advances. There is no automatic grant minting on a timer,
 // blind resend, missing-history refund, or production READY claim.
 type AuthorityController struct {
+	recovery      bool // immutable; enabled only by persistent endpoint assembly
 	mu            sync.Mutex
 	session       *Session
 	client        bool
@@ -128,7 +129,9 @@ func (a *AuthorityController) validate(payload []byte, inbound bool) error {
 	}
 	route, ok := a.routes[class]
 	k := authorityKey(message)
-	if !ok || k.Store != route.id || k.Epoch != route.run || k.Session != a.sessionID || k.User != a.user || k.Account != a.account {
+	current := k.Epoch == route.run && k.Session == a.sessionID
+	old := a.recovery && k.Epoch <= route.run && k.Session != a.sessionID
+	if !ok || k.Store != route.id || (!current && !old) || k.User != a.user || k.Account != a.account {
 		return ErrProtocol
 	}
 	serverOrigin := a.client == inbound
@@ -324,6 +327,15 @@ func (a *AuthorityController) apply(payload []byte) error {
 	route := a.routes[class]
 	switch m := message.(type) {
 	case wire.StorageGrant:
+		if m.Key.Session != a.sessionID {
+			// Only surviving original wallet history may attest final spend.
+			// Reinstallation cannot turn an unknown old allocation into zero.
+			_, err := route.wallet.ReconcileOffer(m)
+			if errors.Is(err, wallet.ErrMissing) {
+				return nil
+			}
+			return err
+		}
 		accepted, err := route.wallet.AcceptCurrentOffer(m)
 		if err != nil {
 			if errors.Is(err, wallet.ErrLimit) {

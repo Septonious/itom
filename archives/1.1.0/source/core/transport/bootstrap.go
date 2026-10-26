@@ -20,6 +20,8 @@ type Endpoint struct {
 	// An unbound executor can run protocol checks, not accounted publications.
 	AccountID string
 	TLS       *tls.Config
+	// Only the server profile owner may create an explicitly allowlisted folder.
+	CreateMailbox bool
 }
 type Selected struct {
 	Executor     *Executor
@@ -128,6 +130,19 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 		return Selected{}, ErrUnknown
 	}
 	lines, err = bootstrapReply(x, "BOOT3")
+	if err == ErrRefused && p.CreateMailbox {
+		if err = x.write([]byte("BOOT4 CREATE " + folder + "\r\n")); err != nil {
+			return Selected{}, ErrUnknown
+		}
+		// Concurrent startup may have created it; SELECT is the final authority.
+		if _, err = bootstrapReply(x, "BOOT4"); err != nil && err != ErrRefused {
+			return Selected{}, err
+		}
+		if err = x.write([]byte("BOOT5 SELECT " + folder + "\r\n")); err != nil {
+			return Selected{}, ErrUnknown
+		}
+		lines, err = bootstrapReply(x, "BOOT5")
+	}
 	if err != nil {
 		return Selected{}, err
 	}

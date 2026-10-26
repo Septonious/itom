@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent source checks. This command cannot qualify or package a release."""
+"""Independent source checks, separate from performance and field qualification."""
 from pathlib import Path
 import argparse
 import subprocess
@@ -13,7 +13,7 @@ def main():
     for module in ('core', 'native'):
         subprocess.run([args.go, 'test', '-race', './...'], cwd=root / module, check=True)
         subprocess.run([args.go, 'vet', './...'], cwd=root / module, check=True)
-    print('SOURCE CHECKS PASSED. Full transport qualification is incomplete; packaging remains disabled.')
+    print('SOURCE CHECKS PASSED. RC1 is experimental; full performance and field qualification remain incomplete.')
 
 
 if __name__ == '__main__':

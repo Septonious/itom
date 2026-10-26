@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "SESSION-V2-UNQUALIFIED",
-  "revision": "itom-1-1-0-session-v2-unqualified",
-  "archive_name": "ITOM-1.1.0-session-v2-unqualified-sources.zip",
+  "release": "RC1",
+  "revision": "itom-1-1-0-rc1",
+  "archive_name": "ITOM-1.1.0-RC1-sources.zip",
   "baseline": "Independent session transport; historical predecessor preserved in Git",
-  "qualification": "INCOMPLETE: source checks only; production runtime disabled; no performance qualification",
-  "android_version_name": "1.1.0-session-v2-unqualified",
-  "android_version_code": 10110,
+  "qualification": "EXPERIMENTAL FIELD TEST: functional startup and accounting checks; maximum RTT and sustained 100 Mbps not qualified",
+  "android_version_name": "1.1.0-rc1",
+  "android_version_code": 10111,
   "android_application_id": "org.itom.client",
-  "build_allowed": false
+  "build_allowed": true
 }

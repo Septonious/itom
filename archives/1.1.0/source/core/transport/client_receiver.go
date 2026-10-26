@@ -17,6 +17,7 @@ type ServerOrigin struct {
 // their durable local attempts; receiving DATA cannot spend a client wallet,
 // reconcile old remote grants or authorize any refund.
 type ClientReceiver struct {
+	history           *historyScope
 	session           *Session
 	cipher            *Cipher
 	origin            ServerOrigin

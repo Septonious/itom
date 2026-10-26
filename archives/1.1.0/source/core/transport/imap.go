@@ -79,6 +79,7 @@ func DefaultIMAPLimits() IMAPLimits {
 // public FETCH API retain exclusive admission. IDLE owns the writer until DONE and
 // its tag have drained. Mailbox selection changes require a new executor.
 type Executor struct {
+	history          *historyScope // immutable persistent-owner scope, set before inbox adoption
 	literalPlus      bool
 	literalMinus     bool
 	mailbox          string

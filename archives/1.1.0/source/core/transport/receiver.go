@@ -11,6 +11,7 @@ import (
 // classifier. Local-origin bodies and other ledger classes must be routed to
 // their own authority before this point; none may become peer application data.
 type RemoteReceiver struct {
+	history               *historyScope
 	session               *Session
 	cipher                *Cipher
 	store                 *journal.Store

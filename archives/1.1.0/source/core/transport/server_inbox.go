@@ -68,6 +68,9 @@ func serverInboxDecoderWithReclamation(reclaim func(*reclaimBody), receivers ...
 			return nil, err
 		}
 		defer clear(envelope.body)
+		if old, err := first.history.historical(first.account, first.folder, envelope); err != nil || old {
+			return nil, err
+		}
 		usage := envelope.usage
 		r := routes[usage.Key.Store]
 		if r == nil || usage.Attempt == nil || usage.Key.Account != r.account || usage.Key.User != r.user || usage.Key.Session != r.cipher.epoch.Context().Session || usage.Attempt.Folder != r.folder {

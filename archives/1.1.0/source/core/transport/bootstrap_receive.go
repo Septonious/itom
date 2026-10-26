@@ -32,6 +32,9 @@ func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver
 		return err
 	}
 	defer clear(envelope.body)
+	if old, err := executor.history.historical(executor.account, executor.mailbox, envelope); err != nil || old {
+		return err
+	}
 	usage := envelope.usage
 	if usage.Attempt == nil || usage.Key.Store != b.origin.Store || usage.Key.Epoch != b.origin.Run || usage.Key.Account != b.origin.Account || usage.Key.User != b.binding.User || usage.Key.Session != b.binding.Session || usage.Attempt.Folder != b.origin.Folder || envelope.class != 0 && envelope.class != wire.ServerControl {
 		return ErrProtocol

@@ -1,3 +1,9 @@
+> Current update: [RC1 testing preparation](RC1_TESTING.md) wires the production
+> entry points and bounded grant renewal. The user has authorized an experimental
+> field candidate with current average results. The source-only packaging
+> prohibition below describes earlier checkpoints; outstanding maximum RTT,
+> controller/window and sustained-bandwidth targets remain unqualified.
+
 # Working field-test candidate
 
 The requested target is one working APK/server pair from the replacement
