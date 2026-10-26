@@ -27,7 +27,13 @@ Additional coverage includes all 12 installed DATA capacity/shard combinations (
 
 Uncalibrated zero-delay 15-account experiments with the race detector exceeded an original HTTP deadline locally; those failures and CPU profiles are retained in the release evidence. The corresponding uninstrumented zero-delay run passed. Do not use that run to claim a real-world RTT or bandwidth improvement.
 
-The release build and attached evidence provide the final test results. No real Rambler credentials or field diagnostic payloads are included in the public evidence.
+Final hosted verification at source `6a6cd6bc922b38ea39d6f73cb587c28037d0d945`: **268/268 core race groups**, **12/12 native race groups**, both Go vet checks, source/launcher checks, **91 domain + 7 Android adapter tests**, Android compilation and lint (zero errors). Both Linux binaries match independent local builds byte for byte. Both APK JNI architectures and the unchanged persistent signing certificate are verified.
+
+The exact-source local uninstrumented full suite passed **264/268** groups; four existing application timing cases missed their original deadlines. Local race experiments also retained timing misses, and an initial expanded suite hit its 300-second whole-package cap. The final suite cap is 600 seconds; application and IMAP deadlines are unchanged. A follow-up failure trace recorded a 100 ms diagnostic tick over one second late while actor-lock wait stayed small. That observation does not establish one sole cause, and the local timing failures are not presented as passes. The final 15-account/two-user public upgrade/restart case passed locally in 18.29 seconds and in hosted CI.
+
+Read-only policy inspection also avoids repeatedly decoding unchanged journal/wallet rows. Journal reuse checks the exact persisted bytes; wallet reuse requires the identical immutable bbolt transaction and returns detached descriptors. Spend, fence and caller-mutation regressions cover invalidation. This does not change admission or create capacity.
+
+No real Rambler credentials or field diagnostic payloads are included in the public evidence. This release fixes reproduced startup blockers; live Rambler/Android-device success and performance targets remain unqualified.
 
 ## Install and collect a useful retest
 

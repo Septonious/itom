@@ -1,0 +1,101 @@
+{
+  "release": "ITOM 1.1.0 RC1.3",
+  "source_commit": "6a6cd6bc922b38ea39d6f73cb587c28037d0d945",
+  "build_run_id": 40352541470,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40352541470",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 268,
+    "native_race_groups_passed": 12,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 91,
+    "android_adapter_tests": 7,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1,
+    "legacy_mail_upgrade_unknown_debt_HTTPS_restart": "passed",
+    "fifteen_accounts_two_users_thirty_lines_each_HTTPS_restart": "passed",
+    "all_twelve_installed_data_profiles_migrate_without_debt_reset": "passed"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10114,
+    "version_name": "1.1.0-rc1.3-debug"
+  },
+  "source_ci_apk_sha256": "b8286ad8c92cfc3fdaede2c4843e0079b27c0f8580e8496c189d96af2f66fcb5",
+  "signed_apk_sha256": "2e06cdfe46c70fd5561d1457afae8cd0af1de35e1301ef57a784a1a0a5150b47",
+  "signed_apk_bytes": 54219092,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "5950a2611c08dbed7235d23a36a67c3a95d0792ecadd647935aa83535c8b0e32",
+    "lib/armeabi-v7a/libgojni.so": "438c466d0408edfac99bcc1140d161319d3d9d0006342961748906ae91cc3f10"
+  },
+  "native_source_sha256sums": "b79f6f5e827fd9378ce4a3161b8b38d98e1ecf51c379f26e5d4106860947d734  ITOM-1.1.0-RC1.3-linux-amd64.bin\n7f7512ba929b10a89a606eaad7f913b1c444c57f1f8a601dda5f5b5ec1143628  ITOM-1.1.0-RC1.3-linux-arm64.bin\n6e4d9ce3ed3c41543070cb7f72353f6fe97a36174b2a79e5226f4280e528dfdc  ITOM-1.1.0-RC1.3-sources.zip\n",
+  "local_and_hosted_linux_binaries_identical": true,
+  "source_manifest_files": 694,
+  "source_manifest_sha256": "500a74de4064ed86cc7b147b07bdcc473fd230ea648122a0b9184dfef5e7d24e",
+  "current_limits": {
+    "temporary_idle_light_ms": 300,
+    "preferred_idle_light_ms": 250,
+    "loaded_ms": 2000,
+    "target_sustained_mbps_per_direction": 100,
+    "per_stream_receive_window_bytes": 262144,
+    "selected_lines_per_endpoint_on_fifteen_accounts": 30
+  },
+  "changes": [
+    "Isolated session-v2 mail folders; old formats are not fed to new decoder",
+    "Capacity-neutral additive folder allowlist migration in original journals",
+    "Initial/refill grants share only available headroom after historical debt",
+    "Exact committed-row policy inspection caches with detached read results",
+    "Idempotent planned-folder creation tolerates first-start client/server race",
+    "First startup error preserved; cancellation stops queued login work",
+    "Last Android startup evidence survives Stop/process restart with tracing off"
+  ],
+  "wire_envelopes_changed": false,
+  "journal_profile_additive_migration": true,
+  "mailbox_config_binding_changed": true,
+  "historical_debt_reclaimed_or_reset": false,
+  "retained_failures": {
+    "source_commit": "6a6cd6bc922b38ea39d6f73cb587c28037d0d945",
+    "runtime_revision": "itom-1-1-0-rc1-3",
+    "hosted_build_run": 40352541470,
+    "hosted_core_race": {
+      "passed": 268,
+      "failed": 0
+    },
+    "hosted_native_race": {
+      "passed": 12,
+      "failed": 0
+    },
+    "final_local_regular_core": {
+      "passed": 264,
+      "failed": [
+        "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+        "TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP",
+        "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService",
+        "TestColdTLSHTTPWithQuietBulkIdleAndFluctuatingIMAPService"
+      ]
+    },
+    "local_native_race": {
+      "passed": 12,
+      "failed": 0
+    },
+    "local_vet": "both passed",
+    "before_after": {
+      "legacy_mail_before": "server WIRE_LIMIT/inventory failure; client V2_STARTUP_RENDEZVOUS",
+      "isolation_only_near_full_history": "client V2_STARTUP_PERMISSION",
+      "complete_fix": "same original journal, unknown debt retained, HTTPS plus VPN restart passed",
+      "local_final_field_topology": "15 accounts / two users, four phone sessions with 30 usable lines and real HTTPS; 20/40/30 ms command variation; passed in 18.29 seconds"
+    },
+    "retained_experiments": "All local failed and intermediate logs included. Some precede final source; final exact-source hosted suite is separately attached. No field payloads/accounts/keys included.",
+    "timing_limit": "Follow-up failed request trace retained a 100ms observer tick over 1s late with low session actor-lock wait. This is an observation, not proof of one sole cause. Application deadlines were not raised.",
+    "field_qualified": false,
+    "performance_qualified": false,
+    "unchanged_application_deadlines": true,
+    "suite_timeout_note": "Expanded full suite exceeded original 300s package cap locally; full suite cap 600s, actual application/IMAP deadlines unchanged."
+  },
+  "persistent_state_notes": "Install new server using option 11. Update APK in place. Keep original state and wallets; both endpoints must be RC1.3."
+}
