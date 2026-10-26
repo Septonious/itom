@@ -1,0 +1,67 @@
+{
+  "release": "ITOM 1.1.0 RC1.2",
+  "source_commit": "3be6f82447c3155a48b4895b5d3325a41880bfce",
+  "build_run_id": 40317693578,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40317693578",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 261,
+    "native_race_groups_passed": 12,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 89,
+    "android_adapter_tests": 7,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1,
+    "public_API_TLS_and_VPN_restart": "passed",
+    "delayed_client_after_91_seconds": "passed",
+    "provider_alternating_keyword_case_TLS_and_restart": "passed",
+    "pre_connection_trace_and_export": "passed"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10113,
+    "version_name": "1.1.0-rc1.2-debug"
+  },
+  "source_ci_apk_sha256": "94ca171d4591ebd5531228b1c3a28f5f167ca2e341e0ba552bdbcafb9115155a",
+  "signed_apk_sha256": "fbab2c4f1c9f9d78c4603de24d6b663d6e8519a98b6373b1b03b42938cc46d38",
+  "signed_apk_bytes": 54202708,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "c1e0061222117ca2dc2e44da3b776a45be0989c4f5dae6f3cb418005aaaf21c6",
+    "lib/armeabi-v7a/libgojni.so": "6351c31336746c23d73510dc84ee05851068b6999fb9bb4ab5b186b3b73b14bb"
+  },
+  "native_source_sha256sums": "a2d8b5017913fe54c494c52bd4c8d177e30df83c66b27fa8ee1779b107097ea8  ITOM-1.1.0-RC1.2-linux-amd64.bin\n00ebd7e25731adf991588f4565ffe47108cb6b1b27622087e7e264d4ce3592de  ITOM-1.1.0-RC1.2-linux-arm64.bin\n731132c3463a8eb80a11c0dc89ba680b24fdaab99413f16ddf6ae9e7eda3e8c1  ITOM-1.1.0-RC1.2-sources.zip\n",
+  "local_and_hosted_linux_binaries_identical": true,
+  "source_manifest_files": 688,
+  "source_manifest_sha256": "ea0396d39de6baaf4e767b64f4befaac28a16d47cf42e36a4c80d7cbc6bcabf2",
+  "current_limits": {
+    "temporary_idle_light_ms": 300,
+    "preferred_idle_light_ms": 250,
+    "loaded_ms": 2000,
+    "target_sustained_mbps_per_direction": 100,
+    "per_stream_receive_window_bytes": 262144,
+    "selected_lines_per_endpoint_on_ten_accounts": 20
+  },
+  "changes": [
+    "Server listener remains available before any authenticated phone request; active handshake still bounded",
+    "Whole client startup includes login and has one 90s budget; runtime lifetime independent",
+    "Joined live native startup heartbeat reports phases, SELECT counts and public config binding; supports user cancellation",
+    "Actual rotating private server trace now records startup, capability checks, retained inventory and original held capacity before any client connects",
+    "IMAP bootstrap errors retain fixed stages; missing UIDPLUS/permanent keywords exposed explicitly",
+    "Authenticated request keywords respect IMAP case-insensitivity; case changes cannot allocate again or force a new session",
+    "Live trace shows latest 30 entries; logging-off honored"
+  ],
+  "wire_and_accounting_formats_changed": false,
+  "retained_failures": {
+    "server_wait_before_fix": "Old independent server process exited at 90.18 seconds before phone started at 91 seconds; failure log retained",
+    "provider_keyword_case_before_fix": "Valid equivalent keyword spelling rejected as V2_PROTOCOL; failure log retained",
+    "initial_vet": "Reassigned cancel ownership flagged; made explicit without deadline change; failure log retained",
+    "final_local_core": "260/261 groups passed; persistent TLS/HTTP run 11 missed its original header deadline. Raw failure retained. Final exact-source hosted core passed 261/261.",
+    "performance": "Historical max RTT misses, sustained 100Mbps qualification, RC2 comparison and live Rambler/device connection remain unqualified"
+  },
+  "persistent_state_notes": "Update APK in place. Install new server through option 11 or binary install command; 7/9 only control existing installed service. Keep original journals and wallets."
+}
