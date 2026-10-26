@@ -33,6 +33,9 @@ type Host interface {
 	DNS() string
 	Lookup(host string) string
 	Route(host string) string
+	// Startup receives bounded phase/count snapshots before New returns. False
+	// means the user canceled or replaced this VPN attempt.
+	Startup(snapshot string) bool
 }
 type config struct {
 	Profile     servercfg.Profile
@@ -88,6 +91,8 @@ func New(raw, dir string, host Host) (*Client, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Client{ctx: ctx, cancel: cancel, host: host, slots: make(chan struct{}, 128)}
+	progress, stopProgress := reportStartup(ctx, cancel, host, 2*len(cfg.Profile.Accounts))
+	defer stopProgress()
 	control := func(_, _ string, r syscall.RawConn) error {
 		ok := false
 		e := r.Control(func(fd uintptr) { ok = host.Protect(int(fd)) })
@@ -170,7 +175,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 		cancel()
 		return nil, e
 	}
-	c.pool, e = tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics})
+	c.pool, e = tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, Progress: progress})
 	if e != nil {
 		c.Close()
 		return nil, e

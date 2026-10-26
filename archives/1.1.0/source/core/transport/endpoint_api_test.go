@@ -61,6 +61,15 @@ func TestEndpointServerProcessHelper(t *testing.T) {
 }
 
 func TestPublicClientAndServerAPIsCarryTLSAndRestartWithOriginalWalletPaths(t *testing.T) {
+	testPublicEndpoints(t, 0)
+}
+
+func TestServerStartedBeforePhoneStillAcceptsClientAfterNinetySeconds(t *testing.T) {
+	testPublicEndpoints(t, 91*time.Second)
+}
+
+func testPublicEndpoints(t *testing.T, clientDelay time.Duration) {
+	t.Helper()
 	if os.Getenv("ITOM_RC1_TEST_SERVER_CONFIG") != "" {
 		t.Fatal("helper scope escaped")
 	}
@@ -169,7 +178,7 @@ func TestPublicClientAndServerAPIsCarryTLSAndRestartWithOriginalWalletPaths(t *t
 	if err != nil {
 		t.Fatal(err)
 	}
-	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout=45s")
+	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+(45*time.Second+clientDelay).String())
 	cmd.Env = append(os.Environ(), "ITOM_RC1_TEST_SERVER_CONFIG="+configPath, "ITOM_RC1_TEST_STATE="+filepath.Join(root, "server-state"), "ITOM_RC1_TEST_EXIT="+upstream.Listener.Addr().String(), "SSL_CERT_FILE="+rootFile)
 	var logs bytes.Buffer
 	cmd.Stdout = &logs
@@ -183,15 +192,50 @@ func TestPublicClientAndServerAPIsCarryTLSAndRestartWithOriginalWalletPaths(t *t
 			t.Error("server process failed", err, logs.String())
 		}
 	}()
+	if clientDelay > 0 {
+		// Measure the real production timeout from actual rendezvous startup,
+		// rather than assuming that launching the child means it is listening.
+		ready := time.NewTimer(5 * time.Second)
+		defer ready.Stop()
+		for {
+			raw, _ := os.ReadFile(filepath.Join(root, "server-state", "v2-"+p.User.ID+".json"))
+			if bytes.Contains(raw, []byte(`"Stage":"rendezvous"`)) {
+				break
+			}
+			select {
+			case <-ready.C:
+				t.Fatal("server did not reach standing rendezvous")
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+		t.Log("server listening; phone will connect after", clientDelay)
+		timer := time.NewTimer(clientDelay)
+		defer timer.Stop()
+		<-timer.C
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	clientDir := filepath.Join(root, "client-state")
 	certPool := x509.NewCertPool()
 	certPool.AddCert(upstream.Certificate())
 	for round := 0; round < 2; round++ {
-		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}})
+		var progress []tunnel.StartupProgress
+		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}, Progress: func(p tunnel.StartupProgress) { progress = append(progress, p) }})
 		if err != nil {
 			t.Fatal("public API startup", round, err)
+		}
+		if len(progress) == 0 || progress[0].Stage != "PROFILE" || progress[len(progress)-1].Stage != "READY" {
+			t.Fatal("startup did not report real phase boundaries", progress)
+		}
+		lastSelected := 0
+		for _, p := range progress {
+			if p.TotalLines != 2 || p.SelectedLines < lastSelected || p.SelectedLines > 2 {
+				t.Fatal("invalid selected socket progress", p)
+			}
+			lastSelected = p.SelectedLines
+		}
+		if lastSelected != 2 {
+			t.Fatal("selected sockets were not reported", progress)
 		}
 		shutdown.Store(false)
 		tr := &http.Transport{DialContext: func(ctx context.Context, _ string, _ string) (net.Conn, error) {

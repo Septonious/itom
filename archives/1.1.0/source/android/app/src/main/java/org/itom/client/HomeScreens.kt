@@ -99,7 +99,7 @@ import kotlin.math.sin
     val errorCode = session.error
     val hint = when {
         session.error != null -> "Show disconnection reason"
-        session.phase == Phase.CONNECTING -> "Tap to cancel"
+        session.phase == Phase.CONNECTING -> startupStatus(session.transport)
         session.phase == Phase.CONNECTED -> "Tap to disconnect"
         session.phase == Phase.ERROR -> "Tap to retry"
         else -> "Tap the circle to connect"

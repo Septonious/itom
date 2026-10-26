@@ -19,16 +19,19 @@ import (
 // Noise keys or substitute accounting files are accepted here.
 type EndpointOptions struct {
 	// Stage receives fixed nonsecret progress codes on the startup owner.
-	Stage        func(string)
-	Client       bool
-	Template     InvitationTemplate
-	Plan         RosterPlan
-	Lanes        []RosterLane
-	Journals     []RosterJournals
-	Wallets      []RosterWalletPaths
-	AnchorWallet string
-	Key          []byte
-	Service      RosterServiceOptions
+	Stage func(string)
+	// Client startup may share a deadline with its preceding account logins.
+	// This never becomes the lifetime of the established runtime.
+	StartupDeadline time.Time
+	Client          bool
+	Template        InvitationTemplate
+	Plan            RosterPlan
+	Lanes           []RosterLane
+	Journals        []RosterJournals
+	Wallets         []RosterWalletPaths
+	AnchorWallet    string
+	Key             []byte
+	Service         RosterServiceOptions
 }
 
 type EndpointSession struct {
@@ -174,8 +177,16 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 		return nil, ErrProtocol
 	}
 	ctx, cancel := context.WithCancel(parent)
-	startup, stop := context.WithTimeout(ctx, 90*time.Second)
-	defer stop()
+	startup := ctx
+	stop := func() {}
+	if o.Client {
+		deadline := time.Now().Add(90 * time.Second)
+		if !o.StartupDeadline.IsZero() && o.StartupDeadline.Before(deadline) {
+			deadline = o.StartupDeadline
+		}
+		startup, stop = context.WithDeadline(ctx, deadline)
+	}
+	defer func() { stop() }()
 	var anchor *wallet.Wallet
 	var roster *RosterResult
 	defer func() {
@@ -325,6 +336,10 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 					}
 					request = flag
 					if owner != nil {
+						// A listening server may precede the phone indefinitely.
+						// Only an authenticated accepted request starts its bounded
+						// active handshake. Individual IMAP commands stay bounded.
+						startup, stop = context.WithTimeout(ctx, 90*time.Second)
 						break
 					}
 				}

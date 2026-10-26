@@ -184,6 +184,13 @@ class ItomVpnService : VpnService() {
             if (!diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = "{}"
             val router = Router(config.settings.routing)
             val host = object : Host {
+                override fun startup(snapshot: String): Boolean = callbacks.call("UNDERLYING_NETWORK_FAILED", false) {
+                    if (!sessionJob.isActive) return@call false
+                    val now = SystemClock.elapsedRealtime()
+                    backend.machine.sample(g, Metrics(totalLines = config.profile.totalLines), snapshot, now)
+                    if (diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = snapshot
+                    true
+                }
                 override fun dns(): String = callbacks.call("UNDERLYING_NETWORK_FAILED", "[]") { org.json.JSONArray(underlyingDNS()).toString() }
                 override fun lookup(host: String): String {
                     return try {
@@ -285,7 +292,7 @@ class ItomVpnService : VpnService() {
                 if (diagnosticsEnabled && backend.snapshot.value.generation == g) {
                     native?.let { client -> backend.diagnosticState.value = runCatching { client.diagnostics() }.getOrDefault(backend.diagnosticState.value) }
                     if (native == null && failure != null) {
-                        backend.diagnosticState.value = JSONObject().put("StartupFailure", failure)
+                        backend.diagnosticState.value = JSONObject(backend.diagnosticState.value).put("StartupFailure", failure)
                             .put("SampledAtMS", System.currentTimeMillis()).toString()
                     }
                 }

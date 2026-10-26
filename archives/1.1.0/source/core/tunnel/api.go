@@ -33,6 +33,14 @@ type Stats struct {
 type ClientOptions struct {
 	Diagnostics bool
 	TLSConfig   *tls.Config
+	Progress    func(StartupProgress)
+}
+
+// SelectedLines reports authenticated SELECTs only, never usable VPN capacity.
+// The callback is serialized and contains fixed phases and counts, no profile.
+type StartupProgress struct {
+	Stage                     string
+	SelectedLines, TotalLines int
 }
 type ClientSnapshot struct {
 	Stats
@@ -59,6 +67,22 @@ func StartClient(ctx context.Context, p servercfg.Profile, dir string, d Dial) (
 }
 func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string, d Dial, o ClientOptions) (client *Client, err error) {
 	stage := "PROFILE"
+	var progressMu sync.Mutex
+	progress := StartupProgress{Stage: stage, TotalLines: 2 * len(p.Accounts)}
+	report := func(code string, selected bool) {
+		progressMu.Lock()
+		defer progressMu.Unlock()
+		if code != "" {
+			progress.Stage = code
+		}
+		if selected {
+			progress.SelectedLines++
+		}
+		if o.Progress != nil {
+			o.Progress(progress)
+		}
+	}
+	report(stage, false)
 	defer func() {
 		if err != nil {
 			err = &startupError{code: "V2_STARTUP_" + stage, cause: err}
@@ -74,13 +98,19 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	if d == nil {
 		d = &net.Dialer{Timeout: 20 * time.Second}
 	}
+	// One client startup budget includes all account logins and negotiation.
+	// Runtime lifetime remains attached to ctx, not this temporary deadline.
+	startup, stop := context.WithTimeout(ctx, 90*time.Second)
+	defer stop()
 	stage = "WALLET"
+	report(stage, false)
 	anchor, paths, err := walletPaths(dir, p, plan)
 	if err != nil {
 		return nil, err
 	}
 	stage = "IMAP"
-	lanes, err := selectProfile(ctx, p, plan, nil, d, o.TLSConfig)
+	report(stage, false)
+	lanes, err := selectProfile(startup, p, plan, nil, d, o.TLSConfig, func() { report("", true) })
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +120,8 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	defer clear(key)
 	stage = "RENDEZVOUS"
-	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
+	deadline, _ := startup.Deadline()
+	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, StartupDeadline: deadline, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
 		switch code {
 		case "rendezvous":
 			stage = "RENDEZVOUS"
@@ -102,7 +133,10 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 			stage = "RUNTIME"
 		case "permission":
 			stage = "PERMISSION"
+		case "ready":
+			stage = "READY"
 		}
+		report(stage, false)
 	}})
 	if err != nil {
 		return nil, err

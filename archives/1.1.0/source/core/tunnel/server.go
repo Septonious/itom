@@ -54,7 +54,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 		if log != nil {
 			log("event=v2_startup state=inventory user=" + p.User.ID)
 		}
-		lanes, err := selectProfile(ctx, p, plan, journals, network, tlsConfig)
+		lanes, err := selectProfile(ctx, p, plan, journals, network, tlsConfig, nil)
 		if err != nil {
 			return err
 		}

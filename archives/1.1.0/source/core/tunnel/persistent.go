@@ -108,7 +108,7 @@ func sessionPlan(p servercfg.Profile) (transport.RosterPlan, transport.Invitatio
 	return plan, template, nil
 }
 
-func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.RosterPlan, journals []transport.RosterJournals, d transport.NetworkDialer, tlsConfig *tls.Config) ([]transport.RosterLane, error) {
+func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.RosterPlan, journals []transport.RosterJournals, d transport.NetworkDialer, tlsConfig *tls.Config, onSelected func()) ([]transport.RosterLane, error) {
 	key, err := hex.DecodeString(p.User.Key)
 	if err != nil {
 		return nil, servercfg.ErrConfig
@@ -204,6 +204,9 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							break
 						}
 						lanes = append(lanes, transport.RosterLane{Plane: l.plane, Executor: x})
+						if onSelected != nil {
+							onSelected()
+						}
 					}
 				}
 				if failure != nil {

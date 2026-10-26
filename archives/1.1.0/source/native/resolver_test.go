@@ -158,6 +158,7 @@ type dnsHost struct{ routes []string }
 func (h *dnsHost) Protect(int) bool         { return true }
 func (*dnsHost) DNS() string                { return "[]" }
 func (*dnsHost) Lookup(string) string       { return "[]" }
+func (*dnsHost) Startup(string) bool        { return true }
 func (h *dnsHost) Route(name string) string { h.routes = append(h.routes, name); return "DIRECT" }
 
 func TestDirectResolverPreservesDomainRoutingWithSyntheticAddresses(t *testing.T) {

@@ -8,3 +8,24 @@ fun nativeFailureCode(message: String?): String = message?.takeIf {
         "V2_STARTUP_RENDEZVOUS", "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER",
         "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION")
 } ?: "TRANSPORT_FAILED"
+
+fun startupStatus(raw: String): String {
+    val root = TransportDiagnostics.parse(raw).root
+    val label = when (root.field("StartupStage")) {
+        "PROFILE" -> "Checking profile"
+        "WALLET" -> "Opening saved session"
+        "IMAP" -> {
+            val total = root.field("TotalLines")?.toIntOrNull()?.takeIf { it in 1..4096 }
+            val selected = root.field("SelectedLines")?.toIntOrNull()
+            if (total != null && selected != null && selected in 0..total) "Connecting mail lines: $selected/$total"
+            else "Connecting mail lines"
+        }
+        "RENDEZVOUS" -> "Contacting server"
+        "NOISE" -> "Securing connection"
+        "ROSTER" -> "Preparing mail lines"
+        "RUNTIME", "PERMISSION" -> "Finishing connection"
+        "READY" -> "Starting VPN"
+        else -> return "Tap to cancel"
+    }
+    return "$label · Tap to cancel"
+}
