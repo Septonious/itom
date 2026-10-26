@@ -7,14 +7,19 @@ established. The preferred target remains 250ms; see the
 [user-directed temporary RTT policy](TEMPORARY_RTT_POLICY.md).
 See [implementation status](SESSION_V2_STATUS.md), the
 [structural plan](STRUCTURAL_REWORK_PLAN.md) and
-[latest source checks](experiments/session-v2/COMMAND_LIFETIME_CHECK_RESULTS.json).
+[latest source checks](experiments/session-v2/ALLOCATION_TAIL_CHECK_RESULTS.json).
+
+[Allocation-tail discovery](ALLOCATION_TAIL_WORK.md) preserves an observed UID
+prediction through cleanup. Local warm averages improve, but maximum RTT and
+stability remain unqualified. A new constant 50/40ms propagation gate also fails.
 
 [Command lifetime work](COMMAND_LIFETIME_WORK.md) removes per-command waiting
 goroutines. Core/native race checks and vet pass; application RTT gates still fail.
 
-[Cleanup/idle experiments](UID_DISCOVERY_WORK.md) retain a UID-exhaustion safety
-fix and new long-idle coverage. A faster UID prediction candidate is held back
-because stability is not established; the temporary 300ms target remains unqualified.
+Earlier [cleanup/idle experiments](UID_DISCOVERY_WORK.md) retained UID-exhaustion
+safety and long-idle coverage while holding back their first prediction candidate.
+The allocation-tail continuation above extends and evaluates that work; the
+temporary 300ms target remains unqualified.
 
 [Shared FETCH service](FETCH_SERVICE_WORK.md) now queues cleanup/discovery turns
 and bounds unsuccessful maintenance probing. Sized read grouping is enabled

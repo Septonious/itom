@@ -7,13 +7,19 @@ cannot supply that pair yet: `tunnel.StartClient` and `ServeManaged` still retur
 Stable 1.0.0/RC2 remains separate; its removed runtime will not be reactivated as
 the replacement transport.
 
+The [allocation-tail continuation](ALLOCATION_TAIL_WORK.md) improves typical
+source-host light exchanges while retaining the failed maximum RTT gates and
+the original cold HTTP failure. Constant upper-range propagation is now tested
+explicitly in CI. Production startup, controller/authority integration and
+field qualification remain required; these samples do not authorize packaging.
+
 [Command lifetime work](COMMAND_LIFETIME_WORK.md) reduces watchdog overhead while
 preserving the independent progress limit. All 237 core and ten native race
 groups pass, as do both vet checks. The warm and quiet application gates still
 exceed 300ms; this does not resolve the release blockers below.
 
-The current [cleanup/idle coverage](UID_DISCOVERY_WORK.md) retains numeric UID
-exhaustion safety; a faster prediction candidate is held back. New 30s cases expose
+Earlier [cleanup/idle coverage](UID_DISCOVERY_WORK.md) retained numeric UID
+exhaustion safety and held back its first prediction candidate. Its 30s cases expose
 intermittent completion failures. Those failures remain release blockers under
 the temporary 300ms policy as well as the preferred 250ms target.
 

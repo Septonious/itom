@@ -21,6 +21,18 @@ func TestAccountWarmLightPropagationQualification(t *testing.T) {
 	}
 }
 
+// The upper end of each requested latency range must also work when it lasts
+// throughout an exchange. A fluctuating profile can otherwise hide this corner
+// by repeatedly moving one leg into its faster phase during a request.
+func TestAccountUpperLatencyLightPropagationQualification(t *testing.T) {
+	client := newWireRoute([]time.Duration{50 * time.Millisecond}, 250*time.Millisecond, 62_500_000)
+	server := newWireRoute([]time.Duration{40 * time.Millisecond}, 250*time.Millisecond, 62_500_000)
+	samples := testAccountTLSHTTPOnNetwork(t, nil, nil, 16, client, server)
+	for _, failure := range qualification.CheckExchanges(samples) {
+		t.Error(failure)
+	}
+}
+
 // The same complete accounting/runtime path must keep an existing TLS stream
 // responsive after real application silence. Slightly irregular gaps avoid
 // synchronizing requests with the deterministic link-profile period. A longer

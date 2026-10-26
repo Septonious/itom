@@ -187,7 +187,11 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	uids := make([]uint32, 0, len(metadata))
 	present := make(map[uint32]uint32, len(metadata))
 	sizes := make(map[uint32]Body, len(metadata))
-	var tail, tailUID uint32
+	var tail uint32
+	// Allocation does not rewind when a replica exposes an empty or shorter
+	// live inventory. Retain the highest observed UID only as a prediction;
+	// pending/deferred bodies and uncertain sequence history still force a sweep.
+	tailUID := i.tailUID
 	for _, body := range metadata {
 		tail = max(tail, body.Sequence)
 		tailUID = max(tailUID, body.UID)
@@ -195,6 +199,9 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 		present[body.UID] = body.Sequence
 		sizes[body.UID] = body
 	}
+	// Even an inventory whose BODY disappears before FETCH observed allocation.
+	// This is no delivery, deletion proof, replay advance or quota release.
+	i.tailUID = tailUID
 	sort.Slice(uids, func(a, b int) bool { return uids[a] < uids[b] })
 	progress.Observed = len(uids)
 	for uid := range i.seen {

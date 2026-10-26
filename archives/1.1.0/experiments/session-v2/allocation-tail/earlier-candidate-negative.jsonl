@@ -1,0 +1,9 @@
+{"Time":"2026-10-26T02:21:54.125410562Z","Action":"start","Package":"itom.local/core/transport"}
+{"Time":"2026-10-26T02:21:54.143578289Z","Action":"run","Package":"itom.local/core/transport","Test":"TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation"}
+{"Time":"2026-10-26T02:21:54.143687668Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation","Output":"=== RUN   TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation\n","OutputType":"frame"}
+{"Time":"2026-10-26T02:21:54.158101086Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation","Output":"    inbox_allocation_test.go:113: unfetched observed allocation was forgotten {0 0 0 true} \u003cnil\u003e\n","OutputType":"error"}
+{"Time":"2026-10-26T02:21:54.158157535Z","Action":"output","Package":"itom.local/core/transport","Test":"TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation","Output":"--- FAIL: TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-26T02:21:54.158163984Z","Action":"fail","Package":"itom.local/core/transport","Test":"TestDeletedUnfetchedInventoryTailDoesNotRewindAllocation","Elapsed":0.01}
+{"Time":"2026-10-26T02:21:54.158585902Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-26T02:21:54.159916558Z","Action":"output","Package":"itom.local/core/transport","Output":"FAIL\titom.local/core/transport\t0.034s\n","OutputType":"frame"}
+{"Time":"2026-10-26T02:21:54.160267142Z","Action":"fail","Package":"itom.local/core/transport","Elapsed":0.035}

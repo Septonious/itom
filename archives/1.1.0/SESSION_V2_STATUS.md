@@ -8,6 +8,14 @@ still returns `V2_NOT_READY`; packaging is disabled. No APK or deployable server
 binary is published from this branch. This is one structural replacement, not a
 series of intermediate timing releases.
 
+The [allocation-tail continuation](ALLOCATION_TAIL_WORK.md) retains observed UID
+allocation through cleanup and a BODY vanishing after inventory. Two warm cohorts
+improve average RTT by about 17% against the parent source cohort, but maximum RTT
+and quiet recovery still miss 300ms. A new fixed 50/40ms propagation gate also
+fails. The default core race run passes 240/241 groups; all 241 pass in an
+additional package-isolated run. The original failure remains retained. No
+field RTT, stability or sustained 100Mbps qualification follows from these data.
+
 The [command-lifetime continuation](COMMAND_LIFETIME_WORK.md) removes a sleeping
 watchdog goroutine per IMAP command while preserving independent progress limits
 and cancellation semantics. Targeted TLS/race checks and isolated bookkeeping
@@ -16,9 +24,10 @@ benchmarks pass, but the complete warm and quiet HTTP cohorts still fail the
 The [source-check snapshot](experiments/session-v2/COMMAND_LIFETIME_CHECK_RESULTS.json)
 passes 237 core race groups, ten native groups and both module vet checks.
 
-The [UID discovery continuation](UID_DISCOVERY_WORK.md) keeps inventory alive at
-numeric UID exhaustion and adds long-idle completion checks. The faster allocation
-high-water candidate is held back pending stability evidence. Misses above the
+The earlier [UID discovery continuation](UID_DISCOVERY_WORK.md) keeps inventory
+alive at numeric UID exhaustion and adds long-idle completion checks. Its first
+allocation high-water candidate was held back; the newer continuation above
+records the subsequent extended implementation and evidence. Misses above the
 temporary 300ms maximum and intermittent long-idle HTTP failures remain. Faster
 probe pacing and a parser-cache variant were also not activated. See
 [the current evidence](experiments/session-v2/UID_DISCOVERY_CHECK_RESULTS.json).
