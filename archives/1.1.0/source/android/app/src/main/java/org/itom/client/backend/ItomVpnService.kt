@@ -274,7 +274,7 @@ class ItomVpnService : VpnService() {
             }
         } catch (e: CancellationException) { throw e }
         catch (e: DomainError) { failure = e.code }
-        catch (e: Exception) { failure = e.message?.takeIf { it in setOf("SOCKS_PORT_IN_USE", "UNDERLYING_DNS_MISSING") } ?: "TRANSPORT_FAILED" }
+        catch (e: Exception) { failure = nativeFailureCode(e.message) }
         finally {
             withContext(NonCancellable) {
                 callbacks.close()
@@ -284,6 +284,10 @@ class ItomVpnService : VpnService() {
                 networkCallback?.let { callback -> runCatching { connectivity?.unregisterNetworkCallback(callback) } }
                 if (diagnosticsEnabled && backend.snapshot.value.generation == g) {
                     native?.let { client -> backend.diagnosticState.value = runCatching { client.diagnostics() }.getOrDefault(backend.diagnosticState.value) }
+                    if (native == null && failure != null) {
+                        backend.diagnosticState.value = JSONObject().put("StartupFailure", failure)
+                            .put("SampledAtMS", System.currentTimeMillis()).toString()
+                    }
                 }
                 runCatching { networkEvent("session_stop", null) }
                 traceClient.set(null)

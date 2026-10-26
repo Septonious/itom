@@ -57,7 +57,13 @@ type Client struct {
 func StartClient(ctx context.Context, p servercfg.Profile, dir string, d Dial) (*Client, error) {
 	return StartClientWithOptions(ctx, p, dir, d, ClientOptions{})
 }
-func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string, d Dial, o ClientOptions) (*Client, error) {
+func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string, d Dial, o ClientOptions) (client *Client, err error) {
+	stage := "PROFILE"
+	defer func() {
+		if err != nil {
+			err = &startupError{code: "V2_STARTUP_" + stage, cause: err}
+		}
+	}()
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -68,10 +74,12 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	if d == nil {
 		d = &net.Dialer{Timeout: 20 * time.Second}
 	}
+	stage = "WALLET"
 	anchor, paths, err := walletPaths(dir, p, plan)
 	if err != nil {
 		return nil, err
 	}
+	stage = "IMAP"
 	lanes, err := selectProfile(ctx, p, plan, nil, d, o.TLSConfig)
 	if err != nil {
 		return nil, err
@@ -81,12 +89,37 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		return nil, err
 	}
 	defer clear(key)
-	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}})
+	stage = "RENDEZVOUS"
+	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
+		switch code {
+		case "rendezvous":
+			stage = "RENDEZVOUS"
+		case "noise":
+			stage = "NOISE"
+		case "roster":
+			stage = "ROSTER"
+		case "runtime":
+			stage = "RUNTIME"
+		case "permission":
+			stage = "PERMISSION"
+		}
+	}})
 	if err != nil {
 		return nil, err
 	}
 	return &Client{endpoint: endpoint, profile: p}, nil
 }
+
+// Error exposes only a fixed startup phase across gomobile. The Go caller can
+// still inspect the cause with errors.Is/As; provider text and private paths
+// never become UI messages or diagnostic exports.
+type startupError struct {
+	code  string
+	cause error
+}
+
+func (e *startupError) Error() string { return e.code }
+func (e *startupError) Unwrap() error { return e.cause }
 func (c *Client) Close() error {
 	if c == nil {
 		return nil

@@ -71,6 +71,13 @@ func New(raw, dir string, host Host) (*Client, error) {
 	if e := json.Unmarshal([]byte(raw), &cfg); e != nil {
 		return nil, errors.New("NATIVE_CONFIG")
 	}
+	// VaultStore identifies its in-memory runtime document as Android, whereas
+	// the core consumes the canonical server-export profile. Adapt only this
+	// known discriminator at the platform boundary; all profile fields still
+	// pass the core's original validation before any provider socket is opened.
+	if cfg.Profile.Kind == "itom-android" {
+		cfg.Profile.Kind = "itom-imap-probe"
+	}
 	if len(cfg.DNS) == 0 {
 		return nil, errors.New("UNDERLYING_DNS_MISSING")
 	}
