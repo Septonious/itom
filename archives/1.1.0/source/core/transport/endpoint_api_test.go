@@ -61,14 +61,18 @@ func TestEndpointServerProcessHelper(t *testing.T) {
 }
 
 func TestPublicClientAndServerAPIsCarryTLSAndRestartWithOriginalWalletPaths(t *testing.T) {
-	testPublicEndpoints(t, 0)
+	testPublicEndpoints(t, 0, false)
 }
 
 func TestServerStartedBeforePhoneStillAcceptsClientAfterNinetySeconds(t *testing.T) {
-	testPublicEndpoints(t, 91*time.Second)
+	testPublicEndpoints(t, 91*time.Second, false)
 }
 
-func testPublicEndpoints(t *testing.T, clientDelay time.Duration) {
+func TestPublicEndpointsAcceptProviderKeywordCaseChangesWithoutSpuriousRestart(t *testing.T) {
+	testPublicEndpoints(t, 0, true)
+}
+
+func testPublicEndpoints(t *testing.T, clientDelay time.Duration, caseChanges bool) {
 	t.Helper()
 	if os.Getenv("ITOM_RC1_TEST_SERVER_CONFIG") != "" {
 		t.Fatal("helper scope escaped")
@@ -87,6 +91,17 @@ func testPublicEndpoints(t *testing.T, clientDelay time.Duration) {
 	upFolder, downFolder := "itom-field-up", "itom-field-down"
 	var shutdown atomic.Bool
 	boxes := map[string]*sharedMailbox{upFolder: {keywords: true, reclamation: true, allowClose: shutdown.Load}, downFolder: {keywords: true, reclamation: true, allowClose: shutdown.Load}}
+	if caseChanges {
+		var count atomic.Uint64
+		for _, box := range boxes {
+			box.flagCase = func(flag string) string {
+				if count.Add(1)%2 == 0 {
+					return strings.ToUpper(flag)
+				}
+				return strings.ToLower(flag)
+			}
+		}
+	}
 	acceptDone := make(chan struct{})
 	go func() {
 		defer close(acceptDone)
@@ -199,7 +214,7 @@ func testPublicEndpoints(t *testing.T, clientDelay time.Duration) {
 		defer ready.Stop()
 		for {
 			raw, _ := os.ReadFile(filepath.Join(root, "server-state", "v2-"+p.User.ID+".json"))
-			if bytes.Contains(raw, []byte(`"Stage":"rendezvous"`)) {
+			if bytes.Contains(raw, []byte(`"Stage":"waiting_request"`)) {
 				break
 			}
 			select {
@@ -267,6 +282,13 @@ func testPublicEndpoints(t *testing.T, clientDelay time.Duration) {
 		}
 		if !strings.Contains(client.Diagnostics(), tunnel.TransportRevision) || strings.Contains(client.Diagnostics(), p.User.Key) {
 			t.Fatal("diagnostics missing identity or exposed key")
+		}
+		trace, err := os.ReadFile(filepath.Join(root, "server-state", "transport-trace.jsonl"))
+		if err != nil || !bytes.Contains(trace, []byte(`"Stage":"rendezvous"`)) || !bytes.Contains(trace, []byte(`"Stage":"imap_selected"`)) {
+			t.Fatal("production server did not record real startup stages", err)
+		}
+		if bytes.Contains(trace, []byte(p.User.Key)) || bytes.Contains(trace, []byte("fixture-only")) {
+			t.Fatal("server trace exposed private input")
 		}
 		shutdown.Store(true)
 		_ = client.Close()

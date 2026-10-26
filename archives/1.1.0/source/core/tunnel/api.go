@@ -40,6 +40,7 @@ type ClientOptions struct {
 // The callback is serialized and contains fixed phases and counts, no profile.
 type StartupProgress struct {
 	Stage                     string
+	ConfigHash                string
 	SelectedLines, TotalLines int
 }
 type ClientSnapshot struct {
@@ -95,6 +96,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	if err != nil {
 		return nil, err
 	}
+	progress.ConfigHash = hex.EncodeToString(template.Binding.ConfigHash[:])
 	if d == nil {
 		d = &net.Dialer{Timeout: 20 * time.Second}
 	}
@@ -110,7 +112,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	stage = "IMAP"
 	report(stage, false)
-	lanes, err := selectProfile(startup, p, plan, nil, d, o.TLSConfig, func() { report("", true) })
+	lanes, err := selectProfile(startup, p, plan, nil, d, o.TLSConfig, func() { report("", true) }, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +125,10 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	deadline, _ := startup.Deadline()
 	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, StartupDeadline: deadline, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
 		switch code {
-		case "rendezvous":
+		case "rendezvous", "rendezvous_found":
 			stage = "RENDEZVOUS"
+		case "waiting_invitation":
+			stage = "INVITATION"
 		case "noise":
 			stage = "NOISE"
 		case "roster":
@@ -152,7 +156,14 @@ type startupError struct {
 	cause error
 }
 
-func (e *startupError) Error() string { return e.code }
+func (e *startupError) Error() string {
+	for _, feature := range []error{errProviderUIDPlus, errProviderKeywords} {
+		if errors.Is(e.cause, feature) {
+			return feature.Error()
+		}
+	}
+	return e.code
+}
 func (e *startupError) Unwrap() error { return e.cause }
 func (c *Client) Close() error {
 	if c == nil {
@@ -246,7 +257,12 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	trace := &serverTrace{root: dir, enabled: c.DiagnosticsMode != "off"}
+	if err := trace.record(map[string]any{"Event": "server_start", "Revision": TransportRevision, "Accounts": len(c.Accounts), "Users": len(c.Users), "SampledAtMS": time.Now().UnixMilli()}); err != nil {
+		return errors.New("V2_DIAGNOSTICS_UNAVAILABLE")
+	}
 	if err := c.Validate(); err != nil {
+		_ = trace.record(map[string]any{"Event": "configuration_failed", "Revision": TransportRevision, "Failure": "SERVER_CONFIG", "SampledAtMS": time.Now().UnixMilli()})
 		return err
 	}
 	ctx, cancel := context.WithCancel(ctx)
@@ -259,7 +275,9 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		}
 		active++
 		p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: c.Server, Provider: c.Provider, User: u, Accounts: c.Accounts, Transport: c.TransportForUsers()}
-		go func() { done <- serveProfile(ctx, p, dir, log, managed, &net.Dialer{Timeout: 20 * time.Second}, nil) }()
+		go func() {
+			done <- serveProfile(ctx, p, dir, log, managed, &net.Dialer{Timeout: 20 * time.Second}, nil, trace)
+		}()
 	}
 	if active == 0 {
 		return servercfg.ErrConfig

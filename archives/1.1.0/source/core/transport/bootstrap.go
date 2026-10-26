@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -37,7 +38,7 @@ type Selected struct {
 // transfers sole connection ownership to the executor. No old mailbox.Client or
 // operation mutex is involved. Error strings never contain provider responses,
 // mailbox names, credentials or target hostnames.
-func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits) (Selected, error) {
+func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits) (selected Selected, err error) {
 	if d == nil || p.Address == "" || p.ServerName == "" || len(p.AccountID) > 64 {
 		return Selected{}, ErrProtocol
 	}
@@ -67,11 +68,18 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	if cfg.InsecureSkipVerify {
 		return Selected{}, ErrProtocol
 	}
+	stage := "CONNECT"
+	defer func() {
+		if err != nil {
+			err = &imapStartupError{stage: stage, cause: err}
+		}
+	}()
 	raw, err := d.DialContext(ctx, "tcp", p.Address)
 	if err != nil {
 		return Selected{}, ErrUnknown
 	}
 	conn := tls.Client(raw, cfg)
+	stage = "TLS"
 	owned := false
 	defer func() {
 		if !owned {
@@ -89,16 +97,19 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	// Reuse only bounded line/writer utilities; the asynchronous parser starts
 	// after successful SELECT and buffered bytes are handed over intact.
 	x := &Executor{conn: conn, reader: bufio.NewReaderSize(conn, 8192), limits: l}
+	stage = "GREETING"
 	line, err := x.line()
 	if err != nil || !strings.HasPrefix(strings.ToUpper(line), "* OK") {
 		return Selected{}, ErrProtocol
 	}
+	stage = "LOGIN"
 	if err = x.write([]byte("BOOT1 LOGIN " + user + " " + password + "\r\n")); err != nil {
 		return Selected{}, ErrUnknown
 	}
 	if _, err = bootstrapReply(x, "BOOT1"); err != nil {
 		return Selected{}, err
 	}
+	stage = "CAPABILITY"
 	if err = x.write([]byte("BOOT2 CAPABILITY\r\n")); err != nil {
 		return Selected{}, ErrUnknown
 	}
@@ -126,11 +137,13 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 			}
 		}
 	}
+	stage = "SELECT"
 	if err = x.write([]byte("BOOT3 SELECT " + folder + "\r\n")); err != nil {
 		return Selected{}, ErrUnknown
 	}
 	lines, err = bootstrapReply(x, "BOOT3")
 	if err == ErrRefused && p.CreateMailbox {
+		stage = "CREATE"
 		if err = x.write([]byte("BOOT4 CREATE " + folder + "\r\n")); err != nil {
 			return Selected{}, ErrUnknown
 		}
@@ -141,6 +154,7 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 		if err = x.write([]byte("BOOT5 SELECT " + folder + "\r\n")); err != nil {
 			return Selected{}, ErrUnknown
 		}
+		stage = "SELECT"
 		lines, err = bootstrapReply(x, "BOOT5")
 	}
 	if err != nil {
@@ -198,6 +212,23 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	executor.uidPlus = uidPlus
 	owned = true
 	return Selected{Executor: executor, UIDValidity: uint32(validity), LiteralPlus: plus, LiteralMinus: minus, Idle: idle, Keywords: keywords, UIDPlus: uidPlus}, nil
+}
+
+type imapStartupError struct {
+	stage string
+	cause error
+}
+
+func (e *imapStartupError) Error() string { return "V2_IMAP_STARTUP_" + e.stage }
+func (e *imapStartupError) Unwrap() error { return e.cause }
+
+// IMAPStartupStage reports an application-defined stage, never provider text.
+func IMAPStartupStage(err error) string {
+	var e *imapStartupError
+	if errors.As(err, &e) {
+		return e.stage
+	}
+	return ""
 }
 func bootstrapReply(x *Executor, tag string) ([]string, error) {
 	var out []string

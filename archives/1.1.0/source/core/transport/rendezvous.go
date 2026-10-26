@@ -195,7 +195,7 @@ func (v *VerifiedRendezvous) RequestKeyword(w *wallet.Wallet, key []byte) (strin
 // full observed anchor/body/location/run. A provider keyword on its own can
 // never reserve storage or reset an original session's counters.
 func (v *VerifiedRendezvous) RequestTemplate(keyword string, key []byte) (InvitationTemplate, error) {
-	if v == nil || v.issuer == nil || v.issuer.StoreID() != v.origin.Store || v.issuer.Run() != v.origin.Run || len(key) != 32 || sha256.Sum256(key) != v.keyHash || len(keyword) != 103 || !strings.HasPrefix(keyword, "ITOM2_") || keyword[38] != '_' {
+	if v == nil || v.issuer == nil || v.issuer.StoreID() != v.origin.Store || v.issuer.Run() != v.origin.Run || len(key) != 32 || sha256.Sum256(key) != v.keyHash || len(keyword) != 103 || !validKeyword(keyword) || !strings.EqualFold(keyword[:6], "ITOM2_") || keyword[38] != '_' {
 		return InvitationTemplate{}, ErrProtocol
 	}
 	rawSession, err := hex.DecodeString(keyword[6:38])
@@ -203,7 +203,7 @@ func (v *VerifiedRendezvous) RequestTemplate(keyword string, key []byte) (Invita
 		return InvitationTemplate{}, ErrProtocol
 	}
 	rawMAC, err := hex.DecodeString(keyword[39:])
-	if err != nil || hex.EncodeToString(rawSession) != keyword[6:38] || hex.EncodeToString(rawMAC) != keyword[39:] {
+	if err != nil {
 		return InvitationTemplate{}, ErrProtocol
 	}
 	var session wire.ID

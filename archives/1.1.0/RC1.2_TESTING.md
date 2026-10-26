@@ -32,6 +32,30 @@ All limitations from [RC1 testing notes](RC1_TESTING.md), including incomplete
 historical-body reclamation, still apply. No live Rambler or Android device
 success is claimed by a local or hosted synthetic pass.
 
+The new runtime now writes the actual `transport-trace.jsonl` consumed by the
+server trace viewer and diagnostic export, including events before any client
+connects. It records IMAP setup stages, provider UIDPLUS/permanent-keyword
+capabilities, original journal capacity/held counts, retained inventory failures,
+standing rendezvous/request/invitation progress and session state. App/server
+startup snapshots include the public configuration-binding hash for comparison.
+No passwords, keys, request markers, provider response text or traffic bodies are
+recorded. The trace rotates through three private files of at most 2MiB each.
+Logging-off is honored; the live viewer shows the latest 30 events when opened.
+
+IMAP keywords are case-insensitive. The prior implementation rejected provider
+case normalization of its authenticated request marker, and could also mistake
+a spelling change for a fresh VPN restart. RC1.2 accepts equivalent case only
+after the original session/MAC validation, and deduplicates by the same session.
+Tests reproduce the old rejection and carry real HTTPS/restarts through a
+provider fixture that alternates keyword case. This is not a claim about the
+exact response behavior of Rambler in the reported run.
+
+Options 7/9 start or restart `/usr/local/bin/itom`; they do not install a binary
+downloaded to another path. From the downloaded RC1.2 binary, use **option 11**
+or its `install` command to update the service executable. Option 14 enables
+server tracing; restart applies a changed logging setting. Option 12 displays
+events and option 13 exports them, including failed-start records.
+
 Try a connection with the server already running for at least two minutes.
 Record the last startup hint if it stalls, then export app and server bundles.
 After connection, test small HTTPS requests, SINGLE/MULTI throughput and one

@@ -5,8 +5,8 @@ fun nativeFailureCode(message: String?): String = message?.takeIf {
     it in setOf("SOCKS_PORT_IN_USE", "UNDERLYING_DNS_MISSING", "UNDERLYING_DNS_INVALID",
         "NATIVE_CONFIG", "DNS_ADDRESS", "DNS_BACKUP_REQUIRED", "DNS_DUPLICATE",
         "V2_STARTUP_PROFILE", "V2_STARTUP_WALLET", "V2_STARTUP_IMAP",
-        "V2_STARTUP_RENDEZVOUS", "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER",
-        "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION")
+        "V2_STARTUP_RENDEZVOUS", "V2_STARTUP_INVITATION", "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER",
+        "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION", "V2_PROVIDER_UIDPLUS_REQUIRED", "V2_PROVIDER_PERMANENT_KEYWORDS_REQUIRED")
 } ?: "TRANSPORT_FAILED"
 
 fun startupStatus(raw: String): String {
@@ -21,6 +21,7 @@ fun startupStatus(raw: String): String {
             else "Connecting mail lines"
         }
         "RENDEZVOUS" -> "Contacting server"
+        "INVITATION" -> "Waiting for server session"
         "NOISE" -> "Securing connection"
         "ROSTER" -> "Preparing mail lines"
         "RUNTIME", "PERMISSION" -> "Finishing connection"

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,26 @@ import (
 	"itom.local/core/transport"
 	"itom.local/core/wire"
 )
+
+func TestRendezvousRequestKeywordsRemainAuthenticatedWhenProviderChangesCase(t *testing.T) {
+	f, client, server := rendezvousFixture(t, true, nil, nil, false)
+	keyword, err := client.RequestKeyword(f.wallet, f.key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var first *transport.PreparedPublication
+	for _, value := range []string{keyword, strings.ToLower(keyword), strings.ToUpper(keyword)} {
+		p, err := server.PrepareRequestedInvitation(context.Background(), value, pool.Amount{Bytes: 32 << 10, Messages: 8}, f.key)
+		if err != nil {
+			t.Fatal("legal IMAP keyword casing rejected", err)
+		}
+		if first == nil {
+			first = p
+		} else if first != p {
+			t.Fatal("case change allocated another invitation")
+		}
+	}
+}
 
 func rendezvousFixture(t *testing.T, keywords bool, clientService, serverService []time.Duration, idle bool, extraAccounts ...string) (*bootstrapFixture, *transport.VerifiedRendezvous, *transport.VerifiedRendezvous) {
 	return rendezvousNetworkFixture(t, keywords, clientService, serverService, idle, nil, nil, extraAccounts...)

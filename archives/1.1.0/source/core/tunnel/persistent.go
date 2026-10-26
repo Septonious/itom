@@ -108,7 +108,7 @@ func sessionPlan(p servercfg.Profile) (transport.RosterPlan, transport.Invitatio
 	return plan, template, nil
 }
 
-func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.RosterPlan, journals []transport.RosterJournals, d transport.NetworkDialer, tlsConfig *tls.Config, onSelected func()) ([]transport.RosterLane, error) {
+func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.RosterPlan, journals []transport.RosterJournals, d transport.NetworkDialer, tlsConfig *tls.Config, onSelected func(), observe func(selectionEvent)) ([]transport.RosterLane, error) {
 	key, err := hex.DecodeString(p.User.Key)
 	if err != nil {
 		return nil, servercfg.ErrConfig
@@ -141,6 +141,18 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 			for a := range jobs {
 				var lanes []transport.RosterLane
 				open := func(folder string) (*transport.Executor, error) {
+					role := "retained"
+					if folder == a.FastFolder {
+						role = "fast"
+					} else if folder == a.BulkFolder {
+						role = "bulk"
+					}
+					note := func(stage string, e error, plus, keywords bool) {
+						if observe != nil {
+							observe(selectionEvent{Account: a.Account, Role: role, Stage: stage, Failure: startupFailureCode(e), UIDPlus: plus, Keywords: keywords})
+						}
+					}
+					note("imap_connecting", nil, false, false)
 					account := byAccount[a.Account]
 					host := account.Mail.Host
 					if account.Mail.DialIP != "" {
@@ -148,12 +160,19 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 					}
 					selected, e := transport.DialSelected(ctx, d, transport.Endpoint{Address: net.JoinHostPort(host, strconv.Itoa(account.Mail.Port)), ServerName: account.Mail.Host, Username: account.Mail.Username, Password: account.Mail.Password, Mailbox: folder, AccountID: a.Account, TLS: tlsConfig, CreateMailbox: server}, transport.DefaultIMAPLimits())
 					if e != nil {
+						note("imap_"+transport.IMAPStartupStage(e), e, false, false)
 						return nil, e
 					}
 					if !selected.Keywords || !selected.UIDPlus {
 						selected.Executor.Close()
-						return nil, errors.New("V2_PROVIDER_UIDPLUS_AND_PERMANENT_KEYWORDS_REQUIRED")
+						e = errProviderKeywords
+						if !selected.UIDPlus {
+							e = errProviderUIDPlus
+						}
+						note("imap_capabilities", e, selected.UIDPlus, selected.Keywords)
+						return nil, e
 					}
+					note("imap_selected", nil, selected.UIDPlus, selected.Keywords)
 					return selected.Executor, nil
 				}
 				var failure error
@@ -180,6 +199,9 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 						e = transport.InventoryRetained(ctx, x, p.User.ID, key)
 						x.Close()
 						if e != nil {
+							if observe != nil {
+								observe(selectionEvent{Account: a.Account, Stage: "inventory_failed", Role: "retained", Failure: startupFailureCode(e)})
+							}
 							failure = e
 							break
 						}

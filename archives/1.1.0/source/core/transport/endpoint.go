@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -222,6 +223,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 				}
 			}
 		}
+		stage("rendezvous_found")
 		anchor, err = rendezvous.OpenWallet(o.AnchorWallet)
 		if err != nil {
 			return nil, err
@@ -229,6 +231,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 		if err = rendezvous.Submit(startup, x, anchor, o.Key); err != nil {
 			return nil, err
 		}
+		stage("waiting_invitation")
 		for owner == nil {
 			latest, e := findRendezvous(startup, x, o, nil)
 			if e != nil {
@@ -289,6 +292,8 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 		if err != nil || rendezvous == nil {
 			return nil, errors.Join(ErrProtocol, err)
 		}
+		stage("waiting_request")
+		rejectedRequest, claimedRequest := false, false
 		for owner == nil {
 			cmd, e := x.fetchMaintenance(startup, []uint32{rendezvous.uid}, true)
 			if e != nil {
@@ -300,12 +305,16 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			}
 			for _, row := range rows {
 				for _, flag := range row.Flags {
-					requests[flag] = true
+					requests[strings.ToLower(flag)] = true
 				}
 			}
 			for _, row := range rows {
 				for _, flag := range row.Flags {
 					if _, e = rendezvous.RequestTemplate(flag, o.Key); e != nil {
+						if !rejectedRequest && len(flag) >= 6 && strings.EqualFold(flag[:6], "ITOM2_") {
+							stage("request_rejected")
+							rejectedRequest = true
+						}
 						continue
 					}
 					limit, e := store.Limit(account, o.Template.Binding.User)
@@ -315,6 +324,10 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 					allowance := endpointAllowance(ControlLedger, limit)
 					p, e := rendezvous.PrepareRequestedInvitation(startup, flag, allowance, o.Key)
 					if errors.Is(e, journal.ErrState) {
+						if !claimedRequest {
+							stage("request_already_claimed")
+							claimedRequest = true
+						}
 						continue
 					} // an original session already claimed its invitation
 					if e != nil {
@@ -323,6 +336,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 					if outcome, e := p.Start(startup, x); e != nil || outcome != Accepted {
 						return nil, errors.Join(ErrUnknown, e)
 					}
+					stage("invitation_published")
 					err = visitBodies(startup, x, func(body Body) (bool, error) {
 						v, e := rendezvous.ObserveInvitation(x, body, flag, o.Key)
 						if e != nil {
@@ -519,7 +533,7 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
 	}
 	for _, row := range rows {
 		for _, flag := range row.Flags {
-			if flag != current && !s.requests[flag] {
+			if !strings.EqualFold(flag, current) && !s.requests[strings.ToLower(flag)] {
 				if _, err := rv.RequestTemplate(flag, key); err == nil {
 					return ErrEndpointRestart
 				}

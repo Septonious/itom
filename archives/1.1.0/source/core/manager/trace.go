@@ -12,16 +12,22 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"itom.local/core/servercfg"
 )
 
 func (u *UI) followTrace() error {
 	if runtime.GOOS != "linux" {
 		return fmt.Errorf("trace viewer requires a Linux server")
 	}
-	fmt.Fprintln(u.Out, "Full JSONL transport trace. Ctrl+C returns to the menu.")
+	if c, e := servercfg.Load(u.db()); e == nil && c.DiagnosticsMode == "off" {
+		fmt.Fprintln(u.Out, "Server tracing is disabled. Enable it in option 14 and restart the service.")
+		return nil
+	}
+	fmt.Fprintln(u.Out, "Latest 30 transport events, then live updates. Ctrl+C returns to the menu.")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	cmd := exec.CommandContext(ctx, "tail", "-n", "0", "-F", "--", filepath.Join(u.State, "tunnel-server", "transport-trace.jsonl"))
+	cmd := exec.CommandContext(ctx, "tail", "-n", "30", "-F", "--", filepath.Join(u.State, "tunnel-server", "transport-trace.jsonl"))
 	cmd.Stdout = u.Out
 	cmd.Stderr = u.Out
 	err := cmd.Run()

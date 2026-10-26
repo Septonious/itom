@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"itom.local/core/journal"
 	"itom.local/core/servercfg"
 	"itom.local/core/transport"
 	"itom.local/core/wire"
@@ -35,26 +36,79 @@ func publicExit(ctx context.Context, _ string, target transport.Target) (netip.A
 	return netip.AddrPortFrom(ips[0].Unmap(), target.Port), nil
 }
 
-func serveProfile(ctx context.Context, p servercfg.Profile, root string, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error), network transport.NetworkDialer, tlsConfig *tls.Config) error {
+func serveProfile(ctx context.Context, p servercfg.Profile, root string, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error), network transport.NetworkDialer, tlsConfig *tls.Config, trace *serverTrace) (err error) {
+	phase := "profile"
+	binding := ""
+	observe := func(stage string, event selectionEvent, failure error) {
+		reason := event.Failure
+		if failure != nil {
+			reason = startupFailureCode(failure)
+		}
+		raw, _ := json.Marshal(map[string]any{
+			"Event": "startup", "Revision": TransportRevision, "Stage": stage,
+			"User": p.User.ID, "ConfigHash": binding, "Account": event.Account,
+			"MailboxRole": event.Role, "UIDPlus": event.UIDPlus,
+			"PermanentKeywords": event.Keywords, "Failure": reason,
+			"SampledAtMS": time.Now().UnixMilli(),
+		})
+		if e := trace.record(json.RawMessage(raw)); e != nil && log != nil {
+			log("event=v2_diagnostics state=write_failed")
+		}
+		if len(p.User.ID) == 8 && p.User.ID[0] >= '1' && p.User.ID[0] <= '9' {
+			valid := true
+			for _, c := range p.User.ID {
+				if c < '0' || c > '9' {
+					valid = false
+				}
+			}
+			if valid {
+				_ = trace.snapshot(p.User.ID, raw)
+			}
+		}
+		if log != nil {
+			log("event=v2_startup state=" + stage + " reason=" + reason + " account=" + event.Account)
+		}
+	}
+	observe(phase, selectionEvent{}, nil)
+	defer func() {
+		if err != nil {
+			observe(phase+"_failed", selectionEvent{}, err)
+		}
+	}()
 	plan, template, err := sessionPlan(p)
 	if err != nil {
 		return err
 	}
+	binding = hex.EncodeToString(template.Binding.ConfigHash[:])
+	phase = "journals"
+	observe(phase, selectionEvent{}, nil)
 	journals, err := openProfileJournals(root, p)
 	if err != nil {
 		return err
 	}
 	defer closeProfileJournals(journals)
+	for _, j := range journals {
+		for name, store := range map[string]*journal.Store{"control": j.Control, "data": j.Data} {
+			limit, le := store.Limit(j.Account, p.User.ID)
+			held, he := store.Held(j.Account, p.User.ID)
+			if le == nil && he == nil {
+				_ = trace.record(map[string]any{
+					"Event": "journal_capacity", "Revision": TransportRevision,
+					"User": p.User.ID, "Account": j.Account, "Ledger": name,
+					"Limit": limit, "Held": held, "SampledAtMS": time.Now().UnixMilli(),
+				})
+			}
+		}
+	}
 	key, err := hex.DecodeString(p.User.Key)
 	if err != nil {
 		return err
 	}
 	defer clear(key)
 	for ctx.Err() == nil {
-		if log != nil {
-			log("event=v2_startup state=inventory user=" + p.User.ID)
-		}
-		lanes, err := selectProfile(ctx, p, plan, journals, network, tlsConfig, nil)
+		phase = "inventory"
+		observe(phase, selectionEvent{}, nil)
+		lanes, err := selectProfile(ctx, p, plan, journals, network, tlsConfig, nil, func(e selectionEvent) { observe(e.Stage, e, nil) })
 		if err != nil {
 			return err
 		}
@@ -73,19 +127,18 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 			}
 		}
 		stage := func(code string) {
-			if log != nil {
-				log("event=v2_startup state=" + code + " user=" + p.User.ID)
-			}
+			phase = code
+			observe(code, selectionEvent{}, nil)
 			var imap []transport.ExecutorSnapshot
 			for _, lane := range lanes {
 				imap = append(imap, lane.Executor.Snapshot())
 			}
 			raw, _ := json.Marshal(struct {
-				Revision, Stage string
-				SampledAtMS     int64
-				Carriers        []transport.ExecutorSnapshot
-			}{TransportRevision, code, time.Now().UnixMilli(), imap})
-			_ = writePrivateSnapshot(filepath.Join(root, "v2-"+p.User.ID+".json"), raw)
+				Revision, Stage, ConfigHash string
+				SampledAtMS                 int64
+				Carriers                    []transport.ExecutorSnapshot
+			}{TransportRevision, code, binding, time.Now().UnixMilli(), imap})
+			_ = trace.snapshot(p.User.ID, raw)
 		}
 		endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Template: template, Plan: plan, Lanes: lanes, Journals: journals, Key: key, Service: options, Stage: stage})
 		if err != nil {
@@ -113,7 +166,8 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 					SampledAtMS int64
 					Runtime     transport.RuntimeSnapshot
 				}{TransportRevision, time.Now().UnixMilli(), endpoint.Service.Runtime.Snapshot()})
-				if err := writePrivateSnapshot(filepath.Join(root, "v2-"+p.User.ID+".json"), raw); err != nil {
+				_ = trace.record(json.RawMessage(raw))
+				if err := trace.snapshot(p.User.ID, raw); err != nil {
 					if log != nil {
 						log("event=v2_diagnostics state=write_failed")
 					}

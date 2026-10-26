@@ -26,7 +26,8 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	allowClose     func() bool // explicit test-owner shutdown only; never ordinary application service
+	flagCase       func(string) string // provider-equivalent, case-insensitive keyword spelling
+	allowClose     func() bool         // explicit test-owner shutdown only; never ordinary application service
 	mu             sync.Mutex
 	bodies         [][]byte
 	bytes          int
@@ -344,6 +345,9 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					}
 					var flags []string
 					for flag := range m.flags[uid] {
+						if m.flagCase != nil {
+							flag = m.flagCase(flag)
+						}
 						flags = append(flags, flag)
 					}
 					replies = append(replies, transport.Body{UID: uid, Sequence: sequence, Bytes: body, Flags: flags})

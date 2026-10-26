@@ -137,7 +137,7 @@ func run(args []string) error {
 		defer stop()
 		var logger func(string)
 		if cfg.DiagnosticsMode != "off" {
-			log.Printf("event=server_start revision=%s protocol=4 accounts=%d users=%d", revision, len(cfg.Accounts), len(cfg.Users))
+			log.Printf("event=server_start revision=%s protocol=session-v2 accounts=%d users=%d", revision, len(cfg.Accounts), len(cfg.Users))
 			logger = func(s string) { log.Print(s) }
 		}
 		if e = adminserver.RecoverGuard(*state); e != nil {

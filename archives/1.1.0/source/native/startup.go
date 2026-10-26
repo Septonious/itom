@@ -21,10 +21,10 @@ func reportStartup(ctx context.Context, cancel context.CancelFunc, host Host, to
 		copy := state
 		mu.Unlock()
 		raw, _ := json.Marshal(struct {
-			Revision, StartupStage    string
-			SelectedLines, TotalLines int
-			ElapsedMS, SampledAtMS    int64
-		}{tunnel.TransportRevision, copy.Stage, copy.SelectedLines, copy.TotalLines, time.Since(started).Milliseconds(), time.Now().UnixMilli()})
+			Revision, StartupStage, ConfigHash string
+			SelectedLines, TotalLines          int
+			ElapsedMS, SampledAtMS             int64
+		}{tunnel.TransportRevision, copy.Stage, copy.ConfigHash, copy.SelectedLines, copy.TotalLines, time.Since(started).Milliseconds(), time.Now().UnixMilli()})
 		return host.Startup(string(raw))
 	}
 	if !send() {

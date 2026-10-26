@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.2 with delayed-client, timer ownership and live Android startup checks
+name: Build session-v2 RC1.2 with persistent startup trace and provider keyword interoperability
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]

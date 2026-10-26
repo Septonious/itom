@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"errors"
 	"fmt"
 	"io"
 	"itom.local/core/transport"
@@ -19,6 +20,53 @@ import (
 	"testing"
 	"time"
 )
+
+type failedBootstrapDialer struct{}
+
+func (failedBootstrapDialer) DialContext(context.Context, string, string) (net.Conn, error) {
+	return nil, errors.New("private-provider-password")
+}
+
+func TestBootstrapFailuresExposeStageWithoutProviderTextOrLostCause(t *testing.T) {
+	p := transport.Endpoint{Address: "127.0.0.1:1", ServerName: "fixture.local", Username: "fixture", Password: "fixture-only", Mailbox: "fast"}
+	_, err := transport.DialSelected(context.Background(), failedBootstrapDialer{}, p, transport.DefaultIMAPLimits())
+	if transport.IMAPStartupStage(err) != "CONNECT" || !errors.Is(err, transport.ErrUnknown) || strings.Contains(err.Error(), "private-provider") {
+		t.Fatal("unsafe or missing dial diagnostic", err)
+	}
+	cert, roots, err := certificate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	l, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		c, err := l.Accept()
+		if err != nil {
+			return
+		}
+		defer c.Close()
+		c.SetDeadline(time.Now().Add(3 * time.Second))
+		fmt.Fprint(c, "* OK fixture\r\n")
+		r := bufio.NewReader(c)
+		line, err := r.ReadString('\n')
+		if err != nil {
+			return
+		}
+		fmt.Fprintf(c, "%s NO private-provider-password\r\n", tag(line))
+	}()
+	p.Address = l.Addr().String()
+	p.TLS = &tls.Config{RootCAs: roots}
+	_, err = transport.DialSelected(context.Background(), &net.Dialer{}, p, transport.DefaultIMAPLimits())
+	if transport.IMAPStartupStage(err) != "LOGIN" || !errors.Is(err, transport.ErrRefused) || strings.Contains(err.Error(), "private-provider") {
+		t.Fatal("unsafe or missing LOGIN diagnostic", err)
+	}
+	<-done
+}
 
 var certificate = func() (tls.Certificate, *x509.CertPool, error) {
 	key, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

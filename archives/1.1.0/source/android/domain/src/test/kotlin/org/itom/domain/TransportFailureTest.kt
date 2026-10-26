@@ -16,7 +16,7 @@ class TransportFailureTest {
             startupStatus("""{"StartupStage":"IMAP","SelectedLines":21,"TotalLines":20}"""))
     }
     @Test fun startupPhasesSurviveTheNativeBoundary() {
-        for (stage in listOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "NOISE", "ROSTER", "RUNTIME", "PERMISSION")) {
+        for (stage in listOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION")) {
             val code = "V2_STARTUP_$stage"
             assertEquals(code, nativeFailureCode(code))
         }

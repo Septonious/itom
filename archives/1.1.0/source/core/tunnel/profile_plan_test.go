@@ -1,8 +1,11 @@
 package tunnel_test
 
 import (
+	"archive/zip"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -12,12 +15,47 @@ import (
 
 	"itom.local/core/journal"
 	"itom.local/core/mailbox"
+	"itom.local/core/manager"
 	"itom.local/core/pool"
 	"itom.local/core/servercfg"
 	"itom.local/core/transport"
 	"itom.local/core/tunnel"
 	"itom.local/core/wire"
 )
+
+func TestFailedStartupCanExportServerTraceBeforeAnyClientConnects(t *testing.T) {
+	root := t.TempDir()
+	if err := tunnel.ServeManaged(context.Background(), servercfg.Config{}, filepath.Join(root, "tunnel-server"), nil, nil); !errors.Is(err, servercfg.ErrConfig) {
+		t.Fatal("invalid configuration unexpectedly started", err)
+	}
+	archive := filepath.Join(t.TempDir(), "diagnostics.zip")
+	if err := manager.ExportDiagnostics(root, archive); err != nil {
+		t.Fatal("failed startup diagnostics unavailable", err)
+	}
+	z, err := zip.OpenReader(archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer z.Close()
+	found := false
+	for _, f := range z.File {
+		if f.Name == "transport-trace.jsonl" {
+			r, err := f.Open()
+			if err != nil {
+				t.Fatal(err)
+			}
+			raw, err := io.ReadAll(r)
+			r.Close()
+			if err != nil || !strings.Contains(string(raw), "configuration_failed") {
+				t.Fatal("missing cause in exported startup trace", err)
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("server bundle omitted pre-connection trace")
+	}
+}
 
 func profile(t *testing.T, accounts int) servercfg.Profile {
 	t.Helper()
