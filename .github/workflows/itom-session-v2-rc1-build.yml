@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.1 experimental field packages and Android runtime startup fix and public API restart checks
+name: Build session-v2 RC1.1 Android startup fix with native revision and public API checks
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
