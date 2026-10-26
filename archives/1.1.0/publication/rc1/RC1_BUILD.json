@@ -1,0 +1,74 @@
+{
+  "release": "ITOM 1.1.0 RC1",
+  "source_commit": "6f88274fb630001d41fbea7351871b662f3d34d9",
+  "build_run_id": 40283701142,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40283701142",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 253,
+    "native_race_groups_passed": 10,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 85,
+    "android_adapter_tests": 7,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1,
+    "public_client_server_entrypoint_TLS_and_VPN_restart": "passed"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10111,
+    "version_name": "1.1.0-rc1-debug"
+  },
+  "source_ci_apk_sha256": "79ac53bf0ed1587e2699722e209c14b35d6fc9b05746f2a0c9667f4e14e58f8f",
+  "signed_apk_sha256": "a317398ca35158ed8a6142b7d5cea741615c9b864d201be112601b09222c6558",
+  "signed_apk_bytes": 54137172,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "710019a11852e555e04ca351b2c7101f9cf8757234baecb93d93d6c1b90be579",
+    "lib/armeabi-v7a/libgojni.so": "84dcf5d22c3a797e56418ea337ea53a19b3d73ae97fad34be8c0837be7b53220"
+  },
+  "native_source_sha256sums": "7d81e47a1bc8388591c9ca68146cef51dd93edb3d20aa07944511683ef93f911  ITOM-1.1.0-RC1-linux-amd64.bin\n3cda7d5b7bc743f2dc63051b5bd53621c8a440e678db571d9b1f1b6f32301262  ITOM-1.1.0-RC1-linux-arm64.bin\n9b3eab80d8448ea67f4ce2f60d4275c0f25262595b2cdd5dff102305a87f4082  ITOM-1.1.0-RC1-sources.zip\n",
+  "local_and_hosted_linux_binaries_identical": true,
+  "source_manifest_files": 681,
+  "source_manifest_sha256": "1fdd3e1fae11ddbd36df180bbac1fe0b65cd04c22f96ae9e5d3059072bedf465",
+  "current_limits": {
+    "temporary_idle_light_ms": 300,
+    "preferred_idle_light_ms": 250,
+    "loaded_ms": 2000,
+    "target_sustained_mbps_per_direction": 100,
+    "per_stream_receive_window_bytes": 262144,
+    "selected_lines_per_endpoint_on_ten_accounts": 20
+  },
+  "implemented": {
+    "production_accounted_rendezvous_Noise_and_roster": true,
+    "automatic_overlapping_CONTROL_DATA_grant_turnover": true,
+    "original_DATA_wallet_paths_preserved": true,
+    "surviving_wallet_old_spend_fences": true,
+    "missing_wallet_history_conservatively_held": true,
+    "historical_body_refund_or_deletion_on_timeout": false,
+    "dynamic_service_controller_and_window_helpers_activated": false
+  },
+  "local_production_capacity_check": {
+    "application_TLS_HTTP_exchanges": 80,
+    "real_DATA_offers": 6,
+    "CONTROL_capacity_bytes": 2097152,
+    "CONTROL_capacity_messages": 128,
+    "DATA_capacity_bytes": 12582912,
+    "DATA_capacity_messages": 192,
+    "result": "pass",
+    "performance_claim": false,
+    "test_only_overlay_retained": true
+  },
+  "retained_failures": {
+    "maximum_RTT_cases": "See FETCH_OVERLAP_WORK.md and committed raw cohorts; maximum gates remain unqualified",
+    "local_source_checks": "See RC1-local-evidence.zip; includes failed overlapping executions and later bounded-provider APPEND/EOF failure",
+    "initial_echo_fixture": "Read before write required for HTTP fixture; original failed logs retained",
+    "first_hosted_native": "Old unqualified-version assertion updated for explicitly authorized experimental RC identity",
+    "first_hosted_android_export": "Compilation, tests and lint passed; export size guard failed; final packaging strips native debug sections and exports bounded parts"
+  },
+  "persistent_state_notes": "Update APK in place. Keep original server journals, user identities and client wallets. Reinstallation cannot attest unknown original spend. Historical body reclamation remains incomplete."
+}
