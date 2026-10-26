@@ -445,6 +445,19 @@ func (s *EndpointSession) run(ctx context.Context, o EndpointOptions, rv *Verifi
 			return
 		case <-runCtx.Done():
 		case <-ticker.C:
+			runtime := s.Service.Runtime
+			runtime.mu.Lock()
+			failed := false
+			for _, carrier := range runtime.status {
+				if carrier.Read == ServiceFailed || carrier.Write == ServiceFailed {
+					failed = true
+				}
+			}
+			runtime.mu.Unlock()
+			if failed {
+				policyErr = ErrRuntimeStopped
+				continue
+			}
 			if o.Client {
 				policyErr = s.clientPolicy(runCtx)
 			} else {

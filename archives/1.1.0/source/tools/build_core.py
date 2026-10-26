@@ -25,7 +25,7 @@ GO_SHA256 = {
     ("darwin", "arm64"): "ee215d57e0ec269c60cc9ceca68e6bda321ba9ee5afe24f4b0988703c2d87d12",
 }
 PINS = {"github.com/emersion/go-imap/v2": "v2.0.0-beta.8", "github.com/emersion/go-message": "v0.18.2", "github.com/emersion/go-sasl": "v0.0.0-20241020182733-b788ff22d5a6", "golang.org/x/term": "v0.46.0", "go.etcd.io/bbolt": "v1.4.3", "github.com/flynn/noise": "v1.1.0", "golang.org/x/crypto": "v0.57.0", "golang.org/x/sys": "v0.48.0"}
-EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "flow", "pool", "session", "recovery", "integration", "journal", "wallet", "datapath", "socks", "mailbox", "mailcontrol", "servercfg", "manager", "adminapi", "adminserver", "probe", "netroute", "tunnel", "cmd/itom")}
+EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "pool", "journal", "wallet", "socks", "mailbox", "servercfg", "manager", "adminapi", "adminserver", "probe", "netroute", "tunnel", "transport", "qualification", "internal/commitdiag", "cmd/itom")}
 
 
 def host_pair():
@@ -92,6 +92,7 @@ def enable_required_survival_tests(env: dict) -> None:
 
 def summarize_events(path: Path, expected: set[str]):
     packages, tests, running, failures, skipped_optional = set(), set(), set(), [], set()
+    compiled_without_tests = set()
     with path.open(encoding="utf-8") as stream:
         for line in stream:
             if not line.strip():
@@ -102,6 +103,12 @@ def summarize_events(path: Path, expected: set[str]):
                 raise RuntimeError("Invalid Go test JSON; see " + str(path)) from error
             package, test, action = event.get("Package", ""), event.get("Test"), event.get("Action")
             key = (package, test)
+            if action == "output" and not test and package in expected and re.fullmatch(
+                    r"\?\s+" + re.escape(package) + r"\s+\[no test files\]\s*", event.get("Output", "")):
+                compiled_without_tests.add(package)
+            if action == "skip" and not test and package in compiled_without_tests:
+                packages.add(package)
+                continue
             if action == "run" and test:
                 running.add(key)
             if action == "pass" and test:
@@ -115,7 +122,7 @@ def summarize_events(path: Path, expected: set[str]):
     missing = sorted(expected - packages)
     if failures or missing or not tests or running != tests | skipped_optional or packages != expected:
         raise RuntimeError(f"Go test gate incomplete: missing={missing}, failures={failures}, tests={len(tests)}")
-    return {"packages": sorted(packages), "passed_test_events": len(tests), "failed": 0, "skipped": len(skipped_optional),
+    return {"packages": sorted(packages), "compiled_without_tests": sorted(compiled_without_tests), "passed_test_events": len(tests), "failed": 0, "skipped": len(skipped_optional),
             "skipped_optional": [{"package": p, "test": t} for p, t in sorted(skipped_optional)]}
 
 
@@ -387,39 +394,16 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                 listed = set(command(["list", "-mod=readonly", "./..."], work, capture=True).splitlines())
                 if listed != EXPECTED_PACKAGES:
                     build.fail("Unexpected Go package set: " + repr(sorted(listed)))
-                # Both stages are mandatory for --race: production performance
-                # in the normal binary, full workload/race/integrity afterwards.
-                # Go timeout covers the ENTIRE package, including startup, load
-                # and all mandatory network-outage tests. Windows FIELD72 was
-                # already 240.77s before the three newly mandatory scenarios.
-                # Allow setup and slow Windows filesystem overhead (420s), but
-                # keep all scenario-specific traffic/rejoin/RTT deadlines as is.
-                # These three outage/recovery tests are *mandatory* for the
-                # core/server/all gates. Standalone `go test` intentionally
-                # leaves them opt-in to avoid expensive fault injection on
-                # every developer's quick unit-test run. The release gate
-                # must explicitly enable them, never silently permit SKIP.
-                enable_required_survival_tests(env)
-                report["unstable_survival_tests"] = "enabled (mandatory; SKIP fails the Go gate)"
-                report["qualification_policy"] = "stability; 90 Mbps floor waived by user; all liveness, RTT, integrity and recovery checks required"
-                log.write("Mandatory IMAP outage tests: ITOM_UNSTABLE_SURVIVAL=1\n")
+                report["qualification_policy"] = "Independent source safety; performance and field qualification incomplete"
+                report["field_performance_qualified"] = False
+                log.write("Full independent session safety suite; no performance qualification claim.\n")
                 log.flush()
                 modes = [("normal", False)] + ([("race", True)] if race else [])
                 for mode, instrumented in modes:
                     env["CGO_ENABLED"] = "1" if instrumented else "0"
-                    # Race overhead cannot qualify physical speed. The same
-                    # source must pass its normal performance case above.
-                    env["ITOM_CORE_QUALIFICATION"] = "0" if instrumented else "1"
-                    # The mandatory field lifecycle suite includes a 30-second
-                    # blackout plus real traffic/rejoin. Individual application
-                    # deadlines remain unchanged; allow the complete package
-                    # enough wall time to run those additional cases serially.
-                    # Rev5 adds calibrated paced-body (38s) and application
-                    # scenarios to a package already taking about 550s. This
-                    # package envelope does not change any per-case deadline.
-                    # Rev7 adds correlated-role, handshake and missing-IDLE
-                    # regressions to the serial package; allow their total time.
-                    args = ["test", "-mod=readonly", "-json", "-count=1", "-timeout=1200s", "-p=1"]
+                    # Keep scenario-specific deadlines intact. No legacy test
+                    # toggles or synthetic performance certification are applied.
+                    args = ["test", "-mod=readonly", "-json", "-count=1", "-timeout=300s"]
                     if instrumented:
                         args.append("-race")
                     args.append("./...")

@@ -1,4 +1,4 @@
-name: Build session-v2 RC1 experimental field packages
+name: Build session-v2 RC1 experimental field packages and public API restart checks
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]

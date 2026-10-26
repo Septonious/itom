@@ -148,6 +148,21 @@ class CoreGateTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             build_core.summarize_events(self.events(self.success()), {"p", "q"})
 
+    def test_compiled_api_package_is_distinct_from_a_skipped_test(self):
+        compiled = [
+            {"Action": "output", "Package": "api", "Output": "?\tapi\t[no test files]\n"},
+            {"Action": "skip", "Package": "api"},
+        ]
+        result = build_core.summarize_events(self.events(self.success() + compiled), {"p", "api"})
+        self.assertEqual(["api"], result["compiled_without_tests"])
+        self.assertEqual(0, result["skipped"])
+        with self.assertRaises(RuntimeError):
+            build_core.summarize_events(self.events(self.success() + compiled[1:]), {"p", "api"})
+        with self.assertRaises(RuntimeError):
+            build_core.summarize_events(self.events(self.success() + compiled + [
+                {"Action": "skip", "Package": "api", "Test": "TestRequired"}
+            ]), {"p", "api"})
+
     def test_truncated_test_rejected(self):
         with self.assertRaises(RuntimeError):
             build_core.summarize_events(self.events(self.success()[:1]), {"p"})

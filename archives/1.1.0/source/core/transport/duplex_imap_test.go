@@ -26,6 +26,7 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
+	allowClose     func() bool // explicit test-owner shutdown only; never ordinary application service
 	mu             sync.Mutex
 	bodies         [][]byte
 	bytes          int
@@ -142,7 +143,11 @@ func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder stri
 	if m.reclamation {
 		capabilities += " UIDPLUS"
 	}
-	return prepareSelectedAccountPeer(t, account, folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, func(conn net.Conn) {
+	return prepareSelectedAccountPeer(t, account, folder, transport.DefaultIMAPLimits(), capabilities, m.keywords, m.commandScript(t, folder, delays, idle, silent))
+}
+
+func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time.Duration, idle, silent bool) func(net.Conn) {
+	return func(conn net.Conn) {
 		r := bufio.NewReader(conn)
 		turn := 0
 		delay := func() {
@@ -200,7 +205,7 @@ func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder stri
 			}
 			switch fields[1] {
 			case "APPEND":
-				_, body := readAppendLiteral(t, conn, r, line)
+				_, body := readAppendLiteral(t, conn, r, line, m.allowClose)
 				if body == nil {
 					return
 				}
@@ -367,7 +372,7 @@ func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder stri
 				return
 			}
 		}
-	})
+	}
 }
 
 func TestDuplexTLSIMAPKeepsOriginsLedgersAndPeerReceiptsIndependent(t *testing.T) {

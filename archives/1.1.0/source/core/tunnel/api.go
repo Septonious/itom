@@ -58,6 +58,9 @@ func StartClient(ctx context.Context, p servercfg.Profile, dir string, d Dial) (
 	return StartClientWithOptions(ctx, p, dir, d, ClientOptions{})
 }
 func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string, d Dial, o ClientOptions) (*Client, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	plan, template, err := sessionPlan(p)
 	if err != nil {
 		return nil, err
@@ -91,6 +94,14 @@ func (c *Client) Close() error {
 	return c.endpoint.Close()
 }
 func (c *Client) Stats() Stats { return c.Snapshot().Stats }
+func (c *Client) Failure() string {
+	select {
+	case <-c.endpoint.Done():
+		return "V2_TRANSPORT_STOPPED"
+	default:
+		return ""
+	}
+}
 func (c *Client) Snapshot() ClientSnapshot {
 	r := c.endpoint.Service.Runtime.Snapshot()
 	s := ClientSnapshot{SampledAtMS: time.Now().UnixMilli()}
@@ -165,6 +176,9 @@ func Serve(ctx context.Context, c servercfg.Config, dir string, log func(string)
 	return ServeManaged(ctx, c, dir, log, nil)
 }
 func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if err := c.Validate(); err != nil {
 		return err
 	}

@@ -63,8 +63,8 @@ func TestApplicationCopyPreservesReplyAfterUploadHalfClose(t *testing.T) {
 		t.Fatal(e)
 	}
 }
-func TestUnqualifiedReplacementCannotMasqueradeAsARelease(t *testing.T) {
-	if !strings.Contains(Version(), "unqualified") {
-		t.Fatal("first iteration claims qualified version")
+func TestExperimentalCandidateCannotMasqueradeAsStableRelease(t *testing.T) {
+	if !strings.HasSuffix(Version(), "-rc1") {
+		t.Fatal("field candidate must retain its explicit RC identity")
 	}
 }

@@ -22,7 +22,7 @@ func readAppendBody(t *testing.T, conn net.Conn, reader *bufio.Reader) (string, 
 	return readAppendLiteral(t, conn, reader, line)
 }
 
-func readAppendLiteral(t *testing.T, conn net.Conn, reader *bufio.Reader, line string) (string, []byte) {
+func readAppendLiteral(t *testing.T, conn net.Conn, reader *bufio.Reader, line string, allowClose ...func() bool) (string, []byte) {
 	t.Helper()
 	at, end := strings.LastIndex(line, "{"), strings.LastIndex(line, "}")
 	if at < 0 || end <= at {
@@ -37,6 +37,10 @@ func readAppendLiteral(t *testing.T, conn net.Conn, reader *bufio.Reader, line s
 	fmt.Fprint(conn, "+\r\n")
 	body := make([]byte, n+2)
 	if _, err = io.ReadFull(reader, body); err != nil || !bytes.Equal(body[n:], []byte("\r\n")) {
+		if err != nil && len(allowClose) > 0 && allowClose[0] != nil && allowClose[0]() {
+			t.Log("explicit endpoint shutdown interrupted an uncommitted fixture APPEND")
+			return line, nil
+		}
 		t.Error("incomplete APPEND literal", err)
 		return line, nil
 	}

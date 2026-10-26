@@ -261,6 +261,9 @@ func (c *Client) Stats() string {
 		s.TCP = int(c.tcp.Load())
 	}
 	err := ""
+	if c.pool != nil {
+		err = c.pool.Failure()
+	}
 	if e := c.failure.Load(); e != nil {
 		err = *e
 	}
@@ -280,6 +283,9 @@ func (c *Client) Snapshot() string {
 	}
 	snapshot.TCP = int(c.tcp.Load())
 	err := ""
+	if c.pool != nil {
+		err = c.pool.Failure()
+	}
 	if failure := c.failure.Load(); failure != nil {
 		err = *failure
 	}
