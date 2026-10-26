@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.2 server listener lifetime and live Android startup checks
+name: Build session-v2 RC1.2 with delayed-client, timer ownership and live Android startup checks
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]

@@ -178,15 +178,15 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	}
 	ctx, cancel := context.WithCancel(parent)
 	startup := ctx
-	stop := func() {}
 	if o.Client {
 		deadline := time.Now().Add(90 * time.Second)
 		if !o.StartupDeadline.IsZero() && o.StartupDeadline.Before(deadline) {
 			deadline = o.StartupDeadline
 		}
+		var stop context.CancelFunc
 		startup, stop = context.WithDeadline(ctx, deadline)
+		defer stop()
 	}
-	defer func() { stop() }()
 	var anchor *wallet.Wallet
 	var roster *RosterResult
 	defer func() {
@@ -339,7 +339,9 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 						// A listening server may precede the phone indefinitely.
 						// Only an authenticated accepted request starts its bounded
 						// active handshake. Individual IMAP commands stay bounded.
-						startup, stop = context.WithTimeout(ctx, 90*time.Second)
+						activeHandshake, stopHandshake := context.WithTimeout(ctx, 90*time.Second)
+						defer stopHandshake()
+						startup = activeHandshake
 						break
 					}
 				}
