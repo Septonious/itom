@@ -630,8 +630,10 @@ func (s *Store) ScanGrants(after uint64, limit int) ([]Grant, error) {
 		}
 		c := tx.Bucket(grantBucket).Cursor()
 		for k, v := c.Seek(key(after + 1)); k != nil && len(out) < limit; k, v = c.Next() {
-			var g Grant
-			if e := decode(v, &g); e != nil {
+			// Same byte-checked, bounded decode cache used by UsageByOrigin.
+			// A changed committed row is decoded again under this read snapshot.
+			g, e := s.originGrant(k, v)
+			if e != nil {
 				return e
 			}
 			out = append(out, g)

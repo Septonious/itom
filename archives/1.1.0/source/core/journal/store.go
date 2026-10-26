@@ -120,12 +120,12 @@ func OpenCompatible(path string, config Config, alternatives []Config, lockTimeo
 	}
 	profiles := []Config{c}
 	profileBytes := [][]byte{configBytes}
-	if len(alternatives) > 16 {
+	if len(alternatives) > 32 {
 		return nil, ErrConfig
 	}
 	for _, alternative := range alternatives {
 		ac, raw, e := canonicalConfig(alternative)
-		if e != nil || !sameOwners(c, ac) && !sameDataFolderOwners(c, ac) && !sameDataFolderOwners(ac, c) {
+		if e != nil || !sameOwners(c, ac) && !sameDataFolderOwners(c, ac) && !sameDataFolderOwners(ac, c) && !compatibleSessionFolderOwners(c, ac) {
 			return nil, ErrConfig
 		}
 		profiles = append(profiles, ac)

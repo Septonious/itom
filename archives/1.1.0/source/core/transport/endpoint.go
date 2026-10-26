@@ -317,11 +317,10 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 						}
 						continue
 					}
-					limit, e := store.Limit(account, o.Template.Binding.User)
+					allowance, e := endpointAllowance(store, account, o.Template.Binding.User, wire.ID{})
 					if e != nil {
 						return nil, e
 					}
-					allowance := endpointAllowance(ControlLedger, limit)
 					p, e := rendezvous.PrepareRequestedInvitation(startup, flag, allowance, o.Key)
 					if errors.Is(e, journal.ErrState) {
 						if !claimedRequest {
@@ -448,11 +447,31 @@ func endpointPermissionReady(r *RosterResult) bool {
 	return true
 }
 
-// Allowances are bounded shares of the ORIGINAL configured capacity. Refill
-// policy never changes that capacity. Two overlapping grants leave half for
-// local publication, retained historical debt and protocol progress.
-func endpointAllowance(class LedgerClass, limit pool.Amount) pool.Amount {
-	return pool.Amount{Bytes: limit.Bytes / 4, Messages: min(uint64(48), limit.Messages/4)}
+// Two overlapping grants share only the capacity LEFT AFTER historical debt.
+// On a clean store this is the original allowance. Existing sessions' held
+// reservations are never treated as free because a new namespace/wallet exists.
+// Current-session grants are excluded from historical debt so refill does not
+// shrink its target every time it issues a grant. The journal remains the final
+// atomic admission authority; no limit, balance, or old grant is changed here.
+func endpointAllowance(store *journal.Store, account, user string, current wire.ID) (pool.Amount, error) {
+	limit, err := store.Limit(account, user)
+	if err != nil {
+		return pool.Amount{}, err
+	}
+	usage, err := store.UsageByOrigin(account, user, current)
+	if err != nil {
+		return pool.Amount{}, err
+	}
+	bytes := usage.HistoricalLocal.Bytes + usage.HistoricalRemote.Bytes
+	messages := usage.HistoricalLocal.Messages + usage.HistoricalRemote.Messages
+	if bytes >= limit.Bytes || messages >= limit.Messages {
+		return pool.Amount{}, ErrCapacity
+	}
+	allowance := pool.Amount{Bytes: (limit.Bytes - bytes) / 4, Messages: min(uint64(48), (limit.Messages-messages)/4)}
+	if allowance.Bytes == 0 || allowance.Messages == 0 {
+		return pool.Amount{}, ErrCapacity
+	}
+	return allowance, nil
 }
 
 func (s *EndpointSession) run(ctx context.Context, o EndpointOptions, rv *VerifiedRendezvous, request string) {
@@ -552,11 +571,13 @@ func (s *EndpointSession) serverPolicy(ctx context.Context, sequences map[string
 			class LedgerClass
 			store *journal.Store
 		}{{ControlLedger, j.Control}, {DataLedger, j.Data}} {
-			limit, err := entry.store.Limit(account, s.Roster.handoff.origin.User)
+			allowance, err := endpointAllowance(entry.store, account, s.Roster.handoff.origin.User, s.Roster.handoff.epoch.Context().Session)
+			if errors.Is(err, ErrCapacity) {
+				continue
+			}
 			if err != nil {
 				return err
 			}
-			allowance := endpointAllowance(entry.class, limit)
 			grants, err := entry.store.ScanGrants(0, 256)
 			if err != nil {
 				return err

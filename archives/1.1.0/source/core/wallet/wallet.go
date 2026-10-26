@@ -59,6 +59,9 @@ type Wallet struct {
 	fencing          map[wire.QuotaKey]bool
 	admissionChanged chan struct{}
 	oldSessions      map[wire.ID]bool
+	entriesTX        int
+	entriesCached    bool
+	entriesView      []Entry
 }
 
 func key(n uint64) []byte         { b := make([]byte, 8); binary.BigEndian.PutUint64(b, n); return b }
@@ -286,6 +289,7 @@ func (w *Wallet) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.failed = true
+	w.entriesView = nil
 	return w.db.Close()
 }
 func (w *Wallet) write(fn func(*bolt.Tx) error) error { return w.writeAfter(fn, nil) }
@@ -542,18 +546,42 @@ func (w *Wallet) Entries() ([]Entry, error) {
 	if w.failed {
 		return nil, ErrIO
 	}
-	var out []Entry
 	e := w.db.View(func(tx *bolt.Tx) error {
-		return tx.Bucket(grants).ForEach(func(_, v []byte) error {
+		// A committed bbolt transaction is immutable. Reuse only this exact
+		// snapshot, never an estimated grant balance or stale mutable entry.
+		if w.entriesCached && w.entriesTX == tx.ID() {
+			return nil
+		}
+		var view []Entry
+		err := tx.Bucket(grants).ForEach(func(_, v []byte) error {
 			var x Entry
-			if json.Unmarshal(v, &x) != nil {
+			if len(view) >= MaxGrants || json.Unmarshal(v, &x) != nil {
 				return ErrState
 			}
-			out = append(out, x)
+			view = append(view, x)
 			return nil
 		})
+		if err == nil {
+			w.entriesTX, w.entriesCached, w.entriesView = tx.ID(), true, view
+		}
+		return err
 	})
-	return out, e
+	if e != nil {
+		return nil, e
+	}
+	// Callers may retain/edit their detached inspection result. No mutable
+	// Pending slice or descriptor pointer can alias the next policy read.
+	out := append([]Entry(nil), w.entriesView...)
+	for i := range out {
+		out[i].Pending = append([]wire.UsageReport(nil), out[i].Pending...)
+		for j := range out[i].Pending {
+			if a := out[i].Pending[j].Attempt; a != nil {
+				copy := *a
+				out[i].Pending[j].Attempt = &copy
+			}
+		}
+	}
+	return out, nil
 }
 
 // Retirements is a durable outbox. A new process retransmits it after startup

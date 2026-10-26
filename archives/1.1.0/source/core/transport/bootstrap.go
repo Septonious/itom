@@ -21,7 +21,7 @@ type Endpoint struct {
 	// An unbound executor can run protocol checks, not accounted publications.
 	AccountID string
 	TLS       *tls.Config
-	// Only the server profile owner may create an explicitly allowlisted folder.
+	// Only a profile owner may create an explicitly allowlisted folder.
 	CreateMailbox bool
 }
 type Selected struct {
@@ -71,6 +71,10 @@ func DialSelected(ctx context.Context, d NetworkDialer, p Endpoint, l IMAPLimits
 	stage := "CONNECT"
 	defer func() {
 		if err != nil {
+			// Sibling startup cancellation is not a TLS/provider failure.
+			if ctx.Err() != nil {
+				err = errors.Join(err, ctx.Err())
+			}
 			err = &imapStartupError{stage: stage, cause: err}
 		}
 	}()

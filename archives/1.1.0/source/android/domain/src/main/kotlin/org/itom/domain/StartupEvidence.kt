@@ -1,0 +1,24 @@
+package org.itom.domain
+
+import kotlinx.serialization.json.*
+
+enum class StartupOutcome { STARTING, CONNECTED, FAILED, STOPPED }
+
+/** Small, allowlisted evidence survives Stop/process death even with tracing off. */
+fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, sampledAt: Long): JsonObject {
+    val root = TransportDiagnostics.parse(raw).root
+    return buildJsonObject {
+        put("Outcome", outcome.name)
+        put("SampledAtMS", sampledAt.coerceAtLeast(0))
+        root.field("Revision")?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) }?.let { put("Revision", it) }
+        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "READY") }?.let { put("StartupStage", it) }
+        root.field("ConfigHash")?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }?.let { put("ConfigHash", it) }
+        val total = root.field("TotalLines")?.toIntOrNull()?.takeIf { it in 0..4096 }
+        if (total != null) {
+            put("TotalLines", total)
+            root.field("SelectedLines")?.toIntOrNull()?.takeIf { it in 0..total }?.let { put("SelectedLines", it) }
+        }
+        root.field("ElapsedMS")?.toLongOrNull()?.takeIf { it in 0L..3_600_000L }?.let { put("ElapsedMS", it) }
+        if (failure != null) put("StartupFailure", nativeFailureCode(failure))
+    }
+}

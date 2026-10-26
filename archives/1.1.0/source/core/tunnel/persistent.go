@@ -35,6 +35,35 @@ func diskConfig(a servercfg.Account, u servercfg.User, limit pool.Amount, shards
 	return journal.Config{MaxGrants: 256, MaxAttempts: 256, Accounts: []journal.Account{{ID: a.ID, Provider: a.Mail.Host, Limit: limit, Users: []journal.User{{ID: u.ID, Limit: limit, Folders: folders}}}}}
 }
 
+const sessionFolderSuffix = "-session-v2"
+
+func withSessionFolders(c journal.Config, u servercfg.User) journal.Config {
+	c.Accounts = append([]journal.Account(nil), c.Accounts...)
+	for i := range c.Accounts {
+		c.Accounts[i].Users = append([]journal.User(nil), c.Accounts[i].Users...)
+		for j := range c.Accounts[i].Users {
+			c.Accounts[i].Users[j].Folders = append([]string(nil), c.Accounts[i].Users[j].Folders...)
+		}
+	}
+	for i := range c.Accounts {
+		for j := range c.Accounts[i].Users {
+			owner := &c.Accounts[i].Users[j]
+			for _, base := range []string{u.Up, u.Down} {
+				folder, found := base+sessionFolderSuffix, false
+				for _, f := range owner.Folders {
+					if f == folder {
+						found = true
+					}
+				}
+				if !found {
+					owner.Folders = append(owner.Folders, folder)
+				}
+			}
+		}
+	}
+	return c
+}
+
 func openIssuer(root, name string, a servercfg.Account, u servercfg.User) (*journal.Store, error) {
 	if err := os.MkdirAll(root, 0700); err != nil {
 		return nil, err
@@ -52,7 +81,23 @@ func openIssuer(root, name string, a servercfg.Account, u servercfg.User) (*jour
 			}
 		}
 	}
-	return journal.OpenCompatible(filepath.Join(root, name+".db"), diskConfig(a, u, limit, 0), alternatives, time.Second)
+	// Both old and migrated profiles are explicitly allowlisted. Never open a
+	// second ledger or reset historical debt to obtain a clean mail namespace.
+	base := diskConfig(a, u, limit, 0)
+	alternatives = append(alternatives, base)
+	legacy := append([]journal.Config(nil), alternatives...)
+	for _, c := range legacy {
+		alternatives = append(alternatives, withSessionFolders(c, u))
+	}
+	s, err := journal.OpenCompatible(filepath.Join(root, name+".db"), withSessionFolders(diskConfig(a, u, limit, 0), u), alternatives, time.Second)
+	if err != nil {
+		return nil, err
+	}
+	if err = s.ExtendSessionFolders(withSessionFolders(s.Config(), u)); err != nil {
+		s.Close()
+		return nil, err
+	}
+	return s, nil
 }
 
 func MigrateDataProfile(root string, a servercfg.Account, u servercfg.User, profile string) error {
@@ -91,7 +136,7 @@ func sessionPlan(p servercfg.Profile) (transport.RosterPlan, transport.Invitatio
 		if a.Mail.TLS != "tls" {
 			return plan, template, errors.New("V2_TLS_IMAP_REQUIRED")
 		}
-		plan.Accounts = append(plan.Accounts, transport.RosterAccount{Account: a.ID, FastFolder: p.User.Up, BulkFolder: p.User.Down})
+		plan.Accounts = append(plan.Accounts, transport.RosterAccount{Account: a.ID, FastFolder: p.User.Up + sessionFolderSuffix, BulkFolder: p.User.Down + sessionFolderSuffix})
 	}
 	sort.Slice(plan.Accounts, func(i, j int) bool { return plan.Accounts[i].Account < plan.Accounts[j].Account })
 	// Bind account identities/folder selection and shared budgets, never keys,
@@ -135,10 +180,15 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 		err   error
 	}
 	results := make(chan opened, len(plan.Accounts))
+	var firstFailure error
+	var failOnce sync.Once
 	var wg sync.WaitGroup
 	for range min(p.Transport.Effective().LoginParallelism, len(plan.Accounts)) {
 		wg.Go(func() {
 			for a := range jobs {
+				if ctx.Err() != nil {
+					break
+				}
 				var lanes []transport.RosterLane
 				open := func(folder string) (*transport.Executor, error) {
 					role := "retained"
@@ -158,7 +208,10 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 					if account.Mail.DialIP != "" {
 						host = account.Mail.DialIP
 					}
-					selected, e := transport.DialSelected(ctx, d, transport.Endpoint{Address: net.JoinHostPort(host, strconv.Itoa(account.Mail.Port)), ServerName: account.Mail.Host, Username: account.Mail.Username, Password: account.Mail.Password, Mailbox: folder, AccountID: a.Account, TLS: tlsConfig, CreateMailbox: server}, transport.DefaultIMAPLimits())
+					// Both endpoints may idempotently create their exact profile-owned
+					// v2 folder. Otherwise the phone racing first server startup fails
+					// SELECT before the server can create it. No APPEND/grant is issued.
+					selected, e := transport.DialSelected(ctx, d, transport.Endpoint{Address: net.JoinHostPort(host, strconv.Itoa(account.Mail.Port)), ServerName: account.Mail.Host, Username: account.Mail.Username, Password: account.Mail.Password, Mailbox: folder, AccountID: a.Account, TLS: tlsConfig, CreateMailbox: folder == a.FastFolder || folder == a.BulkFolder}, transport.DefaultIMAPLimits())
 					if e != nil {
 						note("imap_"+transport.IMAPStartupStage(e), e, false, false)
 						return nil, e
@@ -177,20 +230,12 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 				}
 				var failure error
 				if server {
-					// Scan every retained configured folder before opening the two runtime
-					// sockets. This keeps the same per-account socket budget throughout.
-					folders := map[string]bool{}
+					// Inventory only this version's physical namespace. Old folders
+					// and all original journal debt remain untouched and charged;
+					// their incompatible control packets are never v2 input/proof.
+					folders := []string{a.FastFolder, a.BulkFolder}
 					j := byJournal[a.Account]
-					for _, s := range []*journal.Store{j.Control, j.Data} {
-						for _, account := range s.Config().Accounts {
-							for _, u := range account.Users {
-								for _, f := range u.Folders {
-									folders[f] = true
-								}
-							}
-						}
-					}
-					for folder := range folders {
+					for _, folder := range folders {
 						x, e := open(folder)
 						if e != nil {
 							failure = e
@@ -232,7 +277,7 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 					}
 				}
 				if failure != nil {
-					cancel()
+					failOnce.Do(func() { firstFailure = failure; cancel() })
 				}
 				results <- opened{lanes, failure}
 			}
@@ -243,7 +288,10 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 	var lanes []transport.RosterLane
 	for r := range results {
 		lanes = append(lanes, r.lanes...)
-		err = errors.Join(err, r.err)
+	}
+	err = firstFailure
+	if err == nil {
+		err = ctx.Err()
 	}
 	if err != nil {
 		for _, l := range lanes {

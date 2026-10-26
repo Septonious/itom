@@ -35,7 +35,7 @@ const (
 	MaxDecoded        = 1 << 20
 	MaxEncoded        = 2 << 20
 	maxValue          = 4096
-	MaxFoldersPerUser = 10 // two legacy/control folders plus four DATA shards each way
+	MaxFoldersPerUser = 12 // legacy/control + four DATA shards each way + two isolated session-v2 folders
 )
 
 type User struct {

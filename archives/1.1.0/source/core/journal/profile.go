@@ -124,6 +124,90 @@ func (s *Store) ExtendDataFolders(next Config) error {
 	})
 }
 
+// ExtendSessionFolders adds only the two version-scoped children of existing
+// base folders. It is offline and capacity-neutral. Old folders, identities,
+// grants and uncertain APPENDs are retained in the SAME ledger transaction.
+func (s *Store) ExtendSessionFolders(next Config) error {
+	return s.migrateConfig(next, func(a, b Config) bool {
+		if !sameSessionFolderOwners(a, b) {
+			return false
+		}
+		for i, x := range a.Accounts {
+			if x.Limit != b.Accounts[i].Limit {
+				return false
+			}
+			for j, u := range x.Users {
+				if u.Limit != b.Accounts[i].Users[j].Limit {
+					return false
+				}
+			}
+		}
+		return true
+	})
+}
+
+// Return a detached canonical profile with only verified namespace children
+// removed. A shard, nested suffix, or missing base is never a valid root.
+func withoutSessionFolders(c Config) (Config, bool) {
+	out, _, err := canonicalConfig(c)
+	if err != nil {
+		return Config{}, false
+	}
+	for i := range out.Accounts {
+		for j := range out.Accounts[i].Users {
+			u := &out.Accounts[i].Users[j]
+			owned := map[string]bool{}
+			for _, f := range u.Folders {
+				owned[f] = true
+			}
+			var folders []string
+			for _, f := range u.Folders {
+				if strings.HasSuffix(f, "-session-v2") {
+					base := strings.TrimSuffix(f, "-session-v2")
+					if !owned[base] || dataShardFolder(base) || strings.HasSuffix(base, "-session-v2") {
+						return Config{}, false
+					}
+				} else {
+					folders = append(folders, f)
+				}
+			}
+			u.Folders = folders
+		}
+	}
+	return out, true
+}
+
+func sameSessionFolderOwners(a, b Config) bool {
+	x, ok := withoutSessionFolders(a)
+	y, nextOK := withoutSessionFolders(b)
+	if !ok || !nextOK || !sameOwners(x, y) {
+		return false
+	}
+	for i, account := range a.Accounts {
+		for j, u := range account.Users {
+			next := map[string]bool{}
+			for _, f := range b.Accounts[i].Users[j].Folders {
+				next[f] = true
+			}
+			for _, f := range u.Folders {
+				if !next[f] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+// Explicit profiles may differ in legacy shard count and session children.
+// This only validates caller-supplied allowlists; Open still matches saved
+// configuration bytes exactly and never silently changes a saved capacity.
+func compatibleSessionFolderOwners(a, b Config) bool {
+	x, ok := withoutSessionFolders(a)
+	y, nextOK := withoutSessionFolders(b)
+	return ok && nextOK && (sameOwners(x, y) || sameDataFolderOwners(x, y) || sameDataFolderOwners(y, x))
+}
+
 func dataShardFolder(folder string) bool {
 	if len(folder) < 8 || folder[len(folder)-8:len(folder)-2] != "-data-" {
 		return false

@@ -119,7 +119,7 @@ import org.itom.domain.*
             Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Logs and tracing", style = MaterialTheme.typography.titleMedium)
-                    SmallNote(if (config.settings.diagnosticsEnabled) "Recording transport events." else "Tracing is off. Current account metrics remain available.")
+                    SmallNote(if (config.settings.diagnosticsEnabled) "Recording transport events." else "Tracing is off. The last connection attempt is still saved for diagnostics.")
                 }
                 ItomSwitch(config.settings.diagnosticsEnabled, onDiagnosticsChanged)
             }

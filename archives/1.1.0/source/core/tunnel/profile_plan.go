@@ -90,17 +90,13 @@ func PlanProfileService(p servercfg.Profile, bindings []AccountJournals, client,
 		if !ok {
 			return ProfileServicePlan{}, ErrProfileService
 		}
-		// The new fast path requires DATA and CONTROL on the same existing folder.
-		// Never add a folder or fall back to an unauthorized legacy mailbox here.
-		fast := p.User.Up
+		// Planning accepts only already-migrated, isolated session folders.
+		// The offline journal owner adds them; this read-only planner cannot.
+		fast := p.User.Up + sessionFolderSuffix
 		if !control[fast] || !data[fast] {
 			return ProfileServicePlan{}, ErrProfileService
 		}
-		bulk := p.User.Down
-		shard := bulk + "-data-00"
-		if t.Layout == "split" || t.Layout == "auto" && data[shard] {
-			bulk = shard
-		}
+		bulk := p.User.Down + sessionFolderSuffix
 		if bulk == fast || !data[bulk] {
 			return ProfileServicePlan{}, ErrProfileService
 		}

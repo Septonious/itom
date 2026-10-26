@@ -66,7 +66,7 @@ func profile(t *testing.T, accounts int) servercfg.Profile {
 	return p
 }
 func folders(p servercfg.Profile) []string {
-	out := []string{p.User.Up, p.User.Down}
+	out := []string{p.User.Up, p.User.Down, p.User.Up + "-session-v2", p.User.Down + "-session-v2"}
 	for _, base := range []string{p.User.Up, p.User.Down} {
 		for n := range 4 {
 			out = append(out, fmt.Sprintf("%s-data-%02d", base, n))
@@ -93,7 +93,7 @@ func bindings(t *testing.T, p servercfg.Profile) []tunnel.AccountJournals {
 	var out []tunnel.AccountJournals
 	for _, a := range p.Accounts {
 		dir := filepath.Join(t.TempDir(), a.ID, p.User.ID)
-		out = append(out, tunnel.AccountJournals{Account: a.ID, Control: store(t, p, a.ID, dir+"-control.db", []string{p.User.Up, p.User.Down}), Data: store(t, p, a.ID, dir+"-data.db", folders(p))})
+		out = append(out, tunnel.AccountJournals{Account: a.ID, Control: store(t, p, a.ID, dir+"-control.db", []string{p.User.Up, p.User.Down, p.User.Up + "-session-v2", p.User.Down + "-session-v2"}), Data: store(t, p, a.ID, dir+"-data.db", folders(p))})
 	}
 	return out
 }
@@ -117,7 +117,7 @@ func TestProfilePlanUsesOriginalPerAccountIssuersAndAllTenRetainedFolders(t *tes
 	}
 	seen := map[wire.ID]bool{}
 	for _, a := range plan.Accounts {
-		if a.FastFolder != p.User.Up || a.BulkFolder != p.User.Down+"-data-00" || len(a.InventoryFolders) != journal.MaxFoldersPerUser {
+		if a.FastFolder != p.User.Up+"-session-v2" || a.BulkFolder != p.User.Down+"-session-v2" || len(a.InventoryFolders) != journal.MaxFoldersPerUser {
 			t.Fatal("legacy folder coverage lost", a)
 		}
 		if seen[a.ControlStore] || seen[a.DataStore] || a.ControlStore == a.DataStore {
@@ -162,7 +162,7 @@ func TestProfilePlanRejectsMissingScopeSharedLoginOvercommitAndFolderOverflow(t 
 		})
 	}
 	overflow := append([]tunnel.AccountJournals(nil), b...)
-	overflow[0].Control = store(t, p, p.Accounts[0].ID, filepath.Join(t.TempDir(), "other-control.db"), []string{p.User.Up, p.User.Down, "itom-extra-retained"})
+	overflow[0].Control = store(t, p, p.Accounts[0].ID, filepath.Join(t.TempDir(), "other-control.db"), []string{p.User.Up, p.User.Down, p.User.Up + "-session-v2", p.User.Down + "-session-v2", "itom-extra-retained"})
 	if _, err := tunnel.PlanProfileService(p, overflow, client, server); !errors.Is(err, tunnel.ErrProfileCapacity) {
 		t.Fatal("combined retained folder limit bypassed", err)
 	}

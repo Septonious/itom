@@ -67,6 +67,7 @@ class ItomVpnService : VpnService() {
     }
     fun requestStop(expected: Long) {
         if (backend.snapshot.value.generation != expected) return
+        backend.recordStartup(expected, "{}", StartupOutcome.STOPPED)
         backend.machine.stop(expected)
         running?.cancel()
         scope.launch { lifecycle.withLock { }
@@ -181,7 +182,6 @@ class ItomVpnService : VpnService() {
             val dns = underlyingDNS()
             val config = backend.vault.runtime(profileId, revision, dns)
             diagnosticsEnabled = config.settings.diagnosticsEnabled
-            if (!diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = "{}"
             val router = Router(config.settings.routing)
             val host = object : Host {
                 override fun startup(snapshot: String): Boolean = callbacks.call("UNDERLYING_NETWORK_FAILED", false) {
@@ -189,6 +189,7 @@ class ItomVpnService : VpnService() {
                     val now = SystemClock.elapsedRealtime()
                     backend.machine.sample(g, Metrics(totalLines = config.profile.totalLines), snapshot, now)
                     if (diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = snapshot
+                    backend.recordStartup(g, snapshot)
                     true
                 }
                 override fun dns(): String = callbacks.call("UNDERLYING_NETWORK_FAILED", "[]") { org.json.JSONArray(underlyingDNS()).toString() }
@@ -254,7 +255,7 @@ class ItomVpnService : VpnService() {
                 val active = stats.getInt("ActiveLines")
                 if (active > 0) {
                     lastHealthy = now
-                    backend.machine.connected(g, now, interfaceUp = true)
+                    if (backend.machine.connected(g, now, interfaceUp = true)) backend.recordStartup(g, snapshot, StartupOutcome.CONNECTED)
                 } else if (now - lastHealthy > 90_000) throw DomainError("TRANSPORT_TIMEOUT")
                 val down = stats.getLong("Download"); val up = stats.getLong("Upload")
                 val elapsed = (now - previous).coerceAtLeast(1)
@@ -296,6 +297,8 @@ class ItomVpnService : VpnService() {
                             .put("SampledAtMS", System.currentTimeMillis()).toString()
                     }
                 }
+                val last = TransportDiagnostics.parse(backend.diagnosticState.value).root.objectField("LastStartup")?.toString() ?: "{}"
+                backend.recordStartup(g, last, if (failure == null) StartupOutcome.STOPPED else StartupOutcome.FAILED, failure)
                 runCatching { networkEvent("session_stop", null) }
                 traceClient.set(null)
                 if (backend.snapshot.value.generation == g) { backend.adminClient = null; backend.adminState.value = "{}" }
