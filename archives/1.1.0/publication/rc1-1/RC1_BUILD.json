@@ -1,0 +1,61 @@
+{
+  "release": "ITOM 1.1.0 RC1.1",
+  "source_commit": "1a93e8abcaee56d10720543fdcd3e2d36c2e6d8d",
+  "build_run_id": 40296630349,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40296630349",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 254,
+    "native_race_groups_passed": 11,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 87,
+    "android_adapter_tests": 7,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1,
+    "public_client_server_entrypoint_TLS_and_VPN_restart": "passed"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10112,
+    "version_name": "1.1.0-rc1.1-debug"
+  },
+  "source_ci_apk_sha256": "8ca7a1e184f84ba3f2ab4195a5db4a529af947ec40a5de6e81978b3d90b9500d",
+  "signed_apk_sha256": "409d07176ffcf4e776c2fbd9b5d9f78dd7048d829a99569e9a7e2830fdf61e04",
+  "signed_apk_bytes": 54137172,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "1b0307905c232e2094293bb2f7583dadf9360a6570fe29ef966d01932e2618c5",
+    "lib/armeabi-v7a/libgojni.so": "595e9302fd41d4c4fd4c78396892b8e1ba7c016200085c20d6dc737306cfabe8"
+  },
+  "native_source_sha256sums": "4148eb5e6d6b17ea1ca7348eb20a3e8b672a88bd86a808af32fb473b0adb6dac  ITOM-1.1.0-RC1.1-linux-amd64.bin\n557a8807b9dbf641cab0e5e3e9bbf105fcd0943253c4919195c43567caf7c79a  ITOM-1.1.0-RC1.1-linux-arm64.bin\nebba30e011f77649e4e29a94c5f8a5071075c8274e850a4d68502282de5cf537  ITOM-1.1.0-RC1.1-sources.zip\n",
+  "publication_requires_independent_matching_linux_rebuild": true,
+  "source_manifest_files": 685,
+  "source_manifest_sha256": "ddc683967e636882e57aca29ae363fefa0612efcf9a4c28f3444d5dd0c6fa4ba",
+  "current_limits": {
+    "temporary_idle_light_ms": 300,
+    "preferred_idle_light_ms": 250,
+    "loaded_ms": 2000,
+    "target_sustained_mbps_per_direction": 100,
+    "per_stream_receive_window_bytes": 262144,
+    "selected_lines_per_endpoint_on_ten_accounts": 20
+  },
+  "changes": [
+    "Adapt the known itom-android runtime discriminator to the core canonical profile at the native boundary; all other validation remains strict",
+    "Expose bounded startup phase errors without provider or private filesystem details",
+    "Export failed-start diagnostics even if no native client was returned"
+  ],
+  "wire_and_accounting_formats_changed": false,
+  "RC1_server_compatible": true,
+  "reproduced_before_fix": "Real native New with Android-format runtime rejected before network as SERVER_CONFIG; canonical CLI format reached network",
+  "retained_failures": {
+    "local_core": "253/254 passed; TestDistinctAccountRosterServiceCarriesTLSHTTPWithoutFlatteningTwentyOriginalIssuers missed its original deadline; retained in RC1.1-local-evidence.zip",
+    "initial_native_revision_guard": "Expected dotted RC suffix instead of embedded hyphenated revision; corrected without runtime change; original failure retained",
+    "hosted_linux_export": "Both binaries and source archive built; copying misnamed release notes failed. Notes renamed, and publication rebuilds and verifies Linux outputs independently against local hashes.",
+    "historical_RTT_and_throughput": "RC1 numerical RTT cohorts and sustained 100Mbps remain unqualified; no fresh RC2 comparison or live Rambler/device pass claimed"
+  },
+  "persistent_state_notes": "Update APK in place. Keep original server journals and client wallets. No data reset needed."
+}
