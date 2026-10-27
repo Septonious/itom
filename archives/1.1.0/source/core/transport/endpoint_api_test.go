@@ -613,9 +613,18 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		if !strings.Contains(client.Diagnostics(), tunnel.TransportRevision) || strings.Contains(client.Diagnostics(), p.User.Key) {
 			t.Fatal("diagnostics missing identity or exposed key")
 		}
-		trace, err := os.ReadFile(filepath.Join(root, "server-state", "transport-trace.jsonl"))
-		if err != nil || !bytes.Contains(trace, []byte(`"Stage":"rendezvous"`)) || !bytes.Contains(trace, []byte(`"Stage":"imap_selected"`)) {
-			t.Fatal("production server did not record real startup stages", err)
+		var trace []byte
+		// The full field topology can legitimately rotate the bounded trace.
+		// Check retained evidence, not just whichever file is currently active.
+		for _, suffix := range []string{".2", ".1", ""} {
+			raw, e := os.ReadFile(filepath.Join(root, "server-state", "transport-trace.jsonl"+suffix))
+			if e != nil && !os.IsNotExist(e) {
+				t.Fatal("reading rotated server trace", e)
+			}
+			trace = append(trace, raw...)
+		}
+		if !bytes.Contains(trace, []byte(`"Stage":"rendezvous"`)) || !bytes.Contains(trace, []byte(`"Stage":"imap_selected"`)) {
+			t.Fatal("production server did not retain real startup stages")
 		}
 		if bytes.Contains(trace, []byte(p.User.Key)) || bytes.Contains(trace, []byte("fixture-only")) {
 			t.Fatal("server trace exposed private input")
