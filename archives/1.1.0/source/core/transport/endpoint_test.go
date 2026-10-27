@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"net/netip"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -23,6 +24,8 @@ import (
 func TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
+	var stopping atomic.Bool
+	defer stopping.Store(true)
 	key := bytes.Repeat([]byte{17}, 32)
 	template := transport.InvitationTemplate{Binding: secure.Binding{Server: wire.ID{1}, Pair: wire.ID{2}, User: "12345678", Epoch: 1, ConfigHash: [32]byte{5}}, Generation: 7}
 	plan := transport.RosterPlan{ClientBudget: transport.RuntimeBudget{Connections: 4, PerAccount: 2}, ServerBudget: transport.RuntimeBudget{Connections: 4, PerAccount: 2}}
@@ -46,7 +49,7 @@ func TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP(t *t
 			plane  transport.Plane
 			folder string
 		}{{transport.Fast, "fast"}, {transport.Bulk, "bulk"}} {
-			box := &sharedMailbox{keywords: true, reclamation: true}
+			box := &sharedMailbox{keywords: true, reclamation: true, allowClose: stopping.Load}
 			cx := box.selectedAccountService(t, account, l.folder, nil, true, false)
 			sx := box.selectedAccountService(t, account, l.folder, nil, true, false)
 			t.Cleanup(func() { cx.Close(); sx.Close() })
@@ -96,8 +99,13 @@ func TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP(t *t
 			s = r.s
 		}
 	}
-	defer c.Close()
-	defer s.Close()
+	defer func() {
+		// User shutdown can interrupt an uncommitted control APPEND. Only this
+		// explicit endpoint close permits EOF; all 80 actual transfers stay strict.
+		stopping.Store(true)
+		s.Close()
+		c.Close()
+	}()
 	roots := x509.NewCertPool()
 	roots.AddCert(upstream.Certificate())
 	tr := &http.Transport{DialContext: c.Service.Dialer.DialContext, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 1500 * time.Millisecond, ResponseHeaderTimeout: 1500 * time.Millisecond}

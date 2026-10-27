@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.7 with selected-mailbox standby service and retained close causes and rotated-trace coverage
+name: Build session-v2 RC1.7 with selected-mailbox standby service and retained close causes and explicit shutdown coverage
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
