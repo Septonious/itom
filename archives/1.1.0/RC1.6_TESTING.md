@@ -27,7 +27,7 @@ alone do not install a new download. Confirm fresh events identify
   OPEN time is excluded from the echo sample. Failed or mismatched echoes are
   not RTT samples. Probes do not change congestion policy or refill quota.
 * With tracing enabled, the client records runtime/flow/receipt/publication
-  state every two seconds and on close. The connected diagnostic export includes
+  state every two seconds and on close. With tracing enabled, the connected diagnostic export includes
   the full native state, open attempts/failures/timeouts, DNS failures and the
   existing session DNS-fallback latch. No destinations, query contents,
   credentials or traffic payloads are added to these diagnostics.
