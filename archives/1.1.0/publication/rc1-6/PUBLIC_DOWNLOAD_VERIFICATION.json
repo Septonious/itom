@@ -1,0 +1,21 @@
+{
+  "apk": {
+    "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.6/ITOM-1.1.0-RC1.6.apk",
+    "status": 200,
+    "bytes": 54350164,
+    "sha256": "ed88ace89fa5632c344724e29a1857083e7a21a92f2a1b370111c66c458fb4e7",
+    "full_download_verified": true
+  },
+  "amd64": {
+    "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.6/ITOM-1.1.0-RC1.6-linux-amd64.bin",
+    "status": 200,
+    "bytes": 13717804,
+    "method": "HEAD"
+  },
+  "arm64": {
+    "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.6/ITOM-1.1.0-RC1.6-linux-arm64.bin",
+    "status": 200,
+    "bytes": 12565695,
+    "method": "HEAD"
+  }
+}
