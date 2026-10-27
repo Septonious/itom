@@ -169,8 +169,13 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	o.Plan = plan
 	account := plan.Accounts[0].Account
 	var x *Executor
+	seen := map[*Executor]bool{}
 	for _, l := range o.Lanes {
-		if l.Executor != nil && l.Executor.account == account && l.Plane == Fast {
+		if l.Executor == nil || seen[l.Executor] {
+			return nil, ErrProtocol
+		}
+		seen[l.Executor] = true
+		if l.Executor.account == account && l.Plane == Fast {
 			x = l.Executor
 		}
 	}
@@ -189,8 +194,11 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 		defer stop()
 	}
 	var anchor *wallet.Wallet
+	var standby = startStandby(ctx, cancel, o.Lanes, x)
 	var roster *RosterResult
 	defer func() {
+		standby.requestStop()
+		standbyFailure := standby.failure()
 		if result == nil {
 			cancel()
 			for _, l := range o.Lanes {
@@ -204,6 +212,10 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			if anchor != nil {
 				anchor.Close()
 			}
+		}
+		<-standby.done
+		if result == nil && parent.Err() == nil && standbyFailure != nil {
+			err = standbyFailure
 		}
 	}()
 	var owner *SessionBootstrap
@@ -408,6 +420,9 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	if err != nil {
 		rd.Close()
 		return nil, fmt.Errorf("roster: %w", err)
+	}
+	if err = standby.stop(startup); err != nil {
+		return nil, err
 	}
 	session, err := NewSession(o.Template.Generation, DefaultLimits())
 	if err != nil {

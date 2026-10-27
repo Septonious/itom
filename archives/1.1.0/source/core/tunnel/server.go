@@ -143,6 +143,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 				SampledAtMS                 int64
 				Carriers                    []transport.ExecutorSnapshot
 			}{TransportRevision, code, binding, time.Now().UnixMilli(), imap})
+			_ = trace.record(json.RawMessage(raw))
 			_ = trace.snapshot(p.User.ID, raw)
 		}
 		endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Template: template, Plan: plan, Lanes: lanes, Journals: journals, Key: key, Service: options, Stage: stage})

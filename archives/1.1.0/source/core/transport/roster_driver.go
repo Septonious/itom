@@ -214,7 +214,10 @@ func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte)
 	}()
 	for _, l := range lanes {
 		x := l.Executor
-		if x.closed != nil || x.bootstrapOwner || x.publicationOwner || x.inboxOwner || len(x.pending) != 0 {
+		if x.closed != nil {
+			return nil, selectedLaneError(l)
+		}
+		if x.bootstrapOwner || x.publicationOwner || x.inboxOwner || !x.onlyStandbyPendingLocked() {
 			return nil, ErrProtocol
 		}
 	}

@@ -114,7 +114,12 @@ func TestSelectedLinesAndControlPermissionCannotReportReadyWhenDataPathIsBlackho
 	testPublicEndpoints(t, publicEndpointCase{dataBlackhole: true, keywordBytes: 32})
 }
 
+func TestStandingServerKeepsSelectedMailboxesAliveBeforePhoneArrives(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{clientDelay: 25 * time.Second, idleTimeout: 20 * time.Second, accounts: 3, keywordBytes: 32})
+}
+
 type publicEndpointCase struct {
+	idleTimeout                        time.Duration
 	dataBlackhole                      bool
 	native                             bool
 	clientDelay                        time.Duration
@@ -179,7 +184,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes, hideServerData: scenario.dataBlackhole}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes, hideServerData: scenario.dataBlackhole, idleTimeout: scenario.idleTimeout}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -214,7 +219,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		username := fmt.Sprintf("fixture-%02d", n)
 		clone := map[string]*sharedMailbox{}
 		for folder, box := range boxes {
-			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes}
+			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes, idleTimeout: box.idleTimeout}
 		}
 		providerBoxes[username] = clone
 	}

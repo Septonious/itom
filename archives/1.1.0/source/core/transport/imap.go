@@ -34,6 +34,7 @@ type Result struct {
 	Err    error
 }
 type operation struct {
+	standby      bool        // immutable private NOOP ownership marker
 	watchdog     *time.Timer // stopped under Executor.mu on every terminal path
 	fetchTurn    *fetchRequest
 	class        commandClass
@@ -101,6 +102,7 @@ type Executor struct {
 	fetchPairs       uint64
 	fetchWaiters     int
 	closed           error
+	closeReason      string // fixed diagnostic code; never provider text
 	done             chan struct{}
 	changes          chan struct{}
 	sequenceVersion  uint64
@@ -151,14 +153,16 @@ func (e *Executor) SequenceVersion() uint64 {
 	defer e.mu.Unlock()
 	return e.sequenceVersion
 }
-func (e *Executor) Close() error { e.fail(ErrClosed); return nil }
-func (e *Executor) fail(err error) {
+func (e *Executor) Close() error   { e.failReason(ErrClosed, "owner_closed"); return nil }
+func (e *Executor) fail(err error) { e.failReason(err, serviceFailure(err)) }
+func (e *Executor) failReason(err error, reason string) {
 	e.mu.Lock()
 	if e.closed != nil {
 		e.mu.Unlock()
 		return
 	}
 	e.closed = err
+	e.closeReason = reason
 	for _, op := range e.pending {
 		e.releaseFetchTurnLocked(op)
 		op.result.Err = err
@@ -242,6 +246,7 @@ func (e *Executor) expire(op *operation) {
 		return
 	}
 	e.closed = ErrUnknown
+	e.closeReason = "command_timeout"
 	for _, pending := range e.pending {
 		e.releaseFetchTurnLocked(pending)
 		pending.result.Err = ErrUnknown
@@ -311,7 +316,7 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 		literalCount = fmt.Sprintf("{%d+}", len(body))
 	}
 	if err = e.write([]byte(fmt.Sprintf("%s APPEND %s %s\r\n", tag, name, literalCount))); err != nil {
-		e.fail(ErrUnknown)
+		e.failReason(ErrUnknown, "write_failed")
 		return cmd, ErrUnknown
 	}
 	if !nonSync {
@@ -331,7 +336,7 @@ func (e *Executor) Append(ctx context.Context, mailbox string, body []byte) (*Co
 	e.timing[commandAppend].LiteralWrite.observe(time.Since(literalBegin))
 	e.mu.Unlock()
 	if err != nil {
-		e.fail(ErrUnknown)
+		e.failReason(ErrUnknown, "write_failed")
 		return cmd, ErrUnknown
 	}
 	e.mu.Lock()
@@ -393,12 +398,13 @@ func (e *Executor) fetchRange(ctx context.Context, first, last uint32, metadata,
 	}
 	command := fmt.Sprintf("%s UID FETCH %d:%d (%s)\r\n", tag, first, last, items)
 	if err = e.write([]byte(command)); err != nil {
-		e.fail(ErrUnknown)
+		e.failReason(ErrUnknown, "write_failed")
 		return &Command{op}, ErrUnknown
 	}
 	return &Command{op}, nil
 }
-func (e *Executor) Noop(ctx context.Context) (*Command, error) {
+func (e *Executor) Noop(ctx context.Context) (*Command, error) { return e.noop(ctx, false) }
+func (e *Executor) noop(ctx context.Context, standby bool) (*Command, error) {
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
 	}
@@ -406,12 +412,12 @@ func (e *Executor) Noop(ctx context.Context) (*Command, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	tag, op, err := e.begin(commandNoop, false, false)
+	tag, op, err := e.beginOperation(&operation{class: commandNoop, standby: standby}, false)
 	if err != nil {
 		return nil, err
 	}
 	if err = e.write([]byte(tag + " NOOP\r\n")); err != nil {
-		e.fail(ErrUnknown)
+		e.failReason(ErrUnknown, "write_failed")
 		return &Command{op}, ErrUnknown
 	}
 	return &Command{op}, nil
@@ -436,7 +442,11 @@ func (e *Executor) readLoop() {
 	for {
 		line, err := e.line()
 		if err != nil {
-			e.fail(ErrUnknown)
+			reason := "read_failed"
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+				reason = "peer_eof"
+			}
+			e.failReason(ErrUnknown, reason)
 			return
 		}
 		e.mu.Lock()
@@ -498,7 +508,7 @@ func (e *Executor) readLoop() {
 				}
 			}
 			if strings.EqualFold(fields[1], "BYE") {
-				e.fail(ErrUnknown)
+				e.failReason(ErrUnknown, "provider_bye")
 				return
 			}
 			if len(fields) >= 3 && strings.EqualFold(fields[2], "FETCH") {

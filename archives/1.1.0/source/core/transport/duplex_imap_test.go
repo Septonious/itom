@@ -26,6 +26,7 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
+	idleTimeout     time.Duration       // explicit provider inactivity lease; client/server sockets stay separate
 	hideServerData  bool                // explicit negative fixture: accepted server DATA never becomes visible
 	flagCase        func(string) string // provider-equivalent, case-insensitive keyword spelling
 	rejectRequests  bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
@@ -163,6 +164,9 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 			}
 		}
 		for {
+			if m.idleTimeout > 0 {
+				conn.SetReadDeadline(time.Now().Add(m.idleTimeout))
+			}
 			if _, err := r.Peek(1); err != nil {
 				return // executor closed by fixture owner
 			}

@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.7 with selected-mailbox standby service and preserved failure causes
+name: Build session-v2 RC1.7 with selected-mailbox standby service and retained carrier close causes
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]

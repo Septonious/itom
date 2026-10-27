@@ -60,6 +60,7 @@ type ExecutorSnapshot struct {
 	KeywordsSupported    bool          `json:"keywords_supported"`
 	IdleSupported        bool          `json:"idle_supported"`
 	Failure              string        `json:"failure,omitempty"`
+	CloseReason          string        `json:"close_reason,omitempty"`
 	CapacityRefusals     uint64        `json:"capacity_refusals"`
 	WriterWait           TimingSummary `json:"writer_wait"`
 	Append               CommandTiming `json:"append"`
@@ -83,6 +84,7 @@ func (e *Executor) Snapshot() ExecutorSnapshot {
 		Append: e.timing[commandAppend], Fetch: e.timing[commandBody], Inventory: e.timing[commandInventory], Noop: e.timing[commandNoop], Idle: e.timing[commandIdle], Flags: e.timing[commandFlags], Store: e.timing[commandStore], Expunge: e.timing[commandExpunge]}
 	if e.closed != nil {
 		s.Failure = serviceFailure(e.closed)
+		s.CloseReason = e.closeReason
 	} else {
 		s.FetchActive, s.FlagsFetchActive, s.LiteralActive, s.IdleActive = e.fetch != nil || e.flagFetch != nil, e.flagFetch != nil, e.literal != nil, e.idle != nil
 	}
