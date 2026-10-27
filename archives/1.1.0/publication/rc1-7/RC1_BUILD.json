@@ -1,0 +1,194 @@
+{
+  "release": "ITOM 1.1.0 RC1.7",
+  "purpose": "selected-mailbox standby service, drained handoff and preserved fixed carrier close diagnostics",
+  "source_commit": "47b5a59c3eb4901bd886542af3468de7ef6ba052",
+  "build_run_id": 40552885766,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40552885766",
+  "reproduced_idle_expiry_startup_bug_fixed": true,
+  "exact_field_provider_close_cause_confirmed": false,
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 285,
+    "native_race_groups_passed": 14,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 93,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10118,
+    "version_name": "1.1.0-rc1.7-debug"
+  },
+  "source_ci_apk_sha256": "48c018393b2f364276f48b2361f0a3cbd2d45faf84afe12f3e1421421e0ac25c",
+  "signed_apk_sha256": "45cdbd23427909ad6947df5c21254e4e4e2eeb29209d0ebc736a84e805cb0624",
+  "signed_apk_bytes": 54382932,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "5e1563118f05cf209b9d1ba616715b5f19c269e96084c19c9f24a2340caccb11",
+    "lib/armeabi-v7a/libgojni.so": "32eed204c47d36c37c32ab52ff455add6cf4eb939fa3b7435ab30712b59b6b98"
+  },
+  "native_source_sha256sums": "06b02b31f15fa151bd669ee2fec152b9265454e2a8d223c5e9fcd66a532ee56e  ITOM-1.1.0-RC1.7-linux-amd64.bin\n969f8036b40072046886340150e1fca49c0bab8b1c6c94d9f314333658f4e18c  ITOM-1.1.0-RC1.7-linux-arm64.bin\nab8175903d4cb6e661e1a2f4c8928bed009716f3ed8a2f8a6411e6511a92daf1  ITOM-1.1.0-RC1.7-sources.zip\n",
+  "source_manifest_files": 708,
+  "source_manifest_sha256": "8be07db8aa9e3a5fb6f9e9d5555f8b773b393deef3a2da3aeea93d006636ac49",
+  "matching_endpoints_notes": "Update both endpoints in place; retain profiles, wallets and journals",
+  "wire_envelopes_changed": false,
+  "mailbox_config_binding_changed": false,
+  "journal_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "existing_application_deadlines_changed": false,
+  "standby": {
+    "scope": "already selected nonanchor sockets during rendezvous, Noise and roster",
+    "period_seconds": 10,
+    "original_progress_lifetime_fraction_maximum": 0.3333333333333333,
+    "command": "private tagged NOOP",
+    "issued_tags_drained_before_runtime": true,
+    "additional_logins_or_connections": false,
+    "additional_data_publications_or_grants": false,
+    "automatic_reconnects_added": false
+  },
+  "diagnostics": {
+    "stage_snapshots_retained_in_rotating_trace": true,
+    "fixed_close_codes_without_provider_text": true,
+    "first_close_cause_preserved": true
+  },
+  "source_qualification": {
+    "run_id": 40552885738,
+    "core_race_groups": 285,
+    "native_race_groups": 14,
+    "functional_failures": 0,
+    "warm_light_exchanges": 64,
+    "warm_light_failures": 0,
+    "quiet_light_exchanges": 3,
+    "quiet_light_failures": 0,
+    "upper_light_exchanges": 16,
+    "at_or_below_300ms": 10,
+    "maximum_ms": 366.493664,
+    "strict_limit_ms": 300,
+    "result": "failed upper-range light RTT gate"
+  },
+  "local_validation": {
+    "source_commit": "47b5a59c3eb4901bd886542af3468de7ef6ba052",
+    "standby_before_fix": "V2_STARTUP_ROSTER / PROTOCOL_OR_RETAINED_BODY",
+    "standby_after_fix": "startup, real HTTPS and wallet-preserving restarts passed",
+    "synthetic_idle_lease_seconds": 20,
+    "phone_delay_seconds": 25,
+    "idle_model_not_measured_provider_policy": true,
+    "local_evidence": [
+      {
+        "file": "idle-before.jsonl",
+        "top_level_passes": 0,
+        "failures": [
+          "TestStandingServerKeepsSelectedMailboxesAliveBeforePhoneArrives",
+          "itom.local/core/transport"
+        ]
+      },
+      {
+        "file": "idle-after.jsonl",
+        "top_level_passes": 4,
+        "failures": []
+      },
+      {
+        "file": "standby-safety.jsonl",
+        "top_level_passes": 5,
+        "failures": []
+      },
+      {
+        "file": "core-all.jsonl",
+        "top_level_passes": 284,
+        "failures": [
+          "TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingState",
+          "itom.local/core/transport"
+        ]
+      },
+      {
+        "file": "native-all.jsonl",
+        "top_level_passes": 14,
+        "failures": []
+      },
+      {
+        "file": "rotated-trace-after.jsonl",
+        "top_level_passes": 1,
+        "failures": []
+      }
+    ],
+    "local_full_race_failure": "trace-presence assertion ignored rotated files; actual startup and HTTPS passed; corrected assertion and focused topology test passed",
+    "core_native_vet": "passed",
+    "no_deadline_or_quota_changes": true,
+    "live_provider_or_android_device_tested": false,
+    "field_qualified": false,
+    "performance_qualified": false,
+    "evidence_source_lineage": {
+      "production_fix_commit": "33075e096e8286fd5ea7eba74ff083513a267a6b",
+      "initial_build_source": "1bc123b6e70001ce5560662ca51e87e66d4796c3",
+      "final_build_source": "47b5a59c3eb4901bd886542af3468de7ef6ba052",
+      "source_changes_after_production_fix": [
+        "archives/1.1.0/source/core/transport/endpoint_api_test.go",
+        "archives/1.1.0/source/core/transport/endpoint_test.go"
+      ],
+      "subsequent_production_changes": false,
+      "final_build_run": 40552885766,
+      "final_qualification_run": 40552885738,
+      "initial_qualification_run": 40551050313
+    },
+    "explicit_shutdown_repetitions": {
+      "passed": 3,
+      "actual_https_transfers_per_repetition": 80,
+      "failures": 0,
+      "original_deadlines_preserved": true
+    },
+    "initial_secondary_ci": {
+      "run_id": 40551050313,
+      "core_passes": 284,
+      "core_failures": 1,
+      "cause": "unmarked deliberate endpoint close after all 80 HTTPS bodies and journal audits; now explicitly marked in fixture",
+      "warm_light_at_or_below_300ms": 63,
+      "warm_light_exchanges": 64,
+      "warm_light_max_ms": 318.237912,
+      "upper_light_at_or_below_300ms": 12,
+      "upper_light_exchanges": 16,
+      "upper_light_max_ms": 354.313435,
+      "quiet_light_exchanges": 3,
+      "quiet_light_failures": 0
+    },
+    "final_hosted_functional": {
+      "build_run": 40552885766,
+      "core_passes": 285,
+      "native_passes": 14,
+      "failures": 0
+    },
+    "final_secondary_ci": {
+      "run_id": 40552885738,
+      "core_passes": 285,
+      "native_passes": 14,
+      "core_native_failures": 0,
+      "warm_light_exchanges": 64,
+      "warm_light_failures": 0,
+      "quiet_light_exchanges": 3,
+      "quiet_light_failures": 0,
+      "upper_light_exchanges": 16,
+      "upper_light_at_or_below_300ms": 10,
+      "upper_light_max_ms": 366.493664,
+      "result": "failed upper-range light RTT gate"
+    }
+  },
+  "dns_unchanged": {
+    "resolvers": [
+      "31.131.251.83",
+      "185.22.234.229"
+    ],
+    "race_both": true,
+    "direct_timeout_ms": 250,
+    "protocols": [
+      "UDP/53",
+      "TCP/53"
+    ],
+    "optional_imap_fallback_latched_until_user_restart": true
+  },
+  "persistent_state_notes": "Run downloaded server executable, choose 11 then 9; install APK in place; preserve all persistent state"
+}
