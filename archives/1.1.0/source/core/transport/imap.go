@@ -103,6 +103,7 @@ type Executor struct {
 	fetchWaiters     int
 	closed           error
 	closeReason      string // fixed diagnostic code; never provider text
+	closeCommands    [commandClasses]bool
 	done             chan struct{}
 	changes          chan struct{}
 	sequenceVersion  uint64
@@ -163,6 +164,7 @@ func (e *Executor) failReason(err error, reason string) {
 	}
 	e.closed = err
 	e.closeReason = reason
+	e.recordCloseCommandsLocked()
 	for _, op := range e.pending {
 		e.releaseFetchTurnLocked(op)
 		op.result.Err = err
@@ -187,14 +189,12 @@ func (e *Executor) beginOperation(op *operation, literal bool) (string, *operati
 		return "", nil, e.closed
 	}
 	blocked := false
-	if op.fetch {
-		if r := op.fetchTurn; r != nil {
-			if !r.granted || r.finished || r.started || r.op != op {
-				return "", nil, ErrProtocol
-			}
-		} else {
-			blocked = e.fetch != nil || e.flagFetch != nil || e.fetchTurns[0] != nil || e.fetchTurns[1] != nil
+	if r := op.fetchTurn; r != nil {
+		if !r.granted || r.finished || r.started || r.op != op {
+			return "", nil, ErrProtocol
 		}
+	} else if op.fetch {
+		blocked = e.fetch != nil || e.flagFetch != nil || e.fetchTurns[0] != nil || e.fetchTurns[1] != nil
 	}
 	if len(e.pending) >= e.limits.Pending || blocked {
 		e.capacityRefusals++
@@ -205,14 +205,14 @@ func (e *Executor) beginOperation(op *operation, literal bool) (string, *operati
 	op.started, op.done, op.continuation = time.Now(), make(chan struct{}), make(chan struct{}, 1)
 	e.timing[op.class].Started++
 	e.pending[tag] = op
+	if op.fetchTurn != nil {
+		op.fetchTurn.started = true
+	}
 	if op.fetch {
 		if op.flags {
 			e.flagFetch = op
 		} else {
 			e.fetch = op
-		}
-		if op.fetchTurn != nil {
-			op.fetchTurn.started = true
 		}
 		if e.fetch != nil && e.flagFetch != nil {
 			e.fetchPairs++
@@ -247,6 +247,7 @@ func (e *Executor) expire(op *operation) {
 	}
 	e.closed = ErrUnknown
 	e.closeReason = "command_timeout"
+	e.recordCloseCommandsLocked()
 	for _, pending := range e.pending {
 		e.releaseFetchTurnLocked(pending)
 		pending.result.Err = ErrUnknown

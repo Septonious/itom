@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "RC1.7",
-  "revision": "itom-1-1-0-rc1-7",
-  "archive_name": "ITOM-1.1.0-RC1.7-sources.zip",
+  "release": "RC1.8",
+  "revision": "itom-1-1-0-rc1-8",
+  "archive_name": "ITOM-1.1.0-RC1.8-sources.zip",
   "baseline": "Independent session transport; historical predecessor preserved in Git",
   "qualification": "EXPERIMENTAL FIELD TEST: functional startup and accounting checks; maximum RTT and sustained 100 Mbps not qualified",
-  "android_version_name": "1.1.0-rc1.7",
-  "android_version_code": 10118,
+  "android_version_name": "1.1.0-rc1.8",
+  "android_version_code": 10119,
   "android_application_id": "org.itom.client",
   "build_allowed": true
 }

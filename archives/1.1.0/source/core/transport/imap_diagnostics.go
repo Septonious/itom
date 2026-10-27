@@ -61,6 +61,7 @@ type ExecutorSnapshot struct {
 	IdleSupported        bool          `json:"idle_supported"`
 	Failure              string        `json:"failure,omitempty"`
 	CloseReason          string        `json:"close_reason,omitempty"`
+	CloseCommands        []string      `json:"close_commands,omitempty"`
 	CapacityRefusals     uint64        `json:"capacity_refusals"`
 	WriterWait           TimingSummary `json:"writer_wait"`
 	Append               CommandTiming `json:"append"`
@@ -85,10 +86,23 @@ func (e *Executor) Snapshot() ExecutorSnapshot {
 	if e.closed != nil {
 		s.Failure = serviceFailure(e.closed)
 		s.CloseReason = e.closeReason
+		for class, name := range [...]string{"append", "fetch", "inventory", "noop", "idle", "flags", "store", "expunge"} {
+			if e.closeCommands[class] {
+				s.CloseCommands = append(s.CloseCommands, name)
+			}
+		}
 	} else {
 		s.FetchActive, s.FlagsFetchActive, s.LiteralActive, s.IdleActive = e.fetch != nil || e.flagFetch != nil, e.flagFetch != nil, e.literal != nil, e.idle != nil
 	}
 	return s
+}
+
+// Capture the admitted command classes before fail/timeout drains the tag map.
+// Fixed names only: no tags, UIDs, provider text, destinations or body bytes.
+func (e *Executor) recordCloseCommandsLocked() {
+	for _, op := range e.pending {
+		e.closeCommands[op.class] = true
+	}
 }
 
 func (e *Executor) completedLocked(op *operation, failed bool) {

@@ -143,7 +143,7 @@ func TestCarrierCloseDiagnosticsKeepFirstCauseWithoutProviderText(t *testing.T) 
 			}
 			x.Close()
 			s := x.Snapshot()
-			if s.CloseReason != reason || !s.Closed || s.PendingTags != 0 {
+			if s.CloseReason != reason || !s.Closed || s.PendingTags != 0 || len(s.CloseCommands) != 1 || s.CloseCommands[0] != "noop" {
 				t.Fatal("owner cleanup overwrote original fixed close reason", s)
 			}
 		})

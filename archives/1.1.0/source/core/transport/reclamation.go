@@ -308,6 +308,20 @@ func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool
 	if e.account == "" || e.mailbox == "" || e.validity == 0 {
 		return nil, ErrProtocol
 	}
+	class, command := commandStore, fmt.Sprintf("UID STORE %s +FLAGS.SILENT (\\Deleted)", set)
+	if expunge {
+		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %s", set)
+	}
+	op := &operation{class: class}
+	if expunge {
+		// Sequence mutation must drain earlier FETCH tags and fence later reads
+		// until its own tag. APPEND retains its independent writer admission.
+		turn, err := e.acquireFetchTurn(ctx, op)
+		if err != nil {
+			return nil, err
+		}
+		defer e.releaseUnstartedFetch(turn)
+	}
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
 	}
@@ -315,11 +329,7 @@ func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	class, command := commandStore, fmt.Sprintf("UID STORE %s +FLAGS.SILENT (\\Deleted)", set)
-	if expunge {
-		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %s", set)
-	}
-	tag, op, err := e.begin(class, false, false)
+	tag, op, err := e.beginOperation(op, false)
 	if err != nil {
 		return nil, err
 	}
