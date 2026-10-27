@@ -1,0 +1,82 @@
+{
+  "url": "https://github.com/Septonious/itom/releases/tag/v1.1.0-rc1.8",
+  "tag": "v1.1.0-rc1.8",
+  "release_id": 425841345,
+  "draft": false,
+  "prerelease": true,
+  "source_commit": "592f2a66252463c2944a4df97bfa72fe5b29e973",
+  "publication_run": 40560993320,
+  "publication_job": 122389629668,
+  "assets": [
+    {
+      "name": "ANDROID_BUILD.json",
+      "size": 2489,
+      "digest": "sha256:31c5b39fb1e9217bd9a699a7959f74d5e97f405ac45a85843a64b92e58c3e7f6"
+    },
+    {
+      "name": "ITOM-1.1.0-RC1.8-linux-amd64.bin",
+      "size": 13737982,
+      "digest": "sha256:a4d3c30695f63a851d2e30f85dc205f7dd58fa0d5038a45d8e074ed761f3acef"
+    },
+    {
+      "name": "ITOM-1.1.0-RC1.8-linux-arm64.bin",
+      "size": 12637001,
+      "digest": "sha256:130b1b78c5586c1a8ec5add790887b7343398412bd3c28b0ce4fdaa3f99e9edd"
+    },
+    {
+      "name": "ITOM-1.1.0-RC1.8-sources.zip",
+      "size": 1934803,
+      "digest": "sha256:98dae18ec5c0f581f43b55d5b8a72c5ca8c147d63e05bd742f798abc451a26aa"
+    },
+    {
+      "name": "ITOM-1.1.0-RC1.8.apk",
+      "size": 54382932,
+      "digest": "sha256:c20ead3db729e0b5507da6b3356d122239f343089f7c5076bf31478f3bd43415"
+    },
+    {
+      "name": "NATIVE_SOURCE_SHA256SUMS",
+      "size": 293,
+      "digest": "sha256:36f264cf9aab3b9842638e569c2d8d974362ba44d6c3c6888b69f1efbadd13b3"
+    },
+    {
+      "name": "RC1.8-hosted-safety.zip",
+      "size": 42071,
+      "digest": "sha256:93ebceee0273f5c190b5fa711be42f884321e49ce30d5ab5e51021368bf1230f"
+    },
+    {
+      "name": "RC1.8-synthetic-evidence.zip",
+      "size": 204193,
+      "digest": "sha256:7f6f38ac8300927a8cd885719780a730594b10c5ac094f09b5a8d5b2118ff455"
+    },
+    {
+      "name": "RC1.8_TESTING.md",
+      "size": 3763,
+      "digest": "sha256:8cc7662e88d081d5677b07c01c97a5cf91f866776f6ba8d803216d8a3ad10f16"
+    },
+    {
+      "name": "RC1_BUILD.json",
+      "size": 9551,
+      "digest": "sha256:4d805097ad92f17971e93e99cbb3a29f47093aa9da8d5f1731d3e2670b7fee50"
+    },
+    {
+      "name": "RC1_SOURCE_MANIFEST.json",
+      "size": 79049,
+      "digest": "sha256:32b786ee847c4f0e920a0f79f8a2e643a17ee48a3ddc4efc2a62018a18053503"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 1153,
+      "digest": "sha256:ae4bce02aef74fa5596ab08b666ab262d552c5340854c8eeca74683825ca4251"
+    },
+    {
+      "name": "SIGNER.txt",
+      "size": 951,
+      "digest": "sha256:4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d"
+    },
+    {
+      "name": "SOURCE_COMMIT",
+      "size": 41,
+      "digest": "sha256:f5fde28374fa1d956118cbbbeaa31b152de148c798ce90d25bf6c0ab7da0c495"
+    }
+  ]
+}
