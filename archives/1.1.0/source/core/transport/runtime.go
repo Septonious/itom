@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"sync"
+
+	"itom.local/core/journal"
 )
 
 var ErrRuntimeStopped = errors.New("V2_RUNTIME_SERVICE_STOPPED")
@@ -225,6 +227,11 @@ func (e *Runtime) PendingPublication(index int) *PreparedPublication {
 }
 
 func serviceFailure(err error) string {
+	for _, known := range []error{journal.ErrScope, journal.ErrLimit, journal.ErrState, journal.ErrMissing, journal.ErrGeneration, journal.ErrCorrupt, journal.ErrPoisoned} {
+		if errors.Is(err, known) {
+			return known.Error()
+		}
+	}
 	switch {
 	case errors.Is(err, ErrProtocol):
 		return "protocol"

@@ -176,6 +176,13 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 		}
 		ticker.Stop()
 		err = endpoint.Close()
+		if err != nil && !errors.Is(err, transport.ErrEndpointRestart) && ctx.Err() == nil {
+			_ = trace.record(struct {
+				Event, Revision string
+				SampledAtMS     int64
+				Runtime         transport.RuntimeSnapshot
+			}{"runtime_failed", TransportRevision, time.Now().UnixMilli(), endpoint.Service.Runtime.Snapshot()})
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}

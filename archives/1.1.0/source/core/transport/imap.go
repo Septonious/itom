@@ -113,6 +113,7 @@ type Executor struct {
 	bootstrapOwner   bool
 	uidPlus          bool
 	keywords         bool
+	keywordBytes     int // successful metadata name preference; never authority
 	idleSupported    bool
 	idle             *operation
 	idleStop         chan struct{}

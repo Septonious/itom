@@ -52,9 +52,9 @@ class LauncherTests(unittest.TestCase):
 
     def test_public_release_consistent_across_gradle_server_and_archive(self):
         info = check_sources.validate_release_identity(check_sources.ROOT)
-        self.assertEqual("RC1.4", info["release"])
-        self.assertEqual("ITOM-1.1.0-RC1.4-debug.apk", build.public_apk_name(info))
-        self.assertEqual("ITOM-1.1.0-RC1.4-sources.zip", info["archive_name"])
+        self.assertEqual("RC1.5", info["release"])
+        self.assertEqual("ITOM-1.1.0-RC1.5-debug.apk", build.public_apk_name(info))
+        self.assertEqual("ITOM-1.1.0-RC1.5-sources.zip", info["archive_name"])
 
     def test_public_release_mismatch_is_fatal(self):
         info = build.read_source_info()
@@ -229,7 +229,7 @@ class LauncherTests(unittest.TestCase):
         (source / "build-report.json").write_text(json.dumps({"status":"passed", "source_revision":info["revision"], "sha256":sha}))
         sums = []
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-1.1.0-RC1.4-linux-{arch}"
+            name = f"ITOM-1.1.0-RC1.5-linux-{arch}"
             data = b"fixture-" + arch.encode()
             (source / name).write_bytes(data)
             sums.append(hashlib.sha256(data).hexdigest() + "  " + name)
@@ -238,7 +238,7 @@ class LauncherTests(unittest.TestCase):
         result = archive_main.export_verified_artifacts(self.root / "ITOM_FIELD77_tmp", archive, info, "all")
         self.assertEqual(7, len(result))
         self.assertEqual(b"verified-test-apk", (self.root / "dist" / apk_name).read_bytes())
-        self.assertTrue((self.root / "dist" / "ITOM-1.1.0-RC1.4-linux-arm64").is_file())
+        self.assertTrue((self.root / "dist" / "ITOM-1.1.0-RC1.5-linux-arm64").is_file())
         # Failed gate and tampered APK must NEVER overwrite the public dist.
         apk.write_bytes(b"tampered")
         with self.assertRaisesRegex(RuntimeError, "APK checksum mismatch"):

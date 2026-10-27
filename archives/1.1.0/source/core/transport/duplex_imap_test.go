@@ -26,22 +26,25 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	flagCase       func(string) string // provider-equivalent, case-insensitive keyword spelling
-	rejectRequests bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
-	allowClose     func() bool         // explicit test-owner shutdown only; never ordinary application service
-	mu             sync.Mutex
-	bodies         [][]byte
-	bytes          int
-	peakMessages   int
-	changed        chan struct{}
-	keywords       bool
-	reclamation    bool
-	reclaimFault   string // explicit maintenance fault; ordinary traffic is unchanged
-	expungeEntered chan struct{}
-	expungeRelease <-chan struct{}
-	appendEntered  chan struct{}
-	appendRelease  <-chan struct{}
-	flags          map[uint32]map[string]bool
+	flagCase        func(string) string // provider-equivalent, case-insensitive keyword spelling
+	rejectRequests  bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
+	keywordBytes    int                 // optional provider name-length bound despite advertised permanent keywords
+	keywordRefusals int
+	peakFlags       int
+	allowClose      func() bool // explicit test-owner shutdown only; never ordinary application service
+	mu              sync.Mutex
+	bodies          [][]byte
+	bytes           int
+	peakMessages    int
+	changed         chan struct{}
+	keywords        bool
+	reclamation     bool
+	reclaimFault    string // explicit maintenance fault; ordinary traffic is unchanged
+	expungeEntered  chan struct{}
+	expungeRelease  <-chan struct{}
+	appendEntered   chan struct{}
+	appendRelease   <-chan struct{}
+	flags           map[uint32]map[string]bool
 }
 
 // The fixture accepts explicit sets and ranges, but only walks its bounded
@@ -294,13 +297,25 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					fmt.Fprintf(conn, "%s OK exact UID set expunged\r\n", tag(line))
 					continue
 				}
-				if len(fields) == 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && (m.keywords || m.reclamation && fields[5] == `(\Deleted)`) {
+				if len(fields) >= 6 && fields[2] == "STORE" && (fields[4] == "+FLAGS.SILENT" || fields[4] == "-FLAGS.SILENT") && (m.keywords || m.reclamation && fields[5] == `(\Deleted)`) {
 					if m.reclaimFault == "store_refused" && fields[5] == `(\Deleted)` {
 						fmt.Fprintf(conn, "%s NO store refused\r\n", tag(line))
 						continue
 					}
-					keyword := strings.TrimSuffix(strings.TrimPrefix(fields[5], "("), ")")
-					if m.rejectRequests && strings.HasPrefix(keyword, "ITOM2_") {
+					keywords := strings.Fields(strings.TrimSuffix(strings.TrimPrefix(strings.Join(fields[5:], " "), "("), ")"))
+					refused := false
+					m.mu.Lock()
+					rejectRequests, keywordBytes := m.rejectRequests, m.keywordBytes
+					m.mu.Unlock()
+					for _, keyword := range keywords {
+						if !strings.HasPrefix(keyword, `\`) && (rejectRequests || keywordBytes > 0 && len(keyword) > keywordBytes) {
+							refused = true
+						}
+					}
+					if refused {
+						m.mu.Lock()
+						m.keywordRefusals++
+						m.mu.Unlock()
 						fmt.Fprintf(conn, "%s NO request keyword refused\r\n", tag(line))
 						continue
 					}
@@ -315,11 +330,17 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 						if m.flags[uid] == nil {
 							m.flags[uid] = make(map[string]bool)
 						}
-						if fields[4] == "+FLAGS.SILENT" {
-							m.flags[uid][keyword] = true
-						} else {
-							delete(m.flags[uid], keyword)
+						for _, keyword := range keywords {
+							if !strings.HasPrefix(keyword, `\`) {
+								keyword = strings.ToLower(keyword)
+							}
+							if fields[4] == "+FLAGS.SILENT" {
+								m.flags[uid][keyword] = true
+							} else {
+								delete(m.flags[uid], keyword)
+							}
 						}
+						m.peakFlags = max(m.peakFlags, len(m.flags[uid]))
 					}
 					m.mu.Unlock()
 					if m.reclaimFault == "lost_store_tag" && fields[5] == `(\Deleted)` {

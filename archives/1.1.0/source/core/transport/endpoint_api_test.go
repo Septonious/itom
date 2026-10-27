@@ -85,6 +85,18 @@ func TestProviderRequestRefusalAfterSuccessfulLoginsReportsRequestPhaseWithoutAp
 	testPublicEndpoints(t, publicEndpointCase{requestRefusal: true})
 }
 
+func TestProviderKeywordLengthLimitsStillAllowAuthenticatedStartupAndHTTPSRestart(t *testing.T) {
+	for _, limit := range []int{64, 32, 16} {
+		t.Run(fmt.Sprint(limit), func(t *testing.T) {
+			testPublicEndpoints(t, publicEndpointCase{keywordBytes: limit, caseChanges: true})
+		})
+	}
+}
+
+func TestTwentySelectedLinesCarryHTTPSAcrossRestartsWithShortProviderKeywords(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{keywordBytes: 32, accounts: 10, rounds: 4})
+}
+
 func TestInPlaceUpgradeWithLegacyControlMailAndUnknownDataDebtStillCarriesHTTPS(t *testing.T) {
 	testPublicEndpoints(t, publicEndpointCase{legacy: true})
 }
@@ -97,11 +109,15 @@ type publicEndpointCase struct {
 	clientDelay                        time.Duration
 	caseChanges, legacy, fieldTopology bool
 	requestRefusal                     bool
+	keywordBytes, accounts, rounds     int
 }
 
 func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	clientDelay, caseChanges, legacy := scenario.clientDelay, scenario.caseChanges, scenario.legacy
 	accountCount, userCount := 1, 1
+	if scenario.accounts > 0 {
+		accountCount = scenario.accounts
+	}
 	if scenario.fieldTopology {
 		accountCount, userCount = 15, 2
 	}
@@ -135,7 +151,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, rejectRequests: scenario.requestRefusal}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -170,7 +186,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		username := fmt.Sprintf("fixture-%02d", n)
 		clone := map[string]*sharedMailbox{}
 		for folder, box := range boxes {
-			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase}
+			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes}
 		}
 		providerBoxes[username] = clone
 	}
@@ -276,7 +292,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				fmt.Fprintf(conn, "* OK [PERMANENTFLAGS (\\Seen \\*)] keywords\r\n* OK [UIDVALIDITY 9] selected\r\n%s OK selected\r\n", tag(line))
 				conn.SetDeadline(time.Time{})
 				var delays []time.Duration
-				if scenario.fieldTopology {
+				if scenario.fieldTopology || scenario.accounts > 1 {
 					// Real stated client/provider and server/provider service range.
 					// Keep all original OPEN/TLS/header/application deadlines.
 					delays = []time.Duration{20 * time.Millisecond, 40 * time.Millisecond, 30 * time.Millisecond}
@@ -304,6 +320,8 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: wire.ID{1}, Provider: "fixture", User: servercfg.User{ID: "12345678", Name: "field", Enabled: true, Key: strings.Repeat("17", 32), Up: upFolder, Down: downFolder}, Accounts: []servercfg.Account{{ID: "account1", Mail: mailbox.Config{Host: "fixture.local", DialIP: "127.0.0.1", Port: int(address.Port()), TLS: "tls", Username: "fixture", Password: "fixture-only"}}}, Transport: servercfg.Transport{AccountSessions: 5, EndpointConnections: 30, Participants: 1}}
 	if scenario.fieldTopology {
 		p.Transport.AccountSessions, p.Transport.EndpointConnections, p.Transport.Participants = 10, 60, 2
+	}
+	if accountCount > 1 {
 		for n := 2; n <= accountCount; n++ {
 			account := p.Accounts[0]
 			account.ID = fmt.Sprintf("account%d", n)
@@ -371,7 +389,10 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+(time.Duration(userCount)*45*time.Second+clientDelay).String())
+	cohort := max(2*userCount, scenario.rounds)
+	// Scale only the outer cohort budget with the number of VPN restarts.
+	// Per-attempt startup and all IMAP/OPEN/TLS/HTTP deadlines are unchanged.
+	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+(time.Duration(cohort)*45*time.Second/2+clientDelay).String())
 	if profile := os.Getenv("ITOM_TEST_SERVER_CPU_PROFILE"); profile != "" {
 		cmd.Args = append(cmd.Args, "-test.cpuprofile="+profile)
 	}
@@ -432,11 +453,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		defer timer.Stop()
 		<-timer.C
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(userCount)*30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cohort)*15*time.Second)
 	defer cancel()
 	certPool := x509.NewCertPool()
 	certPool.AddCert(upstream.Certificate())
-	for round := 0; round < 2*userCount; round++ {
+	for round := 0; round < cohort; round++ {
 		p.User = cfg.Users[round%userCount]
 		clientDir := filepath.Join(root, "client-state", p.User.ID)
 		var progress []tunnel.StartupProgress
@@ -460,6 +481,10 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			return
 		}
 		if err != nil {
+			t.Log("failed actual startup progress", progress)
+			if raw, e := os.ReadFile(filepath.Join(root, "server-state", "v2-"+p.User.ID+".json")); e == nil {
+				t.Log("failed actual startup server state", string(raw))
+			}
 			t.Fatal("public API startup", round, err)
 		}
 		if len(progress) == 0 || progress[0].Stage != "PROFILE" || progress[len(progress)-1].Stage != "READY" {
@@ -519,5 +544,20 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 		shutdown.Store(true)
 		_ = client.Close()
+	}
+	if scenario.keywordBytes > 0 {
+		box := boxes[upFolder+"-session-v2"]
+		box.mu.Lock()
+		defer box.mu.Unlock()
+		if box.keywordRefusals == 0 || box.peakFlags > 20 {
+			t.Fatal("fixture did not reject long names or request metadata accumulated", box.keywordRefusals, box.peakFlags)
+		}
+		for _, flags := range box.flags {
+			for flag := range flags {
+				if strings.HasPrefix(flag, "itom2_") || (len(flag) == 16 || len(flag) == 31 || len(flag) == 59) && strings.HasPrefix(flag, "i") {
+					t.Fatal("authenticated request metadata was not cleared", flag)
+				}
+			}
+		}
 	}
 }

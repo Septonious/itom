@@ -35,16 +35,17 @@ func TestImmediateFailureFlushesFinalStartupPhaseBeforeFirstHeartbeat(t *testing
 	defer cancel()
 	host := &retainedStartupHost{}
 	update, finish := reportStartup(ctx, cancel, host, 20)
-	update(tunnel.StartupProgress{Stage: "REQUEST", FailureReason: "IMAP_TAGGED_REFUSAL", SelectedLines: 20, TotalLines: 20})
+	update(tunnel.StartupProgress{Stage: "REQUEST", FailureReason: "IMAP_TAGGED_REFUSAL", RequestKeywordBytes: 16, SelectedLines: 20, TotalLines: 20})
 	finish()
 	var final struct {
 		StartupStage, FailureReason string
 		SelectedLines, TotalLines   int
+		RequestKeywordBytes         int
 	}
 	if err := json.Unmarshal([]byte(host.reports[len(host.reports)-1]), &final); err != nil {
 		t.Fatal(err)
 	}
-	if final.StartupStage != "REQUEST" || final.FailureReason != "IMAP_TAGGED_REFUSAL" || final.SelectedLines != 20 || final.TotalLines != 20 {
+	if final.StartupStage != "REQUEST" || final.FailureReason != "IMAP_TAGGED_REFUSAL" || final.SelectedLines != 20 || final.TotalLines != 20 || final.RequestKeywordBytes != 16 {
 		t.Fatal("sub-second failure returned before its final evidence", host.reports)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"strings"
 )
 
 // A receipt is emitted only for a complete authenticated SERVER body after
@@ -14,9 +15,11 @@ import (
 // never another message or grant. It is NOT deletion/absence proof, a logical
 // DATA receipt, or a measurement of RTT/useful bandwidth.
 type deliveryReceipt struct {
-	uid     uint32
-	keyword string
-	command *Command
+	uid         uint32
+	keyword     string
+	command     *Command
+	format      int
+	initialized bool
 }
 
 type DeliveryReceiptStats struct {
@@ -86,9 +89,20 @@ func (i *Inbox) markReceiptOne(ctx context.Context) (bool, error) {
 	}
 	r := i.receipts[uid]
 	i.mu.Unlock()
+	if !r.initialized {
+		r.initialized = true
+		preferred := i.executor.preferredKeywordBytes()
+		for r.format < 3 && preferred > 0 && []int{71, 59, 31, 16}[r.format] > preferred {
+			r.format++
+		}
+	}
 	if r.command == nil {
 		var err error
-		r.command, err = i.executor.StoreKeyword(ctx, uid, r.keyword, true)
+		flags := []string{r.keyword}
+		if r.format > 0 {
+			flags = keywordFragments(r.keyword[7:], 'r', []int{0, 48, 20, 5}[r.format])
+		}
+		r.command, err = i.executor.storeKeywords(ctx, uid, flags, true)
 		if err != nil {
 			return false, err
 		}
@@ -96,19 +110,45 @@ func (i *Inbox) markReceiptOne(ctx context.Context) (bool, error) {
 	if _, err := r.command.Wait(ctx); err != nil {
 		if errors.Is(err, ErrRefused) {
 			i.mu.Lock()
-			i.receiptEnabled = false
 			i.receiptStats.Refused++
-			i.receiptStats.Disabled = true
+			if r.format == 3 {
+				i.receiptEnabled = false
+				i.receiptStats.Disabled = true
+			}
 			i.mu.Unlock()
+			if r.format < 3 {
+				r.format++
+				r.command = nil
+				return true, nil // bounded metadata fallback, not a marked receipt
+			}
 			return false, nil
 		}
 		return false, err
 	}
+	i.executor.rememberKeywordBytes([]int{71, 59, 31, 16}[r.format])
 	i.mu.Lock()
 	delete(i.receipts, uid)
 	i.receiptStats.Marked++
 	i.mu.Unlock()
 	return true, nil
+}
+
+func verifiedReceiptKeyword(flags []string, expected string) bool {
+	if len(expected) != 71 || !strings.EqualFold(expected[:7], "ITOM2R_") {
+		return false
+	}
+	for _, flag := range flags {
+		if hmac.Equal([]byte(strings.ToLower(flag)), []byte(strings.ToLower(expected))) {
+			return true
+		}
+	}
+	want := strings.ToLower(expected[7:])
+	for payload := range decodeKeywordFragments(flags, 'r', 64) {
+		if hmac.Equal([]byte(payload), []byte(want)) {
+			return true
+		}
+	}
+	return false
 }
 
 // The short maintenance-state lock is held when queuing. Wakes are bounded hints, not authority.

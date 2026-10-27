@@ -4,9 +4,10 @@ import kotlin.test.*
 
 class StartupEvidenceTest {
     @Test fun requestRefusalRetainsSafeCauseAndDropsProviderResponse() {
-        val report = startupEvidence("""{"StartupStage":"REQUEST","FailureReason":"IMAP_TAGGED_REFUSAL","SelectedLines":20,"TotalLines":20,"Response":"private-provider-reply"}""", StartupOutcome.FAILED, "V2_STARTUP_REQUEST", 100)
+        val report = startupEvidence("""{"StartupStage":"REQUEST","FailureReason":"IMAP_TAGGED_REFUSAL","RequestKeywordBytes":16,"SelectedLines":20,"TotalLines":20,"Response":"private-provider-reply"}""", StartupOutcome.FAILED, "V2_STARTUP_REQUEST", 100)
         assertEquals("REQUEST", report.field("StartupStage"))
         assertEquals("IMAP_TAGGED_REFUSAL", report.field("FailureReason"))
+        assertEquals("16", report.field("RequestKeywordBytes"))
         assertEquals("V2_STARTUP_REQUEST", report.field("StartupFailure"))
         assertFalse(report.toString().contains("private"))
         val untrusted = startupEvidence("""{"FailureReason":"private-provider-reply"}""", StartupOutcome.FAILED, "V2_STARTUP_REQUEST", 101)

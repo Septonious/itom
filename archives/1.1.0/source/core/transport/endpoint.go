@@ -229,7 +229,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			return nil, err
 		}
 		stage("request")
-		if err = rendezvous.Submit(startup, x, anchor, o.Key); err != nil {
+		if err = rendezvous.submit(startup, x, anchor, o.Key, stage); err != nil {
 			return nil, err
 		}
 		stage("waiting_invitation")
@@ -245,7 +245,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 				if err != nil {
 					return nil, err
 				}
-				if err = rendezvous.Submit(startup, x, anchor, o.Key); err != nil {
+				if err = rendezvous.submit(startup, x, anchor, o.Key, stage); err != nil {
 					return nil, err
 				}
 			}
@@ -304,62 +304,68 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			if e != nil {
 				return nil, e
 			}
+			var flags []string
 			for _, row := range rows {
-				for _, flag := range row.Flags {
-					requests[strings.ToLower(flag)] = true
+				flags = append(flags, row.Flags...)
+			}
+			observed := rendezvous.requests(flags, o.Key)
+			for _, hint := range observed {
+				requests[hint.keyword] = true
+			}
+			for _, flag := range flags {
+				if !rejectedRequest && len(flag) >= 6 && strings.EqualFold(flag[:6], "ITOM2_") {
+					if _, e = rendezvous.RequestTemplate(flag, o.Key); e != nil {
+						stage("request_rejected")
+						rejectedRequest = true
+					}
 				}
 			}
-			for _, row := range rows {
-				for _, flag := range row.Flags {
-					if _, e = rendezvous.RequestTemplate(flag, o.Key); e != nil {
-						if !rejectedRequest && len(flag) >= 6 && strings.EqualFold(flag[:6], "ITOM2_") {
-							stage("request_rejected")
-							rejectedRequest = true
-						}
-						continue
-					}
-					allowance, e := endpointAllowance(store, account, o.Template.Binding.User, wire.ID{})
-					if e != nil {
-						return nil, e
-					}
-					p, e := rendezvous.PrepareRequestedInvitation(startup, flag, allowance, o.Key)
-					if errors.Is(e, journal.ErrState) {
-						if !claimedRequest {
-							stage("request_already_claimed")
-							claimedRequest = true
-						}
-						continue
-					} // an original session already claimed its invitation
-					if e != nil {
-						return nil, e
-					}
-					if outcome, e := p.Start(startup, x); e != nil || outcome != Accepted {
-						return nil, errors.Join(ErrUnknown, e)
-					}
-					stage("invitation_published")
-					err = visitBodies(startup, x, func(body Body) (bool, error) {
-						v, e := rendezvous.ObserveInvitation(x, body, flag, o.Key)
-						if e != nil {
-							return false, nil
-						}
-						owner, e = v.NewServer(store, o.Key)
-						return true, e
-					})
-					if err != nil {
-						return nil, err
-					}
-					request = flag
-					if owner != nil {
-						// A listening server may precede the phone indefinitely.
-						// Only an authenticated accepted request starts its bounded
-						// active handshake. Individual IMAP commands stay bounded.
-						activeHandshake, stopHandshake := context.WithTimeout(ctx, 90*time.Second)
-						defer stopHandshake()
-						startup = activeHandshake
-						break
-					}
+			for _, hint := range observed {
+				flag := hint.keyword
+				allowance, e := endpointAllowance(store, account, o.Template.Binding.User, wire.ID{})
+				if e != nil {
+					return nil, e
 				}
+				p, e := rendezvous.PrepareRequestedInvitation(startup, flag, allowance, o.Key)
+				if errors.Is(e, journal.ErrState) {
+					if !claimedRequest {
+						stage("request_already_claimed")
+						claimedRequest = true
+					}
+					if e = rendezvous.clearRequest(startup, x, hint); e != nil && !errors.Is(e, ErrRefused) {
+						return nil, e
+					}
+					continue // original session already claimed; metadata is not authority
+				}
+				if e != nil {
+					return nil, e
+				}
+				if outcome, e := p.Start(startup, x); e != nil || outcome != Accepted {
+					return nil, errors.Join(ErrUnknown, e)
+				}
+				stage("invitation_published")
+				err = visitBodies(startup, x, func(body Body) (bool, error) {
+					v, e := rendezvous.ObserveInvitation(x, body, flag, o.Key)
+					if e != nil {
+						return false, nil
+					}
+					owner, e = v.NewServer(store, o.Key)
+					return true, e
+				})
+				if err != nil {
+					return nil, err
+				}
+				request = flag
 				if owner != nil {
+					activeHandshake, stopHandshake := context.WithTimeout(ctx, 90*time.Second)
+					defer stopHandshake()
+					startup = activeHandshake
+					// Remove only this fully authenticated, durably claimed hint.
+					// This bounds keyword accumulation across VPN restarts and
+					// neither deletes mail nor refunds any original quota.
+					if e = rendezvous.clearRequest(startup, x, hint); e != nil && !errors.Is(e, ErrRefused) {
+						return nil, e
+					}
 					break
 				}
 			}
@@ -368,6 +374,13 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 					return nil, err
 				}
 			}
+		}
+	}
+	if o.Client {
+		// Start every account with the already accepted request representation.
+		// A stricter account can still fall back on its own explicit refusals.
+		for _, lane := range o.Lanes {
+			lane.Executor.rememberKeywordBytes(x.preferredKeywordBytes())
 		}
 	}
 	installHistory(o.Lanes, owner.binding.User, owner.binding.Session, o.Key)
@@ -552,11 +565,9 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
 		return err
 	}
 	for _, row := range rows {
-		for _, flag := range row.Flags {
-			if !strings.EqualFold(flag, current) && !s.requests[strings.ToLower(flag)] {
-				if _, err := rv.RequestTemplate(flag, key); err == nil {
-					return ErrEndpointRestart
-				}
+		for _, flag := range rv.RequestKeywords(row.Flags, key) {
+			if !strings.EqualFold(flag, current) && !s.requests[flag] {
+				return ErrEndpointRestart
 			}
 		}
 	}

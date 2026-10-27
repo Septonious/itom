@@ -230,12 +230,9 @@ func (i *Inbox) reclaimOne(ctx context.Context) (bool, error) {
 			var newlyVerified uint64
 			for _, r := range batch.bodies {
 				if r.receiptKeyword != "" && !r.receiptVerified {
-					for _, flag := range flags[r.location.UID] {
-						if flag == r.receiptKeyword {
-							r.receiptVerified = true
-							newlyVerified++
-							break
-						}
+					if verifiedReceiptKeyword(flags[r.location.UID], r.receiptKeyword) {
+						r.receiptVerified = true
+						newlyVerified++
 					}
 				}
 				if r.receiptKeyword == "" || r.receiptVerified {

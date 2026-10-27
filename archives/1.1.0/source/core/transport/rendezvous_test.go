@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,6 +16,73 @@ import (
 	"itom.local/core/transport"
 	"itom.local/core/wire"
 )
+
+func TestFragmentedRequestsRetainFullAuthenticationAndSingleInvitationAuthority(t *testing.T) {
+	for _, limit := range []int{64, 32, 16} {
+		t.Run(fmt.Sprint(limit), func(t *testing.T) {
+			f, client, server := rendezvousFixture(t, true, nil, nil, false)
+			f.box.mu.Lock()
+			f.box.keywordBytes = limit
+			f.box.mu.Unlock()
+			ctx := context.Background()
+			if err := client.Submit(ctx, f.cx, f.wallet, f.key); err != nil {
+				t.Fatal("provider refusal prevented bounded metadata fallback", err)
+			}
+			anchor := onlyMailboxBody(t, f.sx)
+			cmd, err := f.sx.FetchFlags(ctx, anchor.UID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rows, err := cmd.Wait(ctx)
+			if err != nil || len(rows) != 1 {
+				t.Fatal(err, rows)
+			}
+			flags := rows[0].Flags
+			for _, flag := range flags {
+				if len(flag) > limit {
+					t.Fatal("oversized fragment", len(flag))
+				}
+			}
+			original, _ := client.RequestKeyword(f.wallet, f.key)
+			got := server.RequestKeywords(flags, f.key)
+			if len(got) != 1 || !strings.EqualFold(got[0], original) {
+				t.Fatal("fragmentation lost Session or full MAC", got)
+			}
+			if len(server.RequestKeywords(flags[1:], f.key)) != 0 {
+				t.Fatal("incomplete request became authority")
+			}
+			conflicting := append([]string(nil), flags...)
+			last := byte('0')
+			if flags[0][len(flags[0])-1] == last {
+				last = '1'
+			}
+			conflicting = append(conflicting, flags[0][:len(flags[0])-1]+string(last))
+			if len(server.RequestKeywords(conflicting, f.key)) != 0 {
+				t.Fatal("conflicting fragment became authority")
+			}
+			_, _, other := rendezvousFixture(t, true, nil, nil, false)
+			if len(other.RequestKeywords(flags, f.key)) != 0 {
+				t.Fatal("request replay across anchors passed full MAC validation")
+			}
+			duplicates := append([]string(nil), flags...)
+			duplicates = append(duplicates, strings.ToUpper(flags[0]))
+			again := server.RequestKeywords(duplicates, f.key)
+			if len(again) != 1 || again[0] != got[0] {
+				t.Fatal("case/duplicate altered request identity")
+			}
+			p, err := server.PrepareRequestedInvitation(ctx, got[0], pool.Amount{Bytes: 32 << 10, Messages: 8}, f.key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			held, _ := f.store.Held("account1", "12345678")
+			p2, err := server.PrepareRequestedInvitation(ctx, again[0], pool.Amount{Bytes: 32 << 10, Messages: 8}, f.key)
+			after, _ := f.store.Held("account1", "12345678")
+			if err != nil || p != p2 || after != held {
+				t.Fatal("duplicate request allocated another invitation", err)
+			}
+		})
+	}
+}
 
 func TestRendezvousRequestKeywordsRemainAuthenticatedWhenProviderChangesCase(t *testing.T) {
 	f, client, server := rendezvousFixture(t, true, nil, nil, false)

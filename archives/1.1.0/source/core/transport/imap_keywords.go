@@ -29,11 +29,23 @@ func validKeyword(keyword string) bool {
 // quota release. A rendezvous request is only a MAC-verified routing hint for
 // the issuer; any resulting grant still needs original durable admission.
 func (e *Executor) StoreKeyword(ctx context.Context, uid uint32, keyword string, add bool) (*Command, error) {
+	return e.storeKeywords(ctx, uid, []string{keyword}, add)
+}
+
+func (e *Executor) storeKeywords(ctx context.Context, uid uint32, keywords []string, add bool) (*Command, error) {
 	if !e.keywords {
 		return nil, ErrKeywordsUnsupported
 	}
-	if uid == 0 || !validKeyword(keyword) {
+	if uid == 0 || len(keywords) == 0 || len(keywords) > 32 {
 		return nil, ErrProtocol
+	}
+	seen := map[string]bool{}
+	for _, keyword := range keywords {
+		canonical := strings.ToLower(keyword)
+		if !validKeyword(keyword) || seen[canonical] {
+			return nil, ErrProtocol
+		}
+		seen[canonical] = true
 	}
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
@@ -50,7 +62,7 @@ func (e *Executor) StoreKeyword(ctx context.Context, uid uint32, keyword string,
 	if add {
 		sign = "+"
 	}
-	if err = e.write([]byte(fmt.Sprintf("%s UID STORE %d %sFLAGS.SILENT (%s)\r\n", tag, uid, sign, keyword))); err != nil {
+	if err = e.write([]byte(fmt.Sprintf("%s UID STORE %d %sFLAGS.SILENT (%s)\r\n", tag, uid, sign, strings.Join(keywords, " ")))); err != nil {
 		e.fail(ErrUnknown)
 		return &Command{op}, ErrUnknown
 	}

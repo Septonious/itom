@@ -7,6 +7,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -217,6 +219,10 @@ func (v *VerifiedRendezvous) RequestTemplate(keyword string, key []byte) (Invita
 }
 
 func (v *VerifiedRendezvous) Submit(ctx context.Context, executor *Executor, w *wallet.Wallet, key []byte) error {
+	return v.submit(ctx, executor, w, key, nil)
+}
+
+func (v *VerifiedRendezvous) submit(ctx context.Context, executor *Executor, w *wallet.Wallet, key []byte, stage func(string)) error {
 	if v == nil || executor == nil || executor.account != v.origin.Account || executor.mailbox != v.origin.Folder || executor.validity != v.origin.UIDValidity {
 		return ErrProtocol
 	}
@@ -224,11 +230,36 @@ func (v *VerifiedRendezvous) Submit(ctx context.Context, executor *Executor, w *
 	if err != nil {
 		return err
 	}
-	command, err := executor.StoreKeyword(ctx, v.uid, keyword, true)
-	if err != nil {
-		return err
+	// Providers advertising permanent keywords can still reject long names.
+	// Only an explicit tagged refusal permits another metadata representation;
+	// a timeout or unknown outcome never triggers a physical publication retry.
+	forms := [][]string{{keyword}}
+	for _, width := range []int{48, 20, 5} {
+		forms = append(forms, requestFragments(keyword, width))
 	}
-	_, err = command.Wait(ctx)
+	for index, flags := range forms {
+		if len(flags) == 0 {
+			return ErrProtocol
+		}
+		if stage != nil {
+			if index == 0 {
+				stage("request")
+			} else {
+				stage(fmt.Sprintf("request_%d", len(flags[0])))
+			}
+		}
+		command, e := executor.storeKeywords(ctx, v.uid, flags, true)
+		if e == nil {
+			_, e = command.Wait(ctx)
+		}
+		if !errors.Is(e, ErrRefused) {
+			if e == nil {
+				executor.rememberKeywordBytes(len(flags[0]))
+			}
+			return e
+		}
+		err = e
+	}
 	return err
 }
 

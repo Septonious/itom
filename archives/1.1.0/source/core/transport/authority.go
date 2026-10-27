@@ -360,6 +360,23 @@ func (a *AuthorityController) apply(payload []byte) error {
 	case wire.UsageReport, wire.StorageRelease:
 		status, err := route.store.ApplyRemote(a.user, route.run, message)
 		if err != nil {
+			// A delayed aggregate/fence can follow the actual final retirement
+			// handshake. Missing metadata is NEVER zero-spend/cleanup evidence.
+			// Drop only a bounded, previously allocated aggregate reference;
+			// issue no status, permission, balance change or reconstructed row.
+			aggregate := true
+			if usage, ok := message.(wire.UsageReport); ok {
+				aggregate = usage.Attempt == nil
+			}
+			if a.recovery && aggregate && errors.Is(err, journal.ErrMissing) {
+				absent, check := route.store.GrantMetadataAbsent(a.user, route.run, authorityKey(message))
+				if check != nil {
+					return check
+				}
+				if absent {
+					return nil
+				}
+			}
 			return err
 		}
 		if _, fenced := message.(wire.StorageRelease); fenced {

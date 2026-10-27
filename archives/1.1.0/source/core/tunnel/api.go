@@ -42,6 +42,7 @@ type StartupProgress struct {
 	Stage                     string
 	ConfigHash                string
 	FailureReason             string
+	RequestKeywordBytes       int
 	SelectedLines, TotalLines int
 }
 type ClientSnapshot struct {
@@ -151,8 +152,11 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 			stage = "RENDEZVOUS"
 		case "rendezvous_found":
 			stage = "WALLET"
-		case "request":
+		case "request", "request_59", "request_31", "request_16":
 			stage = "REQUEST"
+			progressMu.Lock()
+			progress.RequestKeywordBytes = map[string]int{"request": 103, "request_59": 59, "request_31": 31, "request_16": 16}[code]
+			progressMu.Unlock()
 		case "waiting_invitation":
 			stage = "INVITATION"
 		case "noise":
