@@ -24,7 +24,8 @@ alone do not install a new download. Confirm fresh events identify
   is classified as `V2_STARTUP_PATH`, retaining the actual selected line count.
 * RTT now reports the real peer DATA echo completion. A persistent bounded
   stream sends 16 bytes every five seconds, with only one probe outstanding.
-  OPEN time is excluded from the echo sample. Failed or mismatched echoes are
+  OPEN time is excluded from the echo sample. A probe has a 1.5 s deadline;
+  a timeout clears its displayed RTT without reconnecting any provider line. Failed or mismatched echoes are
   not RTT samples. Probes do not change congestion policy or refill quota.
 * With tracing enabled, the client records runtime/flow/receipt/publication
   state every two seconds and on close. With tracing enabled, the connected diagnostic export includes
@@ -57,3 +58,14 @@ RC1.5, but executable bytes contain no server runtime trace.
 A passing DATA echo proves one small round trip, not that every external
 service, DNS path, destination or sustained transfer works. The new diagnostics
 are intended to distinguish those failures without another reinstall.
+
+## Validation limits
+
+The final source passed 280 core race-test groups and 14 native groups in the
+hosted functional suite, including real native TUN/SOCKS HTTPS and the negative
+DATA-readiness regression. The separate source qualification workflow failed its
+upper-latency light RTT gate: 11/16 exchanges met 300 ms, and the maximum was
+386.44 ms. Those passing and failing measurements are retained in the synthetic
+evidence archive. A previous full local race suite also had one timing failure;
+focused reruns passed without increasing deadlines. These results do not
+establish a field-stall fix, a 300 ms maximum, or sustained 100 Mbps.

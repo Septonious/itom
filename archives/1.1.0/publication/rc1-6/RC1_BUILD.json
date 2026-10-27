@@ -1,0 +1,115 @@
+{
+  "release": "ITOM 1.1.0 RC1.6",
+  "purpose": "verified DATA readiness, actual peer RTT and connected-session diagnostics",
+  "source_commit": "6d60e2d7c4372f96ac1e0e6a9b49d26787908c9e",
+  "build_run_id": 40491512008,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40491512008",
+  "field_stall_cause_confirmed": false,
+  "field_stall_fixed": false,
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 280,
+    "native_race_groups_passed": 14,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 93,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10117,
+    "version_name": "1.1.0-rc1.6-debug"
+  },
+  "source_ci_apk_sha256": "fac66ee8aaef223e6291a52ef1744a549f709eaf9190a4bc983043290d112cc1",
+  "signed_apk_sha256": "ed88ace89fa5632c344724e29a1857083e7a21a92f2a1b370111c66c458fb4e7",
+  "signed_apk_bytes": 54350164,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "ec0de734e12ea134087d4df3a24b973e40328dc10007b184d35fd29865771cd3",
+    "lib/armeabi-v7a/libgojni.so": "93bae9b1fc061656eec5c24b14b50ec1ca5561e7b213b3f654215f130dfcba55"
+  },
+  "native_source_sha256sums": "afe125ba8b770a1a9c50c0bbdc1c9d78ca58e224730df1d9c0fc720669e01fd8  ITOM-1.1.0-RC1.6-linux-amd64.bin\n804709db420707727ce46822b4a5cc362a1f9f6bf569fce03cdacebac8290d52  ITOM-1.1.0-RC1.6-linux-arm64.bin\n9362301f1ecd8760087c3090aeb9b59b87b6e3019a4f2444a17782f44bf39aa8  ITOM-1.1.0-RC1.6-sources.zip\n",
+  "source_manifest_files": 706,
+  "source_manifest_sha256": "91f999d1152e873f43d435c2f11959d3c61b2770e02b41184f06074b858fdbd7",
+  "matching_endpoints_required": "Client and server RC1.6 for virtual authenticated DATA echo",
+  "wire_envelopes_changed": false,
+  "mailbox_config_binding_changed": false,
+  "journal_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "existing_application_deadlines_changed": false,
+  "probe": {
+    "bytes": 16,
+    "period_seconds": 5,
+    "deadline_ms": 1500,
+    "authority": "ordinary accounted OPEN/DATA/receipt paths",
+    "nonce_checked": true,
+    "open_time_excluded": true,
+    "first_echo_required_before_ready": true,
+    "failed_sample_reported_as_rtt": false,
+    "provider_reconnect_on_probe_timeout": false
+  },
+  "source_qualification": {
+    "run_id": 40491511954,
+    "result": "failed upper-latency light RTT gate",
+    "samples": 16,
+    "at_or_below_300ms": 11,
+    "maximum_ms": 386.435826,
+    "strict_limit_ms": 300
+  },
+  "local_validation": {
+    "source_commit": "6d60e2d7c4372f96ac1e0e6a9b49d26787908c9e",
+    "input_summary": "RC1.5 reached READY at 4455ms, 20 selected lines; short request 31 accepted; 6950/8517 cumulative application bytes; no runtime trace or RTT implementation",
+    "attached_server_matches_rc1_5": true,
+    "field_stall_cause_confirmed": false,
+    "field_stall_fixed": false,
+    "data_readiness_before": "negative DATA visibility scenario returns a live client with nil startup error",
+    "data_readiness_after": "PATH failure with selected 2/2, no READY",
+    "real_native_bridge": "two VPN sessions; ten accounts; 4KiB and 128KiB real HTTPS bodies via SOCKS and IPv4 TUN; command service 20/40/30ms; passed",
+    "repeat_native_with_tracing": "three cohorts passed; independent profiled cohort passed",
+    "focused_repeat": {
+      "case_groups_per_iteration": 5,
+      "iterations": 3,
+      "failures": 0
+    },
+    "local_full_race": {
+      "core_passed": 278,
+      "core_failed": 1,
+      "native_passed": 14,
+      "native_failed": 0,
+      "failing_case": "TestDistinctAccountRosterTLSHTTPWithFluctuatingClientAndServerService",
+      "max_observed_scheduler_tick_delay_ms": 920
+    },
+    "additional_local_failure": "one native TLS timeout after earlier transfers; test reporter had separate synchronized-buffer bug now fixed",
+    "deadlines_changed": false,
+    "quota_or_debt_reset": false,
+    "performance_qualified": false,
+    "first_hosted_safety": {
+      "run_id": 40489264274,
+      "core_passed": 280,
+      "core_failed": 0,
+      "native_passed": 13,
+      "native_failed": 1,
+      "cause": "old RC1.5 suffix assertion; corrected to RC1.6 without changing transport or deadlines"
+    },
+    "final_hosted_safety": {
+      "run_id": 40491512008,
+      "core_passed": 280,
+      "native_passed": 14,
+      "failures": 0
+    },
+    "source_qualification": {
+      "run_id": 40491511954,
+      "result": "failed upper-latency light RTT gate",
+      "samples": 16,
+      "at_or_below_300ms": 11,
+      "maximum_ms": 386.435826,
+      "strict_limit_ms": 300
+    }
+  },
+  "persistent_state_notes": "Update both endpoints in place; launch downloaded server executable and choose 11 then 9. Keep all profiles/wallets/journals."
+}
