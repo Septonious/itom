@@ -19,6 +19,7 @@ type serverTrace struct {
 	mu      sync.Mutex
 	root    string
 	enabled bool
+	startup bool // minimal fixed client startup evidence, independent of packet tracing
 }
 
 func (t *serverTrace) record(value any) error {
@@ -37,8 +38,12 @@ func (t *serverTrace) record(value any) error {
 	if err = os.MkdirAll(t.root, 0700); err != nil {
 		return err
 	}
-	path := filepath.Join(t.root, "transport-trace.jsonl")
-	if info, e := os.Stat(path); e == nil && info.Size()+int64(len(raw)+1) > 2<<20 {
+	name, limit := "transport-trace.jsonl", int64(2<<20)
+	if t.startup {
+		name, limit = "startup-trace.jsonl", 256<<10
+	}
+	path := filepath.Join(t.root, name)
+	if info, e := os.Stat(path); e == nil && info.Size()+int64(len(raw)+1) > limit {
 		_ = os.Remove(path + ".2")
 		if e = os.Rename(path+".1", path+".2"); e != nil && !os.IsNotExist(e) {
 			return e

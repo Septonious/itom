@@ -64,7 +64,7 @@ func TestApplicationCopyPreservesReplyAfterUploadHalfClose(t *testing.T) {
 	}
 }
 func TestExperimentalCandidateCannotMasqueradeAsStableRelease(t *testing.T) {
-	if !strings.HasSuffix(Version(), "-rc1-3") {
+	if !strings.HasSuffix(Version(), "-rc1-4") {
 		t.Fatal("field candidate must retain its explicit RC identity")
 	}
 }

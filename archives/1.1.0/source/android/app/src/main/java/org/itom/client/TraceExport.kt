@@ -16,7 +16,9 @@ internal fun exportTransportTrace(root: File, profile: String?, report: String, 
             val base = File(root, "transport").canonicalFile
             val directory = File(base, "$profile/transport").canonicalFile
             require(directory.path.startsWith(base.path + File.separator))
-            for (name in listOf("transport-trace.jsonl.2", "transport-trace.jsonl.1", "transport-trace.jsonl")) {
+            val names = listOf("startup-trace.jsonl.2", "startup-trace.jsonl.1", "startup-trace.jsonl",
+                "transport-trace.jsonl.2", "transport-trace.jsonl.1", "transport-trace.jsonl")
+            for (name in names) {
                 val file = File(directory, name)
                 require(file.canonicalFile.parentFile == directory)
                 val stream = try { FileInputStream(file) } catch (e: java.io.FileNotFoundException) {
@@ -29,7 +31,8 @@ internal fun exportTransportTrace(root: File, profile: String?, report: String, 
             zip.putNextEntry(ZipEntry("diagnostics.json"))
             zip.write(report.toByteArray(Charsets.UTF_8)); zip.closeEntry()
             zip.putNextEntry(ZipEntry("capture.json"))
-            zip.write("""{"schema":1,"live_snapshot_best_effort":true,"trace_files":${sources.size},"plaintext_payload":false}""".toByteArray(Charsets.UTF_8))
+            val startupFiles = sources.count { it.first.startsWith("startup-") }
+            zip.write("""{"schema":1,"live_snapshot_best_effort":true,"trace_files":${sources.size},"startup_trace_files":$startupFiles,"transport_trace_files":${sources.size - startupFiles},"plaintext_payload":false}""".toByteArray(Charsets.UTF_8))
             zip.closeEntry()
             val buffer = ByteArray(64 * 1024)
             for ((name, stream, size) in sources) {

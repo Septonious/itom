@@ -69,6 +69,12 @@ func StartClient(ctx context.Context, p servercfg.Profile, dir string, d Dial) (
 }
 func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string, d Dial, o ClientOptions) (client *Client, err error) {
 	stage := "PROFILE"
+	started := time.Now()
+	// Record fixed, nonsecret startup transitions before opening any provider
+	// socket or returning a native Client. Failed construction has no runtime
+	// object from which Android could retrieve a trace later.
+	startupTrace := &serverTrace{root: dir, enabled: true, startup: true}
+	accountTrace := &serverTrace{root: dir, enabled: o.Diagnostics}
 	var progressMu sync.Mutex
 	progress := StartupProgress{Stage: stage, TotalLines: 2 * len(p.Accounts)}
 	report := func(code string, selected bool) {
@@ -80,6 +86,11 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		if selected {
 			progress.SelectedLines++
 		}
+		_ = startupTrace.record(struct {
+			Event, Revision string
+			StartupProgress
+			ElapsedMS, SampledAtMS int64
+		}{"client_startup", TransportRevision, progress, time.Since(started).Milliseconds(), time.Now().UnixMilli()})
 		if o.Progress != nil {
 			o.Progress(progress)
 		}
@@ -117,7 +128,13 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	stage = "IMAP"
 	report(stage, false)
-	lanes, err := selectProfile(startup, p, plan, nil, d, o.TLSConfig, func() { report("", true) }, nil)
+	lanes, err := selectProfile(startup, p, plan, nil, d, o.TLSConfig, func() { report("", true) }, func(e selectionEvent) {
+		_ = accountTrace.record(struct {
+			Event, Revision string
+			selectionEvent
+			SampledAtMS int64
+		}{"client_account_startup", TransportRevision, e, time.Now().UnixMilli()})
+	})
 	if err != nil {
 		return nil, err
 	}

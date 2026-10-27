@@ -12,7 +12,7 @@ import (
 func TestStartupFailureReportsSafePhaseAndPreservesInspectableCause(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := StartClient(ctx, servercfg.Profile{}, "private-wallet-path", nil)
+	_, err := StartClient(ctx, servercfg.Profile{}, t.TempDir(), nil)
 	if !errors.Is(err, context.Canceled) || err.Error() != "V2_STARTUP_PROFILE" {
 		t.Fatalf("lost startup phase or cancellation cause: %v", err)
 	}
