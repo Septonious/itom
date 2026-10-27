@@ -71,3 +71,10 @@ run is still needed to confirm it accepts the shorter forms. There is no claim
 of sustained 100 Mbps or completed idle/loaded RTT qualification. If connection
 still fails, export the new client and server diagnostics; the client trace will
 show the smallest attempted representation without exposing provider reply text.
+
+The exact packaged source passed 275 core race-test groups, 13 native race-test
+groups, both Go vet checks, source/launcher checks, 92 Android domain tests and
+8 app unit tests. Android compilation and lint passed with zero errors and one
+dependency-version warning. APK v3 signing and the unchanged persistent signer
+were verified. All 701 tracked source files in the source archive match the
+build commit byte-for-byte.

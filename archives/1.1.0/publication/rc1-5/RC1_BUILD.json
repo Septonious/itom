@@ -1,0 +1,78 @@
+{
+  "release": "ITOM 1.1.0 RC1.5",
+  "purpose": "provider short-keyword request/receipt compatibility and retired-control race fixes",
+  "source_commit": "5d93587fd188f555e070296ac06b26b54389f7f4",
+  "build_run_id": 40448551513,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40448551513",
+  "field_connection_fixed": false,
+  "field_qualified": false,
+  "performance_qualified": false,
+  "exact_provider_keyword_limit": "not measured; tagged request refusal observed",
+  "functional_ci": {
+    "core_race_groups_passed": 275,
+    "native_race_groups_passed": 13,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 92,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10116,
+    "version_name": "1.1.0-rc1.5-debug"
+  },
+  "source_ci_apk_sha256": "b9699f4cd752fb04481b69cb32e175402df5e9807961cf23f0f0cf0c051eb0ac",
+  "signed_apk_sha256": "3dfc93d773eeda40ddda5f1844074b9fcc7cd58bb651f93e094618530fb0e9b1",
+  "signed_apk_bytes": 54317396,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "ffb0b8b68188727c2cc335549760fce40e91432c80dcb7ad3482062ce723639b",
+    "lib/armeabi-v7a/libgojni.so": "81a0805a7ef8deba754101767df2c9a2bbb6f17381a309fb4bd8027abba722a8"
+  },
+  "native_source_sha256sums": "78b54b9bf9b110e4f9523ffce22dbf94953e02540d2b3ed7dbcf8db692487a52  ITOM-1.1.0-RC1.5-linux-amd64.bin\nb31f54382aa759b54ee320fac0abded905b522a3a397eafc8b9cd0613621b479  ITOM-1.1.0-RC1.5-linux-arm64.bin\n9c41213f2c250de1a3e68e760f6944956ad420dd725c59beaeb118c9d36544fa  ITOM-1.1.0-RC1.5-sources.zip\n",
+  "source_manifest_files": 701,
+  "source_manifest_sha256": "57370138de8136b6efb1e10e444311b5196c762699f8b85d553f3920251b1986",
+  "matching_endpoints_required": "App and server RC1.5 for fragmented keywords",
+  "wire_envelopes_changed": false,
+  "metadata_representations_added": true,
+  "mailbox_config_binding_changed": false,
+  "journal_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "authentication_MAC_bits": 256,
+  "short_request_keyword_bytes": [
+    59,
+    31,
+    16
+  ],
+  "application_deadlines_changed": false,
+  "changes": [
+    "Explicit tagged refusals can select complete bounded request fragments; original full MAC and durable grant authority retained",
+    "Authenticated request hints cleared without message deletion or quota release",
+    "Delivery receipts support bounded fragments and case-equivalent IMAP flags, with unchanged full BODY/receipt/absence requirements",
+    "Known absent aggregate grant snapshots are discarded without a fabricated cleanup status, balance mutation or new grant; unknown descriptors still fail closed",
+    "Startup traces expose attempted keyword size; runtime failure snapshots retain fixed journal cause"
+  ],
+  "local_validation": {
+    "source_commit": "5d93587fd188f555e070296ac06b26b54389f7f4",
+    "field_observed": "Two attempts selected 20/20 lines, matched config hash, read authenticated offer, failed at request with IMAP_TAGGED_REFUSAL at 976 and 890ms",
+    "exact_provider_limit": "not measured; provider reason text absent",
+    "request_before": "previous single-keyword submission fails REQUEST against length-64 provider",
+    "metadata_fixed": "passed all 64/32/16 provider limits, complete auth checks, four 10-account VPN sessions with real HTTPS and 20/40/30ms command variation",
+    "focused_safety": "25 top-level race groups passed",
+    "native_race": "13 passed",
+    "vet": "core and native passed",
+    "application_deadlines_changed": false,
+    "intermediate_failures": [
+      "request-only fix exposed refused 71-character receipts and fixture mailbox exhaustion",
+      "four-session cohort exposed delayed aggregate/fence for actually retired grant metadata; recovered only by no-op with no cleanup ACK/refund"
+    ],
+    "retained_history_debt_reset": false,
+    "field_qualified": false,
+    "performance_qualified": false
+  },
+  "persistent_state_notes": "Update both app and server in place; launch downloaded server executable and choose 11 then 9. Keep all profile, wallet and journal state."
+}
