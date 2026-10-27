@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.6 with verified DATA readiness, real RTT and complete connected diagnostics
+name: Build session-v2 RC1.6 with verified DATA readiness, real RTT and matched native identity
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
