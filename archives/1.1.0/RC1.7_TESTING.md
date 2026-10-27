@@ -46,3 +46,18 @@ diagnostics, not the runtime congestion controller.
 
 DNS remains unchanged: race 31.131.251.83 and 185.22.234.229 over UDP/TCP 53,
 250 ms shared direct timeout, optional IMAP fallback latched until VPN restart.
+
+## Validation recorded for this source
+
+Both hosted functional runs passed 285 core and 14 native race-test groups.
+The final separate source qualification run passed the 64-exchange fluctuating
+light profile and three exchanges after silence. The sustained upper-range
+profile passed the 300 ms bound in 10/16 exchanges, with a 366.494 ms maximum;
+that strict gate failed. This is not a throughput or field qualification.
+
+An earlier secondary run exposed an unmarked deliberate test shutdown after all
+80 HTTPS transfers and journal audits. The fixture now permits incomplete-literal
+EOF only after explicit endpoint shutdown; live transfers retain strict checks.
+Three focused repetitions and both final hosted functional runs passed. The
+initial failure and the earlier trace-rotation assertion failure remain included
+in the synthetic evidence, with their corrections identified.
