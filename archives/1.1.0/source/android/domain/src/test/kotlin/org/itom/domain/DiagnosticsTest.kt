@@ -19,6 +19,8 @@ class DiagnosticsTest {
         val view = TransportDiagnostics.parse("""{"Revision":"fixture","Runtime":{"Phase":"serving"},"Client":{"ActiveLines":2,"TotalLines":2,"Lines":[{"ActiveLines":2}]}}""")
         assertTrue(view.consistent(Metrics(activeLines = 2, totalLines = 2)))
         assertEquals(1, view.lines.size)
+        assertEquals("fixture", view.root.field("Revision"))
+        assertEquals("serving", view.root.objectField("Runtime")?.field("Phase"))
         assertFalse(TransportDiagnostics.parse("""{"Runtime":{"Phase":"serving"}}""").consistent(Metrics(activeLines = 2, totalLines = 2)))
     }
     @Test fun recoveringWarningsDifferFromTerminalCodes() {
