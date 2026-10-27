@@ -46,3 +46,18 @@ Sustained 100 Mbps and maximum 300 ms light-load RTT remain unqualified. No
 Android device or live Rambler access is available in this environment. DNS is
 unchanged: race 31.131.251.83 and 185.22.234.229 over UDP/TCP 53, shared 250 ms
 direct timeout, optional IMAP fallback latched until the user restarts the VPN.
+
+## Validation limits for this build
+
+Both hosted runs passed all 286 core and 14 native race-test groups. The separate
+source qualification passed 64 exchanges with fluctuating propagation and three
+after silence. Its strict upper-range gate passed 8/16 exchanges at or below
+300 ms, with a maximum of 370.216 ms; that gate failed.
+
+The local full race run had three timing failures despite the focused production
+cases passing. Sequential RC1.7/RC1.8 comparisons also had failures in both
+versions, with host scheduling delays reaching multiple seconds. A small
+non-race 80-request renewal cohort passed in both versions. These are test-cohort
+elapsed times, not sustained-bandwidth measurements, and cannot establish a
+general speed advantage. All original deadlines and CPU settings were retained.
+The full failures and comparison logs are included in synthetic evidence.
