@@ -1,0 +1,62 @@
+{
+  "release": "ITOM 1.1.0 RC1.4",
+  "purpose": "diagnostic startup capture; not a confirmed field connection fix",
+  "source_commit": "16d487f3eb737454443a04e9adc09e22b3d11ba3",
+  "build_run_id": 40438933156,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40438933156",
+  "field_connection_fixed": false,
+  "field_qualified": false,
+  "performance_qualified": false,
+  "functional_ci": {
+    "core_race_groups_passed": 270,
+    "native_race_groups_passed": 13,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 92,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10115,
+    "version_name": "1.1.0-rc1.4-debug"
+  },
+  "source_ci_apk_sha256": "4c957c232dbb1f83a979a581eaafdeec8a1d2c0e077293e86fd0f75b9255d1e8",
+  "signed_apk_sha256": "fc6e34d8d20ee80d76ff35f6b6b2ce5fce3b632d197d55a0ded8b850d402e1c6",
+  "signed_apk_bytes": 54251860,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "c7bd572133507fbcf0c3c7500dcc203e3a047d18019dbf28d6b29b912f7930e5",
+    "lib/armeabi-v7a/libgojni.so": "b404e84536a85bbe6cc67e98a1b6c014bcf2ee767a8e8a7690485296d699aa95"
+  },
+  "native_source_sha256sums": "ece21cad52012bed7f7e09d9c598d40eb6ca4642b8bb8aed6d7cc8a2a993bb24  ITOM-1.1.0-RC1.4-linux-amd64.bin\n777026c7591fceb57934ebc95cc600814db052de380ffa568ec8a4bf2583f690  ITOM-1.1.0-RC1.4-linux-arm64.bin\nd760a5e10de23cf50049fcfed1a4059adafa1786c6112cdc971e53d4e58bced8  ITOM-1.1.0-RC1.4-sources.zip\n",
+  "source_manifest_files": 696,
+  "source_manifest_sha256": "8d64daa6ae3d1154095ed26c32c2495c58882c3f6bb852e9e5f52d84e0391753",
+  "compatible_existing_server": "1.1.0-rc1.3",
+  "wire_envelopes_changed": false,
+  "mailbox_config_binding_changed": false,
+  "journal_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "changes": [
+    "Create minimal bounded startup trace before provider connections even without a native client",
+    "Wire detailed client account tracing to the diagnostics option",
+    "Export startup trace generations separately from runtime trace generations",
+    "Flush terminal native startup phase before returning",
+    "Separate discovery, wallet opening, request publication and invitation phases; retain safe failure reason"
+  ],
+  "local_validation": {
+    "source_commit": "16d487f3eb737454443a04e9adc09e22b3d11ba3",
+    "targeted_core_race": "passed: immediate failure, tracing on/off, public TLS startup/restart and request refusal",
+    "native_full_race": "passed",
+    "tunnel_full_race": "passed",
+    "core_transport_tunnel_vet": "passed",
+    "startup_export_kotlin_jvm": "passed (1 test, no Android device)",
+    "native_old_report_overlay": "failed as expected: only PROFILE retained",
+    "old_client_trace_overlay": "failed as expected: no startup trace with tracing off or on",
+    "local_java_limit": "JRE only; pure Kotlin export test used no-source JavaCompile tasks disabled. Full Android compilation and lint delegated to hosted build."
+  },
+  "persistent_state_notes": "Update APK in place; keep profile and state. RC1.3 server may remain installed. Enable tracing for optional account-stage details and export after one failed attempt."
+}

@@ -54,3 +54,10 @@ uncharged client HELLO. Normal HTTPS startup/restart remains covered.
 No real Android device or Rambler account was available in the build environment.
 The next transport change requires the new trace from the actual failing
 attempt; this release makes that evidence obtainable without another reinstall.
+
+The exact packaged source passed 270 core race-test groups, 13 native race-test
+groups, both Go vet checks, source/launcher checks, 92 Android domain tests and
+8 app unit tests. Android compilation and lint passed with zero errors; the
+single lint warning reports a newer dependency version. APK v3 signing and the
+unchanged persistent certificate were verified after signing. All 696 tracked
+source files in the archive were compared byte-for-byte with the build commit.
