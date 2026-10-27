@@ -1,12 +1,15 @@
 package mobile
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"itom.local/core/tunnel"
 )
 
 type startupHost struct{ lookups int }
@@ -16,6 +19,35 @@ func (*startupHost) DNS() string            { return `["192.0.2.53"]` }
 func (h *startupHost) Lookup(string) string { h.lookups++; return `[]` }
 func (*startupHost) Route(string) string    { return "PROXY" }
 func (*startupHost) Startup(string) bool    { return true }
+
+type retainedStartupHost struct {
+	startupHost
+	reports []string
+}
+
+func (h *retainedStartupHost) Startup(raw string) bool {
+	h.reports = append(h.reports, raw)
+	return true
+}
+
+func TestImmediateFailureFlushesFinalStartupPhaseBeforeFirstHeartbeat(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	host := &retainedStartupHost{}
+	update, finish := reportStartup(ctx, cancel, host, 20)
+	update(tunnel.StartupProgress{Stage: "REQUEST", FailureReason: "IMAP_TAGGED_REFUSAL", SelectedLines: 20, TotalLines: 20})
+	finish()
+	var final struct {
+		StartupStage, FailureReason string
+		SelectedLines, TotalLines   int
+	}
+	if err := json.Unmarshal([]byte(host.reports[len(host.reports)-1]), &final); err != nil {
+		t.Fatal(err)
+	}
+	if final.StartupStage != "REQUEST" || final.FailureReason != "IMAP_TAGGED_REFUSAL" || final.SelectedLines != 20 || final.TotalLines != 20 {
+		t.Fatal("sub-second failure returned before its final evidence", host.reports)
+	}
+}
 
 // This is the production VaultStore.runtime JSON shape, including Android's
 // profile discriminator. The public API fixture previously constructed a CLI

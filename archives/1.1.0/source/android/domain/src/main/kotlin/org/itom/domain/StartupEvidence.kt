@@ -11,7 +11,8 @@ fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, samp
         put("Outcome", outcome.name)
         put("SampledAtMS", sampledAt.coerceAtLeast(0))
         root.field("Revision")?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) }?.let { put("Revision", it) }
-        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "READY") }?.let { put("StartupStage", it) }
+        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "READY") }?.let { put("StartupStage", it) }
+        root.field("FailureReason")?.takeIf { it in startupFailureReasons }?.let { put("FailureReason", it) }
         root.field("ConfigHash")?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }?.let { put("ConfigHash", it) }
         val total = root.field("TotalLines")?.toIntOrNull()?.takeIf { it in 0..4096 }
         if (total != null) {
@@ -22,3 +23,11 @@ fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, samp
         if (failure != null) put("StartupFailure", nativeFailureCode(failure))
     }
 }
+
+private val startupFailureReasons = setOf(
+    "CANCELED", "TIMEOUT", "JOURNAL_CONFIG_MISMATCH", "UIDPLUS_UNSUPPORTED",
+    "PERMANENT_KEYWORDS_UNSUPPORTED", "IMAP_TAGGED_REFUSAL", "PROTOCOL_OR_RETAINED_BODY",
+    "CAPACITY_OR_INVENTORY_BOUND", "IMAP_CONNECT_FAILED", "IMAP_TLS_FAILED",
+    "IMAP_GREETING_FAILED", "IMAP_LOGIN_FAILED", "IMAP_CAPABILITY_FAILED",
+    "IMAP_SELECT_FAILED", "IMAP_CREATE_FAILED", "LOCAL_OR_SESSION_FAILURE",
+)

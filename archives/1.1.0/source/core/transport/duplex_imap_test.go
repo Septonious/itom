@@ -27,6 +27,7 @@ import (
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
 	flagCase       func(string) string // provider-equivalent, case-insensitive keyword spelling
+	rejectRequests bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
 	allowClose     func() bool         // explicit test-owner shutdown only; never ordinary application service
 	mu             sync.Mutex
 	bodies         [][]byte
@@ -299,6 +300,10 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 						continue
 					}
 					keyword := strings.TrimSuffix(strings.TrimPrefix(fields[5], "("), ")")
+					if m.rejectRequests && strings.HasPrefix(keyword, "ITOM2_") {
+						fmt.Fprintf(conn, "%s NO request keyword refused\r\n", tag(line))
+						continue
+					}
 					m.mu.Lock()
 					if m.flags == nil {
 						m.flags = make(map[uint32]map[string]bool)

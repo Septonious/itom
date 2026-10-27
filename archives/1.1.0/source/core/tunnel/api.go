@@ -41,6 +41,7 @@ type ClientOptions struct {
 type StartupProgress struct {
 	Stage                     string
 	ConfigHash                string
+	FailureReason             string
 	SelectedLines, TotalLines int
 }
 type ClientSnapshot struct {
@@ -86,6 +87,10 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	report(stage, false)
 	defer func() {
 		if err != nil {
+			progressMu.Lock()
+			progress.FailureReason = startupFailureCode(err)
+			progressMu.Unlock()
+			report(stage, false)
 			err = &startupError{code: "V2_STARTUP_" + stage, cause: err}
 		}
 	}()
@@ -125,8 +130,12 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	deadline, _ := startup.Deadline()
 	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, StartupDeadline: deadline, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
 		switch code {
-		case "rendezvous", "rendezvous_found":
+		case "rendezvous":
 			stage = "RENDEZVOUS"
+		case "rendezvous_found":
+			stage = "WALLET"
+		case "request":
+			stage = "REQUEST"
 		case "waiting_invitation":
 			stage = "INVITATION"
 		case "noise":

@@ -35,7 +35,7 @@ class NativeBackend(private val context: Context, val vault: VaultStore) : Sessi
         val before = TransportDiagnostics.parse(lastStartup).root
         lastStartup = report.toString()
         // Persist stage/count/outcome transitions, not every heartbeat or packet.
-        if (listOf("StartupStage", "SelectedLines", "TotalLines", "Outcome", "StartupFailure").all { before[it] == report[it] }) return
+        if (listOf("StartupStage", "SelectedLines", "TotalLines", "Outcome", "StartupFailure", "FailureReason").all { before[it] == report[it] }) return
         var stream: java.io.FileOutputStream? = null
         try {
             stream = startupFile.startWrite()

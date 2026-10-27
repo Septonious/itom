@@ -228,6 +228,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 		if err != nil {
 			return nil, err
 		}
+		stage("request")
 		if err = rendezvous.Submit(startup, x, anchor, o.Key); err != nil {
 			return nil, err
 		}

@@ -28,6 +28,7 @@ import (
 	"itom.local/core/mailbox"
 	"itom.local/core/pool"
 	"itom.local/core/servercfg"
+	"itom.local/core/transport"
 	"itom.local/core/tunnel"
 	"itom.local/core/wire"
 )
@@ -80,6 +81,10 @@ func TestPublicEndpointsAcceptProviderKeywordCaseChangesWithoutSpuriousRestart(t
 	testPublicEndpoints(t, publicEndpointCase{caseChanges: true})
 }
 
+func TestProviderRequestRefusalAfterSuccessfulLoginsReportsRequestPhaseWithoutAppending(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{requestRefusal: true})
+}
+
 func TestInPlaceUpgradeWithLegacyControlMailAndUnknownDataDebtStillCarriesHTTPS(t *testing.T) {
 	testPublicEndpoints(t, publicEndpointCase{legacy: true})
 }
@@ -91,6 +96,7 @@ func TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingS
 type publicEndpointCase struct {
 	clientDelay                        time.Duration
 	caseChanges, legacy, fieldTopology bool
+	requestRefusal                     bool
 }
 
 func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
@@ -129,7 +135,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, rejectRequests: scenario.requestRefusal}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -435,6 +441,24 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		clientDir := filepath.Join(root, "client-state", p.User.ID)
 		var progress []tunnel.StartupProgress
 		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}, Progress: func(p tunnel.StartupProgress) { progress = append(progress, p) }})
+		if scenario.requestRefusal {
+			shutdown.Store(true)
+			if client != nil || err == nil || err.Error() != "V2_STARTUP_REQUEST" || !errors.Is(err, transport.ErrRefused) {
+				t.Fatal("provider refusal was hidden as offer discovery or produced a session", err)
+			}
+			last := progress[len(progress)-1]
+			if last.Stage != "REQUEST" || last.FailureReason != "IMAP_TAGGED_REFUSAL" || last.SelectedLines != 2 || last.TotalLines != 2 {
+				t.Fatal("final failure lost phase, reason or actual SELECT count", last)
+			}
+			box := boxes[upFolder+"-session-v2"]
+			box.mu.Lock()
+			physicalBodies := len(box.bodies)
+			box.mu.Unlock()
+			if physicalBodies != 1 {
+				t.Fatal("refused request appended an invitation or an uncharged client HELLO", physicalBodies)
+			}
+			return
+		}
 		if err != nil {
 			t.Fatal("public API startup", round, err)
 		}

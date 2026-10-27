@@ -21,10 +21,10 @@ func reportStartup(ctx context.Context, cancel context.CancelFunc, host Host, to
 		copy := state
 		mu.Unlock()
 		raw, _ := json.Marshal(struct {
-			Revision, StartupStage, ConfigHash string
-			SelectedLines, TotalLines          int
-			ElapsedMS, SampledAtMS             int64
-		}{tunnel.TransportRevision, copy.Stage, copy.ConfigHash, copy.SelectedLines, copy.TotalLines, time.Since(started).Milliseconds(), time.Now().UnixMilli()})
+			Revision, StartupStage, ConfigHash, FailureReason string
+			SelectedLines, TotalLines                         int
+			ElapsedMS, SampledAtMS                            int64
+		}{tunnel.TransportRevision, copy.Stage, copy.ConfigHash, copy.FailureReason, copy.SelectedLines, copy.TotalLines, time.Since(started).Milliseconds(), time.Now().UnixMilli()})
 		return host.Startup(string(raw))
 	}
 	if !send() {
@@ -49,8 +49,17 @@ func reportStartup(ctx context.Context, cancel context.CancelFunc, host Host, to
 		}
 	}()
 	return func(p tunnel.StartupProgress) {
-		mu.Lock()
-		state = p
-		mu.Unlock()
-	}, func() { stop(); <-done }
+			mu.Lock()
+			state = p
+			mu.Unlock()
+		}, func() {
+			stop()
+			<-done
+			// A failed attempt can finish before the first one-second heartbeat.
+			// Flush its final phase/reason before New returns to Android, after
+			// joining the heartbeat so Host.Startup callbacks never overlap.
+			if !send() {
+				cancel()
+			}
+		}
 }
