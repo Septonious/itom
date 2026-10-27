@@ -113,19 +113,24 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 			return err
 		}
 		options := transport.RosterServiceOptions{ReceiveWindow: 256 << 10, ExitWorkers: 16, Dialer: network, Policy: transport.ExitPolicyFunc(publicExit)}
-		if managed != nil {
-			options.ManagedDial = func(ctx context.Context, user string, target transport.Target) (net.Conn, bool, error) {
-				if user != p.User.ID {
-					return nil, true, transport.OpenDenied
-				}
-				conn, handled, err := managed(ctx, p.User, wire.Connect{Host: target.Host, Port: target.Port})
-				// Do not turn a typed nil *TCPConn into a nonnil net.Conn interface.
-				if conn == nil {
-					return nil, handled, err
-				}
+		options.ManagedDial = func(ctx context.Context, user string, target transport.Target) (net.Conn, bool, error) {
+			if user != p.User.ID {
+				return nil, true, transport.OpenDenied
+			}
+			if conn, handled, err := echoExit(target); handled {
 				return conn, handled, err
 			}
+			if managed == nil {
+				return nil, false, nil
+			}
+			conn, handled, err := managed(ctx, p.User, wire.Connect{Host: target.Host, Port: target.Port})
+			// A typed nil *TCPConn is not a live managed destination.
+			if conn == nil {
+				return nil, handled, err
+			}
+			return conn, handled, err
 		}
+
 		stage := func(code string) {
 			phase = code
 			observe(code, selectionEvent{}, nil)

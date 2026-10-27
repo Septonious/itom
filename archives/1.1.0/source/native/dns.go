@@ -97,6 +97,7 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 	}
 	reply, err := c.resolver.exchange(c.ctx, raw)
 	if err != nil {
+		c.traffic.dnsFailures.Add(1)
 		response.RCode = dnsmessage.RCodeServerFailure
 		return response.Pack()
 	}

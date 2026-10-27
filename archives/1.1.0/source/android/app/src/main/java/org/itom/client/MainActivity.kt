@@ -177,7 +177,7 @@ fun errorText(code: String) = when (code) {
                                 message(if (restartFailed) "Profile saved. Reconnect to apply it." else "Profile saved.")
                             })
                         }
-                        Page.DASHBOARD, Page.DIAGNOSTICS -> DiagnosticsScreen(config, session, if (session.phase == Phase.CONNECTED) session.transport else diagnostics, { enabled -> perform { graph.vault.diagnostics(enabled); restartIfActive(); message(if (enabled) "Logs and tracing enabled." else "Logs and tracing disabled.") } }, ::message)
+                        Page.DASHBOARD, Page.DIAGNOSTICS -> DiagnosticsScreen(config, session, diagnostics, { enabled -> perform { graph.vault.diagnostics(enabled); restartIfActive(); message(if (enabled) "Logs and tracing enabled." else "Logs and tracing disabled.") } }, ::message)
                         Page.SETTINGS -> SettingsScreen(graph.backend, session, ::message) { page = it }
                         Page.NETWORKS -> NetworkScreen(config, busy) { policy -> perform { graph.vault.networks(policy); message("Network selection saved.") } }
                         Page.DNS -> DNSScreen(config, busy) { value -> perform { graph.vault.dns(value); restartIfActive(); page = Page.SETTINGS; message("DNS settings saved.") } }

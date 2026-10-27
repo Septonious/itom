@@ -63,6 +63,9 @@ type Client struct {
 	profile  servercfg.Profile
 	mu       sync.Mutex
 	events   []string
+	cancel   context.CancelFunc
+	workers  sync.WaitGroup
+	probe    ProbeSnapshot
 }
 
 func StartClient(ctx context.Context, p servercfg.Profile, dir string, d Dial) (*Client, error) {
@@ -175,7 +178,15 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	if err != nil {
 		return nil, err
 	}
-	return &Client{endpoint: endpoint, profile: p}, nil
+	monitor, cancelMonitor := context.WithCancel(ctx)
+	client = &Client{endpoint: endpoint, profile: p, cancel: cancelMonitor}
+	client.workers.Add(1)
+	go client.runProbe(monitor)
+	if o.Diagnostics {
+		client.workers.Add(1)
+		go client.traceRuntime(monitor, accountTrace)
+	}
+	return client, nil
 }
 
 // Error exposes only a fixed startup phase across gomobile. The Go caller can
@@ -199,7 +210,12 @@ func (c *Client) Close() error {
 	if c == nil {
 		return nil
 	}
-	return c.endpoint.Close()
+	if c.cancel != nil {
+		c.cancel()
+	}
+	err := c.endpoint.Close()
+	c.workers.Wait()
+	return err
 }
 func (c *Client) Stats() Stats { return c.Snapshot().Stats }
 func (c *Client) Failure() string {
@@ -233,6 +249,7 @@ func (c *Client) Snapshot() ClientSnapshot {
 	}
 	c.mu.Lock()
 	s.Events = append([]string(nil), c.events...)
+	s.RTTMillis = c.probe.RTTMillis
 	c.mu.Unlock()
 	if err := c.endpoint.Err(); err != nil {
 		s.Events = append(s.Events, err.Error())
@@ -244,7 +261,8 @@ func (c *Client) Diagnostics() string {
 		Revision string
 		Client   ClientSnapshot
 		Runtime  transport.RuntimeSnapshot
-	}{TransportRevision, c.Snapshot(), c.endpoint.Service.Runtime.Snapshot()})
+		Probe    ProbeSnapshot
+	}{TransportRevision, c.Snapshot(), c.endpoint.Service.Runtime.Snapshot(), c.Probe()})
 	return string(raw)
 }
 func (c *Client) RecordNetworkEvent(code string, _ int64) {

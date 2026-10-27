@@ -48,6 +48,7 @@ type RuntimeSnapshot struct {
 	Phase    ServicePhase
 	Exit     ServicePhase
 	Session  SessionSnapshot
+	Flows    []FlowSnapshot
 	Carriers []CarrierServiceSnapshot
 }
 
@@ -187,6 +188,7 @@ func (e *Runtime) Snapshot() RuntimeSnapshot {
 	snapshot := RuntimeSnapshot{Phase: e.phase, Exit: e.exitPhase, Carriers: append([]CarrierServiceSnapshot(nil), e.status...)}
 	e.mu.Unlock()
 	snapshot.Session = e.session.Snapshot()
+	snapshot.Flows = e.session.FlowSnapshots()
 	for i, c := range e.carriers {
 		snapshot.Carriers[i].Receive = c.Reader.Stats()
 		snapshot.Carriers[i].Publish = c.Writer.Stats()

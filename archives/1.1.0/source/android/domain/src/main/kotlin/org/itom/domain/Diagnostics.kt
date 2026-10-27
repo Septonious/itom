@@ -27,7 +27,8 @@ data class TransportDiagnostics(val root: JsonObject, val lines: List<JsonObject
         root.field("TotalLines")?.toIntOrNull() == metrics.totalLines && lineActive == metrics.activeLines
     companion object {
         fun parse(text: String): TransportDiagnostics {
-            val root = runCatching { Codec.json.parseToJsonElement(text) as? JsonObject }.getOrNull() ?: JsonObject(emptyMap())
+            val envelope = runCatching { Codec.json.parseToJsonElement(text) as? JsonObject }.getOrNull() ?: JsonObject(emptyMap())
+            val root = envelope.objectField("Client") ?: envelope
             val lines = (root["Lines"] as? JsonArray)?.mapNotNull { it as? JsonObject } ?: emptyList()
             return TransportDiagnostics(root, lines)
         }

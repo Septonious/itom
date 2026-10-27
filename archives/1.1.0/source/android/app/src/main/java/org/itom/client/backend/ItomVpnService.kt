@@ -250,6 +250,7 @@ class ItomVpnService : VpnService() {
                 val now = SystemClock.elapsedRealtime()
                 val snapshot = core.snapshot()
                 backend.adminState.value = core.adminSnapshot()
+                if (diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = core.diagnostics()
                 val stats = JSONObject(snapshot)
                 demand(stats.optString("Error").isEmpty(), "TRANSPORT_FAILED")
                 val active = stats.getInt("ActiveLines")

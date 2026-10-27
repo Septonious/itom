@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -55,7 +56,7 @@ func TestEndpointServerProcessHelper(t *testing.T) {
 				allowed = true
 			}
 		}
-		if !allowed || target.Host != "field-test.fixture" || target.Port != 443 {
+		if !allowed || (target.Host != "field-test.fixture" && target.Host != "203.0.113.80") || target.Port != 443 {
 			return nil, true, errors.New("fixture exit denied")
 		}
 		conn, err := (&net.Dialer{}).DialContext(ctx, "tcp", address)
@@ -105,7 +106,12 @@ func TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingS
 	testPublicEndpoints(t, publicEndpointCase{legacy: true, fieldTopology: true})
 }
 
+func TestNativeTUNAndSOCKSClientsCarryTLSAfterSuccessfulStartup(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{native: true, keywordBytes: 32, accounts: 10})
+}
+
 type publicEndpointCase struct {
+	native                             bool
 	clientDelay                        time.Duration
 	caseChanges, legacy, fieldTopology bool
 	requestRefusal                     bool
@@ -113,6 +119,15 @@ type publicEndpointCase struct {
 }
 
 func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
+	var nativeBinary string
+	if scenario.native {
+		nativeBinary = filepath.Join(t.TempDir(), "native-client.test")
+		build := exec.Command("go", "test", "-c", "-race", "-o", nativeBinary, ".")
+		build.Dir = "../../native"
+		if out, err := build.CombinedOutput(); err != nil {
+			t.Fatalf("native integration build: %v\n%s", err, out)
+		}
+	}
 	clientDelay, caseChanges, legacy := scenario.clientDelay, scenario.caseChanges, scenario.legacy
 	accountCount, userCount := 1, 1
 	if scenario.accounts > 0 {
@@ -138,7 +153,15 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	active := map[net.Conn]bool{}
 	upFolder, downFolder := "itom-field-up", "itom-field-down"
 	var shutdown atomic.Bool
-	boxes := map[string]*sharedMailbox{upFolder: {keywords: true, reclamation: true, allowClose: shutdown.Load}, downFolder: {keywords: true, reclamation: true, allowClose: shutdown.Load}}
+	nativeStopFile := filepath.Join(t.TempDir(), "native-close")
+	allowShutdown := func() bool {
+		if shutdown.Load() {
+			return true
+		}
+		_, e := os.Stat(nativeStopFile)
+		return scenario.native && e == nil
+	}
+	boxes := map[string]*sharedMailbox{upFolder: {keywords: true, reclamation: true, allowClose: allowShutdown}, downFolder: {keywords: true, reclamation: true, allowClose: allowShutdown}}
 	// The old protocol used these same base folders for unwrapped control
 	// packets. These are valid physical MIME messages, not v2 envelopes.
 	if legacy {
@@ -151,7 +174,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -176,8 +199,8 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			boxes[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, bodies: [][]byte{raw}}
-			boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load}
+			boxes[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: [][]byte{raw}}
+			boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown}
 			created[folder] = true
 		}
 	}
@@ -186,7 +209,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		username := fmt.Sprintf("fixture-%02d", n)
 		clone := map[string]*sharedMailbox{}
 		for folder, box := range boxes {
-			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: shutdown.Load, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes}
+			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes}
 		}
 		providerBoxes[username] = clone
 	}
@@ -460,6 +483,29 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	for round := 0; round < cohort; round++ {
 		p.User = cfg.Users[round%userCount]
 		clientDir := filepath.Join(root, "client-state", p.User.ID)
+		if scenario.native {
+			raw, e := json.Marshal(map[string]any{"Profile": p, "DNS": []string{"127.0.0.1"}, "Socks": map[string]any{"Port": 19081}, "Diagnostics": true})
+			if e != nil {
+				t.Fatal(e)
+			}
+			input := filepath.Join(root, "native-config.json")
+			if e = os.WriteFile(input, raw, 0600); e != nil {
+				t.Fatal(e)
+			}
+			certFile := filepath.Join(root, "https-root.pem")
+			if e = os.WriteFile(certFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: upstream.Certificate().Raw}), 0600); e != nil {
+				t.Fatal(e)
+			}
+			run := exec.Command(nativeBinary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=20s")
+			os.Remove(nativeStopFile)
+			run.Env = append(os.Environ(), "ITOM_NATIVE_TEST_STOP="+nativeStopFile, "ITOM_NATIVE_TEST_CONFIG="+input, "ITOM_NATIVE_TEST_STATE="+clientDir, "SSL_CERT_FILE="+rootFile, "ITOM_NATIVE_TEST_HTTPS_ROOT="+certFile)
+			if out, e := run.CombinedOutput(); e != nil {
+				t.Fatalf("native traffic round=%d err=%v\n%s\nserver=%s", round, e, out, logs.String())
+			} else {
+				t.Logf("native round=%d\n%s", round, out)
+			}
+			continue
+		}
 		var progress []tunnel.StartupProgress
 		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}, Progress: func(p tunnel.StartupProgress) { progress = append(progress, p) }})
 		if scenario.requestRefusal {

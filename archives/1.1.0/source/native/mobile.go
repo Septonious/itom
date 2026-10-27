@@ -63,6 +63,7 @@ type Client struct {
 	up, down atomic.Uint64
 	tcp      atomic.Int64
 	failure  atomic.Pointer[string]
+	traffic  trafficDiagnostics
 }
 
 // New starts provider connections and SOCKS but does not take ownership of TUN.
@@ -319,6 +320,7 @@ func (c *Client) worker(conn net.Conn, fn func()) {
 	select {
 	case c.slots <- struct{}{}:
 	default:
+		c.traffic.workerRefusals.Add(1)
 		c.mu.Unlock()
 		conn.Close()
 		return
@@ -335,16 +337,25 @@ func (c *Client) worker(conn net.Conn, fn func()) {
 	}()
 }
 func (c *Client) open(ctx context.Context, target wire.Connect) (socks.Stream, netip.AddrPort, error) {
+	c.traffic.openAttempts.Add(1)
+	c.traffic.opening.Add(1)
 	stream, addr, err := c.openRoute(ctx, target)
+	c.traffic.opening.Add(-1)
 	if err != nil {
+		c.traffic.openFailures.Add(1)
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrDeadlineExceeded) {
+			c.traffic.openTimeouts.Add(1)
+		}
 		return nil, addr, err
 	}
+	c.traffic.openEstablished.Add(1)
 	c.tcp.Add(1)
 	return &countStream{Stream: stream, client: c}, addr, nil
 }
 func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stream, netip.AddrPort, error) {
 	if ip, e := netip.ParseAddr(target.Host); e == nil {
 		if !ip.Is4() {
+			c.traffic.ipv6Blocked.Add(1)
 			return nil, netip.AddrPort{}, errors.New("IPV6_BLOCKED")
 		}
 		if fakePrefix.Contains(ip) {
@@ -452,6 +463,7 @@ func (c *Client) recordCopyStage(stream socks.Stream, direction string, n int64,
 
 func (c *Client) handleUDP(conn adapter.UDPConn) {
 	if conn.ID().LocalPort != 53 {
+		c.traffic.udpBlocked.Add(1)
 		conn.Close()
 		return
 	}
@@ -490,7 +502,13 @@ func (c *Client) Diagnostics() string {
 	if c.pool == nil {
 		return "{}"
 	}
-	return c.pool.Diagnostics()
+	var evidence map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(c.pool.Diagnostics()), &evidence); err != nil {
+		return "{}"
+	}
+	evidence["Native"], _ = json.Marshal(c.trafficSnapshot())
+	raw, _ := json.Marshal(evidence)
+	return string(raw)
 }
 
 // RecordNetworkEvent accepts only the core's bounded callback vocabulary.

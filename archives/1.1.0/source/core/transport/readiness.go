@@ -80,11 +80,29 @@ func (s *Session) FlowSnapshot(id uint64) (FlowSnapshot, bool) {
 	if f == nil {
 		return FlowSnapshot{}, false
 	}
-	snapshot := FlowSnapshot{ID: id, Sent: f.sent, Received: f.recv, Consumed: f.consumed, PeerCredit: f.peerCredit, PeerReceipt: f.receipt, ReceiveLimit: f.receiveLimit(), SendBuffered: f.buffered, Queued: f.tx.Len(), Readable: f.rx.Len(), Reordered: len(f.reorder), PendingRecords: len(f.pending), ReceiptPending: f.receiptPending, CreditPending: f.creditPending, LocalFinish: f.localFinish, FinishSent: f.finishSent, FinishAcked: f.finishAcked, RemoteFinish: f.remoteFinish, Reset: f.stopped()}
+	return s.flowSnapshotLocked(f), true
+}
+
+func (s *Session) flowSnapshotLocked(f *stream) FlowSnapshot {
+	snapshot := FlowSnapshot{ID: f.id, Sent: f.sent, Received: f.recv, Consumed: f.consumed, PeerCredit: f.peerCredit, PeerReceipt: f.receipt, ReceiveLimit: f.receiveLimit(), SendBuffered: f.buffered, Queued: f.tx.Len(), Readable: f.rx.Len(), Reordered: len(f.reorder), PendingRecords: len(f.pending), ReceiptPending: f.receiptPending, CreditPending: f.creditPending, LocalFinish: f.localFinish, FinishSent: f.finishSent, FinishAcked: f.finishAcked, RemoteFinish: f.remoteFinish, Reset: f.stopped()}
 	for _, d := range s.dispatches {
-		if d.record.Stream == id {
+		if d.record.Stream == f.id {
 			snapshot.Dispatches++
 		}
 	}
-	return snapshot, true
+	return snapshot
+}
+
+// FlowSnapshots follows the bounded stream table order and exposes only queue,
+// credit and progress state. Targets and application bytes are never included.
+func (s *Session) FlowSnapshots() []FlowSnapshot {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result := make([]FlowSnapshot, 0, len(s.flows))
+	for _, id := range s.order {
+		if f := s.flows[id]; f != nil {
+			result = append(result, s.flowSnapshotLocked(f))
+		}
+	}
+	return result
 }

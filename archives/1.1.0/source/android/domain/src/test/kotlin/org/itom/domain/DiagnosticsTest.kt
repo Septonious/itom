@@ -15,6 +15,12 @@ class DiagnosticsTest {
             assertTrue(TransportDiagnostics.parse(malformed).lines.isEmpty())
         }
     }
+    @Test fun fullRuntimeExportKeepsClientReadinessWithoutConfusingWorkerState() {
+        val view = TransportDiagnostics.parse("""{"Revision":"fixture","Runtime":{"Phase":"serving"},"Client":{"ActiveLines":2,"TotalLines":2,"Lines":[{"ActiveLines":2}]}}""")
+        assertTrue(view.consistent(Metrics(activeLines = 2, totalLines = 2)))
+        assertEquals(1, view.lines.size)
+        assertFalse(TransportDiagnostics.parse("""{"Runtime":{"Phase":"serving"}}""").consistent(Metrics(activeLines = 2, totalLines = 2)))
+    }
     @Test fun recoveringWarningsDifferFromTerminalCodes() {
         assertEquals(DiagnosticLevel.WARNING, diagnosticLevel("TIMEOUT"))
         assertEquals(DiagnosticLevel.WARNING, diagnosticLevel("IMAP_APPEND_OUTCOME_UNKNOWN"))
