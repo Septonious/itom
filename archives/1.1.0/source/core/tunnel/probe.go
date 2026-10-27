@@ -80,45 +80,37 @@ func echoSample(ctx context.Context, conn net.Conn) (time.Duration, error) {
 	return time.Since(begin), nil
 }
 
-func (c *Client) runProbe(ctx context.Context) {
+func (c *Client) sampleProbe(ctx context.Context, conn net.Conn) error {
+	elapsed, err := echoSample(ctx, conn)
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err == nil {
+		c.probe.Samples++
+		c.probe.RTTMillis = max(int64(1), elapsed.Milliseconds())
+		c.probe.SampledAtMS = time.Now().UnixMilli()
+		c.probe.Failure = ""
+	} else {
+		c.probe.Failures++
+		c.probe.RTTMillis = 0
+		c.probe.Failure = "PROBE_FAILED"
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrDeadlineExceeded) {
+			c.probe.Failure = "PROBE_TIMEOUT"
+		}
+	}
+	return err
+}
+
+func (c *Client) runProbe(ctx context.Context, conn net.Conn) {
 	defer c.workers.Done()
-	var conn net.Conn
 	defer func() {
 		if conn != nil {
 			conn.Close()
 		}
 	}()
-	for ctx.Err() == nil {
-		var err error
-		if conn == nil {
-			conn, err = c.endpoint.Service.Dialer.DialContext(ctx, "tcp", net.JoinHostPort(probeHost, "1"))
-		}
-		var elapsed time.Duration
-		if err == nil {
-			elapsed, err = echoSample(ctx, conn)
-		}
-		if ctx.Err() != nil {
-			return
-		}
-		c.mu.Lock()
-		if err == nil {
-			c.probe.Samples++
-			c.probe.RTTMillis = max(int64(1), elapsed.Milliseconds())
-			c.probe.SampledAtMS = time.Now().UnixMilli()
-			c.probe.Failure = ""
-		} else {
-			c.probe.Failures++
-			c.probe.RTTMillis = 0
-			c.probe.Failure = "PROBE_FAILED"
-			if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrDeadlineExceeded) {
-				c.probe.Failure = "PROBE_TIMEOUT"
-			}
-		}
-		c.mu.Unlock()
-		if err != nil && conn != nil {
-			conn.Close()
-			conn = nil
-		}
+	for {
 		timer := time.NewTimer(5 * time.Second)
 		select {
 		case <-ctx.Done():
@@ -128,6 +120,23 @@ func (c *Client) runProbe(ctx context.Context) {
 			timer.Stop()
 			return
 		case <-timer.C:
+		}
+		var err error
+		if conn == nil {
+			conn, err = c.endpoint.Service.Dialer.DialContext(ctx, "tcp", net.JoinHostPort(probeHost, "1"))
+		}
+		if err == nil {
+			err = c.sampleProbe(ctx, conn)
+		} else {
+			c.mu.Lock()
+			c.probe.Failures++
+			c.probe.RTTMillis = 0
+			c.probe.Failure = "PROBE_OPEN_FAILED"
+			c.mu.Unlock()
+		}
+		if err != nil && conn != nil {
+			conn.Close()
+			conn = nil
 		}
 	}
 }

@@ -11,7 +11,7 @@ fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, samp
         put("Outcome", outcome.name)
         put("SampledAtMS", sampledAt.coerceAtLeast(0))
         root.field("Revision")?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) }?.let { put("Revision", it) }
-        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "READY") }?.let { put("StartupStage", it) }
+        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "PATH", "READY") }?.let { put("StartupStage", it) }
         root.field("FailureReason")?.takeIf { it in startupFailureReasons }?.let { put("FailureReason", it) }
         root.field("RequestKeywordBytes")?.toIntOrNull()?.takeIf { it in setOf(16, 31, 59, 103) }?.let { put("RequestKeywordBytes", it) }
         root.field("ConfigHash")?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }?.let { put("ConfigHash", it) }

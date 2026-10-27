@@ -26,6 +26,7 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
+	hideServerData  bool                // explicit negative fixture: accepted server DATA never becomes visible
 	flagCase        func(string) string // provider-equivalent, case-insensitive keyword spelling
 	rejectRequests  bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
 	keywordBytes    int                 // optional provider name-length bound despite advertised permanent keywords
@@ -368,6 +369,14 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					uid := uint32(n + 1)
 					if !selected[uid] {
 						continue
+					}
+					if m.hideServerData {
+						decoded, e := mailbox.Decode(body)
+						hidden := e == nil && len(decoded) >= 4 && string(decoded[:4]) == "ISD2"
+						clear(decoded)
+						if hidden {
+							continue
+						}
 					}
 					var flags []string
 					for flag := range m.flags[uid] {

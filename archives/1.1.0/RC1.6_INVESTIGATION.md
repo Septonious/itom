@@ -45,3 +45,18 @@ The application deadlines and fixture mailbox limits were not increased.
 These changes fix missing measurement/evidence. They do not yet prove a fix for
 the user's application-traffic stall, qualify 100 Mbps or establish a 300 ms
 idle/light RTT bound. Matched client/server field diagnostics remain necessary.
+
+Additional correction: client READY now waits for an actual authenticated DATA
+nonce echo, not just permission. A negative fixture whose control path works
+but whose accepted server DATA remains invisible reproduces false readiness
+before this change. It now returns V2_STARTUP_PATH without emitting READY. This
+fix prevents a false connected state; it is not a claim that missing field DATA
+has been recovered.
+
+Expanded local race testing also exposed an intermittent native TLS deadline
+failure after earlier successful transfers. A subsequent three-run cohort and
+profiled run passed with unchanged deadlines. One full local race suite failed
+the existing fluctuating-service account HTTP case with scheduler tick delays
+up to 920 ms. These failures are retained; passing reruns do not erase them.
+The failure reporter's concurrent child-log buffer access was separately fixed
+so it cannot add a reporting-only data race to an application failure.

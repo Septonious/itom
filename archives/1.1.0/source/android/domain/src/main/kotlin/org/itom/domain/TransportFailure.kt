@@ -6,7 +6,7 @@ fun nativeFailureCode(message: String?): String = message?.takeIf {
         "NATIVE_CONFIG", "DNS_ADDRESS", "DNS_BACKUP_REQUIRED", "DNS_DUPLICATE",
         "V2_STARTUP_PROFILE", "V2_STARTUP_WALLET", "V2_STARTUP_IMAP",
         "V2_STARTUP_RENDEZVOUS", "V2_STARTUP_REQUEST", "V2_STARTUP_INVITATION", "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER",
-        "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION", "V2_PROVIDER_UIDPLUS_REQUIRED", "V2_PROVIDER_PERMANENT_KEYWORDS_REQUIRED")
+        "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION", "V2_STARTUP_PATH", "V2_PROVIDER_UIDPLUS_REQUIRED", "V2_PROVIDER_PERMANENT_KEYWORDS_REQUIRED")
 } ?: "TRANSPORT_FAILED"
 
 fun startupStatus(raw: String): String {
@@ -25,6 +25,7 @@ fun startupStatus(raw: String): String {
         "INVITATION" -> "Waiting for server session"
         "NOISE" -> "Securing connection"
         "ROSTER" -> "Preparing mail lines"
+        "PATH" -> "Checking data path"
         "RUNTIME", "PERMISSION" -> "Finishing connection"
         "READY" -> "Starting VPN"
         else -> return "Tap to cancel"

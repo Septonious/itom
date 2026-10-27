@@ -171,7 +171,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		case "permission":
 			stage = "PERMISSION"
 		case "ready":
-			stage = "READY"
+			stage = "PATH"
 		}
 		report(stage, false)
 	}})
@@ -180,8 +180,26 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	monitor, cancelMonitor := context.WithCancel(ctx)
 	client = &Client{endpoint: endpoint, profile: p, cancel: cancelMonitor}
+	stage = "PATH"
+	report(stage, false)
+	conn, probeErr := endpoint.Service.Dialer.DialContext(startup, "tcp", net.JoinHostPort(probeHost, "1"))
+	if probeErr == nil {
+		probeErr = client.sampleProbe(startup, conn)
+	}
+	if probeErr != nil {
+		if o.Diagnostics {
+			_ = accountTrace.record(map[string]any{"Event": "client_path_failed", "Revision": TransportRevision, "Runtime": endpoint.Service.Runtime.Snapshot(), "Probe": client.Probe(), "SampledAtMS": time.Now().UnixMilli()})
+		}
+		if conn != nil {
+			conn.Close()
+		}
+		client.Close()
+		return nil, probeErr
+	}
+	stage = "READY"
+	report(stage, false)
 	client.workers.Add(1)
-	go client.runProbe(monitor)
+	go client.runProbe(monitor, conn)
 	if o.Diagnostics {
 		client.workers.Add(1)
 		go client.traceRuntime(monitor, accountTrace)

@@ -52,6 +52,11 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
+	defer func() {
+		if t.Failed() {
+			_ = os.WriteFile(os.Getenv("ITOM_NATIVE_TEST_EVIDENCE"), []byte(c.Diagnostics()), 0600)
+		}
+	}()
 	roots := x509.NewCertPool()
 	pem, err := os.ReadFile(os.Getenv("ITOM_NATIVE_TEST_HTTPS_ROOT"))
 	if err != nil || !roots.AppendCertsFromPEM(pem) {

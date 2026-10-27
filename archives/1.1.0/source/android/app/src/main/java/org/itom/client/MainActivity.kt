@@ -77,6 +77,7 @@ fun errorText(code: String) = when (code) {
     "V2_STARTUP_REQUEST" -> "The app found the server offer but could not send its session request. Export app and server diagnostics."
     "V2_STARTUP_INVITATION" -> "The app found the server but did not receive a session response. Export app and server diagnostics."
     "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER" -> "The secure session could not be established. Check the server profile and export diagnostics."
+    "V2_STARTUP_PATH" -> "The mail lines connected, but a data round trip failed. Export app and server diagnostics."
     "V2_STARTUP_RUNTIME", "V2_STARTUP_PERMISSION" -> "The session could not obtain ready mail lines. Export app and server diagnostics."
     "TRANSPORT_FAILED", "VPN_SERVICE_START_FAILED" -> "Could not start the transport. Check the server and profile."
     "NATIVE_CLOSE_FAILED" -> "VPN stopped after a transport cleanup failure. Try connecting again."

@@ -110,7 +110,12 @@ func TestNativeTUNAndSOCKSClientsCarryTLSAfterSuccessfulStartup(t *testing.T) {
 	testPublicEndpoints(t, publicEndpointCase{native: true, keywordBytes: 32, accounts: 10})
 }
 
+func TestSelectedLinesAndControlPermissionCannotReportReadyWhenDataPathIsBlackholed(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{dataBlackhole: true, keywordBytes: 32})
+}
+
 type publicEndpointCase struct {
+	dataBlackhole                      bool
 	native                             bool
 	clientDelay                        time.Duration
 	caseChanges, legacy, fieldTopology bool
@@ -155,7 +160,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	var shutdown atomic.Bool
 	nativeStopFile := filepath.Join(t.TempDir(), "native-close")
 	allowShutdown := func() bool {
-		if shutdown.Load() {
+		if shutdown.Load() || scenario.dataBlackhole {
 			return true
 		}
 		_, e := os.Stat(nativeStopFile)
@@ -174,7 +179,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes, hideServerData: scenario.dataBlackhole}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -420,7 +425,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		cmd.Args = append(cmd.Args, "-test.cpuprofile="+profile)
 	}
 	cmd.Env = append(os.Environ(), "ITOM_RC1_TEST_SERVER_CONFIG="+configPath, "ITOM_RC1_TEST_STATE="+filepath.Join(root, "server-state"), "ITOM_RC1_TEST_EXIT="+upstream.Listener.Addr().String(), "SSL_CERT_FILE="+rootFile)
-	var logs bytes.Buffer
+	var logs lockedTestBuffer
 	cmd.Stdout = &logs
 	cmd.Stderr = &logs
 	if err = cmd.Start(); err != nil {
@@ -498,8 +503,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			}
 			run := exec.Command(nativeBinary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=20s")
 			os.Remove(nativeStopFile)
-			run.Env = append(os.Environ(), "ITOM_NATIVE_TEST_STOP="+nativeStopFile, "ITOM_NATIVE_TEST_CONFIG="+input, "ITOM_NATIVE_TEST_STATE="+clientDir, "SSL_CERT_FILE="+rootFile, "ITOM_NATIVE_TEST_HTTPS_ROOT="+certFile)
+			run.Env = append(os.Environ(), "ITOM_NATIVE_TEST_STOP="+nativeStopFile, "ITOM_NATIVE_TEST_EVIDENCE="+filepath.Join(root, "native-evidence.json"), "ITOM_NATIVE_TEST_CONFIG="+input, "ITOM_NATIVE_TEST_STATE="+clientDir, "SSL_CERT_FILE="+rootFile, "ITOM_NATIVE_TEST_HTTPS_ROOT="+certFile)
 			if out, e := run.CombinedOutput(); e != nil {
+				if snapshot, e := os.ReadFile(filepath.Join(root, "server-state", "v2-"+p.User.ID+".json")); e == nil {
+					t.Log("native failed server state", string(snapshot))
+				}
 				t.Fatalf("native traffic round=%d err=%v\n%s\nserver=%s", round, e, out, logs.String())
 			} else {
 				t.Logf("native round=%d\n%s", round, out)
@@ -508,6 +516,25 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 		var progress []tunnel.StartupProgress
 		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}, Progress: func(p tunnel.StartupProgress) { progress = append(progress, p) }})
+		if scenario.dataBlackhole {
+			shutdown.Store(true)
+			if client != nil || err == nil || err.Error() != "V2_STARTUP_PATH" {
+				if client != nil {
+					client.Close()
+				}
+				t.Fatal("control-only readiness admitted a broken DATA path", err)
+			}
+			for _, p := range progress {
+				if p.Stage == "READY" {
+					t.Fatal("READY emitted without DATA echo", p)
+				}
+			}
+			last := progress[len(progress)-1]
+			if last.Stage != "PATH" || last.SelectedLines != 2 || last.TotalLines != 2 {
+				t.Fatal("DATA path failure lost actual selected lines", last)
+			}
+			return
+		}
 		if scenario.requestRefusal {
 			shutdown.Store(true)
 			if client != nil || err == nil || err.Error() != "V2_STARTUP_REQUEST" || !errors.Is(err, transport.ErrRefused) {
@@ -607,3 +634,17 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 }
+
+// Child stdout can still be appended when a failed request snapshots logs.
+// The test's failure reporter must not introduce a second, unrelated data race.
+type lockedTestBuffer struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (b *lockedTestBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.b.Write(p)
+}
+func (b *lockedTestBuffer) String() string { b.mu.Lock(); defer b.mu.Unlock(); return b.b.String() }
