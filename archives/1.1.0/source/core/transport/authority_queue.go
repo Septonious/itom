@@ -6,6 +6,12 @@ import "itom.local/core/wire"
 // Publishers still reserve the ORIGINAL concrete CONTROL ticket before dequeue,
 // encryption, durable envelope commit and I/O. In-flight unknown work stays held.
 func (s *Session) queueAuthority(class LedgerClass, message wire.Control) error {
+	return s.queueAuthorityPriority(class, message, false)
+}
+
+// Historical recovery has one shared queued/in-flight slot and yields to
+// current permissions and stream protocol. It still spends original CONTROL.
+func (s *Session) queueAuthorityPriority(class LedgerClass, message wire.Control, background bool) error {
 	payload, err := encodeAuthority(class, message)
 	if err != nil {
 		return err
@@ -53,11 +59,20 @@ func (s *Session) queueAuthority(class LedgerClass, message wire.Control) error 
 			return nil
 		}
 	}
+	if background && len(s.authorityBackground) >= 1 {
+		return ErrCapacity
+	}
 	if s.authorityCount >= maxAuthorityQueued || s.nextAuthority == maxStreamID || uint64(len(payload)) > s.limits.SessionBytes-s.buffered {
 		return ErrCapacity
 	}
 	s.nextAuthority++
 	s.authorityOut = append(s.authorityOut, Record{Kind: Authority, Generation: s.generation, Offset: s.nextAuthority, Payload: payload})
+	if background {
+		if s.authorityBackground == nil {
+			s.authorityBackground = map[uint64]bool{}
+		}
+		s.authorityBackground[s.nextAuthority] = true
+	}
 	s.authorityCount++
 	s.authorityBytes += uint64(len(payload))
 	s.buffered += uint64(len(payload))

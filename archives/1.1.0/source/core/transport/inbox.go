@@ -135,7 +135,9 @@ func NewInbox(executor *Executor, scope InboxScope, limits InboxLimits, decode I
 	if executor == nil || scope.Account == "" || scope.Account != executor.account || scope.Folder != executor.mailbox || scope.UIDValidity == 0 || scope.UIDValidity != executor.validity || limits.KnownUIDs < 1 || limits.KnownUIDs > 65536 || limits.PendingDeliveries < 1 || limits.PendingDeliveries > 32 || limits.PendingControls < 1 || limits.PendingControls > 32 || limits.BodyReadBatch < 0 || limits.BodyReadBatch > min(2, limits.PendingDeliveries) || decode == nil {
 		return nil, ErrProtocol
 	}
-	return &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass), examined: make(map[uint32]bool)}, nil
+	i := &Inbox{executor: executor, scope: scope, limits: limits, decode: decode, seen: make(map[uint32]bool), pending: make(map[uint32]InboxDelivery), deferred: make(map[uint32]LedgerClass), examined: make(map[uint32]bool)}
+	i.adoptHistoricalReads()
+	return i, nil
 }
 
 func newScopedInbox(executor *Executor, session *Session, scope InboxScope, limits InboxLimits, decode scopedInboxDecoder) (*Inbox, error) {

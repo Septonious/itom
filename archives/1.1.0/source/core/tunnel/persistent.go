@@ -229,6 +229,7 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 					return selected.Executor, nil
 				}
 				var failure error
+				retained := map[string]*transport.RetainedInventory{}
 				if server {
 					// Inventory only this version's physical namespace. Old folders
 					// and all original journal debt remain untouched and charged;
@@ -241,7 +242,7 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							failure = e
 							break
 						}
-						e = transport.InventoryRetained(ctx, x, p.User.ID, key)
+						retained[folder], e = transport.InspectRetained(ctx, x, p.User.ID, key)
 						x.Close()
 						if e != nil {
 							if observe != nil {
@@ -267,6 +268,11 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 					}{{transport.Fast, a.FastFolder}, {transport.Bulk, a.BulkFolder}} {
 						x, e := open(l.folder)
 						if e != nil {
+							failure = e
+							break
+						}
+						if e = x.AdoptRetainedInventory(retained[l.folder]); e != nil {
+							x.Close()
 							failure = e
 							break
 						}

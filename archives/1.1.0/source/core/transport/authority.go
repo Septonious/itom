@@ -161,7 +161,7 @@ func (a *AuthorityController) queue(class LedgerClass, message wire.Control) err
 	if err := a.validate(payload, false); err != nil {
 		return err
 	}
-	return a.session.queueAuthority(class, message)
+	return a.session.queueAuthorityPriority(class, message, authorityKey(message).Session != a.sessionID)
 }
 func authorityRef(k wire.QuotaKey) journal.GrantRef {
 	return journal.GrantRef{Store: k.Store, ID: k.Grant, Scope: journal.Scope{Account: k.Account, User: k.User, Session: k.Session}}

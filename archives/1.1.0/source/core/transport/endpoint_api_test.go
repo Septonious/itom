@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -31,6 +32,7 @@ import (
 	"itom.local/core/servercfg"
 	"itom.local/core/transport"
 	"itom.local/core/tunnel"
+	"itom.local/core/wallet"
 	"itom.local/core/wire"
 )
 
@@ -122,7 +124,12 @@ func TestExhaustedFirstControlAndSplitDataCapacityStillCarryHTTPSWithoutDebtRese
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, splitCapacity: true, keywordBytes: 32})
 }
 
+func TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 128, keywordBytes: 32})
+}
+
 type publicEndpointCase struct {
+	retainedBacklog                    int
 	splitCapacity                      bool
 	idleTimeout                        time.Duration
 	dataBlackhole                      bool
@@ -426,6 +433,120 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			})
 		}
 	}
+	if scenario.retainedBacklog > 0 {
+		oldEpoch, _ := sessionEpochs(t, wire.ID{77})
+		key, e := hex.DecodeString(p.User.Key)
+		if e != nil {
+			t.Fatal(e)
+		}
+		for _, a := range p.Accounts {
+			limit := pool.Amount{Bytes: 12 << 20, Messages: 192}
+			jc := journal.Config{MaxGrants: 256, MaxAttempts: 256, Accounts: []journal.Account{{ID: a.ID, Provider: a.Mail.Host, Limit: limit, Users: []journal.User{{ID: p.User.ID, Limit: limit, Folders: []string{upFolder, downFolder, upFolder + "-session-v2", downFolder + "-session-v2"}}}}}}
+			path := filepath.Join(root, "server-state", a.ID, p.User.ID, "data.db")
+			if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
+				t.Fatal(e)
+			}
+			store, e := journal.Open(path, jc, time.Second)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = store.EnableAfterInventory(a.ID, p.User.ID, store.Run()); e != nil {
+				t.Fatal(e)
+			}
+			scope := journal.Scope{Account: a.ID, User: p.User.ID, Session: wire.ID{77}}
+			folder := upFolder + "-session-v2"
+			shape := wire.QuotaKey{Store: store.StoreID(), Epoch: store.Run(), Grant: 1, Account: a.ID, User: p.User.ID, Session: scope.Session}
+			for n := 0; n < scenario.retainedBacklog; n++ {
+				// Real original local tickets and MAC-authenticated retained envelopes.
+				// Old opaque ciphertext must never enter the new Noise session.
+				packet := bytes.Repeat([]byte{byte(n + 1)}, 64)
+				ticket, _, e := store.ReserveLocalSized(scope, folder, len(packet), len(packet), func(size int) (uint64, error) {
+					body, e := wire.ServerEnvelopeSize(shape, wire.ServerData, folder, size)
+					if e != nil {
+						return 0, e
+					}
+					return mailbox.EncodedSize(body)
+				})
+				if e != nil {
+					t.Fatal(e)
+				}
+				batch := wire.ID{byte(n + 1), 99}
+				usage, body, e := wire.BindServerEnvelope(ticket.Key(), wire.ServerData, batch, folder, packet, key, func(b []byte) (uint64, error) { return mailbox.EncodedSize(len(b)) })
+				if e != nil {
+					t.Fatal(e)
+				}
+				attempt, e := ticket.Commit(batch, usage.Attempt.EncodedBytes, body)
+				if e != nil {
+					t.Fatal(e)
+				}
+				mime, e := mailbox.Encode(body)
+				if e != nil {
+					t.Fatal(e)
+				}
+				box := providerBoxes[a.Mail.Username][folder]
+				box.messageLimit = 128 + 192 // original separate CONTROL and DATA ledgers share this FAST folder
+				box.bodies = append(box.bodies, mime)
+				box.bytes += len(mime)
+				if e = store.Complete(attempt.Ref, journal.Accepted); e != nil {
+					t.Fatal(e)
+				}
+			}
+			before, e := store.Held(a.ID, p.User.ID)
+			if e != nil {
+				t.Fatal(e)
+			}
+			store.Close()
+			// Surviving original wallet history creates the field-sized recovery
+			// fence/status backlog; no fixture grants enter the new live epoch.
+			cc := journal.Config{MaxGrants: 256, MaxAttempts: 256, Accounts: []journal.Account{{ID: a.ID, Provider: a.Mail.Host, Limit: pool.Amount{Bytes: 2 << 20, Messages: 128}, Users: []journal.User{{ID: p.User.ID, Limit: pool.Amount{Bytes: 2 << 20, Messages: 128}, Folders: []string{upFolder, downFolder, upFolder + "-session-v2", downFolder + "-session-v2"}}}}}}
+			cs, e := journal.Open(filepath.Join(root, "server-state", a.ID, p.User.ID, "control.db"), cc, time.Second)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = cs.EnableAfterInventory(a.ID, p.User.ID, cs.Run()); e != nil {
+				t.Fatal(e)
+			}
+			wp := filepath.Join(root, "client-state", p.User.ID, a.ID, "control-wallet.db")
+			if e = os.MkdirAll(filepath.Dir(wp), 0700); e != nil {
+				t.Fatal(e)
+			}
+			cw, e := wallet.OpenBound(wp, cs.StoreID(), oldEpoch)
+			if e != nil {
+				t.Fatal(e)
+			}
+			for range 32 {
+				g, e := cs.IssueRemote(scope, pool.Amount{Bytes: 4096, Messages: 1})
+				if e != nil {
+					t.Fatal(e)
+				}
+				offer, e := cs.RemoteOffer(g.Ref)
+				if e != nil {
+					t.Fatal(e)
+				}
+				if e = cw.Accept(offer); e != nil {
+					t.Fatal(e)
+				}
+			}
+			cw.Close()
+			cs.Close()
+			t.Cleanup(func() {
+				s, e := journal.Open(path, jc, time.Second)
+				if e != nil {
+					t.Error(e)
+					return
+				}
+				defer s.Close()
+				after, e := s.Held(a.ID, p.User.ID)
+				if e != nil || after.Bytes < before.Bytes || after.Messages < before.Messages {
+					t.Error("retained-history optimization refunded original debt", before, after, e)
+				}
+				if e = s.Audit(); e != nil {
+					t.Error(e)
+				}
+			})
+		}
+	}
+
 	legacyUser := p.User.ID
 	var legacyAttempt journal.AttemptRef
 	legacyPath := filepath.Join(root, "server-state", "account1", p.User.ID, "data.db")
@@ -478,7 +599,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	cohort := max(2*userCount, scenario.rounds)
 	// Scale only the outer cohort budget with the number of VPN restarts.
 	// Per-attempt startup and all IMAP/OPEN/TLS/HTTP deadlines are unchanged.
-	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+(time.Duration(cohort)*45*time.Second/2+clientDelay).String())
+	serverCohortLifetime := time.Duration(cohort)*45*time.Second/2 + clientDelay
+	if scenario.retainedBacklog > 0 {
+		serverCohortLifetime = time.Duration(cohort)*90*time.Second + clientDelay + 15*time.Second
+	}
+	cmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+serverCohortLifetime.String())
 	if profile := os.Getenv("ITOM_TEST_SERVER_CPU_PROFILE"); profile != "" {
 		cmd.Args = append(cmd.Args, "-test.cpuprofile="+profile)
 	}
@@ -539,7 +664,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		defer timer.Stop()
 		<-timer.C
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cohort)*15*time.Second)
+	cohortBudget := time.Duration(cohort) * 15 * time.Second
+	if scenario.retainedBacklog > 0 {
+		cohortBudget = time.Duration(cohort) * 90 * time.Second
+	} // outer cohort only; original 90s startup and all request deadlines remain unchanged
+	ctx, cancel := context.WithTimeout(context.Background(), cohortBudget)
 	defer cancel()
 	certPool := x509.NewCertPool()
 	certPool.AddCert(upstream.Certificate())

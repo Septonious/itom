@@ -157,6 +157,7 @@ func (c *endpointCandidate) discover(ctx context.Context, o EndpointOptions, pat
 		latest := c.rv
 		var invitation *VerifiedInvitation
 		c.err = scan.poll(ctx, func(body Body) error {
+			c.x.rememberRetained(body, o.Template.Binding.User, o.Key)
 			v, e := VerifyRendezvous(c.x, body, o.Template, o.Key)
 			if e == nil && (latest == nil || v.uid > latest.uid) {
 				latest = v

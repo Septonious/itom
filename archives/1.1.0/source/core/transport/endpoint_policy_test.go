@@ -90,7 +90,7 @@ func TestPendingGrantRetryPreservesAmountWhenRecoveryChangesAvailableQuota(t *te
 		t.Fatal(err)
 	}
 	for range maxAuthorityQueued {
-		if err = owner.queue(DataLedger, old); err != nil {
+		if err = session.queueAuthority(DataLedger, old); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -149,7 +149,7 @@ func TestHistoricalOfferBacklogCannotFillQueueBeforeFreshPermissions(t *testing.
 	if err := endpoint.serverPolicyFor(context.Background(), map[string]map[LedgerClass]uint64{}, "12345678", current); err != nil {
 		t.Fatal(err)
 	}
-	if len(session.authorityOut) != maxAuthorityQueued {
+	if len(session.authorityOut) != 3 {
 		t.Fatal("fixture did not saturate bounded queue", len(session.authorityOut))
 	}
 	for n, class := range []LedgerClass{ControlLedger, DataLedger} {
@@ -158,7 +158,7 @@ func TestHistoricalOfferBacklogCannotFillQueueBeforeFreshPermissions(t *testing.
 			t.Fatal("history starved initial permission", n, got, message, err)
 		}
 	}
-	if len(endpoint.reconciled) != maxAuthorityQueued-2 {
+	if len(endpoint.reconciled) != 1 {
 		t.Fatal("unqueued history was marked delivered", len(endpoint.reconciled))
 	}
 }

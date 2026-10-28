@@ -70,18 +70,8 @@ func (s *EndpointSession) Close() error {
 // remote grants, delete messages or infer missing wallet spend. Original debt
 // remains charged. An incompatible body/profile is an explicit startup error.
 func InventoryRetained(ctx context.Context, x *Executor, user string, key []byte) error {
-	return visitBodies(ctx, x, func(body Body) (bool, error) {
-		e, err := openMailboxEnvelope(body.Bytes, key)
-		if err != nil {
-			return false, err
-		}
-		defer clear(e.body)
-		u := e.usage
-		if u.Attempt == nil || u.Key.Account != x.account || u.Key.User != user || u.Attempt.Folder != x.mailbox {
-			return false, ErrProtocol
-		}
-		return false, nil
-	})
+	_, err := InspectRetained(ctx, x, user, key)
+	return err
 }
 
 func visitBodies(ctx context.Context, x *Executor, visit func(Body) (bool, error)) error {

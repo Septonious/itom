@@ -49,6 +49,7 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 }
 
 type SessionSnapshot struct {
+	BackgroundAuthorityOutstanding                 int
 	Streams, RetainedRecords, ActiveDispatches     int
 	ActiveServices                                 int
 	AuthorityOutstanding                           int
@@ -62,7 +63,7 @@ type SessionSnapshot struct {
 func (s *Session) Snapshot() SessionSnapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed, FastPreparations: s.preparingFast[DataLedger] + s.preparingFast[ControlLedger], PreparationContention: s.preparationContention}
+	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, BackgroundAuthorityOutstanding: len(s.authorityBackground), AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed, FastPreparations: s.preparingFast[DataLedger] + s.preparingFast[ControlLedger], PreparationContention: s.preparationContention}
 }
 
 // FlowSnapshot separates application queues, receiver-backed credit and

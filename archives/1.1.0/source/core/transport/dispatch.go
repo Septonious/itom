@@ -104,6 +104,7 @@ func (d *Dispatch) completeLocked(outcome PublicationOutcome, proofOfStorage boo
 			s.buffered -= n
 			s.authorityBytes -= n
 			s.authorityCount--
+			delete(s.authorityBackground, state.record.Offset)
 			clear(state.record.Payload)
 			s.signalSpace()
 		}

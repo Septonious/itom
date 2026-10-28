@@ -81,51 +81,53 @@ func DefaultIMAPLimits() IMAPLimits {
 // public FETCH API retain exclusive admission. IDLE owns the writer until DONE and
 // its tag have drained. Mailbox selection changes require a new executor.
 type Executor struct {
-	history          *historyScope // immutable persistent-owner scope, set before inbox adoption
-	literalPlus      bool
-	literalMinus     bool
-	mailbox          string
-	account          string
-	validity         uint32
-	conn             net.Conn
-	reader           *bufio.Reader
-	limits           IMAPLimits
-	writer           chan struct{}
-	mu               sync.Mutex
-	pending          map[string]*operation
-	sequence         uint64
-	literal          *operation
-	fetch            *operation
-	flagFetch        *operation
-	fetchTurns       [2]*fetchRequest
-	fetchQueue       []*fetchRequest
-	fetchBytes       int
-	fetchPairs       uint64
-	fetchWaiters     int
-	closed           error
-	closeReason      string // fixed diagnostic code; never provider text
-	closeCommands    [commandClasses]bool
-	exclusiveWait    sync.WaitGroup
-	done             chan struct{}
-	changes          chan struct{}
-	sequenceVersion  uint64
-	sequenceChanges  [maxSequenceChanges]sequenceChange
-	exists           uint32
-	existsKnown      bool
-	space            chan struct{}
-	publicationOwner bool
-	inboxOwner       bool
-	bootstrapOwner   bool
-	uidPlus          bool
-	keywords         bool
-	keywordBytes     int // successful metadata name preference; never authority
-	idleSupported    bool
-	idle             *operation
-	idleStop         chan struct{}
-	writerWaiters    int
-	timing           [commandClasses]CommandTiming
-	writerWait       TimingSummary
-	capacityRefusals uint64
+	historicalReadHints int
+	retained            *RetainedInventory // bounded authenticated startup read hints; never storage proof
+	history             *historyScope      // immutable persistent-owner scope, set before inbox adoption
+	literalPlus         bool
+	literalMinus        bool
+	mailbox             string
+	account             string
+	validity            uint32
+	conn                net.Conn
+	reader              *bufio.Reader
+	limits              IMAPLimits
+	writer              chan struct{}
+	mu                  sync.Mutex
+	pending             map[string]*operation
+	sequence            uint64
+	literal             *operation
+	fetch               *operation
+	flagFetch           *operation
+	fetchTurns          [2]*fetchRequest
+	fetchQueue          []*fetchRequest
+	fetchBytes          int
+	fetchPairs          uint64
+	fetchWaiters        int
+	closed              error
+	closeReason         string // fixed diagnostic code; never provider text
+	closeCommands       [commandClasses]bool
+	exclusiveWait       sync.WaitGroup
+	done                chan struct{}
+	changes             chan struct{}
+	sequenceVersion     uint64
+	sequenceChanges     [maxSequenceChanges]sequenceChange
+	exists              uint32
+	existsKnown         bool
+	space               chan struct{}
+	publicationOwner    bool
+	inboxOwner          bool
+	bootstrapOwner      bool
+	uidPlus             bool
+	keywords            bool
+	keywordBytes        int // successful metadata name preference; never authority
+	idleSupported       bool
+	idle                *operation
+	idleStop            chan struct{}
+	writerWaiters       int
+	timing              [commandClasses]CommandTiming
+	writerWait          TimingSummary
+	capacityRefusals    uint64
 }
 
 // NewSelectedExecutor adopts an already authenticated, SELECTed TLS connection.

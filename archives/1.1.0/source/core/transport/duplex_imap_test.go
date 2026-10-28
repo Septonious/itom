@@ -26,6 +26,7 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
+	messageLimit    int                 // optional original combined CONTROL/DATA physical message ceiling
 	idleTimeout     time.Duration       // explicit provider inactivity lease; client/server sockets stay separate
 	hideServerData  bool                // explicit negative fixture: accepted server DATA never becomes visible
 	flagCase        func(string) string // provider-equivalent, case-insensitive keyword spelling
@@ -220,7 +221,11 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					return
 				}
 				m.mu.Lock()
-				if m.liveCountLocked() >= 64 || len(body) > (16<<20)-m.bytes || len(m.bodies) >= 8192 {
+				messageLimit := m.messageLimit
+				if messageLimit == 0 {
+					messageLimit = 64
+				}
+				if m.liveCountLocked() >= messageLimit || len(body) > (16<<20)-m.bytes || len(m.bodies) >= 8192 {
 					count, used := m.liveCountLocked(), m.bytes
 					m.mu.Unlock()
 					t.Errorf("fixture mailbox bounds exceeded: folder=%s messages=%d bytes=%d next=%d", folder, count, used, len(body))

@@ -73,6 +73,7 @@ type Session struct {
 	preparingFast                 [3]int
 	preparationContention         uint64
 	authorityOut                  []Record
+	authorityBackground           map[uint64]bool // original logical offsets, including admitted unknown publications
 	authorityCount                int
 	authorityTurn                 bool
 	authorityBytes, nextAuthority uint64
@@ -178,15 +179,23 @@ func (s *Session) nextFilteredLocked(plane Plane, max int, class LedgerClass, pr
 	if max > MaxPayload {
 		max = MaxPayload
 	}
-	authorityReady := plane == Fast && class != DataLedger && !progressOnly && len(s.authorityOut) > 0 && len(s.authorityOut[0].Payload) <= max
+	authorityIndex := 0
+	for n, r := range s.authorityOut {
+		if !s.authorityBackground[r.Offset] && len(r.Payload) <= max {
+			authorityIndex = n
+			break
+		}
+	}
+	authorityReady := plane == Fast && class != DataLedger && !progressOnly && len(s.authorityOut) > 0 && len(s.authorityOut[authorityIndex].Payload) <= max
 	takeAuthority := func() (Record, bool) {
-		r := s.authorityOut[0]
-		s.authorityOut[0] = Record{}
-		s.authorityOut = s.authorityOut[1:]
+		r := s.authorityOut[authorityIndex]
+		copy(s.authorityOut[authorityIndex:], s.authorityOut[authorityIndex+1:])
+		s.authorityOut[len(s.authorityOut)-1] = Record{}
+		s.authorityOut = s.authorityOut[:len(s.authorityOut)-1]
 		s.authorityTurn = true
 		return r, true
 	}
-	if authorityReady && !s.authorityTurn {
+	if authorityReady && !s.authorityTurn && !s.authorityBackground[s.authorityOut[authorityIndex].Offset] {
 		return takeAuthority()
 	}
 	for attempts := len(s.retries[plane]); attempts > 0; attempts-- {
@@ -699,6 +708,7 @@ func (s *Session) Close() error {
 		clear(r.Payload)
 	}
 	s.authorityOut = nil
+	s.authorityBackground = nil
 	s.authorityCount = 0
 	s.authorityBytes = 0
 	s.buffered = 0
