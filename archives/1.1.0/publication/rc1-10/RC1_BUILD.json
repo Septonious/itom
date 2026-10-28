@@ -1,0 +1,223 @@
+{
+  "release": "ITOM 1.1.0 RC1.10",
+  "purpose": "Prevent retained-history contention, exhausted-grant deadlocks and unused-grant churn from breaking accounted DATA roundtrip and HTTPS",
+  "source_commit": "462e718e44fbd5c3be328644a3d579d5f8cc1968",
+  "build_run_id": 40777520886,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40777520886",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "exact_field_provider_close_cause_confirmed": false,
+  "reproduction": {
+    "rc1_9_retained_backlog_result": "V2_STARTUP_PATH failure",
+    "rc1_10_race_backlog_result": "two VPN sessions, accounted DATA echoes and real HTTPS passed",
+    "all_spent_grant_regression_before": "fresh permission deadlocked with zero queued fences",
+    "fresh_single_message_regression_before": "unused offer was fenced due integer half rounding",
+    "earlier_maintenance32_focused_source": "f2e76ae6c6137fda934e38822d211257ddab1fc9",
+    "earlier_maintenance32_focused_data_echo_ms": [
+      104,
+      196,
+      187,
+      129,
+      166,
+      180
+    ],
+    "final_source_data_echo_ms_by_run": {
+      "local": [
+        161,
+        266
+      ],
+      "local_pre_single_message_boundary": [
+        242,
+        185
+      ],
+      "hosted_safety": [
+        212,
+        120
+      ],
+      "source_checks": [
+        249,
+        204
+      ]
+    },
+    "initial_race_https_failure_preserved": true
+  },
+  "functional_ci": {
+    "core_race_groups_passed": 306,
+    "native_race_groups_passed": 14,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 93,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10121,
+    "version_name": "1.1.0-rc1.10-debug"
+  },
+  "source_ci_apk_sha256": "ecf652ba6dec8c756ea8bb4124b7438d37c9b652d2c2d9f05485e487c376bdc3",
+  "signed_apk_sha256": "303753ae16c394c3262ec201d36942f8c6d2001bd552e26e9f2f8b2107b5d8ae",
+  "signed_apk_bytes": 54497620,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "d8b94b498b7f675650014f4cf193c406bb5300c3ed191a3dc0e820de7c9a9b9e",
+    "lib/armeabi-v7a/libgojni.so": "317d859ed250b69d8ff3822a9cd9758f7f6cf79ee369cfbc5806aa8da1212e59"
+  },
+  "native_source_sha256sums": "8b660495f6885eb0913bb716a6f0cd5dbf58cccfac2f0d1bdf0ba41efb258334  ITOM-1.1.0-RC1.10-linux-amd64.bin\ne7c84537dd031cd5d0aae8ff911305479dfa46bf8f664fd892eebc20dcdb05ac  ITOM-1.1.0-RC1.10-linux-arm64.bin\nbb66c6832a2442820d3876f2825868b1de68cdced91dc18920c4fe46da14080d  ITOM-1.1.0-RC1.10-sources.zip\n",
+  "source_manifest_files": 720,
+  "source_manifest_sha256": "c1c49da3cbedf0c624f1e94f6aee93f4965072b31bb292650dcd9ce0c06256b9",
+  "outer_mailbox_envelopes_changed": false,
+  "inner_authority_only_containers_added": true,
+  "roster_version": 3,
+  "both_endpoints_required": true,
+  "journal_wallet_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "existing_application_deadlines_changed": false,
+  "extra_connections_or_blind_retries": false,
+  "retained_reads": {
+    "full_body_mac_required": true,
+    "pins": [
+      "account",
+      "folder",
+      "UIDVALIDITY",
+      "user",
+      "key"
+    ],
+    "current_session_skipped": false,
+    "cache_is_financial_or_absence_proof": false
+  },
+  "recovery": {
+    "queued_inflight_historical_records": 8,
+    "max_authority_batch_records": 8,
+    "control_container_bytes": 8192,
+    "pending_control_deliveries": 2,
+    "maintenance_pressure_candidates": 16,
+    "foreground_grace_ms": 1500,
+    "grace_extends_request_deadlines": false,
+    "current_permissions_and_replies_always_serviced": true,
+    "authenticated_receipts_always_urgent": true,
+    "blocked_peer_grant_issue_overrides_grace": true,
+    "zero_usable_grants_still_finalize_exact_spend": true,
+    "fresh_one_message_grants_preserved_until_spent": true,
+    "bulk_pressure_allows_recovery": true,
+    "quiet_recovery_resumes": true
+  },
+  "production_receive_window_bytes": 262144,
+  "parser_benchmark_is_end_to_end_bandwidth_proof": false,
+  "source_qualification": {
+    "run_id": 40777521099,
+    "source_commit": "462e718e44fbd5c3be328644a3d579d5f8cc1968",
+    "core": {
+      "passed": 306,
+      "failed": []
+    },
+    "native": {
+      "passed": 14,
+      "failed": []
+    },
+    "cohorts": {
+      "warm": {
+        "exchanges": 64,
+        "at_or_below_300ms": 64,
+        "maximum_ms": 286.364035,
+        "passed": true
+      },
+      "upper": {
+        "exchanges": 16,
+        "at_or_below_300ms": 10,
+        "maximum_ms": 359.856108,
+        "passed": false
+      },
+      "quiet": {
+        "exchanges": 3,
+        "at_or_below_300ms": 3,
+        "maximum_ms": 240.524349,
+        "passed": true
+      }
+    },
+    "field_qualified": false,
+    "performance_qualified": false
+  },
+  "local_validation": {
+    "pre_maintenance_full_run_source": "3f38ab463d913ba19f1309b16380ecec406ca51a",
+    "pre_maintenance_full_core": {
+      "passed": 301,
+      "failed": [
+        "TestFullAuthorityQueueCannotMintAnotherGrantForTheSamePolicySequence",
+        "TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip",
+        "TestColdTLSHTTPWithFluctuatingClientAndServerIMAPCommandService"
+      ]
+    },
+    "maintenance32_full_source": "f2e76ae6c6137fda934e38822d211257ddab1fc9",
+    "maintenance32_full_core": {
+      "passed": 300,
+      "failed": [
+        "TestPublicClientAndServerAPIsCarryTLSAndRestartWithOriginalWalletPaths",
+        "TestServerStartedBeforePhoneStillAcceptsClientAfterNinetySeconds",
+        "TestPublicEndpointsAcceptProviderKeywordCaseChangesWithoutSpuriousRestart",
+        "TestProviderKeywordLengthLimitsStillAllowAuthenticatedStartupAndHTTPSRestart",
+        "TestInPlaceUpgradeWithLegacyControlMailAndUnknownDataDebtStillCarriesHTTPS"
+      ]
+    },
+    "pressure16_full_source": "835a89ce8fd1c8d1a87f81b9e07317e5ee69c112",
+    "pressure16_full_core": {
+      "passed": 305,
+      "failed": []
+    },
+    "pre_boundary_full_run_source": "ad8feee889a2d998d8578e5b4e65f87bfe7307ca",
+    "pre_boundary_full_core": {
+      "passed": 305,
+      "failed": [
+        "TestStandingServerKeepsSelectedMailboxesAliveBeforePhoneArrives"
+      ]
+    },
+    "full_run_source": "462e718e44fbd5c3be328644a3d579d5f8cc1968",
+    "full_core": {
+      "passed": 306,
+      "failed": []
+    },
+    "final_single_message_boundary_checks": {
+      "passed": 20,
+      "failed": []
+    },
+    "final_standing_server_repeats": {
+      "passed": 3,
+      "failed": []
+    },
+    "final_source_commit": "462e718e44fbd5c3be328644a3d579d5f8cc1968",
+    "native": {
+      "passed": 14,
+      "failed": []
+    },
+    "batched_queue_accounting": {
+      "passed": 2,
+      "failed": []
+    },
+    "pre_maintenance_backlog_race": {
+      "passed": 1,
+      "failed": []
+    },
+    "repeated_foreground_maintenance_backlog_race": {
+      "passed": 3,
+      "failed": []
+    },
+    "interpretation": "Pre-maintenance full run failed backlog TLS, fluctuating TLS, and the old single-record queue-count expectation. The peer-pressure full local run passed the backlog case but retained one standing-server HTTP timeout, assessed separately with final-source repetitions. The 32-candidate maintenance trigger overflowed the unchanged 64-message provider fixture; the final trigger is sixteen, and the original physical limit is preserved. Final source is assessed separately; final queue regression checks actual delivered batch and original allocation identity. All failures remain in evidence. No CPU or deadline overrides."
+  },
+  "dns_unchanged": {
+    "resolvers": [
+      "31.131.251.83",
+      "185.22.234.229"
+    ],
+    "race_both": true,
+    "direct_timeout_ms": 250,
+    "protocols": [
+      "UDP/53",
+      "TCP/53"
+    ],
+    "optional_imap_fallback_latched_until_user_restart": true
+  },
+  "persistent_state_notes": "Update both endpoints in place; run downloaded server executable, choose 11 then 9; install APK in place; preserve profiles, wallets and journals"
+}

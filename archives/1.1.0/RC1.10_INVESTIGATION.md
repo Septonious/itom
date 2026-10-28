@@ -121,3 +121,13 @@ Independent source run 40777521099 records all 64 normal-profile exchanges below
 (maximum 240.52 ms). The upper-latency cohort passes 10/16 at 300 ms, maximum
 359.86 ms, and FAILS its strict maximum gate. These are same-host synthetic
 results, not live provider or sustained 100 Mbps qualification.
+
+The final packaged source also completes all 306 core race-test groups locally.
+Its backlog DATA echoes are 161 and 266 ms, with HTTPS completing across both
+VPN sessions. The preceding local timeout remains included as a failed run;
+no request deadline or CPU setting was changed for the final passing run.
+
+Android qualification passes 93 domain tests and 8 app tests, with zero lint
+errors (one dependency-version notice). The APK uses the persistent signing
+certificate, retains application ID `org.itom.client`, and advances versionCode
+to 10121 for an in-place update. Native library hashes match the build report.
