@@ -702,6 +702,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			continue
 		}
 		var progress []tunnel.StartupProgress
+		clientBegin := time.Now()
 		client, err := tunnel.StartClientWithOptions(ctx, p, clientDir, &net.Dialer{}, tunnel.ClientOptions{Diagnostics: true, TLSConfig: &tls.Config{RootCAs: roots}, Progress: func(p tunnel.StartupProgress) { progress = append(progress, p) }})
 		if scenario.dataBlackhole {
 			shutdown.Store(true)
@@ -746,6 +747,9 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				t.Log("failed actual startup server state", string(raw))
 			}
 			t.Fatal("public API startup", round, err)
+		}
+		if scenario.retainedBacklog > 0 {
+			t.Logf("cold_start_session=%d elapsed_ms=%d measured_data_rtt_ms=%d", round, time.Since(clientBegin).Milliseconds(), client.Probe().RTTMillis)
 		}
 		if len(progress) == 0 || progress[0].Stage != "PROFILE" || progress[len(progress)-1].Stage != "READY" {
 			t.Fatal("startup did not report real phase boundaries", progress)

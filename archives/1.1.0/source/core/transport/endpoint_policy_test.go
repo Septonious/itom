@@ -90,7 +90,7 @@ func TestPendingGrantRetryPreservesAmountWhenRecoveryChangesAvailableQuota(t *te
 		t.Fatal(err)
 	}
 	for range maxAuthorityQueued {
-		if err = session.queueAuthority(DataLedger, old); err != nil {
+		if err = session.queueAuthorityPriority(DataLedger, old, false); err != nil {
 			t.Fatal(err)
 		}
 	}

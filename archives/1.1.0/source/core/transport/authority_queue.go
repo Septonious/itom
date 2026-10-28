@@ -2,13 +2,9 @@ package transport
 
 import "itom.local/core/wire"
 
-// queueAuthority reserves bounded logical memory, never a physical permit.
-// Publishers still reserve the ORIGINAL concrete CONTROL ticket before dequeue,
-// encryption, durable envelope commit and I/O. In-flight unknown work stays held.
-func (s *Session) queueAuthority(class LedgerClass, message wire.Control) error {
-	return s.queueAuthorityPriority(class, message, false)
-}
-
+// Only the validated authority owner selects recovery priority. Logical queue
+// space is never a physical permit: publication still reserves original CONTROL
+// before encryption, durable commit and I/O. Unknown work retains admission.
 // Historical recovery has one shared queued/in-flight slot and yields to
 // current permissions and stream protocol. It still spends original CONTROL.
 func (s *Session) queueAuthorityPriority(class LedgerClass, message wire.Control, background bool) error {
