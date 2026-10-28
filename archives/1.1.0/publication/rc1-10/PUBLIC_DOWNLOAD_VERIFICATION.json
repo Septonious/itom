@@ -1,0 +1,30 @@
+{
+  "tag": "v1.1.0-rc1.10",
+  "apk": {
+    "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.10/ITOM-1.1.0-RC1.10.apk",
+    "full_download_verified": true,
+    "bytes": 54497620,
+    "sha256": "303753ae16c394c3262ec201d36942f8c6d2001bd552e26e9f2f8b2107b5d8ae"
+  },
+  "servers": [
+    {
+      "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.10/ITOM-1.1.0-RC1.10-linux-amd64.bin",
+      "status": 200,
+      "bytes": 13820485,
+      "published_digest_verified_by_publisher": true
+    },
+    {
+      "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.10/ITOM-1.1.0-RC1.10-linux-arm64.bin",
+      "status": 200,
+      "bytes": 12656352,
+      "published_digest_verified_by_publisher": true
+    }
+  ],
+  "source_commit": "462e718e44fbd5c3be328644a3d579d5f8cc1968",
+  "build_run_id": 40777520886,
+  "publication_run_id": 40779495744,
+  "publication_url": "https://github.com/Septonious/itom/actions/runs/40779495744",
+  "publication_checkpoint": "c2500cc970c7b495ce43030c737fd88bd4ce8752",
+  "field_qualified": false,
+  "performance_qualified": false
+}
