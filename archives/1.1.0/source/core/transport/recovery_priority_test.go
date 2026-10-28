@@ -15,8 +15,10 @@ func TestHistoricalRecoveryYieldsToLiveRecordsAndUnknownWorkCannotFloodControl(t
 	endpoint, s, current := endpointPolicyFixture(t)
 	owner := endpoint.Service.Authorities["account1"]
 	old := policyOldGrant(t, owner.routes[ControlLedger].store, pool.Amount{Bytes: 4096, Messages: 1})
-	if e := owner.queue(ControlLedger, old); e != nil {
-		t.Fatal(e)
+	for range maxHistoricalAuthorityQueued {
+		if e := owner.queue(ControlLedger, old); e != nil {
+			t.Fatal(e)
+		}
 	}
 	if e := owner.queue(ControlLedger, old); !errors.Is(e, ErrCapacity) {
 		t.Fatal("history bypassed bounded queued/in-flight admission", e)
@@ -65,7 +67,7 @@ func TestHistoricalRecoveryYieldsToLiveRecordsAndUnknownWorkCannotFloodControl(t
 	if !ok || next.Record.Kind != Data {
 		t.Fatal("unknown historical publication blocked independent live DATA", next, ok)
 	}
-	if len(s.authorityBackground) != 1 {
+	if len(s.authorityBackground) != maxHistoricalAuthorityQueued {
 		t.Fatal("unknown admission was forgotten", s.authorityBackground)
 	}
 }

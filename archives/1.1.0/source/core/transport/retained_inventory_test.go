@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -43,7 +44,12 @@ func retainedPeer(t *testing.T, bodies map[uint32][]byte) *Executor {
 			}
 			f := strings.Fields(line)
 			if strings.Contains(line, "(UID)") {
-				for _, uid := range []uint32{1, 2} {
+				uids := make([]uint32, 0, len(bodies))
+				for uid := range bodies {
+					uids = append(uids, uid)
+				}
+				sort.Slice(uids, func(a, b int) bool { return uids[a] < uids[b] })
+				for _, uid := range uids {
 					if bodies[uid] != nil {
 						fmt.Fprintf(peer, "* %d FETCH (UID %d)\r\n", uid, uid)
 					}

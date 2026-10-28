@@ -65,6 +65,10 @@ func (f *stream) signal() { close(f.notify); f.notify = make(chan struct{}) }
 // Bytes handed to a carrier remain charged to its bounded send memory until
 // authenticated cumulative peer receipt. No disk/provider I/O runs under mu.
 type Session struct {
+	lastForeground time.Time
+
+	decodedKinds                  [12]uint64
+	lastDecodedKindsAtMS          [12]int64
 	mu                            sync.Mutex
 	crypto                        *secure.Epoch
 	runtime                       *Runtime
@@ -144,6 +148,7 @@ func (s *Session) queueLocked(id uint64, b []byte, now time.Time) error {
 	if uint64(f.tx.Len()) > maxStreamID-f.sent || n > maxStreamID-f.sent-uint64(f.tx.Len()) {
 		return ErrProtocol
 	}
+	s.lastForeground = now
 	s.refillInteractiveLocked(now)
 	f.tx.Write(b)
 	f.buffered += n
@@ -517,6 +522,7 @@ func (s *Session) receiveLocked(r Record) error {
 		}
 		f.signal()
 	case Data:
+		s.lastForeground = time.Now()
 		if r.ReceiveLimit != 0 && !s.validPiggybackLocked(f, r.Acknowledged, r.ReceiveLimit) {
 			return ErrProtocol
 		}

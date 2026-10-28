@@ -5,7 +5,7 @@ import "itom.local/core/wire"
 // Only the validated authority owner selects recovery priority. Logical queue
 // space is never a physical permit: publication still reserves original CONTROL
 // before encryption, durable commit and I/O. Unknown work retains admission.
-// Historical recovery has one shared queued/in-flight slot and yields to
+// Historical recovery has a small shared queued/in-flight batch and yields to
 // current permissions and stream protocol. It still spends original CONTROL.
 func (s *Session) queueAuthorityPriority(class LedgerClass, message wire.Control, background bool) error {
 	payload, err := encodeAuthority(class, message)
@@ -55,7 +55,7 @@ func (s *Session) queueAuthorityPriority(class LedgerClass, message wire.Control
 			return nil
 		}
 	}
-	if background && len(s.authorityBackground) >= 1 {
+	if background && len(s.authorityBackground) >= maxHistoricalAuthorityQueued {
 		return ErrCapacity
 	}
 	if s.authorityCount >= maxAuthorityQueued || s.nextAuthority == maxStreamID || uint64(len(payload)) > s.limits.SessionBytes-s.buffered {

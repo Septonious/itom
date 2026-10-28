@@ -360,3 +360,22 @@ func (p *ClientPublisher) prepareBatch(ctx context.Context, maxEncryptedBytes in
 	}
 	return finishPublication(batch, usage, body, p.folder)
 }
+
+// Fixed kind counts contain no targets or payloads and stay readable after the
+// immutable publication's completion. Callers own the publisher turn.
+func (p *PreparedPublication) recordKindCounts() (counts [12]uint64) {
+	add := func(r Record) {
+		if int(r.Kind) < len(counts) {
+			counts[r.Kind]++
+		}
+	}
+	switch w := p.work.(type) {
+	case *Dispatch:
+		add(w.Record)
+	case *DispatchBatch:
+		for _, d := range w.dispatches {
+			add(d.Record)
+		}
+	}
+	return counts
+}

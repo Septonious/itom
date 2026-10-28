@@ -5,6 +5,7 @@ import (
 	"itom.local/core/journal"
 	"itom.local/core/wire"
 	"sync"
+	"time"
 )
 
 // RemoteReceiver is the server's CLIENT-origin path, not a shared-mailbox
@@ -83,6 +84,7 @@ func (r *RemoteReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if err != nil {
 		return nil, err
 	}
+	r.session.observeDecoded(records)
 	return &StoredDelivery{session: r.session, records: records, status: status, reclaim: &reclaimBody{store: r.store, ref: ref, location: proof.Location, account: r.account, folder: r.folder}}, nil
 }
 func (d *StoredDelivery) Apply() error {
@@ -152,3 +154,14 @@ func (d *StoredDelivery) Apply() error {
 }
 func (d *StoredDelivery) Status() wire.CleanupStatus { return d.status }
 func (d *StoredDelivery) Discarded() bool            { d.mu.Lock(); defer d.mu.Unlock(); return d.discarded }
+
+func (s *Session) observeDecoded(records []Record) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, r := range records {
+		if int(r.Kind) < len(s.decodedKinds) {
+			s.decodedKinds[r.Kind]++
+			s.lastDecodedKindsAtMS[r.Kind] = time.Now().UnixMilli()
+		}
+	}
+}

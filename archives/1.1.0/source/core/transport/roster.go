@@ -3,10 +3,13 @@ package transport
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"sort"
 
 	"itom.local/core/wire"
 )
+
+var ErrRosterRevision = errors.New("V2_ROSTER_REVISION_REQUIRED")
 
 const maxRosterAccounts = 4096 / 2 // bounded selected service, not configured accounts
 const maxRosterBytes = 32 << 10
@@ -87,7 +90,7 @@ func encodeRoster(m RosterManifest, plan RosterPlan, hash [32]byte) ([]byte, err
 	}
 	raw := make([]byte, size)
 	copy(raw, "IRS2")
-	raw[4] = 2
+	raw[4] = 3
 	copy(raw[8:40], hash[:])
 	copy(raw[40:56], m.ControlStore[:])
 	binary.BigEndian.PutUint64(raw[56:64], m.ControlRun)
@@ -140,7 +143,10 @@ func encodeRoster(m RosterManifest, plan RosterPlan, hash [32]byte) ([]byte, err
 }
 func decodeRoster(raw []byte, plan RosterPlan, hash [32]byte) (RosterManifest, error) {
 	var m RosterManifest
-	if len(raw) < rosterHeader || len(raw) > maxRosterManifestBytes || string(raw[:4]) != "IRS2" || raw[4] != 2 || raw[5] != 0 || raw[6] != 0 || raw[7] != 0 || raw[98] != 0 || raw[99] != 0 || string(raw[8:40]) != string(hash[:]) || int(binary.BigEndian.Uint16(raw[96:98])) != len(plan.Accounts) || len(raw) != rosterHeader+rosterEntry*len(plan.Accounts) {
+	if len(raw) >= 5 && string(raw[:4]) == "IRS2" && raw[4] != 3 {
+		return m, ErrRosterRevision
+	}
+	if len(raw) < rosterHeader || len(raw) > maxRosterManifestBytes || string(raw[:4]) != "IRS2" || raw[4] != 3 || raw[5] != 0 || raw[6] != 0 || raw[7] != 0 || raw[98] != 0 || raw[99] != 0 || string(raw[8:40]) != string(hash[:]) || int(binary.BigEndian.Uint16(raw[96:98])) != len(plan.Accounts) || len(raw) != rosterHeader+rosterEntry*len(plan.Accounts) {
 		return m, ErrProtocol
 	}
 	copy(m.ControlStore[:], raw[40:56])

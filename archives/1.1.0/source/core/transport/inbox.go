@@ -18,7 +18,7 @@ func (f InboxAction) Apply() error { return f() }
 
 type InboxDecoder func(validity uint32, body Body) (InboxDelivery, error)
 
-type inboxAdmission struct{ data, control, progress bool }
+type inboxAdmission struct{ data, control, progress, recovery bool }
 
 func (a inboxAdmission) allows(class LedgerClass) bool {
 	return class == DataLedger && a.data || class == ControlLedger && a.control
@@ -27,8 +27,9 @@ func (a inboxAdmission) allows(class LedgerClass) bool {
 type scopedInboxDecoder func(uint32, Body, inboxAdmission) (InboxDelivery, error)
 type ledgerDelivery struct {
 	InboxDelivery
-	class    LedgerClass
-	progress bool
+	class      LedgerClass
+	progress   bool
+	background bool
 }
 
 func deliveryClass(d InboxDelivery) LedgerClass {
@@ -41,11 +42,28 @@ func classifyDelivery(d InboxDelivery, class LedgerClass, progress bool, err err
 	if d == nil {
 		return nil, err
 	}
-	return &ledgerDelivery{InboxDelivery: d, class: class, progress: progress}, err
+	tagged := &ledgerDelivery{InboxDelivery: d, class: class, progress: progress}
+	var stored *StoredDelivery
+	switch value := d.(type) {
+	case *StoredDelivery:
+		stored = value
+	case *ClientDelivery:
+		stored = value.delivery
+	}
+	if stored != nil {
+		stored.session.mu.Lock()
+		owners := stored.session.authorities
+		stored.session.mu.Unlock()
+		tagged.background = historicalAuthorityGroup(stored.records, owners)
+		if tagged.background && allAuthorityProgress(stored.records) {
+			tagged.progress = true
+		}
+	}
+	return tagged, err
 }
 func standaloneInboxDecoder(decode scopedInboxDecoder) InboxDecoder {
 	return func(validity uint32, body Body) (InboxDelivery, error) {
-		delivery, err := decode(validity, body, inboxAdmission{data: true, control: true})
+		delivery, err := decode(validity, body, inboxAdmission{data: true, control: true, recovery: true})
 		// Preserve the standalone decoder API; a generic Inbox has one shared
 		// delivery bound. Only the scoped factories install ledger admission.
 		if tagged, ok := delivery.(*ledgerDelivery); ok {
@@ -56,8 +74,10 @@ func standaloneInboxDecoder(decode scopedInboxDecoder) InboxDecoder {
 }
 
 type inboxDeferred struct {
-	class     LedgerClass
-	transient bool
+	kind       Kind
+	class      LedgerClass
+	background bool
+	transient  bool
 }
 
 func (e *inboxDeferred) Error() string { return ErrCapacity.Error() }
@@ -92,6 +112,7 @@ type InboxScope struct {
 // inventory can group two known UIDs within the unchanged response budget;
 // accounting, replay and pending-delivery admission still run per BODY.
 type Inbox struct {
+	readQuantum        int        // runtime FAST work bound; bulk and bootstrap retain their own service bounds
 	mu                 sync.Mutex // maintenance state only; never held over receive I/O
 	receiveMu          sync.Mutex // serial receiver state and parser turns
 	maintenanceMu      sync.Mutex
@@ -110,6 +131,7 @@ type Inbox struct {
 	stopAfterApply      func() bool
 	pending             map[uint32]InboxDelivery
 	deferred            map[uint32]LedgerClass
+	recoveryDeferred    map[uint32]bool
 	examined            map[uint32]bool
 	continuing, forward bool
 	tailReady           bool
@@ -127,7 +149,9 @@ type Inbox struct {
 	receiptStats        DeliveryReceiptStats
 }
 type InboxProgress struct {
+	DeferredKinds               [12]uint64
 	Observed, Applied, Deferred int
+	OrderWaits, RecoveryWaits   int
 	More                        bool
 }
 
@@ -154,15 +178,17 @@ func newScopedInbox(executor *Executor, session *Session, scope InboxScope, limi
 }
 
 func (i *Inbox) admission() inboxAdmission {
-	data, control := 0, 0
+	data, control, background := 0, 0, 0
 	for _, d := range i.pending {
-		if deliveryClass(d) == ControlLedger {
+		if tagged, ok := d.(*ledgerDelivery); ok && tagged.background {
+			background++
+		} else if deliveryClass(d) == ControlLedger {
 			control++
 		} else {
 			data++
 		}
 	}
-	return inboxAdmission{data: data < i.limits.PendingDeliveries, control: i.admit != nil && control < i.limits.PendingControls, progress: i.admit != nil}
+	return inboxAdmission{data: data < i.limits.PendingDeliveries, control: i.admit != nil && control+background < i.limits.PendingControls, recovery: i.admit != nil && background < max(1, i.limits.PendingControls-1) && control+background < i.limits.PendingControls, progress: i.admit != nil}
 }
 
 func (i *Inbox) Sweep(ctx context.Context) (InboxProgress, error) {
@@ -175,6 +201,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	i.tailReady = false
 	version := i.executor.SequenceVersion()
 	var progress InboxProgress
+	readWork := 0
 	command, err := i.executor.enumerateInbox(ctx, i.limits.BodyReadBatch > 1)
 	if err != nil {
 		return progress, err
@@ -223,6 +250,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 	for uid := range i.deferred {
 		if present[uid] == 0 {
 			delete(i.deferred, uid)
+			delete(i.recoveryDeferred, uid)
 		}
 	}
 	if !i.continuing {
@@ -273,7 +301,7 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 			}
 			available := i.admission()
 			var uid uint32
-			if !available.data && available.control && !i.forward {
+			if (i.readQuantum > 0 && readWork == 0 || i.readQuantum == 0 && (!available.data || !available.recovery)) && available.control && !i.forward {
 				uid = uids[high]
 				high--
 			} else {
@@ -290,11 +318,11 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 				progress.Deferred++
 				continue
 			}
-			if class, ok := i.deferred[uid]; ok && !available.allows(class) {
+			if class, ok := i.deferred[uid]; ok && (!available.allows(class) || i.recoveryDeferred[uid] && !available.recovery) {
 				progress.Deferred++
 				continue
 			}
-			if i.admit != nil && (!available.data || !available.control) {
+			if i.admit != nil && (!available.data || !available.control || !available.recovery) {
 				if blockedProbes == maxBlockedInboxProbes {
 					progress.More = true
 					i.continuing = true
@@ -302,10 +330,20 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 				}
 				blockedProbes++
 			}
+			if i.readQuantum > 0 && readWork >= i.readQuantum {
+				progress.More = true
+				i.continuing = true
+				if progress.Applied > 0 {
+					clear(i.examined)
+					i.forward = false
+				}
+				return progress, nil
+			}
 			i.examined[uid] = true
 			body, cached := prefetched[uid]
 			delete(prefetched, uid)
 			if !cached {
+				readWork++
 				group := i.readGroup(uid, uids[low:high+1], sizes, available)
 				fetch, err := i.executor.fetchBodies(ctx, group)
 				if err != nil {
@@ -330,6 +368,11 @@ func (i *Inbox) sweepLocked(ctx context.Context) (InboxProgress, error) {
 			}
 			progress.Applied += step.Applied
 			progress.Deferred += step.Deferred
+			progress.OrderWaits += step.OrderWaits
+			progress.RecoveryWaits += step.RecoveryWaits
+			for k, n := range step.DeferredKinds {
+				progress.DeferredKinds[k] += n
+			}
 			advanced = advanced || madeProgress
 		}
 		if !advanced {

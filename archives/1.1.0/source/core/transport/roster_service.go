@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"net"
+	"time"
 
 	"itom.local/core/journal"
 )
@@ -179,6 +180,9 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 		if err != nil {
 			return nil, err
 		}
+		if l.Plane == Fast {
+			inbox.readQuantum = 2
+		}
 		if r.client {
 			err = inbox.EnableDeliveryReceipts()
 		} else {
@@ -210,5 +214,8 @@ func NewRosterService(r *RosterResult, s *Session, key []byte, options RosterSer
 	if err != nil {
 		return nil, err
 	}
+	s.mu.Lock()
+	s.lastForeground = time.Now()
+	s.mu.Unlock()
 	return svc, nil
 }

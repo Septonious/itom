@@ -49,6 +49,8 @@ func (s *Session) ReadyFor(plane Plane, class LedgerClass) bool {
 }
 
 type SessionSnapshot struct {
+	DecodedKinds                                   [12]uint64
+	LastDecodedKindsAtMS                           [12]int64
 	BackgroundAuthorityOutstanding                 int
 	Streams, RetainedRecords, ActiveDispatches     int
 	ActiveServices                                 int
@@ -63,12 +65,14 @@ type SessionSnapshot struct {
 func (s *Session) Snapshot() SessionSnapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return SessionSnapshot{Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, BackgroundAuthorityOutstanding: len(s.authorityBackground), AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed, FastPreparations: s.preparingFast[DataLedger] + s.preparingFast[ControlLedger], PreparationContention: s.preparationContention}
+	return SessionSnapshot{DecodedKinds: s.decodedKinds, LastDecodedKindsAtMS: s.lastDecodedKindsAtMS, Streams: len(s.flows), RetainedRecords: s.records, ActiveDispatches: len(s.dispatches), ActiveServices: s.services, AuthorityOutstanding: s.authorityCount, BackgroundAuthorityOutstanding: len(s.authorityBackground), AuthorityBuffered: s.authorityBytes, SendBuffered: s.buffered, ReceiveBuffered: s.received, ReceiveReserved: s.reserved, Closed: s.closed, FastPreparations: s.preparingFast[DataLedger] + s.preparingFast[ControlLedger], PreparationContention: s.preparationContention}
 }
 
 // FlowSnapshot separates application queues, receiver-backed credit and
 // publication state. It contains no target, payload, credentials or key data.
 type FlowSnapshot struct {
+	OpenPending, OpenSent                                                                    bool
+	Opening                                                                                  uint8
 	ID, Sent, Received, Consumed, PeerCredit, PeerReceipt, ReceiveLimit, SendBuffered        uint64
 	Queued, Readable, Reordered, PendingRecords, Dispatches                                  int
 	ReceiptPending, CreditPending, LocalFinish, FinishSent, FinishAcked, RemoteFinish, Reset bool
@@ -85,7 +89,7 @@ func (s *Session) FlowSnapshot(id uint64) (FlowSnapshot, bool) {
 }
 
 func (s *Session) flowSnapshotLocked(f *stream) FlowSnapshot {
-	snapshot := FlowSnapshot{ID: f.id, Sent: f.sent, Received: f.recv, Consumed: f.consumed, PeerCredit: f.peerCredit, PeerReceipt: f.receipt, ReceiveLimit: f.receiveLimit(), SendBuffered: f.buffered, Queued: f.tx.Len(), Readable: f.rx.Len(), Reordered: len(f.reorder), PendingRecords: len(f.pending), ReceiptPending: f.receiptPending, CreditPending: f.creditPending, LocalFinish: f.localFinish, FinishSent: f.finishSent, FinishAcked: f.finishAcked, RemoteFinish: f.remoteFinish, Reset: f.stopped()}
+	snapshot := FlowSnapshot{OpenPending: f.openPending, OpenSent: f.openSent, Opening: uint8(f.opening), ID: f.id, Sent: f.sent, Received: f.recv, Consumed: f.consumed, PeerCredit: f.peerCredit, PeerReceipt: f.receipt, ReceiveLimit: f.receiveLimit(), SendBuffered: f.buffered, Queued: f.tx.Len(), Readable: f.rx.Len(), Reordered: len(f.reorder), PendingRecords: len(f.pending), ReceiptPending: f.receiptPending, CreditPending: f.creditPending, LocalFinish: f.localFinish, FinishSent: f.finishSent, FinishAcked: f.finishAcked, RemoteFinish: f.remoteFinish, Reset: f.stopped()}
 	for _, d := range s.dispatches {
 		if d.record.Stream == f.id {
 			snapshot.Dispatches++

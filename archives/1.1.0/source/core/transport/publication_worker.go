@@ -20,6 +20,8 @@ type publicationSource struct {
 // PublicationStats describes physical service only. Accepted bytes and own
 // storage proof are never samples of useful peer delivery or application RTT.
 type PublicationStats struct {
+	LastAcceptedKindsAtMS                          [12]int64
+	PreparedKinds, AcceptedKinds                   [12]uint64
 	Prepared, Accepted, Uncertain, ConfirmedStored uint64
 	AcceptedEncodedBytes                           uint64
 	PrepareTime, PublishTime                       time.Duration
@@ -268,6 +270,9 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
 				w.mu.Lock()
 				w.pending = p
 				w.stats.Prepared++
+				for k, n := range p.recordKindCounts() {
+					w.stats.PreparedKinds[k] += n
+				}
 				w.signalLocked()
 				w.mu.Unlock()
 				break
@@ -297,6 +302,12 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
 		w.stats.PublishTime += time.Since(start)
 		if outcome == Accepted {
 			w.stats.Accepted++
+			for k, n := range pending.recordKindCounts() {
+				w.stats.AcceptedKinds[k] += n
+				if n > 0 {
+					w.stats.LastAcceptedKindsAtMS[k] = time.Now().UnixMilli()
+				}
+			}
 			w.stats.AcceptedEncodedBytes += pending.usage.Attempt.EncodedBytes
 			w.pending = nil
 		}

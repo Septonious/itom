@@ -149,7 +149,7 @@ func TestHistoricalOfferBacklogCannotFillQueueBeforeFreshPermissions(t *testing.
 	if err := endpoint.serverPolicyFor(context.Background(), map[string]map[LedgerClass]uint64{}, "12345678", current); err != nil {
 		t.Fatal(err)
 	}
-	if len(session.authorityOut) != 3 {
+	if len(session.authorityOut) != 2+maxHistoricalAuthorityQueued {
 		t.Fatal("fixture did not saturate bounded queue", len(session.authorityOut))
 	}
 	for n, class := range []LedgerClass{ControlLedger, DataLedger} {
@@ -158,7 +158,7 @@ func TestHistoricalOfferBacklogCannotFillQueueBeforeFreshPermissions(t *testing.
 			t.Fatal("history starved initial permission", n, got, message, err)
 		}
 	}
-	if len(endpoint.reconciled) != 1 {
+	if len(endpoint.reconciled) != maxHistoricalAuthorityQueued {
 		t.Fatal("unqueued history was marked delivered", len(endpoint.reconciled))
 	}
 }

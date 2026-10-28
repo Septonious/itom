@@ -2,9 +2,10 @@
 
 The paired RC1.9 exports show all twenty lines selected, Noise and roster
 complete, then PATH timeout. Both endpoints identify RC1.9. The client recovery
-queue reaches 64 records before PATH. The first OPEN reaches the server after
-the client's original 1.5-second OPEN deadline. The client has not sent probe
-DATA yet. The later server EOF retains EXPUNGE alone; the RC1.9 APPEND/EXPUNGE
+queue reaches 64 records before PATH. The client times out waiting for OPEN acknowledgement within its original
+1.5-second limit and has not sent probe DATA yet. The server's first runtime
+snapshot has no flow; a later snapshot has the OPEN. These clocks are independent,
+so their absolute timestamps are not used to calculate a cross-host RTT. The later server EOF retains EXPUNGE alone; the RC1.9 APPEND/EXPUNGE
 barrier is working. An exact provider-side reason for that later EOF is absent.
 
 Two omissions in prior synthetic tests matter: old reserved quota was modeled,
@@ -19,12 +20,23 @@ entries were not combined with a cold first DATA roundtrip.
   folder, UIDVALIDITY, user and authentication key, and skips only sessions
   different from the new authenticated session. New/current bodies remain
   subject to ordinary receive authentication, replay and accounting checks.
-* Historical grant/fence/status/retirement work has one shared queued/in-flight
-  logical slot. Current permission messages and live stream work have priority.
-  Unknown physical publication keeps its slot and original debt; it does not
-  block independent live work. Recovery continues when live work yields.
-* Diagnostics expose historical read hints and background-authority outstanding
-  counts, without UIDs, session keys, destinations or traffic contents.
+* Historical authority work has eight shared queued/in-flight logical slots,
+  with bounded homogeneous authority-only batches (at most eight records and
+  the existing 8 KiB physical CONTROL ceiling). Current permission messages and
+  live stream work have priority. Unknown publication retains original debt.
+* New historical re-offers/fences/retirements wait through the original short
+  request lifetime after service startup or foreground OPEN/DATA. Current quota
+  and replies to admitted work remain enabled. Quiet sessions resume recovery;
+  bulk pressure permits it so capacity cannot be stranded. This is scheduling,
+  not a longer request timeout or a storage release rule.
+* A pending historical receive leaves room within the original two CONTROL
+  delivery slots for live OPEN. FAST turns bound BODY reads and fairly visit
+  recent and older waiting UIDs. Bulk keeps its existing sized read grouping.
+* Diagnostics expose historical read hints, outstanding background work and
+  fixed-size record-kind counters, without keys, destinations or payloads.
+* Roster version 3 negotiates the new authority-only containers. Older roster
+  versions are explicitly rejected before runtime; update both endpoints.
+  Original mailbox envelopes, journal/wallet identities and profiles persist.
 
 Retained read hints are not delivery, registration, storage absence, deletion or
 refund proof. Original wallet/journal state, MACs, nonces, physical tickets,
@@ -43,10 +55,16 @@ original combined 128+192 FAST-folder ceiling. Old retained BODY debt must stay
 charged through two VPN sessions and actual HTTPS.
 
 The unchanged RC1.9 production source fails this corrected case at
-V2_STARTUP_PATH in 32.42 seconds. The combined correction completes both sessions
-and HTTPS in 47.59 seconds. A first attempt with only read handoff still failed
-PATH; isolating historical authority traffic was also necessary. These are
-whole-cohort times, not throughput or raw RTT measurements.
+V2_STARTUP_PATH in 32.42 seconds. An initial non-race correction passed in
+47.59 seconds but failed the full race-enabled HTTPS gate locally and on CI;
+that candidate was not released. Queue isolation, batching or tail preference
+alone also failed; all generated failures are retained as evidence.
+
+With historical launches yielding to foreground requests, the race-enabled
+case completes both VPN sessions and actual HTTPS in 48.53 seconds. The two
+startup DATA echoes measure 262 and 206 ms. Whole-cohort times include cold
+inventory and are not throughput or raw RTT measurements. Full-suite and hosted
+qualification must be assessed separately from this focused result.
 
 The large-backlog case's outer test-process lifetimes cover the existing
 90-second startup budget per VPN attempt. The original 1.5-second OPEN/TLS/header

@@ -19,10 +19,10 @@ func (s *Session) progressControlAdmission() func([]Record) error {
 				return ErrProtocol
 			}
 			if r.Kind == Authority && !authorityProgress(r.Payload) {
-				return &inboxDeferred{class: ControlLedger}
+				return &inboxDeferred{class: ControlLedger, kind: r.Kind}
 			}
 			if r.Kind == Open {
-				return &inboxDeferred{class: ControlLedger}
+				return &inboxDeferred{class: ControlLedger, kind: r.Kind}
 			}
 			if r.Kind == Reset && !existing[r.Stream] {
 				return &inboxDeferred{class: ControlLedger, transient: true}
@@ -32,12 +32,65 @@ func (s *Session) progressControlAdmission() func([]Record) error {
 	}
 }
 
+// This runs against an immutable authority routing view, including inside the
+// crypto validator. No mutable owner lock or wallet/journal I/O occurs here.
+func historicalAuthorityGroup(records []Record, owners map[string]*AuthorityController) bool {
+	if len(records) == 0 {
+		return false
+	}
+	for _, r := range records {
+		if r.Kind != Authority {
+			return false
+		}
+		_, message, err := decodeAuthority(r.Payload)
+		if err != nil {
+			return false
+		}
+		k := authorityKey(message)
+		owner := owners[k.Account]
+		if owner == nil || k.Session == owner.sessionID {
+			return false
+		}
+	}
+	return true
+}
+func allAuthorityProgress(records []Record) bool {
+	for _, r := range records {
+		if r.Kind != Authority || !authorityProgress(r.Payload) {
+			return false
+		}
+	}
+	return len(records) > 0
+}
+
 func peerInboxAdmission(s *Session, class LedgerClass, available inboxAdmission) (func([]Record) error, bool, error) {
-	if available.allows(class) {
-		return nil, false, nil
+	if class != ControlLedger {
+		if available.allows(class) {
+			return nil, false, nil
+		}
+		return nil, false, &inboxDeferred{class: class}
 	}
-	if class == ControlLedger && available.progress {
-		return s.progressControlAdmission(), true, nil
-	}
-	return nil, false, &inboxDeferred{class: class}
+	s.mu.Lock()
+	owners := s.authorities
+	s.mu.Unlock()
+	progress := s.progressControlAdmission()
+	return func(records []Record) error {
+		if historicalAuthorityGroup(records, owners) {
+			if available.recovery || available.progress && allAuthorityProgress(records) {
+				return nil
+			}
+			return &inboxDeferred{class: ControlLedger, background: true, kind: Authority}
+		}
+		if available.control {
+			return nil
+		}
+		if available.progress {
+			return progress(records)
+		}
+		kind := Kind(0)
+		if len(records) > 0 {
+			kind = records[0].Kind
+		}
+		return &inboxDeferred{class: ControlLedger, kind: kind}
+	}, !available.control && available.progress, nil
 }

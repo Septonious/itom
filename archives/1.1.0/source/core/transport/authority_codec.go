@@ -4,6 +4,7 @@ import "itom.local/core/wire"
 
 const maxAuthorityPayload = 4096
 const maxAuthorityQueued = 64
+const maxHistoricalAuthorityQueued = 8
 
 // Authority records are stream-independent CONTROL work. Inner ledger class
 // selects the ORIGINAL quota authority; the carrying mail still spends CONTROL.

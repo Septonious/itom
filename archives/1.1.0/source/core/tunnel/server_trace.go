@@ -91,6 +91,8 @@ func startupFailureCode(err error) string {
 		return "WALLET_IO_UNCERTAIN"
 	case errors.Is(err, wallet.ErrState):
 		return "WALLET_STATE_INVALID"
+	case errors.Is(err, transport.ErrRosterRevision):
+		return "ROSTER_REVISION_REQUIRED"
 	case errors.Is(err, transport.ErrRuntimeStopped):
 		return "RUNTIME_STOPPED"
 	case errors.Is(err, errProviderUIDPlus):

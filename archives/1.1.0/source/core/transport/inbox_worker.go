@@ -24,6 +24,8 @@ func DefaultInboxServiceLimits() InboxServiceLimits {
 // InboxStats reports discovery work. Observed includes repeated inventory UIDs;
 // none of these counters is useful delivery, bandwidth or application RTT.
 type InboxStats struct {
+	DeferredKinds                                     [12]uint64
+	OrderWaits, RecoveryWaits                         uint64
 	Turns, Observed, Applied, Deferred, CapacityWaits uint64
 	ServiceTime, ProbeDelay                           time.Duration
 	IdleAttempts, IdleRefusals                        uint64
@@ -197,6 +199,11 @@ func (w *InboxWorker) run(ctx context.Context, runtime *Runtime) (resultErr erro
 		w.stats.Observed += uint64(p.Observed)
 		w.stats.Applied += uint64(p.Applied)
 		w.stats.Deferred += uint64(p.Deferred)
+		w.stats.OrderWaits += uint64(p.OrderWaits)
+		w.stats.RecoveryWaits += uint64(p.RecoveryWaits)
+		for k, n := range p.DeferredKinds {
+			w.stats.DeferredKinds[k] += n
+		}
 		w.stats.ServiceTime += elapsed
 		w.stats.ProbeDelay = delay
 		w.stats.Reclamation = w.inbox.ReclamationStats()

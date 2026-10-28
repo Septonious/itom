@@ -69,6 +69,8 @@ func (s *Session) signalOpenLocked() {
 // lifetime of a successfully established application connection.
 type ClientDialer struct{ session *Session }
 
+const openTimeout = 1500 * time.Millisecond
+
 func NewClientDialer(s *Session, receiveWindow uint64) (*ClientDialer, error) {
 	if s == nil {
 		return nil, ErrProtocol
@@ -86,7 +88,7 @@ func (d *ClientDialer) DialContext(ctx context.Context, network, address string)
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(ctx, 1500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, openTimeout)
 	defer cancel()
 	if err = ctx.Err(); err != nil {
 		return nil, err
@@ -102,6 +104,7 @@ func (d *ClientDialer) DialContext(ctx context.Context, network, address string)
 		s.mu.Unlock()
 		return nil, err
 	}
+	s.lastForeground = time.Now()
 	s.nextOpenID += 2
 	f := s.flows[id]
 	f.opening, f.openPending, f.openTarget = openAwaitPeer, true, target
@@ -161,6 +164,7 @@ func (s *Session) receiveOpenLocked(r Record) error {
 	if err := s.addLocked(r.Stream, r.ReceiveLimit, s.openWindow); err != nil {
 		return err
 	}
+	s.lastForeground = time.Now()
 	f := s.flows[r.Stream]
 	f.opening, f.openTarget, f.openCredit = openAwaitExit, target, r.ReceiveLimit
 	s.signalOpenLocked()

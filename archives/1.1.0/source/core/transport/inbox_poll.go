@@ -74,6 +74,7 @@ func (i *Inbox) Poll(ctx context.Context) (InboxProgress, error) {
 	}
 	step, _, err := i.acceptBody(bodies[0], i.admission())
 	progress.Applied, progress.Deferred = step.Applied, step.Deferred
+	progress.OrderWaits, progress.RecoveryWaits, progress.DeferredKinds = step.OrderWaits, step.RecoveryWaits, step.DeferredKinds
 	if err != nil || progress.Deferred > 0 {
 		i.tailReady = false
 		progress.More = err == nil

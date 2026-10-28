@@ -699,6 +699,9 @@ func (s *EndpointSession) serverPolicyFor(ctx context.Context, sequences map[str
 			}
 		}
 	}
+	if !s.Service.historicalLaunchAllowed() {
+		return nil
+	}
 	for _, r := range recovery {
 		if err := r.owner.queue(r.class, r.offer); err != nil {
 			if errors.Is(err, ErrCapacity) {
@@ -729,6 +732,9 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 			}
 			for _, e := range rows {
 				if e.Offer.Key.Session != entry.w.Session() {
+					if !s.Service.historicalLaunchAllowed() {
+						continue
+					}
 					// OpenBound fenced this exact persisted spend before the new
 					// epoch. Only unused allowance is released, never BODY debt.
 					err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)

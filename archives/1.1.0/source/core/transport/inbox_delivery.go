@@ -20,11 +20,22 @@ func (i *Inbox) acceptBody(body Body, available inboxAdmission) (InboxProgress, 
 	}
 	if errors.Is(err, journal.ErrOrder) || errors.Is(err, ErrCapacity) {
 		if errors.Is(err, journal.ErrOrder) {
+			progress.OrderWaits++
 			i.forward = true
 		}
 		var blocked *inboxDeferred
 		if errors.As(err, &blocked) && !blocked.transient {
 			i.deferred[uid] = blocked.class
+			if int(blocked.kind) < len(progress.DeferredKinds) {
+				progress.DeferredKinds[blocked.kind]++
+			}
+			if blocked.background {
+				progress.RecoveryWaits++
+				if i.recoveryDeferred == nil {
+					i.recoveryDeferred = map[uint32]bool{}
+				}
+				i.recoveryDeferred[uid] = true
+			}
 		}
 		progress.Deferred++
 		return progress, false, nil
@@ -37,12 +48,14 @@ func (i *Inbox) acceptBody(body Body, available inboxAdmission) (InboxProgress, 
 		return progress, false, err
 	}
 	delete(i.deferred, uid)
+	delete(i.recoveryDeferred, uid)
 	if delivery != nil {
-		progressOnly := false
+		progressOnly, background := false, false
 		if tagged, ok := delivery.(*ledgerDelivery); ok {
 			progressOnly = tagged.progress
+			background = tagged.background
 		}
-		if progressOnly && (!available.progress || deliveryClass(delivery) != ControlLedger) || !progressOnly && !available.allows(deliveryClass(delivery)) {
+		if progressOnly && (!available.progress || deliveryClass(delivery) != ControlLedger) || !progressOnly && (background && !available.recovery || !background && !available.allows(deliveryClass(delivery))) {
 			return progress, false, ErrProtocol
 		}
 		if err = delivery.Apply(); errors.Is(err, ErrCapacity) {

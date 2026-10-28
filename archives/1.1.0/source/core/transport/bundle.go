@@ -41,11 +41,15 @@ func (c *Cipher) sealContainer(records []Record, control bool) ([]byte, error) {
 	if control {
 		maximum, magic = MaxControlBytes, controlMagic
 	}
+	authorityGroup := control && records[0].Kind == Authority
+	if authorityGroup && len(records) > maxAuthorityBatchRecords {
+		return nil, ErrCapacity
+	}
 	generation := records[0].Generation
 	for _, r := range records {
 		validKind := r.Kind == Data
 		if control {
-			validKind = r.Kind != Data && r.Kind != Open && r.Kind != Reset && r.Kind != Authority
+			validKind = r.Kind != Data && r.Kind != Open && r.Kind != Reset && (r.Kind == Authority) == authorityGroup
 		}
 		if !r.valid() || !validKind || r.Generation != generation {
 			return nil, ErrProtocol
@@ -146,7 +150,8 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 	}
 	plains, err := c.epoch.OpenSessionBatch(packets, func(plains [][]byte) error {
 		var generation uint64
-		for _, plain := range plains {
+		var authorityGroup bool
+		for index, plain := range plains {
 			r, e := DecodeRecord(plain)
 			if e != nil {
 				return e
@@ -155,7 +160,10 @@ func (c *Cipher) openRecordsAdmitted(body []byte, class LedgerClass, expectedGen
 				clear(r.Payload)
 				return ErrProtocol
 			}
-			if controls && (r.Kind == Data || r.Kind == Open || r.Kind == Reset || r.Kind == Authority || generation != 0 && r.Generation != generation) {
+			if controls && index == 0 {
+				authorityGroup = r.Kind == Authority
+			}
+			if controls && (r.Kind == Data || r.Kind == Open || r.Kind == Reset || (r.Kind == Authority) != authorityGroup || authorityGroup && len(plains) > maxAuthorityBatchRecords || generation != 0 && r.Generation != generation) {
 				clear(r.Payload)
 				return ErrProtocol
 			}

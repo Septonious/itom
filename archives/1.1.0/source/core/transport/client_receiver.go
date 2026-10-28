@@ -81,6 +81,7 @@ func (r *ClientReceiver) receiveAdmittedEnvelope(validity, uid uint32, envelope 
 	if err != nil {
 		return nil, err
 	}
+	r.session.observeDecoded(records)
 	return &ClientDelivery{delivery: &StoredDelivery{session: r.session, records: records}, descriptor: usage, receipt: &deliveryReceipt{uid: uid, keyword: receiptKeyword(envelope.body, validity, uid, r.authenticationKey[:])}}, nil
 }
 
