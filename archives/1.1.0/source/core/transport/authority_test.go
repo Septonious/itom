@@ -357,6 +357,18 @@ func TestFullAuthorityQueueCannotMintAnotherGrantForTheSamePolicySequence(t *tes
 	if _, err := p.Start(context.Background(), x); err != nil {
 		t.Fatal(err)
 	}
+	body := fetchAt(t, x, 1)
+	delivery, err := a.clientControlReceiver.Decode(9, body.UID, body.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = delivery.Apply(); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := a.dataWallet.Entries()
+	if err != nil || len(entries) < 2 || len(entries) > 8 {
+		t.Fatal("bounded physical authority batch did not deliver the actual offers", len(entries), err)
+	}
 	if same, err := a.server.Issue(context.Background(), transport.DataLedger, 65, limit); err != nil || same != ref {
 		t.Fatal("retained grant did not queue after real space change", same, err)
 	}
@@ -364,7 +376,7 @@ func TestFullAuthorityQueueCannotMintAnotherGrantForTheSamePolicySequence(t *tes
 	if err != nil || len(grants) != 65 {
 		t.Fatal("queue retry leaked extra grants", len(grants), err)
 	}
-	if s := a.f.server.Snapshot(); s.AuthorityOutstanding != 64 || s.AuthorityBuffered == 0 || s.SendBuffered < s.AuthorityBuffered {
+	if s := a.f.server.Snapshot(); s.AuthorityOutstanding != 65-len(entries) || s.AuthorityOutstanding > 64 || s.AuthorityBuffered == 0 || s.SendBuffered < s.AuthorityBuffered {
 		t.Fatal("protocol work escaped bounded session memory", s)
 	}
 	if err := a.f.store.Audit(); err != nil {
