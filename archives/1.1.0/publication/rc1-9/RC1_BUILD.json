@@ -1,0 +1,205 @@
+{
+  "release": "ITOM 1.1.0 RC1.9",
+  "purpose": "Exclusive destructive command lifetime and capacity-aware authenticated startup and recovery",
+  "source_commit": "6187cb061d125d776042c6d05d91f9aa9dac70da",
+  "build_run_id": 40703357532,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40703357532",
+  "reproduced_append_expunge_overlap_fixed": true,
+  "reproduced_exhausted_first_control_and_split_data_capacity_fixed": true,
+  "reproduced_historical_queue_priority_and_pending_grant_amount_fixed": true,
+  "exact_field_provider_close_cause_confirmed": false,
+  "field_qualified": false,
+  "performance_qualified": false,
+  "production_receive_window_bytes": 262144,
+  "parser_benchmark_is_end_to_end_bandwidth_proof": false,
+  "functional_ci": {
+    "core_race_groups_passed": 293,
+    "native_race_groups_passed": 14,
+    "core_and_native_vet": "passed",
+    "source_and_launcher_checks": "passed",
+    "android_domain_tests": 93,
+    "android_app_unit_tests": 8,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 1
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10120,
+    "version_name": "1.1.0-rc1.9-debug"
+  },
+  "source_ci_apk_sha256": "2bc28688ba6f5b2c52fd887108ebca36903149291e0b01279c2e74373af03edb",
+  "signed_apk_sha256": "34b9e03900aa67a9e880da81cc46c0bee86eb10a250cdf6f3b9b86944494e691",
+  "signed_apk_bytes": 54432084,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "2220eaf55d155123cd73b3c74d1ad397192d7044170524f00932c19cda0ed7b8",
+    "lib/armeabi-v7a/libgojni.so": "50d7d6c247ba25feefbfa1e96aa566b8a252bc80cb1f1b99971340fdc35f4d60"
+  },
+  "native_source_sha256sums": "8ed83a61c365b3eba117ebe8f6ede0a49e480ed723340240852279b13bcc3f00  ITOM-1.1.0-RC1.9-linux-amd64.bin\n4258ed39eb14506de70ae99e9ba97098ad4582c2cfa7dec85f4208e951c68162  ITOM-1.1.0-RC1.9-linux-arm64.bin\n2c8c84307897ba32a2f33ddb2f5781f86e750bb53fa0703d5a6af917e13e2b54  ITOM-1.1.0-RC1.9-sources.zip\n",
+  "source_manifest_files": 713,
+  "source_manifest_sha256": "2215d040dd97c317cc6d428189f81da3eabbfb7f3944a7291ca3cd60f8b3d389",
+  "wire_envelopes_changed": false,
+  "mailbox_config_binding_changed": false,
+  "journal_profiles_changed": false,
+  "historical_debt_reclaimed_or_reset": false,
+  "existing_application_deadlines_changed": false,
+  "exclusive_deletion": {
+    "command": "UID EXPUNGE",
+    "drains_all_earlier_tags": true,
+    "fences_all_later_commands_until_tag": true,
+    "append_fetch_remain_concurrent_outside_deletion": true,
+    "issued_tag_survives_waiter_cancellation": true,
+    "executor_close_joins_lease": true,
+    "original_absence_proof_required": true
+  },
+  "bootstrap": {
+    "original_control_headroom_selects_server_anchor": true,
+    "existing_fast_lanes_only": true,
+    "full_authenticated_fresh_session_invitation_selects_client_anchor": true,
+    "original_wallet_paths_preserved": true,
+    "data_and_control_can_use_different_healthy_accounts": true,
+    "actual_data_echo_required_before_ready": true,
+    "extra_connections_or_grants": false
+  },
+  "grant_policy": {
+    "fresh_permissions_before_historical_reoffers": true,
+    "full_ledger_reoffers_history": true,
+    "pending_retry_keeps_original_request_ref_and_amount": true,
+    "missing_wallet_history_refunds": false
+  },
+  "diagnostics": {
+    "bounded_permission_wait_snapshot_before_native_start": true,
+    "fixed_quota_and_wallet_failure_codes": true,
+    "provider_text_or_payload_logged": false
+  },
+  "source_qualification": {
+    "run_id": 40703357756,
+    "source_commit": "6187cb061d125d776042c6d05d91f9aa9dac70da",
+    "core_race_groups": 293,
+    "native_race_groups": 14,
+    "functional_failures": 0,
+    "strict_limit_ms": 300,
+    "field_qualified": false,
+    "performance_qualified": false,
+    "cohorts": {
+      "warm": {
+        "exchanges": 64,
+        "at_or_below_300ms": 63,
+        "maximum_ms": 305.628347,
+        "complete": true
+      },
+      "upper": {
+        "exchanges": 16,
+        "at_or_below_300ms": 8,
+        "maximum_ms": 431.665756,
+        "complete": true
+      },
+      "quiet": {
+        "exchanges": 3,
+        "at_or_below_300ms": 3,
+        "maximum_ms": 200.475201,
+        "complete": true
+      }
+    },
+    "result": "failed warm and/or upper-range light RTT gates"
+  },
+  "local_validation": {
+    "core_race_groups_passed": 289,
+    "core_race_groups_failed": [
+      "TestTwentySelectedLinesCarryHTTPSAcrossRestartsWithShortProviderKeywords",
+      "TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingState",
+      "TestEndpointRestartsPreserveWalletSpendAndClearedWalletCannotReleaseUnknownGrants",
+      "TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP"
+    ],
+    "native_race_groups_passed": 14,
+    "core_and_native_vet": "passed",
+    "cpu_or_deadline_overrides": false,
+    "comparison": {
+      "same_host": true,
+      "race": false,
+      "count": 1,
+      "no_cpu_or_deadline_overrides": true,
+      "interpretation": "Small functional cohorts; elapsed totals are not sustained throughput or field qualification",
+      "results": {
+        "rc1-8": {
+          "groups": [
+            {
+              "name": "TestTwentySelectedLinesCarryHTTPSAcrossRestartsWithShortProviderKeywords",
+              "result": "pass",
+              "elapsed_seconds": 28.98
+            },
+            {
+              "name": "TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingState",
+              "result": "pass",
+              "elapsed_seconds": 17.02
+            },
+            {
+              "name": "TestEndpointRestartsPreserveWalletSpendAndClearedWalletCannotReleaseUnknownGrants",
+              "result": "pass",
+              "elapsed_seconds": 0.39
+            },
+            {
+              "name": "TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP",
+              "result": "pass",
+              "elapsed_seconds": 1.55
+            }
+          ],
+          "package_elapsed_seconds": [
+            47.938
+          ]
+        },
+        "rc1-9": {
+          "groups": [
+            {
+              "name": "TestTwentySelectedLinesCarryHTTPSAcrossRestartsWithShortProviderKeywords",
+              "result": "pass",
+              "elapsed_seconds": 17
+            },
+            {
+              "name": "TestFieldTopologyFifteenAccountsTwoUsersUpgradesAndRestartsWithoutClearingState",
+              "result": "pass",
+              "elapsed_seconds": 13.58
+            },
+            {
+              "name": "TestEndpointRestartsPreserveWalletSpendAndClearedWalletCannotReleaseUnknownGrants",
+              "result": "pass",
+              "elapsed_seconds": 0.36
+            },
+            {
+              "name": "TestPersistentEndpointOwnsStartupAndRenewsAccountedGrantsDuringTLSHTTP",
+              "result": "pass",
+              "elapsed_seconds": 1.24
+            }
+          ],
+          "package_elapsed_seconds": [
+            32.184
+          ]
+        }
+      },
+      "source_commits": {
+        "rc1-8": "592f2a66252463c2944a4df97bfa72fe5b29e973",
+        "rc1-9": "c4d47d4403ddbb0af5f587cd8a5517d7bcc65647"
+      }
+    },
+    "interpretation": "Hosted functional runs both passed; local full race failures retained, and corresponding non-race RC1.8/RC1.9 cohorts both passed. No field or sustained throughput qualification.",
+    "full_local_source_commit": "c4d47d4403ddbb0af5f587cd8a5517d7bcc65647",
+    "final_source_commit": "6187cb061d125d776042c6d05d91f9aa9dac70da",
+    "final_bounded_policy_race_groups_passed": 3
+  },
+  "dns_unchanged": {
+    "resolvers": [
+      "31.131.251.83",
+      "185.22.234.229"
+    ],
+    "race_both": true,
+    "direct_timeout_ms": 250,
+    "protocols": [
+      "UDP/53",
+      "TCP/53"
+    ],
+    "optional_imap_fallback_latched_until_user_restart": true
+  },
+  "persistent_state_notes": "Update both endpoints in place; run downloaded server executable, choose 11 then 9; install APK in place; preserve profiles, wallets and journals"
+}

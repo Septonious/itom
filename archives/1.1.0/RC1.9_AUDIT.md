@@ -73,8 +73,25 @@ are not qualified by these functional reproductions.
 
 Private field archives are excluded from public evidence.
 
-The separate hosted timing qualification fails the strict 300 ms limit: warm
-62/64 (maximum 325.610 ms), upper-range 7/16 (maximum 392.075 ms), and after
-silence 3/3 (maximum 235.281 ms). All exchanges complete; completion alone does
+The final-source hosted timing qualification fails the strict 300 ms limit: warm
+63/64 (maximum 305.628 ms), upper-range 8/16 (maximum 431.666 ms), and after
+silence 3/3 (maximum 200.475 ms). All exchanges complete; completion alone does
 not qualify latency. Functional fixes and performance qualification remain
 separate in the release metadata.
+
+## Remaining bandwidth constraint
+
+The active production per-stream receive window is still 256 KiB. At a 300 ms
+end-to-end credit-return interval, that window covers about 7 Mbps per stream
+before overhead; 100 Mbps in one stream would require roughly 3.75 MB of backed
+in-flight credit. Multiple streams can aggregate more capacity. Parser-service
+benchmarks above 200 Mbps therefore cannot establish sustained application
+throughput through the complete transport. Dynamic receive-credit machinery
+exists in component tests but is not active in the production endpoint. This
+remains an explicit performance limitation of this connectivity testing build.
+
+The matched Android build passes 93 domain and 8 app tests, with zero lint
+errors and one dependency-update warning. Both JNI architectures and both
+Linux server architectures are built. All 713 packaged source files match the
+pinned commit. The APK retains the existing signing certificate; its restored
+public-signature artifact is byte-identical to the locally verified signed APK.

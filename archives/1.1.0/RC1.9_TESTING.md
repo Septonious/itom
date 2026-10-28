@@ -43,12 +43,13 @@ DNS is unchanged: race 31.131.251.83 and 185.22.234.229 over UDP/TCP 53, shared
 ## Validation
 
 Both hosted full functional runs pass 293 core and 14 native race-test groups,
-plus vet. The local full race run has four failures, retained in the evidence.
+plus vet. Android passes 93 domain and 8 app tests; lint has zero errors.
+The local full race run has four failures, retained in the evidence.
 A sequential non-race comparison of those four scenarios passes in both RC1.8
 and RC1.9 (47.938 and 32.184 seconds for the cohorts). This does not establish
 sustained throughput or field reliability.
 
-The separate strict 300 ms RTT qualification still fails: warm 62/64
-(maximum 325.610 ms), upper-range 7/16 (maximum 392.075 ms); after silence 3/3
-(maximum 235.281 ms). This is a testing release for the audited connectivity
+The final-source strict 300 ms RTT qualification still fails: warm 63/64
+(maximum 305.628 ms), upper-range 8/16 (maximum 431.666 ms); after silence 3/3
+(maximum 200.475 ms). This is a testing release for the audited connectivity
 fixes. Complete passing and failing synthetic logs accompany it.
