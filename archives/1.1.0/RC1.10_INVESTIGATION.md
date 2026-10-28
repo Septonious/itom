@@ -29,13 +29,21 @@ entries were not combined with a cold first DATA roundtrip.
   and replies to admitted work remain enabled. Quiet sessions resume recovery;
   bulk pressure permits it so capacity cannot be stranded. This is scheduling,
   not a longer request timeout or a storage release rule.
-* Optional receipt/cleanup I/O also yields during short foreground work. It
+* Authenticated client delivery receipts always run: the peer may already be
+  out of DATA quota even when this sender still has space. Optional server
+  cleanup I/O yields during short foreground work. It
   resumes under bulk load, blocked quota, a bounded maintenance queue or quiet
   service, using the original exact receipt, EXPUNGE and absence proof. Issued
   tags still drain normally; held storage is never forgiven by scheduling.
+  Actual blocked publisher admission OR a blocked issuer grant replacement
+  overrides the foreground grace, including when only the peer needs quota.
   Cleanup pressure begins at sixteen queued candidates (two authority batches),
   including when a short request is active. The earlier 32-candidate trigger
   overflowed the unchanged 64-message small-mailbox fixture and was rejected.
+* Exhausted current grants are fenced even if BOTH overlapping grants became
+  spent before one policy tick. Previously `usable == 0` suppressed every
+  fence, leaving the issuer with two permanently open grants. The regression
+  fails before the fix and checks exact lifetime spend and one-time fencing.
 * A pending historical receive leaves room within the original two CONTROL
   delivery slots for live OPEN. FAST turns bound BODY reads and fairly visit
   recent and older waiting UIDs. Bulk keeps its existing sized read grouping.
@@ -72,7 +80,9 @@ DATA echoes) but still failed TLS during the broader local run. The logs show
 optional cleanup competing on the short-request socket. With maintenance also
 yielding safely, the first race-enabled cohort completes both VPN sessions and
 actual HTTPS in 47.78 seconds, with DATA echoes of 104 and 196 ms. Repeated and
-full hosted runs are recorded separately. Whole-cohort times include cold
+full hosted runs are recorded separately. Subsequent qualification caught the
+legacy all-grants-spent deadlock; authenticated receipts and issuer-side grant
+pressure must remain urgent as well as local publisher pressure. Whole-cohort times include cold
 inventory and are not throughput or raw RTT measurements. Full-suite and hosted
 qualification must be assessed separately from this focused result.
 

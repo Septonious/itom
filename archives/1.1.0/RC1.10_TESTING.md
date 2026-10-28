@@ -4,7 +4,9 @@ This experimental build addresses RC1.9's PATH failure after successful login,
 Noise and roster. It carries authenticated historical read knowledge into the
 runtime, batches bounded historical authority work and lets short foreground
 requests finish before launching more historical recovery. FAST reads and
-receive admission also reserve service for live traffic. Optional cleanup
+receive admission also reserve service for live traffic. Exhausted grants are
+finalized even when both became spent between policy ticks. Client receipts
+and local/peer quota recovery remain urgent. Optional server cleanup
 yields during short exchanges and resumes under bounded queue/quota pressure,
 bulk load or quiet service; original physical debt and proofs are preserved. A new same-namespace backlog and surviving-wallet test
 fails on RC1.9 and passes across two VPN sessions with the corrections.

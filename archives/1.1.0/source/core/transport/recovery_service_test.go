@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"itom.local/core/journal"
 	"itom.local/core/pool"
 )
 
@@ -82,7 +83,17 @@ func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
 	if worker.maintenanceAllowed() {
 		t.Fatal("optional cleanup competes with short foreground work")
 	}
+	inbox.receiptEnabled = true
+	inbox.receipts[1] = &deliveryReceipt{}
+	if !worker.maintenanceAllowed() {
+		t.Fatal("peer quota could be stranded behind a delayed authenticated receipt")
+	}
+	clear(inbox.receipts)
+	inbox.receiptEnabled = false
 	writer.stats.ControlBlocked = true
+	if !ep.Service.historicalLaunchAllowed() {
+		t.Fatal("quota pressure could not recover surviving historical permissions")
+	}
 	if !worker.maintenanceAllowed() {
 		t.Fatal("blocked current permission could not progress original cleanup")
 	}
@@ -94,6 +105,13 @@ func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
 		t.Fatal("bounded receipt queue could strand peer cleanup")
 	}
 	clear(inbox.receipts)
+	s.authorities = ep.Service.Authorities
+	owner := ep.Service.Authorities["account1"]
+	owner.issues[DataLedger] = authorityIssue{err: journal.ErrLimit}
+	if !worker.maintenanceAllowed() || !ep.Service.historicalLaunchAllowed() {
+		t.Fatal("blocked peer grant issuance could not reclaim original capacity")
+	}
+	delete(owner.issues, DataLedger)
 	s.lastForeground = time.Now().Add(-openTimeout)
 	if !worker.maintenanceAllowed() {
 		t.Fatal("idle maintenance failed to resume")

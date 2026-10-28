@@ -19,6 +19,9 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		i.mu.Lock()
+		wake := i.maintenanceChanged
+		i.mu.Unlock()
 		if !w.maintenanceAllowed() {
 			timer := time.NewTimer(w.limits.MaxProbe)
 			select {
@@ -28,6 +31,8 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 			case <-x.done:
 				timer.Stop()
 				return ErrClosed
+			case <-wake:
+				timer.Stop()
 			case <-timer.C:
 			}
 			continue
@@ -58,7 +63,7 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 		}
 		i.mu.Lock()
 		pending := i.receiptEnabled && len(i.receipts) > 0 || i.reclamation && len(i.reclaimQueue) > 0
-		wake := i.maintenanceChanged
+		wake = i.maintenanceChanged
 		i.mu.Unlock()
 		var timer *time.Timer
 		var tick <-chan time.Time
@@ -104,23 +109,15 @@ func (w *InboxWorker) maintenanceAllowed() bool {
 	if runtime == nil {
 		return true
 	}
-	if s.historicalLaunchAllowed(time.Now()) {
-		return true
-	}
 	i := w.inbox
 	i.mu.Lock()
+	// A peer may already be quota-blocked. Its authenticated receipt is
+	// essential flow progress even when our own publishers have space.
+	essentialReceipt := i.receiptEnabled && len(i.receipts) > 0
 	pressure := len(i.receipts)+len(i.reclaimQueue) >= 2*maxAuthorityBatchRecords
 	i.mu.Unlock()
-	if pressure {
+	if essentialReceipt || pressure || s.historicalLaunchAllowed(time.Now()) {
 		return true
 	}
-	if runtime != nil {
-		for _, c := range runtime.carriers {
-			stats := c.Writer.Stats()
-			if stats.DataBlocked || stats.ControlBlocked {
-				return true
-			}
-		}
-	}
-	return false
+	return runtime.permissionPressure()
 }

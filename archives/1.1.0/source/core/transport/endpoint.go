@@ -746,9 +746,13 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 					}
 					continue
 				}
-				if !e.Fenced && (usable >= 2 || usable >= 1 && (e.Used.Messages == e.Offer.Limit.Messages || e.Used.Bytes == e.Offer.Limit.Bytes)) && (e.Used.Messages >= e.Offer.Limit.Messages/2 || e.Used.Bytes >= e.Offer.Limit.Bytes/2) {
+				// A policy tick may see BOTH overlapping grants already spent.
+				// Their final fence is still required when usable == 0;
+				// otherwise the issuer keeps two open grants forever.
+				exhausted := e.Used.Messages == e.Offer.Limit.Messages || e.Used.Bytes == e.Offer.Limit.Bytes
+				if !e.Fenced && (exhausted || usable >= 2 && (e.Used.Messages >= e.Offer.Limit.Messages/2 || e.Used.Bytes >= e.Offer.Limit.Bytes/2)) {
 					err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
-					if err == nil {
+					if err == nil && !exhausted {
 						usable--
 					}
 				} else if e.Fenced && e.Ack == e.Used {

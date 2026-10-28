@@ -5,6 +5,7 @@ import (
 	"errors"
 	"itom.local/core/journal"
 	"itom.local/core/pool"
+	"itom.local/core/wallet"
 	"itom.local/core/wire"
 	"path/filepath"
 	"testing"
@@ -160,5 +161,67 @@ func TestHistoricalOfferBacklogCannotFillQueueBeforeFreshPermissions(t *testing.
 	}
 	if len(endpoint.reconciled) != maxHistoricalAuthorityQueued {
 		t.Fatal("unqueued history was marked delivered", len(endpoint.reconciled))
+	}
+}
+
+func TestAllCurrentGrantsExhaustedBeforePolicyTickStillFenceExactSpend(t *testing.T) {
+	s, err := NewSession(7, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	dw, err := wallet.Open(filepath.Join(t.TempDir(), "data.db"), "12345678", wire.ID{1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dw.Close()
+	cw, err := wallet.Open(filepath.Join(t.TempDir(), "control.db"), "12345678", wire.ID{2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cw.Close()
+	for n := uint64(1); n <= 2; n++ {
+		offer := wire.StorageGrant{Key: wire.QuotaKey{Store: wire.ID{1}, Epoch: 1, Grant: n, Session: dw.Session(), User: "12345678", Account: "account1"}, Limit: wire.Quota{Bytes: 4096, Messages: 1}}
+		if err = dw.Accept(offer); err != nil {
+			t.Fatal(err)
+		}
+		ticket, e := dw.Reserve(4096)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, _, e = ticket.Commit("fast", []byte("opaque authenticated fixture"), make([]byte, 32), func(b []byte) (uint64, error) { return uint64(len(b)), nil }); e != nil {
+			t.Fatal(e)
+		}
+	}
+	before, err := dw.Entries()
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner := &AuthorityController{session: s, client: true, account: "account1", user: "12345678", sessionID: dw.Session(), routes: map[LedgerClass]authorityRoute{ControlLedger: {wallet: cw, id: wire.ID{2}, run: 1}, DataLedger: {wallet: dw, id: wire.ID{1}, run: 1}}}
+	ep := &EndpointSession{Service: &RosterService{Authorities: map[string]*AuthorityController{"account1": owner}}, Roster: &RosterResult{wallets: map[string]RosterWallets{"account1": {Control: cw, Data: dw}}}}
+	if err = ep.clientPolicy(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	after, err := dw.Entries()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s.authorityOut) != 2 {
+		t.Fatal("all-spent grants deadlocked fresh permission", len(s.authorityOut))
+	}
+	for n, e := range after {
+		if !e.Fenced || e.Used != before[n].Used || e.Used.Messages != 1 {
+			t.Fatal("fencing forgot or refunded original spend", before[n], e)
+		}
+	}
+	for _, r := range s.authorityOut {
+		class, message, e := decodeAuthority(r.Payload)
+		release, ok := message.(wire.StorageRelease)
+		if e != nil || !ok || class != DataLedger || release.Final.Messages != 1 || release.Final.Bytes == 0 {
+			t.Fatal("fence lost exact lifetime spend", message, e)
+		}
+	}
+	if err = ep.clientPolicy(context.Background()); err != nil || len(s.authorityOut) != 2 {
+		t.Fatal("policy duplicated fences", err, len(s.authorityOut))
 	}
 }
