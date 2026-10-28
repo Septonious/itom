@@ -61,9 +61,20 @@ EXPUNGE outstanding at peer EOF. The three grant-policy regressions also fail
 against RC1.8. They pass with the corrections. A production client/server HTTPS
 case starts with account one's CONTROL full and the other accounts' DATA full,
 then completes across two VPN sessions without resetting that historical debt.
-Focused race checks pass. Complete and hosted validation will be recorded with
-the release evidence; no live Android device or Rambler connection is available
-here. Field connectivity and sustained 100 Mbps / maximum 300 ms light-load RTT
+Focused race checks pass. Both hosted full runs pass all 293 core and 14
+native race-test groups, with both vet checks passing. The local full race run
+passes 289 core groups and fails four larger startup/HTTPS/shutdown cases; those
+failures remain in the evidence. A subsequent sequential non-race comparison of
+the same four cases passes all four in RC1.8 and RC1.9, with cohort totals of
+47.938 and 32.184 seconds respectively. These totals are not sustained bandwidth
+measurements and do not erase the local full-run failures. No live Android
+device or Rambler connection is available here. Field connectivity and sustained 100 Mbps / maximum 300 ms light-load RTT
 are not qualified by these functional reproductions.
 
 Private field archives are excluded from public evidence.
+
+The separate hosted timing qualification fails the strict 300 ms limit: warm
+62/64 (maximum 325.610 ms), upper-range 7/16 (maximum 392.075 ms), and after
+silence 3/3 (maximum 235.281 ms). All exchanges complete; completion alone does
+not qualify latency. Functional fixes and performance qualification remain
+separate in the release metadata.
