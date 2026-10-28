@@ -63,3 +63,43 @@ func TestShortRequestDefersHistoricalLaunchesWithoutDelayingFreshPermissionOrFor
 		t.Fatal("repeated policy minted or refunded capacity", held, after, err)
 	}
 }
+
+func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
+	ep, s, _ := endpointPolicyFixture(t)
+	writer := &PublicationWorker{session: s}
+	runtime := &Runtime{session: s, carriers: []RuntimeCarrier{{Writer: writer}}}
+	ep.Service.Runtime = runtime
+	s.runtime = runtime
+	s.lastForeground = time.Now()
+	inbox := &Inbox{session: s, receipts: map[uint32]*deliveryReceipt{}, reclaimQueue: map[uint32]*reclaimBody{}}
+	worker := &InboxWorker{inbox: inbox}
+	store := ep.Service.Authorities["account1"].routes[ControlLedger].store
+	policyOldGrant(t, store, pool.Amount{Bytes: 4096, Messages: 1})
+	before, err := store.Held("account1", "12345678")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if worker.maintenanceAllowed() {
+		t.Fatal("optional cleanup competes with short foreground work")
+	}
+	writer.stats.ControlBlocked = true
+	if !worker.maintenanceAllowed() {
+		t.Fatal("blocked current permission could not progress original cleanup")
+	}
+	writer.stats.ControlBlocked = false
+	for uid := uint32(1); uid <= maxAuthorityQueued/2; uid++ {
+		inbox.receipts[uid] = &deliveryReceipt{}
+	}
+	if !worker.maintenanceAllowed() {
+		t.Fatal("bounded receipt queue could strand peer cleanup")
+	}
+	clear(inbox.receipts)
+	s.lastForeground = time.Now().Add(-openTimeout)
+	if !worker.maintenanceAllowed() {
+		t.Fatal("idle maintenance failed to resume")
+	}
+	after, err := store.Held("account1", "12345678")
+	if err != nil || before != after {
+		t.Fatal("scheduling fabricated cleanup proof", before, after, err)
+	}
+}

@@ -29,6 +29,10 @@ entries were not combined with a cold first DATA roundtrip.
   and replies to admitted work remain enabled. Quiet sessions resume recovery;
   bulk pressure permits it so capacity cannot be stranded. This is scheduling,
   not a longer request timeout or a storage release rule.
+* Optional receipt/cleanup I/O also yields during short foreground work. It
+  resumes under bulk load, blocked quota, a bounded maintenance queue or quiet
+  service, using the original exact receipt, EXPUNGE and absence proof. Issued
+  tags still drain normally; held storage is never forgiven by scheduling.
 * A pending historical receive leaves room within the original two CONTROL
   delivery slots for live OPEN. FAST turns bound BODY reads and fairly visit
   recent and older waiting UIDs. Bulk keeps its existing sized read grouping.
@@ -60,9 +64,12 @@ V2_STARTUP_PATH in 32.42 seconds. An initial non-race correction passed in
 that candidate was not released. Queue isolation, batching or tail preference
 alone also failed; all generated failures are retained as evidence.
 
-With historical launches yielding to foreground requests, the race-enabled
-case completes both VPN sessions and actual HTTPS in 48.53 seconds. The two
-startup DATA echoes measure 262 and 206 ms. Whole-cohort times include cold
+Deferring historical launches alone passed a focused race run (262/206 ms
+DATA echoes) but still failed TLS during the broader local run. The logs show
+optional cleanup competing on the short-request socket. With maintenance also
+yielding safely, the first race-enabled cohort completes both VPN sessions and
+actual HTTPS in 47.78 seconds, with DATA echoes of 104 and 196 ms. Repeated and
+full hosted runs are recorded separately. Whole-cohort times include cold
 inventory and are not throughput or raw RTT measurements. Full-suite and hosted
 qualification must be assessed separately from this focused result.
 

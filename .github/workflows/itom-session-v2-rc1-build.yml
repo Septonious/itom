@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.10 with foreground recovery scheduling and bounded authority batches
+name: Build session-v2 RC1.10 with foreground I/O scheduling and bounded authority batches
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]

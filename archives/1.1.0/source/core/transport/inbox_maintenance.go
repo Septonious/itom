@@ -19,6 +19,19 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		if !w.maintenanceAllowed() {
+			timer := time.NewTimer(w.limits.MaxProbe)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return ctx.Err()
+			case <-x.done:
+				timer.Stop()
+				return ErrClosed
+			case <-timer.C:
+			}
+			continue
+		}
 		space := x.SpaceChanged()
 		begin := time.Now()
 		marked, err := i.markReceiptOne(ctx)
@@ -77,4 +90,37 @@ func (w *InboxWorker) maintain(ctx context.Context) error {
 			timer.Stop()
 		}
 	}
+}
+
+// Yield optional physical cleanup while short foreground work owns the path.
+// Nothing is refunded here. Already issued tags keep their normal draining
+// lifetime. Quiet service, bulk demand, publication pressure or bounded queued
+// maintenance re-enable the original receipt/EXPUNGE/absence-proof machinery.
+func (w *InboxWorker) maintenanceAllowed() bool {
+	s := w.inbox.session
+	s.mu.Lock()
+	runtime := s.runtime
+	s.mu.Unlock()
+	if runtime == nil {
+		return true
+	}
+	if s.historicalLaunchAllowed(time.Now()) {
+		return true
+	}
+	i := w.inbox
+	i.mu.Lock()
+	pressure := len(i.receipts)+len(i.reclaimQueue) >= maxAuthorityQueued/2
+	i.mu.Unlock()
+	if pressure {
+		return true
+	}
+	if runtime != nil {
+		for _, c := range runtime.carriers {
+			stats := c.Writer.Stats()
+			if stats.DataBlocked || stats.ControlBlocked {
+				return true
+			}
+		}
+	}
+	return false
 }
