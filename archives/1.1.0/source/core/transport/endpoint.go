@@ -152,8 +152,8 @@ func findRendezvous(ctx context.Context, x *Executor, o EndpointOptions, store *
 
 // StartEndpoint runs production rendezvous, actual initial CONTROL allocation,
 // Noise confirmation and per-account roster negotiation. It then starts the
-// same Runtime used by source application checks and waits for usable duplex
-// grants on every selected account. Cancellation closes/join owned carriers;
+// same Runtime used by source application checks and waits for usable CONTROL
+// and DATA grants across the selected accounts. Cancellation closes/join owned carriers;
 // borrowed journals and original wallet files are never removed.
 func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointSession, err error) {
 	stage := func(code string) {
