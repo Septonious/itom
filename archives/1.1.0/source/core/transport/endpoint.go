@@ -21,6 +21,8 @@ import (
 type EndpointOptions struct {
 	// Stage receives fixed nonsecret progress codes on the startup owner.
 	Stage func(string)
+	// Serialized startup-only observation; it conveys no readiness authority.
+	ObservePermission func(RuntimeSnapshot, []AccountPermission)
 	// Client startup may share a deadline with its preceding account logins.
 	// This never becomes the lifetime of the established runtime.
 	StartupDeadline time.Time
@@ -168,13 +170,42 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	}
 	o.Plan = plan
 	account := plan.Accounts[0].Account
+	var controlPaths map[string]string
+	if o.Client {
+		controlPaths, err = endpointControlPaths(o)
+	} else {
+		account, err = endpointServerAnchor(o)
+	}
+	if err != nil {
+		return nil, err
+	}
 	var x *Executor
 	seen := map[*Executor]bool{}
+	scopes := map[string]map[Plane]bool{}
+	planned := map[string]RosterAccount{}
+	for _, a := range plan.Accounts {
+		planned[a.Account] = a
+	}
 	for _, l := range o.Lanes {
 		if l.Executor == nil || seen[l.Executor] {
 			return nil, ErrProtocol
 		}
 		seen[l.Executor] = true
+		a, ok := planned[l.Executor.account]
+		if !ok || l.Executor.validity == 0 || l.Plane != Fast && l.Plane != Bulk {
+			return nil, ErrProtocol
+		}
+		folder := a.FastFolder
+		if l.Plane == Bulk {
+			folder = a.BulkFolder
+		}
+		if l.Executor.mailbox != folder || scopes[a.Account][l.Plane] {
+			return nil, ErrProtocol
+		}
+		if scopes[a.Account] == nil {
+			scopes[a.Account] = map[Plane]bool{}
+		}
+		scopes[a.Account][l.Plane] = true
 		if l.Executor.account == account && l.Plane == Fast {
 			x = l.Executor
 		}
@@ -224,58 +255,37 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	requests := map[string]bool{}
 	stage("rendezvous")
 	if o.Client {
-		for rendezvous == nil {
-			rendezvous, err = findRendezvous(startup, x, o, nil)
-			if err != nil {
-				return nil, fmt.Errorf("rendezvous read: %w", err)
-			}
-			if rendezvous == nil {
-				if err = endpointPause(startup, x); err != nil {
-					return nil, err
-				}
-			}
+		candidate, e := discoverEndpoint(startup, o, controlPaths, stage)
+		if e != nil {
+			return nil, e
 		}
-		stage("rendezvous_found")
-		anchor, err = rendezvous.OpenWallet(o.AnchorWallet)
-		if err != nil {
+		anchor, owner, rendezvous, x = candidate.w, candidate.owner, candidate.rv, candidate.x
+		account = x.account
+		if err = standby.stop(startup); err != nil {
+			owner.Close()
 			return nil, err
 		}
-		stage("request")
-		if err = rendezvous.submit(startup, x, anchor, o.Key, stage); err != nil {
-			return nil, err
-		}
-		stage("waiting_invitation")
-		for owner == nil {
-			latest, e := findRendezvous(startup, x, o, nil)
-			if e != nil {
-				return nil, e
-			}
-			if latest != nil && (latest.uid != rendezvous.uid || latest.origin != rendezvous.origin) {
-				anchor.Close()
-				rendezvous = latest
-				anchor, err = rendezvous.OpenWallet(o.AnchorWallet)
-				if err != nil {
-					return nil, err
-				}
-				if err = rendezvous.submit(startup, x, anchor, o.Key, stage); err != nil {
-					return nil, err
-				}
-			}
-			err = visitBodies(startup, x, func(body Body) (bool, error) {
-				v, e := rendezvous.VerifyInvitation(x, body, anchor, o.Key)
-				if e != nil {
-					return false, nil
-				}
-				owner, e = v.NewClient(anchor, o.Key)
-				return true, e
-			})
-			if err != nil {
+		// Detached discovery commands drain before ownership transfer. No
+		// reader, request or NOOP from another discovery owner survives.
+		for _, l := range o.Lanes {
+			if err = l.Executor.lockWriter(startup); err != nil {
+				owner.Close()
 				return nil, err
 			}
-			if owner == nil {
-				if err = endpointPause(startup, x); err != nil {
-					return nil, err
-				}
+			err = l.Executor.drainCommands(startup)
+			<-l.Executor.writer
+			if err != nil {
+				owner.Close()
+				return nil, err
+			}
+		}
+		standby = startStandby(ctx, cancel, o.Lanes, x)
+		o.Wallets = append([]RosterWalletPaths(nil), o.Wallets...)
+		for n := range o.Wallets {
+			p := &o.Wallets[n]
+			p.Control = controlPaths[p.Account]
+			if p.Account == account {
+				p.Control = ""
 			}
 		}
 	} else {
@@ -388,6 +398,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			}
 		}
 	}
+	defer owner.Close()
 	if o.Client {
 		// Start every account with the already accepted request representation.
 		// A stricter account can still fall back on its own explicit refusals.
@@ -438,7 +449,20 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	go s.run(ctx, o, rendezvous, request)
 	if o.Client {
 		stage("permission")
-		for !endpointPermissionReady(roster) {
+		var observed time.Time
+		for {
+			permissions, ready, e := endpointPermissions(roster)
+			if e != nil {
+				s.Close()
+				return nil, e
+			}
+			if o.ObservePermission != nil && (observed.IsZero() || ready || time.Since(observed) >= time.Second) {
+				o.ObservePermission(service.Runtime.Snapshot(), permissions)
+				observed = time.Now()
+			}
+			if ready {
+				break
+			}
 			select {
 			case <-startup.Done():
 				s.Close()
@@ -455,25 +479,49 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	return result, nil
 }
 
-func endpointPermissionReady(r *RosterResult) bool {
-	for _, ws := range r.wallets {
-		for _, w := range []*wallet.Wallet{ws.Control, ws.Data} {
+type AccountPermission struct {
+	Account                                 string
+	ControlUsable, DataUsable               bool
+	CurrentControlOffers, CurrentDataOffers int
+}
+
+func endpointPermissions(r *RosterResult) ([]AccountPermission, bool, error) {
+	// Storage authority is account-scoped; logical control and DATA can use
+	// different healthy accounts. An exhausted account must not hold every
+	// independent lane hostage. Actual duplex DATA is checked before VPN READY.
+	var control, data bool
+	var state []AccountPermission
+	for _, a := range r.manifest.Accounts {
+		ws := r.wallets[a.Account]
+		p := AccountPermission{Account: a.Account}
+		for n, w := range []*wallet.Wallet{ws.Control, ws.Data} {
 			entries, err := w.Entries()
 			if err != nil {
-				return false
+				return nil, false, err
 			}
-			usable := false
 			for _, e := range entries {
-				if e.Offer.Key.Session == w.Session() && !e.Fenced && e.Used.Messages < e.Offer.Limit.Messages && e.Used.Bytes < e.Offer.Limit.Bytes {
-					usable = true
+				if e.Offer.Key.Session != w.Session() {
+					continue
+				}
+				if n == 0 {
+					p.CurrentControlOffers++
+				} else {
+					p.CurrentDataOffers++
+				}
+				if !e.Fenced && e.Used.Messages < e.Offer.Limit.Messages && e.Used.Bytes < e.Offer.Limit.Bytes {
+					if n == 0 {
+						control = true
+						p.ControlUsable = true
+					} else {
+						data = true
+						p.DataUsable = true
+					}
 				}
 			}
-			if !usable {
-				return false
-			}
 		}
+		state = append(state, p)
 	}
-	return true
+	return state, control && data, nil
 }
 
 // Two overlapping grants share only the capacity LEFT AFTER historical debt.
@@ -590,6 +638,20 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
 }
 
 func (s *EndpointSession) serverPolicy(ctx context.Context, sequences map[string]map[LedgerClass]uint64) error {
+	return s.serverPolicyFor(ctx, sequences, s.Roster.handoff.origin.User, s.Roster.handoff.epoch.Context().Session)
+}
+
+// Fresh permissions take priority over historical re-offers. The latter still
+// travel through any healthy physical CONTROL carrier, even when their own
+// ledger is full. Neither queuing metadata nor missing client history refunds
+// any reserved or unknown publication debt.
+func (s *EndpointSession) serverPolicyFor(ctx context.Context, sequences map[string]map[LedgerClass]uint64, user string, current wire.ID) error {
+	type recoveryOffer struct {
+		owner *AuthorityController
+		class LedgerClass
+		offer wire.StorageGrant
+	}
+	var recovery []recoveryOffer
 	for account, j := range s.Roster.journals {
 		if sequences[account] == nil {
 			sequences[account] = map[LedgerClass]uint64{}
@@ -598,57 +660,63 @@ func (s *EndpointSession) serverPolicy(ctx context.Context, sequences map[string
 			class LedgerClass
 			store *journal.Store
 		}{{ControlLedger, j.Control}, {DataLedger, j.Data}} {
-			allowance, err := endpointAllowance(entry.store, account, s.Roster.handoff.origin.User, s.Roster.handoff.epoch.Context().Session)
-			if errors.Is(err, ErrCapacity) {
-				continue
+			allowance, allowanceErr := endpointAllowance(entry.store, account, user, current)
+			if allowanceErr != nil && !errors.Is(allowanceErr, ErrCapacity) {
+				return allowanceErr
 			}
-			if err != nil {
-				return err
-			}
+			// MaxGrants bounds the live inventory to 256 rows. Exhaustion of
+			// physical capacity must not suppress recovery of existing grants.
 			grants, err := entry.store.ScanGrants(0, 256)
 			if err != nil {
 				return err
 			}
+			owner := s.Service.Authorities[account]
 			open := 0
 			var remaining pool.Amount
 			for _, g := range grants {
-				if g.Remote && !g.Closed && g.Ref.Scope.Session != s.Roster.handoff.epoch.Context().Session {
+				if g.Remote && !g.Closed && g.Ref.Scope.Session != current {
 					key := wire.QuotaKey{Store: g.Ref.Store, Epoch: g.Run, Grant: g.Ref.ID, Session: g.Ref.Scope.Session, Account: g.Ref.Scope.Account, User: g.Ref.Scope.User}
 					if !s.reconciled[key] {
 						offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: g.Limit.Bytes, Messages: g.Limit.Messages}}
-						err = s.Service.Authorities[account].queue(entry.class, offer)
-						if err == nil {
-							s.reconciled[key] = true
-						} else if !errors.Is(err, ErrCapacity) {
-							return err
-						}
+						recovery = append(recovery, recoveryOffer{owner, entry.class, offer})
 					}
 				}
-				if g.Remote && !g.Closed && g.Run == entry.store.Run() && g.Ref.Scope.Session == s.Roster.handoff.epoch.Context().Session {
+				if g.Remote && !g.Closed && g.Run == entry.store.Run() && g.Ref.Scope.Session == current {
 					open++
 					remaining.Bytes += g.Limit.Bytes - g.Used.Bytes
 					remaining.Messages += g.Limit.Messages - g.Used.Messages
 				}
 			}
-			owner := s.Service.Authorities[account]
 			owner.mu.Lock()
 			prior := owner.issues[entry.class]
 			owner.mu.Unlock()
 			pending := prior.request != 0 && !prior.queued
-			if !pending && (open >= 2 || remaining.Bytes > allowance.Bytes/2 && remaining.Messages > allowance.Messages/2) {
+			if !pending && (allowanceErr != nil || open >= 2 || remaining.Bytes > allowance.Bytes/2 && remaining.Messages > allowance.Messages/2) {
 				continue
 			}
 			next := sequences[account][entry.class] + 1
 			if pending {
-				next = prior.request
+				// A reservation that has not entered the bounded queue is the
+				// SAME issue. Recovery may change available quota in between;
+				// changing this request's amount would break idempotency.
+				next, allowance = prior.request, prior.limit
 			}
-			_, err = s.Service.Authorities[account].Issue(ctx, entry.class, next, allowance)
+			_, err = owner.Issue(ctx, entry.class, next, allowance)
 			if err == nil {
 				sequences[account][entry.class] = next
 			} else if !errors.Is(err, journal.ErrLimit) && !errors.Is(err, ErrCapacity) {
 				return err
 			}
 		}
+	}
+	for _, r := range recovery {
+		if err := r.owner.queue(r.class, r.offer); err != nil {
+			if errors.Is(err, ErrCapacity) {
+				break
+			}
+			return err
+		}
+		s.reconciled[r.offer.Key] = true
 	}
 	return nil
 }

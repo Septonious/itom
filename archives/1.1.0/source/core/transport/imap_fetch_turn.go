@@ -4,8 +4,8 @@ import "context"
 
 // Only a BODY and FLAGS query for disjoint UIDs can coexist. Their response
 // forms identify them independently, including when tags finish out of order.
-// Inventory, absence proof and UID EXPUNGE remain exclusive; hints cannot supply
-// proof. EXPUNGE uses this same FIFO so sequence mutation cannot cross read tags.
+// Inventory and absence proof remain exclusive; hints cannot supply proof.
+// UID EXPUNGE uses an exclusive wire lease that drains every earlier tag.
 type fetchRequest struct {
 	op                         *operation
 	ready                      chan struct{}

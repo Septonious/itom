@@ -312,26 +312,41 @@ func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool
 	if expunge {
 		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %s", set)
 	}
-	op := &operation{class: class}
-	if expunge {
-		// Sequence mutation must drain earlier FETCH tags and fence later reads
-		// until its own tag. APPEND retains its independent writer admission.
-		turn, err := e.acquireFetchTurn(ctx, op)
-		if err != nil {
-			return nil, err
-		}
-		defer e.releaseUnstartedFetch(turn)
-	}
+	op := &operation{class: class, exclusiveWriter: expunge}
 	if err := e.lockWriter(ctx); err != nil {
 		return nil, err
 	}
-	defer func() { <-e.writer }()
+	release := true
+	defer func() {
+		if release {
+			<-e.writer
+		}
+	}()
+	if expunge {
+		// Block all new admissions while earlier tags drain. APPEND literals
+		// and IDLE hold the writer until their own wire barriers finish.
+		if err := e.drainCommands(ctx); err != nil {
+			return nil, err
+		}
+	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	tag, op, err := e.beginOperation(op, false)
 	if err != nil {
 		return nil, err
+	}
+	if expunge {
+		release = false
+		// Begin this bounded lease only after all bytes have been written.
+		// An early tag cannot release the writer during a partial write.
+		defer func() {
+			go func() {
+				defer e.exclusiveWait.Done()
+				<-op.done
+				<-e.writer
+			}()
+		}()
 	}
 	if err := e.write([]byte(tag + " " + command + "\r\n")); err != nil {
 		e.fail(ErrUnknown)

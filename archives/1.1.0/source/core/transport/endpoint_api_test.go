@@ -118,7 +118,12 @@ func TestStandingServerKeepsSelectedMailboxesAliveBeforePhoneArrives(t *testing.
 	testPublicEndpoints(t, publicEndpointCase{clientDelay: 25 * time.Second, idleTimeout: 20 * time.Second, accounts: 3, keywordBytes: 32})
 }
 
+func TestExhaustedFirstControlAndSplitDataCapacityStillCarryHTTPSWithoutDebtReset(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{accounts: 3, splitCapacity: true, keywordBytes: 32})
+}
+
 type publicEndpointCase struct {
+	splitCapacity                      bool
 	idleTimeout                        time.Duration
 	dataBlackhole                      bool
 	native                             bool
@@ -373,6 +378,54 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		cfg.Users = append(cfg.Users, other)
 	}
 	configPath := filepath.Join(root, "server.db")
+	if scenario.splitCapacity {
+		// Model the supplied full CONTROL ledger and missing old wallet
+		// history. DATA is available only on account1; CONTROL only elsewhere.
+		// These are original remote reservations, never refundable as zero.
+		for n, a := range p.Accounts {
+			name, amount := "control", pool.Amount{Bytes: 1 << 20, Messages: 128}
+			if n > 0 {
+				name, amount = "data", pool.Amount{Bytes: 3 << 20, Messages: 192}
+			}
+			limit := pool.Amount{Bytes: 2 << 20, Messages: 128}
+			if name == "data" {
+				limit = pool.Amount{Bytes: 12 << 20, Messages: 192}
+			}
+			config := journal.Config{MaxGrants: 256, MaxAttempts: 256, Accounts: []journal.Account{{ID: a.ID, Provider: a.Mail.Host, Limit: limit, Users: []journal.User{{ID: p.User.ID, Limit: limit, Folders: []string{upFolder, downFolder, upFolder + "-session-v2", downFolder + "-session-v2"}}}}}}
+			path := filepath.Join(root, "server-state", a.ID, p.User.ID, name+".db")
+			if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+				t.Fatal(err)
+			}
+			store, e := journal.Open(path, config, time.Second)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = store.EnableAfterInventory(a.ID, p.User.ID, store.Run()); e != nil {
+				t.Fatal(e)
+			}
+			if _, e = store.IssueRemote(journal.Scope{Account: a.ID, User: p.User.ID, Session: wire.ID{77}}, amount); e != nil {
+				t.Fatal(e)
+			}
+			store.Close()
+			// Registered before the server-process defer: verify after it stops.
+			t.Cleanup(func() {
+				s, e := journal.Open(path, config, time.Second)
+				if e != nil {
+					t.Error(e)
+					return
+				}
+				defer s.Close()
+				held, e := s.Held(a.ID, p.User.ID)
+				if e != nil || held.Messages < amount.Messages || held.Bytes < amount.Bytes {
+					t.Error("old unknown reservation was refunded", held, e)
+				}
+				got, e := s.Limit(a.ID, p.User.ID)
+				if e != nil || got != limit {
+					t.Error("quota was increased", got, e)
+				}
+			})
+		}
+	}
 	legacyUser := p.User.ID
 	var legacyAttempt journal.AttemptRef
 	legacyPath := filepath.Join(root, "server-state", "account1", p.User.ID, "data.db")
@@ -633,18 +686,31 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		_ = client.Close()
 	}
 	if scenario.keywordBytes > 0 {
-		box := boxes[upFolder+"-session-v2"]
-		box.mu.Lock()
-		defer box.mu.Unlock()
-		if box.keywordRefusals == 0 || box.peakFlags > 20 {
-			t.Fatal("fixture did not reject long names or request metadata accumulated", box.keywordRefusals, box.peakFlags)
-		}
-		for _, flags := range box.flags {
-			for flag := range flags {
-				if strings.HasPrefix(flag, "itom2_") || (len(flag) == 16 || len(flag) == 31 || len(flag) == 59) && strings.HasPrefix(flag, "i") {
-					t.Fatal("authenticated request metadata was not cleared", flag)
+		refusals := 0
+		for _, accountBoxes := range providerBoxes {
+			for folder, box := range accountBoxes {
+				if !strings.HasSuffix(folder, "-session-v2") {
+					continue
 				}
+				box.mu.Lock()
+				refusals += box.keywordRefusals
+				if box.peakFlags > 20 {
+					box.mu.Unlock()
+					t.Fatal("request metadata accumulated", folder, box.peakFlags)
+				}
+				for _, flags := range box.flags {
+					for flag := range flags {
+						if strings.HasPrefix(flag, "itom2_") || (len(flag) == 16 || len(flag) == 31 || len(flag) == 59) && strings.HasPrefix(flag, "i") {
+							box.mu.Unlock()
+							t.Fatal("authenticated request metadata was not cleared", folder, flag)
+						}
+					}
+				}
+				box.mu.Unlock()
 			}
+		}
+		if refusals == 0 {
+			t.Fatal("fixture did not reject long request names")
 		}
 	}
 }

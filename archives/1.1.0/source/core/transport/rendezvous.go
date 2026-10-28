@@ -223,12 +223,17 @@ func (v *VerifiedRendezvous) Submit(ctx context.Context, executor *Executor, w *
 }
 
 func (v *VerifiedRendezvous) submit(ctx context.Context, executor *Executor, w *wallet.Wallet, key []byte, stage func(string)) error {
+	_, err := v.submitTracked(ctx, executor, w, key, stage)
+	return err
+}
+
+func (v *VerifiedRendezvous) submitTracked(ctx context.Context, executor *Executor, w *wallet.Wallet, key []byte, stage func(string)) ([]string, error) {
 	if v == nil || executor == nil || executor.account != v.origin.Account || executor.mailbox != v.origin.Folder || executor.validity != v.origin.UIDValidity {
-		return ErrProtocol
+		return nil, ErrProtocol
 	}
 	keyword, err := v.RequestKeyword(w, key)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Providers advertising permanent keywords can still reject long names.
 	// Only an explicit tagged refusal permits another metadata representation;
@@ -239,7 +244,7 @@ func (v *VerifiedRendezvous) submit(ctx context.Context, executor *Executor, w *
 	}
 	for index, flags := range forms {
 		if len(flags) == 0 {
-			return ErrProtocol
+			return nil, ErrProtocol
 		}
 		if stage != nil {
 			if index == 0 {
@@ -256,11 +261,11 @@ func (v *VerifiedRendezvous) submit(ctx context.Context, executor *Executor, w *
 			if e == nil {
 				executor.rememberKeywordBytes(len(flags[0]))
 			}
-			return e
+			return flags, e
 		}
 		err = e
 	}
-	return err
+	return nil, err
 }
 
 // PrepareRequestedInvitation retains one exact result for each fresh Session.

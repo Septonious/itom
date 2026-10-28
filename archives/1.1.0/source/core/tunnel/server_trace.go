@@ -11,6 +11,7 @@ import (
 
 	"itom.local/core/journal"
 	"itom.local/core/transport"
+	"itom.local/core/wallet"
 )
 
 // One shared writer per service, including startup before any carrier exists.
@@ -76,10 +77,22 @@ func startupFailureCode(err error) string {
 		return ""
 	case errors.Is(err, context.Canceled):
 		return "CANCELED"
-	case errors.Is(err, context.DeadlineExceeded):
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(err, os.ErrDeadlineExceeded):
 		return "TIMEOUT"
 	case errors.Is(err, journal.ErrConfig):
 		return "JOURNAL_CONFIG_MISMATCH"
+	case errors.Is(err, journal.ErrLimit):
+		return "STORAGE_QUOTA_EXHAUSTED"
+	case errors.Is(err, journal.ErrPoisoned):
+		return "JOURNAL_IO_UNCERTAIN"
+	case errors.Is(err, journal.ErrCorrupt):
+		return "JOURNAL_CORRUPT"
+	case errors.Is(err, wallet.ErrIO):
+		return "WALLET_IO_UNCERTAIN"
+	case errors.Is(err, wallet.ErrState):
+		return "WALLET_STATE_INVALID"
+	case errors.Is(err, transport.ErrRuntimeStopped):
+		return "RUNTIME_STOPPED"
 	case errors.Is(err, errProviderUIDPlus):
 		return "UIDPLUS_UNSUPPORTED"
 	case errors.Is(err, errProviderKeywords):

@@ -34,21 +34,22 @@ type Result struct {
 	Err    error
 }
 type operation struct {
-	standby      bool        // immutable private NOOP ownership marker
-	watchdog     *time.Timer // stopped under Executor.mu on every terminal path
-	fetchTurn    *fetchRequest
-	class        commandClass
-	started      time.Time
-	done         chan struct{}
-	continuation chan struct{}
-	result       Result
-	bytes        int
-	fetch        bool
-	metadata     bool
-	flags        bool
-	first, last  uint32
-	uids         map[uint32]bool
-	requested    map[uint32]bool
+	exclusiveWriter bool        // destructive command owns writer until tag completion
+	standby         bool        // immutable private NOOP ownership marker
+	watchdog        *time.Timer // stopped under Executor.mu on every terminal path
+	fetchTurn       *fetchRequest
+	class           commandClass
+	started         time.Time
+	done            chan struct{}
+	continuation    chan struct{}
+	result          Result
+	bytes           int
+	fetch           bool
+	metadata        bool
+	flags           bool
+	first, last     uint32
+	uids            map[uint32]bool
+	requested       map[uint32]bool
 }
 
 // Command is a completion handle. Wait cancellation detaches that waiter; it
@@ -104,6 +105,7 @@ type Executor struct {
 	closed           error
 	closeReason      string // fixed diagnostic code; never provider text
 	closeCommands    [commandClasses]bool
+	exclusiveWait    sync.WaitGroup
 	done             chan struct{}
 	changes          chan struct{}
 	sequenceVersion  uint64
@@ -154,7 +156,11 @@ func (e *Executor) SequenceVersion() uint64 {
 	defer e.mu.Unlock()
 	return e.sequenceVersion
 }
-func (e *Executor) Close() error   { e.failReason(ErrClosed, "owner_closed"); return nil }
+func (e *Executor) Close() error {
+	e.failReason(ErrClosed, "owner_closed")
+	e.exclusiveWait.Wait()
+	return nil
+}
 func (e *Executor) fail(err error) { e.failReason(err, serviceFailure(err)) }
 func (e *Executor) failReason(err error, reason string) {
 	e.mu.Lock()
@@ -205,6 +211,9 @@ func (e *Executor) beginOperation(op *operation, literal bool) (string, *operati
 	op.started, op.done, op.continuation = time.Now(), make(chan struct{}), make(chan struct{}, 1)
 	e.timing[op.class].Started++
 	e.pending[tag] = op
+	if op.exclusiveWriter {
+		e.exclusiveWait.Add(1)
+	}
 	if op.fetchTurn != nil {
 		op.fetchTurn.started = true
 	}

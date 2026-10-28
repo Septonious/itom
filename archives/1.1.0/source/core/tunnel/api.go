@@ -149,7 +149,13 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	defer clear(key)
 	stage = "RENDEZVOUS"
 	deadline, _ := startup.Deadline()
-	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, StartupDeadline: deadline, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
+	observePermission := func(runtime transport.RuntimeSnapshot, permissions []transport.AccountPermission) {
+		_ = accountTrace.record(map[string]any{"Event": "client_permission_wait", "Revision": TransportRevision, "Runtime": runtime, "Permissions": permissions, "SampledAtMS": time.Now().UnixMilli()})
+	}
+	if !o.Diagnostics {
+		observePermission = nil
+	}
+	endpoint, err := transport.StartEndpoint(ctx, transport.EndpointOptions{Client: true, StartupDeadline: deadline, Template: template, Plan: plan, Lanes: lanes, AnchorWallet: anchor, Wallets: paths, Key: key, ObservePermission: observePermission, Service: transport.RosterServiceOptions{ReceiveWindow: 256 << 10}, Stage: func(code string) {
 		switch code {
 		case "rendezvous":
 			stage = "RENDEZVOUS"
