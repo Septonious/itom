@@ -185,6 +185,13 @@ func TestAllCurrentGrantsExhaustedBeforePolicyTickStillFenceExactSpend(t *testin
 		if err = dw.Accept(offer); err != nil {
 			t.Fatal(err)
 		}
+	}
+	owner := &AuthorityController{session: s, client: true, account: "account1", user: "12345678", sessionID: dw.Session(), routes: map[LedgerClass]authorityRoute{ControlLedger: {wallet: cw, id: wire.ID{2}, run: 1}, DataLedger: {wallet: dw, id: wire.ID{1}, run: 1}}}
+	ep := &EndpointSession{Service: &RosterService{Authorities: map[string]*AuthorityController{"account1": owner}}, Roster: &RosterResult{wallets: map[string]RosterWallets{"account1": {Control: cw, Data: dw}}}}
+	if err = ep.clientPolicy(context.Background()); err != nil || len(s.authorityOut) != 0 {
+		t.Fatal("fresh one-message grants were fenced before any publication", err, len(s.authorityOut))
+	}
+	for range 2 {
 		ticket, e := dw.Reserve(4096)
 		if e != nil {
 			t.Fatal(e)
@@ -197,8 +204,6 @@ func TestAllCurrentGrantsExhaustedBeforePolicyTickStillFenceExactSpend(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	owner := &AuthorityController{session: s, client: true, account: "account1", user: "12345678", sessionID: dw.Session(), routes: map[LedgerClass]authorityRoute{ControlLedger: {wallet: cw, id: wire.ID{2}, run: 1}, DataLedger: {wallet: dw, id: wire.ID{1}, run: 1}}}
-	ep := &EndpointSession{Service: &RosterService{Authorities: map[string]*AuthorityController{"account1": owner}}, Roster: &RosterResult{wallets: map[string]RosterWallets{"account1": {Control: cw, Data: dw}}}}
 	if err = ep.clientPolicy(context.Background()); err != nil {
 		t.Fatal(err)
 	}

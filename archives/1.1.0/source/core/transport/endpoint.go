@@ -750,7 +750,7 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 				// Their final fence is still required when usable == 0;
 				// otherwise the issuer keeps two open grants forever.
 				exhausted := e.Used.Messages == e.Offer.Limit.Messages || e.Used.Bytes == e.Offer.Limit.Bytes
-				if !e.Fenced && (exhausted || usable >= 2 && (e.Used.Messages >= e.Offer.Limit.Messages/2 || e.Used.Bytes >= e.Offer.Limit.Bytes/2)) {
+				if !e.Fenced && (exhausted || usable >= 2 && e.Used.Messages > 0 && (e.Used.Messages >= e.Offer.Limit.Messages/2 || e.Used.Bytes >= e.Offer.Limit.Bytes/2)) {
 					err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
 					if err == nil && !exhausted {
 						usable--

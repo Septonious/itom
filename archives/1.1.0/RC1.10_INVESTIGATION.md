@@ -44,6 +44,8 @@ entries were not combined with a cold first DATA roundtrip.
   spent before one policy tick. Previously `usable == 0` suppressed every
   fence, leaving the issuer with two permanently open grants. The regression
   fails before the fix and checks exact lifetime spend and one-time fencing.
+  It also checks fresh one-message grants: integer half rounding previously
+  fenced an unused offer. Partial-grant rotation now requires actual spend.
 * A pending historical receive leaves room within the original two CONTROL
   delivery slots for live OPEN. FAST turns bound BODY reads and fairly visit
   recent and older waiting UIDs. Bulk keeps its existing sized read grouping.
