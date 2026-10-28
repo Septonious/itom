@@ -676,7 +676,7 @@ func (s *EndpointSession) serverPolicyFor(ctx context.Context, sequences map[str
 			for _, g := range grants {
 				if g.Remote && !g.Closed && g.Ref.Scope.Session != current {
 					key := wire.QuotaKey{Store: g.Ref.Store, Epoch: g.Run, Grant: g.Ref.ID, Session: g.Ref.Scope.Session, Account: g.Ref.Scope.Account, User: g.Ref.Scope.User}
-					if !s.reconciled[key] {
+					if !s.reconciled[key] && len(recovery) < maxAuthorityQueued {
 						offer := wire.StorageGrant{Key: key, Limit: wire.Quota{Bytes: g.Limit.Bytes, Messages: g.Limit.Messages}}
 						recovery = append(recovery, recoveryOffer{owner, entry.class, offer})
 					}
