@@ -109,7 +109,7 @@ func (w *InboxWorker) maintenanceAllowed() bool {
 	}
 	i := w.inbox
 	i.mu.Lock()
-	pressure := len(i.receipts)+len(i.reclaimQueue) >= maxAuthorityQueued/2
+	pressure := len(i.receipts)+len(i.reclaimQueue) >= 2*maxAuthorityBatchRecords
 	i.mu.Unlock()
 	if pressure {
 		return true

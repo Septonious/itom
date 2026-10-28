@@ -87,7 +87,7 @@ func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
 		t.Fatal("blocked current permission could not progress original cleanup")
 	}
 	writer.stats.ControlBlocked = false
-	for uid := uint32(1); uid <= maxAuthorityQueued/2; uid++ {
+	for uid := uint32(1); uid <= 2*maxAuthorityBatchRecords; uid++ {
 		inbox.receipts[uid] = &deliveryReceipt{}
 	}
 	if !worker.maintenanceAllowed() {

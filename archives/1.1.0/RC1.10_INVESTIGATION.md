@@ -33,6 +33,9 @@ entries were not combined with a cold first DATA roundtrip.
   resumes under bulk load, blocked quota, a bounded maintenance queue or quiet
   service, using the original exact receipt, EXPUNGE and absence proof. Issued
   tags still drain normally; held storage is never forgiven by scheduling.
+  Cleanup pressure begins at sixteen queued candidates (two authority batches),
+  including when a short request is active. The earlier 32-candidate trigger
+  overflowed the unchanged 64-message small-mailbox fixture and was rejected.
 * A pending historical receive leaves room within the original two CONTROL
   delivery slots for live OPEN. FAST turns bound BODY reads and fairly visit
   recent and older waiting UIDs. Bulk keeps its existing sized read grouping.
