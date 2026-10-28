@@ -103,3 +103,21 @@ Private field archives are excluded from public evidence. Live Android/provider
 connectivity, sustained 100 Mbps and maximum 300 ms light-load RTT still require
 qualification. The active per-stream receive window remains 256 KiB; parser
 throughput above 200 Mbps is not end-to-end application throughput proof.
+
+## Packaged-source qualification
+
+Source `462e718e44fbd5c3be328644a3d579d5f8cc1968` passes all 306 core
+and 14 native race-test groups in build run 40777520886, with both modules vetted.
+The hosted backlog case completes two cold VPN sessions and actual HTTPS;
+DATA echoes are 212 and 120 ms. The 720 tracked source files are independently
+verified against the packaged ZIP, and both Linux binaries match build hashes.
+
+The final-source standing-server case passes three local repetitions. A prior
+full local run at ad8feee retained one standing-server HTTP timeout; that failure
+and all intermediate failed candidates remain in the synthetic evidence.
+
+Independent source run 40777521099 records all 64 normal-profile exchanges below
+300 ms (maximum 286.36 ms), and all three post-silence exchanges below 300 ms
+(maximum 240.52 ms). The upper-latency cohort passes 10/16 at 300 ms, maximum
+359.86 ms, and FAILS its strict maximum gate. These are same-host synthetic
+results, not live provider or sustained 100 Mbps qualification.

@@ -32,3 +32,9 @@ user restarts the VPN.
 See RC1.10_INVESTIGATION.md and the complete passing/failing synthetic evidence.
 Live connectivity and the sustained 100 Mbps / maximum 300 ms light-load RTT
 goals remain unqualified. The active per-stream receive window is still 256 KiB.
+
+The packaged-source CI passes 306 core and 14 native race-test groups. Its
+retained-backlog DATA checks measure 212/120 ms across two VPN sessions with
+HTTPS. Separate RTT gates pass 64/64 normal-profile and 3/3 post-idle exchanges
+within 300 ms; the upper-latency gate fails 6/16 (maximum 359.86 ms). These
+synthetic results do not establish the sustained bandwidth or field RTT goals.
