@@ -105,7 +105,7 @@ func writeTraceBundle(dir, path string) (err error) {
 	if e != nil {
 		return e
 	}
-	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-rc1-10", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
+	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-rc1-11", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
 		return e
 	}
 	for _, s := range sources {

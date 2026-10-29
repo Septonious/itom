@@ -334,7 +334,7 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 			}
 			for _, hint := range observed {
 				flag := hint.keyword
-				allowance, e := endpointAllowance(store, account, o.Template.Binding.User, wire.ID{})
+				allowance, e := endpointInitialAllowance(store, account, o.Template.Binding.User)
 				if e != nil {
 					return nil, e
 				}
@@ -628,6 +628,14 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
 }
 
 func (s *EndpointSession) serverPolicy(ctx context.Context, sequences map[string]map[LedgerClass]uint64) error {
+	// Confirmed startup mail uses its original proof machinery before new offers
+	// consume the headroom required to reclaim it. Receipt metadata needs no grant.
+	for _, carrier := range s.Service.Runtime.carriers {
+		if carrier.Reader.inbox.startupCleanupPending() {
+			return nil
+		}
+	}
+
 	return s.serverPolicyFor(ctx, sequences, s.Roster.handoff.origin.User, s.Roster.handoff.epoch.Context().Session)
 }
 

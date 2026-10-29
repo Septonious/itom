@@ -118,6 +118,7 @@ func decodeSessionFrame(raw []byte, magic string) (bootstrapFrame, error) {
 // Methods serialize the bounded bootstrap actor; no Session lock or target I/O
 // is held during its original wallet/journal transactions.
 type SessionBootstrap struct {
+	cleanup                             startupCleanup
 	mu                                  sync.Mutex
 	binding                             secure.Binding
 	generation                          uint64

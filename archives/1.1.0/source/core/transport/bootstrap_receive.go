@@ -15,7 +15,7 @@ func (b *SessionBootstrap) Receive(executor *Executor, physical Body) error {
 	return b.receiveBody(executor, physical, nil)
 }
 
-func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver *BootstrapDriver) error {
+func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver *BootstrapDriver) (resultErr error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.driver != driver {
@@ -40,6 +40,13 @@ func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver
 		return ErrProtocol
 	}
 	own := (envelope.class == 0) == b.client
+	var candidate *reclaimBody
+	defer func() {
+		if resultErr == nil {
+			b.cleanup.remember(b.client, b.origin, physical.UID, envelope, b.key[:], candidate)
+		}
+	}()
+
 	if !b.client {
 		observation := journal.Observation{Account: b.origin.Account, Folder: b.origin.Folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: executor.validity, UID: physical.UID}, Decoded: envelope.body}
 		if own {
@@ -50,10 +57,13 @@ func (b *SessionBootstrap) receiveBody(executor *Executor, physical Body, driver
 			if err = b.store.Observe(ref, b.origin.Run, observation); err != nil {
 				return err
 			}
+			candidate = &reclaimBody{store: b.store, ref: ref, location: observation.Location, account: observation.Account, folder: b.origin.Folder, receiptKeyword: receiptKeyword(envelope.body, executor.validity, physical.UID, b.key[:])}
 		} else {
-			if _, _, err := b.store.AcceptRemoteBody(b.binding.User, b.origin.Run, usage, observation); err != nil {
+			_, ref, err := b.store.AcceptRemoteBody(b.binding.User, b.origin.Run, usage, observation)
+			if err != nil {
 				return err
 			}
+			candidate = &reclaimBody{store: b.store, ref: ref, location: observation.Location, account: observation.Account, folder: b.origin.Folder}
 		}
 	}
 	f, err := decodeBootstrapFrame(envelope.packet)

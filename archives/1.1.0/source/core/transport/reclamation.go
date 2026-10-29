@@ -25,8 +25,10 @@ type ReclamationStats struct {
 // registered the exact descriptor and observed the complete authenticated BODY.
 // Inbox queues a peer candidate only AFTER all records apply/discard. Own
 // SERVER bodies require their original observed row AND a per-body client MAC
-// receipt before deletion. Startup messages never enter this cleanup path.
+// receipt before deletion. Confirmed current-startup bodies enter only through the sealed handoff;
+// unobserved historical bodies never gain cleanup proof from that handoff.
 type reclaimBody struct {
+	startup         bool
 	store           *journal.Store
 	ref             journal.AttemptRef
 	location        journal.Location
@@ -59,6 +61,10 @@ func (i *Inbox) EnableReclamation() error {
 	}
 	i.ensureMaintenanceWake()
 	i.reclamation = true
+	for uid, candidate := range i.startupCleanup.reclaim {
+		i.queueReclaimTokenLocked(uid, candidate)
+	}
+	i.startupCleanup.reclaim = nil
 	return nil
 }
 

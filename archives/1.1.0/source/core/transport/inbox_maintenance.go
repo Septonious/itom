@@ -116,8 +116,8 @@ func (w *InboxWorker) maintenanceAllowed() bool {
 	essentialReceipt := i.receiptEnabled && len(i.receipts) > 0
 	pressure := len(i.receipts)+len(i.reclaimQueue) >= 2*maxAuthorityBatchRecords
 	i.mu.Unlock()
-	if essentialReceipt || pressure || s.historicalLaunchAllowed(time.Now()) {
+	if essentialReceipt || pressure || i.startupCleanupPending() || s.historicalLaunchAllowed(time.Now()) {
 		return true
 	}
-	return runtime.permissionPressure()
+	return runtime.accountPermissionPressure(i.scope.Account)
 }

@@ -39,6 +39,7 @@ type RosterSnapshot struct {
 // Its exchange is bounded encrypted OFFER chunks, client ACCEPT and server READY.
 // READY requires full actual BODY observation, not just APPEND acceptance.
 type RosterDriver struct {
+	cleanup                 startupCleanup
 	mu                      sync.Mutex
 	input                   *BootstrapHandoff
 	lanes                   []RosterLane
@@ -180,6 +181,7 @@ func newRoster(d *RosterDriver, plan RosterPlan, lanes []RosterLane, key []byte)
 		}
 		d.digest = sha256.Sum256(d.encoded)
 	}
+	d.cleanup = d.input.cleanup.clone()
 	d.own, d.ownSeen, d.peer, d.known = map[[32]byte]uint8{}, map[[32]byte]bool{}, map[[32]byte]bool{}, map[uint32]bool{}
 	for _, uid := range d.input.uids {
 		d.known[uid] = true
@@ -301,7 +303,7 @@ func (d *RosterDriver) Run(ctx context.Context) (result *RosterResult, err error
 		}
 		d.mu.Lock()
 		if d.readyLocked() {
-			h := &BootstrapHandoff{epoch: d.input.epoch, generation: d.input.generation, client: d.client, origin: d.input.origin, keyHash: d.input.keyHash, rosterComplete: true}
+			h := &BootstrapHandoff{epoch: d.input.epoch, generation: d.input.generation, client: d.client, origin: d.input.origin, keyHash: d.input.keyHash, rosterComplete: true, cleanup: d.cleanup.clone()}
 			for uid := range d.known {
 				h.uids = append(h.uids, uid)
 			}

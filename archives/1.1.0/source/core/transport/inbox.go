@@ -112,6 +112,7 @@ type InboxScope struct {
 // inventory can group two known UIDs within the unchanged response budget;
 // accounting, replay and pending-delivery admission still run per BODY.
 type Inbox struct {
+	startupCleanup     startupCleanup
 	readQuantum        int        // runtime FAST work bound; bulk and bootstrap retain their own service bounds
 	mu                 sync.Mutex // maintenance state only; never held over receive I/O
 	receiveMu          sync.Mutex // serial receiver state and parser turns

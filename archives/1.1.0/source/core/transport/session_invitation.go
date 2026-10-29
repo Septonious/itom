@@ -77,6 +77,7 @@ func PrepareSessionInvitation(ctx context.Context, store *journal.Store, templat
 // with profile-key MAC, canonical charge, profile binding, ledger and scope
 // validation. It contains no private key, DATA allowance or refund authority.
 type VerifiedInvitation struct {
+	cleanup    startupCleanup
 	binding    secure.Binding
 	generation uint64
 	origin     ServerOrigin
@@ -125,6 +126,7 @@ func verifySessionInvitation(executor *Executor, physical Body, expected Invitat
 		return nil, e, ErrProtocol
 	}
 	v := &VerifiedInvitation{binding: f.binding, generation: f.generation, origin: ServerOrigin{Store: offer.Key.Store, Run: offer.Key.Epoch, Account: executor.account, User: f.binding.User, Folder: executor.mailbox, UIDValidity: executor.validity}, offer: offer, uid: physical.UID, keyHash: sha256.Sum256(key)}
+	v.cleanup.remember(true, v.origin, physical.UID, e, key, nil)
 	return v, e, nil
 }
 
@@ -154,6 +156,8 @@ func ObserveSessionInvitation(store *journal.Store, executor *Executor, physical
 		return nil, err
 	}
 	v.issuer = store
+	v.cleanup = startupCleanup{}
+	v.cleanup.remember(false, v.origin, physical.UID, e, key, &reclaimBody{store: store, ref: ref, location: journal.Location{UIDValidity: executor.validity, UID: physical.UID}, account: v.origin.Account, folder: v.origin.Folder, receiptKeyword: receiptKeyword(e.body, executor.validity, physical.UID, key)})
 	return v, nil
 }
 
@@ -176,6 +180,7 @@ func (v *VerifiedInvitation) NewClient(w *wallet.Wallet, key []byte) (*SessionBo
 	if err != nil {
 		return nil, err
 	}
+	b.cleanup = v.cleanup.clone()
 	b.knownUIDs[v.uid] = true
 	if v.anchorUID != 0 {
 		b.knownUIDs[v.anchorUID] = true
@@ -203,6 +208,7 @@ func (v *VerifiedInvitation) NewServer(store *journal.Store, key []byte) (*Sessi
 		}
 		return nil, err
 	}
+	b.cleanup = v.cleanup.clone()
 	b.knownUIDs[v.uid] = true
 	if v.anchorUID != 0 {
 		b.knownUIDs[v.anchorUID] = true

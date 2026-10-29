@@ -62,6 +62,14 @@ func (i *Inbox) EnableDeliveryReceipts() error {
 	}
 	i.ensureMaintenanceWake()
 	i.receiptEnabled = true
+	for uid, keyword := range i.startupCleanup.receipts {
+		i.receipts[uid] = &deliveryReceipt{uid: uid, keyword: keyword}
+		i.receiptStats.Queued++
+	}
+	i.startupCleanup.receipts = nil
+	if len(i.receipts) > 0 {
+		i.signalMaintenance()
+	}
 	return nil
 }
 

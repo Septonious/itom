@@ -67,12 +67,12 @@ func TestShortRequestDefersHistoricalLaunchesWithoutDelayingFreshPermissionOrFor
 
 func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
 	ep, s, _ := endpointPolicyFixture(t)
-	writer := &PublicationWorker{session: s}
+	writer := &PublicationWorker{session: s, executor: &Executor{account: "account1"}, sources: []publicationSource{{class: ControlLedger}, {class: DataLedger}}}
 	runtime := &Runtime{session: s, carriers: []RuntimeCarrier{{Writer: writer}}}
 	ep.Service.Runtime = runtime
 	s.runtime = runtime
 	s.lastForeground = time.Now()
-	inbox := &Inbox{session: s, receipts: map[uint32]*deliveryReceipt{}, reclaimQueue: map[uint32]*reclaimBody{}}
+	inbox := &Inbox{session: s, scope: InboxScope{Account: "account1"}, receipts: map[uint32]*deliveryReceipt{}, reclaimQueue: map[uint32]*reclaimBody{}}
 	worker := &InboxWorker{inbox: inbox}
 	store := ep.Service.Authorities["account1"].routes[ControlLedger].store
 	policyOldGrant(t, store, pool.Amount{Bytes: 4096, Messages: 1})
@@ -119,5 +119,32 @@ func TestRuntimeMaintenanceYieldsButCannotStrandBoundedCleanup(t *testing.T) {
 	after, err := store.Held("account1", "12345678")
 	if err != nil || before != after {
 		t.Fatal("scheduling fabricated cleanup proof", before, after, err)
+	}
+}
+
+func TestOneQuotaBlockedAccountDoesNotInterruptHealthyForegroundAccounts(t *testing.T) {
+	_, s, _ := endpointPolicyFixture(t)
+	s.lastForeground = time.Now()
+	first := &PublicationWorker{session: s, executor: &Executor{account: "account1"}, sources: []publicationSource{{class: ControlLedger}, {class: DataLedger}}}
+	second := &PublicationWorker{session: s, executor: &Executor{account: "account2"}, sources: []publicationSource{{class: ControlLedger}, {class: DataLedger}}}
+	r := &Runtime{session: s, carriers: []RuntimeCarrier{{Writer: first}, {Writer: second}}}
+	first.stats.ControlBlocked = true
+	if r.permissionPressure() || !r.accountPermissionPressure("account1") || r.accountPermissionPressure("account2") {
+		t.Fatal("one blocked account interrupted healthy accounts or lost local cleanup")
+	}
+	second.stats.ControlBlocked = true
+	if !r.permissionPressure() {
+		t.Fatal("all accounts blocked but global capacity recovery suppressed")
+	}
+	second.stats.ControlBlocked = false
+	first.stats.ControlBlocked = false
+	first.stats.DataBlocked = true
+	r.carriers = append(r.carriers, RuntimeCarrier{Writer: &PublicationWorker{session: s, executor: &Executor{account: "account1"}, sources: []publicationSource{{class: DataLedger}}}})
+	if r.permissionPressure() || !r.accountPermissionPressure("account1") {
+		t.Fatal("shared DATA quota pressure aggregated incorrectly")
+	}
+	second.stats.DataBlocked = true
+	if !r.permissionPressure() {
+		t.Fatal("exhausted DATA accounts cannot recover capacity")
 	}
 }

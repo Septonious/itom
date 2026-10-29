@@ -51,10 +51,11 @@ func (b *SessionBootstrap) inbox(executor *Executor, limits InboxLimits, driver 
 	return i, nil
 }
 
-// BootstrapHandoff retains only scoped authenticated bootstrap UID knowledge.
-// It conveys no deletion/refund authority, grant, payload or secret keys. Fields
+// BootstrapHandoff retains scoped authenticated UID knowledge and original
+// cleanup candidates. It conveys no absence/refund proof, grant or payload. Fields
 // are private so only completed key establishment can mint a handoff.
 type BootstrapHandoff struct {
+	cleanup        startupCleanup
 	mu             sync.Mutex
 	rosterConsumed bool
 	rosterComplete bool
@@ -97,7 +98,7 @@ func (b *SessionBootstrap) handoff(driver *BootstrapDriver) (*BootstrapHandoff, 
 	if err := b.handoffReadyLocked(); err != nil {
 		return nil, err
 	}
-	h := &BootstrapHandoff{epoch: b.epoch, generation: b.generation, client: b.client, origin: b.origin, keyHash: sha256.Sum256(b.key[:])}
+	h := &BootstrapHandoff{epoch: b.epoch, generation: b.generation, client: b.client, origin: b.origin, keyHash: sha256.Sum256(b.key[:]), cleanup: b.cleanup.clone()}
 	for uid := range b.knownUIDs {
 		h.uids = append(h.uids, uid)
 	}
@@ -153,5 +154,5 @@ func (i *Inbox) adoptBootstrap(h *BootstrapHandoff) error {
 		}
 		i.seen[uid], i.bootstrapUIDs[uid] = true, true
 	}
-	return nil
+	return i.adoptStartupCleanup(h)
 }

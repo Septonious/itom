@@ -12,7 +12,7 @@ import (
 // Observe and durably account the full original envelope before protocol
 // processing. The AEAD validator is pure; wallet I/O happens after it releases
 // the receive lock. No APPEND completion can stand in for a peer's confirmation.
-func (d *RosterDriver) receiveBody(physical Body) error {
+func (d *RosterDriver) receiveBody(physical Body) (resultErr error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.closed || d.failed {
@@ -36,6 +36,13 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 		return ErrProtocol
 	}
 	own := (envelope.class == 0) == d.client
+	var cleanupCandidate *reclaimBody
+	defer func() {
+		if resultErr == nil {
+			d.cleanup.remember(d.client, origin, physical.UID, envelope, d.key[:], cleanupCandidate)
+		}
+	}()
+
 	if !d.client {
 		observation := journal.Observation{Account: origin.Account, Folder: origin.Folder, EncodedBytes: envelope.charge, Location: journal.Location{UIDValidity: d.anchor.validity, UID: physical.UID}, Decoded: envelope.body}
 		if own {
@@ -46,10 +53,13 @@ func (d *RosterDriver) receiveBody(physical Body) error {
 			if err = d.store.Observe(ref, origin.Run, observation); err != nil {
 				return err
 			}
+			cleanupCandidate = &reclaimBody{store: d.store, ref: ref, location: observation.Location, account: observation.Account, folder: origin.Folder, receiptKeyword: receiptKeyword(envelope.body, d.anchor.validity, physical.UID, d.key[:])}
 		} else {
-			if _, _, err = d.store.AcceptRemoteBody(binding.User, origin.Run, usage, observation); err != nil {
+			_, ref, err := d.store.AcceptRemoteBody(binding.User, origin.Run, usage, observation)
+			if err != nil {
 				return err
 			}
+			cleanupCandidate = &reclaimBody{store: d.store, ref: ref, location: observation.Location, account: observation.Account, folder: origin.Folder}
 		}
 	}
 	if len(envelope.packet) < 4 || string(envelope.packet[:4]) != "IRO2" {

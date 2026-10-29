@@ -124,6 +124,10 @@ func TestExhaustedFirstControlAndSplitDataCapacityStillCarryHTTPSWithoutDebtRese
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, splitCapacity: true, keywordBytes: 32})
 }
 
+func TestTwentyVPNRestartsReclaimConfirmedStartupTraffic(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{accounts: 3, rounds: 20, keywordBytes: 32})
+}
+
 func TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip(t *testing.T) {
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 128, keywordBytes: 32})
 }
@@ -356,6 +360,15 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		mu.Unlock()
 		peers.Wait()
 	}()
+	// This long cohort retains the original 128 CONTROL + 192 DATA ceilings.
+	// A provider folder serves both ledgers; the ordinary small fixtures keep 64.
+	if scenario.rounds >= 20 {
+		for _, folders := range providerBoxes {
+			for _, box := range folders {
+				box.messageLimit = 128 + 192
+			}
+		}
+	}
 	root := t.TempDir()
 	rootFile := filepath.Join(root, "fixture-root.pem")
 	if err = os.WriteFile(rootFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Certificate[0]}), 0600); err != nil {
