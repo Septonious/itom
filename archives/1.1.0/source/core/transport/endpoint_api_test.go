@@ -182,6 +182,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 	active := map[net.Conn]bool{}
 	upFolder, downFolder := "itom-field-up", "itom-field-down"
 	var shutdown atomic.Bool
+	var shutdownGeneration atomic.Uint64
 	nativeStopFile := filepath.Join(t.TempDir(), "native-close")
 	allowShutdown := func() bool {
 		if shutdown.Load() || scenario.dataBlackhole {
@@ -190,7 +191,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		_, e := os.Stat(nativeStopFile)
 		return scenario.native && e == nil
 	}
-	boxes := map[string]*sharedMailbox{upFolder: {keywords: true, reclamation: true, allowClose: allowShutdown}, downFolder: {keywords: true, reclamation: true, allowClose: allowShutdown}}
+	connectionShutdown := func() func() bool {
+		opened := shutdownGeneration.Load()
+		return func() bool { return allowShutdown() || shutdownGeneration.Load() > opened }
+	}
+	boxes := map[string]*sharedMailbox{upFolder: {keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown}, downFolder: {keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown}}
 	// The old protocol used these same base folders for unwrapped control
 	// packets. These are valid physical MIME messages, not v2 envelopes.
 	if legacy {
@@ -203,7 +208,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 	}
 	for _, folder := range []string{upFolder, downFolder} {
-		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes, hideServerData: scenario.dataBlackhole, idleTimeout: scenario.idleTimeout}
+		boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown, rejectRequests: scenario.requestRefusal, keywordBytes: scenario.keywordBytes, hideServerData: scenario.dataBlackhole, idleTimeout: scenario.idleTimeout}
 	}
 	// On an actual in-place upgrade the new namespace does not exist yet.
 	created := map[string]bool{upFolder: true, downFolder: true}
@@ -228,8 +233,8 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			boxes[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: [][]byte{raw}}
-			boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown}
+			boxes[folder] = &sharedMailbox{keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown, bodies: [][]byte{raw}}
+			boxes[folder+"-session-v2"] = &sharedMailbox{keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown}
 			created[folder] = true
 		}
 	}
@@ -238,7 +243,7 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		username := fmt.Sprintf("fixture-%02d", n)
 		clone := map[string]*sharedMailbox{}
 		for folder, box := range boxes {
-			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowClose: allowShutdown, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes, idleTimeout: box.idleTimeout}
+			clone[folder] = &sharedMailbox{keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown, bodies: append([][]byte(nil), box.bodies...), flagCase: box.flagCase, keywordBytes: box.keywordBytes, idleTimeout: box.idleTimeout}
 		}
 		providerBoxes[username] = clone
 	}
@@ -705,6 +710,12 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				t.Fatal(e)
 			}
 			run := exec.Command(nativeBinary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=20s")
+			// A declared stop belongs to connections from that session even
+			// after the next native child removes/reuses its marker path.
+			// New connections pin the new generation and remain strict.
+			if round > 0 {
+				shutdownGeneration.Add(1)
+			}
 			os.Remove(nativeStopFile)
 			run.Env = append(os.Environ(), "ITOM_NATIVE_TEST_STOP="+nativeStopFile, "ITOM_NATIVE_TEST_EVIDENCE="+filepath.Join(root, "native-evidence.json"), "ITOM_NATIVE_TEST_CONFIG="+input, "ITOM_NATIVE_TEST_STATE="+clientDir, "SSL_CERT_FILE="+rootFile, "ITOM_NATIVE_TEST_HTTPS_ROOT="+certFile)
 			if out, e := run.CombinedOutput(); e != nil {

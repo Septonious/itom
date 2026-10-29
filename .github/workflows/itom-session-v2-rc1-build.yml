@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.11 with durable final-spend acknowledgements and restart recovery
+name: Build session-v2 RC1.11 with durable restart recovery and connection-scoped fixture shutdown
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -76,7 +76,7 @@ jobs:
             release-assets/NATIVE_SOURCE_SHA256SUMS
           if-no-files-found: error
   android:
-    needs: safety
+    # Build independently; publication still requires safety AND both builds.
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:

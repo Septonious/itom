@@ -26,28 +26,29 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
-	messageLimit    int                 // optional original combined CONTROL/DATA physical message ceiling
-	idleTimeout     time.Duration       // explicit provider inactivity lease; client/server sockets stay separate
-	hideServerData  bool                // explicit negative fixture: accepted server DATA never becomes visible
-	flagCase        func(string) string // provider-equivalent, case-insensitive keyword spelling
-	rejectRequests  bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
-	keywordBytes    int                 // optional provider name-length bound despite advertised permanent keywords
-	keywordRefusals int
-	peakFlags       int
-	allowClose      func() bool // explicit test-owner shutdown only; never ordinary application service
-	mu              sync.Mutex
-	bodies          [][]byte
-	bytes           int
-	peakMessages    int
-	changed         chan struct{}
-	keywords        bool
-	reclamation     bool
-	reclaimFault    string // explicit maintenance fault; ordinary traffic is unchanged
-	expungeEntered  chan struct{}
-	expungeRelease  <-chan struct{}
-	appendEntered   chan struct{}
-	appendRelease   <-chan struct{}
-	flags           map[uint32]map[string]bool
+	messageLimit            int                 // optional original combined CONTROL/DATA physical message ceiling
+	idleTimeout             time.Duration       // explicit provider inactivity lease; client/server sockets stay separate
+	hideServerData          bool                // explicit negative fixture: accepted server DATA never becomes visible
+	flagCase                func(string) string // provider-equivalent, case-insensitive keyword spelling
+	rejectRequests          bool                // tagged refusal after successful LOGIN/SELECT/offer discovery
+	keywordBytes            int                 // optional provider name-length bound despite advertised permanent keywords
+	keywordRefusals         int
+	peakFlags               int
+	allowCloseForConnection func() func() bool // test-owner stop generation pinned per socket
+	allowClose              func() bool        // explicit test-owner shutdown only; never ordinary application service
+	mu                      sync.Mutex
+	bodies                  [][]byte
+	bytes                   int
+	peakMessages            int
+	changed                 chan struct{}
+	keywords                bool
+	reclamation             bool
+	reclaimFault            string // explicit maintenance fault; ordinary traffic is unchanged
+	expungeEntered          chan struct{}
+	expungeRelease          <-chan struct{}
+	appendEntered           chan struct{}
+	appendRelease           <-chan struct{}
+	flags                   map[uint32]map[string]bool
 }
 
 // The fixture accepts explicit sets and ranges, but only walks its bounded
@@ -157,6 +158,10 @@ func (m *sharedMailbox) prepareAccountService(t *testing.T, account, folder stri
 func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time.Duration, idle, silent bool) func(net.Conn) {
 	return func(conn net.Conn) {
 		r := bufio.NewReader(conn)
+		allowClose := m.allowClose
+		if m.allowCloseForConnection != nil {
+			allowClose = m.allowCloseForConnection()
+		}
 		turn := 0
 		delay := func() {
 			if len(delays) > 0 {
@@ -216,7 +221,7 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 			}
 			switch fields[1] {
 			case "APPEND":
-				_, body := readAppendLiteral(t, conn, r, line, m.allowClose)
+				_, body := readAppendLiteral(t, conn, r, line, allowClose)
 				if body == nil {
 					return
 				}
