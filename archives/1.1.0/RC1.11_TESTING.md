@@ -11,9 +11,7 @@ with a valid exact per-body client receipt. It uses the original BODY observatio
 UID deletion and independent absence proof. Old CLIENT mail, missing journal
 rows, unreceived mail and incompatible namespaces cannot use this path.
 Unknown and unobserved historical debt remains charged. Startup reserves exactly
-four CLIENT messages. Runtime CONTROL and DATA retain their original allowances. Small runtime
-CONTROL leases caused excessive grant turnover in an intermediate candidate
-and are excluded from the final transport.
+four CLIENT messages. Runtime CONTROL and DATA retain their original quota-derived allowances.
 
 One account's quota pressure no longer unleashes historical traffic on healthy
 accounts during a short request. That account's cleanup remains urgent; global
@@ -45,3 +43,15 @@ IMAP fallback latched until the user restarts the VPN. No DoH/DoT.
 This is an experimental candidate. Local TLS/IMAP fixture success does not prove
 live Rambler or Android device operation. Sustained 100 Mbps and maximum 300 ms
 light-load RTT remain unqualified. Validation evidence accompanies the release.
+
+Final packaged-source CI passes 314 core and 14 native race-test groups, both
+vet checks, 93 domain and 8 Android app tests, with zero lint errors. The exact
+packaged server passes twenty persistent restarts plus clean, legacy-debt and
+retained-backlog cases. Native checks cover authenticated administration, UDP
+DNS and SOCKS/TUN HTTPS with body integrity; the APK is source/signature verified
+but was not executed on an Android device here.
+
+Hosted cold-start DATA echoes pass 20/20 within 300 ms (maximum 279 ms). Separate
+normal and post-idle propagation gates pass 64/64 and 3/3, respectively. The
+upper-range gate still exceeds 300 ms in 7/16 samples (maximum 366.32 ms). The
+release therefore does not satisfy the complete RTT target or establish 100 Mbps.

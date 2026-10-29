@@ -73,3 +73,19 @@ is part of this release.
 This evidence does not establish live Rambler connectivity, Android-device
 operation, sustained 100 Mbps or the complete 300 ms light-load RTT goal. The
 published APK/server pair remains an experimental real-world testing release.
+
+Final validation: both independent hosted runs pass all 314 core and 14 native
+race-test groups. The final build's twenty cold-start DATA echoes average
+222.4 ms, maximum 279 ms. A local run measured 254.05 ms average and 350 ms
+maximum, demonstrating variation outside that one hosted cohort. Both still
+complete all twenty startup/HTTPS/restart cycles. The six exact-artifact checks
+pass: twenty-restart CLI, clean CLI, legacy-debt CLI, retained-backlog CLI,
+Android-shaped native administration against that CLI, and source-native direct
+UDP DNS plus SOCKS/TUN HTTPS. Production source archives match all 724 tracked
+files; signed APK native libraries match the source-pinned Android build.
+
+The upper-range propagation gate fails 7/16 samples above 300 ms, maximum
+366.32 ms; its raw failure is included. Normal propagation passes 64/64 within
+300 ms, maximum 267.54 ms, and post-idle passes 3/3, maximum 158.48 ms. This is
+functional release qualification for further testing, not full performance or
+live-device/provider qualification.

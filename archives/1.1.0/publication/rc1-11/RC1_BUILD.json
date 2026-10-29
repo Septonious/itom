@@ -1,0 +1,346 @@
+{
+  "release": "ITOM 1.1.0 RC1.11",
+  "source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+  "build_run_id": 40957255024,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/40957255024",
+  "purpose": "Prevent startup quota leaks and repeated acknowledged final-spend metadata from breaking DATA readiness and TLS across VPN restarts",
+  "field_qualified": false,
+  "performance_qualified": false,
+  "android_device_qualified": false,
+  "sustained_100mbps_verified": false,
+  "functional_ci": {
+    "rc1-core.jsonl": {
+      "passed": 314,
+      "failed": []
+    },
+    "rc1-native.jsonl": {
+      "passed": 14,
+      "failed": []
+    }
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "android_lint_warnings": 1,
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10122,
+    "version_name": "1.1.0-rc1.11-debug"
+  },
+  "source_ci_apk_sha256": "f21465b3c17388dea0c951b245af9abb7b804cc3fbaa2ebf4c2cf3ee8f84f7b0",
+  "signed_apk_sha256": "601553eb0b8449df0e2cfe0fe9353d4d0a30be345a2448163cdeefd94cec0a4f",
+  "signed_apk_bytes": 54563156,
+  "server_sha256": {
+    "amd64": "1b0e90712a018c3d0a00767b79f75c7315166a5e197dd3f0039f0c0739eeb916",
+    "arm64": "6bcc866dc3716fe82aafe9c349e7b938253d0b015c0721e62ed3a1b060ef9c9e"
+  },
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "private_signing_material_exported": false,
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "c603754f961cda11325af523ff8af50de7b3694dbdbdb60e3b76b0c37212e344",
+    "lib/armeabi-v7a/libgojni.so": "eaa8b164fdb24c0bcd1b422717261469432c625b1fecd4aa1ab003b6173b5fea"
+  },
+  "source_manifest_files": 724,
+  "source_manifest_sha256": "ea0ad5a94eab41b91dd54ff1e416ef66b1cb62762e6b9bf48fdba917bc693f47",
+  "local_investigation": {
+    "original_release": "v1.1.0-rc1.10",
+    "original_published_server_first_failure_restart": 12,
+    "fix_attempts": [
+      {
+        "log": "twenty-restarts-source-after.jsonl",
+        "result": "startup cleanup alone later failed TLS"
+      },
+      {
+        "log": "twenty-restarts-scoped-pressure.jsonl",
+        "result": "single-account pressure scoped, later startup capacity exhausted"
+      },
+      {
+        "log": "twenty-restarts-capacity-diagnostic.jsonl",
+        "result": "eighteen-threshold varying with scheduling; startup failed at restart18"
+      },
+      {
+        "log": "twenty-restarts-demand-control.jsonl",
+        "result": "later startup failure; one separate empty-journal unit fixture was invalid and corrected"
+      },
+      {
+        "log": "twenty-restarts-received-history.jsonl",
+        "result": "receipt-qualified local inventory recovery alone later failed startup"
+      },
+      {
+        "log": "twenty-restarts-essential-fences.jsonl",
+        "result": "old final fences were resent every restart; TLS failed on restart15"
+      },
+      {
+        "log": "twenty-restarts-durable-closed-ack.jsonl",
+        "result": "all20 startup/DATA/HTTPS/restarts passed"
+      },
+      {
+        "log": "first-hosted-safety/rc1-core.jsonl",
+        "result": "313/314 groups passed; retained-backlog HTTP failed; all20 restarts passed"
+      },
+      {
+        "log": "bounded-essential-fences-critical.jsonl",
+        "result": "one-per-account recovery cap passed backlog but intermediate eight-message runtime CONTROL cap still failed HTTP on restart8"
+      },
+      {
+        "log": "original-runtime-allowance-critical.jsonl",
+        "result": "original runtime allowances restored; all20 persistent VPN restarts and retained-backlog HTTPS passed"
+      }
+    ],
+    "final_passing_restarts": 20,
+    "final_data_echo_samples_ms": [
+      188,
+      224,
+      350,
+      286,
+      205,
+      213,
+      286,
+      189,
+      198,
+      319,
+      198,
+      246,
+      276,
+      296,
+      219,
+      175,
+      324,
+      318,
+      287,
+      284
+    ],
+    "final_data_echo_mean_ms": 254.05,
+    "final_data_echo_max_ms": 350,
+    "application_deadlines_changed": false,
+    "physical_limits_changed": false,
+    "synthetic_physical_provider_limit_note": "long cohort holds original combined CONTROL128+DATA192 physical message capacity320; original durable limits unchanged",
+    "peer_ack_is_not_absence_proof": true,
+    "wallet_json_addition": "IssuerClosed defaults false; requires authenticated exact-final Closed status; preserves Used/Ack/physical debt",
+    "performance_qualified": false,
+    "android_device_qualified": false,
+    "provider": "local TLS IMAP fixture",
+    "interrupted_superseded_full_runs": [
+      "core-rc1-11-race.jsonl",
+      "core-rc1-11-received-history-race.jsonl",
+      "core-rc1-11-essential-fences-race.jsonl"
+    ],
+    "environment_restart_interrupted_runs": [
+      "core-rc1-11-closed-ack-final.jsonl",
+      "native-shutdown-ownership-race.jsonl"
+    ],
+    "fixture_correction_repeated_native_groups_passed": 3,
+    "fixture_correction_repeated_vpn_sessions": 6,
+    "packaged_source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+    "final_source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+    "final_passing_source_log": "original-runtime-allowance-critical.jsonl",
+    "final_light_cold_start_samples_at_or_below_300ms": 16,
+    "final_twenty_and_retained_backlog_passed": true,
+    "intermediate_runtime_control_cap_removed": true,
+    "foreground_urgent_fences_per_account_ledger": 1,
+    "superseded_passing_twenty_source": "6d2aff9 production transport; qualified separately before large-backlog repair"
+  },
+  "startup_client_message_reservation": 4,
+  "runtime_control_allowance": "original quota-derived allowance; no eight-message cap",
+  "bulk_control_and_data_original_allowances_preserved": true,
+  "wallet_change": "IssuerClosed persists authenticated exact-final acknowledgement separately from registration, physical deletion and retirement; old JSON defaults false",
+  "wallet_balances_original_spend_reset": false,
+  "original_physical_quotas_changed": false,
+  "original_application_imap_startup_deadlines_changed": false,
+  "extra_connections_or_blind_resends_added": false,
+  "historical_cleanup_requires": [
+    "original local SERVER attempt",
+    "full original MAC and journal BODY match",
+    "exact per-body client receipt",
+    "exact UID EXPUNGE",
+    "independent same-incarnation absence"
+  ],
+  "unreceived_missing_history_old_client_and_other_namespace_debt_reclaimed": false,
+  "fixture_shutdown_fix": "Each native provider socket pins its explicit test-owner shutdown generation; future sessions cannot erase that declared stop; live-session incomplete APPENDs remain errors",
+  "source_checks_note": "Core/native functional checks pass; the upper-range RTT gate fails7 of16 samples above300ms (maximum366.323207ms). Raw passing and failing evidence is preserved.",
+  "source_qualification": {
+    "session-v2-quiet-light.jsonl": {
+      "passed_parent_groups": 1,
+      "failed": [],
+      "samples": 3,
+      "at_or_below_300ms": 3,
+      "maximum_ms": 158.480908
+    },
+    "session-v2-parser-service.jsonl": {
+      "passed_parent_groups": 1,
+      "failed": []
+    },
+    "session-v2-core.jsonl": {
+      "passed_parent_groups": 314,
+      "failed": [],
+      "samples": 8,
+      "at_or_below_300ms": 8,
+      "maximum_ms": 220.807693
+    },
+    "session-v2-fetch-overlap.jsonl": {
+      "passed_parent_groups": 30,
+      "failed": []
+    },
+    "session-v2-upper-light.jsonl": {
+      "passed_parent_groups": 0,
+      "failed": [
+        "TestAccountUpperLatencyLightPropagationQualification",
+        "itom.local/core/transport"
+      ],
+      "samples": 16,
+      "at_or_below_300ms": 9,
+      "maximum_ms": 366.323207
+    },
+    "session-v2-light.jsonl": {
+      "passed_parent_groups": 1,
+      "failed": [],
+      "samples": 64,
+      "at_or_below_300ms": 64,
+      "maximum_ms": 267.538375
+    },
+    "session-v2-preparation.jsonl": {
+      "passed_parent_groups": 6,
+      "failed": []
+    },
+    "session-v2-native.jsonl": {
+      "passed_parent_groups": 14,
+      "failed": []
+    }
+  },
+  "native_source_tun_socks_fixture_repeats": {
+    "passed": 3,
+    "failed": []
+  },
+  "artifact_validation_pending": false,
+  "dns_unchanged": {
+    "resolvers": [
+      "31.131.251.83",
+      "185.22.234.229"
+    ],
+    "race_both": true,
+    "timeout_ms": 250,
+    "protocols": [
+      "UDP/53",
+      "TCP/53"
+    ],
+    "optional_imap_fallback_latched_until_user_restart": true
+  },
+  "installation": "Update both endpoints in place; run downloaded server executable, select11 then9; install APK over existing app; preserve profiles, wallets and journals",
+  "artifact_validation": {
+    "log_file": "see phase log_file entries",
+    "source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+    "server_sha256": "1b0e90712a018c3d0a00767b79f75c7315166a5e197dd3f0039f0c0739eeb916",
+    "apk_sha256": "601553eb0b8449df0e2cfe0fe9353d4d0a30be345a2448163cdeefd94cec0a4f",
+    "exact_hosted_server_executed": true,
+    "publication_pending": true,
+    "android_package_verified": true,
+    "android_apk_executed_on_device": false,
+    "native_bridge_on_linux": true,
+    "application_tls_uses_source_fixture_exit": true,
+    "internal_admin_names_are_not_normal_dns_targets": true,
+    "provider": "local TLS IMAP fixture",
+    "unchanged_request_deadlines": true,
+    "exit_code": 0,
+    "tests": [
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerTwentyRestartsPreserveWalletsAndQuota",
+        "Elapsed": 150.36
+      },
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerCleanRestartAndAuthenticatedRPC",
+        "Elapsed": 10.02
+      },
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerLegacyDebtAndAuthenticatedRPC",
+        "Elapsed": 0.96
+      },
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerRetainedBacklogAndAuthenticatedRPC",
+        "Elapsed": 50.12
+      },
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerWithAndroidRuntimeNativeAdministration",
+        "Elapsed": 18.43
+      },
+      {
+        "Action": "pass",
+        "Test": "TestPublishedServerSourcesNativeDNSAndTLS",
+        "Elapsed": 17.79
+      }
+    ],
+    "phases": [
+      {
+        "log_file": "released-artifact-tests-1793309083031657787.jsonl",
+        "source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+        "server_sha256": "1b0e90712a018c3d0a00767b79f75c7315166a5e197dd3f0039f0c0739eeb916",
+        "apk_sha256": null,
+        "exact_hosted_server_executed": true,
+        "publication_pending": true,
+        "android_package_verified": false,
+        "android_apk_executed_on_device": false,
+        "native_bridge_on_linux": true,
+        "application_tls_uses_source_fixture_exit": true,
+        "internal_admin_names_are_not_normal_dns_targets": true,
+        "provider": "local TLS IMAP fixture",
+        "unchanged_request_deadlines": true,
+        "exit_code": 0,
+        "tests": [
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerTwentyRestartsPreserveWalletsAndQuota",
+            "Elapsed": 150.36
+          },
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerCleanRestartAndAuthenticatedRPC",
+            "Elapsed": 10.02
+          },
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerLegacyDebtAndAuthenticatedRPC",
+            "Elapsed": 0.96
+          },
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerRetainedBacklogAndAuthenticatedRPC",
+            "Elapsed": 50.12
+          }
+        ]
+      },
+      {
+        "log_file": "released-artifact-tests-1793309447330255563.jsonl",
+        "source_commit": "d84a82e674b0e3334bedeefe3ffe04db990fa1a1",
+        "server_sha256": "1b0e90712a018c3d0a00767b79f75c7315166a5e197dd3f0039f0c0739eeb916",
+        "apk_sha256": "601553eb0b8449df0e2cfe0fe9353d4d0a30be345a2448163cdeefd94cec0a4f",
+        "exact_hosted_server_executed": true,
+        "publication_pending": true,
+        "android_package_verified": true,
+        "android_apk_executed_on_device": false,
+        "native_bridge_on_linux": true,
+        "application_tls_uses_source_fixture_exit": true,
+        "internal_admin_names_are_not_normal_dns_targets": true,
+        "provider": "local TLS IMAP fixture",
+        "unchanged_request_deadlines": true,
+        "exit_code": 0,
+        "tests": [
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerWithAndroidRuntimeNativeAdministration",
+            "Elapsed": 18.43
+          },
+          {
+            "Action": "pass",
+            "Test": "TestPublishedServerSourcesNativeDNSAndTLS",
+            "Elapsed": 17.79
+          }
+        ]
+      }
+    ]
+  }
+}
