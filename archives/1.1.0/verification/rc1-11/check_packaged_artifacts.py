@@ -11,7 +11,7 @@ REPO=Path(__file__).resolve().parents[4]
 SOURCE=REPO/'archives/1.1.0/source'
 ROOT=Path(os.environ.get('ITOM_RELEASE_CHECK_DIR','/tmp/itom-rc1-11-artifact-validation'))
 ROOT.mkdir(parents=True,exist_ok=True)
-SHA='f09fe101a876d899d8e512649c0d6eaeee3f0383'
+SHA='d84a82e674b0e3334bedeefe3ffe04db990fa1a1'
 metadata=json.loads((REPO/'archives/1.1.0/publication/rc1-11/RC1_BUILD.json').read_text())
 base='https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.11/'
 def fetched(name,digest):
