@@ -16,9 +16,9 @@ That failure is preserved under verification/rc1-10/POSTRELEASE_BEFORE.zip.
    alone still cannot authorize deletion or release physical debt.
 2. A small remaining quarter-allowance could not complete startup. Startup now
    reserves exactly four CLIENT publications and requires original capacity
-   for those plus six SERVER publications. No limit is increased. Light CONTROL
-   leases cap new reservations at eight messages; actual bulk demand restores
-   the original allowance and DATA reservations are unchanged.
+   for those plus six SERVER publications. No limit is increased. An intermediate
+   eight-message runtime CONTROL cap caused excessive grant turnover; the final
+   candidate retains the original runtime CONTROL and DATA allowances.
 3. One quota-blocked account globally overrode foreground scheduling. Local
    cleanup now responds to its own account. Global historical launches override
    the original short-request grace only when every eligible account in a

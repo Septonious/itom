@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.11 with bounded essential recovery and durable restart acknowledgements
+name: Build session-v2 RC1.11 with original runtime grants and bounded restart recovery
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -38,7 +38,7 @@ jobs:
           path: ${{ runner.temp }}/rc1-*.jsonl
           if-no-files-found: error
   linux:
-    needs: safety
+    # Build independently; publication still requires complete safety checks.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

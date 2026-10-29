@@ -669,9 +669,6 @@ func (s *EndpointSession) serverPolicyFor(ctx context.Context, sequences map[str
 			store *journal.Store
 		}{{ControlLedger, j.Control}, {DataLedger, j.Data}} {
 			allowance, allowanceErr := endpointAllowance(entry.store, account, user, current)
-			if entry.class == ControlLedger && allowanceErr == nil && s.Service.Runtime != nil {
-				allowance = s.Service.Runtime.session.controlAllowance(allowance)
-			}
 			if allowanceErr != nil && !errors.Is(allowanceErr, ErrCapacity) {
 				return allowanceErr
 			}

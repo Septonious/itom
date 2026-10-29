@@ -117,21 +117,3 @@ func TestStartupCleanupCandidatesRemainScopedAndNeverSupplyAbsenceProof(t *testi
 		t.Fatal(err)
 	}
 }
-
-func TestLightControlReservationCannotLimitBulkOrDataCapacity(t *testing.T) {
-	_, s, _ := endpointPolicyFixture(t)
-	original := pool.Amount{Bytes: 1 << 20, Messages: 32}
-	light := s.controlAllowance(original)
-	if light.Bytes != original.Bytes || light.Messages != 8 {
-		t.Fatal("light CONTROL lease incorrectly sized", light)
-	}
-	s.buffered = uint64(s.limits.InteractiveBytes) + 1
-	if s.controlAllowance(original) != original {
-		t.Fatal("bulk sender lost original CONTROL capacity")
-	}
-	s.buffered = 0
-	s.received = uint64(s.limits.InteractiveBytes) + 1
-	if s.controlAllowance(original) != original {
-		t.Fatal("bulk receiver lost original CONTROL capacity")
-	}
-}

@@ -11,8 +11,9 @@ with a valid exact per-body client receipt. It uses the original BODY observatio
 UID deletion and independent absence proof. Old CLIENT mail, missing journal
 rows, unreceived mail and incompatible namespaces cannot use this path.
 Unknown and unobserved historical debt remains charged. Startup reserves exactly
-four CLIENT messages. Light-load CONTROL leases are capped at eight messages;
-actual bulk demand keeps the original allowance. DATA quotas are unchanged.
+four CLIENT messages. Runtime CONTROL and DATA retain their original allowances. Small runtime
+CONTROL leases caused excessive grant turnover in an intermediate candidate
+and are excluded from the final transport.
 
 One account's quota pressure no longer unleashes historical traffic on healthy
 accounts during a short request. That account's cleanup remains urgent; global
