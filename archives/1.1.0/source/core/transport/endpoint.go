@@ -429,6 +429,10 @@ func StartEndpoint(parent context.Context, o EndpointOptions) (result *EndpointS
 	if err != nil {
 		return nil, err
 	}
+	// Protect the first actual request, not only requests that have already
+	// queued DATA. Surviving wallets may immediately send exact final-spend
+	// fences; speculative old re-offers wait for the original short lifetime.
+	session.lastForeground = time.Now()
 	o.Service.ReconcileHistory = true
 	stage("runtime")
 	service, err := NewRosterService(roster, session, o.Key, o.Service)
@@ -743,13 +747,13 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 			}
 			for _, e := range rows {
 				if e.Offer.Key.Session != entry.w.Session() {
-					if !s.Service.historicalLaunchAllowed() {
-						continue
-					}
+					// Returning a surviving wallet's exact final unused
+					// reservation is capacity progress, not speculative history.
+					// The existing bounded authority queue still limits it.
 					// OpenBound fenced this exact persisted spend before the new
 					// epoch. Only unused allowance is released, never BODY debt.
 					err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
-					if err == nil && e.Retired {
+					if err == nil && e.Retired && s.Service.historicalLaunchAllowed() {
 						err = s.Service.Authorities[account].Retire(entry.class, e.Offer.Key)
 					}
 					if err != nil && !errors.Is(err, ErrCapacity) && !errors.Is(err, wallet.ErrState) {

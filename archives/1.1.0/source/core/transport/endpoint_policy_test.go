@@ -230,3 +230,63 @@ func TestAllCurrentGrantsExhaustedBeforePolicyTickStillFenceExactSpend(t *testin
 		t.Fatal("policy duplicated fences", err, len(s.authorityOut))
 	}
 }
+
+func TestSurvivingWalletFinalSpendRemainsEssentialDuringFirstRequestGrace(t *testing.T) {
+	s, err := NewSession(7, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	path := filepath.Join(t.TempDir(), "surviving-data.db")
+	dw, err := wallet.Open(path, "12345678", wire.ID{1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	offer := wire.StorageGrant{Key: wire.QuotaKey{Store: wire.ID{1}, Epoch: 1, Grant: 1, Session: dw.Session(), User: "12345678", Account: "account1"}, Limit: wire.Quota{Bytes: 4096, Messages: 8}}
+	if err = dw.Accept(offer); err != nil {
+		t.Fatal(err)
+	}
+	ticket, err := dw.Reserve(4096)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err = ticket.Commit("fast", []byte("original lifetime spend"), make([]byte, 32), func(b []byte) (uint64, error) { return uint64(len(b)), nil }); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := dw.Entries()
+	dw.Close()
+	dw, err = wallet.Open(path, "12345678", wire.ID{1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dw.Close()
+	cw, err := wallet.Open(filepath.Join(t.TempDir(), "control.db"), "12345678", wire.ID{2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cw.Close()
+	owner := &AuthorityController{session: s, client: true, recovery: true, account: "account1", user: "12345678", sessionID: dw.Session(), routes: map[LedgerClass]authorityRoute{ControlLedger: {wallet: cw, id: wire.ID{2}, run: 1}, DataLedger: {wallet: dw, id: wire.ID{1}, run: 1}}}
+	runtime := &Runtime{session: s}
+	ep := &EndpointSession{Service: &RosterService{Runtime: runtime, Authorities: map[string]*AuthorityController{"account1": owner}}, Roster: &RosterResult{wallets: map[string]RosterWallets{"account1": {Control: cw, Data: dw}}}}
+	s.lastForeground = time.Now()
+	if ep.Service.historicalLaunchAllowed() {
+		t.Fatal("speculative historical offers are not deferred")
+	}
+	for range 2 {
+		if err = ep.clientPolicy(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(s.authorityOut) != 1 {
+		t.Fatal("exact surviving final spend was delayed or duplicated", len(s.authorityOut))
+	}
+	class, message, err := decodeAuthority(s.authorityOut[0].Payload)
+	release, ok := message.(wire.StorageRelease)
+	if err != nil || !ok || class != DataLedger || release.Key != offer.Key || release.Final != before[0].Used {
+		t.Fatal("original final spend changed", message, err)
+	}
+	after, err := dw.Entries()
+	if err != nil || len(after) != 1 || !after[0].Fenced || after[0].Used != before[0].Used || len(after[0].Pending) != len(before[0].Pending) {
+		t.Fatal("scheduling released original BODY debt", after, err)
+	}
+}

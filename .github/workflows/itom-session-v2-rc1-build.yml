@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.11 with received-mail recovery and demand-sized CONTROL
+name: Build session-v2 RC1.11 with essential fences and receipt-qualified restart recovery
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -19,7 +19,7 @@ jobs:
         with: {go-version: "1.27.1", cache: false}
       - name: Source integrity and exact startup plus demand-sized CONTROL reservations
         run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-rc1-11
-      - name: Complete core safety, receipt-qualified history and twenty persistent restarts
+      - name: Complete core safety, essential final-spend fences and twenty persistent restarts
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail
