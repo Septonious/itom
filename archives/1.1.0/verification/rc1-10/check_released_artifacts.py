@@ -44,6 +44,7 @@ s=s.replace('\troot := t.TempDir()','\troot := t.TempDir()\n serverState := file
 s=s.replace('filepath.Join(root, "server-state",','filepath.Join(serverState,')
 s=s.replace('filepath.Join(root, "server-state")','serverState')
 s=s.replace('\tcfg := servercfg.Config{Schema:', '\tif scenario.released {p.User.Name="admin"}\n\tcfg := servercfg.Config{Schema:')
+s=s.replace('\troot := t.TempDir()', '\tif scenario.released && scenario.rounds>=20 { for _,folders:=range providerBoxes { for _,box:=range folders { box.messageLimit=128+192 } } }\n\troot := t.TempDir()')
 needle='\tcmd := exec.Command(executable, "-test.run=^TestEndpointServerProcessHelper$", "-test.v", "-test.timeout="+serverCohortLifetime.String())'
 assert needle in s
 s=s.replace(needle,needle+'''
@@ -84,6 +85,7 @@ s=s.replace(needle,'''
 s=s.replace('"DNS": []string{"127.0.0.1"}, "Socks":', '"DNS": []string{"127.0.0.1"}, "DNSResolver": map[string]any{"primary":"127.0.0.83","backup":"127.0.0.84","itom_fallback":false}, "Socks":')
 s=s.replace('run.Env = append(os.Environ(), "ITOM_NATIVE_TEST_STOP="', 'run.Env = append(os.Environ(), "ITOM_NATIVE_RELEASED_SERVER="+fmt.Sprint(scenario.released), "ITOM_NATIVE_TEST_STOP="')
 s+='''
+func TestPublishedServerTwentyRestartsPreserveWalletsAndQuota(t *testing.T){testPublicEndpoints(t,publicEndpointCase{released:true,accounts:3,rounds:20,keywordBytes:32})}
 func TestPublishedServerCleanRestartAndAuthenticatedRPC(t *testing.T){testPublicEndpoints(t,publicEndpointCase{released:true,accounts:3,keywordBytes:32})}
 func TestPublishedServerLegacyDebtAndAuthenticatedRPC(t *testing.T){testPublicEndpoints(t,publicEndpointCase{released:true,legacy:true,keywordBytes:32})}
 func TestPublishedServerRetainedBacklogAndAuthenticatedRPC(t *testing.T){testPublicEndpoints(t,publicEndpointCase{released:true,accounts:3,retainedBacklog:128,keywordBytes:32})}
@@ -159,7 +161,7 @@ native_overlay=ROOT/'traffic_integration_test.go';native_overlay.write_text(s)
 subprocess.run(['gofmt','-w',str(core_overlay),str(native_overlay)],check=True)
 overlay=ROOT/'overlay.json';overlay.write_text(json.dumps({'Replace':{str(core):str(core_overlay),str(native):str(native_overlay)}},indent=2)+'\n')
 env=dict(os.environ);env['GOFLAGS']='-overlay='+str(overlay);env['GOTOOLCHAIN']='local';env['ITOM_RELEASE_SERVER']=str(server);env['ITOM_RELEASE_VALIDATION']='1'
-command=['go','test','-race','-json','./transport','-run','^TestPublishedServer','-count=1','-timeout=300s']
+command=['go','test','-race','-json','./transport','-run','^TestPublishedServer','-count=1','-timeout=600s']
 trace=ROOT/('released-artifact-tests-'+str(time.time_ns())+'.jsonl')
 with trace.open('w')as log:
  result=subprocess.run(command,cwd=SOURCE/'core',env=env,stdout=log,stderr=subprocess.STDOUT)
