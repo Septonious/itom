@@ -6,6 +6,10 @@ because confirmed startup and roster mail never entered normal reclamation.
 The new sealed handoff carries only authenticated, fully observed current-startup
 cleanup candidates. Original per-body receipts, exact UID EXPUNGE and independent
 same-incarnation absence checks still gate every release of physical debt.
+Restart inventory can also finish interrupted cleanup of original SERVER mail
+with a valid exact per-body client receipt. It uses the original BODY observation,
+UID deletion and independent absence proof. Old CLIENT mail, missing journal
+rows, unreceived mail and incompatible namespaces cannot use this path.
 Unknown and unobserved historical debt remains charged. Startup reserves exactly
 four CLIENT messages. Light-load CONTROL leases are capped at eight messages;
 actual bulk demand keeps the original allowance. DATA quotas are unchanged.

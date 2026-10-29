@@ -926,6 +926,9 @@ func logOriginalJournalCapacity(t *testing.T, root string) {
 			var limit, heldBytes, heldMessages uint64
 			for _, g := range grants {
 				amount, _ := g["Limit"].(map[string]any)
+				if closed, _ := g["Closed"].(bool); closed {
+					amount, _ = g["Used"].(map[string]any)
+				}
 				released, _ := g["Released"].(map[string]any)
 				if b, ok := amount["Bytes"].(float64); ok {
 					heldBytes += uint64(b)

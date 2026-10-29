@@ -232,8 +232,9 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 				retained := map[string]*transport.RetainedInventory{}
 				if server {
 					// Inventory only this version's physical namespace. Old folders
-					// and all original journal debt remain untouched and charged;
-					// their incompatible control packets are never v2 input/proof.
+					// and their original journal debt remain untouched and charged.
+					// In this namespace only originally sent, fully observed, peer-
+					// receipted SERVER mail can use exact deletion/absence recovery.
 					folders := []string{a.FastFolder, a.BulkFolder}
 					j := byJournal[a.Account]
 					for _, folder := range folders {
@@ -242,7 +243,7 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							failure = e
 							break
 						}
-						retained[folder], e = transport.InspectRetained(ctx, x, p.User.ID, key)
+						retained[folder], e = transport.InspectRetainedAndReclaimReceived(ctx, x, p.User.ID, key, j.Control, j.Data)
 						x.Close()
 						if e != nil {
 							if observe != nil {

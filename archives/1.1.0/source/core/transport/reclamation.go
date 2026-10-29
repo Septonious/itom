@@ -286,7 +286,9 @@ func (i *Inbox) reclaimOne(ctx context.Context) (bool, error) {
 				if err := store.DeletedMany(store.Run(), proofs); err != nil {
 					return false, err
 				}
-				i.session.notifyReclaimed(i.scope.Account, store.StoreID())
+				if i.session != nil {
+					i.session.notifyReclaimed(i.scope.Account, store.StoreID())
+				}
 			}
 			i.mu.Lock()
 			for _, proof := range proofs {
