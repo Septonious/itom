@@ -16,7 +16,9 @@ func TestStartupAllowanceRequiresRealCapacityForFourClientAndSixServerMessages(t
 		t.Run(strconv.FormatUint(free, 10), func(t *testing.T) {
 			ep, _, _ := endpointPolicyFixture(t)
 			store := ep.Service.Authorities["account1"].routes[ControlLedger].store
-			policyOldGrant(t, store, pool.Amount{Bytes: 4096, Messages: 128 - free})
+			if free < 128 {
+				policyOldGrant(t, store, pool.Amount{Bytes: 4096, Messages: 128 - free})
+			}
 			before, _ := store.Held("account1", "12345678")
 			allowance, err := endpointInitialAllowance(store, "account1", "12345678")
 			if free >= 10 && (err != nil || allowance.Messages != 4) {
