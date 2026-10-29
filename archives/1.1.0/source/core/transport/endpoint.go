@@ -752,7 +752,10 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 					// The existing bounded authority queue still limits it.
 					// OpenBound fenced this exact persisted spend before the new
 					// epoch. Only unused allowance is released, never BODY debt.
-					err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
+					err = nil
+					if !e.IssuerClosed {
+						err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
+					}
 					if err == nil && e.Retired && s.Service.historicalLaunchAllowed() {
 						err = s.Service.Authorities[account].Retire(entry.class, e.Offer.Key)
 					}

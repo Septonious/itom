@@ -60,8 +60,29 @@ func TestShortRequestDefersHistoricalLaunchesWithoutDelayingFreshPermissionOrFor
 		t.Fatal(err)
 	}
 	after, err = oldStore.Held("account1", "12345678")
-	if err != nil || after != held {
-		t.Fatal("repeated policy minted or refunded capacity", held, after, err)
+	// Bulk demand intentionally grows a new CONTROL lease from the light
+	// eight-message cap. That allocation must be current-session authority;
+	// the historical offer and original held debt cannot be forgiven.
+	if err != nil || after.Bytes < held.Bytes || after.Messages < held.Messages {
+		t.Fatal("bulk policy forgave original debt", held, after, err)
+	}
+	grants, err := oldStore.ScanGrants(0, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, grant := range grants {
+		if grant.Ref.ID == old.Key.Grant {
+			found = true
+			if grant.Closed || grant.Limit.Bytes != old.Limit.Bytes || grant.Limit.Messages != old.Limit.Messages || grant.Used.Messages != 0 || grant.Released.Messages != 0 {
+				t.Fatal("scheduling changed the historical allocation", grant)
+			}
+		} else if grant.Ref.Scope.Session != current {
+			t.Fatal("bulk expansion minted historical authority", grant)
+		}
+	}
+	if !found {
+		t.Fatal("original historical debt disappeared")
 	}
 }
 

@@ -289,4 +289,23 @@ func TestSurvivingWalletFinalSpendRemainsEssentialDuringFirstRequestGrace(t *tes
 	if err != nil || len(after) != 1 || !after[0].Fenced || after[0].Used != before[0].Used || len(after[0].Pending) != len(before[0].Pending) {
 		t.Fatal("scheduling released original BODY debt", after, err)
 	}
+	if err = dw.Acknowledge(wire.CleanupStatus{Key: offer.Key, Used: before[0].Used, Registered: before[0].Used, Closed: true}); err != nil {
+		t.Fatal(err)
+	}
+	s2, err := NewSession(7, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s2.Close()
+	s2.lastForeground = time.Now()
+	owner.session = s2
+	owner.fences = nil
+	ep.Service.Runtime = &Runtime{session: s2}
+	if err = ep.clientPolicy(context.Background()); err != nil || len(s2.authorityOut) != 0 {
+		t.Fatal("already acknowledged final spend was re-fenced", err, len(s2.authorityOut))
+	}
+	after, _ = dw.Entries()
+	if !after[0].IssuerClosed || after[0].Retired || after[0].Used != before[0].Used {
+		t.Fatal("final spend ack became physical cleanup proof", after)
+	}
 }

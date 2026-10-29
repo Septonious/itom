@@ -39,12 +39,13 @@ var grants = []byte("grants")
 var retiredOffers = []byte("retired_offers")
 
 type Entry struct {
-	Offer   wire.StorageGrant
-	Used    wire.Quota
-	Ack     wire.Quota
-	Fenced  bool
-	Retired bool
-	Pending []wire.UsageReport
+	Offer        wire.StorageGrant
+	Used         wire.Quota
+	Ack          wire.Quota
+	Fenced       bool
+	IssuerClosed bool // authenticated final-spend acknowledgement; never physical cleanup proof
+	Retired      bool
+	Pending      []wire.UsageReport
 }
 type Wallet struct {
 	metrics          commitMetrics
@@ -225,6 +226,9 @@ func openSession(path, user string, store, session wire.ID) (*Wallet, error) {
 					return ErrState
 				}
 				prev = p.Total
+			}
+			if x.IssuerClosed && !x.Fenced {
+				return ErrState
 			}
 			if x.Retired && (!x.Fenced || x.Ack != x.Used || len(x.Pending) != 0) {
 				return ErrState
@@ -514,9 +518,16 @@ func (w *Wallet) Acknowledge(s wire.CleanupStatus) error {
 		if !within(s.Used, x.Used) || s.Closed && (!x.Fenced || s.Used != x.Used) {
 			return ErrState
 		}
+		closedChanged := s.Closed && !x.IssuerClosed
+		if s.Closed {
+			x.IssuerClosed = true
+		}
 		if within(s.Registered, x.Ack) {
 			if x.Fenced && s.Closed && s.Released == x.Used && s.Registered == x.Ack {
 				x.Retired = true
+				return put(b, s.Key.Grant, x)
+			}
+			if closedChanged {
 				return put(b, s.Key.Grant, x)
 			}
 			return nil

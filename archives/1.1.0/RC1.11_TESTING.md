@@ -19,7 +19,11 @@ accounts during a short request. That account's cleanup remains urgent; global
 recovery overrides foreground scheduling when all accounts in a ledger are
 blocked. Original final-spend fences from surviving wallets remain urgent during
 foreground grace; speculative historical re-offers yield from the start of
-the session. Bulk and quiet service continue to recover original capacity.
+the session. The wallet now persists the authenticated final-spend acknowledgement
+(`IssuerClosed`) separately from physical cleanup. This prevents resending
+already acknowledged old fences on each restart. Older wallet files default
+conservatively to unacknowledged; no balance or original spend is reset.
+Bulk and quiet service continue to recover original capacity.
 
 Update BOTH endpoints in place. Run the newly downloaded server executable,
 choose option 11, then option 9. Using the old installed executable for option 11
