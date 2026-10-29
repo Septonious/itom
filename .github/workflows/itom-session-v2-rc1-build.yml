@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.11 with durable restart recovery and connection-scoped fixture shutdown
+name: Build session-v2 RC1.11 with bounded essential recovery and durable restart acknowledgements
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -19,7 +19,7 @@ jobs:
         with: {go-version: "1.27.1", cache: false}
       - name: Source integrity and exact startup plus demand-sized CONTROL reservations
         run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-rc1-11
-      - name: Complete core safety, durable final-spend acknowledgements and twenty persistent restarts
+      - name: Complete core safety, large retained-wallet backlog and twenty persistent restarts
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail

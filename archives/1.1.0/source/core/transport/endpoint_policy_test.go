@@ -309,3 +309,87 @@ func TestSurvivingWalletFinalSpendRemainsEssentialDuringFirstRequestGrace(t *tes
 		t.Fatal("final spend ack became physical cleanup proof", after)
 	}
 }
+
+func TestForegroundFencesOneLargestSurvivingReservationWithoutDrainingOldWallet(t *testing.T) {
+	ep, s, _ := endpointPolicyFixture(t)
+	cs := ep.Service.Authorities["account1"].routes[ControlLedger].store
+	ds := ep.Service.Authorities["account1"].routes[DataLedger].store
+	path := filepath.Join(t.TempDir(), "surviving-control.db")
+	cw, err := wallet.Open(path, "12345678", cs.StoreID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var largest wire.StorageGrant
+	for n := 0; n < 33; n++ {
+		amount := pool.Amount{Bytes: 4096, Messages: 1}
+		if n == 32 {
+			amount.Messages = 8
+		}
+		grant, err := cs.IssueRemote(journal.Scope{Account: "account1", User: "12345678", Session: cw.Session()}, amount)
+		if err != nil {
+			t.Fatal(err)
+		}
+		offer, err := cs.RemoteOffer(grant.Ref)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = cw.Accept(offer); err != nil {
+			t.Fatal(err)
+		}
+		if n == 32 {
+			largest = offer
+		}
+	}
+	before, _ := cs.Held("account1", "12345678")
+	cw.Close()
+	cw, err = wallet.Open(path, "12345678", cs.StoreID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cw.Close()
+	dw, err := wallet.Open(filepath.Join(t.TempDir(), "data.db"), "12345678", ds.StoreID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dw.Close()
+	owner := &AuthorityController{session: s, client: true, recovery: true, account: "account1", user: "12345678", sessionID: cw.Session(), routes: map[LedgerClass]authorityRoute{ControlLedger: {wallet: cw, id: cs.StoreID(), run: cs.Run()}, DataLedger: {wallet: dw, id: ds.StoreID(), run: ds.Run()}}}
+	ep.Roster.wallets = map[string]RosterWallets{"account1": {Control: cw, Data: dw}}
+	ep.Service.Authorities = map[string]*AuthorityController{"account1": owner}
+	ep.Service.Runtime = &Runtime{session: s}
+	s.lastForeground = time.Now()
+	for range 20 {
+		if err = ep.clientPolicy(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(s.authorityOut) != 1 {
+		t.Fatal("field-sized old wallet flooded first request", len(s.authorityOut))
+	}
+	_, message, err := decodeAuthority(s.authorityOut[0].Payload)
+	release, ok := message.(wire.StorageRelease)
+	if err != nil || !ok || release.Key != largest.Key || release.Final.Messages != 0 {
+		t.Fatal("best unused original reservation was not selected", message, err)
+	}
+	if err = cw.Acknowledge(wire.CleanupStatus{Key: largest.Key, Closed: true}); err != nil {
+		t.Fatal(err)
+	}
+	for range 20 {
+		if err = ep.clientPolicy(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(s.authorityOut) != 1 {
+		t.Fatal("acknowledgement reset foreground recovery budget", len(s.authorityOut))
+	}
+	s.lastForeground = time.Now().Add(-openTimeout)
+	if err = ep.clientPolicy(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.authorityOut) <= 1 || len(s.authorityOut) > maxHistoricalAuthorityQueued {
+		t.Fatal("quiet recovery lost progress or bounded admission", len(s.authorityOut))
+	}
+	after, _ := cs.Held("account1", "12345678")
+	if after != before {
+		t.Fatal("scheduling returned capacity without an original issuer acknowledgement", before, after)
+	}
+}

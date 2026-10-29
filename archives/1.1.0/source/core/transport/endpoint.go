@@ -37,17 +37,23 @@ type EndpointOptions struct {
 	Service         RosterServiceOptions
 }
 
+type fenceRoute struct {
+	account string
+	class   LedgerClass
+}
+
 type EndpointSession struct {
-	Service    *RosterService
-	Roster     *RosterResult
-	cancel     context.CancelFunc
-	done       chan struct{}
-	mu         sync.Mutex
-	err        error
-	anchor     *wallet.Wallet
-	requests   map[string]bool
-	reconciled map[wire.QuotaKey]bool
-	closeOnce  sync.Once
+	essentialFences map[fenceRoute]wire.QuotaKey
+	Service         *RosterService
+	Roster          *RosterResult
+	cancel          context.CancelFunc
+	done            chan struct{}
+	mu              sync.Mutex
+	err             error
+	anchor          *wallet.Wallet
+	requests        map[string]bool
+	reconciled      map[wire.QuotaKey]bool
+	closeOnce       sync.Once
 }
 
 func (s *EndpointSession) Done() <-chan struct{} { return s.done }
@@ -739,6 +745,12 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			historyAllowed := s.Service.historicalLaunchAllowed()
+			route := fenceRoute{account, entry.class}
+			urgent := wire.QuotaKey{}
+			if !historyAllowed && s.essentialFences[route] == (wire.QuotaKey{}) {
+				urgent = largestUnusedHistoricalFence(rows, entry.w.Session())
+			}
 			usable := 0
 			for _, e := range rows {
 				if e.Offer.Key.Session == entry.w.Session() && !e.Fenced && e.Used.Messages < e.Offer.Limit.Messages && e.Used.Bytes < e.Offer.Limit.Bytes {
@@ -753,10 +765,16 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 					// OpenBound fenced this exact persisted spend before the new
 					// epoch. Only unused allowance is released, never BODY debt.
 					err = nil
-					if !e.IssuerClosed {
+					if !e.IssuerClosed && !e.Retired && (historyAllowed || e.Offer.Key == urgent) {
 						err = s.Service.Authorities[account].Fence(ctx, entry.class, e.Offer.Key)
+						if err == nil && !historyAllowed {
+							if s.essentialFences == nil {
+								s.essentialFences = map[fenceRoute]wire.QuotaKey{}
+							}
+							s.essentialFences[route] = e.Offer.Key
+						}
 					}
-					if err == nil && e.Retired && s.Service.historicalLaunchAllowed() {
+					if err == nil && e.Retired && historyAllowed {
 						err = s.Service.Authorities[account].Retire(entry.class, e.Offer.Key)
 					}
 					if err != nil && !errors.Is(err, ErrCapacity) && !errors.Is(err, wallet.ErrState) {
@@ -783,4 +801,27 @@ func (s *EndpointSession) clientPolicy(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// During short foreground work, return at most one surviving reservation per
+// account/ledger. Prefer the largest unused message allowance (then bytes and
+// newest grant). A field-sized old wallet must not become a new control flood.
+// Quiet/bulk or actual all-account pressure restores the original bounded work.
+func largestUnusedHistoricalFence(rows []wallet.Entry, current wire.ID) wire.QuotaKey {
+	var key wire.QuotaKey
+	var messages, bytes uint64
+	for _, entry := range rows {
+		if entry.Offer.Key.Session == current || entry.IssuerClosed || entry.Retired {
+			continue
+		}
+		m := entry.Offer.Limit.Messages - entry.Used.Messages
+		b := entry.Offer.Limit.Bytes - entry.Used.Bytes
+		if m == 0 || b == 0 {
+			continue
+		}
+		if key == (wire.QuotaKey{}) || m > messages || m == messages && (b > bytes || b == bytes && entry.Offer.Key.Grant > key.Grant) {
+			key, messages, bytes = entry.Offer.Key, m, b
+		}
+	}
+	return key
 }

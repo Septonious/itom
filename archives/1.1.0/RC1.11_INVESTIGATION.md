@@ -30,7 +30,11 @@ That failure is preserved under verification/rc1-10/POSTRELEASE_BEFORE.zip.
    bodies, unreceived SERVER mail and incompatible namespaces remain ineligible.
 5. Final-spend fences from surviving wallets were deferred as optional history,
    keeping unused reservations held. Their exact original final spend remains
-   urgent and bounded; speculative re-offers yield from session startup.
+   urgent and bounded: at most one largest unused reservation per account and
+   ledger during first-request grace. Speculative re-offers yield from session
+   startup. An intermediate all-fences-urgent variant passed twenty restarts
+   but failed HTTPS against 96 small old reservations; that failed hosted run
+   is retained separately, and the final scheduling correction is assessed anew.
 6. Wallet acknowledgement discarded the server's Closed flag until all physical
    cleanup completed. Repeated starts consequently resent already acknowledged
    fences and generated increasing status traffic, eventually delaying TLS.

@@ -18,7 +18,8 @@ One account's quota pressure no longer unleashes historical traffic on healthy
 accounts during a short request. That account's cleanup remains urgent; global
 recovery overrides foreground scheduling when all accounts in a ledger are
 blocked. Original final-spend fences from surviving wallets remain urgent during
-foreground grace; speculative historical re-offers yield from the start of
+foreground grace, with at most one largest unused reservation per account and
+ledger for that short-request window; speculative historical re-offers yield from the start of
 the session. The wallet now persists the authenticated final-spend acknowledgement
 (`IssuerClosed`) separately from physical cleanup. This prevents resending
 already acknowledged old fences on each restart. Older wallet files default
