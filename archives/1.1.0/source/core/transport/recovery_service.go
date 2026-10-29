@@ -3,6 +3,7 @@ package transport
 import (
 	"errors"
 	"itom.local/core/journal"
+	"itom.local/core/pool"
 	"time"
 )
 
@@ -87,4 +88,17 @@ func (r *Runtime) permissionPressureByAccount() map[string]map[LedgerClass]bool 
 		owner.mu.Unlock()
 	}
 	return pressure
+}
+
+// Short exchanges need a bounded control lease, not a bulk-sized reservation
+// left behind on every VPN restart. This caps only new CONTROL reservations;
+// actual bulk demand retains the original allowance and DATA is unchanged.
+func (s *Session) controlAllowance(allowance pool.Amount) pool.Amount {
+	s.mu.Lock()
+	bulk := s.buffered > uint64(s.limits.InteractiveBytes) || s.received > uint64(s.limits.InteractiveBytes)
+	s.mu.Unlock()
+	if !bulk {
+		allowance.Messages = min(allowance.Messages, 8)
+	}
+	return allowance
 }

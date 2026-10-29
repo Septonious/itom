@@ -6,7 +6,9 @@ because confirmed startup and roster mail never entered normal reclamation.
 The new sealed handoff carries only authenticated, fully observed current-startup
 cleanup candidates. Original per-body receipts, exact UID EXPUNGE and independent
 same-incarnation absence checks still gate every release of physical debt.
-Unknown and unobserved historical debt remains charged.
+Unknown and unobserved historical debt remains charged. Startup reserves exactly
+four CLIENT messages. Light-load CONTROL leases are capped at eight messages;
+actual bulk demand keeps the original allowance. DATA quotas are unchanged.
 
 One account's quota pressure no longer unleashes historical traffic on healthy
 accounts during a short request. That account's cleanup remains urgent; global

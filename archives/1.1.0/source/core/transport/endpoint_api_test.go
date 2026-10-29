@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -26,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	bolt "go.etcd.io/bbolt"
 	"itom.local/core/journal"
 	"itom.local/core/mailbox"
 	"itom.local/core/pool"
@@ -68,6 +70,7 @@ func TestEndpointServerProcessHelper(t *testing.T) {
 		return conn.(*net.TCPConn), true, nil
 	})
 	if err != nil && !errors.Is(err, context.Canceled) {
+		logOriginalJournalCapacity(t, os.Getenv("ITOM_RC1_TEST_STATE"))
 		t.Fatal(err)
 	}
 }
@@ -764,6 +767,9 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		if scenario.retainedBacklog > 0 {
 			t.Logf("cold_start_session=%d elapsed_ms=%d measured_data_rtt_ms=%d", round, time.Since(clientBegin).Milliseconds(), client.Probe().RTTMillis)
 		}
+		if scenario.rounds >= 20 {
+			t.Logf("persistent_restart=%d measured_data_rtt_ms=%d", round, client.Probe().RTTMillis)
+		}
 		if len(progress) == 0 || progress[0].Stage != "PROFILE" || progress[len(progress)-1].Stage != "READY" {
 			t.Fatal("startup did not report real phase boundaries", progress)
 		}
@@ -874,3 +880,74 @@ func (b *lockedTestBuffer) Write(p []byte) (int, error) {
 	return b.b.Write(p)
 }
 func (b *lockedTestBuffer) String() string { b.mu.Lock(); defer b.mu.Unlock(); return b.b.String() }
+
+// Read-only failure evidence after ServeManaged has closed its original stores.
+// Only synthetic test counters are logged, never config, keys or mail bodies.
+func logOriginalJournalCapacity(t *testing.T, root string) {
+	t.Helper()
+	filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil || entry.IsDir() || (entry.Name() != "control.db" && entry.Name() != "data.db") {
+			return nil
+		}
+		db, err := bolt.Open(path, 0600, &bolt.Options{ReadOnly: true, Timeout: time.Millisecond})
+		if err != nil {
+			return nil
+		}
+		defer db.Close()
+		db.View(func(tx *bolt.Tx) error {
+			meta := tx.Bucket([]byte("meta"))
+			if meta == nil {
+				return nil
+			}
+			counts := map[string]uint64{}
+			for _, key := range []string{"grant_count", "attempt_count", "last_grant", "last_attempt"} {
+				raw := meta.Get([]byte(key))
+				if len(raw) == 8 {
+					counts[key] = binary.BigEndian.Uint64(raw)
+				}
+			}
+			var grants, attempts []map[string]any
+			for _, item := range []struct {
+				name string
+				out  *[]map[string]any
+			}{{"grants", &grants}, {"attempts", &attempts}} {
+				bucket := tx.Bucket([]byte(item.name))
+				if bucket == nil {
+					continue
+				}
+				bucket.ForEach(func(_, raw []byte) error {
+					var row map[string]any
+					if json.Unmarshal(raw, &row) == nil {
+						*item.out = append(*item.out, row)
+					}
+					return nil
+				})
+			}
+			var limit, heldBytes, heldMessages uint64
+			for _, g := range grants {
+				amount, _ := g["Limit"].(map[string]any)
+				released, _ := g["Released"].(map[string]any)
+				if b, ok := amount["Bytes"].(float64); ok {
+					heldBytes += uint64(b)
+				}
+				if b, ok := released["Bytes"].(float64); ok {
+					heldBytes -= uint64(b)
+				}
+				if m, ok := amount["Messages"].(float64); ok {
+					heldMessages += uint64(m)
+				}
+				if m, ok := released["Messages"].(float64); ok {
+					heldMessages -= uint64(m)
+				}
+			}
+			var cfg journal.Config
+			if json.Unmarshal(meta.Get([]byte("config")), &cfg) == nil && len(cfg.Accounts) > 0 {
+				limit = cfg.Accounts[0].Limit.Messages
+			}
+			relative, _ := filepath.Rel(root, path)
+			t.Logf("original_journal_capacity path=%s counts=%v held_bytes=%d held_messages=%d original_message_limit=%d attempts=%d", relative, counts, heldBytes, heldMessages, limit, len(attempts))
+			return nil
+		})
+		return nil
+	})
+}

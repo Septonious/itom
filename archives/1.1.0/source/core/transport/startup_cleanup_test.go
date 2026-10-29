@@ -12,7 +12,7 @@ import (
 )
 
 func TestStartupAllowanceRequiresRealCapacityForFourClientAndSixServerMessages(t *testing.T) {
-	for _, free := range []uint64{16, 15, 11, 10, 9} {
+	for _, free := range []uint64{128, 16, 15, 11, 10, 9} {
 		t.Run(strconv.FormatUint(free, 10), func(t *testing.T) {
 			ep, _, _ := endpointPolicyFixture(t)
 			store := ep.Service.Authorities["account1"].routes[ControlLedger].store
@@ -113,5 +113,23 @@ func TestStartupCleanupCandidatesRemainScopedAndNeverSupplyAbsenceProof(t *testi
 	}
 	if err = store.Audit(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestLightControlReservationCannotLimitBulkOrDataCapacity(t *testing.T) {
+	_, s, _ := endpointPolicyFixture(t)
+	original := pool.Amount{Bytes: 1 << 20, Messages: 32}
+	light := s.controlAllowance(original)
+	if light.Bytes != original.Bytes || light.Messages != 8 {
+		t.Fatal("light CONTROL lease incorrectly sized", light)
+	}
+	s.buffered = uint64(s.limits.InteractiveBytes) + 1
+	if s.controlAllowance(original) != original {
+		t.Fatal("bulk sender lost original CONTROL capacity")
+	}
+	s.buffered = 0
+	s.received = uint64(s.limits.InteractiveBytes) + 1
+	if s.controlAllowance(original) != original {
+		t.Fatal("bulk receiver lost original CONTROL capacity")
 	}
 }

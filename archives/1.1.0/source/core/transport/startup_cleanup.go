@@ -75,6 +75,7 @@ func (i *Inbox) startupCleanupPending() bool {
 }
 
 // Startup needs three CLIENT Noise frames and one roster acknowledgement.
+// Reserve exactly those four messages, rather than a bulk-sized unused lease.
 // Rounding a quarter of remaining quota down below four must not turn valid
 // remaining capacity into a protocol error. The issuer still atomically checks
 // the ORIGINAL limit; keep six message slots for invitation/server startup.
@@ -97,5 +98,6 @@ func endpointInitialAllowance(store *journal.Store, account, user string) (pool.
 		}
 		allowance.Messages = 4
 	}
+	allowance.Messages = 4
 	return allowance, nil
 }
