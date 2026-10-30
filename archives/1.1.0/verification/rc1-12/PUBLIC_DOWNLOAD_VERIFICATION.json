@@ -1,0 +1,23 @@
+{
+  "tag": "v1.1.0-rc1.12",
+  "apk": {
+    "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.12/ITOM-1.1.0-RC1.12.apk",
+    "full_download_verified": true,
+    "bytes": 54595924,
+    "sha256": "783d330e03aa4eae365cd3784c44abda919239b31afd60c5a7771d04e3bf57e4"
+  },
+  "servers": [
+    {
+      "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.12/ITOM-1.1.0-RC1.12-linux-amd64.bin",
+      "status": 200,
+      "bytes": 13885840,
+      "published_digest_verified_by_publisher": true
+    },
+    {
+      "url": "https://github.com/Septonious/itom/releases/download/v1.1.0-rc1.12/ITOM-1.1.0-RC1.12-linux-arm64.bin",
+      "status": 200,
+      "bytes": 12735819,
+      "published_digest_verified_by_publisher": true
+    }
+  ]
+}
