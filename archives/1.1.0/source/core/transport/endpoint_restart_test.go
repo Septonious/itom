@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/netip"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -24,7 +25,15 @@ func TestEndpointRestartsPreserveWalletSpendAndClearedWalletCannotReleaseUnknown
 	key := bytes.Repeat([]byte{17}, 32)
 	control := accountIssuer(t, filepath.Join(root, "control.db"), "account1", []string{"fast", "bulk"})
 	data := accountIssuer(t, filepath.Join(root, "data.db"), "account1", []string{"fast", "bulk"})
-	boxes := []*sharedMailbox{{keywords: true, reclamation: true}, {keywords: true, reclamation: true}}
+	// Every fixture socket pins its owner's explicit stop generation. A later
+	// round cannot turn a previous intentional shutdown into a live APPEND
+	// failure. No interrupted APPEND is accepted before the owner stops.
+	var shutdownGeneration atomic.Uint64
+	connectionShutdown := func() func() bool {
+		opened := shutdownGeneration.Load()
+		return func() bool { return shutdownGeneration.Load() > opened }
+	}
+	boxes := []*sharedMailbox{{keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown}, {keywords: true, reclamation: true, allowCloseForConnection: connectionShutdown}}
 	template := transport.InvitationTemplate{Binding: secure.Binding{Server: wire.ID{1}, Pair: wire.ID{2}, User: "12345678", Epoch: 1, ConfigHash: [32]byte{5}}, Generation: 7}
 	plan := transport.RosterPlan{Accounts: []transport.RosterAccount{{Account: "account1", FastFolder: "fast", BulkFolder: "bulk"}}, ClientBudget: transport.RuntimeBudget{Connections: 2, PerAccount: 2}, ServerBudget: transport.RuntimeBudget{Connections: 2, PerAccount: 2}}
 	var previous []wallet.Entry
@@ -114,6 +123,7 @@ func TestEndpointRestartsPreserveWalletSpendAndClearedWalletCannotReleaseUnknown
 		if len(previous) == 0 {
 			t.Fatal("no actual current-session DATA offer")
 		}
+		shutdownGeneration.Add(1)
 		if e = client.Close(); e != nil && !errors.Is(e, context.Canceled) {
 			t.Fatal(e)
 		}
