@@ -135,7 +135,12 @@ func TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip(t *t
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 128, keywordBytes: 32})
 }
 
+func TestHistoricalLocatorMismatchCannotPreventRendezvousDATAAndHTTPS(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 1, historicalLocatorConflict: true, keywordBytes: 32})
+}
+
 type publicEndpointCase struct {
+	historicalLocatorConflict          bool
 	retainedBacklog                    int
 	splitCapacity                      bool
 	idleTimeout                        time.Duration
@@ -511,6 +516,11 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				if e = store.Complete(attempt.Ref, journal.Accepted); e != nil {
 					t.Fatal(e)
 				}
+				if scenario.historicalLocatorConflict {
+					if e = store.Observe(attempt.Ref, store.Run(), journal.Observation{Account: a.ID, Folder: folder, EncodedBytes: usage.Attempt.EncodedBytes, Location: journal.Location{UIDValidity: 9, UID: uint32(50000 + n)}, Decoded: body}); e != nil {
+						t.Fatal(e)
+					}
+				}
 			}
 			before, e := store.Held(a.ID, p.User.ID)
 			if e != nil {
@@ -841,6 +851,21 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 		}
 		if !bytes.Contains(trace, []byte(`"Stage":"rendezvous"`)) || !bytes.Contains(trace, []byte(`"Stage":"imap_selected"`)) {
 			t.Fatal("production server did not retain real startup stages")
+		}
+		if scenario.historicalLocatorConflict {
+			diagnosed := false
+			for _, line := range bytes.Split(trace, []byte("\n")) {
+				var row struct {
+					Stage string
+					IMAP  *transport.ExecutorSnapshot
+				}
+				if json.Unmarshal(line, &row) == nil && row.Stage == "inventory_complete" && row.IMAP != nil && row.IMAP.RetainedInventory.ProofConflicts > 0 {
+					diagnosed = true
+				}
+			}
+			if !diagnosed {
+				t.Fatal("real startup did not expose the quarantined inventory conflict")
+			}
 		}
 		if bytes.Contains(trace, []byte(p.User.Key)) || bytes.Contains(trace, []byte("fixture-only")) {
 			t.Fatal("server trace exposed private input")

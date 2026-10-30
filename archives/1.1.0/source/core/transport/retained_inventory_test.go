@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"itom.local/core/journal"
 	"reflect"
 	"sort"
 	"strconv"
@@ -144,5 +146,16 @@ func TestRetainedReadHintsRequireFullMACUserFolderAndCurrentAuthenticationKey(t 
 	}
 	if len(i.seen) != 0 {
 		t.Fatal("old authentication key authorized a current skip")
+	}
+}
+
+func TestRetainedProofDeferralCannotHidePoisonedCorruptOrReownedJournals(t *testing.T) {
+	for _, fatal := range []error{context.Canceled, context.DeadlineExceeded, journal.ErrPoisoned, journal.ErrCorrupt, journal.ErrGeneration} {
+		for _, optional := range []error{journal.ErrState, journal.ErrScope, journal.ErrMissing, ErrClosed, ErrUnknown, ErrRefused} {
+			err := errors.Join(optional, fatal)
+			if deferRetainedCleanup(err) || retainedProofConflict(err) {
+				t.Fatal("fatal original-journal state became optional cleanup", err)
+			}
+		}
 	}
 }

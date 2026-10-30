@@ -368,6 +368,18 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					t.Error("unsupported fixture UID command")
 					return
 				}
+				if strings.Contains(strings.Join(fields[4:], " "), "FLAGS") {
+					m.mu.Lock()
+					fault := m.reclaimFault
+					m.mu.Unlock()
+					if fault == "flags_refused" {
+						fmt.Fprintf(conn, "%s NO flags refused\r\n", tag(line))
+						continue
+					}
+					if fault == "lost_flags_tag" {
+						return
+					}
+				}
 				selected := make(map[uint32]bool, len(uids))
 				for _, uid := range uids {
 					selected[uid] = true

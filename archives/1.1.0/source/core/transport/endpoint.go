@@ -81,6 +81,11 @@ func InventoryRetained(ctx context.Context, x *Executor, user string, key []byte
 }
 
 func visitBodies(ctx context.Context, x *Executor, visit func(Body) (bool, error)) error {
+	return visitBodiesWithStage(ctx, x, visit, func(string) {})
+}
+
+func visitBodiesWithStage(ctx context.Context, x *Executor, visit func(Body) (bool, error), stage func(string)) error {
+	stage("enumerate")
 	command, err := x.enumerateInbox(ctx, false)
 	if err != nil {
 		return err
@@ -90,6 +95,7 @@ func visitBodies(ctx context.Context, x *Executor, visit func(Body) (bool, error
 		return err
 	}
 	for _, m := range meta {
+		stage("fetch_body")
 		command, err = x.fetchInbox(ctx, m.UID)
 		if err != nil {
 			return err
@@ -99,6 +105,7 @@ func visitBodies(ctx context.Context, x *Executor, visit func(Body) (bool, error
 			return err
 		}
 		for _, body := range bodies {
+			stage("authenticate_body")
 			stop, err := visit(body)
 			clear(body.Bytes)
 			if err != nil {

@@ -81,6 +81,12 @@ func startupFailureCode(err error) string {
 		return "TIMEOUT"
 	case errors.Is(err, journal.ErrConfig):
 		return "JOURNAL_CONFIG_MISMATCH"
+	case errors.Is(err, journal.ErrState):
+		return "JOURNAL_STATE_CONFLICT"
+	case errors.Is(err, journal.ErrScope):
+		return "JOURNAL_SCOPE_MISMATCH"
+	case errors.Is(err, journal.ErrMissing):
+		return "JOURNAL_ORIGINAL_RECORD_MISSING"
 	case errors.Is(err, journal.ErrLimit):
 		return "STORAGE_QUOTA_EXHAUSTED"
 	case errors.Is(err, journal.ErrPoisoned):
@@ -116,6 +122,7 @@ func startupFailureCode(err error) string {
 }
 
 type selectionEvent struct {
+	IMAP                          *transport.ExecutorSnapshot
 	Account, Stage, Role, Failure string
 	UIDPlus, Keywords             bool
 }

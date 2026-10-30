@@ -46,33 +46,34 @@ type CommandTiming struct {
 }
 
 type ExecutorSnapshot struct {
-	HistoricalReadHints  int           `json:"historical_read_hints"`
-	PendingTags          int           `json:"pending_tags"`
-	WriterWaiters        int           `json:"writer_waiters"`
-	FetchWaiters         int           `json:"fetch_waiters"`
-	FetchActive          bool          `json:"fetch_active"`
-	FlagsFetchActive     bool          `json:"flags_fetch_active"`
-	FetchResponseBytes   int           `json:"fetch_response_bytes"`
-	ConcurrentFetchPairs uint64        `json:"concurrent_fetch_pairs"`
-	LiteralActive        bool          `json:"literal_active"`
-	IdleActive           bool          `json:"idle_active"`
-	Closed               bool          `json:"closed"`
-	UIDPlusSupported     bool          `json:"uidplus_supported"`
-	KeywordsSupported    bool          `json:"keywords_supported"`
-	IdleSupported        bool          `json:"idle_supported"`
-	Failure              string        `json:"failure,omitempty"`
-	CloseReason          string        `json:"close_reason,omitempty"`
-	CloseCommands        []string      `json:"close_commands,omitempty"`
-	CapacityRefusals     uint64        `json:"capacity_refusals"`
-	WriterWait           TimingSummary `json:"writer_wait"`
-	Append               CommandTiming `json:"append"`
-	Fetch                CommandTiming `json:"fetch"`
-	Inventory            CommandTiming `json:"inventory"`
-	Noop                 CommandTiming `json:"noop"`
-	Idle                 CommandTiming `json:"idle"`
-	Flags                CommandTiming `json:"flags"`
-	Store                CommandTiming `json:"store"`
-	Expunge              CommandTiming `json:"expunge"`
+	RetainedInventory    RetainedInventoryStats `json:"retained_inventory"`
+	HistoricalReadHints  int                    `json:"historical_read_hints"`
+	PendingTags          int                    `json:"pending_tags"`
+	WriterWaiters        int                    `json:"writer_waiters"`
+	FetchWaiters         int                    `json:"fetch_waiters"`
+	FetchActive          bool                   `json:"fetch_active"`
+	FlagsFetchActive     bool                   `json:"flags_fetch_active"`
+	FetchResponseBytes   int                    `json:"fetch_response_bytes"`
+	ConcurrentFetchPairs uint64                 `json:"concurrent_fetch_pairs"`
+	LiteralActive        bool                   `json:"literal_active"`
+	IdleActive           bool                   `json:"idle_active"`
+	Closed               bool                   `json:"closed"`
+	UIDPlusSupported     bool                   `json:"uidplus_supported"`
+	KeywordsSupported    bool                   `json:"keywords_supported"`
+	IdleSupported        bool                   `json:"idle_supported"`
+	Failure              string                 `json:"failure,omitempty"`
+	CloseReason          string                 `json:"close_reason,omitempty"`
+	CloseCommands        []string               `json:"close_commands,omitempty"`
+	CapacityRefusals     uint64                 `json:"capacity_refusals"`
+	WriterWait           TimingSummary          `json:"writer_wait"`
+	Append               CommandTiming          `json:"append"`
+	Fetch                CommandTiming          `json:"fetch"`
+	Inventory            CommandTiming          `json:"inventory"`
+	Noop                 CommandTiming          `json:"noop"`
+	Idle                 CommandTiming          `json:"idle"`
+	Flags                CommandTiming          `json:"flags"`
+	Store                CommandTiming          `json:"store"`
+	Expunge              CommandTiming          `json:"expunge"`
 }
 
 // Snapshot reads counters only. It neither issues a probe nor spends mailbox
@@ -80,7 +81,7 @@ type ExecutorSnapshot struct {
 func (e *Executor) Snapshot() ExecutorSnapshot {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	s := ExecutorSnapshot{HistoricalReadHints: e.historicalReadHints, PendingTags: len(e.pending), WriterWaiters: e.writerWaiters, FetchWaiters: e.fetchWaiters,
+	s := ExecutorSnapshot{RetainedInventory: e.retainedStats, HistoricalReadHints: e.historicalReadHints, PendingTags: len(e.pending), WriterWaiters: e.writerWaiters, FetchWaiters: e.fetchWaiters,
 		FetchResponseBytes: e.fetchBytes, ConcurrentFetchPairs: e.fetchPairs,
 		Closed: e.closed != nil, UIDPlusSupported: e.uidPlus, KeywordsSupported: e.keywords, IdleSupported: e.idleSupported, CapacityRefusals: e.capacityRefusals, WriterWait: e.writerWait,
 		Append: e.timing[commandAppend], Fetch: e.timing[commandBody], Inventory: e.timing[commandInventory], Noop: e.timing[commandNoop], Idle: e.timing[commandIdle], Flags: e.timing[commandFlags], Store: e.timing[commandStore], Expunge: e.timing[commandExpunge]}

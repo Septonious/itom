@@ -44,13 +44,17 @@ func serveProfile(ctx context.Context, p servercfg.Profile, root string, log fun
 		if failure != nil {
 			reason = startupFailureCode(failure)
 		}
-		raw, _ := json.Marshal(map[string]any{
+		fields := map[string]any{
 			"Event": "startup", "Revision": TransportRevision, "Stage": stage,
 			"User": p.User.ID, "ConfigHash": binding, "Account": event.Account,
 			"MailboxRole": event.Role, "UIDPlus": event.UIDPlus,
 			"PermanentKeywords": event.Keywords, "Failure": reason,
 			"SampledAtMS": time.Now().UnixMilli(),
-		})
+		}
+		if event.IMAP != nil {
+			fields["IMAP"] = event.IMAP
+		}
+		raw, _ := json.Marshal(fields)
 		if e := trace.record(json.RawMessage(raw)); e != nil && log != nil {
 			log("event=v2_diagnostics state=write_failed")
 		}

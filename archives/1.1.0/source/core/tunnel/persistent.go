@@ -244,11 +244,16 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							break
 						}
 						retained[folder], e = transport.InspectRetainedAndReclaimReceived(ctx, x, p.User.ID, key, j.Control, j.Data)
+						state := x.Snapshot()
+						if observe != nil {
+							stage := "inventory_complete"
+							if e != nil {
+								stage = "inventory_failed"
+							}
+							observe(selectionEvent{Account: a.Account, Stage: stage, Role: "retained", Failure: startupFailureCode(e), IMAP: &state})
+						}
 						x.Close()
 						if e != nil {
-							if observe != nil {
-								observe(selectionEvent{Account: a.Account, Stage: "inventory_failed", Role: "retained", Failure: startupFailureCode(e)})
-							}
 							failure = e
 							break
 						}

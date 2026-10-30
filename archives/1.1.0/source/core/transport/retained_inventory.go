@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"itom.local/core/journal"
+	"itom.local/core/mailbox"
 	"sort"
 
 	"itom.local/core/wire"
@@ -35,13 +36,36 @@ func InspectRetainedAndReclaimReceived(ctx context.Context, x *Executor, user st
 	return inspectRetained(ctx, x, user, key, stores)
 }
 
-func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, stores []*journal.Store) (*RetainedInventory, error) {
+func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, stores []*journal.Store) (result *RetainedInventory, resultErr error) {
 	if x == nil || len(key) != 32 || user == "" {
 		return nil, ErrProtocol
 	}
+	x.mu.Lock()
+	x.retainedStats = RetainedInventoryStats{}
+	x.mu.Unlock()
+	stage := func(value string) { x.mu.Lock(); x.retainedStats.Stage = value; x.mu.Unlock() }
+	defer func() {
+		x.mu.Lock()
+		defer x.mu.Unlock()
+		if resultErr != nil {
+			x.retainedStats.Failure = retainedFailureCode(resultErr)
+		} else {
+			x.retainedStats.Stage = "complete"
+		}
+	}()
 	snapshot := &RetainedInventory{account: x.account, folder: x.mailbox, user: user, validity: x.validity, keyHash: sha256.Sum256(key), sessions: map[uint32]wire.ID{}}
 	candidates := map[uint32]*reclaimBody{}
-	err := visitBodies(ctx, x, func(body Body) (bool, error) {
+	references := map[journal.AttemptRef]uint32{}
+	ambiguous := map[journal.AttemptRef]bool{}
+	conflict := func(ref journal.AttemptRef, err error) {
+		ambiguous[ref] = true
+		delete(candidates, references[ref])
+		x.mu.Lock()
+		x.retainedStats.ProofConflicts++
+		x.retainedStats.DeferredFailure = retainedFailureCode(err)
+		x.mu.Unlock()
+	}
+	err := visitBodiesWithStage(ctx, x, func(body Body) (bool, error) {
 		e, err := openMailboxEnvelope(body.Bytes, key)
 		if err != nil {
 			return false, err
@@ -55,6 +79,9 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 			return false, ErrCapacity
 		}
 		snapshot.sessions[body.UID] = u.Key.Session
+		x.mu.Lock()
+		x.retainedStats.ObservedBodies++
+		x.mu.Unlock()
 		if e.class != 0 && x.uidPlus && x.keywords {
 			for _, store := range stores {
 				if store == nil || u.Key.Store != store.StoreID() {
@@ -70,20 +97,54 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 				if store.LocalPublicationActive(ref) {
 					continue
 				}
+				if uid, ok := references[ref]; ok && uid != body.UID {
+					conflict(ref, journal.ErrState)
+					continue
+				}
+				references[ref] = body.UID
+				if ambiguous[ref] {
+					continue
+				}
 				observation := journal.Observation{Account: x.account, Folder: x.mailbox, EncodedBytes: e.charge, Location: journal.Location{UIDValidity: x.validity, UID: body.UID}, Decoded: e.body}
+				stage("journal_observe")
 				if err = store.Observe(ref, store.Run(), observation); err != nil {
+					if retainedProofConflict(err) {
+						conflict(ref, err)
+						continue
+					}
 					return false, err
 				}
 				candidates[body.UID] = &reclaimBody{store: store, ref: ref, location: observation.Location, account: x.account, folder: x.mailbox, receiptKeyword: receiptKeyword(e.body, x.validity, body.UID, key)}
 			}
 		}
 		return false, nil
-	})
+	}, stage)
 	if err != nil {
 		return nil, err
 	}
+	stage("cleanup_receipts")
+	x.mu.Lock()
+	x.retainedStats.CleanupCandidates = uint64(len(candidates))
+	x.mu.Unlock()
+	deferred := false
 	if err = reclaimReceivedInventory(ctx, x, candidates, snapshot); err != nil {
-		return nil, err
+		// The full authenticated inventory already completed. A failed optional
+		// proof cannot authorize a refund or block the planned service socket.
+		// Cancellation, poisoned/corrupt journals and unclassified errors stay fatal.
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if !deferRetainedCleanup(err) {
+			return nil, err
+		}
+		deferred = true
+		x.mu.Lock()
+		x.retainedStats.CleanupDeferred = true
+		x.retainedStats.DeferredFailure = retainedFailureCode(err)
+		x.mu.Unlock()
+	}
+	if deferred && x.Snapshot().Closed {
+		return snapshot, nil
 	}
 	if err = x.AdoptRetainedInventory(snapshot); err != nil {
 		return nil, err
@@ -214,4 +275,42 @@ func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[u
 		}
 	}
 	return nil
+}
+
+// Fixed labels/counters only. No provider text, UID, destination, BODY or key.
+type RetainedInventoryStats struct {
+	Stage             string `json:"stage,omitempty"`
+	Failure           string `json:"failure,omitempty"`
+	DeferredFailure   string `json:"deferred_failure,omitempty"`
+	ObservedBodies    uint64 `json:"observed_bodies"`
+	CleanupCandidates uint64 `json:"cleanup_candidates"`
+	ProofConflicts    uint64 `json:"proof_conflicts"`
+	CleanupDeferred   bool   `json:"cleanup_deferred"`
+}
+
+func retainedFailureCode(err error) string {
+	for _, known := range []error{context.Canceled, context.DeadlineExceeded, mailbox.ErrScope, mailbox.ErrLimit, wire.ErrFormat, wire.ErrLimit, wire.ErrVersion, wire.ErrDataEnvelopeDigest, ErrRefused} {
+		if errors.Is(err, known) {
+			return known.Error()
+		}
+	}
+	return serviceFailure(err)
+}
+func retainedProofConflict(err error) bool {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, journal.ErrPoisoned) || errors.Is(err, journal.ErrCorrupt) || errors.Is(err, journal.ErrGeneration) {
+		return false
+	}
+	return errors.Is(err, journal.ErrState) || errors.Is(err, journal.ErrScope) || errors.Is(err, journal.ErrMissing)
+}
+
+func deferRetainedCleanup(err error) bool {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, journal.ErrPoisoned) || errors.Is(err, journal.ErrCorrupt) || errors.Is(err, journal.ErrGeneration) {
+		return false
+	}
+	for _, known := range []error{ErrRefused, ErrUnknown, ErrClosed, ErrProtocol, ErrCapacity, journal.ErrState, journal.ErrScope, journal.ErrMissing} {
+		if errors.Is(err, known) {
+			return true
+		}
+	}
+	return false
 }

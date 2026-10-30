@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"itom.local/core/journal"
 	"net"
 	"os"
 	"path/filepath"
@@ -88,5 +90,14 @@ func TestServerTraceRotatesConcurrentWritersWithinBoundedPrivateFiles(t *testing
 	}
 	if _, err := os.Stat(filepath.Join(off.root, "transport-trace.jsonl")); !os.IsNotExist(err) {
 		t.Fatal("disabled trace wrote a file", err)
+	}
+}
+
+func TestInventoryJournalFailuresHavePreciseSecretFreeStartupReasons(t *testing.T) {
+	for err, expected := range map[error]string{journal.ErrState: "JOURNAL_STATE_CONFLICT", journal.ErrScope: "JOURNAL_SCOPE_MISMATCH", journal.ErrMissing: "JOURNAL_ORIGINAL_RECORD_MISSING", journal.ErrPoisoned: "JOURNAL_IO_UNCERTAIN", journal.ErrCorrupt: "JOURNAL_CORRUPT"} {
+		wrapped := fmt.Errorf("private-provider-password-private.example: %w", err)
+		if actual := startupFailureCode(wrapped); actual != expected || strings.Contains(actual, "private") {
+			t.Fatal("specific journal cause hidden or raw provider text leaked", actual)
+		}
 	}
 }

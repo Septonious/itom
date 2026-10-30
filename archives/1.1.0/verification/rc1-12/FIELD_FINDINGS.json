@@ -1,0 +1,15 @@
+{
+  "client_revision": "itom-1-1-0-rc1-11",
+  "server_revision": "itom-1-1-0-rc1-11",
+  "client_selected_connections": 20,
+  "client_total_connections": 20,
+  "client_last_phase": "REQUEST",
+  "client_snapshot_elapsed_ms": 53002,
+  "server_rc11_start_attempts": 4,
+  "server_inventory_failures_before_capture": 3,
+  "server_primary_failure_class": "LOCAL_OR_SESSION_FAILURE",
+  "config_hashes_match": true,
+  "underlying_field_error_confirmed": false,
+  "reproduced_fault": "original local BODY observed under another UID or duplicated under a second UID aborts RC1.11 inventory with JOURNAL_STATE, classified LOCAL_OR_SESSION_FAILURE",
+  "uploaded_user_archives_included": false
+}
