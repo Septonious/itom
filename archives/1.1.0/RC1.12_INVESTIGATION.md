@@ -44,7 +44,18 @@ fixture treated an APPEND interrupted by its own intentional shutdown as a live
 failure. Its sockets now pin the owner's stop generation, as the existing native
 fixture already did. Twenty repeats passed after that test-only correction.
 Incomplete APPENDs before the declared owner stop are still errors. The complete
-suite is rerun for the final source; the failed run remains in the evidence.
+suite passed for the final source: 319 core groups and 14 native groups under
+the race detector, with both modules vetted. Android checks passed 93 domain
+tests and eight app unit tests, with no lint errors. The failed intermediate
+run remains in the evidence.
+
+The final artifacts passed seven test groups: 20 persistent restarts, fresh
+startup, historical locator conflicts, legacy debt, a retained 128-message
+backlog, native administration through the packaged server, and native DNS plus
+SOCKS/TUN HTTPS through the source fixture exit. The APK's two native libraries
+match the build report, and its signer matches the preceding release. These
+checks retain their exact scope; APK execution on Android and Rambler access
+were not available in this environment.
 
 This release repairs reproduced startup defects and improves diagnosis of any
 remaining field failure. It does not qualify Rambler operation, sustained 100 Mbps

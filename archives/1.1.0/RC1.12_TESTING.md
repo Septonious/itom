@@ -32,3 +32,11 @@ reproduced regressions without claiming live-provider confirmation. Export both
 full diagnostics during a remaining failure; the new inventory snapshot will
 identify where it stops. Sustained 100 Mbps and the full 300 ms RTT goal remain
 unqualified. DNS settings and original application/startup deadlines are unchanged.
+
+Final functional checks passed 319 core groups and 14 native groups under the
+race detector, 101 Android unit tests, and all seven packaged-artifact groups,
+including 20 persistent VPN restarts. Source light-load results were 64/64
+exchanges within 300 ms (maximum 277 ms), and 3/3 after application silence
+(maximum 232 ms). The upper-latency scenario failed the full target: 10/16 were
+within 300 ms, maximum 335 ms. These are local TLS IMAP fixtures; Android-device
+and live Rambler operation have not been qualified.
