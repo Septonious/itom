@@ -63,6 +63,7 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 		x.mu.Lock()
 		x.retainedStats.ProofConflicts++
 		x.retainedStats.DeferredFailure = retainedFailureCode(err)
+		x.retainedStats.DeferredStage = x.retainedStats.Stage
 		x.mu.Unlock()
 	}
 	err := visitBodiesWithStage(ctx, x, func(body Body) (bool, error) {
@@ -87,6 +88,7 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 				if store == nil || u.Key.Store != store.StoreID() {
 					continue
 				}
+				stage("journal_correlate")
 				ref, err := store.LocalAttempt(u.Key, u.Attempt.Batch)
 				if errors.Is(err, journal.ErrMissing) || errors.Is(err, journal.ErrScope) {
 					continue
@@ -127,7 +129,7 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 	x.retainedStats.CleanupCandidates = uint64(len(candidates))
 	x.mu.Unlock()
 	deferred := false
-	if err = reclaimReceivedInventory(ctx, x, candidates, snapshot); err != nil {
+	if err = reclaimReceivedInventory(ctx, x, candidates, snapshot, stage); err != nil {
 		// The full authenticated inventory already completed. A failed optional
 		// proof cannot authorize a refund or block the planned service socket.
 		// Cancellation, poisoned/corrupt journals and unclassified errors stay fatal.
@@ -141,6 +143,7 @@ func inspectRetained(ctx context.Context, x *Executor, user string, key []byte, 
 		x.mu.Lock()
 		x.retainedStats.CleanupDeferred = true
 		x.retainedStats.DeferredFailure = retainedFailureCode(err)
+		x.retainedStats.DeferredStage = x.retainedStats.Stage
 		x.mu.Unlock()
 	}
 	if deferred && x.Snapshot().Closed {
@@ -230,7 +233,7 @@ func (i *Inbox) adoptHistoricalReads() {
 
 // This pre-session owner reuses precisely the runtime's receipt/delete/proof
 // implementation. It has no logical Session, authority queue or grant issuer.
-func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[uint32]*reclaimBody, snapshot *RetainedInventory) error {
+func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[uint32]*reclaimBody, snapshot *RetainedInventory, stage func(string)) error {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -242,6 +245,7 @@ func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[u
 	inbox := &Inbox{executor: x, scope: InboxScope{Account: x.account, Folder: x.mailbox, UIDValidity: x.validity}, limits: DefaultInboxLimits(), reclamation: true, reclaimQueue: map[uint32]*reclaimBody{}}
 	inbox.ensureMaintenanceWake()
 	for start := 0; start < len(uids); start += journal.MaxProofBatch {
+		stage("cleanup_flags")
 		command, err := x.fetchMaintenance(ctx, uids[start:min(start+journal.MaxProofBatch, len(uids))], true)
 		if err != nil {
 			return err
@@ -259,6 +263,7 @@ func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[u
 		}
 	}
 	for len(inbox.reclaimQueue) > 0 {
+		stage("cleanup_delete_and_absence")
 		progress, err := inbox.reclaimOne(ctx)
 		if err != nil {
 			return err
@@ -279,6 +284,7 @@ func reclaimReceivedInventory(ctx context.Context, x *Executor, candidates map[u
 
 // Fixed labels/counters only. No provider text, UID, destination, BODY or key.
 type RetainedInventoryStats struct {
+	DeferredStage     string `json:"deferred_stage,omitempty"`
 	Stage             string `json:"stage,omitempty"`
 	Failure           string `json:"failure,omitempty"`
 	DeferredFailure   string `json:"deferred_failure,omitempty"`
