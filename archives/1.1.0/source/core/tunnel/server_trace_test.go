@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"itom.local/core/journal"
+	"itom.local/core/transport"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"itom.local/core/mailbox"
 	"itom.local/core/servercfg"
@@ -94,6 +96,33 @@ func TestServerTraceRotatesConcurrentWritersWithinBoundedPrivateFiles(t *testing
 }
 
 func TestInventoryJournalFailuresHavePreciseSecretFreeStartupReasons(t *testing.T) {
+	t.Run("passive_progress", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		x := new(transport.Executor)
+		observed := make(chan selectionEvent, 1)
+		stop := observeRetainedInventory(ctx, x, "account1", func(e selectionEvent) {
+			select {
+			case observed <- e:
+			default:
+			}
+		})
+		select {
+		case e := <-observed:
+			if e.Stage != "inventory_progress" || e.IMAP == nil || e.Account != "account1" {
+				t.Fatal("missing safe startup progress", e)
+			}
+		case <-time.After(2 * time.Second):
+			stop()
+			t.Fatal("inventory progress not captured before a stalled command finishes")
+		}
+		stop()
+		s := x.Snapshot()
+		if s.PendingTags != 0 || s.Append.Started != 0 || s.Fetch.Started != 0 || s.Inventory.Started != 0 || s.Noop.Started != 0 {
+			t.Fatal("diagnostic progress performed mailbox IO", s)
+		}
+	})
+
 	for err, expected := range map[error]string{journal.ErrState: "JOURNAL_STATE_CONFLICT", journal.ErrScope: "JOURNAL_SCOPE_MISMATCH", journal.ErrMissing: "JOURNAL_ORIGINAL_RECORD_MISSING", journal.ErrPoisoned: "JOURNAL_IO_UNCERTAIN", journal.ErrCorrupt: "JOURNAL_CORRUPT"} {
 		wrapped := fmt.Errorf("private-provider-password-private.example: %w", err)
 		if actual := startupFailureCode(wrapped); actual != expected || strings.Contains(actual, "private") {

@@ -17,7 +17,7 @@ commands no longer prevents the already planned service connection from opening.
 Incomplete/unauthenticated inventory, cancellation and poisoned/corrupt journal
 failures remain fatal. This does not increase quotas or add reconnects under load.
 
-Each inventory completion/failure now includes its exact phase, fixed error
+Passive progress, inventory completion and failures now include the exact phase, fixed error
 classification, proof-conflict counters and selected IMAP command/close snapshot.
 No provider text, credentials or payload is logged. These diagnostics distinguish
 a journal conflict from BODY parsing, authentication, socket loss or command timeout.

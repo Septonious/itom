@@ -243,7 +243,9 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							failure = e
 							break
 						}
+						stopProgress := observeRetainedInventory(ctx, x, a.Account, observe)
 						retained[folder], e = transport.InspectRetainedAndReclaimReceived(ctx, x, p.User.ID, key, j.Control, j.Data)
+						stopProgress()
 						state := x.Snapshot()
 						if observe != nil {
 							stage := "inventory_complete"
@@ -358,4 +360,30 @@ func walletPaths(root string, p servercfg.Profile, plan transport.RosterPlan) (s
 		paths = append(paths, path)
 	}
 	return anchor, paths, nil
+}
+
+// Passive progress only: no probes, mailbox commands or transport deadlines.
+// Join before closing/transferring the temporary selected connection.
+func observeRetainedInventory(ctx context.Context, x *transport.Executor, account string, observe func(selectionEvent)) func() {
+	if observe == nil {
+		return func() {}
+	}
+	stop, done := make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(done)
+		tick := time.NewTicker(time.Second)
+		defer tick.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-stop:
+				return
+			case <-tick.C:
+				state := x.Snapshot()
+				observe(selectionEvent{Account: account, Stage: "inventory_progress", Role: "retained", UIDPlus: state.UIDPlusSupported, Keywords: state.KeywordsSupported, IMAP: &state})
+			}
+		}
+	}()
+	return func() { close(stop); <-done }
 }
