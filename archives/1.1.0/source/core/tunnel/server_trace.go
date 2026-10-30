@@ -107,6 +107,10 @@ func startupFailureCode(err error) string {
 		return "PERMANENT_KEYWORDS_UNSUPPORTED"
 	case errors.Is(err, transport.ErrRefused):
 		return "IMAP_TAGGED_REFUSAL"
+	case errors.Is(err, transport.ErrUnknown):
+		return "IMAP_COMMAND_UNCERTAIN"
+	case errors.Is(err, transport.ErrClosed):
+		return "IMAP_SELECTED_CONNECTION_CLOSED"
 	case errors.Is(err, transport.ErrSelectedLaneClosed):
 		return "SELECTED_LANE_CLOSED"
 	case errors.Is(err, transport.ErrProtocol):

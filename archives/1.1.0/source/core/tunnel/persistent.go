@@ -250,7 +250,7 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							if e != nil {
 								stage = "inventory_failed"
 							}
-							observe(selectionEvent{Account: a.Account, Stage: stage, Role: "retained", Failure: startupFailureCode(e), IMAP: &state})
+							observe(selectionEvent{Account: a.Account, Stage: stage, Role: "retained", Failure: startupFailureCode(e), UIDPlus: state.UIDPlusSupported, Keywords: state.KeywordsSupported, IMAP: &state})
 						}
 						x.Close()
 						if e != nil {
