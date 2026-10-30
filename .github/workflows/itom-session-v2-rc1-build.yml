@@ -19,7 +19,7 @@ jobs:
         with: {go-version: "1.27.1", cache: false}
       - name: Source integrity and passive pre-rendezvous inventory diagnostics
         run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-rc1-12
-      - name: Complete core safety, historical locator and cleanup failures, and persistent restarts
+      - name: Complete core safety, historical conflicts, cleanup failures and shutdown-owned persistent restarts
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail
