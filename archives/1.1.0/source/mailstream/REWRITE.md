@@ -73,8 +73,42 @@ preserves the earlier failures and deliberately makes a last BODY visible before
 returning its APPEND completion. Both available and refused retirement then pass
 three real HTTPS/session-restart cycles. None of this establishes provider RTT.
 
-Android integration, durable process-restart retention and control-log retirement,
-full sustained physical reclamation and rollout
+The active source now contains this module as `source/mailstream`; the Android
+native boundary and actual `ServeManaged` use it. Session-v2 and its synthetic
+qualification tools are preserved under `retired-v2/`, outside the compiled and
+packaged source. The native application proof runs the real protected socket,
+SOCKS and IPv4 TUN entry points against an independent verified-TLS IMAP server.
+It checks actual HTTPS upload/download bytes, startup DATA readiness, user
+restarts and server-exit counters. The app displays three physical roles per
+account and preserves the direct DNS settings.
+
+Per-stream windows grow from 256 KiB to 32 MiB once actual consumption reaches
+64 KiB. Bulk uses a shared 60 MiB outstanding-byte allowance; small prefixes
+have a separate aggregate 4 MiB bound. Mailbox receipts do not free this credit:
+only actual application consumption or an acknowledged terminal reset can.
+WINDOW updates and graceful FIN offsets remain valid after local close, so
+late receipts do not truncate a response. The application proof includes a
+request half-close followed by a complete 1 MiB response and EOF.
+
+Server admission occurs after authenticated READY and before either side opens
+its DATA reader. With two enabled profiles and ten provider sockets/account,
+one profile may be active while the second receives an encrypted BUSY response.
+The same identity can replace its own session. Server DATA readers join before
+their admission is released. A 30-second authenticated-silence lease releases an
+abandoned session; this is independent of throughput and RTT control. The whole
+native scenario enforces a ten-connection provider limit, checks that a second
+identity is refused, and then checks a same-identity restart. The unselected
+APPEND owner sends a bounded asynchronous NOOP when idle.
+
+The changed startup order exposed a library completion race: go-imap beta.8
+signalled command completion before publishing SELECT's mailbox state. An
+immediately started receiver could see Mailbox()==nil and fail an account.
+The pinned fork now completes state transitions before waking Wait. The manifest
+is updated, the full library suite passes, and the failed application cohort is
+retained beside the corrected run. No custom response parser was introduced.
+
+Durable process-restart retention and control-log retirement,
+full sustained physical reclamation, Android device qualification and rollout
 qualification remain explicit unfinished work until their code is present.
 No APK or testing RC is qualified by a compiling protocol core.
 

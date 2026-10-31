@@ -30,7 +30,7 @@ data class ServerProfile(
     @SerialName("mailbox_namespace") val mailboxNamespace: String,
     val accounts: List<MailAccount>, @SerialName("transport_profile") val transportProfile: String = "balanced-lab-v1",
     @SerialName("transport_resources") val transportResources: TransportResources = TransportResources(),
-) { val totalLines: Int get() = accounts.count { it.enabled } * 2 }
+) { val totalLines: Int get() = accounts.count { it.enabled } * 3 }
 @Serializable
 enum class RouteAction { VPN, @SerialName("Block") BLOCK, @SerialName("Direct") DIRECT }
 @Serializable

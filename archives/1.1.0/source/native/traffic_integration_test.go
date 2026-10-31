@@ -36,7 +36,7 @@ func (trafficHost) Route(string) string  { return "VPN" }
 func (trafficHost) Startup(string) bool  { return true }
 
 // Launched by the core's real LOGIN/SELECT/standing-server fixture. No native
-// transport, crypto, grant, exit bridge or application copy path is substituted.
+// transport, crypto, exit bridge or application copy path is substituted.
 // The datagram pair carries raw IPv4 packets, as an unprivileged TUN surrogate.
 func TestRealNativeClientProcessHelper(t *testing.T) {
 	input := os.Getenv("ITOM_NATIVE_TEST_CONFIG")
@@ -121,7 +121,7 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 	if p := c.pool.Probe(); p.Samples == 0 || p.RTTMillis <= 0 {
 		t.Fatalf("real peer echo missing: %+v", p)
 	}
-	if evidence := c.Diagnostics(); !strings.Contains(evidence, `"Flows":`) || !strings.Contains(evidence, `"Native":`) {
+	if evidence := c.Diagnostics(); !strings.Contains(evidence, `"Session":`) || !strings.Contains(evidence, `"Native":`) {
 		t.Fatal("runtime/bridge evidence missing", evidence)
 	}
 	trace, e := os.ReadFile(filepath.Join(os.Getenv("ITOM_NATIVE_TEST_STATE"), "transport", "transport-trace.jsonl"))

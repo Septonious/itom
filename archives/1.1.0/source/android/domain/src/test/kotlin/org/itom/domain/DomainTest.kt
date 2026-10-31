@@ -296,7 +296,7 @@ class DomainTest {
         val new = ProfileEditing.newAccount(edit.initial.accounts).copy(username = "added@example.invalid", password = "ADDED_PASSWORD")
         val disabled = ProfileEditing.newAccount(edit.initial.accounts).copy(username = "disabled@example.invalid", password = "DISABLED_PASSWORD", enabled = false)
         val next = ProfileEditing.apply(v, "local", edit.revision, edit.initial.copy(accounts = listOf(new, disabled)))
-        assertEquals(2, next.profiles.first { it.profileId == "local" }.totalLines)
+        assertEquals(3, next.profiles.first { it.profileId == "local" }.totalLines)
         assertFalse("keystore:mail" in next.credentials)
         assertEquals(setOf(new.localRef, disabled.localRef, "keystore:second_mail"), next.credentials.keys)
         assertEquals("OTHER_PASSWORD", next.credentials.getValue("keystore:second_mail").password)

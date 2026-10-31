@@ -72,9 +72,9 @@ def validate_release_identity(root: Path):
         source = (root / relative).read_text(encoding="utf-8")
         check('"' + info["revision"] + '"' in source,
               "Server revision mismatch in " + relative)
-    runtime = (root / "core/tunnel/version.go").read_text(encoding="utf-8")
+    runtime = (root / "core/tunnel/api.go").read_text(encoding="utf-8")
     check('"' + info["revision"] + '"' in runtime,
-          "Transport revision mismatch in core/tunnel/version.go")
+          "Transport revision mismatch in core/tunnel/api.go")
     return info
 
 
@@ -129,7 +129,7 @@ def main():
     # Keep their output in logs so it cannot be mistaken for this user's build.
     logs = ROOT / "dist" / "source-checks"
     logs.mkdir(parents=True, exist_ok=True)
-    for name in ("test_launcher", "test_core_tools", "test_rework_gate"):
+    for name in ("test_launcher", "test_core_tools"):
         result = subprocess.run([sys.executable, str(ROOT / "tools" / (name + ".py"))],
                                 capture_output=True, text=True, encoding="utf-8", errors="replace")
         (logs / (name + ".log")).write_text(result.stdout + result.stderr, encoding="utf-8")

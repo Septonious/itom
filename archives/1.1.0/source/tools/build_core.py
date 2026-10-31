@@ -25,7 +25,7 @@ GO_SHA256 = {
     ("darwin", "arm64"): "ee215d57e0ec269c60cc9ceca68e6bda321ba9ee5afe24f4b0988703c2d87d12",
 }
 PINS = {"github.com/emersion/go-imap/v2": "v2.0.0-beta.8", "github.com/emersion/go-message": "v0.18.2", "github.com/emersion/go-sasl": "v0.0.0-20241020182733-b788ff22d5a6", "golang.org/x/term": "v0.46.0", "go.etcd.io/bbolt": "v1.4.3", "github.com/flynn/noise": "v1.1.0", "golang.org/x/crypto": "v0.57.0", "golang.org/x/sys": "v0.48.0"}
-EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "pool", "journal", "wallet", "socks", "mailbox", "servercfg", "manager", "adminapi", "adminserver", "probe", "netroute", "tunnel", "transport", "qualification", "internal/commitdiag", "cmd/itom")}
+EXPECTED_PACKAGES = {"itom.local/core/" + p for p in ("wire", "secure", "pool", "journal", "wallet", "socks", "mailbox", "servercfg", "manager", "adminapi", "adminserver", "probe", "netroute", "tunnel", "internal/commitdiag", "cmd/itom")}
 
 
 def host_pair():
@@ -274,7 +274,16 @@ def verify_modules(raw: str, core_root: Path = None):
         if item.get("Replace"):
             if core_root is None:
                 build.fail("Module replacements are not allowed without a verified source root")
-            verify_imap_replacement(item, core_root)
+            if item.get("Path") == "itom.local/mailstream":
+                replacement = item["Replace"]
+                expected = (core_root.parent / "mailstream").resolve()
+                if (item.get("Version") != "v0.0.0" or replacement.get("Path") != "../mailstream" or
+                        replacement.get("Version") or not replacement.get("Dir") or
+                        Path(replacement["Dir"]).resolve() != expected or
+                        (expected / "go.mod").read_text(encoding="utf-8").splitlines()[0] != "module itom.local/mailstream"):
+                    build.fail("Invalid bundled mailbox stream replacement")
+            else:
+                verify_imap_replacement(item, core_root)
         elif core_root is not None and item.get("Path") == "github.com/emersion/go-imap/v2":
             build.fail("The bundled IMAP patch is required")
         if not item.get("Main"):
@@ -299,7 +308,7 @@ def build_binaries(command, work: Path, dist: Path, env: dict, release: str | No
             sha = hashlib.sha256(destination.read_bytes()).hexdigest()
             files.append((name, sha))
             if release:
-                named = (f"ITOM-1.1.0-{release}-{system}-{arch}" if release in ("DEV9", "RC1.13") and build.read_source_info()["version"] == "1.1.0" else f"ITOM-1.0.0-{release}-{system}-{arch}" if release in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final")
+                named = (f"ITOM-1.1.0-{release}-{system}-{arch}" if build.read_source_info()["version"] == "1.1.0" else f"ITOM-1.0.0-{release}-{system}-{arch}" if release in ("RC2","RC5","RC6","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final")
                          else f"ITOM-0.9.1-Rev10-{system}-{arch}" if release == "Rev10" and build.read_source_info()["version"] == "0.9.1"
                          else f"ITOM-0.9.2-{release}-{system}-{arch}" if release in ("Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev10","Rev11")
                          else f"ITOM_{release}_{system}_{arch}")
@@ -321,7 +330,7 @@ def runtime_hash(core: Path):
         relative = path.relative_to(core)
         if "third_party" in relative.parts or path.name.endswith("_test.go"):
             continue
-        digest.update(("core/" + relative.as_posix()).encode())
+        digest.update((core.name + "/" + relative.as_posix()).encode())
         digest.update(path.read_bytes())
     return digest.hexdigest()
 
@@ -346,6 +355,8 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
     log_path = dist / "core-build.log"
     try:
         report["core_runtime_sha256"] = runtime_hash(root / "core")
+        report["mailstream_runtime_sha256"] = runtime_hash(root / "mailstream")
+        report["native_runtime_sha256"] = runtime_hash(root / "native")
         log_path.write_text(f"ITOM source revision: {info['revision']}\nGo toolchain: {GO_VERSION}\n", encoding="utf-8")
         # Remove only this gate's own reports, so a failed run cannot inherit
         # successful results from an older build. Keep other user artifacts.
@@ -356,6 +367,7 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
             log.write("Preparing Go toolchain from the verified cache or archive.\n")
         go, checksum = ensure_go(cache)
         env = os.environ.copy()
+        env["PATH"] = str(go.parent) + os.pathsep + env.get("PATH", "")
         # Respect neither ambient go.work nor private module/sumdb bypasses for
         # this public, pinned module. Overrides are limited to this process tree.
         for key in ("GOROOT", "GOPATH", "GOOS", "GOARCH", "GOAMD64", "GOARM64", "GONOSUMDB", "GONOPROXY", "GOPRIVATE", "GOEXPERIMENT", "GODEBUG"):
@@ -384,6 +396,12 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                 shutil.copytree(root / "core", work)
                 if runtime_hash(work) != report["core_runtime_sha256"]:
                     build.fail("Core runtime changed while creating the test copy; repeat on final sources")
+                # Local modules and the native application child must travel
+                # with the core. Testing a core-only copy omits the new engine.
+                for module in ("mailstream", "native"):
+                    shutil.copytree(root / module, Path(temporary) / module)
+                    if runtime_hash(Path(temporary) / module) != report[module + "_runtime_sha256"]:
+                        build.fail(module + " changed while creating the test copy")
                 command(["mod", "tidy"], work)
                 command(["mod", "verify"], work)
                 modules = verify_modules(command(["list", "-mod=readonly", "-m", "-json", "all"], work, capture=True), work)
@@ -429,6 +447,12 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                         report["tests"] = outcome
                         report["performance_mode"] = "normal Go binary; local diagnostic assertions, not field speed qualification"
                         report["field_performance_qualified"] = False
+                    for module in ("mailstream", "native"):
+                        sibling_args = ["test", "-mod=readonly", "-count=1", "-timeout=120s"]
+                        if instrumented:
+                            sibling_args.append("-race")
+                        command([*sibling_args, "./..."], work.parent / module)
+                        report[module + "_" + mode + "_tests"] = "passed"
                 fork_args = ["test", "-mod=readonly", "-p=1", "-count=1", "-timeout=120s"]
                 if race:
                     fork_args.append("-race")
@@ -443,6 +467,9 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                 report["live_provider_tested"] = False
                 if runtime_hash(root / "core") != report["core_runtime_sha256"]:
                     build.fail("Core runtime changed during checks; repeat on final sources")
+                for module in ("mailstream", "native"):
+                    if runtime_hash(root / module) != report[module + "_runtime_sha256"]:
+                        build.fail(module + " changed during checks; repeat on final sources")
                 report.update({"status": "passed", "stage": "complete", "vet": "passed", "fuzz": "seed corpus only; no timed fuzz campaign"})
         print("Core gates passed. Report:", dist / "core-report.json", flush=True)
         print("Android IMAP TCP runtime and Linux server integrated. Device qualification remains required.", flush=True)

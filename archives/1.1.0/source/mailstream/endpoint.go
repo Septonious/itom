@@ -46,9 +46,6 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 				if err != nil {
 					return nil, err
 				}
-				if err = link.Attach(ctx, h.id); err != nil {
-					return nil, err
-				}
 				body, _ := (frame{kind: frameReady}).encode()
 				ready, _, err = cipher.seal(body)
 				if err != nil {
@@ -64,8 +61,19 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 					continue
 				}
 				f, err := decodeFrame(body)
-				if err != nil || seq != 0 || f.kind != frameReadyAck || f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
+				if err != nil || seq != 0 || f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
 					continue
+				}
+				if f.kind == frameBusy {
+					return nil, ErrBusy
+				}
+				if f.kind != frameReadyAck {
+					continue
+				}
+				// Admission is authenticated before either endpoint's extra
+				// DATA reader can consume the provider's connection allowance.
+				if err = link.Attach(ctx, h.id); err != nil {
+					return nil, err
 				}
 				// Startup's caller deadline is not the established connection's
 				// lifetime. The owner closes Session/Link explicitly.
@@ -104,6 +112,7 @@ func routeSession(s *Session, incoming <-chan []byte) {
 type candidateSession struct {
 	cipher       *cipherPair
 	hello, reply []byte
+	denied       []byte
 	created      time.Time
 }
 
@@ -112,21 +121,53 @@ type candidateSession struct {
 // key must authenticate READY before Attach selects its DATA namespace.
 // The prototype serves one configured client identity per Link.
 func Serve(ctx context.Context, link Link, identity string, psk []byte, dial func(context.Context, string, string) (net.Conn, error), connected func(*Session)) error {
+	return ServeWithOptions(ctx, link, identity, psk, dial, ServerOptions{Connected: connected})
+}
+
+type ServerOptions struct {
+	Connected func(*Session)
+	// Admit reserves a physical DATA socket pair only after peer authentication.
+	// Its release must not run until the previous DATA readers have joined.
+	Admit       func() (release func(), err error)
+	IdleTimeout time.Duration
+}
+
+func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byte, dial func(context.Context, string, string) (net.Conn, error), options ServerOptions) error {
 	if len(psk) != 32 || len(identity) == 0 || len(identity) > 64 {
 		return ErrProtocol
 	}
 	var active *Session
 	var current *candidateSession
-	pending := map[SessionID]*candidateSession{}
-	defer func() {
-		if active != nil {
-			active.Close()
+	var release func()
+	var activeDone <-chan struct{}
+	closeActive := func() {
+		if active == nil {
+			return
 		}
-	}()
+		active.Close()
+		if carrier, ok := link.(interface{ Detach(SessionID) }); ok {
+			carrier.Detach(active.cipher.id)
+		}
+		active, activeDone, current = nil, nil, nil
+		if release != nil {
+			release()
+			release = nil
+		}
+	}
+	pending := map[SessionID]*candidateSession{}
+	defer closeActive()
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-activeDone:
+			closeActive()
+		case <-ticker.C:
+			if active != nil && options.IdleTimeout > 0 && time.Since(time.Unix(0, active.lastInbound.Load())) > options.IdleTimeout {
+				closeActive()
+			}
 		case packet, ok := <-link.Receive():
 			if !ok {
 				return ErrClosed
@@ -200,14 +241,40 @@ func Serve(ctx context.Context, link Link, identity string, psk []byte, dial fun
 			if err != nil || seq != 0 || f.kind != frameReady || f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
 				continue
 			}
+			if candidate.denied != nil {
+				_ = link.Send(ctx, candidate.denied, true)
+				continue
+			}
+			var nextRelease func()
+			if options.Admit != nil {
+				nextRelease, err = options.Admit()
+				if err != nil {
+					if !errors.Is(err, ErrBusy) {
+						return err
+					}
+					plain, _ := (frame{kind: frameBusy}).encode()
+					candidate.denied, _, err = candidate.cipher.seal(plain)
+					if err != nil {
+						return err
+					}
+					_ = link.Send(ctx, candidate.denied, true)
+					continue
+				}
+			}
+			closeActive()
 			if err = link.Attach(ctx, id); err != nil {
+				if carrier, ok := link.(interface{ Detach(SessionID) }); ok {
+					carrier.Detach(id)
+				}
+				if nextRelease != nil {
+					nextRelease()
+				}
 				delete(pending, id)
 				continue
 			}
-			if active != nil {
-				active.Close()
-			}
+			release = nextRelease
 			active = newSession(ctx, link, candidate.cipher, true, dial)
+			activeDone = active.Done()
 			plain, _ := (frame{kind: frameReadyAck}).encode()
 			reply, _, err := candidate.cipher.seal(plain)
 			if err != nil {
@@ -218,8 +285,8 @@ func Serve(ctx context.Context, link Link, identity string, psk []byte, dial fun
 			if err = link.Send(ctx, reply, true); err != nil && !errors.Is(err, ErrCapacity) {
 				return err
 			}
-			if connected != nil {
-				connected(active)
+			if options.Connected != nil {
+				options.Connected(active)
 			}
 		}
 	}

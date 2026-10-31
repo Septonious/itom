@@ -479,11 +479,11 @@ class ServerBuildTests(unittest.TestCase):
             build_core.build_binaries(command, root, root, {}, release="FIELD77")
             for arch in ("amd64", "arm64"):
                 old = root / f"itom-linux-{arch}"
-                named = root / f"ITOM_FIELD77_linux_{arch}"
+                named = root / f"ITOM-1.1.0-FIELD77-linux-{arch}"
                 self.assertEqual(old.read_bytes(), named.read_bytes())
             sums = (root / "SHA256SUMS").read_text()
             self.assertEqual(4, len(sums.splitlines()))
-            self.assertIn("ITOM_FIELD77_linux_amd64", sums)
+            self.assertIn("ITOM-1.1.0-FIELD77-linux-amd64", sums)
 
     def test_failed_compiler_never_marks_complete(self):
         with tempfile.TemporaryDirectory() as tmp:

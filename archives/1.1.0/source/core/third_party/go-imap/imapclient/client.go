@@ -502,10 +502,6 @@ func findPendingCmdByType[T command](c *Client) T {
 }
 
 func (c *Client) completeCommand(cmd command, err error) {
-	done := cmd.base().done
-	done <- err
-	close(done)
-
 	// Ensure the command is not blocked waiting on continuation requests
 	c.mutex.Lock()
 	var filtered []continuationRequest
@@ -562,6 +558,12 @@ func (c *Client) completeCommand(cmd command, err error) {
 	case *ExpungeCommand:
 		close(cmd.seqNums)
 	}
+	// Wait must observe completed state transitions. In particular, publishing
+	// SELECT completion before c.mailbox lets a caller start its receiver while
+	// Mailbox still reports nil (or the previously selected folder).
+	done := cmd.base().done
+	done <- err
+	close(done)
 }
 
 func (c *Client) registerContReq(cmd command) *imapwire.ContinuationRequest {

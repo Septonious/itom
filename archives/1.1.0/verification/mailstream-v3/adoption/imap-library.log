@@ -1,0 +1,9 @@
+?   	github.com/emersion/go-imap/v2	[no test files]
+?   	github.com/emersion/go-imap/v2/cmd/imapmemserver	[no test files]
+ok  	github.com/emersion/go-imap/v2/imapclient	1.166s
+ok  	github.com/emersion/go-imap/v2/imapserver	1.027s
+?   	github.com/emersion/go-imap/v2/imapserver/imapmemserver	[no test files]
+?   	github.com/emersion/go-imap/v2/internal	[no test files]
+ok  	github.com/emersion/go-imap/v2/internal/imapnum	1.061s
+?   	github.com/emersion/go-imap/v2/internal/imapwire	[no test files]
+ok  	github.com/emersion/go-imap/v2/internal/utf7	1.017s

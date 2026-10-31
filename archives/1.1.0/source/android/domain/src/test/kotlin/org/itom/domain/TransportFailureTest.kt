@@ -16,6 +16,11 @@ class TransportFailureTest {
             startupStatus("""{"StartupStage":"IMAP","SelectedLines":21,"TotalLines":20}"""))
     }
     @Test fun startupPhasesSurviveTheNativeBoundary() {
+        for (stage in listOf("PROFILE", "IMAP", "NOISE", "PATH")) {
+            val code = "MAILSTREAM_STARTUP_$stage"
+            assertEquals(code, nativeFailureCode(code))
+        }
+        assertEquals("MAILSTREAM_SERVER_BUSY", nativeFailureCode("MAILSTREAM_SERVER_BUSY"))
         for (stage in listOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "PATH")) {
             val code = "V2_STARTUP_$stage"
             assertEquals(code, nativeFailureCode(code))

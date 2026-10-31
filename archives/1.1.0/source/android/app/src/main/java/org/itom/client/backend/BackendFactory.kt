@@ -51,9 +51,9 @@ class NativeBackend(private val context: Context, val vault: VaultStore) : Sessi
         }
         diagnosticState.value = "{}"
         adminState.value = "{}"
-        val generation = machine.begin(profile.profileId, revision, profile.accounts.count { it.enabled } * 2)
+        val generation = machine.begin(profile.profileId, revision, profile.totalLines)
         recordStartup(generation, JSONObject().put("StartupStage", "PROFILE").put("SelectedLines", 0)
-            .put("TotalLines", profile.accounts.count { it.enabled } * 2).put("ElapsedMS", 0).toString())
+            .put("TotalLines", profile.totalLines).put("ElapsedMS", 0).toString())
         try {
             context.startForegroundService(Intent(context, ItomVpnService::class.java)
                 .putExtra("generation", generation).putExtra("profile", profile.profileId).putExtra("revision", revision))

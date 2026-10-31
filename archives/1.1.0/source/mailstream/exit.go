@@ -42,6 +42,9 @@ func publicDial(ctx context.Context, network, target string) (net.Conn, error) {
 	}
 	return nil, ErrClosed
 }
+func PublicDial(ctx context.Context, network, target string) (net.Conn, error) {
+	return publicDial(ctx, network, target)
+}
 func publicAddress(address netip.Addr) bool {
 	return address.IsGlobalUnicast() && !address.IsPrivate() && !address.IsLoopback() && !address.IsLinkLocalUnicast() && !address.IsUnspecified()
 }

@@ -52,9 +52,9 @@ class LauncherTests(unittest.TestCase):
 
     def test_public_release_consistent_across_gradle_server_and_archive(self):
         info = check_sources.validate_release_identity(check_sources.ROOT)
-        self.assertEqual("RC1.13", info["release"])
-        self.assertEqual("ITOM-1.1.0-RC1.13-debug.apk", build.public_apk_name(info))
-        self.assertEqual("ITOM-1.1.0-RC1.13-sources.zip", info["archive_name"])
+        self.assertEqual("MAILSTREAM-DEV1", info["release"])
+        self.assertEqual("ITOM-1.1.0-MAILSTREAM-DEV1-debug.apk", build.public_apk_name(info))
+        self.assertEqual("ITOM-1.1.0-MAILSTREAM-DEV1-sources.zip", info["archive_name"])
 
     def test_public_release_mismatch_is_fatal(self):
         info = build.read_source_info()
@@ -70,7 +70,7 @@ class LauncherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             for rel in ("source-info.json", "android/app/build.gradle.kts",
-                        "core/cmd/itom/main.go", "core/manager/trace.go", "core/tunnel/version.go"):
+                        "core/cmd/itom/main.go", "core/manager/trace.go", "core/tunnel/api.go"):
                 target = root / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((source / rel).read_bytes())
@@ -84,7 +84,7 @@ class LauncherTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Server revision mismatch"):
                 check_sources.validate_release_identity(root)
             main.write_bytes((source / "core/cmd/itom/main.go").read_bytes())
-            runtime = root / "core/tunnel/version.go"
+            runtime = root / "core/tunnel/api.go"
             runtime.write_text(runtime.read_text().replace(build.read_source_info()["revision"], "old-revision"))
             with self.assertRaisesRegex(RuntimeError, "Transport revision mismatch"):
                 check_sources.validate_release_identity(root)
@@ -229,7 +229,7 @@ class LauncherTests(unittest.TestCase):
         (source / "build-report.json").write_text(json.dumps({"status":"passed", "source_revision":info["revision"], "sha256":sha}))
         sums = []
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-1.1.0-RC1.13-linux-{arch}"
+            name = f"ITOM-1.1.0-{info['release']}-linux-{arch}"
             data = b"fixture-" + arch.encode()
             (source / name).write_bytes(data)
             sums.append(hashlib.sha256(data).hexdigest() + "  " + name)
@@ -238,7 +238,7 @@ class LauncherTests(unittest.TestCase):
         result = archive_main.export_verified_artifacts(self.root / "ITOM_FIELD77_tmp", archive, info, "all")
         self.assertEqual(7, len(result))
         self.assertEqual(b"verified-test-apk", (self.root / "dist" / apk_name).read_bytes())
-        self.assertTrue((self.root / "dist" / "ITOM-1.1.0-RC1.13-linux-arm64").is_file())
+        self.assertTrue((self.root / "dist" / f"ITOM-1.1.0-{info['release']}-linux-arm64").is_file())
         # Failed gate and tampered APK must NEVER overwrite the public dist.
         apk.write_bytes(b"tampered")
         with self.assertRaisesRegex(RuntimeError, "APK checksum mismatch"):

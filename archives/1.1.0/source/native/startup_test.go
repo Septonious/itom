@@ -80,12 +80,12 @@ func TestAndroidRuntimeProfileReachesProtectedNetworkStartup(t *testing.T) {
 				if host.lookups != 0 {
 					t.Fatal("unknown profile reached the network")
 				}
-				if err.Error() != "V2_STARTUP_PROFILE" {
+				if err.Error() != "MAILSTREAM_STARTUP_PROFILE" {
 					t.Fatalf("missing safe profile failure phase: %v", err)
 				}
 			} else if host.lookups == 0 {
 				t.Fatalf("valid Android runtime was rejected before protected network startup: %v", err)
-			} else if err.Error() != "V2_STARTUP_IMAP" {
+			} else if err.Error() != "MAILSTREAM_STARTUP_IMAP" {
 				t.Fatalf("missing safe network startup phase: %v", err)
 			}
 		})

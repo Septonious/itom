@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,12 +22,13 @@ type Link interface {
 }
 
 const (
-	maxStreams        = 64
-	streamWindow      = 4 << 20
-	maxPendingBytes   = 32 << 20
-	maxPendingPackets = 512
-	controlReserve    = 64
-	replaySlots       = 4096
+	maxStreams          = 64
+	streamWindow        = 32 << 20
+	initialStreamWindow = 256 << 10
+	maxPendingBytes     = 32 << 20
+	maxPendingPackets   = 512
+	controlReserve      = 64
+	replaySlots         = 4096
 )
 
 type pendingPacket struct {
@@ -34,33 +36,38 @@ type pendingPacket struct {
 	priority bool
 	sent     time.Time
 	attempts int
+	kind     byte
+	stream   uint32
 }
 
 type Session struct {
-	ctx            context.Context
-	cancel         context.CancelFunc
-	link           Link
-	cipher         *cipherPair
-	server         bool
-	dial           func(context.Context, string, string) (net.Conn, error)
-	mu             sync.Mutex
-	streams        map[uint32]*Stream
-	closedStreams  map[uint32]bool
-	nextStream     uint32
-	pending        map[uint64]*pendingPacket
-	pendingBytes   int
-	changed        chan struct{}
-	wake           chan struct{}
-	input          chan []byte
-	receipts       chan uint64
-	seen           [replaySlots]uint64
-	seenValid      [replaySlots]bool
-	highest        uint64
-	rtt, variation time.Duration
-	pings          map[uint64]chan struct{}
-	nextPing       uint64
-	err            error
-	wg             sync.WaitGroup
+	ctx             context.Context
+	cancel          context.CancelFunc
+	link            Link
+	cipher          *cipherPair
+	server          bool
+	dial            func(context.Context, string, string) (net.Conn, error)
+	mu              sync.Mutex
+	streams         map[uint32]*Stream
+	closedStreams   map[uint32]*terminalStream
+	bulkOutstanding uint64
+	receiveBuffered atomic.Int64
+	lastInbound     atomic.Int64
+	nextStream      uint32
+	pending         map[uint64]*pendingPacket
+	pendingBytes    int
+	changed         chan struct{}
+	wake            chan struct{}
+	input           chan []byte
+	receipts        chan uint64
+	seen            [replaySlots]uint64
+	seenValid       [replaySlots]bool
+	highest         uint64
+	rtt, variation  time.Duration
+	pings           map[uint64]chan struct{}
+	nextPing        uint64
+	err             error
+	wg              sync.WaitGroup
 }
 
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
@@ -69,7 +76,8 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 		dial = publicDial
 	}
 	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan uint64, 1024), pings: map[uint64]chan struct{}{}}
-	s.closedStreams = map[uint32]bool{}
+	s.closedStreams = map[uint32]*terminalStream{}
+	s.lastInbound.Store(time.Now().UnixNano())
 	// Sequence zero was the authenticated READY/READY_ACK. It must never
 	// enter the application engine as a replayed session transition.
 	s.seen[0], s.seenValid[0] = 0, true
@@ -158,7 +166,7 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 		if len(s.pending) < limit && s.pendingBytes+len(plain)+headerSize+16 <= byteLimit {
 			wire, seq, err := s.cipher.seal(plain)
 			if err == nil {
-				s.pending[seq] = &pendingPacket{wire: wire, priority: priority}
+				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream}
 				s.pendingBytes += len(wire)
 				s.notifyLocked()
 			}
@@ -308,12 +316,19 @@ func (s *Session) receiveLoop() {
 				s.fail(err)
 				return
 			}
+			// Replayed ciphertext cannot prolong an abandoned server session's
+			// physical connection reservation. This is a lifetime lease, not CC.
+			if seq > s.highest {
+				s.highest = seq
+				s.lastInbound.Store(time.Now().UnixNano())
+			}
 			if f.kind == frameReceipt {
 				if f.stream != 0 || f.offset != 0 || len(f.data) == 0 || len(f.data) > 256 || len(f.data)%8 != 0 {
 					s.fail(ErrProtocol)
 					return
 				}
 				var acknowledged []uint64
+				var creditErr error
 				s.mu.Lock()
 				for at := 0; at < len(f.data); at += 8 {
 					id := binary.BigEndian.Uint64(f.data[at:])
@@ -336,10 +351,17 @@ func (s *Session) receiveLoop() {
 						}
 					}
 					s.pendingBytes -= len(p.wire)
+					if p.kind == frameReset {
+						creditErr = errors.Join(creditErr, s.releaseTerminalLocked(p.stream))
+					}
 					delete(s.pending, id)
 				}
 				s.notifyLocked()
 				s.mu.Unlock()
+				if creditErr != nil {
+					s.fail(creditErr)
+					return
+				}
 				if storage, ok := s.link.(StorageLink); ok {
 					for _, id := range acknowledged {
 						storage.Acknowledge(s.cipher.id, id)
@@ -405,16 +427,15 @@ func (s *Session) apply(f frame) error {
 	s.mu.Lock()
 	stream := s.streams[f.stream]
 	closed := s.closedStreams[f.stream]
-	if stream == nil && f.kind == frameReset {
-		s.closedStreams[f.stream] = true
+	if stream == nil && f.kind == frameReset && closed == nil {
+		s.closedStreams[f.stream] = &terminalStream{state: closedAbort}
+	}
+	if closed != nil {
+		err := s.closedFrameLocked(closed, f)
+		s.mu.Unlock()
+		return err
 	}
 	s.mu.Unlock()
-	if closed {
-		if f.kind == frameReset {
-			return nil
-		}
-		return s.trySend(frame{kind: frameReset, stream: f.stream}, true)
-	}
 	if f.kind == frameOpen {
 		if !s.server || f.offset != 0 || len(f.data) == 0 || len(f.data) > 256 {
 			return ErrProtocol
@@ -501,6 +522,7 @@ func (s *Session) OpenTCP(ctx context.Context, target string) (net.Conn, error) 
 	err := stream.err
 	stream.mu.Unlock()
 	if err != nil {
+		stream.Close()
 		return nil, err
 	}
 	return stream, nil
@@ -533,15 +555,17 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
-	Streams        int   `json:"streams"`
-	PendingPackets int   `json:"pending_packets"`
-	PendingBytes   int   `json:"pending_bytes"`
-	DeliveryRTTMS  int64 `json:"delivery_rtt_ms"`
-	Closed         bool  `json:"closed"`
+	Streams         int    `json:"streams"`
+	PendingPackets  int    `json:"pending_packets"`
+	PendingBytes    int    `json:"pending_bytes"`
+	DeliveryRTTMS   int64  `json:"delivery_rtt_ms"`
+	Closed          bool   `json:"closed"`
+	BulkOutstanding uint64 `json:"bulk_outstanding_bytes"`
+	ReceiveBuffered int64  `json:"receive_buffered_bytes"`
 }
 
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return Snapshot{len(s.streams), len(s.pending), s.pendingBytes, s.rtt.Milliseconds(), s.err != nil}
+	return Snapshot{len(s.streams), len(s.pending), s.pendingBytes, s.rtt.Milliseconds(), s.err != nil, s.bulkOutstanding, s.receiveBuffered.Load()}
 }

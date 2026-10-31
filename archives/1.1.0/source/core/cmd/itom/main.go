@@ -17,7 +17,7 @@ import (
 	"runtime"
 )
 
-const revision = "itom-1-1-0-rc1-13"
+const revision = "itom-1-1-0-mailstream-dev1"
 
 func run(args []string) error {
 	command := "menu"
@@ -103,29 +103,8 @@ func run(args []string) error {
 		defer stop()
 		return probe.CheckIMAP(ctx, cfg, *account, os.Stdout)
 	case "journal-profile":
-		if *to != "data8" && *to != "data12" && *to != "data16" {
-			return errors.New("--to=data8, --to=data12 or --to=data16 required; stop itom service first")
-		}
-		cfg, e := servercfg.Load(filepath.Join(*state, "server.db"))
-		if e != nil {
-			return e
-		}
-		for _, a := range cfg.Accounts {
-			for _, u := range cfg.Users {
-				dir := filepath.Join(*state, "tunnel-server", a.ID, u.ID)
-				if _, e = os.Stat(filepath.Join(dir, "data.db")); errors.Is(e, os.ErrNotExist) {
-					continue
-				}
-				if e != nil {
-					return e
-				}
-				if e = tunnel.MigrateDataProfile(dir, a, u, *to); e != nil {
-					return fmt.Errorf("account=%s user=%s profile=%s: %w", a.Mail.Username, u.ID, *to, e)
-				}
-				fmt.Printf("account=%s user=%s profile=%s outcome=audited\n", a.Mail.Username, u.ID, *to)
-			}
-		}
-		return nil
+		_ = to
+		return errors.New("LEGACY_JOURNALS_PRESERVED: mailbox-stream does not migrate or refund v2 journal state")
 	case "menu":
 		return manager.New(*state).Run()
 	case "serve":
@@ -137,7 +116,7 @@ func run(args []string) error {
 		defer stop()
 		var logger func(string)
 		if cfg.DiagnosticsMode != "off" {
-			log.Printf("event=server_start revision=%s protocol=session-v2 accounts=%d users=%d", revision, len(cfg.Accounts), len(cfg.Users))
+			log.Printf("event=server_start revision=%s protocol=mailbox-stream-v3 accounts=%d users=%d", revision, len(cfg.Accounts), len(cfg.Users))
 			logger = func(s string) { log.Print(s) }
 		}
 		if e = adminserver.RecoverGuard(*state); e != nil {

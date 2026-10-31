@@ -6,7 +6,7 @@ require (
 	github.com/emersion/go-imap/v2 v2.0.0-beta.8
 	github.com/flynn/noise v1.1.0
 	go.etcd.io/bbolt v1.4.3
-	golang.org/x/term v0.46.0
+	itom.local/mailstream v0.0.0
 )
 
 require (
@@ -17,3 +17,5 @@ require (
 )
 
 replace github.com/emersion/go-imap/v2 => ./third_party/go-imap
+
+replace itom.local/mailstream => ../mailstream

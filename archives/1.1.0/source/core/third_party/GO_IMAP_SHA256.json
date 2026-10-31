@@ -25,7 +25,7 @@
     "imapclient/authenticate.go": "f518613a826087fa00312f680111542392eb26f55c54530de67ecc86e41e7ac6",
     "imapclient/authenticate_test.go": "43802974752ccfb78f14df9fd7ad7ce352487b8d49fbb3e269fcd55749694419",
     "imapclient/capability.go": "0ec5f3d8c3de9fa60f0373572e8900d43eb3bd230f406f07d69c54035f7d9758",
-    "imapclient/client.go": "ecdffef3a162e494216938539bd0b87c0cbfbd36c8d857dbe9807ac84e4b8a78",
+    "imapclient/client.go": "bbbd296907f7f6ec72759fa95b56617609cebd26a073f419c6ddd757b3375bac",
     "imapclient/client_test.go": "ff84f37e3ed350f6bca2bf5860cc34a48b2b9790ad8046fc62f9fac9fe520217",
     "imapclient/connection_test.go": "fd04d74f610345de0d5cd045b7bbb096bb9bbaa48a0dc8cc294f10d7855fb8cb",
     "imapclient/copy.go": "312276710a9f2d1ae4aa3da20d25e2985f879c4255f2ddaec7925002eb7ebfe1",

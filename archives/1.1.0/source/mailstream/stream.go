@@ -3,6 +3,7 @@ package mailstream
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"io"
 	"net"
@@ -28,10 +29,20 @@ type Stream struct {
 	hasFinal, writeClosed                            bool
 	err                                              error
 	readDeadline, writeDeadline                      time.Time
+	receiveLimit, peerWindow                         int
+	closeOnce                                        sync.Once
 }
+type closeState uint8
+
+const (
+	closedAbort closeState = iota + 1
+	closedGraceful
+)
+
+func (s *Stream) StreamID() uint64 { return uint64(s.id) }
 
 func newStream(session *Session, id uint32) *Stream {
-	return &Stream{session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), chunks: map[uint64][]byte{}}
+	return &Stream{session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), chunks: map[uint64][]byte{}, receiveLimit: initialStreamWindow, peerWindow: initialStreamWindow}
 }
 func (s *Stream) notifyLocked() { close(s.changed); s.changed = make(chan struct{}) }
 func (s *Stream) markOpen() {
@@ -48,6 +59,7 @@ func (s *Stream) abort(err error) {
 	defer s.mu.Unlock()
 	if s.err == nil {
 		s.err = err
+		s.session.receiveBuffered.Add(-int64(s.buffered))
 		s.chunks = nil
 		s.buffered = 0
 		if !s.isOpen {
@@ -60,7 +72,17 @@ func (s *Stream) abort(err error) {
 func (s *Stream) accept(f frame) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.err != nil {
+	if f.kind == frameWindow || f.kind == frameReset {
+		s.session.mu.Lock()
+		terminal := s.session.closedStreams[s.id]
+		if terminal != nil {
+			err := s.session.closedFrameLocked(terminal, f)
+			s.session.mu.Unlock()
+			return err
+		}
+		s.session.mu.Unlock()
+	}
+	if s.err != nil && f.kind != frameWindow && f.kind != frameReset {
 		return nil
 	}
 	switch f.kind {
@@ -80,7 +102,7 @@ func (s *Stream) accept(f frame) error {
 		if end <= s.readOffset {
 			return nil
 		}
-		if end-s.readOffset > streamWindow || s.hasFinal && end > s.final {
+		if end-s.readOffset > uint64(s.receiveLimit) || s.hasFinal && end > s.final {
 			return ErrProtocol
 		}
 		if f.offset < s.readOffset {
@@ -98,18 +120,28 @@ func (s *Stream) accept(f frame) error {
 				return ErrProtocol
 			}
 		}
-		if s.buffered+len(f.data) > streamWindow {
+		if s.buffered+len(f.data) > s.receiveLimit {
+			return ErrCapacity
+		}
+		if !s.session.reserveReceive(len(f.data)) {
 			return ErrCapacity
 		}
 		s.chunks[f.offset] = bytes.Clone(f.data)
 		s.buffered += len(f.data)
 	case frameWindow:
-		if len(f.data) != 0 || f.offset > s.sendOffset {
+		if len(f.data) != 4 || f.offset > s.sendOffset {
 			return ErrProtocol
 		}
-		s.peerConsumed = max(s.peerConsumed, f.offset)
+		window := int(binary.BigEndian.Uint32(f.data))
+		if window < initialStreamWindow || window > streamWindow {
+			return ErrProtocol
+		}
+		s.peerWindow = max(s.peerWindow, window)
+		if err := s.consumedLocked(f.offset); err != nil {
+			return err
+		}
 	case frameFIN:
-		if len(f.data) != 0 || f.offset < s.readOffset || f.offset-s.readOffset > streamWindow || s.hasFinal && s.final != f.offset {
+		if len(f.data) != 0 || f.offset < s.readOffset || f.offset-s.readOffset > uint64(s.receiveLimit) || s.hasFinal && s.final != f.offset {
 			return ErrProtocol
 		}
 		for at, b := range s.chunks {
@@ -123,6 +155,10 @@ func (s *Stream) accept(f frame) error {
 			return ErrProtocol
 		}
 		s.err = ErrClosed
+		if err := s.consumedLocked(s.sendOffset); err != nil {
+			return err
+		}
+		s.session.receiveBuffered.Add(-int64(s.buffered))
 		s.chunks = nil
 		s.buffered = 0
 		if !s.isOpen {
@@ -136,7 +172,7 @@ func (s *Stream) accept(f frame) error {
 	return nil
 }
 
-func waitStream(ctx context.Context, change <-chan struct{}, deadline time.Time) error {
+func waitStream(ctx context.Context, change, credit <-chan struct{}, deadline time.Time) error {
 	var timer *time.Timer
 	var timeout <-chan time.Time
 	if !deadline.IsZero() {
@@ -153,6 +189,8 @@ func waitStream(ctx context.Context, change <-chan struct{}, deadline time.Time)
 	case <-timeout:
 		return os.ErrDeadlineExceeded
 	case <-change:
+		return nil
+	case <-credit:
 		return nil
 	}
 }
@@ -178,17 +216,24 @@ func (s *Stream) Read(p []byte) (int, error) {
 			delete(s.chunks, s.readOffset)
 			s.readOffset += uint64(n)
 			s.buffered -= n
+			s.session.receiveBuffered.Add(-int64(n))
 			if n < len(b) {
 				s.chunks[s.readOffset] = b[n:]
 			}
 			consumed := s.readOffset
-			sendWindow := consumed-s.advertised >= streamWindow/4
+			grew := false
+			if consumed >= 64<<10 && s.receiveLimit == initialStreamWindow {
+				s.receiveLimit = streamWindow
+				grew = true
+			}
+			sendWindow := grew || consumed-s.advertised >= streamPrefix
 			if sendWindow {
 				s.advertised = consumed
 			}
+			window := s.receiveLimit
 			s.mu.Unlock()
 			if sendWindow {
-				if err := s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed}, true); err != nil {
+				if err := s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed, data: binary.BigEndian.AppendUint32(nil, uint32(window))}, true); err != nil {
 					return n, err
 				}
 			}
@@ -200,7 +245,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 		}
 		change, deadline := s.changed, s.readDeadline
 		s.mu.Unlock()
-		if err := waitStream(s.session.ctx, change, deadline); err != nil {
+		if err := waitStream(s.session.ctx, change, nil, deadline); err != nil {
 			return 0, err
 		}
 	}
@@ -223,11 +268,19 @@ func (s *Stream) Write(p []byte) (int, error) {
 			s.mu.Unlock()
 			return written, os.ErrDeadlineExceeded
 		}
-		room := uint64(streamWindow) - (s.sendOffset - s.peerConsumed)
+		room := uint64(s.peerWindow) - (s.sendOffset - s.peerConsumed)
+		s.session.mu.Lock()
+		credit := s.session.changed
+		if s.sendOffset >= streamPrefix {
+			room = min(room, bulkBudget-s.session.bulkOutstanding)
+		} else {
+			room = min(room, streamPrefix-s.sendOffset)
+		}
 		if room == 0 {
 			change, deadline := s.changed, s.writeDeadline
+			s.session.mu.Unlock()
 			s.mu.Unlock()
-			if err := waitStream(s.session.ctx, change, deadline); err != nil {
+			if err := waitStream(s.session.ctx, change, credit, deadline); err != nil {
 				return written, err
 			}
 			continue
@@ -236,12 +289,15 @@ func (s *Stream) Write(p []byte) (int, error) {
 		offset := s.sendOffset
 		deadline := s.writeDeadline
 		if offset > ^uint64(0)-uint64(n) {
+			s.session.mu.Unlock()
 			s.mu.Unlock()
 			return written, ErrCapacity
 		}
 		// Reserve the offset before publication: a fast peer's WINDOW may
 		// arrive before send returns. Write owns this reservation exclusively.
 		s.sendOffset += uint64(n)
+		s.session.bulkOutstanding += bulkBytes(s.sendOffset) - bulkBytes(offset)
+		s.session.mu.Unlock()
 		s.mu.Unlock()
 		ctx := s.session.ctx
 		cancel := func() {}
@@ -251,6 +307,18 @@ func (s *Stream) Write(p []byte) (int, error) {
 		err := s.session.send(ctx, frame{kind: frameData, stream: s.id, offset: offset, data: p[:n]}, n <= 4096)
 		cancel()
 		if err != nil {
+			s.mu.Lock()
+			s.session.mu.Lock()
+			if s.session.closedStreams[s.id] == nil {
+				old := bulkBytes(s.sendOffset) - bulkBytes(s.peerConsumed)
+				s.sendOffset = offset
+				s.peerConsumed = min(s.peerConsumed, offset)
+				remaining := bulkBytes(s.sendOffset) - bulkBytes(s.peerConsumed)
+				s.session.bulkOutstanding -= old - remaining
+				s.session.notifyLocked()
+			}
+			s.session.mu.Unlock()
+			s.mu.Unlock()
 			s.abort(err)
 			return written, err
 		}
@@ -278,15 +346,40 @@ func (s *Stream) CloseWrite() error {
 	return s.session.send(s.session.ctx, frame{kind: frameFIN, stream: s.id, offset: offset}, true)
 }
 func (s *Stream) Close() error {
-	s.abort(ErrClosed)
-	s.session.mu.Lock()
-	delete(s.session.streams, s.id)
-	s.session.closedStreams[s.id] = true
-	s.session.mu.Unlock()
-	// A reset is best effort when the user already canceled the session.
-	ctx, cancel := context.WithTimeout(s.session.ctx, time.Second)
-	defer cancel()
-	_ = s.session.send(ctx, frame{kind: frameReset, stream: s.id}, true)
+	s.closeOnce.Do(func() {
+		s.mu.Lock()
+		graceful := s.err == nil && s.writeClosed && s.hasFinal && s.readOffset == s.final
+		peerReset := errors.Is(s.err, ErrClosed)
+		consumed, window := s.readOffset, s.receiveLimit
+		terminal := &terminalStream{state: closedAbort, sent: s.sendOffset, consumed: s.peerConsumed}
+		if graceful {
+			terminal.state = closedGraceful
+		}
+		if s.err == nil {
+			s.err = ErrClosed
+			s.session.receiveBuffered.Add(-int64(s.buffered))
+			s.buffered = 0
+			s.chunks = nil
+			if !s.isOpen {
+				s.isOpen = true
+				close(s.opened)
+			}
+			s.notifyLocked()
+		}
+		s.session.mu.Lock()
+		delete(s.session.streams, s.id)
+		s.session.closedStreams[s.id] = terminal
+		s.session.mu.Unlock()
+		s.mu.Unlock()
+		if graceful {
+			_ = s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed, data: binary.BigEndian.AppendUint32(nil, uint32(window))}, true)
+		}
+		if !graceful && !peerReset {
+			ctx, cancel := context.WithTimeout(s.session.ctx, time.Second)
+			defer cancel()
+			_ = s.session.send(ctx, frame{kind: frameReset, stream: s.id}, true)
+		}
+	})
 	return nil
 }
 
@@ -324,10 +417,11 @@ func bridge(a, b net.Conn) {
 	copyOne := func(dst, src net.Conn) {
 		defer wg.Done()
 		_, err := io.Copy(dst, src)
-		if closer, ok := dst.(interface{ CloseWrite() error }); ok {
-			_ = closer.CloseWrite()
-		}
-		if err != nil && !errors.Is(err, io.EOF) {
+		if err == nil || errors.Is(err, io.EOF) {
+			if closer, ok := dst.(interface{ CloseWrite() error }); ok {
+				_ = closer.CloseWrite()
+			}
+		} else {
 			a.Close()
 			b.Close()
 		}

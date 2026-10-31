@@ -92,7 +92,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Client{ctx: ctx, cancel: cancel, host: host, slots: make(chan struct{}, 128)}
-	progress, stopProgress := reportStartup(ctx, cancel, host, 2*len(cfg.Profile.Accounts))
+	progress, stopProgress := reportStartup(ctx, cancel, host, 3*len(cfg.Profile.Accounts))
 	defer stopProgress()
 	control := func(_, _ string, r syscall.RawConn) error {
 		ok := false

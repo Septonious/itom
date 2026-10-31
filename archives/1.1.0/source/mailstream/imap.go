@@ -255,6 +255,29 @@ func (l *IMAPLink) Attach(ctx context.Context, id SessionID) error {
 	}
 }
 
+// Detach joins every old DATA reader before releasing physical admission.
+// Control discovery and the APPEND owner stay up for the next user session.
+func (l *IMAPLink) Detach(id SessionID) {
+	l.mu.Lock()
+	if l.attached != id {
+		l.mu.Unlock()
+		return
+	}
+	l.attached = SessionID{}
+	l.mu.Unlock()
+	for _, a := range l.accounts {
+		a.attachMu.Lock()
+		a.mu.Lock()
+		current := a.id == id
+		a.mu.Unlock()
+		if current {
+			a.closeData()
+		}
+		a.attachMu.Unlock()
+	}
+	l.notify()
+}
+
 func (a *mailAccountState) fail() {
 	a.mu.Lock()
 	a.failed = true
@@ -422,6 +445,9 @@ func (a *mailAccountState) run() {
 	dataAppends := map[SessionID]uint32{}
 	completed := make(chan error, 4)
 	inFlight := 0
+	keepalive := time.NewTicker(30 * time.Second)
+	defer keepalive.Stop()
+	lastWrite := time.Now()
 	var carry *mailWork
 	for {
 		if inFlight == 4 {
@@ -452,6 +478,28 @@ func (a *mailAccountState) run() {
 				select {
 				case <-a.ctx.Done():
 					return
+				case <-keepalive.C:
+					if inFlight == 0 && time.Since(lastWrite) >= 30*time.Second {
+						// An unselected APPEND connection cannot use IDLE.
+						// Keep its login alive without blocking the fast queue
+						// while waiting for the tagged NOOP completion.
+						cmd := writer.client.Noop()
+						lastWrite = time.Now()
+						inFlight++
+						appendWait.Add(1)
+						go func() {
+							defer appendWait.Done()
+							err := cmd.Wait()
+							if err != nil {
+								a.failedStage("writer_keepalive", err)
+							}
+							select {
+							case completed <- err:
+							case <-a.ctx.Done():
+							}
+						}()
+					}
+					continue
 				case err := <-completed:
 					inFlight--
 					if err != nil {
@@ -545,6 +593,7 @@ func (a *mailAccountState) run() {
 			a.link.note("append", a.config.ID, packet, generation, work.control)
 		}
 		cmd, startErr := writer.startAppend(folder, encoded)
+		lastWrite = time.Now()
 		if startErr != nil {
 			return
 		}
@@ -599,14 +648,14 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		if a.ready {
 			s.Ready++
 		}
-		if a.id != (SessionID{}) {
+		if !a.failed && a.ready && a.id != (SessionID{}) {
 			s.Data++
 		}
 		if a.failed {
 			s.Failed++
 		}
 		s.RetainedBytes += a.spent
-		line := MailAccountSnapshot{Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Data: a.id != (SessionID{}), RetainedBytes: a.spent}
+		line := MailAccountSnapshot{Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		if p := a.data; p != nil {
 			line.DataPhase = p.phase.Load()
 			line.DataCursor = p.cursor.Load()

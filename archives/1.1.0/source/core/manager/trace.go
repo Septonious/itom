@@ -62,7 +62,7 @@ func writeTraceBundle(dir, path string) (err error) {
 	}()
 	// Keep descriptors open through rotation and copy only the snapshotted length.
 	names := []string{"transport-trace.jsonl.2", "transport-trace.jsonl.1", "transport-trace.jsonl"}
-	current, err := filepath.Glob(filepath.Join(dir, "v2-????????.json"))
+	current, err := filepath.Glob(filepath.Join(dir, "mailstream-????????.json"))
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func writeTraceBundle(dir, path string) (err error) {
 	if e != nil {
 		return e
 	}
-	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-rc1-13", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
+	if e = json.NewEncoder(meta).Encode(map[string]any{"schema": 1, "revision": "itom-1-1-0-mailstream-dev1", "created_utc": time.Now().UTC(), "live_snapshot_best_effort": true, "trace_files": len(sources), "go": runtime.Version(), "plaintext_payload": false}); e != nil {
 		return e
 	}
 	for _, s := range sources {

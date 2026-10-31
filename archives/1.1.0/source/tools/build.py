@@ -40,7 +40,7 @@ def fail(message: str):
 def read_source_info(root: Path = ROOT) -> dict:
     info = json.loads((root / "source-info.json").read_text(encoding="utf-8"))
     if isinstance(info, dict) and info.get("build_allowed") is False:
-        fail("V2_UNQUALIFIED: source-only replacement; runtime integration and complete qualification are required before packaging. Run tools/check_session_v2.py for source checks.")
+        fail("UNQUALIFIED: this source snapshot does not allow packaging")
     if not isinstance(info, dict) or not all(isinstance(info.get(k), str) for k in ("version", "revision", "archive_name")):
         fail("Invalid source-info.json")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", info["version"]) or not re.fullmatch(r"[A-Za-z0-9_-]+", info["revision"]):
@@ -48,8 +48,8 @@ def read_source_info(root: Path = ROOT) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
     if info["version"] == "1.1.0":
-        expected = dict(release="RC1.13", revision="itom-1-1-0-rc1-13", archive_name="ITOM-1.1.0-RC1.13-sources.zip",
-                        android_version_name="1.1.0-rc1.13", android_version_code=10124, android_application_id="org.itom.client")
+        expected = dict(release="MAILSTREAM-DEV1", revision="itom-1-1-0-mailstream-dev1", archive_name="ITOM-1.1.0-MAILSTREAM-DEV1-sources.zip",
+                        android_version_name="1.1.0-mailstream-dev1", android_version_code=10125, android_application_id="org.itom.client")
         if any(info.get(k) != v for k, v in expected.items()):
             fail("Inconsistent ITOM 1.1.0 development identity")
         return info

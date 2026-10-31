@@ -27,8 +27,8 @@ import (
 
 // This is one whole-path acceptance scenario, not a controller throughput
 // formula or substituted grant fixture: verified TLS IMAP, fresh Noise startup,
-// real TCP, real HTTPS, a body larger than stream credit, then user restarts.
-// It intentionally provides no UIDPLUS and permits no cleanup commands. It
+// real TCP, real HTTPS, a body larger than initial credit, then user restarts.
+// It intentionally provides no UIDPLUS and can refuse cleanup commands. It
 // cannot establish real-provider performance or sustained reclamation.
 func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
 	for _, maintenance := range []bool{true, false} {
@@ -64,11 +64,16 @@ func runApplication(t *testing.T, maintenance bool) {
 	}()
 	origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		if err := http.NewResponseController(w).EnableFullDuplex(); err != nil {
+			http.Error(w, "fixture duplex unavailable", http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", "application/octet-stream")
 		_, _ = io.Copy(w, r.Body)
 	}))
-	defer origin.Close()
-	payload := make([]byte, streamWindow+128<<10)
+	defer func() { cancel(); origin.Close() }()
+	// An application-sized object independent of controller constants.
+	payload := make([]byte, 4_325_376)
 	if _, err = rand.Read(payload); err != nil {
 		t.Fatal(err)
 	}
@@ -81,6 +86,9 @@ func runApplication(t *testing.T, maintenance bool) {
 			t.Fatalf("restart %d: %v client=%+v server=%+v", round, err, clientLink.Snapshot(), serverLink.Snapshot())
 		}
 		startupMS := time.Since(start).Milliseconds()
+		if round == 0 {
+			applicationHalfClose(t, session)
+		}
 		baseTransport := origin.Client().Transport.(*http.Transport).Clone()
 		baseTransport.DialContext = func(ctx context.Context, _, target string) (net.Conn, error) { return session.OpenTCP(ctx, target) }
 		baseTransport.ForceAttemptHTTP2 = false
@@ -152,6 +160,59 @@ func runApplication(t *testing.T, maintenance bool) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("server shutdown did not join")
 	}
+}
+
+// A peer that waits for request EOF before replying catches response truncation
+// from premature RESET. The response crosses the initial receive-credit limit.
+func applicationHalfClose(t *testing.T, session *Session) {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+	request := []byte("request complete only at TCP half-close")
+	response := bytes.Repeat([]byte{0x93, 0x17, 0xa5, 0x08}, 256<<10)
+	finished := make(chan error, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			finished <- err
+			return
+		}
+		defer conn.Close()
+		_ = conn.SetDeadline(time.Now().Add(8 * time.Second))
+		got, err := io.ReadAll(io.LimitReader(conn, int64(len(request)+1)))
+		if err == nil && !bytes.Equal(got, request) {
+			err = fmt.Errorf("half-close request bytes=%d", len(got))
+		}
+		if err == nil {
+			_, err = io.Copy(conn, bytes.NewReader(response))
+		}
+		finished <- err
+	}()
+	ctx, cancel := context.WithTimeout(session.ctx, 8*time.Second)
+	defer cancel()
+	stream, err := session.OpenTCP(ctx, listener.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stream.Close()
+	_ = stream.SetDeadline(time.Now().Add(8 * time.Second))
+	if _, err = stream.Write(request); err != nil {
+		t.Fatal(err)
+	}
+	if err = stream.(*Stream).CloseWrite(); err != nil {
+		t.Fatal(err)
+	}
+	got, err := io.ReadAll(io.LimitReader(stream, int64(len(response)+1)))
+	if err != nil || !bytes.Equal(got, response) {
+		t.Fatalf("half-close response bytes=%d want=%d error=%v", len(got), len(response), err)
+	}
+	if err = <-finished; err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("TCP half-close preserved %d response bytes and EOF", len(got))
 }
 func dumpPending(t *testing.T, label string, s *Session) {
 	s.mu.Lock()
