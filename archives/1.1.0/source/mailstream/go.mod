@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	github.com/emersion/go-imap/v2 v2.0.0-beta.8
 	github.com/flynn/noise v1.1.0
+	go.etcd.io/bbolt v1.4.3
 )
 
 require (

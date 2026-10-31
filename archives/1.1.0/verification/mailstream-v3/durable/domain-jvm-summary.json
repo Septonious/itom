@@ -1,0 +1,7 @@
+{
+  "scope": "actual domain source on isolated JVM, not an Android APK/device check",
+  "tests": 93,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+}

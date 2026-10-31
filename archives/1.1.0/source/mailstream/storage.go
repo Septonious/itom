@@ -123,7 +123,9 @@ func (l *IMAPLink) ConfirmCollection(r Retirement) error {
 		if !record.queued || !record.retired || record.appendPending != 0 || len(record.awaiting) != 0 {
 			return ErrProtocol
 		}
-		a.spent -= record.bytes
+		if err := a.refundLocked(record.bytes); err != nil {
+			return err
+		}
 		delete(a.segments, key)
 		a.retired.Add(1)
 		return nil
@@ -227,7 +229,10 @@ func (p *mailPipe) cleanup(job cleanupJob) error {
 			return ErrProtocol
 		}
 		if !job.record.remote {
-			a.spent -= job.record.bytes
+			if err := a.refundLocked(job.record.bytes); err != nil {
+				a.mu.Unlock()
+				return err
+			}
 			a.retired.Add(1)
 			delete(records, job.key)
 		} else {

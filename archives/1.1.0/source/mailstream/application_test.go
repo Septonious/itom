@@ -46,16 +46,17 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
 	accounts, cleanupCalls := applicationMailServer(t, maintenance, stalled)
-	serverLink, err := NewIMAPLink(ctx, "application", accounts, false)
+	serverLink, err := NewStoredIMAPLink(ctx, "application", accounts, false, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer serverLink.Close()
-	clientLink, err := NewIMAPLink(ctx, "application", accounts, true)
+	clientState := t.TempDir()
+	clientLink, err := NewStoredIMAPLink(ctx, "application", accounts, true, clientState)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer clientLink.Close()
+	defer func() { clientLink.Close() }()
 	psk := make([]byte, 32)
 	if _, err = rand.Read(psk); err != nil {
 		t.Fatal(err)
@@ -142,6 +143,21 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 		t.Logf("restart=%d startup_ms=%d https_upload_bytes=%d https_download_bytes=%d mailbox_ping_ms=%d", round, startupMS, len(payload), len(got), rtt.Milliseconds())
 		baseTransport.CloseIdleConnections()
 		session.Close()
+		if round < 2 {
+			if err := clientLink.Close(); err != nil {
+				t.Fatal("retention checkpoint", err)
+			}
+			prior := clientLink.Snapshot().RetainedBytes
+			clientLink, err = NewStoredIMAPLink(ctx, "application", accounts, true, clientState)
+			if err != nil {
+				t.Fatal("retention reopen", err)
+			}
+			if recovered := clientLink.Snapshot().RecoveredBytes; recovered != prior || recovered == 0 {
+				t.Fatalf("restart forgot retained publication: recovered=%d want=%d", recovered, prior)
+			} else {
+				t.Logf("fresh runtime recovered %d retained bytes from durable state", recovered)
+			}
+		}
 	}
 	if cleanupCalls.expunge.Load() != 0 {
 		t.Fatal("delivery used EXPUNGE", cleanupCalls.expunge.Load())
@@ -185,6 +201,25 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("server shutdown did not join")
 	}
+	if err := clientLink.Close(); err != nil {
+		t.Fatal(err)
+	}
+	charged := clientLink.Snapshot().RetainedBytes
+	aliases := append([]MailAccount(nil), accounts...)
+	for i := range aliases {
+		aliases[i].ID = "renamed_" + aliases[i].ID
+	}
+	// No new session is started here. Re-exporting the same physical account
+	// under another routing alias must reopen the same durable debt.
+	rebound, err := NewStoredIMAPLink(context.Background(), "application", aliases, true, clientState)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rebound.Close()
+	if recovered := rebound.Snapshot().RecoveredBytes; recovered != charged {
+		t.Fatalf("routing alias reset physical-account debt: got=%d want=%d", recovered, charged)
+	}
+	t.Logf("routing aliases preserve %d retained bytes", charged)
 }
 
 // A peer that waits for request EOF before replying catches response truncation

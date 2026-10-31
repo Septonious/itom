@@ -181,9 +181,9 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	defer clear(key)
 	life, cancel := context.WithCancel(ctx)
-	stage = "IMAP"
+	stage = "STORAGE"
 	report("", nil)
-	link, err := mailstream.NewIMAPLink(life, identity, accounts, true)
+	link, err := mailstream.NewStoredIMAPLink(life, identity, accounts, true, dir)
 	if err != nil {
 		cancel()
 		return nil, err

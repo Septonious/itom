@@ -11,7 +11,7 @@ fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, samp
         put("Outcome", outcome.name)
         put("SampledAtMS", sampledAt.coerceAtLeast(0))
         root.field("Revision")?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) }?.let { put("Revision", it) }
-        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "PATH", "READY") }?.let { put("StartupStage", it) }
+        root.field("StartupStage")?.takeIf { it in setOf("PROFILE", "STORAGE", "WALLET", "IMAP", "RENDEZVOUS", "REQUEST", "INVITATION", "NOISE", "ROSTER", "RUNTIME", "PERMISSION", "PATH", "READY") }?.let { put("StartupStage", it) }
         root.field("FailureReason")?.takeIf { it in startupFailureReasons }?.let { put("FailureReason", it) }
         root.field("RequestKeywordBytes")?.toIntOrNull()?.takeIf { it in setOf(16, 31, 59, 103) }?.let { put("RequestKeywordBytes", it) }
         root.field("ConfigHash")?.takeIf { it.matches(Regex("[a-f0-9]{64}")) }?.let { put("ConfigHash", it) }
@@ -27,6 +27,7 @@ fun startupEvidence(raw: String, outcome: StartupOutcome, failure: String?, samp
 
 private val startupFailureReasons = setOf(
     "AUTHENTICATION", "CAPACITY", "SERVER_BUSY", "PROTOCOL", "CARRIER_CLOSED", "UNAVAILABLE",
+    "STORAGE_IO",
     "CANCELED", "TIMEOUT", "JOURNAL_CONFIG_MISMATCH", "UIDPLUS_UNSUPPORTED",
     "PERMANENT_KEYWORDS_UNSUPPORTED", "IMAP_TAGGED_REFUSAL", "PROTOCOL_OR_RETAINED_BODY",
     "CAPACITY_OR_INVENTORY_BOUND", "STORAGE_QUOTA_EXHAUSTED", "JOURNAL_IO_UNCERTAIN", "JOURNAL_CORRUPT", "WALLET_IO_UNCERTAIN", "WALLET_STATE_INVALID", "RUNTIME_STOPPED", "ROSTER_REVISION_REQUIRED", "SELECTED_LANE_CLOSED", "IMAP_CONNECT_FAILED", "IMAP_TLS_FAILED",

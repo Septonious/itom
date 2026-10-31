@@ -3,6 +3,8 @@
 package tunnel
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -10,6 +12,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"debug/buildinfo"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -24,12 +27,14 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapserver"
 	"github.com/emersion/go-imap/v2/imapserver/imapmemserver"
+	bolt "go.etcd.io/bbolt"
 	"itom.local/core/mailbox"
 	"itom.local/core/servercfg"
 	"itom.local/core/wire"
@@ -46,7 +51,22 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	binary := filepath.Join(root, "native.test")
 	buildCtx, stopBuild := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer stopBuild()
-	build := exec.CommandContext(buildCtx, "go", "test", "-c", "-o", binary, ".")
+	args := []string{"test"}
+	self, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := buildinfo.ReadFile(self)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "-race" && setting.Value == "true" {
+			args = append(args, "-race")
+			t.Log("native child inherits parent race instrumentation")
+		}
+	}
+	build := exec.CommandContext(buildCtx, "go", append(args, "-c", "-o", binary, ".")...)
 	build.Dir = filepath.Join("..", "..", "native")
 	if output, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("native compile: %v\n%s", err, output)
@@ -146,13 +166,45 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	if err = os.WriteFile(configPath, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	child := exec.CommandContext(ctx, binary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=30s")
-	child.Env = append(os.Environ(), "ITOM_NATIVE_TEST_CONFIG="+configPath, "ITOM_NATIVE_TEST_STATE="+filepath.Join(root, "phone"), "ITOM_NATIVE_TEST_HTTPS_ROOT="+httpsTrust, "ITOM_NATIVE_TEST_EVIDENCE="+filepath.Join(root, "native-evidence.json"), "ITOM_NATIVE_TEST_STOP="+filepath.Join(root, "native-stop"), "SSL_CERT_FILE="+trust)
-	if output, err := child.CombinedOutput(); err != nil {
-		t.Fatalf("actual native SOCKS/TUN child: %v\n%s", err, output)
-	} else {
-		t.Log(string(output))
+	for process := 0; process < 2; process++ {
+		_ = os.Remove(filepath.Join(root, "native-stop"))
+		child := exec.CommandContext(ctx, binary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=30s")
+		child.Env = append(os.Environ(), "ITOM_NATIVE_TEST_CONFIG="+configPath, "ITOM_NATIVE_TEST_STATE="+filepath.Join(root, "phone"), "ITOM_NATIVE_TEST_HTTPS_ROOT="+httpsTrust, "ITOM_NATIVE_TEST_EVIDENCE="+filepath.Join(root, "native-evidence.json"), "ITOM_NATIVE_TEST_STOP="+filepath.Join(root, "native-stop"), "SSL_CERT_FILE="+trust)
+		if process == 0 {
+			child.Env = append(child.Env, "ITOM_NATIVE_TEST_CRASH=1")
+		}
+		output, err := child.CombinedOutput()
+		var exit *exec.ExitError
+		killed := errors.As(err, &exit) && exit.ProcessState.Sys().(syscall.WaitStatus).Signal() == syscall.SIGKILL
+		if process == 0 && (!killed || !bytes.Contains(output, []byte("HTTPS upload/download integrity passed"))) {
+			t.Fatalf("first native process did not reach verified traffic then SIGKILL: %v\n%s", err, output)
+		}
+		if process != 0 && err != nil {
+			t.Fatalf("actual native SOCKS/TUN process %d: %v\n%s", process, err, output)
+		}
+		t.Logf("native process=%d abrupt_exit=%t: %s", process, killed, output)
 	}
+	phoneTrace, err := os.ReadFile(filepath.Join(root, "phone", "transport", "transport-trace.jsonl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovered := false
+	scanner := bufio.NewScanner(bytes.NewReader(phoneTrace))
+	for scanner.Scan() {
+		var row struct {
+			Mail struct {
+				Recovered int  `json:"recovered_retention_bytes"`
+				Durable   bool `json:"retention_durable"`
+			}
+		}
+		if json.Unmarshal(scanner.Bytes(), &row) == nil && row.Mail.Durable && row.Mail.Recovered > 0 {
+			recovered = true
+		}
+	}
+	if !recovered {
+		t.Fatal("fresh native process did not recover durable retention")
+	}
+	t.Log("SIGKILL recovery preserved retention and restored actual native SOCKS/TUN HTTPS traffic")
 	if _, err = os.Stat(filepath.Join(root, "native-stop")); err != nil {
 		t.Fatal("native helper did not complete application paths", err)
 	}
@@ -173,11 +225,46 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 		t.Fatal("expected authenticated capacity refusal", err)
 	}
 	profile.User = u
-	replacement, err := StartClient(ctx, profile, filepath.Join(root, "replacement-phone"), &net.Dialer{})
+	replacementDir := filepath.Join(root, "replacement-phone")
+	replacement, err := StartClient(ctx, profile, replacementDir, &net.Dialer{})
 	if err != nil {
 		t.Fatal("same identity could not replace its session", err)
 	}
 	replacement.Close()
+	// Missing metadata in an existing store must not become a fresh zero
+	// balance. Exercise the actual startup API and preserve the damaged file.
+	files, err := filepath.Glob(filepath.Join(replacementDir, "mailstream-*-c2s.db"))
+	if err != nil || len(files) != 1 {
+		t.Fatal("missing private retention store", err)
+	}
+	db, err := bolt.Open(files[0], 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Update(func(tx *bolt.Tx) error { return tx.DeleteBucket([]byte("mailstream-retention-v1")) }); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(files[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	denied := &denyFixtureDialer{}
+	broken, err := StartClient(ctx, profile, replacementDir, denied)
+	if broken != nil {
+		broken.Close()
+		t.Fatal("damaged state became a fresh balance")
+	}
+	if err == nil || err.Error() != "MAILSTREAM_STARTUP_STORAGE" || denied.calls.Load() != 0 {
+		t.Fatal("damaged state reached network startup", err, denied.calls.Load())
+	}
+	after, err := os.ReadFile(files[0])
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("startup rewrote damaged retention state", err)
+	}
+	t.Log("missing retention metadata failed before network startup and preserved the original file")
 	cancel()
 	select {
 	case <-serverDone:
@@ -199,6 +286,13 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 type countedProviderSession struct {
 	imapserver.Session
 	count *atomic.Int64
+}
+
+type denyFixtureDialer struct{ calls atomic.Int64 }
+
+func (d *denyFixtureDialer) DialContext(context.Context, string, string) (net.Conn, error) {
+	d.calls.Add(1)
+	return nil, errors.New("FIXTURE_NETWORK_FORBIDDEN")
 }
 
 func (s *countedProviderSession) Close() error {

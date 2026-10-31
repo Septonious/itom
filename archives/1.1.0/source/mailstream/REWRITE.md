@@ -121,7 +121,7 @@ failures and no maintenance reconnects. Server admission reserves this socket:
 3P + 3A + 1 provider connections/account for P configured and A active identities.
 At P=2/A=1 this fits the existing default of ten.
 
-Durable process-restart retention and control-log retirement,
+Old-session physical reclamation and control-log retirement,
 full sustained physical reclamation, Android device qualification and rollout
 qualification remain explicit unfinished work until their code is present.
 No APK or testing RC is qualified by a compiling protocol core.
@@ -130,9 +130,11 @@ The standalone `cmd/itom-mailstream` command supports a server and a loopback
 SOCKS5 TCP client. It uses a new JSON profile (`identity`, a base64 32-byte
 `psk_base64`, and `accounts` containing `id`, `host`, `port`, `username`,
 `password`). This is not the existing APK's profile format. Its prototype storage
-bound is 64 MiB of retained attempted physical mail per account per Link lifetime;
-restarting the process does not prove or refund prior storage. It must not be
-installed as a replacement service while durable retention is unfinished.
+bound is 64 MiB of retained attempted physical mail per profile/account/direction. The
+app, server and standalone command use separate durable accounting; restarting
+the process does not refund prior storage. The standalone command requires an
+explicit private `--state` directory. It must not be
+installed as a replacement service while old-session reclamation is unfinished.
 
 The first whole-application acceptance run exposed an IDLE ownership bug on
 the second session: closing an old DATA socket did not wake its local IDLE waiter.
@@ -159,3 +161,28 @@ The existing app's final direct-DNS policy remains the product requirement:
 31.131.251.83 and 185.22.234.229 raced over UDP/TCP 53, 250 ms total timeout;
 optional IMAP fallback only after both fail, sticky until the user restarts VPN;
 no DoH/DoT. This protocol implementation must not silently change that policy.
+
+## Durable reservation accounting
+
+The app, server and standalone command use a new bbolt retention store, separate
+from legacy financial state. Publication reserves durable space before APPEND;
+512 KiB reservation batches avoid an fsync for each small packet. Conservative
+crash uncertainty, including a maximum pending mail body, stays below 1 MiB per
+account. Clean shutdown returns unused reservation after the publisher joins.
+A verified deletion/collection confirmation persists the refund before local
+capacity is released. Existing files with missing or mismatched metadata fail
+closed and are never reinitialized. Diagnostics report reserved, retained and
+recovered bytes, plus the maintenance connection's paused state.
+
+The application cohort recreates the client runtime from its private state
+between HTTPS sessions and checks that charged bytes return unchanged. The
+actual native process scenario kills the first client with SIGKILL after real
+SOCKS/TUN transfers, then launches an independent process on the same state;
+publication debt and working HTTPS survive. This does not establish recovery
+from Android data clearing/reinstallation, disk loss or a missing private store.
+
+Only aggregate debt is durable at this checkpoint. The ownership records needed
+to reclaim old-session mail after a process restart are not yet durable; that
+old debt remains charged. Discovery logs also remain append-only. Resolving
+both is required before sustained-use or reinstall qualification. No release
+claim follows from passing the current bounded application cohort.

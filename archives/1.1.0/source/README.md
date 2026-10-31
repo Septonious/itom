@@ -5,10 +5,15 @@ The former session-v2 transport and its synthetic qualification tools are
 preserved under `../retired-v2/`, outside the active source modules. Existing
 profiles are accepted; neither side opens or resets old wallets or journals.
 
-This is **MAILSTREAM-DEV1**, not a testing RC. Durable retention across process
+This is **MAILSTREAM-DEV1**, not a testing RC. Old-session reclamation after process
 restarts, retirement of discovery logs, sustained provider performance and
 Android device qualification remain unfinished. Do not replace a deployed
 service with this development snapshot.
+
+Retention accounting now survives process death in a separate store. Cleanup
+uses an independent server connection; a hung command pauses maintenance and
+preserves debt without stopping delivery. The native proof includes SIGKILL
+and a fresh client process. Old-session reclamation is still unfinished.
 
 The new engine uses verified TLS IMAP, fresh Noise sessions, independent TCP
 streams, immediate dispatch for small writes and bounded bulk batching. It does

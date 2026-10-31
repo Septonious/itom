@@ -72,6 +72,8 @@ type mailAccountState struct {
 	fast                  chan mailWork
 	bulk                  chan mailWork
 	spent                 int
+	reserved, recovered   int
+	storageKey            []byte
 	appended, received    atomic.Uint64
 	retired               atomic.Uint64
 	segments              map[segmentKey]*segmentRecord
@@ -96,6 +98,8 @@ type IMAPLink struct {
 	retirements      chan Retirement
 	events           []MailEvent
 	ownedMaintenance []*MaintenancePool
+	store            *retentionStore
+	closeErr         error
 }
 
 func validIdentity(s string) bool {
@@ -111,18 +115,29 @@ func validIdentity(s string) bool {
 }
 
 func NewIMAPLink(ctx context.Context, identity string, accounts []MailAccount, client bool) (*IMAPLink, error) {
+	return newIMAPLink(ctx, identity, accounts, client, nil)
+}
+
+func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, client bool, store *retentionStore) (*IMAPLink, error) {
 	if !validIdentity(identity) || len(accounts) == 0 || len(accounts) > 20 {
 		return nil, ErrProtocol
 	}
 	seen := map[string]bool{}
+	physical := map[string]bool{}
 	for _, a := range accounts {
 		if !validIdentity(a.ID) || seen[a.ID] || a.Host == "" || a.Port < 1 || a.Port > 65535 || a.Username == "" || a.Password == "" {
 			return nil, ErrProtocol
 		}
 		seen[a.ID] = true
+		key := string(retentionKey(a))
+		if physical[key] {
+			return nil, ErrProtocol
+		}
+		physical[key] = true
 	}
 	lifetime, cancel := context.WithCancel(ctx)
 	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4)}
+	l.store = store
 	l.retirements = make(chan Retirement, 64)
 	for _, config := range accounts {
 		life, stop := context.WithCancel(lifetime)
@@ -130,6 +145,18 @@ func NewIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 		a.segments = map[segmentKey]*segmentRecord{}
 		a.remoteSegments = map[segmentKey]*segmentRecord{}
 		a.writerOps = make(chan writerOperation, 1)
+		a.storageKey = retentionKey(config)
+		if store != nil {
+			value, err := store.load(a.storageKey)
+			if err != nil {
+				cancel()
+				for _, pool := range l.ownedMaintenance {
+					pool.Close()
+				}
+				return nil, err
+			}
+			a.spent, a.reserved, a.recovered = value, value, value
+		}
 		if !client && a.config.Maintenance == nil {
 			a.config.Maintenance = NewMaintenancePool(lifetime, config)
 			l.ownedMaintenance = append(l.ownedMaintenance, a.config.Maintenance)
@@ -179,9 +206,17 @@ func (l *IMAPLink) Close() error {
 		for _, pool := range l.ownedMaintenance {
 			pool.Close()
 		}
+		if l.store != nil {
+			for _, a := range l.accounts {
+				a.mu.Lock()
+				l.closeErr = errors.Join(l.closeErr, l.store.put(a.storageKey, a.spent))
+				a.mu.Unlock()
+			}
+			l.closeErr = errors.Join(l.closeErr, l.store.close())
+		}
 		close(l.incoming)
 	})
-	return nil
+	return l.closeErr
 }
 
 func (l *IMAPLink) Send(ctx context.Context, body []byte, priority bool) error {
@@ -333,6 +368,8 @@ func (a *mailAccountState) failedStage(stage string, err error) {
 				a.failure = "MAIL_AUTH"
 			case errors.Is(err, ErrCapacity):
 				a.failure = "MAIL_CAPACITY"
+			case errors.Is(err, ErrStorage):
+				a.failure = "MAIL_STORAGE_IO"
 			case errors.Is(err, context.Canceled):
 				a.failure = "CANCELED"
 			default:
@@ -665,8 +702,12 @@ func (a *mailAccountState) run() {
 				continue
 			} // queued DATA from a replaced session
 			a.mu.Lock()
-			a.spent += len(encoded)
+			chargeErr := a.chargeLocked(len(encoded))
 			a.mu.Unlock()
+			if chargeErr != nil {
+				a.failedStage("storage_charge", chargeErr)
+				return
+			}
 			// Before admission the server owns one selected control socket.
 			// Its receive owner serializes this small bootstrap APPEND with
 			// IDLE. Active traffic always has an independent APPEND writer.
@@ -704,7 +745,11 @@ func (a *mailAccountState) run() {
 			created[folder] = true
 		}
 		a.mu.Lock()
-		a.spent += len(encoded) // unknown APPEND is charged, never assumed absent
+		if err := a.chargeLocked(len(encoded)); err != nil {
+			a.mu.Unlock()
+			a.failedStage("storage_charge", err)
+			return
+		} // unknown APPEND is charged, never assumed absent
 		var segment *segmentRecord
 		if !work.control {
 			key := segmentKey{dataID, generation}
@@ -753,15 +798,18 @@ func (a *mailAccountState) run() {
 }
 
 type MailSnapshot struct {
-	Accounts      int                   `json:"accounts"`
-	Ready         int                   `json:"ready_accounts"`
-	Writers       int                   `json:"writer_accounts"`
-	Data          int                   `json:"data_accounts"`
-	Failed        int                   `json:"failed_accounts"`
-	Appended      uint64                `json:"appended_messages"`
-	Retired       uint64                `json:"retired_segments"`
-	RetainedBytes int                   `json:"retained_bytes_this_process"`
-	Lines         []MailAccountSnapshot `json:"lines"`
+	Accounts       int                   `json:"accounts"`
+	Ready          int                   `json:"ready_accounts"`
+	Writers        int                   `json:"writer_accounts"`
+	Data           int                   `json:"data_accounts"`
+	Failed         int                   `json:"failed_accounts"`
+	Appended       uint64                `json:"appended_messages"`
+	Retired        uint64                `json:"retired_segments"`
+	RetainedBytes  int                   `json:"retained_bytes"`
+	ReservedBytes  int                   `json:"reserved_retention_bytes"`
+	RecoveredBytes int                   `json:"recovered_retention_bytes"`
+	Durable        bool                  `json:"retention_durable"`
+	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
 	Account        string              `json:"account"`
@@ -770,7 +818,9 @@ type MailAccountSnapshot struct {
 	Ready          bool                `json:"ready"`
 	Writer         bool                `json:"writer"`
 	Data           bool                `json:"data"`
-	RetainedBytes  int                 `json:"retained_bytes_this_process"`
+	RetainedBytes  int                 `json:"retained_bytes"`
+	ReservedBytes  int                 `json:"reserved_retention_bytes"`
+	RecoveredBytes int                 `json:"recovered_retention_bytes"`
 	DataPhase      int32               `json:"data_phase"`
 	DataCursor     uint32              `json:"data_cursor"`
 	DataCount      uint32              `json:"data_count"`
@@ -779,7 +829,7 @@ type MailAccountSnapshot struct {
 }
 
 func (l *IMAPLink) Snapshot() MailSnapshot {
-	s := MailSnapshot{Accounts: len(l.accounts)}
+	s := MailSnapshot{Accounts: len(l.accounts), Durable: l.store != nil}
 	for _, a := range l.accounts {
 		a.mu.Lock()
 		if a.ready {
@@ -796,7 +846,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 			s.Failed++
 		}
 		s.RetainedBytes += a.spent
+		s.ReservedBytes += a.reserved
+		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
 		if a.config.Maintenance != nil {
 			line.Maintenance = a.config.Maintenance.Snapshot()
 		}

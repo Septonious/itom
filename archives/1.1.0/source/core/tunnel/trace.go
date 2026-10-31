@@ -64,6 +64,8 @@ func failureCode(err error) string {
 		return "CAPACITY"
 	case errors.Is(err, mailstream.ErrBusy):
 		return "SERVER_BUSY"
+	case errors.Is(err, mailstream.ErrStorage):
+		return "STORAGE_IO"
 	case errors.Is(err, mailstream.ErrProtocol):
 		return "PROTOCOL"
 	case errors.Is(err, mailstream.ErrClosed):

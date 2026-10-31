@@ -118,7 +118,7 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 	if stats["Upload"].(float64) < 2*(4096+128<<10) || stats["Download"].(float64) < 2*(4096+128<<10) {
 		t.Fatal("native application counters", stats)
 	}
-	if p := c.pool.Probe(); p.Samples == 0 || p.RTTMillis <= 0 {
+	if p := c.pool.Probe(); p.Samples == 0 || p.SampledAtMS <= 0 || p.Failure != "" {
 		t.Fatalf("real peer echo missing: %+v", p)
 	}
 	if evidence := c.Diagnostics(); !strings.Contains(evidence, `"Session":`) || !strings.Contains(evidence, `"Native":`) {
@@ -132,6 +132,14 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("actual native SOCKS and IPv4 TUN HTTPS upload/download integrity passed")
+	if os.Getenv("ITOM_NATIVE_TEST_CRASH") == "1" {
+		// Real process death bypasses Client.Close and its reservation
+		// checkpoint. The next independently launched native process must
+		// recover publication debt without trusting an in-memory history.
+		if err := unix.Kill(os.Getpid(), unix.SIGKILL); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func headerIPv4EmptySubnet() tcpip.Subnet {

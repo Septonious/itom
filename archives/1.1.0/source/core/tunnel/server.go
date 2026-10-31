@@ -99,7 +99,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 		accounts[i].Maintenance = pools[accounts[i].ID]
 	}
 	identity := profileIdentity(p)
-	link, err := mailstream.NewIMAPLink(ctx, identity, accounts, false)
+	link, err := mailstream.NewStoredIMAPLink(ctx, identity, accounts, false, filepath.Dir(trace.path))
 	if err != nil {
 		return err
 	}

@@ -29,12 +29,13 @@ func run() error {
 	mode := flag.String("mode", "", "server or socks (standalone prototype)")
 	path := flag.String("profile", "", "new mailstream JSON profile; legacy profile/state is not modified")
 	listen := flag.String("listen", "127.0.0.1:1081", "local SOCKS5 TCP CONNECT listener")
+	state := flag.String("state", "", "private directory for durable retention accounting (required)")
 	flag.Parse()
 	if *mode != "server" && *mode != "socks" {
 		return errors.New("--mode server or socks required")
 	}
-	if *path == "" || flag.NArg() != 0 {
-		return errors.New("--profile required")
+	if *path == "" || *state == "" || flag.NArg() != 0 {
+		return errors.New("--profile and --state required")
 	}
 	f, err := os.Open(*path)
 	if err != nil {
@@ -57,7 +58,7 @@ func run() error {
 	defer clear(psk)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	link, err := mailstream.NewIMAPLink(ctx, p.Identity, p.Accounts, *mode == "socks")
+	link, err := mailstream.NewStoredIMAPLink(ctx, p.Identity, p.Accounts, *mode == "socks", *state)
 	if err != nil {
 		return err
 	}

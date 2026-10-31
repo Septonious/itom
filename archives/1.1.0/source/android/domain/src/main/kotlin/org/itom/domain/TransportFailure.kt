@@ -5,6 +5,7 @@ fun nativeFailureCode(message: String?): String = message?.takeIf {
     it in setOf("SOCKS_PORT_IN_USE", "UNDERLYING_DNS_MISSING", "UNDERLYING_DNS_INVALID",
         "NATIVE_CONFIG", "DNS_ADDRESS", "DNS_BACKUP_REQUIRED", "DNS_DUPLICATE",
         "MAILSTREAM_STARTUP_PROFILE", "MAILSTREAM_STARTUP_IMAP", "MAILSTREAM_STARTUP_NOISE",
+        "MAILSTREAM_STARTUP_STORAGE",
         "MAILSTREAM_STARTUP_PATH", "MAILSTREAM_SERVER_BUSY", "MAILSTREAM_STOPPED",
         "V2_STARTUP_PROFILE", "V2_STARTUP_WALLET", "V2_STARTUP_IMAP",
         "V2_STARTUP_RENDEZVOUS", "V2_STARTUP_REQUEST", "V2_STARTUP_INVITATION", "V2_STARTUP_NOISE", "V2_STARTUP_ROSTER",
@@ -15,6 +16,7 @@ fun startupStatus(raw: String): String {
     val root = TransportDiagnostics.parse(raw).root
     val label = when (root.field("StartupStage")) {
         "PROFILE" -> "Checking profile"
+        "STORAGE" -> "Opening saved transport state"
         "WALLET" -> "Opening saved session"
         "IMAP" -> {
             val total = root.field("TotalLines")?.toIntOrNull()?.takeIf { it in 1..4096 }

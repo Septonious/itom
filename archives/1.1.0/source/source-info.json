@@ -4,7 +4,7 @@
   "revision": "itom-1-1-0-mailstream-dev1",
   "archive_name": "ITOM-1.1.0-MAILSTREAM-DEV1-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "DEVELOPMENT: not an RC; provider performance, durable retention and full rollout qualification unfinished",
+  "qualification": "DEVELOPMENT: not an RC; old-session reclamation, discovery-log retirement and field performance unfinished",
   "android_version_name": "1.1.0-mailstream-dev1",
   "android_version_code": 10125,
   "android_application_id": "org.itom.client",
