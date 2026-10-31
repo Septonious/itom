@@ -60,6 +60,21 @@ IMAP prototype. Android integration, sustained physical reclamation and rollout
 qualification remain explicit unfinished work until their code is present.
 No APK or testing RC is qualified by a compiling protocol core.
 
+The standalone `cmd/itom-mailstream` command supports a server and a loopback
+SOCKS5 TCP client. It uses a new JSON profile (`identity`, a base64 32-byte
+`psk_base64`, and `accounts` containing `id`, `host`, `port`, `username`,
+`password`). This is not the existing APK's profile format. Its prototype storage
+bound is 64 MiB of attempted physical mail per account per Link lifetime;
+restarting the process does not prove or refund prior storage. It must not be
+installed as a replacement service while durable retention is unfinished.
+
+The first whole-application acceptance run exposed an IDLE ownership bug on
+the second session: closing an old DATA socket did not wake its local IDLE waiter.
+The corrected owner explicitly wakes and joins it before opening the replacement,
+and distinguishes that intentional switch from a carrier failure. The same
+scenario then passed all three session starts, each with 4,325,376 HTTPS bytes
+up and down. Loopback startup/RTT measurements are not mobile/provider results.
+
 ## Acceptance and release boundary
 
 Only whole-path scenarios should drive promotion: verified TLS IMAP, actual TCP

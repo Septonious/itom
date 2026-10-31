@@ -256,8 +256,12 @@ func (a *mailAccountState) closeData() {
 func (a *mailAccountState) attach(id SessionID) error {
 	a.attachMu.Lock()
 	defer a.attachMu.Unlock()
-	a.link.mu.Lock();current:=a.link.attached;a.link.mu.Unlock()
-	if current!=id{return ErrClosed}
+	a.link.mu.Lock()
+	current := a.link.attached
+	a.link.mu.Unlock()
+	if current != id {
+		return ErrClosed
+	}
 	a.mu.Lock()
 	if a.failed || !a.ready {
 		a.mu.Unlock()
@@ -279,8 +283,13 @@ func (a *mailAccountState) attach(id SessionID) error {
 		a.fail()
 		return err
 	}
-	a.link.mu.Lock();current=a.link.attached;a.link.mu.Unlock()
-	if current!=id{p.close();return ErrClosed}
+	a.link.mu.Lock()
+	current = a.link.attached
+	a.link.mu.Unlock()
+	if current != id {
+		p.close()
+		return ErrClosed
+	}
 	done := make(chan struct{})
 	a.mu.Lock()
 	a.data, a.dataDone, a.id = p, done, id
@@ -288,7 +297,12 @@ func (a *mailAccountState) attach(id SessionID) error {
 	go func() {
 		defer close(done)
 		if err := p.receive(a.ctx, a.link.incoming); err != nil && a.ctx.Err() == nil {
-			a.fail()
+			a.mu.Lock()
+			current := a.data == p
+			a.mu.Unlock()
+			if current {
+				a.fail()
+			}
 		}
 	}()
 	a.link.notify()
@@ -409,12 +423,14 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 }
 
 type mailPipe struct {
-	client  *imapclient.Client
-	conn    *tls.Conn
-	cancel  func() bool
-	wake    chan struct{}
-	invalid atomic.Bool
-	after   uint32
+	client    *imapclient.Client
+	conn      *tls.Conn
+	cancel    func() bool
+	wake      chan struct{}
+	invalid   atomic.Bool
+	after     uint32
+	done      chan struct{}
+	closeOnce sync.Once
 }
 
 func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
@@ -429,7 +445,7 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		conn.Close()
 		return nil, ErrAuth
 	}
-	p := &mailPipe{conn: conn, wake: make(chan struct{}, 1)}
+	p := &mailPipe{conn: conn, wake: make(chan struct{}, 1), done: make(chan struct{})}
 	p.cancel = context.AfterFunc(ctx, func() { conn.Close() })
 	changed := func() {
 		select {
@@ -444,7 +460,9 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 	}
 	return p, nil
 }
-func (p *mailPipe) close() { p.cancel(); p.conn.Close(); p.client.Close() }
+func (p *mailPipe) close() {
+	p.closeOnce.Do(func() { close(p.done); p.cancel(); p.conn.Close(); p.client.Close() })
+}
 func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error) {
 	if err := p.client.Create(folder, nil).Wait(); err != nil {
 		var status *imap.Error
@@ -549,6 +567,9 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			// An EXISTS arriving between the check above and IDLE must not
 			// sleep until another message. The bounded wake edge is retained.
 			select {
+			case <-p.done:
+				idle.Close()
+				return ErrClosed
 			case <-ctx.Done():
 				p.conn.Close()
 				idle.Close()
@@ -565,6 +586,8 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			}
 			delay := min(25*time.Millisecond, max(time.Millisecond, time.Since(begin)/4))
 			select {
+			case <-p.done:
+				return ErrClosed
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-p.wake:

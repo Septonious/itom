@@ -1,0 +1,31 @@
+name: Mailbox stream rewrite - application acceptance only
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: ["archives/1.1.0/rewrite/**", ".github/workflows/itom-mailstream-v3-source.yml"]
+permissions: {contents: read}
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env: {GOTOOLCHAIN: local}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Real TCP and HTTPS over TLS IMAP, including user restarts
+        working-directory: archives/1.1.0/rewrite
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/mailstream-evidence"
+          go test -race -json -count=1 -timeout=90s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/application.jsonl"
+          go vet ./...
+          go build ./cmd/itom-mailstream
+          ./itom-mailstream --help
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/mailstream-evidence/SOURCE_COMMIT"
+          cp REWRITE.md "$GITHUB_WORKSPACE/mailstream-evidence/"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailbox-stream-application-evidence-not-rc, path: mailstream-evidence/}
+# No APK/release publication: Android, retention and real-provider qualification
+# are not established by this source acceptance scenario.
