@@ -1,0 +1,12 @@
+{
+  "scope": "actual Android domain source and tests, isolated JVM build; not APK/device qualification",
+  "gradle": "9.4.0",
+  "jdk": "21, JVM target 17",
+  "tests": 93,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "runtime_commit": "1355987382fd96b3a3876d12a3cfdd3c6bfd6cbb",
+  "github_run": "https://github.com/Septonious/itom/actions/runs/41246581669",
+  "github_conclusion": "success"
+}

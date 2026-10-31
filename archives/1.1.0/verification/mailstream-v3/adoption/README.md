@@ -22,3 +22,21 @@ The GitHub workflow independently repeats the actual source modules on its
 recorded commit. Android compilation/device checks, durable restart retention,
 control-log retirement and mobile/provider throughput qualification remain open.
 No testing RC or APK is published by this checkpoint.
+
+`domain-jvm.log` and its summary record all 93 actual domain tests passing on
+an isolated JVM build (JDK 21, bytecode target 17); this does not compile the
+Android app or replace device testing. The GitHub application workflow passed
+on runtime commit `1355987382fd96b3a3876d12a3cfdd3c6bfd6cbb`:
+https://github.com/Septonious/itom/actions/runs/41246581669
+
+## Remaining structural blockers
+
+Physical debt is still process-local and discovery logs do not yet retire.
+Successful six-session reuse is not durable process/reinstall qualification.
+The retirement queue has its own worker but still borrows the control receiver's
+socket. Tagged DELETE refusal is isolated; a hanging DELETE can delay that
+socket's control receive path. Maintenance therefore needs independent carrier
+ownership with explicit physical connection admission before a testing RC.
+The current cohort injects delayed APPEND completion and DELETE refusal; it
+does not establish isolation from an arbitrarily stalled DELETE. These limits
+must not be masked by a longer application deadline or a larger storage budget.
