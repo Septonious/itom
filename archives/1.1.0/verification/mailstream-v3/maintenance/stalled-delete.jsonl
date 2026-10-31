@@ -1,0 +1,23 @@
+{"Time":"2026-10-31T22:34:53.520807Z","Action":"start","Package":"itom.local/mailstream"}
+{"Time":"2026-10-31T22:34:53.521121867Z","Action":"start","Package":"itom.local/mailstream/cmd/itom-mailstream"}
+{"Time":"2026-10-31T22:34:53.521144267Z","Action":"output","Package":"itom.local/mailstream/cmd/itom-mailstream","Output":"?   \titom.local/mailstream/cmd/itom-mailstream\t[no test files]\n"}
+{"Time":"2026-10-31T22:34:53.521197913Z","Action":"skip","Package":"itom.local/mailstream/cmd/itom-mailstream","Elapsed":0}
+{"Time":"2026-10-31T22:34:53.532044878Z","Action":"run","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts"}
+{"Time":"2026-10-31T22:34:53.532162577Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts","Output":"=== RUN   TestApplicationHTTPSAndUserRestarts\n","OutputType":"frame"}
+{"Time":"2026-10-31T22:34:53.532511085Z","Action":"run","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled"}
+{"Time":"2026-10-31T22:34:53.532544597Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"=== RUN   TestApplicationHTTPSAndUserRestarts/retirement_stalled\n","OutputType":"frame"}
+{"Time":"2026-10-31T22:34:55.174088141Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:93: TCP half-close preserved 1048576 response bytes and EOF\n"}
+{"Time":"2026-10-31T22:34:59.641681545Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:142: restart=0 startup_ms=1040 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=2\n"}
+{"Time":"2026-10-31T22:35:04.400379147Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:142: restart=1 startup_ms=45 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=4\n"}
+{"Time":"2026-10-31T22:35:09.059593776Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:142: restart=2 startup_ms=33 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=3\n"}
+{"Time":"2026-10-31T22:35:09.059652684Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:159: segment_delete_attempts=2 verified_retirements=0\n"}
+{"Time":"2026-10-31T22:35:09.059659889Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"    application_test.go:180: stalled DELETE isolated: paused_pools=2, account_failures=0, no maintenance reconnects\n"}
+{"Time":"2026-10-31T22:35:09.05966483Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"2026/10/31 22:35:09 failed to read command: write tcp 127.0.0.1:34735-\u003e127.0.0.1:40670: write: broken pipe\n"}
+{"Time":"2026-10-31T22:35:09.059668983Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"2026/10/31 22:35:09 handling IDLE command: use of closed network connection\n"}
+{"Time":"2026-10-31T22:35:09.060341399Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Output":"--- PASS: TestApplicationHTTPSAndUserRestarts/retirement_stalled (15.53s)\n","OutputType":"frame"}
+{"Time":"2026-10-31T22:35:09.060367114Z","Action":"pass","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts/retirement_stalled","Elapsed":15.53}
+{"Time":"2026-10-31T22:35:09.060394103Z","Action":"output","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts","Output":"--- PASS: TestApplicationHTTPSAndUserRestarts (15.53s)\n","OutputType":"frame"}
+{"Time":"2026-10-31T22:35:09.060424672Z","Action":"pass","Package":"itom.local/mailstream","Test":"TestApplicationHTTPSAndUserRestarts","Elapsed":15.53}
+{"Time":"2026-10-31T22:35:09.060464941Z","Action":"output","Package":"itom.local/mailstream","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-31T22:35:10.096176066Z","Action":"output","Package":"itom.local/mailstream","Output":"ok  \titom.local/mailstream\t16.574s\n"}
+{"Time":"2026-10-31T22:35:10.096500877Z","Action":"pass","Package":"itom.local/mailstream","Elapsed":16.576}

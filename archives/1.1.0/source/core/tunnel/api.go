@@ -113,7 +113,7 @@ func profileAccounts(p servercfg.Profile, d Dial, roots *tls.Config) ([]mailstre
 	limits := p.Transport.Effective()
 	// Every configured endpoint needs control receive + writer. A live user
 	// adds one DATA reader on both ends; admission enforces that last pair.
-	if limits.AccountSessions < 4*limits.Participants+2 || limits.EndpointConnections < (2*limits.Participants+1)*len(p.Accounts) {
+	if limits.AccountSessions < 3*limits.Participants+4 || limits.EndpointConnections < (limits.Participants+3)*len(p.Accounts) {
 		return nil, nil, errors.New("MAILSTREAM_SOCKET_BUDGET")
 	}
 	if roots != nil && roots.InsecureSkipVerify {
@@ -156,7 +156,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		n := 0
 		if link != nil {
 			snap := link.Snapshot()
-			n = 2*snap.Ready + snap.Data
+			n = snap.Ready + snap.Writers + snap.Data
 		}
 		progress := StartupProgress{Stage: stage, ConfigHash: configHash, FailureReason: failure, SelectedLines: n, TotalLines: 3 * len(p.Accounts)}
 		record := map[string]any{"Event": "startup", "Revision": TransportRevision, "Progress": progress, "SampledAtMS": time.Now().UnixMilli()}
@@ -354,7 +354,10 @@ func (c *Client) Snapshot() ClientSnapshot {
 		}
 		active := 0
 		if line.Ready {
-			active = 2
+			active++
+		}
+		if line.Writer {
+			active++
 		}
 		if line.Data {
 			active++

@@ -31,18 +31,21 @@ import (
 // It intentionally provides no UIDPLUS and can refuse cleanup commands. It
 // cannot establish real-provider performance or sustained reclamation.
 func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
-	for _, maintenance := range []bool{true, false} {
-		name := "retirement_available"
-		if !maintenance {
-			name = "retirement_refused"
-		}
-		t.Run(name, func(t *testing.T) { runApplication(t, maintenance) })
+	for _, scenario := range []struct {
+		name                 string
+		maintenance, stalled bool
+	}{
+		{"retirement_available", true, false},
+		{"retirement_refused", false, false},
+		{"retirement_stalled", false, true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) { runApplication(t, scenario.maintenance, scenario.stalled) })
 	}
 }
-func runApplication(t *testing.T, maintenance bool) {
+func runApplication(t *testing.T, maintenance, stalled bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	accounts, cleanupCalls := applicationMailServer(t, maintenance)
+	accounts, cleanupCalls := applicationMailServer(t, maintenance, stalled)
 	serverLink, err := NewIMAPLink(ctx, "application", accounts, false)
 	if err != nil {
 		t.Fatal(err)
@@ -133,6 +136,9 @@ func runApplication(t *testing.T, maintenance bool) {
 			session.Close()
 			t.Fatal("actual mailbox roundtrip", err)
 		}
+		if stalled && rtt > 300*time.Millisecond {
+			t.Fatalf("stalled maintenance delayed control ping: %s", rtt)
+		}
 		t.Logf("restart=%d startup_ms=%d https_upload_bytes=%d https_download_bytes=%d mailbox_ping_ms=%d", round, startupMS, len(payload), len(got), rtt.Milliseconds())
 		baseTransport.CloseIdleConnections()
 		session.Close()
@@ -153,6 +159,25 @@ func runApplication(t *testing.T, maintenance bool) {
 	t.Logf("segment_delete_attempts=%d verified_retirements=%d", cleanupCalls.delete.Load(), retired)
 	if !maintenance && clientLink.Snapshot().RetainedBytes == 0 {
 		t.Fatal("refused maintenance erased retention debt")
+	}
+	if stalled {
+		server := serverLink.Snapshot()
+		if server.Failed != 0 || server.Ready != len(accounts) || clientLink.Snapshot().Failed != 0 {
+			t.Fatalf("stalled DELETE failed delivery accounts: %+v", server)
+		}
+		if cleanupCalls.delete.Load() > int64(len(accounts)) {
+			t.Fatal("stalled command triggered maintenance reconnects", cleanupCalls.delete.Load())
+		}
+		paused := 0
+		for _, a := range server.Lines {
+			if a.Maintenance.Paused {
+				paused++
+			}
+		}
+		if paused == 0 {
+			t.Fatal("stalled maintenance never entered its bounded pause")
+		}
+		t.Logf("stalled DELETE isolated: paused_pools=%d, account_failures=0, no maintenance reconnects", paused)
 	}
 	cancel()
 	select {
@@ -234,7 +259,11 @@ type noCleanupSession struct {
 	maintenance  bool
 	appendCounts map[string]int
 }
-type cleanupCounters struct{ expunge, delete atomic.Int64 }
+type cleanupCounters struct {
+	expunge, delete atomic.Int64
+	stalled         bool
+	release         chan struct{}
+}
 
 func (s noCleanupSession) Expunge(*imapserver.ExpungeWriter, *imap.UIDSet) error {
 	s.calls.expunge.Add(1)
@@ -242,6 +271,9 @@ func (s noCleanupSession) Expunge(*imapserver.ExpungeWriter, *imap.UIDSet) error
 }
 func (s noCleanupSession) Delete(folder string) error {
 	s.calls.delete.Add(1)
+	if s.calls.stalled {
+		<-s.calls.release
+	}
 	if s.maintenance {
 		return s.Session.Delete(folder)
 	}
@@ -261,7 +293,7 @@ func (s noCleanupSession) Append(folder string, r imap.LiteralReader, opts *imap
 	return data, err
 }
 
-func applicationMailServer(t *testing.T, maintenance bool) ([]MailAccount, *cleanupCounters) {
+func applicationMailServer(t *testing.T, maintenance, stalled bool) ([]MailAccount, *cleanupCounters) {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -283,7 +315,7 @@ func applicationMailServer(t *testing.T, maintenance bool) ([]MailAccount, *clea
 		t.Fatal(err)
 	}
 	backend := imapmemserver.New()
-	calls := &cleanupCounters{}
+	calls := &cleanupCounters{stalled: stalled, release: make(chan struct{})}
 	var accounts []MailAccount
 	for n := 0; n < 2; n++ {
 		username := fmt.Sprintf("fixture%d", n)
@@ -295,6 +327,6 @@ func applicationMailServer(t *testing.T, maintenance bool) ([]MailAccount, *clea
 	}})
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
-	t.Cleanup(func() { server.Close(); <-done })
+	t.Cleanup(func() { close(calls.release); server.Close(); <-done })
 	return accounts, calls
 }

@@ -98,7 +98,11 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 					if retired.Session != s.cipher.id {
 						continue
 					}
-					if err := s.send(s.ctx, frame{kind: frameRetired, offset: uint64(retired.Generation), data: []byte(retired.Account)}, true); err != nil {
+					kind := retired.Kind
+					if kind == 0 {
+						kind = frameRetired
+					}
+					if err := s.send(s.ctx, frame{kind: kind, offset: uint64(retired.Generation), data: []byte(retired.Account)}, true); err != nil {
 						return
 					}
 				}
@@ -394,12 +398,26 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
-	if f.kind == frameRetired {
+	if f.kind == frameRetired || f.kind == frameCollect || f.kind == frameCollected {
 		if f.stream != 0 || f.offset > uint64(^uint32(0)) || !validIdentity(string(f.data)) {
 			return ErrProtocol
 		}
 		if storage, ok := s.link.(StorageLink); ok {
-			return storage.ConfirmRetired(Retirement{Session: s.cipher.id, Account: string(f.data), Generation: uint32(f.offset)})
+			r := Retirement{Session: s.cipher.id, Account: string(f.data), Generation: uint32(f.offset)}
+			switch f.kind {
+			case frameRetired:
+				return storage.ConfirmRetired(r)
+			case frameCollect:
+				if !s.server {
+					return ErrProtocol
+				}
+				return storage.RequestCollection(r)
+			case frameCollected:
+				if s.server {
+					return ErrProtocol
+				}
+				return storage.ConfirmCollection(r)
+			}
 		}
 		return ErrProtocol
 	}

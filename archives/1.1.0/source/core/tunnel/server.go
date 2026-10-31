@@ -50,12 +50,24 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 	defer stopTraffic()
 	done := make(chan error, len(c.Users))
 	limits := c.TransportForUsers()
-	slots := min(limits.Participants, (limits.AccountSessions-4*limits.Participants)/2,
-		limits.EndpointConnections/len(c.Accounts)-2*limits.Participants)
+	// Per account: one standing server control and two client bootstrap
+	// sockets per configured identity; three extra sockets per admitted
+	// session; one independent, shared server maintenance connection.
+	slots := min(limits.Participants, (limits.AccountSessions-3*limits.Participants-1)/3,
+		(limits.EndpointConnections/len(c.Accounts)-limits.Participants-1)/2)
 	if slots < 1 {
 		return errors.New("MAILSTREAM_SOCKET_BUDGET")
 	}
 	admission := &sessionAdmission{limit: slots, owners: map[string]int{}}
+	pools := map[string]*mailstream.MaintenancePool{}
+	for _, a := range c.Accounts {
+		pools[a.ID] = mailstream.NewMaintenancePool(ctx, mailstream.MailAccount{ID: a.ID, Host: a.Mail.Host, Port: a.Mail.Port, Username: a.Mail.Username, Password: a.Mail.Password, DialIP: a.Mail.DialIP})
+	}
+	defer func() {
+		for _, pool := range pools {
+			pool.Close()
+		}
+	}()
 	active := 0
 	for _, u := range c.Users {
 		if !u.Enabled {
@@ -63,7 +75,7 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		}
 		active++
 		p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: c.Server, Provider: c.Provider, User: u, Accounts: c.Accounts, Transport: c.TransportForUsers()}
-		go func() { done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, log, managed) }()
+		go func() { done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, pools, log, managed) }()
 	}
 	if active == 0 {
 		return servercfg.ErrConfig
@@ -77,12 +89,15 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 	}
 	return result
 }
-func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, pools map[string]*mailstream.MaintenancePool, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
 	accounts, key, err := profileAccounts(p, &net.Dialer{Timeout: 15 * time.Second}, nil)
 	if err != nil {
 		return err
 	}
 	defer clear(key)
+	for i := range accounts {
+		accounts[i].Maintenance = pools[accounts[i].ID]
+	}
 	identity := profileIdentity(p)
 	link, err := mailstream.NewIMAPLink(ctx, identity, accounts, false)
 	if err != nil {

@@ -15,11 +15,14 @@ type Retirement struct {
 	Session    SessionID
 	Account    string
 	Generation uint32
+	Kind       byte
 }
 type StorageLink interface {
 	Retirements() <-chan Retirement
 	Acknowledge(SessionID, uint64)
 	ConfirmRetired(Retirement) error
+	RequestCollection(Retirement) error
+	ConfirmCollection(Retirement) error
 }
 type segmentKey struct {
 	session    SessionID
@@ -31,6 +34,8 @@ type segmentRecord struct {
 	appendPending            int
 	awaiting                 map[uint64]bool
 	retired, queued, refused bool
+	remote                   bool
+	deleted                  bool
 }
 type cleanupJob struct {
 	account *mailAccountState
@@ -72,6 +77,60 @@ func (l *IMAPLink) ConfirmRetired(r Retirement) error {
 	return ErrProtocol
 }
 
+// Only the server deletes mail. A producer's authenticated collection request
+// proves its APPEND tags are terminal; the server independently verifies its
+// own reader has drained and unselected that exact inbound generation.
+func (l *IMAPLink) RequestCollection(r Retirement) error {
+	if l.client {
+		return ErrProtocol
+	}
+	for _, a := range l.accounts {
+		if a.config.ID != r.Account {
+			continue
+		}
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		if a.id != r.Session || a.data == nil || a.data.generationDebug.Load() <= r.Generation {
+			return ErrProtocol
+		}
+		key := segmentKey{r.Session, r.Generation}
+		if a.remoteSegments[key] != nil {
+			return nil
+		}
+		if len(a.remoteSegments) >= 128 {
+			return ErrCapacity
+		}
+		a.remoteSegments[key] = &segmentRecord{folder: l.segmentFolder(r.Session, false, r.Generation), remote: true, retired: true}
+		return nil
+	}
+	return ErrProtocol
+}
+func (l *IMAPLink) ConfirmCollection(r Retirement) error {
+	if !l.client {
+		return ErrProtocol
+	}
+	for _, a := range l.accounts {
+		if a.config.ID != r.Account {
+			continue
+		}
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		key := segmentKey{r.Session, r.Generation}
+		record := a.segments[key]
+		if record == nil {
+			return nil
+		} // repeated authenticated confirmation
+		if !record.queued || !record.retired || record.appendPending != 0 || len(record.awaiting) != 0 {
+			return ErrProtocol
+		}
+		a.spent -= record.bytes
+		delete(a.segments, key)
+		a.retired.Add(1)
+		return nil
+	}
+	return ErrProtocol
+}
+
 // Maintenance has its own owner and queue. It is never called from OpenTCP,
 // Write, Connect or the DATA receive loop. Its finite debt remains charged on
 // refusal, timeout, unexpected presence, or an unknown APPEND.
@@ -90,16 +149,44 @@ func (l *IMAPLink) collectSegments() {
 				a.mu.Unlock()
 				continue
 			}
-			for key, record := range a.segments {
+			queue := func(key segmentKey, record *segmentRecord) {
+				if record.remote && record.deleted {
+					select {
+					case l.retirements <- Retirement{key.session, a.config.ID, key.generation, frameCollected}:
+						delete(a.remoteSegments, key)
+					default:
+					}
+					return
+				}
 				if !record.retired || len(record.awaiting) != 0 || record.appendPending != 0 || record.queued || record.refused {
-					continue
+					return
 				}
 				record.queued = true
-				select {
-				case a.control.cleanups <- cleanupJob{a, key, record}:
-				default:
-					record.queued = false
+				if l.client {
+					select {
+					case l.retirements <- Retirement{key.session, a.config.ID, key.generation, frameCollect}:
+					default:
+						record.queued = false
+					}
+					return
 				}
+				job := cleanupJob{a, key, record}
+				err := a.config.Maintenance.submit(maintenanceJob{ctx: a.ctx, run: func(p *mailPipe) error { return p.cleanup(job) }, failed: func(error) {
+					a.mu.Lock()
+					record.refused = true
+					a.mu.Unlock()
+				}})
+				if errors.Is(err, ErrCapacity) {
+					record.queued = false
+				} else if err != nil {
+					record.refused = true
+				}
+			}
+			for key, record := range a.segments {
+				queue(key, record)
+			}
+			for key, record := range a.remoteSegments {
+				queue(key, record)
 			}
 			a.mu.Unlock()
 		}
@@ -111,11 +198,12 @@ func (p *mailPipe) cleanup(job cleanupJob) error {
 	a := job.account
 	// The folder is derived from locally charged metadata, never from an
 	// untrusted mailbox name supplied by a peer or an arbitrary flags scan.
-	if job.record.folder != a.link.segmentFolder(job.key.session, true, job.key.generation) {
+	if job.record.folder != a.link.segmentFolder(job.key.session, !job.record.remote, job.key.generation) {
 		return ErrProtocol
 	}
 	err := p.client.Delete(job.record.folder).Wait()
-	if err == nil {
+	var tagged *imap.Error
+	if err == nil || errors.As(err, &tagged) {
 		p.phase.Store(5)
 		var listErr error
 		rows, readErr := p.client.List("", job.record.folder, nil).Collect()
@@ -124,17 +212,27 @@ func (p *mailPipe) cleanup(job cleanupJob) error {
 			err = listErr
 		} else if len(rows) != 0 {
 			err = ErrProtocol
+		} else {
+			err = nil
 		}
 	}
 	a.mu.Lock()
 	if err == nil {
-		if current := a.segments[job.key]; current != job.record {
+		records := a.segments
+		if job.record.remote {
+			records = a.remoteSegments
+		}
+		if current := records[job.key]; current != job.record {
 			a.mu.Unlock()
 			return ErrProtocol
 		}
-		a.spent -= job.record.bytes
-		delete(a.segments, job.key)
-		a.retired.Add(1)
+		if !job.record.remote {
+			a.spent -= job.record.bytes
+			a.retired.Add(1)
+			delete(records, job.key)
+		} else {
+			job.record.deleted = true
+		}
 	} else {
 		job.record.refused = true
 	}
@@ -158,13 +256,15 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 		old := generation
 		generation++
 		p.generation = generation
-		p.generationDebug.Store(generation)
 		if _, err := p.selectLog(a.link.segmentFolder(id, false, generation), false); err != nil {
 			return err
 		}
+		p.generationDebug.Store(generation)
 		select {
 		case a.link.retirements <- Retirement{Session: id, Account: a.config.ID, Generation: old}:
 			return nil
+		case <-p.done:
+			return ErrClosed
 		case <-ctx.Done():
 			return ctx.Err()
 		}

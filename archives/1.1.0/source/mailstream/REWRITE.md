@@ -42,10 +42,11 @@ stopped during MIME verification. That is not evidence that UID EXPUNGE works.
   has drained and unselected them. No failed deletion is treated as success.
   An exhausted physical budget eventually stops publication on that account;
   a storage limit cannot be fixed by pretending that mail disappeared.
-* Three connections per endpoint/account are the explicit maximum: control
-  receive, DATA receive and APPEND writer. No runtime reconnect storm or extra
-  cleanup socket is permitted. Failed accounts are isolated; retry policy must
-  be separate from an active transfer and preserve that budget.
+* The client has three roles per account: control receive, DATA receive and
+  APPEND writer. A standing server identity keeps only its control socket and
+  opens the writer/DATA pair after authentication. One separately budgeted
+  server maintenance connection per account is shared across identities and
+  retires both directions. Failed maintenance never reconnects a delivery role.
 
 ## One integrated rewrite, not another chain of RC patches
 
@@ -106,6 +107,19 @@ immediately started receiver could see Mailbox()==nil and fail an account.
 The pinned fork now completes state transitions before waking Wait. The manifest
 is updated, the full library suite passes, and the failed application cohort is
 retained beside the corrected run. No custom response parser was introduced.
+
+Retirement no longer borrows the control socket. Only the server performs
+DELETE/LIST, on one maintenance connection per physical account shared across
+configured identities. Client publication asks for collection only after all
+APPEND tags and receipts are terminal. The server checks that its reader has
+unselected the exact generation, deletes it, independently checks absence, then
+returns an authenticated collection confirmation. Only that confirmation frees
+client retention. Unknown maintenance outcomes pause that owner for its lifetime,
+with debt intact and no socket-reopen loop. A blocked-DELETE application scenario
+completes three HTTPS/restart cycles and checks responsive control, zero account
+failures and no maintenance reconnects. Server admission reserves this socket:
+3P + 3A + 1 provider connections/account for P configured and A active identities.
+At P=2/A=1 this fits the existing default of ten.
 
 Durable process-restart retention and control-log retirement,
 full sustained physical reclamation, Android device qualification and rollout
