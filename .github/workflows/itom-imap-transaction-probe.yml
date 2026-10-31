@@ -1,0 +1,71 @@
+name: Build and publish standalone IMAP transaction probe 1
+on:
+  push:
+    branches: ["codex/v1.1.0-session-transport-v2"]
+    paths: [".github/workflows/itom-imap-transaction-probe.yml"]
+permissions: {contents: write}
+concurrency: {group: itom-imap-probe1, cancel-in-progress: false}
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOTOOLCHAIN: local
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Independent IMAP transactions, refusal privacy and offline guard
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/probe-assets"
+          go test -race -json ./probe ./manager -count=1 -timeout=60s | tee "$GITHUB_WORKSPACE/probe-assets/DIAGNOSTIC_TESTS.jsonl"
+          go vet ./probe ./manager ./transport ./cmd/itom-imap-probe
+      - name: Build standalone Linux executables and record boundaries
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            (cd archives/1.1.0/source/core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/probe-assets/itom-imap-probe-linux-$arch" ./cmd/itom-imap-probe)
+          done
+          probe-assets/itom-imap-probe-linux-amd64 --help
+          git rev-parse HEAD > probe-assets/SOURCE_COMMIT
+          cp archives/1.1.0/IMAP_PROBE1.md probe-assets/
+          cp archives/1.1.0/verification/imap-probe1/FIELD_FINDINGS.json probe-assets/
+          python3 archives/1.1.0/source/tools/package_sources.py --output probe-assets/ITOM-IMAP-Probe1-sources.zip
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,zipfile
+          root=Path('probe-assets')
+          logs=[json.loads(s)for s in (root/'DIAGNOSTIC_TESTS.jsonl').read_text().splitlines()if s.startswith('{')]
+          assert not any(e.get('Action')=='fail'for e in logs)
+          assert sum(bool(e.get('Test')and'/'not in e['Test']and e.get('Action')=='pass')for e in logs)==3
+          with zipfile.ZipFile(root/'LOCAL_EVIDENCE.zip','w',zipfile.ZIP_DEFLATED)as z:
+              for folder in ['archives/1.1.0/verification/imap-probe1','archives/1.1.0/experiments/rc1-14-anchor-isolation']:
+                  for p in Path(folder).iterdir():
+                      if p.is_file():z.write(p,p.as_posix())
+          metadata={'diagnostic_only':True,'working_vpn_release_qualified':False,'source_commit':(root/'SOURCE_COMMIT').read_text().strip(),'transport_version':'RC1.13 unchanged','transport_runtime_changes_promoted':False,'android_apk_produced':False,'independent_imap_test_parent_groups_passed':3,'credentials_published':False}
+          (root/'PROBE_BUILD.json').write_text(json.dumps(metadata,indent=2)+'\n')
+          (root/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n'for p in sorted(root.iterdir())if p.is_file()and p.name!='SHA256SUMS'))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: itom-imap-probe1, path: probe-assets/}
+      - name: Publish diagnostic tools with verified digests
+        run: |
+          set -euo pipefail
+          tag=v1.1.0-rc1.13-imap-probe1
+          gh release create "$tag" --draft --prerelease --latest=false --target "$GITHUB_SHA" --title 'ITOM IMAP transaction probe 1 — diagnostic only' --notes-file archives/1.1.0/IMAP_PROBE1.md
+          gh release upload "$tag" probe-assets/*
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-rc1.13-imap-probe1")' > "$RUNNER_TEMP/probe-release.json"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib,os
+          d=json.loads(Path(os.environ['RUNNER_TEMP'],'probe-release.json').read_text());assert d['draft']and d['prerelease']
+          assets={a['name']:a for a in d['assets']}
+          for p in Path('probe-assets').iterdir():
+              if p.is_file():
+                  a=assets[p.name];assert a['size']==p.stat().st_size and a['digest']=='sha256:'+hashlib.sha256(p.read_bytes()).hexdigest(),p.name
+          PY
+          gh release edit "$tag" --draft=false --prerelease --latest=false

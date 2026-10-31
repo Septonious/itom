@@ -1,0 +1,19 @@
+{
+  "client_revision": "itom-1-1-0-rc1-13",
+  "server_revision": "itom-1-1-0-rc1-13",
+  "selected_lines": 20,
+  "runtime_reached": true,
+  "client_wait_stage": "PERMISSION",
+  "client_failure_ms": 90014,
+  "fresh_server_runtime_grants_prepared": 0,
+  "server_runtime_record_decodes": 0,
+  "failed_carrier": "anchor_fast",
+  "failed_command": "expunge",
+  "failed_command_elapsed_ms": 30000,
+  "provider_internal_cause_confirmed": false,
+  "unsupported_wire_format_claimed": false,
+  "new_working_vpn_release_qualified": false,
+  "reason_for_probe": "Compare actual APPEND/FETCH/STORE/UID_EXPUNGE/absence with session executor and original IMAP adapter, singleton and batch, on the real server",
+  "runtime_transport_changes_promoted": false,
+  "uploaded_diagnostics_published": false
+}

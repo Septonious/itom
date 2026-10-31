@@ -1,0 +1,419 @@
+diff --git a/archives/1.1.0/source/core/transport/endpoint.go b/archives/1.1.0/source/core/transport/endpoint.go
+index 4ff9b5b..e0fb06d 100644
+--- a/archives/1.1.0/source/core/transport/endpoint.go
++++ b/archives/1.1.0/source/core/transport/endpoint.go
+@@ -569,6 +569,15 @@ func (s *EndpointSession) run(ctx context.Context, o EndpointOptions, rv *Verifi
+ 	var policyErr error
+ 	sequences := map[string]map[LedgerClass]uint64{}
+ 	monitor := 0
++	probeDone := make(chan error, 1)
++	probeActive := false
++	defer func() {
++		cancel()
++		if probeActive {
++			s.Service.Runtime.Close()
++			<-probeDone
++		}
++	}()
+ 	for policyErr == nil && runCtx.Err() == nil {
+ 		select {
+ 		case policyErr = <-runtimeDone:
+@@ -577,16 +586,31 @@ func (s *EndpointSession) run(ctx context.Context, o EndpointOptions, rv *Verifi
+ 			s.err = policyErr
+ 			s.mu.Unlock()
+ 			return
++		case probeErr := <-probeDone:
++			probeActive = false
++			if runCtx.Err() == nil {
++				policyErr = probeErr
++			}
+ 		case <-runCtx.Done():
+ 		case <-ticker.C:
+ 			runtime := s.Service.Runtime
+ 			runtime.mu.Lock()
+ 			failed := false
++			healthyFast := 0
+ 			for _, carrier := range runtime.status {
+-				if carrier.Read == ServiceFailed || carrier.Write == ServiceFailed {
+-					failed = true
++				// Runtime already isolates failed carriers and stops their
++				// writes. Preserve that isolation for transport loss; journal,
++				// authentication and protocol failures still stop the endpoint.
++				for _, reason := range []string{carrier.ReadFailure, carrier.WriteFailure} {
++					if reason != "" && reason != "carrier" {
++						failed = true
++					}
++				}
++				if carrier.Plane == Fast && (carrier.Read == ServiceServing || carrier.Read == ServicePrepared) && (carrier.Write == ServiceServing || carrier.Write == ServicePrepared) {
++					healthyFast++
+ 				}
+ 			}
++			failed = failed || healthyFast == 0
+ 			runtime.mu.Unlock()
+ 			if failed {
+ 				policyErr = ErrRuntimeStopped
+@@ -598,8 +622,9 @@ func (s *EndpointSession) run(ctx context.Context, o EndpointOptions, rv *Verifi
+ 				policyErr = s.serverPolicy(runCtx, sequences)
+ 			}
+ 			monitor++
+-			if policyErr == nil && !o.Client && monitor%10 == 0 {
+-				policyErr = s.restartRequest(runCtx, rv, request, o.Key)
++			if policyErr == nil && !o.Client && monitor%10 == 0 && !probeActive {
++				probeActive = true
++				go func() { probeDone <- s.restartRequest(runCtx, rv, request, o.Key) }()
+ 			}
+ 		}
+ 	}
+@@ -626,7 +651,13 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
+ 	if x == nil {
+ 		return ErrProtocol
+ 	}
+-	cmd, err := x.fetchMaintenance(ctx, []uint32{rv.uid}, true)
++	if x.Snapshot().Closed {
++		return nil
++	}
++	cmd, err := x.tryFetchMaintenance(ctx, []uint32{rv.uid}, true)
++	if errors.Is(err, errCommandCapacity) || err != nil && x.Snapshot().Closed {
++		return nil
++	}
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -645,13 +676,6 @@ func (s *EndpointSession) restartRequest(ctx context.Context, rv *VerifiedRendez
+ }
+ 
+ func (s *EndpointSession) serverPolicy(ctx context.Context, sequences map[string]map[LedgerClass]uint64) error {
+-	// Confirmed startup mail uses its original proof machinery before new offers
+-	// consume the headroom required to reclaim it. Receipt metadata needs no grant.
+-	for _, carrier := range s.Service.Runtime.carriers {
+-		if carrier.Reader.inbox.startupCleanupPending() {
+-			return nil
+-		}
+-	}
+ 
+ 	return s.serverPolicyFor(ctx, sequences, s.Roster.handoff.origin.User, s.Roster.handoff.epoch.Context().Session)
+ }
+@@ -667,7 +691,28 @@ func (s *EndpointSession) serverPolicyFor(ctx context.Context, sequences map[str
+ 		offer wire.StorageGrant
+ 	}
+ 	var recovery []recoveryOffer
++	// Original quotas remain authoritative per account. Cleanup on one
++	// physical route cannot suppress fresh permissions on independent routes.
++	blocked := map[string]bool{}
++	if rt := s.Service.Runtime; rt != nil {
++		for _, carrier := range rt.carriers {
++			if carrier.Reader.inbox.startupCleanupPending() {
++				blocked[carrier.Writer.executor.account] = true
++			}
++		}
++		rt.mu.Lock()
++		for _, carrier := range rt.status {
++			if carrier.Plane == Fast && (carrier.Read == ServiceFailed || carrier.Write == ServiceFailed) {
++				blocked[carrier.Account] = true
++			}
++		}
++		rt.mu.Unlock()
++	}
+ 	for account, j := range s.Roster.journals {
++		if blocked[account] {
++			continue
++		}
++
+ 		if sequences[account] == nil {
+ 			sequences[account] = map[LedgerClass]uint64{}
+ 		}
+diff --git a/archives/1.1.0/source/core/transport/endpoint_api_test.go b/archives/1.1.0/source/core/transport/endpoint_api_test.go
+index db17f8c..008ff4f 100644
+--- a/archives/1.1.0/source/core/transport/endpoint_api_test.go
++++ b/archives/1.1.0/source/core/transport/endpoint_api_test.go
+@@ -137,6 +137,10 @@ func TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip(t *t
+ 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 128, keywordBytes: 32})
+ }
+ 
++func TestAnchorCleanupTimeoutCannotBlockHealthyAccountPermissionsOrHTTPS(t *testing.T) {
++	testPublicEndpoints(t, publicEndpointCase{accounts: 3, rounds: 1, retainedBacklog: 8, surviveAnchorCleanupTimeout: true, keywordBytes: 32})
++}
++
+ func TestCapturedHistoricalExpungeTimeoutsDoNotSerializeLoginSlotsOrExpireSelectedLanes(t *testing.T) {
+ 	testPublicEndpoints(t, publicEndpointCase{accounts: 10, rounds: 1, retainedBacklog: 1, historicalExpungeStall: true, idleTimeout: 20 * time.Second, keywordBytes: 32})
+ }
+@@ -146,6 +150,8 @@ func TestHistoricalLocatorMismatchCannotPreventRendezvousDATAAndHTTPS(t *testing
+ }
+ 
+ type publicEndpointCase struct {
++	surviveAnchorCleanupTimeout bool
++
+ 	historicalExpungeStall bool
+ 
+ 	historicalLocatorConflict          bool
+@@ -667,6 +673,9 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
+ 		w.Write(raw)
+ 	}))
+ 	defer upstream.Close()
++	if scenario.surviveAnchorCleanupTimeout {
++		providerBoxes[p.Accounts[0].Mail.Username][upFolder+"-session-v2"].historicalExpungeUIDLimit = ^uint32(0)
++	}
+ 	executable, err := os.Executable()
+ 	if err != nil {
+ 		t.Fatal(err)
+@@ -914,6 +923,39 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
+ 		if bytes.Contains(trace, []byte(p.User.Key)) || bytes.Contains(trace, []byte("fixture-only")) {
+ 			t.Fatal("server trace exposed private input")
+ 		}
++
++		if scenario.surviveAnchorCleanupTimeout {
++			begin := time.Now()
++			exchanges := 0
++			for time.Since(begin) < 35*time.Second {
++				requestCtx, stop := context.WithTimeout(ctx, 1500*time.Millisecond)
++				req, e := http.NewRequestWithContext(requestCtx, http.MethodPost, upstream.URL, bytes.NewReader(payload))
++				if e != nil {
++					t.Fatal(e)
++				}
++				reply, e := hc.Do(req)
++				if e != nil {
++					stop()
++					t.Fatal("healthy account HTTPS interrupted by anchor cleanup", exchanges, e)
++				}
++				body, e := io.ReadAll(reply.Body)
++				reply.Body.Close()
++				stop()
++				tr.CloseIdleConnections()
++				if e != nil || !bytes.Equal(body, payload) {
++					t.Fatal("post-cleanup HTTPS integrity", exchanges, e)
++				}
++				exchanges++
++				timer := time.NewTimer(500 * time.Millisecond)
++				select {
++				case <-ctx.Done():
++					timer.Stop()
++					t.Fatal(ctx.Err())
++				case <-timer.C:
++				}
++			}
++			t.Logf("healthy_https_exchanges=%d interval_ms=%d original_cleanup_timeout_ms=30000", exchanges, time.Since(begin).Milliseconds())
++		}
+ 		shutdown.Store(true)
+ 		_ = client.Close()
+ 	}
+diff --git a/archives/1.1.0/source/core/transport/imap.go b/archives/1.1.0/source/core/transport/imap.go
+index c4b5159..7d0f751 100644
+--- a/archives/1.1.0/source/core/transport/imap.go
++++ b/archives/1.1.0/source/core/transport/imap.go
+@@ -81,6 +81,10 @@ func DefaultIMAPLimits() IMAPLimits {
+ // public FETCH API retain exclusive admission. IDLE owns the writer until DONE and
+ // its tag have drained. Mailbox selection changes require a new executor.
+ type Executor struct {
++	publicationPreparations int
++	destructiveWaiters      int
++	destructiveActive       bool
++
+ 	retainedStats       RetainedInventoryStats
+ 	historicalReadHints int
+ 	retained            *RetainedInventory // bounded authenticated startup read hints; never storage proof
+diff --git a/archives/1.1.0/source/core/transport/imap_uid_set.go b/archives/1.1.0/source/core/transport/imap_uid_set.go
+index 0d694e6..e65ee1b 100644
+--- a/archives/1.1.0/source/core/transport/imap_uid_set.go
++++ b/archives/1.1.0/source/core/transport/imap_uid_set.go
+@@ -42,6 +42,15 @@ func (e *Executor) fetchMaintenance(ctx context.Context, input []uint32, flags b
+ }
+ 
+ func (e *Executor) fetchExact(ctx context.Context, input []uint32, flags, bodies, queued bool) (*Command, error) {
++	return e.fetchExactAdmission(ctx, input, flags, bodies, queued, false)
++}
++
++// Routine supervision must yield to the selected socket's real command owner.
++// This issues no bytes and changes no watchdog when the writer is occupied.
++func (e *Executor) tryFetchMaintenance(ctx context.Context, input []uint32, flags bool) (*Command, error) {
++	return e.fetchExactAdmission(ctx, input, flags, false, false, true)
++}
++func (e *Executor) fetchExactAdmission(ctx context.Context, input []uint32, flags, bodies, queued, tryWriter bool) (*Command, error) {
+ 	uids, set, err := checkedUIDSet(input)
+ 	if err != nil {
+ 		return nil, err
+@@ -67,7 +76,16 @@ func (e *Executor) fetchExact(ctx context.Context, input []uint32, flags, bodies
+ 		}
+ 		defer e.releaseUnstartedFetch(turn)
+ 	}
+-	if err = e.lockWriter(ctx); err != nil {
++	if tryWriter {
++		if ctx.Err() != nil {
++			return nil, ctx.Err()
++		}
++		select {
++		case e.writer <- struct{}{}:
++		default:
++			return nil, errCommandCapacity
++		}
++	} else if err = e.lockWriter(ctx); err != nil {
+ 		return nil, err
+ 	}
+ 	defer func() { <-e.writer }()
+diff --git a/archives/1.1.0/source/core/transport/publication_worker.go b/archives/1.1.0/source/core/transport/publication_worker.go
+index 0c9226d..70249d7 100644
+--- a/archives/1.1.0/source/core/transport/publication_worker.go
++++ b/archives/1.1.0/source/core/transport/publication_worker.go
+@@ -202,6 +202,14 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+ 		w.session.services--
+ 		w.session.mu.Unlock()
+ 	}()
++	ownsPreparation := false
++	releasePreparation := func() {
++		if ownsPreparation {
++			ownsPreparation = false
++			w.executor.releasePublicationPreparation()
++		}
++	}
++	defer releasePreparation()
+ 	blocked := map[LedgerClass]bool{}
+ 	var lastEpoch uint64
+ 	for {
+@@ -224,6 +232,19 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+ 			clear(blocked)
+ 			lastEpoch = epoch
+ 		}
++		if !ownsPreparation {
++			if !w.executor.tryPublicationPreparation() {
++				select {
++				case <-ctx.Done():
++					return ctx.Err()
++				case <-w.executor.done:
++					return ErrClosed
++				case <-space:
++				}
++				continue
++			}
++			ownsPreparation = true
++		}
+ 		if pending != nil {
+ 			pending.mu.Lock()
+ 			finished, outcome, priorErr := pending.finished, pending.outcome, pending.err
+@@ -240,6 +261,7 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+ 				w.stats.ConfirmedStored++
+ 				w.signalLocked()
+ 				w.mu.Unlock()
++				releasePreparation()
+ 				continue
+ 			}
+ 		} else {
+@@ -286,6 +308,7 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+ 		}
+ 		w.mu.Unlock()
+ 		if pending == nil {
++			releasePreparation()
+ 			select {
+ 			case <-ctx.Done():
+ 				return ctx.Err()
+@@ -327,6 +350,7 @@ func (w *PublicationWorker) run(ctx context.Context, runtime *Runtime) error {
+ 			}
+ 			continue
+ 		}
++		releasePreparation()
+ 		if err != nil {
+ 			return err
+ 		}
+diff --git a/archives/1.1.0/source/core/transport/reclamation.go b/archives/1.1.0/source/core/transport/reclamation.go
+index 29a59c6..95d6061 100644
+--- a/archives/1.1.0/source/core/transport/reclamation.go
++++ b/archives/1.1.0/source/core/transport/reclamation.go
+@@ -320,6 +320,18 @@ func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool
+ 	if expunge {
+ 		class, command = commandExpunge, fmt.Sprintf("UID EXPUNGE %s", set)
+ 	}
++	var releasePreparation func()
++	if expunge {
++		releasePreparation, err = e.acquireDestructive(ctx)
++		if err != nil {
++			return nil, err
++		}
++		defer func() {
++			if releasePreparation != nil {
++				releasePreparation()
++			}
++		}()
++	}
+ 	op := &operation{class: class, exclusiveWriter: expunge}
+ 	if err := e.lockWriter(ctx); err != nil {
+ 		return nil, err
+@@ -348,9 +360,12 @@ func (e *Executor) deleteUIDSet(ctx context.Context, uids []uint32, expunge bool
+ 		release = false
+ 		// Begin this bounded lease only after all bytes have been written.
+ 		// An early tag cannot release the writer during a partial write.
++		lease := releasePreparation
++		releasePreparation = nil // the original tag owns both leases now
+ 		defer func() {
+ 			go func() {
+ 				defer e.exclusiveWait.Done()
++				defer lease()
+ 				<-op.done
+ 				<-e.writer
+ 			}()
+diff --git a/archives/1.1.0/source/core/transport/imap_publication_turn.go b/archives/1.1.0/source/core/transport/imap_publication_turn.go
+new file mode 100644
+index 0000000..8505de7
+--- /dev/null
++++ b/archives/1.1.0/source/core/transport/imap_publication_turn.go
+@@ -0,0 +1,63 @@
++package transport
++
++import "context"
++
++// A publication must select an available physical writer before it charges and
++// seals a BODY. Otherwise destructive cleanup can capture a logical record on
++// a socket that cannot write it, starving healthy independent carriers.
++func (e *Executor) tryPublicationPreparation() bool {
++	e.mu.Lock()
++	defer e.mu.Unlock()
++	if e.closed != nil || e.destructiveActive || e.destructiveWaiters > 0 {
++		return false
++	}
++	e.publicationPreparations++
++	return true
++}
++func (e *Executor) releasePublicationPreparation() {
++	e.mu.Lock()
++	defer e.mu.Unlock()
++	e.publicationPreparations--
++	e.signalSpaceLocked()
++}
++func (e *Executor) acquireDestructive(ctx context.Context) (func(), error) {
++	e.mu.Lock()
++	e.destructiveWaiters++
++	e.mu.Unlock()
++	waiting := true
++	defer func() {
++		if waiting {
++			e.mu.Lock()
++			e.destructiveWaiters--
++			e.signalSpaceLocked()
++			e.mu.Unlock()
++		}
++	}()
++	for {
++		e.mu.Lock()
++		if err := ctx.Err(); err != nil {
++			e.mu.Unlock()
++			return nil, err
++		}
++		if e.closed != nil {
++			e.mu.Unlock()
++			return nil, ErrClosed
++		}
++		if !e.destructiveActive && e.publicationPreparations == 0 {
++			e.destructiveWaiters--
++			waiting = false
++			e.destructiveActive = true
++			e.mu.Unlock()
++			return func() { e.mu.Lock(); e.destructiveActive = false; e.signalSpaceLocked(); e.mu.Unlock() }, nil
++		}
++		space := e.space
++		e.mu.Unlock()
++		select {
++		case <-ctx.Done():
++			return nil, ctx.Err()
++		case <-e.done:
++			return nil, ErrClosed
++		case <-space:
++		}
++	}
++}

@@ -1,0 +1,11 @@
+{
+  "status": "REJECTED_FOR_RELEASE",
+  "baseline_commit": "673a7a2016fda4fb0dd7a249c16d68b412f1c8d1",
+  "first_session": "startup and 27 HTTPS requests over35s passed after anchor timeout",
+  "next_user_restart": "fails REQUEST; original90s startup limit retained",
+  "reason": "anchor transport loss cannot be hidden by healthy-carrier admission; restart metadata remains tied to dead anchor",
+  "field_cause": "global permission gate plus runtime anchor EXPUNGE timeout observed; provider internal reason still unknown",
+  "transport_changes_promoted": false,
+  "publication_lease_and_account_isolation_patch_preserved": true,
+  "uploaded_archives_included": false
+}
