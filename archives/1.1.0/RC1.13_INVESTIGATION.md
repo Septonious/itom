@@ -12,6 +12,11 @@ Its lane owners schedule bounded cleanup independently of admission of the other
 accounts. Its idle fallback janitor is separately scheduled. The subsequent
 session transport adds a full authenticated historical inventory, then executes
 optional physical reclamation before opening each account's service sockets.
+In both immutable RC2/final 1.0.0 and DEV9, `core/tunnel/resources.go` releases
+the login permit immediately after `dial` returns; it keeps the separate socket
+reservation until close. The rewrite changed that distinction accidentally:
+its worker permit spans inventory and optional cleanup. The repair restores the
+original meaning of login concurrency without reverting the wire protocol.
 RC1.11 added receipt-qualified historical reclamation; RC1.12 made optional
 cleanup errors nonfatal, but still waited for each provider command's full
 watchdog while holding the account worker slot.
