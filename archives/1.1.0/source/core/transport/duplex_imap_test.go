@@ -26,6 +26,8 @@ import (
 // selected executor per plane; both see all bodies, including their own writes.
 // There is no production OPEN/discovery, Android frontend, or rate claim here.
 type sharedMailbox struct {
+	historicalExpungeUIDLimit uint32 // captured historical-only provider stall; live UIDs remain ordinary
+
 	messageLimit            int                 // optional original combined CONTROL/DATA physical message ceiling
 	idleTimeout             time.Duration       // explicit provider inactivity lease; client/server sockets stay separate
 	hideServerData          bool                // explicit negative fixture: accepted server DATA never becomes visible
@@ -268,6 +270,23 @@ func (m *sharedMailbox) commandScript(t *testing.T, folder string, delays []time
 					return
 				}
 				if len(fields) == 4 && fields[2] == "EXPUNGE" && m.reclamation {
+					historicalStall := false
+					for _, uid := range uids {
+						if uid <= m.historicalExpungeUIDLimit {
+							historicalStall = true
+						}
+					}
+					if historicalStall {
+						conn.SetReadDeadline(time.Time{}) // active backend command, not an idle socket
+						// The field server received no tagged completion for 30s.
+						// Wait for the ORIGINAL command watchdog to close this
+						// temporary inventory socket; no application deadline is changed.
+						if _, e := r.ReadByte(); e == nil {
+							t.Error("command crossed outstanding historical EXPUNGE")
+						}
+						return
+					}
+
 					if m.reclaimFault == "expunge_refused" {
 						fmt.Fprintf(conn, "%s NO expunge refused\r\n", tag(line))
 						continue

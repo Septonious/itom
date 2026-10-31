@@ -1,0 +1,23 @@
+{
+  "client_revision": "itom-1-1-0-rc1-12",
+  "server_revision": "itom-1-1-0-rc1-12",
+  "client_selected_connections": 20,
+  "client_total_connections": 20,
+  "client_last_phase": "REQUEST",
+  "client_failed_elapsed_ms": 90013,
+  "client_failure": "SELECTED_LANE_CLOSED",
+  "server_inventory_completed_expunge_timeouts": 38,
+  "server_start_to_rendezvous_ms": [
+    41770,
+    99096,
+    99378,
+    96893,
+    98505
+  ],
+  "inventory_proof_conflicts": 0,
+  "observed_cause": "30-second historical EXPUNGE stalls serialize entire account worker groups; early service sockets receive no keepalive before all groups finish",
+  "provider_internal_cause_known": false,
+  "last_pre_rewrite_field_traffic": "DEV9",
+  "last_usable_baseline": "RC2/final1.0.0",
+  "private_archives_included": false
+}

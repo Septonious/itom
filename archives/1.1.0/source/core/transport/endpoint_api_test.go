@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
@@ -135,11 +137,17 @@ func TestRetainedAuthenticatedMailboxBacklogCannotHideTheFirstDataRoundtrip(t *t
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 128, keywordBytes: 32})
 }
 
+func TestCapturedHistoricalExpungeTimeoutsDoNotSerializeLoginSlotsOrExpireSelectedLanes(t *testing.T) {
+	testPublicEndpoints(t, publicEndpointCase{accounts: 10, rounds: 1, retainedBacklog: 1, historicalExpungeStall: true, idleTimeout: 20 * time.Second, keywordBytes: 32})
+}
+
 func TestHistoricalLocatorMismatchCannotPreventRendezvousDATAAndHTTPS(t *testing.T) {
 	testPublicEndpoints(t, publicEndpointCase{accounts: 3, retainedBacklog: 1, historicalLocatorConflict: true, keywordBytes: 32})
 }
 
 type publicEndpointCase struct {
+	historicalExpungeStall bool
+
 	historicalLocatorConflict          bool
 	retainedBacklog                    int
 	splitCapacity                      bool
@@ -513,6 +521,22 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				box.messageLimit = 128 + 192 // original separate CONTROL and DATA ledgers share this FAST folder
 				box.bodies = append(box.bodies, mime)
 				box.bytes += len(mime)
+				if scenario.historicalExpungeStall {
+					digest := sha256.Sum256(body)
+					mac := hmac.New(sha256.New, key)
+					mac.Write([]byte("ITOM/session-v2/received-body/v1\x00"))
+					mac.Write(digest[:])
+					var location [8]byte
+					binary.BigEndian.PutUint32(location[:4], 9)
+					binary.BigEndian.PutUint32(location[4:], uint32(len(box.bodies)))
+					mac.Write(location[:])
+					if box.flags == nil {
+						box.flags = map[uint32]map[string]bool{}
+					}
+					box.flags[uint32(len(box.bodies))] = map[string]bool{"ITOM2R_" + hex.EncodeToString(mac.Sum(nil)): true}
+					box.historicalExpungeUIDLimit = uint32(scenario.retainedBacklog)
+				}
+
 				if e = store.Complete(attempt.Ref, journal.Accepted); e != nil {
 					t.Fatal(e)
 				}
@@ -527,6 +551,26 @@ func testPublicEndpoints(t *testing.T, scenario publicEndpointCase) {
 				t.Fatal(e)
 			}
 			store.Close()
+			if scenario.historicalExpungeStall {
+				// These old bodies must remain charged: no EXPUNGE tag or
+				// independent absence proof is supplied by the provider.
+				t.Cleanup(func() {
+					s, e := journal.Open(path, jc, time.Second)
+					if e != nil {
+						t.Error(e)
+						return
+					}
+					defer s.Close()
+					held, e := s.Held(a.ID, p.User.ID)
+					if e != nil || held.Messages < before.Messages || held.Bytes < before.Bytes {
+						t.Error("stalled provider refunded historical debt", held, e)
+					}
+					if e = s.Audit(); e != nil {
+						t.Error(e)
+					}
+				})
+				continue
+			}
 			// Surviving original wallet history creates the field-sized recovery
 			// fence/status backlog; no fixture grants enter the new live epoch.
 			cc := journal.Config{MaxGrants: 256, MaxAttempts: 256, Accounts: []journal.Account{{ID: a.ID, Provider: a.Mail.Host, Limit: pool.Amount{Bytes: 2 << 20, Messages: 128}, Users: []journal.User{{ID: p.User.ID, Limit: pool.Amount{Bytes: 2 << 20, Messages: 128}, Folders: []string{upFolder, downFolder, upFolder + "-session-v2", downFolder + "-session-v2"}}}}}}

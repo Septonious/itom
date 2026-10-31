@@ -176,21 +176,34 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 	}
 	close(jobs)
 	type opened struct {
-		lanes []transport.RosterLane
-		err   error
+		lanes      []transport.RosterLane
+		err        error
+		keepalives []func(context.Context) error
 	}
 	results := make(chan opened, len(plan.Accounts))
 	var firstFailure error
 	var failOnce sync.Once
 	var wg sync.WaitGroup
-	for range min(p.Transport.Effective().LoginParallelism, len(plan.Accounts)) {
+	// LoginParallelism bounds actual network authentication, not the lifetime
+	// of an account's inventory/cleanup. A provider's 30s EXPUNGE must not hold
+	// the login slots needed by every remaining account.
+	loginSlots := make(chan struct{}, min(p.Transport.Effective().LoginParallelism, len(plan.Accounts)))
+	for range len(plan.Accounts) {
 		wg.Go(func() {
 			for a := range jobs {
 				if ctx.Err() != nil {
 					break
 				}
 				var lanes []transport.RosterLane
+				var keepalives []func(context.Context) error
 				open := func(folder string) (*transport.Executor, error) {
+					select {
+					case loginSlots <- struct{}{}:
+					case <-ctx.Done():
+						return nil, ctx.Err()
+					}
+					defer func() { <-loginSlots }()
+
 					role := "retained"
 					if folder == a.FastFolder {
 						role = "fast"
@@ -285,6 +298,8 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 							break
 						}
 						lanes = append(lanes, transport.RosterLane{Plane: l.plane, Executor: x})
+						keepalives = append(keepalives, transport.KeepSelectedLanes(ctx, cancel, []transport.RosterLane{lanes[len(lanes)-1]}))
+
 						if onSelected != nil {
 							onSelected()
 						}
@@ -293,24 +308,48 @@ func selectProfile(ctx context.Context, p servercfg.Profile, plan transport.Rost
 				if failure != nil {
 					failOnce.Do(func() { firstFailure = failure; cancel() })
 				}
-				results <- opened{lanes, failure}
+				results <- opened{lanes, failure, keepalives}
 			}
 		})
 	}
 	wg.Wait()
 	close(results)
 	var lanes []transport.RosterLane
+	var keepalives []func(context.Context) error
 	for r := range results {
 		lanes = append(lanes, r.lanes...)
+		keepalives = append(keepalives, r.keepalives...)
 	}
 	err = firstFailure
 	if err == nil {
 		err = ctx.Err()
 	}
-	if err != nil {
+	closeLanes := func() {
 		for _, l := range lanes {
 			l.Executor.Close()
 		}
+	}
+	if err != nil {
+		closeLanes()
+	}
+	for _, stop := range keepalives {
+		if err != nil {
+			stop(context.Background())
+			continue
+		}
+		if e := stop(ctx); e != nil {
+			err = e
+			closeLanes()
+			// Cancellation detaches a waiter, not an issued NOOP. Closing the
+			// owned executors drains it; join before returning or handing off.
+			stop(context.Background())
+		}
+	}
+	if err == nil {
+		err = ctx.Err()
+	}
+	if err != nil {
+		closeLanes()
 		return nil, err
 	}
 	return lanes, nil

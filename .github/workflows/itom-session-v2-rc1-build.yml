@@ -1,4 +1,4 @@
-name: Build session-v2 RC1.12 with nonblocking historical-proof conflicts and precise inventory diagnostics
+name: Build session-v2 RC1.13 with bounded login concurrency and live selected-socket handoff
 on:
   push:
     branches: ["codex/v1.1.0-session-transport-v2"]
@@ -18,8 +18,8 @@ jobs:
       - uses: actions/setup-go@v6
         with: {go-version: "1.27.1", cache: false}
       - name: Source integrity and passive pre-rendezvous inventory diagnostics
-        run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-rc1-12
-      - name: Complete core safety, historical conflicts, cleanup failures and shutdown-owned persistent restarts
+        run: python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-0-rc1-13
+      - name: Complete core safety, captured 30-second EXPUNGE stalls and persistent restarts
         working-directory: archives/1.1.0/source/core
         run: |
           set -euo pipefail
@@ -49,11 +49,11 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           for arch in amd64 arm64; do
-            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.0-RC1.12-linux-$arch.bin" ./cmd/itom)
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.0-RC1.13-linux-$arch.bin" ./cmd/itom)
           done
-          release-assets/ITOM-1.1.0-RC1.12-linux-amd64.bin version
-          python3 "$SOURCE/tools/package_sources.py" --output release-assets/ITOM-1.1.0-RC1.12-sources.zip
-          cp archives/1.1.0/RC1.12_TESTING.md release-assets/
+          release-assets/ITOM-1.1.0-RC1.13-linux-amd64.bin version
+          python3 "$SOURCE/tools/package_sources.py" --output release-assets/ITOM-1.1.0-RC1.13-sources.zip
+          cp archives/1.1.0/RC1.13_TESTING.md release-assets/
           printf '%s\n' "$GITHUB_SHA" > release-assets/SOURCE_COMMIT
           (cd release-assets && sha256sum *.bin *.zip > NATIVE_SOURCE_SHA256SUMS)
       - uses: actions/upload-artifact@v4
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: "17"}
       - name: Build both JNI architectures, compile, unit tests and fatal lint
-        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-0-rc1-12 --accept-android-licenses
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-0-rc1-13 --accept-android-licenses
       - name: Export bounded APK parts and public signing verification tools
         run: |
           set -euo pipefail
@@ -92,11 +92,11 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,os
           from pathlib import Path
-          source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.0-RC1.12-debug.apk'
+          source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.0-RC1.13-debug.apk'
           raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
           report=json.loads((source/'dist/build-report.json').read_text())
-          assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-rc1-12'
-          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10123,'version_name':'1.1.0-rc1.12-debug'}
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-rc1-13'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10124,'version_name':'1.1.0-rc1.13-debug'}
           parts=[]
           for n,start in enumerate(range(0,len(raw),8*1024*1024)):
               part=raw[start:start+8*1024*1024];name=f'rc1-apk.part{n:02d}'

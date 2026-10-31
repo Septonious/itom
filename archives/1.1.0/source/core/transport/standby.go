@@ -121,3 +121,13 @@ func (e *Executor) onlyStandbyPendingLocked() bool {
 	}
 	return true
 }
+
+// KeepSelectedLanes services otherwise unowned selected sockets while another
+// account is still opening or validating inventory. Its only commands are the
+// existing side-effect-free NOOPs. Stop and join before transferring ownership;
+// on cancellation close the owning executors before joining an issued tag.
+// It does not open/reconnect sockets, spend quota, or extend a command deadline.
+func KeepSelectedLanes(ctx context.Context, failed context.CancelFunc, lanes []RosterLane) func(context.Context) error {
+	group := startStandby(ctx, failed, lanes, nil)
+	return group.stop
+}
