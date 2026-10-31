@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -29,10 +30,19 @@ import (
 // real TCP, real HTTPS, a body larger than stream credit, then user restarts.
 // It intentionally provides no UIDPLUS and permits no cleanup commands. It
 // cannot establish real-provider performance or sustained reclamation.
-func TestApplicationHTTPSAndUserRestartsWithoutUIDPlusOrCleanup(t *testing.T) {
+func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
+	for _, maintenance := range []bool{true, false} {
+		name := "retirement_available"
+		if !maintenance {
+			name = "retirement_refused"
+		}
+		t.Run(name, func(t *testing.T) { runApplication(t, maintenance) })
+	}
+}
+func runApplication(t *testing.T, maintenance bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	accounts, cleanupCalls := applicationMailServer(t)
+	accounts, cleanupCalls := applicationMailServer(t, maintenance)
 	serverLink, err := NewIMAPLink(ctx, "application", accounts, false)
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +58,10 @@ func TestApplicationHTTPSAndUserRestartsWithoutUIDPlusOrCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	serverDone := make(chan error, 1)
-	go func() { serverDone <- Serve(ctx, serverLink, "application", psk, nil, nil) }()
+	var serverSession atomic.Pointer[Session]
+	go func() {
+		serverDone <- Serve(ctx, serverLink, "application", psk, (&net.Dialer{}).DialContext, func(s *Session) { serverSession.Store(s) })
+	}()
 	origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		w.Header().Set("Content-Type", "application/octet-stream")
@@ -80,6 +93,28 @@ func TestApplicationHTTPSAndUserRestartsWithoutUIDPlusOrCleanup(t *testing.T) {
 		got, err := io.ReadAll(io.LimitReader(response.Body, int64(len(payload)+1)))
 		response.Body.Close()
 		if err != nil || !bytes.Equal(got, payload) {
+			t.Logf("failed state client=%+v client_mail=%+v server_mail=%+v session_error=%v", session.Snapshot(), clientLink.Snapshot(), serverLink.Snapshot(), session.Err())
+			dumpPending(t, "client", session)
+			if peer := serverSession.Load(); peer != nil {
+				t.Logf("server_session=%+v error=%v", peer.Snapshot(), peer.Err())
+				dumpPending(t, "server", peer)
+				peer.mu.Lock()
+				missing := map[uint64]bool{}
+				for seq := range peer.pending {
+					missing[seq] = true
+				}
+				peer.mu.Unlock()
+				for _, event := range serverLink.Events() {
+					if event.Session == peer.cipher.id && missing[event.Sequence] {
+						t.Logf("server event=%+v", event)
+					}
+				}
+				for _, event := range clientLink.Events() {
+					if event.Session == peer.cipher.id && missing[event.Sequence] {
+						t.Logf("client event=%+v", event)
+					}
+				}
+			}
 			session.Close()
 			t.Fatalf("HTTPS bytes restart %d: size=%d error=%v", round, len(got), err)
 		}
@@ -94,8 +129,22 @@ func TestApplicationHTTPSAndUserRestartsWithoutUIDPlusOrCleanup(t *testing.T) {
 		baseTransport.CloseIdleConnections()
 		session.Close()
 	}
-	if cleanupCalls.Load() != 0 {
-		t.Fatal("delivery called cleanup", cleanupCalls.Load())
+	if cleanupCalls.expunge.Load() != 0 {
+		t.Fatal("delivery used EXPUNGE", cleanupCalls.expunge.Load())
+	}
+	if cleanupCalls.delete.Load() == 0 {
+		t.Fatal("segment retirement never exercised")
+	}
+	retired := clientLink.Snapshot().Retired + serverLink.Snapshot().Retired
+	if maintenance && retired == 0 {
+		t.Fatal("successful deletion never released its own new segment storage")
+	}
+	if !maintenance && retired != 0 {
+		t.Fatal("refused deletion released storage", retired)
+	}
+	t.Logf("segment_delete_attempts=%d verified_retirements=%d", cleanupCalls.delete.Load(), retired)
+	if !maintenance && clientLink.Snapshot().RetainedBytes == 0 {
+		t.Fatal("refused maintenance erased retention debt")
 	}
 	cancel()
 	select {
@@ -104,22 +153,54 @@ func TestApplicationHTTPSAndUserRestartsWithoutUIDPlusOrCleanup(t *testing.T) {
 		t.Fatal("server shutdown did not join")
 	}
 }
+func dumpPending(t *testing.T, label string, s *Session) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for seq, p := range s.pending {
+		plain, err := s.cipher.send.Decrypt(nil, seq, p.wire[:headerSize], p.wire[headerSize:])
+		if err != nil {
+			t.Log(label, err)
+			continue
+		}
+		f, _ := decodeFrame(plain)
+		t.Logf("%s pending seq=%d kind=%d stream=%d offset=%d bytes=%d attempts=%d age_ms=%d", label, seq, f.kind, f.stream, f.offset, len(f.data), p.attempts, time.Since(p.sent).Milliseconds())
+	}
+}
 
 type noCleanupSession struct {
 	imapserver.Session
-	calls *atomic.Int64
+	calls        *cleanupCounters
+	maintenance  bool
+	appendCounts map[string]int
 }
+type cleanupCounters struct{ expunge, delete atomic.Int64 }
 
 func (s noCleanupSession) Expunge(*imapserver.ExpungeWriter, *imap.UIDSet) error {
-	s.calls.Add(1)
+	s.calls.expunge.Add(1)
 	return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "cleanup unavailable"}
 }
-func (s noCleanupSession) Delete(string) error {
-	s.calls.Add(1)
+func (s noCleanupSession) Delete(folder string) error {
+	s.calls.delete.Add(1)
+	if s.maintenance {
+		return s.Session.Delete(folder)
+	}
 	return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "cleanup unavailable"}
+}
+func (s noCleanupSession) Append(folder string, r imap.LiteralReader, opts *imap.AppendOptions) (*imap.AppendData, error) {
+	data, err := s.Session.Append(folder, r, opts)
+	if err == nil && s.maintenance && !strings.Contains(folder, "-control-") {
+		s.appendCounts[folder]++
+		if s.appendCounts[folder] == segmentAppends {
+			// The stored BODY is visible to the other TLS connection before
+			// this APPEND's command completion. Retirement must drain that
+			// transaction even when delivery receipts have already arrived.
+			time.Sleep(300 * time.Millisecond)
+		}
+	}
+	return data, err
 }
 
-func applicationMailServer(t *testing.T) ([]MailAccount, *atomic.Int64) {
+func applicationMailServer(t *testing.T, maintenance bool) ([]MailAccount, *cleanupCounters) {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -141,7 +222,7 @@ func applicationMailServer(t *testing.T) ([]MailAccount, *atomic.Int64) {
 		t.Fatal(err)
 	}
 	backend := imapmemserver.New()
-	calls := &atomic.Int64{}
+	calls := &cleanupCounters{}
 	var accounts []MailAccount
 	for n := 0; n < 2; n++ {
 		username := fmt.Sprintf("fixture%d", n)
@@ -149,7 +230,7 @@ func applicationMailServer(t *testing.T) ([]MailAccount, *atomic.Int64) {
 		accounts = append(accounts, MailAccount{ID: username, Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, Username: username, Password: "fixture-private", Roots: roots})
 	}
 	server := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return noCleanupSession{backend.NewSession(), calls}, nil, nil
+		return noCleanupSession{backend.NewSession(), calls, maintenance, map[string]int{}}, nil, nil
 	}})
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()

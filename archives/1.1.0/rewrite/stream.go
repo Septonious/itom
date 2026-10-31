@@ -80,8 +80,12 @@ func (s *Stream) accept(f frame) error {
 		if end <= s.readOffset {
 			return nil
 		}
-		if f.offset < s.readOffset || end-s.readOffset > streamWindow || s.hasFinal && end > s.final {
+		if end-s.readOffset > streamWindow || s.hasFinal && end > s.final {
 			return ErrProtocol
+		}
+		if f.offset < s.readOffset {
+			f.data = f.data[s.readOffset-f.offset:]
+			f.offset = s.readOffset
 		}
 		if prior := s.chunks[f.offset]; prior != nil {
 			if !bytes.Equal(prior, f.data) {
@@ -277,6 +281,7 @@ func (s *Stream) Close() error {
 	s.abort(ErrClosed)
 	s.session.mu.Lock()
 	delete(s.session.streams, s.id)
+	s.session.closedStreams[s.id] = true
 	s.session.mu.Unlock()
 	// A reset is best effort when the user already canceled the session.
 	ctx, cancel := context.WithTimeout(s.session.ctx, time.Second)

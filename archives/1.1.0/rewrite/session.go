@@ -45,6 +45,7 @@ type Session struct {
 	dial           func(context.Context, string, string) (net.Conn, error)
 	mu             sync.Mutex
 	streams        map[uint32]*Stream
+	closedStreams  map[uint32]bool
 	nextStream     uint32
 	pending        map[uint64]*pendingPacket
 	pendingBytes   int
@@ -65,9 +66,10 @@ type Session struct {
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
 	ctx, cancel := context.WithCancel(parent)
 	if dial == nil {
-		dial = (&net.Dialer{}).DialContext
+		dial = publicDial
 	}
 	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan uint64, 1024), pings: map[uint64]chan struct{}{}}
+	s.closedStreams = map[uint32]bool{}
 	// Sequence zero was the authenticated READY/READY_ACK. It must never
 	// enter the application engine as a replayed session transition.
 	s.seen[0], s.seenValid[0] = 0, true
@@ -76,6 +78,25 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 	go func() { defer s.wg.Done(); s.receiveLoop() }()
 	go func() { defer s.wg.Done(); s.dispatchLoop() }()
 	go func() { defer s.wg.Done(); s.receiptLoop() }()
+	if storage, ok := link.(StorageLink); ok {
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			for {
+				select {
+				case <-s.ctx.Done():
+					return
+				case retired := <-storage.Retirements():
+					if retired.Session != s.cipher.id {
+						continue
+					}
+					if err := s.send(s.ctx, frame{kind: frameRetired, offset: uint64(retired.Generation), data: []byte(retired.Account)}, true); err != nil {
+						return
+					}
+				}
+			}
+		}()
+	}
 	return s
 }
 
@@ -292,9 +313,11 @@ func (s *Session) receiveLoop() {
 					s.fail(ErrProtocol)
 					return
 				}
+				var acknowledged []uint64
 				s.mu.Lock()
 				for at := 0; at < len(f.data); at += 8 {
 					id := binary.BigEndian.Uint64(f.data[at:])
+					acknowledged = append(acknowledged, id)
 					p := s.pending[id]
 					if p == nil {
 						continue
@@ -317,11 +340,17 @@ func (s *Session) receiveLoop() {
 				}
 				s.notifyLocked()
 				s.mu.Unlock()
+				if storage, ok := s.link.(StorageLink); ok {
+					for _, id := range acknowledged {
+						storage.Acknowledge(s.cipher.id, id)
+					}
+				}
 				continue
 			}
-			if seq < s.highest && s.highest-seq >= replaySlots {
-				continue
-			}
+			// ACK traffic has its own nonces and can overtake an old DATA
+			// packet by more than a cache's width. Eviction must not discard
+			// legitimate outstanding DATA. Stream operations are idempotent
+			// after this bounded duplicate cache rolls.
 			duplicate := s.seenValid[seq%replaySlots] && s.seen[seq%replaySlots] == seq
 			if !duplicate {
 				if err = s.apply(f); errors.Is(err, ErrCapacity) {
@@ -343,6 +372,15 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameRetired {
+		if f.stream != 0 || f.offset > uint64(^uint32(0)) || !validIdentity(string(f.data)) {
+			return ErrProtocol
+		}
+		if storage, ok := s.link.(StorageLink); ok {
+			return storage.ConfirmRetired(Retirement{Session: s.cipher.id, Account: string(f.data), Generation: uint32(f.offset)})
+		}
+		return ErrProtocol
+	}
 	if f.kind == framePing || f.kind == framePong {
 		if f.stream != 0 || len(f.data) != 0 {
 			return ErrProtocol
@@ -361,9 +399,22 @@ func (s *Session) apply(f frame) error {
 	if f.stream == 0 || f.stream%2 == 0 {
 		return ErrProtocol
 	}
+	if f.stream > 131071 {
+		return ErrProtocol
+	}
 	s.mu.Lock()
 	stream := s.streams[f.stream]
+	closed := s.closedStreams[f.stream]
+	if stream == nil && f.kind == frameReset {
+		s.closedStreams[f.stream] = true
+	}
 	s.mu.Unlock()
+	if closed {
+		if f.kind == frameReset {
+			return nil
+		}
+		return s.trySend(frame{kind: frameReset, stream: f.stream}, true)
+	}
 	if f.kind == frameOpen {
 		if !s.server || f.offset != 0 || len(f.data) == 0 || len(f.data) > 256 {
 			return ErrProtocol
@@ -426,7 +477,7 @@ func (s *Session) OpenTCP(ctx context.Context, target string) (net.Conn, error) 
 		s.mu.Unlock()
 		return nil, err
 	}
-	if len(s.streams) >= maxStreams || s.nextStream > ^uint32(0)-2 {
+	if len(s.streams) >= maxStreams || s.nextStream > 131071 {
 		s.mu.Unlock()
 		return nil, ErrCapacity
 	}

@@ -55,8 +55,26 @@ maintenance, Android bridge and diagnostics as one design. These are implementat
 areas of one replacement, not separately shippable transport RCs. The old branch
 must not become the fallback data path.
 
-The first commit implements the new protocol and stream engine and a standalone
-IMAP prototype. Android integration, sustained physical reclamation and rollout
+The first commits implement the new protocol and stream engine, bounded bulk
+batching, pipelined APPEND completion and a standalone IMAP prototype. Full DATA
+segments now rotate to fresh folders. Retirement requires authenticated packet
+receipts, peer confirmation that its reader has selected the next segment, and
+terminal completion of every APPEND to the old one. A separate owner then uses
+DELETE plus an independent absence LIST; UID EXPUNGE is not used. Refusal keeps
+the exact segment's debt and does not block connection readiness.
+
+The application scenario exposed two separate requirements. Retirement must wait
+for APPEND completion even after another connection can read the BODY. More
+fundamentally, EXISTS/IDLE notifications can be missing/coalesced: seven visible
+messages could strand a segment whose eighth APPEND was already published. The
+receiver now repairs its observed tail with bounded STATUS/UIDVALIDITY checks,
+on a service-time-dependent interval. Notifications remain wake hints. The scenario
+preserves the earlier failures and deliberately makes a last BODY visible before
+returning its APPEND completion. Both available and refused retirement then pass
+three real HTTPS/session-restart cycles. None of this establishes provider RTT.
+
+Android integration, durable process-restart retention and control-log retirement,
+full sustained physical reclamation and rollout
 qualification remain explicit unfinished work until their code is present.
 No APK or testing RC is qualified by a compiling protocol core.
 
@@ -64,7 +82,7 @@ The standalone `cmd/itom-mailstream` command supports a server and a loopback
 SOCKS5 TCP client. It uses a new JSON profile (`identity`, a base64 32-byte
 `psk_base64`, and `accounts` containing `id`, `host`, `port`, `username`,
 `password`). This is not the existing APK's profile format. Its prototype storage
-bound is 64 MiB of attempted physical mail per account per Link lifetime;
+bound is 64 MiB of retained attempted physical mail per account per Link lifetime;
 restarting the process does not prove or refund prior storage. It must not be
 installed as a replacement service while durable retention is unfinished.
 
