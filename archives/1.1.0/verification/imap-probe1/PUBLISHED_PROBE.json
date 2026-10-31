@@ -1,0 +1,56 @@
+{
+  "checked_at_utc": "2026-10-31T12:06:20.278060+00:00",
+  "release_url": "https://github.com/Septonious/itom/releases/tag/v1.1.0-rc1.13-imap-probe1",
+  "source_commit": "d605ecd18e77a9cf76502dfb5b5051b369f4e1b0",
+  "workflow_run": 41199375982,
+  "workflow_conclusion": "success",
+  "public_full_downloads": [
+    {
+      "name": "SHA256SUMS",
+      "bytes": 787,
+      "sha256": "060b9c064467a8fda4340f86a09b00d2b54bc1110cb74b585769b0ce3c489714",
+      "http_status": 200
+    },
+    {
+      "name": "SOURCE_COMMIT",
+      "bytes": 41,
+      "sha256": "30d64b8954bed6bab2bd4067fd01f88903a261d1b0ea12a37d539c7cd99a8e37",
+      "http_status": 200
+    },
+    {
+      "name": "PROBE_BUILD.json",
+      "bytes": 343,
+      "sha256": "b8ae2a820b5e2011d1b6eecc4d7b840b9d493896ef685a3d249d8e26bc1a2f21",
+      "http_status": 200
+    },
+    {
+      "name": "DIAGNOSTIC_TESTS.jsonl",
+      "bytes": 7749,
+      "sha256": "e13dd00b8fba5cad37a2c2fadc397f55e83159e2665687c050ebcc76c8adb166",
+      "http_status": 200
+    },
+    {
+      "name": "itom-imap-probe-linux-amd64",
+      "bytes": 10359050,
+      "sha256": "f665c533c5eb5d4ba861715fd2b574c23520eda383cd0f648c476c738f3d7bad",
+      "http_status": 200
+    },
+    {
+      "name": "itom-imap-probe-linux-arm64",
+      "bytes": 9593211,
+      "sha256": "5c363fe9dd16f450c223e64355b084584208143f1a1efeb4b65555830eb385f6",
+      "http_status": 200
+    }
+  ],
+  "sha256sums_verified": true,
+  "amd64_help_executed": true,
+  "independent_diagnostic_parent_groups": [
+    "TestBothTransactionImplementationsAgainstIndependentIMAPServer",
+    "TestTransactionRefusalRetainsExactStageAndExcludesProviderText",
+    "TestTransactionDiagnosticRefusesToOpenStateOrNetworkWhileServiceIsActive"
+  ],
+  "diagnostic_only": true,
+  "vpn_runtime_changes_promoted": false,
+  "new_working_vpn_rc_qualified": false,
+  "real_provider_probe_result": "awaiting_user_server_run"
+}
