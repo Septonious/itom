@@ -186,3 +186,46 @@ to reclaim old-session mail after a process restart are not yet durable; that
 old debt remains charged. Discovery logs also remain append-only. Resolving
 both is required before sustained-use or reinstall qualification. No release
 claim follows from passing the current bounded application cohort.
+
+## Comparing actual application speed with RC2
+
+The separate `../../qualification` harness builds the same HTTPS worker against
+frozen RC2 and this runtime, retaining each one's own pinned client dependency.
+It uses verified TLS IMAP sockets and finite shared wire capacity, with client
+RTT varying from 10 to 50 ms and server RTT from 20 to 40 ms. It measures verified
+application bytes across ramp and drain, not controller capacity estimates.
+Functional success and RTT/bandwidth target success are reported separately.
+
+Those comparisons exposed avoidable work on the latency path. The control
+reader now uses service-time-dependent NOOP polling instead of repeated
+IDLE/DONE/FETCH cycles; small application messages avoid the extra IDLE exit
+round trip. DATA keeps IDLE with independent tail repair, and skips STATUS when
+a fresh EXISTS already announces unread mail. Bulk account selection fills a
+bounded 128 KiB publication quantum before moving on, spilling immediately if
+that account's queue is full. It never waits for an unavailable account.
+
+DATA segments hold at most 32 bounded MIME containers (under 12 MiB encoded)
+instead of eight. This reduces CREATE/SELECT/retirement overhead within the
+existing retained-byte cap. Neither the receive memory limit nor the bulk
+window is increased. Both endpoints must use the matching development build.
+The benchmark also retains simultaneous-direction failures; a high one-way
+download figure alone does not satisfy the two-direction target.
+
+This work does not establish provider or Android performance. See the harness
+README and retained evidence for model limits and the exact conditions of each
+comparison. The release blockers above remain in force.
+
+The frozen candidate keeps the 32 MiB pending-byte bound while allowing 2048
+packets, amortizes established WINDOW updates over 256 KiB, and keeps adjacent
+bulk framing on DATA. Initial isolated small writes/open/ping messages may use
+two distinct accounts with identical ciphertext and deduplication. Receipt
+batches retain their ciphertext across local writer backpressure. Dispatch
+orders eligible packets outside the session lock after one scan per wake.
+See the performance evidence for passing and failed variants.
+
+The user has selected these settings for bounded real-provider testing. Further
+throughput tuning is frozen. Experimental testing is separate from production
+readiness: old-session ownership reclamation, discovery-log retirement and
+reinstall recovery remain unfinished. Private state must be preserved; no
+legacy accounting is reset. Matched client/server artifacts, cold startup and
+actual native application paths must pass before publishing the testing build.

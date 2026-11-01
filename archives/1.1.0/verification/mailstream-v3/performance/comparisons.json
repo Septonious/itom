@@ -1,0 +1,4317 @@
+{
+  "field_qualified": false,
+  "cases": [
+    {
+      "case": "perf-initial",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "4s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": false,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "4004797d57018c190f4bcedba8130cba44a0bc887af01ddc430ba7c76af9c986",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 10.118087435000234
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        }
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 1056,
+          "targets": null,
+          "max_idle_and_light_ms": 6.364,
+          "max_loaded_ms": 265.932,
+          "phases": [
+            {
+              "elapsed_seconds": 4.18202872,
+              "name": "upload",
+              "send_seconds": 4,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 242.2088617315856,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 4.439852998,
+              "name": "download",
+              "send_seconds": 4,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 326.9823286162773,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2342792,
+            "client_wire_bytes": 432106762,
+            "commands": {
+              "APPEND": 14711,
+              "CREATE": 1547,
+              "DELETE": 734,
+              "FETCH": 6826,
+              "SELECT": 776
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 4,
+              "a02": 4,
+              "a03": 4,
+              "a04": 4,
+              "a05": 4,
+              "a06": 4,
+              "a07": 4,
+              "a08": 4,
+              "a09": 4,
+              "a10": 4
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4323086,
+            "server_wire_bytes": 433362378
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-variable-before",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "6s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "4004797d57018c190f4bcedba8130cba44a0bc887af01ddc430ba7c76af9c986",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 1,
+            "elapsed_seconds": 3.5240102420002586
+          },
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 19.28782607999983
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        }
+      },
+      "results": {
+        "rc2": {
+          "success": false,
+          "stage": "startup",
+          "error": "TCP_OPEN_3",
+          "startup_ms": 3243,
+          "targets": null,
+          "max_idle_and_light_ms": 0,
+          "max_loaded_ms": 0,
+          "phases": [],
+          "provider": {
+            "client_peak_queued_bytes": 8519,
+            "client_wire_bytes": 507831,
+            "commands": {
+              "APPEND": 147,
+              "CREATE": 40,
+              "EXPUNGE": 32,
+              "FETCH": 637,
+              "SELECT": 443,
+              "STORE": 34
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 10,
+              "a03": 10,
+              "a04": 7,
+              "a05": 8,
+              "a06": 7,
+              "a07": 8,
+              "a08": 6,
+              "a09": 10,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 8430,
+            "server_wire_bytes": 513069
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2735,
+          "targets": null,
+          "max_idle_and_light_ms": 352.127,
+          "max_loaded_ms": 386.543,
+          "phases": [
+            {
+              "elapsed_seconds": 6.29811751,
+              "name": "upload",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 114.12915793627356,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 6.886602211,
+              "name": "download",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 219.63964719553047,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2410190,
+            "client_wire_bytes": 392215715,
+            "commands": {
+              "APPEND": 16403,
+              "CREATE": 1665,
+              "DELETE": 793,
+              "FETCH": 6035,
+              "SELECT": 833
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4569908,
+            "server_wire_bytes": 392508277
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-variable-matched-before",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "6s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "5ae2d1920e5fb01ab87789f113e0ff9da2ec0e22f291cae3b8b4106e7e9a51c5",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 18.11491278700032
+          },
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 19.192569582000033
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        }
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2782,
+          "targets": null,
+          "max_idle_and_light_ms": 176.442,
+          "max_loaded_ms": 360.12,
+          "phases": [
+            {
+              "elapsed_seconds": 6.302965801,
+              "name": "upload",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 118.53315146997416,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 6.654524118,
+              "name": "download",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 139.6100336441819,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 3853880,
+            "client_wire_bytes": 293632266,
+            "commands": {
+              "APPEND": 2364,
+              "CREATE": 40,
+              "EXPUNGE": 566,
+              "FETCH": 7444,
+              "SELECT": 2086,
+              "STORE": 568
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 4,
+              "a02": 4,
+              "a03": 5,
+              "a04": 3,
+              "a05": 5,
+              "a06": 4,
+              "a07": 3,
+              "a08": 3,
+              "a09": 3,
+              "a10": 4
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3747818,
+            "server_wire_bytes": 453786997
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2732,
+          "targets": null,
+          "max_idle_and_light_ms": 468.822,
+          "max_loaded_ms": 375.595,
+          "phases": [
+            {
+              "elapsed_seconds": 6.282799216,
+              "name": "upload",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 116.49362375549134,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 6.730125947,
+              "name": "download",
+              "send_seconds": 6,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 219.76058986820027,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2358838,
+            "client_wire_bytes": 388490098,
+            "commands": {
+              "APPEND": 15857,
+              "CREATE": 1584,
+              "DELETE": 752,
+              "FETCH": 5805,
+              "SELECT": 792
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 6,
+              "a07": 6,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4146447,
+            "server_wire_bytes": 388770561
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-variable-matched-after",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "bb319b6a64331a8c1da7c0ab9b9aa593586d789194a6894265bfa42afa2fe5fb",
+        "mailstream_sha256": "962202fde057af69bc1e9b4655c4f4e4bb370b4169c26c068d94368f9b7e634d",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 29.782621053000184
+          },
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 31.232446151999284
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2784,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 166.464,
+          "max_loaded_ms": 342.407,
+          "phases": [
+            {
+              "elapsed_seconds": 12.241184936,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 148.44822764304982,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.553607132,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 165.00929702664524,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 3661998,
+            "client_wire_bytes": 679168296,
+            "commands": {
+              "APPEND": 4466,
+              "CREATE": 40,
+              "EXPUNGE": 956,
+              "FETCH": 12334,
+              "SELECT": 3267,
+              "STORE": 960
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 6,
+              "a02": 8,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 8,
+              "a07": 9,
+              "a08": 9,
+              "a09": 9,
+              "a10": 8
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3881893,
+            "server_wire_bytes": 1035710283
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2645,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 351.347,
+          "max_loaded_ms": 344.782,
+          "phases": [
+            {
+              "elapsed_seconds": 12.43749801,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 121.82452763262793,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.545830666,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 225.12175807171857,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2439226,
+            "client_wire_bytes": 763004168,
+            "commands": {
+              "APPEND": 33057,
+              "CREATE": 3322,
+              "DELETE": 1622,
+              "FETCH": 12018,
+              "SELECT": 1662
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 3833024,
+            "server_wire_bytes": 763571577
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-variable-quantum",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "bb319b6a64331a8c1da7c0ab9b9aa593586d789194a6894265bfa42afa2fe5fb",
+        "mailstream_sha256": "78bf70e277eca1c63b98b6c080f89d0ce35fc0278f4c137fba243c184ee7fae4",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.017560541999956
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2599,
+          "targets": {
+            "full_phase_100mbps": false,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 933.77,
+          "max_loaded_ms": 383.305,
+          "phases": [
+            {
+              "elapsed_seconds": 13.206044589,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 97.18708848439434,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.386913604,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 297.8901009536742,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2770884,
+            "client_wire_bytes": 889251144,
+            "commands": {
+              "APPEND": 24716,
+              "CREATE": 1804,
+              "DELETE": 862,
+              "FETCH": 11235,
+              "SELECT": 902
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 6,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4825955,
+            "server_wire_bytes": 889617184
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-variable-poll-control",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "bb319b6a64331a8c1da7c0ab9b9aa593586d789194a6894265bfa42afa2fe5fb",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 29.831049868000264
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2471,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 226.384,
+          "max_loaded_ms": 285.121,
+          "phases": [
+            {
+              "elapsed_seconds": 12.293116066,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 144.96364489136843,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.422018602,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 309.4147135942278,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "client_peak_queued_bytes": 2580369,
+            "client_wire_bytes": 983633463,
+            "commands": {
+              "APPEND": 32039,
+              "CREATE": 749,
+              "DELETE": 334,
+              "FETCH": 14108,
+              "SELECT": 374
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 6,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5100197,
+            "server_wire_bytes": 983934260
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-final-single-1",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "candidate-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.52987296499941
+          },
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 34.665378570999565
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 4092,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 533.287,
+          "max_loaded_ms": 410.196,
+          "phases": [
+            {
+              "elapsed_seconds": 12.481527494,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 167.81043514160126,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.756146118,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 160.90969020052424,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 2629,
+              "at_most_4096": 790,
+              "at_most_65536": 47,
+              "over_64k": 1507
+            },
+            "appended_body_bytes": 718605967,
+            "client_peak_queued_bytes": 3206376,
+            "client_wire_bytes": 724697845,
+            "commands": {
+              "APPEND": 4973,
+              "CREATE": 40,
+              "EXPUNGE": 1085,
+              "FETCH": 14084,
+              "IDLE": 2863,
+              "POLL": 24125,
+              "SELECT": 3711,
+              "STORE": 1085
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 8,
+              "a02": 10,
+              "a03": 8,
+              "a04": 6,
+              "a05": 10,
+              "a06": 8,
+              "a07": 9,
+              "a08": 10,
+              "a09": 10,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 4217976,
+            "server_wire_bytes": 1079016335,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2524,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 245.604,
+          "max_loaded_ms": 307.081,
+          "phases": [
+            {
+              "elapsed_seconds": 12.204293,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 158.09025889496425,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.39885451,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 310.7539094754649,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 22082,
+              "at_most_16384": 233,
+              "at_most_4096": 13,
+              "at_most_65536": 2994,
+              "over_64k": 7866
+            },
+            "appended_body_bytes": 1003116478,
+            "client_peak_queued_bytes": 2504232,
+            "client_wire_bytes": 1011402642,
+            "commands": {
+              "APPEND": 33188,
+              "CREATE": 757,
+              "DELETE": 338,
+              "FETCH": 14768,
+              "IDLE": 2607,
+              "POLL": 62344,
+              "SELECT": 378,
+              "STATUS": 2046
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 6,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5050929,
+            "server_wire_bytes": 1011757744,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-final-single-2",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 34.74941889300044
+          },
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.330944065999574
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 4147,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 340.878,
+          "max_loaded_ms": 305.669,
+          "phases": [
+            {
+              "elapsed_seconds": 12.289831948,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 177.25357427320293,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.563613439000001,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 169.38478745246914,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 2696,
+              "at_most_4096": 804,
+              "at_most_65536": 44,
+              "over_64k": 1560
+            },
+            "appended_body_bytes": 746209746,
+            "client_peak_queued_bytes": 3685233,
+            "client_wire_bytes": 752445626,
+            "commands": {
+              "APPEND": 5104,
+              "CREATE": 40,
+              "EXPUNGE": 1105,
+              "FETCH": 14365,
+              "IDLE": 2788,
+              "POLL": 24517,
+              "SELECT": 3768,
+              "STORE": 1106
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 9,
+              "a02": 4,
+              "a03": 7,
+              "a04": 7,
+              "a05": 6,
+              "a06": 7,
+              "a07": 8,
+              "a08": 5,
+              "a09": 8,
+              "a10": 8
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3893614,
+            "server_wire_bytes": 1119200658,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2592,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 217.493,
+          "max_loaded_ms": 285.836,
+          "phases": [
+            {
+              "elapsed_seconds": 12.29157456,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 160.16674107861408,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.399268599,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 309.64415306799987,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 22575,
+              "at_most_16384": 176,
+              "at_most_4096": 12,
+              "at_most_65536": 3096,
+              "over_64k": 7805
+            },
+            "appended_body_bytes": 1007675280,
+            "client_peak_queued_bytes": 2637957,
+            "client_wire_bytes": 1016057366,
+            "commands": {
+              "APPEND": 33664,
+              "CREATE": 753,
+              "DELETE": 337,
+              "FETCH": 15112,
+              "IDLE": 2608,
+              "POLL": 63002,
+              "SELECT": 377,
+              "STATUS": 2030
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5227767,
+            "server_wire_bytes": 1016387888,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-final-multi",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 4,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 33.22599843700027
+          },
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.88917443599985
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2733,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 205.843,
+          "max_loaded_ms": 301.042,
+          "phases": [
+            {
+              "elapsed_seconds": 12.368079941,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 4,
+              "success": true,
+              "upload_mbps": 182.61789338154796,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 13.017839485,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 4,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 173.94590512574598,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 3336,
+              "at_most_16384": 1,
+              "at_most_4096": 1078,
+              "at_most_65536": 87,
+              "over_64k": 1716
+            },
+            "appended_body_bytes": 784496386,
+            "client_peak_queued_bytes": 2891254,
+            "client_wire_bytes": 791468769,
+            "commands": {
+              "APPEND": 6218,
+              "CREATE": 40,
+              "EXPUNGE": 1093,
+              "FETCH": 15136,
+              "IDLE": 2403,
+              "POLL": 25979,
+              "SELECT": 3720,
+              "STORE": 1096
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 9,
+              "a02": 9,
+              "a03": 7,
+              "a04": 6,
+              "a05": 7,
+              "a06": 9,
+              "a07": 6,
+              "a08": 9,
+              "a09": 7,
+              "a10": 8
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3672268,
+            "server_wire_bytes": 1182138973,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2595,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 228.305,
+          "max_loaded_ms": 433.615,
+          "phases": [
+            {
+              "elapsed_seconds": 12.275483885,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 4,
+              "success": true,
+              "upload_mbps": 161.14547031560866,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.71892682,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 4,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 312.7856147221704,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 23535,
+              "at_most_16384": 117,
+              "at_most_4096": 34,
+              "at_most_65536": 2271,
+              "over_64k": 8115
+            },
+            "appended_body_bytes": 1033292910,
+            "client_peak_queued_bytes": 2661859,
+            "client_wire_bytes": 1041744668,
+            "commands": {
+              "APPEND": 34072,
+              "CREATE": 721,
+              "DELETE": 320,
+              "FETCH": 15372,
+              "IDLE": 2633,
+              "POLL": 63062,
+              "SELECT": 360,
+              "STATUS": 2024
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4519005,
+            "server_wire_bytes": 1042048340,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-final-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "candidate-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 29.091656661999878
+          },
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 30.32822335400033
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 4143,
+          "targets": {
+            "full_phase_100mbps": false,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 371.425,
+          "max_loaded_ms": 560.161,
+          "phases": [
+            {
+              "elapsed_seconds": 20.605596041,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 78.31651463947091,
+              "download_mbps": 91.49648688873859,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 2219,
+              "at_most_4096": 1038,
+              "at_most_65536": 70,
+              "over_64k": 1339
+            },
+            "appended_body_bytes": 607089356,
+            "client_peak_queued_bytes": 4276059,
+            "client_wire_bytes": 613111397,
+            "commands": {
+              "APPEND": 4666,
+              "CREATE": 40,
+              "EXPUNGE": 1010,
+              "FETCH": 12326,
+              "IDLE": 2135,
+              "POLL": 21180,
+              "SELECT": 3259,
+              "STORE": 1010
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 8,
+              "a02": 9,
+              "a03": 7,
+              "a04": 9,
+              "a05": 10,
+              "a06": 9,
+              "a07": 6,
+              "a08": 9,
+              "a09": 8,
+              "a10": 6
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 4361975,
+            "server_wire_bytes": 937881215,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2549,
+          "targets": {
+            "full_phase_100mbps": false,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 252.715,
+          "max_loaded_ms": 376.374,
+          "phases": [
+            {
+              "elapsed_seconds": 20.301492111,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 78.1209179763033,
+              "download_mbps": 251.97546998174923,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 14736,
+              "at_most_16384": 49,
+              "at_most_4096": 76,
+              "at_most_65536": 2315,
+              "over_64k": 8837
+            },
+            "appended_body_bytes": 1159461860,
+            "client_peak_queued_bytes": 3503427,
+            "client_wire_bytes": 1166235559,
+            "commands": {
+              "APPEND": 26013,
+              "CREATE": 761,
+              "DELETE": 340,
+              "FETCH": 11858,
+              "IDLE": 2334,
+              "POLL": 48924,
+              "SELECT": 380,
+              "STATUS": 816
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4395570,
+            "server_wire_bytes": 1167115472,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-final-sustained",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "60s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 129.58590796099998
+          },
+          {
+            "version": "candidate",
+            "exit_status": 1,
+            "elapsed_seconds": 108.13890656500007
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2875,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 288.594,
+          "max_loaded_ms": 451.805,
+          "phases": [
+            {
+              "elapsed_seconds": 60.545630643,
+              "name": "upload",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 180.93787518037135,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 60.653995621,
+              "name": "download",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 181.19375225784682,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 10847,
+              "at_most_16384": 1,
+              "at_most_4096": 4314,
+              "at_most_65536": 78,
+              "over_64k": 7802
+            },
+            "appended_body_bytes": 3801807192,
+            "client_peak_queued_bytes": 3981457,
+            "client_wire_bytes": 3830491151,
+            "commands": {
+              "APPEND": 23042,
+              "CREATE": 41,
+              "EXPUNGE": 4423,
+              "FETCH": 59955,
+              "IDLE": 10372,
+              "POLL": 102289,
+              "SELECT": 14067,
+              "STORE": 4425
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 9,
+              "a02": 8,
+              "a03": 8,
+              "a04": 6,
+              "a05": 9,
+              "a06": 8,
+              "a07": 8,
+              "a08": 8,
+              "a09": 9,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 4181920,
+            "server_wire_bytes": 5727324754,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": false,
+          "stage": "download",
+          "error": "loaded ping: i/o timeout",
+          "startup_ms": 2515,
+          "targets": null,
+          "max_idle_and_light_ms": 244.01,
+          "max_loaded_ms": 718.143,
+          "phases": [
+            {
+              "elapsed_seconds": 60.194685248,
+              "name": "upload",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 165.45272737896582,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 89074,
+              "at_most_16384": 1045,
+              "at_most_4096": 29,
+              "at_most_65536": 11698,
+              "over_64k": 26423
+            },
+            "appended_body_bytes": 3463387076,
+            "client_peak_queued_bytes": 2684136,
+            "client_wire_bytes": 3482875213,
+            "commands": {
+              "APPEND": 128272,
+              "CREATE": 2503,
+              "DELETE": 1210,
+              "FETCH": 59244,
+              "IDLE": 7790,
+              "POLL": 218647,
+              "SELECT": 1250,
+              "STATUS": 5175
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 4,
+              "a02": 3,
+              "a03": 4,
+              "a04": 3,
+              "a05": 4,
+              "a06": 4,
+              "a07": 4,
+              "a08": 4,
+              "a09": 5,
+              "a10": 3
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4818789,
+            "server_wire_bytes": 3496127969,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-sustained-investigation",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "60s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "63cd1651f28edb61d48cc83388d3f212224f7418f39131cc6b185fc2dd5b73c9",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "ebbd4ed2b2850524a1a7aa9b5fe5b4d7b41884906ffe8c0acdf048ba06796280",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 129.41071309899962
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2561,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": false,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 224.164,
+          "max_loaded_ms": 924.578,
+          "phases": [
+            {
+              "elapsed_seconds": 60.17797201,
+              "name": "upload",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 141.96678077786225,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 60.386138281,
+              "name": "download",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 298.4873294616897,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 96362,
+              "at_most_16384": 916,
+              "at_most_4096": 32,
+              "at_most_65536": 13208,
+              "over_64k": 34770
+            },
+            "appended_body_bytes": 4608213722,
+            "client_peak_queued_bytes": 2581774,
+            "client_wire_bytes": 4643167872,
+            "commands": {
+              "APPEND": 145288,
+              "CREATE": 3114,
+              "DELETE": 1518,
+              "FETCH": 64172,
+              "IDLE": 8460,
+              "POLL": 246880,
+              "SELECT": 1558,
+              "STATUS": 6290
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4148213,
+            "server_wire_bytes": 4644774024,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-bulk-framing-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "360bf095364444ab95df59250237245b88bd382e5c0927775ea28df9d91169ce",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "81b966be3fa85eb2e8b01d4cd936d9b748d0ba793d4a7dce1101e62a0e580838",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.88496075100011
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2535,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 237.205,
+          "max_loaded_ms": 454.167,
+          "phases": [
+            {
+              "elapsed_seconds": 12.560038719,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 150.69059278749504,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.41620682,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 310.6151970493675,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 10931,
+              "at_most_16384": 366,
+              "at_most_4096": 8,
+              "at_most_65536": 4897,
+              "over_64k": 7382
+            },
+            "appended_body_bytes": 994852176,
+            "client_peak_queued_bytes": 2423674,
+            "client_wire_bytes": 1001783463,
+            "commands": {
+              "APPEND": 23584,
+              "CREATE": 888,
+              "DELETE": 404,
+              "FETCH": 11584,
+              "IDLE": 2402,
+              "POLL": 52400,
+              "SELECT": 444,
+              "STATUS": 2059
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4899975,
+            "server_wire_bytes": 1002181114,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-bulk-framing-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "360bf095364444ab95df59250237245b88bd382e5c0927775ea28df9d91169ce",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "81b966be3fa85eb2e8b01d4cd936d9b748d0ba793d4a7dce1101e62a0e580838",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 29.334313710998686
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2560,
+          "targets": {
+            "full_phase_100mbps": false,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 275.809,
+          "max_loaded_ms": 707.818,
+          "phases": [
+            {
+              "elapsed_seconds": 20.399453835,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 87.43507499890868,
+              "download_mbps": 226.91483749716772,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 8980,
+              "at_most_16384": 140,
+              "at_most_4096": 14,
+              "at_most_65536": 2893,
+              "over_64k": 8578
+            },
+            "appended_body_bytes": 1108110758,
+            "client_peak_queued_bytes": 3679199,
+            "client_wire_bytes": 1114044967,
+            "commands": {
+              "APPEND": 20605,
+              "CREATE": 795,
+              "DELETE": 357,
+              "FETCH": 10359,
+              "IDLE": 1875,
+              "POLL": 42307,
+              "SELECT": 397,
+              "STATUS": 850
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5010672,
+            "server_wire_bytes": 1114851331,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-quantum128-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "360bf095364444ab95df59250237245b88bd382e5c0927775ea28df9d91169ce",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c9e491591e0f52a881862e4e1569ff7d0fb6996402a89f8551ec5d6068130916",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.603962467999736
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2531,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 253.75,
+          "max_loaded_ms": 530.462,
+          "phases": [
+            {
+              "elapsed_seconds": 12.400295186,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 142.39999592861307,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.374988756,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 307.54020605915775,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 9423,
+              "at_most_16384": 243,
+              "at_most_4096": 7,
+              "at_most_65536": 3116,
+              "over_64k": 6016
+            },
+            "appended_body_bytes": 963223938,
+            "client_peak_queued_bytes": 2668940,
+            "client_wire_bytes": 969184466,
+            "commands": {
+              "APPEND": 18805,
+              "CREATE": 663,
+              "DELETE": 291,
+              "FETCH": 10087,
+              "IDLE": 2546,
+              "POLL": 45270,
+              "SELECT": 331,
+              "STATUS": 1980
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4568373,
+            "server_wire_bytes": 969469527,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-quantum128-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "360bf095364444ab95df59250237245b88bd382e5c0927775ea28df9d91169ce",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c9e491591e0f52a881862e4e1569ff7d0fb6996402a89f8551ec5d6068130916",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 1,
+            "elapsed_seconds": 23.056598590999783
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": false,
+          "stage": "duplex",
+          "error": "loaded ping: i/o timeout",
+          "startup_ms": 2528,
+          "targets": null,
+          "max_idle_and_light_ms": 235.95,
+          "max_loaded_ms": 427.685,
+          "phases": [],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 5454,
+              "at_most_16384": 71,
+              "at_most_4096": 13,
+              "at_most_65536": 1462,
+              "over_64k": 4612
+            },
+            "appended_body_bytes": 705117112,
+            "client_peak_queued_bytes": 4119848,
+            "client_wire_bytes": 698900783,
+            "commands": {
+              "APPEND": 11612,
+              "CREATE": 444,
+              "DELETE": 174,
+              "FETCH": 6199,
+              "IDLE": 1342,
+              "POLL": 26040,
+              "SELECT": 219,
+              "STATUS": 600
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 4,
+              "a02": 4,
+              "a03": 4,
+              "a04": 4,
+              "a05": 4,
+              "a06": 4,
+              "a07": 4,
+              "a08": 4,
+              "a09": 4,
+              "a10": 4
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4981041,
+            "server_wire_bytes": 707715294,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-slots2048-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c99079dda57ca47dff3059ba6a84d9f48f62abe4bdf5752520cd42284e5542cd",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 34.44660180199935
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2540,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 349.216,
+          "max_loaded_ms": 694.436,
+          "phases": [
+            {
+              "elapsed_seconds": 12.503699859,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 232.33761532663164,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.584155974,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 301.2618832627956,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 9738,
+              "at_most_16384": 135,
+              "at_most_4096": 22,
+              "at_most_65536": 1773,
+              "over_64k": 8039
+            },
+            "appended_body_bytes": 1163532774,
+            "client_peak_queued_bytes": 2726131,
+            "client_wire_bytes": 1169834169,
+            "commands": {
+              "APPEND": 19707,
+              "CREATE": 689,
+              "DELETE": 304,
+              "FETCH": 9160,
+              "IDLE": 2068,
+              "POLL": 43673,
+              "SELECT": 344,
+              "STATUS": 1909
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4838898,
+            "server_wire_bytes": 1170009280,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-slots2048-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c99079dda57ca47dff3059ba6a84d9f48f62abe4bdf5752520cd42284e5542cd",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 29.548016500000813
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2502,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 268.423,
+          "max_loaded_ms": 595.419,
+          "phases": [
+            {
+              "elapsed_seconds": 20.786407422,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 128.2066616850516,
+              "download_mbps": 208.33897806778015,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 8103,
+              "at_most_16384": 68,
+              "at_most_4096": 71,
+              "at_most_65536": 1310,
+              "over_64k": 8527
+            },
+            "appended_body_bytes": 1235667558,
+            "client_peak_queued_bytes": 4975910,
+            "client_wire_bytes": 1241336322,
+            "commands": {
+              "APPEND": 18079,
+              "CREATE": 681,
+              "DELETE": 300,
+              "FETCH": 9167,
+              "IDLE": 1900,
+              "POLL": 39091,
+              "SELECT": 340,
+              "STATUS": 821
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 6,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5665900,
+            "server_wire_bytes": 1242004395,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-hedged-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c119f40b97326dd7952ff6449e6883255eb738a112a613561dcc7ea631cfcfe8",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 34.02549698400071
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2707,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 240.002,
+          "max_loaded_ms": 369.304,
+          "phases": [
+            {
+              "elapsed_seconds": 12.457033553,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 271.2973705674982,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.715501442,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 308.4992624076177,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 11299,
+              "at_most_16384": 139,
+              "at_most_4096": 18,
+              "at_most_65536": 1864,
+              "over_64k": 9210
+            },
+            "appended_body_bytes": 1276435836,
+            "client_peak_queued_bytes": 2794767,
+            "client_wire_bytes": 1283405856,
+            "commands": {
+              "APPEND": 22530,
+              "CREATE": 765,
+              "DELETE": 342,
+              "FETCH": 10422,
+              "IDLE": 2091,
+              "POLL": 47626,
+              "SELECT": 382,
+              "STATUS": 1906
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 4973906,
+            "server_wire_bytes": 1283613603,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-hedged-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "c119f40b97326dd7952ff6449e6883255eb738a112a613561dcc7ea631cfcfe8",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 29.45610645599845
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2450,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 303.432,
+          "max_loaded_ms": 726.977,
+          "phases": [
+            {
+              "elapsed_seconds": 20.930145263,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 118.85949804647565,
+              "download_mbps": 203.55158717084532,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 7195,
+              "at_most_16384": 44,
+              "at_most_4096": 84,
+              "at_most_65536": 1049,
+              "over_64k": 7805
+            },
+            "appended_body_bytes": 1184143994,
+            "client_peak_queued_bytes": 4738270,
+            "client_wire_bytes": 1189385318,
+            "commands": {
+              "APPEND": 16177,
+              "CREATE": 624,
+              "DELETE": 272,
+              "FETCH": 8128,
+              "IDLE": 1581,
+              "POLL": 35085,
+              "SELECT": 312,
+              "STATUS": 782
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 6,
+              "a02": 7,
+              "a03": 6,
+              "a04": 6,
+              "a05": 7,
+              "a06": 6,
+              "a07": 7,
+              "a08": 5,
+              "a09": 6,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5757596,
+            "server_wire_bytes": 1189898941,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-dispatch-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "candidate-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "2918079052092d46f85acb0cb8d42bde84b8d375bed214414677c2bdbf3b0219",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.338416458998836
+          },
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 34.61490083700119
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 4144,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 209.388,
+          "max_loaded_ms": 512.153,
+          "phases": [
+            {
+              "elapsed_seconds": 12.367985009,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 180.3301952886447,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.629092834,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 165.84964474733388,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 2727,
+              "at_most_4096": 812,
+              "at_most_65536": 50,
+              "over_64k": 1562
+            },
+            "appended_body_bytes": 749402345,
+            "client_peak_queued_bytes": 3732008,
+            "client_wire_bytes": 755705497,
+            "commands": {
+              "APPEND": 5151,
+              "CREATE": 40,
+              "EXPUNGE": 1094,
+              "FETCH": 14670,
+              "IDLE": 2923,
+              "POLL": 24963,
+              "SELECT": 3746,
+              "STORE": 1094
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 9,
+              "a02": 10,
+              "a03": 10,
+              "a04": 6,
+              "a05": 8,
+              "a06": 8,
+              "a07": 7,
+              "a08": 9,
+              "a09": 9,
+              "a10": 9
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3904137,
+            "server_wire_bytes": 1116776962,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2582,
+          "targets": {
+            "full_phase_100mbps": false,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": false,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": false
+          },
+          "max_idle_and_light_ms": 214.733,
+          "max_loaded_ms": 1968.363,
+          "phases": [
+            {
+              "elapsed_seconds": 12.628226699,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 96.48585989484064,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.417953542,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 319.6066200905425,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 7220,
+              "at_most_16384": 19,
+              "at_most_4096": 19,
+              "at_most_65536": 845,
+              "over_64k": 5363
+            },
+            "appended_body_bytes": 904295308,
+            "client_peak_queued_bytes": 2949865,
+            "client_wire_bytes": 908834263,
+            "commands": {
+              "APPEND": 13466,
+              "CREATE": 455,
+              "DELETE": 188,
+              "FETCH": 6571,
+              "IDLE": 1726,
+              "POLL": 33409,
+              "SELECT": 228,
+              "STATUS": 1606
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 6
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5109311,
+            "server_wire_bytes": 909160532,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-receipt-retry-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "85deac5b78caf0110743e7d8f09e31613f7a721492a784c2124be33ed49777c2",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 33.554817602000185
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2428,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 194.346,
+          "max_loaded_ms": 647.581,
+          "phases": [
+            {
+              "elapsed_seconds": 12.471925211,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 261.55704759381274,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            },
+            {
+              "elapsed_seconds": 12.669175699,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 297.9159340491202,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 10006,
+              "at_most_16384": 18,
+              "at_most_4096": 60,
+              "at_most_65536": 829,
+              "over_64k": 8886
+            },
+            "appended_body_bytes": 1220197780,
+            "client_peak_queued_bytes": 3132293,
+            "client_wire_bytes": 1226576870,
+            "commands": {
+              "APPEND": 19799,
+              "CREATE": 669,
+              "DELETE": 295,
+              "FETCH": 9168,
+              "IDLE": 1976,
+              "POLL": 44203,
+              "SELECT": 335,
+              "STATUS": 1780
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 6,
+              "a09": 7,
+              "a10": 6
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5067493,
+            "server_wire_bytes": 1226763855,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-receipt-retry-duplex",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "20s",
+        "streams": 1,
+        "duplex": true,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "1d6008c779b0354d94393dd3c7b32de13d7b40940ee9fd67d068c57347f2d186",
+        "provider_sha256": "aa19d4cbae7c5e3467c92a722670c660409bea0dbd26256104eb975a57ac964f",
+        "mailstream_sha256": "85deac5b78caf0110743e7d8f09e31613f7a721492a784c2124be33ed49777c2",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 28.96856576800019
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2489,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 221.267,
+          "max_loaded_ms": 657.615,
+          "phases": [
+            {
+              "elapsed_seconds": 20.780074064,
+              "name": "duplex",
+              "send_seconds": 20,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 123.45197500735915,
+              "download_mbps": 206.98957755168087,
+              "max_receiver_gaps_ms": {
+                "upload": null,
+                "download": null
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 7309,
+              "at_most_16384": 102,
+              "at_most_4096": 89,
+              "at_most_65536": 794,
+              "over_64k": 8119
+            },
+            "appended_body_bytes": 1200048818,
+            "client_peak_queued_bytes": 4532235,
+            "client_wire_bytes": 1205347436,
+            "commands": {
+              "APPEND": 16413,
+              "CREATE": 619,
+              "DELETE": 269,
+              "FETCH": 8042,
+              "IDLE": 1704,
+              "POLL": 36260,
+              "SELECT": 309,
+              "STATUS": 751
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5556024,
+            "server_wire_bytes": 1205932165,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-independent-single",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "12s",
+        "streams": 1,
+        "duplex": false,
+        "order": "candidate-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "latency_model": "independent-variable",
+        "rtt_step_ms": {
+          "client": 500,
+          "server": 700
+        },
+        "host": {
+          "machine": "x86_64",
+          "kernel": "6.18.57",
+          "cpu_max": "200000 100000"
+        },
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "bb914db5151d81852ba59a21164fba772daa344e3f3b88e2ecb2b7673f0d4144",
+        "provider_sha256": "be9b684cd4c8fc985cd4f4c975b9228dbbe4f9409d6eb923daf110f29642ec1e",
+        "harness_sha256": "39af31d5ed6291af1750e9333f213d5e504eaa4f1838fc77954f98cb2ddd324c",
+        "runner_sha256": "6a39e361fdbf41b9df5ddd7d157aebabe78430d2bc25ca3190f73dcaf0b47092",
+        "mailstream_sha256": "85deac5b78caf0110743e7d8f09e31613f7a721492a784c2124be33ed49777c2",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 32.83600886000002
+          },
+          {
+            "version": "rc2",
+            "exit_status": 0,
+            "elapsed_seconds": 34.29466048200001
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "rc2": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2760,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": false,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": false,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 407.882,
+          "max_loaded_ms": 599.611,
+          "phases": [
+            {
+              "elapsed_seconds": 12.488822669,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 172.66611922936897,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": 386.755,
+                "download": 0
+              }
+            },
+            {
+              "elapsed_seconds": 12.655215216,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 144.54442700328707,
+              "max_receiver_gaps_ms": {
+                "upload": 0,
+                "download": 357.296
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 2618,
+              "at_most_4096": 862,
+              "at_most_65536": 56,
+              "over_64k": 1436
+            },
+            "appended_body_bytes": 690898470,
+            "client_peak_queued_bytes": 3979533,
+            "client_wire_bytes": 696998998,
+            "commands": {
+              "APPEND": 4972,
+              "CREATE": 40,
+              "EXPUNGE": 1093,
+              "FETCH": 14183,
+              "IDLE": 2648,
+              "POLL": 24017,
+              "SELECT": 3750,
+              "STORE": 1093
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 8,
+              "a02": 10,
+              "a03": 8,
+              "a04": 8,
+              "a05": 8,
+              "a06": 9,
+              "a07": 6,
+              "a08": 5,
+              "a09": 10,
+              "a10": 8
+            },
+            "peak": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            },
+            "server_peak_queued_bytes": 3631295,
+            "server_wire_bytes": 1013118296,
+            "successful_logins": {
+              "a01": 10,
+              "a02": 10,
+              "a03": 10,
+              "a04": 10,
+              "a05": 10,
+              "a06": 10,
+              "a07": 10,
+              "a08": 10,
+              "a09": 10,
+              "a10": 10
+            }
+          }
+        },
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2305,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 214.016,
+          "max_loaded_ms": 841.296,
+          "phases": [
+            {
+              "elapsed_seconds": 12.251554325,
+              "name": "upload",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 280.16963765942404,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": 119.969,
+                "download": 0
+              }
+            },
+            {
+              "elapsed_seconds": 12.632590776,
+              "name": "download",
+              "send_seconds": 12,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 312.84817295818334,
+              "max_receiver_gaps_ms": {
+                "upload": 0,
+                "download": 399.308
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 11052,
+              "at_most_16384": 20,
+              "at_most_4096": 16,
+              "at_most_65536": 889,
+              "over_64k": 9414
+            },
+            "appended_body_bytes": 1280445338,
+            "client_peak_queued_bytes": 3162022,
+            "client_wire_bytes": 1287166909,
+            "commands": {
+              "APPEND": 21391,
+              "CREATE": 705,
+              "DELETE": 313,
+              "FETCH": 9966,
+              "IDLE": 1996,
+              "POLL": 46549,
+              "SELECT": 353,
+              "STATUS": 1811
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5294717,
+            "server_wire_bytes": 1287430566,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    },
+    {
+      "case": "perf-frozen-sustained",
+      "manifest": {
+        "go": "go version go1.27.1 linux/amd64",
+        "accounts": 10,
+        "duration": "60s",
+        "streams": 1,
+        "duplex": false,
+        "order": "baseline-first",
+        "idle_probes": 20,
+        "post_probes": 12,
+        "variable_latency": true,
+        "latency_model": "independent-variable",
+        "rtt_step_ms": {
+          "client": 500,
+          "server": 700
+        },
+        "host": {
+          "machine": "x86_64",
+          "kernel": "6.18.57",
+          "cpu_max": "200000 100000"
+        },
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "7d480d0a8096e246c0f7a67fa67cb2697cad4b7e15ac49bc6069a72fd6d98e31"
+        },
+        "application_worker_sha256": "bb914db5151d81852ba59a21164fba772daa344e3f3b88e2ecb2b7673f0d4144",
+        "provider_sha256": "be9b684cd4c8fc985cd4f4c975b9228dbbe4f9409d6eb923daf110f29642ec1e",
+        "harness_sha256": "39af31d5ed6291af1750e9333f213d5e504eaa4f1838fc77954f98cb2ddd324c",
+        "runner_sha256": "6a39e361fdbf41b9df5ddd7d157aebabe78430d2bc25ca3190f73dcaf0b47092",
+        "mailstream_sha256": "85deac5b78caf0110743e7d8f09e31613f7a721492a784c2124be33ed49777c2",
+        "provider_shared_mbps": {
+          "client_both_directions": 500,
+          "server_both_directions": 1000
+        },
+        "field_performance_qualified": false,
+        "attempts": [
+          {
+            "version": "candidate",
+            "exit_status": 0,
+            "elapsed_seconds": 129.3966595249999
+          }
+        ],
+        "core_unchanged": {
+          "rc2": true,
+          "candidate": true
+        },
+        "mailstream_unchanged": true
+      },
+      "results": {
+        "candidate": {
+          "success": true,
+          "stage": "complete",
+          "error": null,
+          "startup_ms": 2339,
+          "targets": {
+            "full_phase_100mbps": true,
+            "idle_and_light_rtt": true,
+            "loaded_rtt": true,
+            "no_half_second_stalls": true,
+            "ramp_100mbps_within_2s": true,
+            "rolling_5s_100mbps": true
+          },
+          "max_idle_and_light_ms": 270.707,
+          "max_loaded_ms": 910.163,
+          "phases": [
+            {
+              "elapsed_seconds": 60.330666911,
+              "name": "upload",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 291.41852215783143,
+              "download_mbps": 0,
+              "max_receiver_gaps_ms": {
+                "upload": 201.397,
+                "download": 0
+              }
+            },
+            {
+              "elapsed_seconds": 60.676037233,
+              "name": "download",
+              "send_seconds": 60,
+              "streams": 1,
+              "success": true,
+              "upload_mbps": 0,
+              "download_mbps": 317.2028589489411,
+              "max_receiver_gaps_ms": {
+                "upload": 0,
+                "download": 418.828
+              }
+            }
+          ],
+          "provider": {
+            "append_sizes": {
+              "at_most_1024": 54277,
+              "at_most_16384": 157,
+              "at_most_4096": 29,
+              "at_most_65536": 4684,
+              "over_64k": 47756
+            },
+            "appended_body_bytes": 6401341250,
+            "client_peak_queued_bytes": 3255870,
+            "client_wire_bytes": 6432627608,
+            "commands": {
+              "APPEND": 106903,
+              "CREATE": 3349,
+              "DELETE": 1634,
+              "FETCH": 48510,
+              "IDLE": 6671,
+              "POLL": 199672,
+              "SELECT": 1674,
+              "STATUS": 5882
+            },
+            "connection_rejections": 0,
+            "live": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 6,
+              "a10": 7
+            },
+            "peak": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            },
+            "server_peak_queued_bytes": 5165589,
+            "server_wire_bytes": 6434474158,
+            "successful_logins": {
+              "a01": 7,
+              "a02": 7,
+              "a03": 7,
+              "a04": 7,
+              "a05": 7,
+              "a06": 7,
+              "a07": 7,
+              "a08": 7,
+              "a09": 7,
+              "a10": 7
+            }
+          }
+        }
+      }
+    }
+  ]
+}

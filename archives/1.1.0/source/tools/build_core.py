@@ -448,7 +448,11 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                         report["performance_mode"] = "normal Go binary; local diagnostic assertions, not field speed qualification"
                         report["field_performance_qualified"] = False
                     for module in ("mailstream", "native"):
-                        sibling_args = ["test", "-mod=readonly", "-count=1", "-timeout=120s"]
+                        # The mailstream safety cohort verifies nine 20 MB HTTPS
+                        # echoes under race instrumentation. Throughput/RTT
+                        # qualification uses separate non-instrumented workers.
+                        sibling_timeout = "360s" if module == "mailstream" else "120s"
+                        sibling_args = ["test", "-mod=readonly", "-count=1", "-timeout=" + sibling_timeout]
                         if instrumented:
                             sibling_args.append("-race")
                         command([*sibling_args, "./..."], work.parent / module)

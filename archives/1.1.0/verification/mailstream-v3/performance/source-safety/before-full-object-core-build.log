@@ -1,0 +1,54 @@
+ITOM source revision: itom-1-1-0-mailstream-dev1
+Go toolchain: 1.27.1
+Preparing Go toolchain from the verified cache or archive.
+$ go version
+$ go mod tidy
+$ go mod verify
+all modules verified
+$ go list -mod=readonly -m -json all
+$ go list -mod=readonly ./...
+Full independent session safety suite; no performance qualification claim.
+$ go test -mod=readonly -json -count=1 -timeout=300s ./...
+$ go test -mod=readonly -count=1 -timeout=120s ./...
+2026/11/01 10:28:01 failed to read command: write tcp 127.0.0.1:44007->127.0.0.1:47368: write: broken pipe
+2026/11/01 10:28:04 handling IDLE command: read tcp 127.0.0.1:43301->127.0.0.1:54642: use of closed network connection
+--- FAIL: TestApplicationHTTPSAndUserRestarts (8.65s)
+    --- FAIL: TestApplicationHTTPSAndUserRestarts/retirement_available (3.54s)
+        application_test.go:94: TCP half-close preserved 1048576 response bytes and EOF
+        application_test.go:143: restart=0 startup_ms=1019 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=0
+        application_test.go:158: fresh runtime recovered 5986812 retained bytes from durable state
+        application_test.go:143: restart=1 startup_ms=1011 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=2
+        application_test.go:158: fresh runtime recovered 11965870 retained bytes from durable state
+        application_test.go:143: restart=2 startup_ms=1011 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=2
+        application_test.go:166: segment retirement never exercised
+    --- FAIL: TestApplicationHTTPSAndUserRestarts/retirement_refused (2.62s)
+        application_test.go:94: TCP half-close preserved 1048576 response bytes and EOF
+        application_test.go:143: restart=0 startup_ms=16 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=3
+        application_test.go:158: fresh runtime recovered 5984376 retained bytes from durable state
+        application_test.go:143: restart=1 startup_ms=1011 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=1
+        application_test.go:158: fresh runtime recovered 11966002 retained bytes from durable state
+        application_test.go:143: restart=2 startup_ms=1010 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=2
+        application_test.go:166: segment retirement never exercised
+    --- FAIL: TestApplicationHTTPSAndUserRestarts/retirement_stalled (2.48s)
+        application_test.go:94: TCP half-close preserved 1048576 response bytes and EOF
+        application_test.go:143: restart=0 startup_ms=13 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=1
+        application_test.go:158: fresh runtime recovered 5986044 retained bytes from durable state
+        application_test.go:143: restart=1 startup_ms=1014 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=1
+        application_test.go:158: fresh runtime recovered 11966904 retained bytes from durable state
+        application_test.go:143: restart=2 startup_ms=1013 https_upload_bytes=4325376 https_download_bytes=4325376 mailbox_ping_ms=3
+        application_test.go:166: segment retirement never exercised
+FAIL
+FAIL	itom.local/mailstream	8.657s
+?   	itom.local/mailstream/cmd/itom-mailstream	[no test files]
+FAIL
+
+FAILED at go test -mod=readonly -count=1 -timeout=120s ./...
+Traceback (most recent call last):
+  File "/workspace/work/rc8/repository/archives/1.1.0/source/tools/build_core.py", line 454, in run
+    command([*sibling_args, "./..."], work.parent / module)
+  File "/workspace/work/rc8/repository/archives/1.1.0/source/tools/build_core.py", line 384, in command
+    result = subprocess.run([str(go), *args], cwd=cwd, env=env, text=True, encoding="utf-8",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/workspace/work/v110/mailstream-build-cache/go-1.27.1-linux-amd64/go/bin/go', 'test', '-mod=readonly', '-count=1', '-timeout=120s', './...']' returned non-zero exit status 1.

@@ -90,6 +90,8 @@ type IMAPLink struct {
 	accounts         []*mailAccountState
 	attached         SessionID
 	roundRobin       uint64
+	bulkAccount      uint64
+	bulkBytes        int
 	changed          chan struct{}
 	incoming         chan []byte
 	wg               sync.WaitGroup
@@ -220,24 +222,53 @@ func (l *IMAPLink) Close() error {
 }
 
 func (l *IMAPLink) Send(ctx context.Context, body []byte, priority bool) error {
-	if err := ctx.Err(); err != nil {
+	_, err := l.send(ctx, body, priority, nil)
+	return err
+}
+
+// SendInteractive hedges an isolated small packet over two distinct ready
+// accounts. Both copies have identical authenticated ciphertext and nonce;
+// receiver replay handling applies it once. Bulk and credit/receipt traffic
+// never use this path. An unavailable second account never delays the first.
+func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
+	if len(body) > 4096+13+headerSize+16 {
+		return l.Send(ctx, body, true)
+	}
+	first, err := l.send(ctx, body, true, nil)
+	if err != nil {
 		return err
+	}
+	if len(l.accounts) > 1 {
+		_, _ = l.send(ctx, body, true, first)
+	}
+	return nil
+}
+
+func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude *mailAccountState) (*mailAccountState, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	if l.ctx.Err() != nil {
-		return ErrClosed
+		return nil, ErrClosed
 	}
 	if _, _, _, err := parseHeader(body); err != nil {
-		return err
+		return nil, err
 	}
 	l.mu.Lock()
 	start := int(l.roundRobin % uint64(len(l.accounts)))
-	l.roundRobin++
+	if priority {
+		l.roundRobin++
+	} else {
+		start = int(l.bulkAccount % uint64(len(l.accounts)))
+	}
 	l.mu.Unlock()
 	work := mailWork{body: bytes.Clone(body), control: priority}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
 		a := l.accounts[(start+n)%len(l.accounts)]
-		a.mu.Lock()
+		if a == exclude || !a.mu.TryLock() {
+			continue
+		}
 		if a.failed {
 			failed++
 		}
@@ -252,14 +283,32 @@ func (l *IMAPLink) Send(ctx context.Context, body []byte, priority bool) error {
 		}
 		select {
 		case q <- work:
-			return nil
+			if !priority {
+				// Fill one bounded publication quantum before striping to
+				// the next account. Per-packet striping left every writer
+				// with tiny APPENDs even during a sustained bulk transfer.
+				// No timer or minimum batch delays an isolated write; a
+				// full queue immediately spills to another ready account.
+				l.mu.Lock()
+				index := uint64((start + n) % len(l.accounts))
+				if l.bulkAccount != index {
+					l.bulkAccount, l.bulkBytes = index, 0
+				}
+				l.bulkBytes += len(body)
+				if l.bulkBytes >= maxMailPlain/2 {
+					l.bulkAccount = (index + 1) % uint64(len(l.accounts))
+					l.bulkBytes = 0
+				}
+				l.mu.Unlock()
+			}
+			return a, nil
 		default:
 		}
 	}
 	if failed == len(l.accounts) {
-		return ErrClosed
+		return nil, ErrClosed
 	}
-	return ErrCapacity
+	return nil, ErrCapacity
 }
 
 func (l *IMAPLink) Attach(ctx context.Context, id SessionID) error {
@@ -1086,7 +1135,11 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			}
 			continue
 		}
-		if p.client.Caps().Has(imap.CapIdle) {
+		// A control reader polls without entering IDLE. DONE followed by
+		// FETCH otherwise adds a whole extra provider round trip, and an
+		// update queued just before IDLE can be held until a repair tick.
+		// DATA retains IDLE and batch FETCH for high-throughput delivery.
+		if p.rotate != nil && p.client.Caps().Has(imap.CapIdle) {
 			p.phase.Store(3)
 			idle, err := p.client.Idle()
 			if err != nil {
@@ -1135,6 +1188,12 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			}
 			<-idleDone
 			if refresh {
+				// A timer and EXISTS may become ready together. Freshly
+				// announced mail does not need a second tail-discovery round
+				// trip. Missing notifications still require STATUS repair.
+				if current := p.client.Mailbox(); current != nil && current.Name == mbox.Name && current.NumMessages > p.after {
+					continue
+				}
 				// EXISTS/IDLE is a wake hint, not proof of the log's tail. In
 				// particular the final APPEND of a sealed segment must not be
 				// stranded forever by a lost or coalesced notification.
@@ -1155,7 +1214,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			if err := p.client.Noop().Wait(); err != nil {
 				return ErrClosed
 			}
-			delay := min(25*time.Millisecond, max(time.Millisecond, time.Since(begin)/4))
+			delay := min(5*time.Millisecond, max(time.Millisecond, time.Since(begin)/16))
 			select {
 			case <-p.done:
 				return ErrClosed

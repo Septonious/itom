@@ -1,10 +1,13 @@
 package mailstream
 
 import (
+	"cmp"
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,9 +29,11 @@ const (
 	streamWindow        = 32 << 20
 	initialStreamWindow = 256 << 10
 	maxPendingBytes     = 32 << 20
-	maxPendingPackets   = 512
-	controlReserve      = 64
-	replaySlots         = 4096
+	// Bound bytes independently of packet count: TLS/HTTP framing can
+	// otherwise exhaust 512 slots with only a few MiB actually in flight.
+	maxPendingPackets = 2048
+	controlReserve    = 64
+	replaySlots       = 4096
 )
 
 type pendingPacket struct {
@@ -60,6 +65,8 @@ type Session struct {
 	wake            chan struct{}
 	input           chan []byte
 	receipts        chan uint64
+	receiptRetries  atomic.Uint64
+	retransmissions uint64
 	seen            [replaySlots]uint64
 	seenValid       [replaySlots]bool
 	highest         uint64
@@ -198,48 +205,63 @@ func (s *Session) receiptLoop() {
 		<-timer.C
 	}
 	defer timer.Stop()
-	var batch []uint64
+	batch := make([]uint64, 0, 32)
+	var wire []byte
 	flush := func() error {
 		if len(batch) == 0 {
 			return nil
 		}
-		body := make([]byte, 8*len(batch))
-		for n, seq := range batch {
-			binary.BigEndian.PutUint64(body[n*8:], seq)
+		if wire == nil {
+			body := make([]byte, 8*len(batch))
+			for n, seq := range batch {
+				binary.BigEndian.PutUint64(body[n*8:], seq)
+			}
+			plain, _ := (frame{kind: frameReceipt, data: body}).encode()
+			var err error
+			wire, _, err = s.cipher.seal(plain)
+			if err != nil {
+				return err
+			}
 		}
-		plain, _ := (frame{kind: frameReceipt, data: body}).encode()
-		wire, _, err := s.cipher.seal(plain)
+		// Local queue pressure is not packet loss. Keep this bounded,
+		// immutable receipt until a writer accepts it instead of forcing
+		// the peer to retransmit already delivered application data.
+		err := s.link.Send(s.ctx, wire, true)
+		if errors.Is(err, ErrCapacity) {
+			s.receiptRetries.Add(1)
+			timer.Reset(2 * time.Millisecond)
+			return nil
+		}
 		if err != nil {
 			return err
 		}
-		// Receipts are untracked and cannot consume the DATA pending budget.
-		// An exact duplicate DATA packet causes its receipt to be sent again.
-		err = s.link.Send(s.ctx, wire, true)
+		wire = nil
 		batch = batch[:0]
-		if errors.Is(err, ErrCapacity) {
-			return nil
-		}
-		return err
+		return nil
 	}
 	for {
+		input := s.receipts
+		if wire != nil {
+			input = nil
+		} // freeze the encrypted batch during retry
 		select {
 		case <-s.ctx.Done():
 			return
-		case seq := <-s.receipts:
+		case seq := <-input:
 			if len(batch) == 0 {
 				timer.Reset(2 * time.Millisecond)
 			}
 			batch = append(batch, seq)
 			if len(batch) == 32 {
-				if err := flush(); err != nil {
-					s.fail(err)
-					return
-				}
 				if !timer.Stop() {
 					select {
 					case <-timer.C:
 					default:
 					}
+				}
+				if err := flush(); err != nil {
+					s.fail(err)
+					return
 				}
 			}
 		case <-timer.C:
@@ -252,6 +274,11 @@ func (s *Session) receiptLoop() {
 }
 
 func (s *Session) dispatchLoop() {
+	type candidate struct {
+		sequence uint64
+		packet   *pendingPacket
+	}
+	batch := make([]candidate, 0, maxPendingPackets+controlReserve)
 	ticker := time.NewTicker(5 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -261,24 +288,35 @@ func (s *Session) dispatchLoop() {
 		case <-s.wake:
 		case <-ticker.C:
 		}
-		for range 32 {
-			now := time.Now()
-			s.mu.Lock()
-			rto := max(750*time.Millisecond, 2*s.rtt+4*s.variation)
-			rto = min(8*time.Second, rto)
-			var selected *pendingPacket
-			var id uint64
-			for seq, p := range s.pending {
-				if !p.sent.IsZero() && now.Sub(p.sent) < rto {
-					continue
-				}
-				if selected == nil || p.priority && !selected.priority || p.priority == selected.priority && seq < id {
-					selected, id = p, seq
-				}
+		now := time.Now()
+		clear(batch)
+		batch = batch[:0]
+		s.mu.Lock()
+		rto := min(8*time.Second, max(750*time.Millisecond, 2*s.rtt+4*s.variation))
+		for seq, p := range s.pending {
+			if p.sent.IsZero() || now.Sub(p.sent) >= rto {
+				batch = append(batch, candidate{seq, p})
 			}
-			if selected == nil {
+		}
+		s.mu.Unlock()
+		// Scan once per wake, then order outside the session lock. Scanning
+		// the entire map for every packet made a larger packet allowance
+		// consume CPU and delay incoming credit/control under bulk load.
+		slices.SortFunc(batch, func(a, b candidate) int {
+			if a.packet.priority != b.packet.priority {
+				if a.packet.priority {
+					return -1
+				}
+				return 1
+			}
+			return cmp.Compare(a.sequence, b.sequence)
+		})
+		for _, next := range batch[:min(32, len(batch))] {
+			s.mu.Lock()
+			selected := next.packet
+			if s.pending[next.sequence] != selected {
 				s.mu.Unlock()
-				break
+				continue
 			}
 			if selected.attempts >= 8 {
 				s.mu.Unlock()
@@ -286,8 +324,18 @@ func (s *Session) dispatchLoop() {
 				return
 			}
 			wire, priority := selected.wire, selected.priority
+			interactive := priority && selected.attempts == 0 &&
+				(selected.kind == frameData || selected.kind == frameOpen || selected.kind == frameOpenOK || selected.kind == framePing || selected.kind == framePong)
 			s.mu.Unlock()
-			err := s.link.Send(s.ctx, wire, priority)
+			var err error
+			started := time.Now()
+			if fast, ok := s.link.(interface {
+				SendInteractive(context.Context, []byte) error
+			}); interactive && ok {
+				err = fast.SendInteractive(s.ctx, wire)
+			} else {
+				err = s.link.Send(s.ctx, wire, priority)
+			}
 			if errors.Is(err, ErrCapacity) {
 				break
 			}
@@ -296,8 +344,11 @@ func (s *Session) dispatchLoop() {
 				return
 			}
 			s.mu.Lock()
-			if p := s.pending[id]; p == selected {
-				p.sent = now
+			if p := s.pending[next.sequence]; p == selected {
+				if p.attempts != 0 {
+					s.retransmissions++
+				}
+				p.sent = started
 				p.attempts++
 			}
 			s.mu.Unlock()
@@ -382,7 +433,7 @@ func (s *Session) receiveLoop() {
 				if err = s.apply(f); errors.Is(err, ErrCapacity) {
 					continue
 				} else if err != nil {
-					s.fail(err)
+					s.fail(fmt.Errorf("MAILSTREAM_FRAME_%d: %w", f.kind, err))
 					return
 				}
 				s.seen[seq%replaySlots], s.seenValid[seq%replaySlots] = seq, true
@@ -573,17 +624,26 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
-	Streams         int    `json:"streams"`
-	PendingPackets  int    `json:"pending_packets"`
-	PendingBytes    int    `json:"pending_bytes"`
-	DeliveryRTTMS   int64  `json:"delivery_rtt_ms"`
-	Closed          bool   `json:"closed"`
-	BulkOutstanding uint64 `json:"bulk_outstanding_bytes"`
-	ReceiveBuffered int64  `json:"receive_buffered_bytes"`
+	Streams             int    `json:"streams"`
+	PendingPackets      int    `json:"pending_packets"`
+	PendingBytes        int    `json:"pending_bytes"`
+	DeliveryRTTMS       int64  `json:"delivery_rtt_ms"`
+	Closed              bool   `json:"closed"`
+	Failure             string `json:"failure,omitempty"`
+	ReceiptBackpressure uint64 `json:"receipt_backpressure"`
+	Retransmissions     uint64 `json:"retransmissions"`
+	BulkOutstanding     uint64 `json:"bulk_outstanding_bytes"`
+	ReceiveBuffered     int64  `json:"receive_buffered_bytes"`
 }
 
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return Snapshot{len(s.streams), len(s.pending), s.pendingBytes, s.rtt.Milliseconds(), s.err != nil, s.bulkOutstanding, s.receiveBuffered.Load()}
+	snapshot := Snapshot{Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
+		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions}
+	if s.err != nil {
+		snapshot.Failure = s.err.Error()
+	}
+	return snapshot
 }

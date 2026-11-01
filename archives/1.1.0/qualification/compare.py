@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Identical application worker and independent shaped provider for RC2 and v3.
+
+All credentials and data are generated local fixtures. No provider credentials
+or live servers are read. Each core keeps its own pinned IMAP dependency.
+"""
+import argparse
+import hashlib
+import json
+import os
+import platform
+import re
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parent
+
+
+def fingerprint(core):
+    files = [p for p in core.rglob('*') if p.is_file() and
+             (p.suffix == '.go' and not p.name.endswith('_test.go') or p.name in ('go.mod', 'go.sum'))]
+    digest = hashlib.sha256()
+    for p in sorted(files):
+        digest.update(p.relative_to(core).as_posix().encode())
+        digest.update(p.read_bytes())
+    return digest.hexdigest()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--go', default=shutil.which('go'))
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--baseline', type=Path, default=ROOT.parent.parent/'1.0.0-rc2/source/core')
+    parser.add_argument('--candidate', type=Path, default=ROOT.parent/'source/core')
+    parser.add_argument('--accounts', type=int, default=10)
+    parser.add_argument('--duration', default='12s')
+    parser.add_argument('--streams', type=int, default=1)
+    parser.add_argument('--duplex', action='store_true')
+    parser.add_argument('--zero-latency', action='store_true')
+    parser.add_argument('--worst-latency', action='store_true')
+    parser.add_argument('--only', choices=('rc2', 'candidate'))
+    parser.add_argument('--order', choices=('baseline-first', 'candidate-first'), default='baseline-first')
+    parser.add_argument('--idle-probes', type=int, default=20)
+    parser.add_argument('--post-probes', type=int, default=12)
+    args = parser.parse_args()
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.duration) or float(args.duration[:-1]) <= 0:
+        parser.error('duration must be positive seconds, e.g. 12s or 0.5s')
+    if not 1 <= args.accounts <= 20 or not 1 <= args.streams <= 16:
+        parser.error('accounts must be 1..20 and streams 1..16')
+    if not 1 <= args.idle_probes <= 100 or not 1 <= args.post_probes <= 100:
+        parser.error('probe counts must be 1..100')
+    if args.zero_latency and args.worst_latency:
+        parser.error('select only one latency model')
+    if not args.go:
+        parser.error('pinned Go 1.27.1 required')
+    env = dict(os.environ, GOTOOLCHAIN='local', GOWORK='off', GOFLAGS='-buildvcs=false')
+    env['PATH'] = str(Path(args.go).resolve().parent)+os.pathsep+env.get('PATH', '')
+    version = subprocess.check_output([args.go, 'version'], env=env, text=True).strip()
+    if not version.startswith('go version go1.27.1 '):
+        parser.error('unexpected Go version: '+version)
+    output = args.out.resolve()
+    output.mkdir(parents=True, exist_ok=False)
+    sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
+    manifest = {'go': version, 'accounts': args.accounts, 'duration': args.duration,
+                'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
+                'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
+                'latency_model': 'zero' if args.zero_latency else 'constant-worst' if args.worst_latency else 'independent-variable',
+                'rtt_step_ms': {'client': 500, 'server': 700},
+                'host': {'machine': platform.machine(), 'kernel': platform.release(), 'cpu_max': Path('/sys/fs/cgroup/cpu.max').read_text().strip()},
+                'core_sha256': {label: fingerprint(core) for label, core in sources.items()},
+                'application_worker_sha256': hashlib.sha256((ROOT/'worker/main.go').read_bytes()).hexdigest(),
+                'provider_sha256': fingerprint(ROOT/'provider'),
+                'harness_sha256': fingerprint(ROOT),
+                'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),
+                'provider_shared_mbps': {'client_both_directions': 500, 'server_both_directions': 1000},
+                'field_performance_qualified': False, 'attempts': []}
+    with tempfile.TemporaryDirectory(prefix='itom-speed-') as temp:
+        work = Path(temp)
+        with (output/'build.log').open('w') as build_log:
+            subprocess.run([args.go, 'build', '-trimpath', '-o', str(work/'provider'), './provider'],
+                           cwd=ROOT, env=env, stdout=build_log, stderr=subprocess.STDOUT, check=True)
+            for label, core in (list(sources.items()) if args.order == 'baseline-first' else reversed(list(sources.items()))):
+                if args.only and args.only != label:
+                    continue
+                build_dir = work/label
+                build_dir.mkdir()
+                shutil.copy2(ROOT/'worker/main.go', build_dir/'main.go')
+                if label == 'candidate':
+                    shutil.copy2(ROOT/'worker/adapter.go', build_dir/'adapter.go')
+                else:
+                    # Frozen RC2's public admin hook accepts only its reserved
+                    # management host. Its existing itomtest entry point changes
+                    # only local exit-address permission; provider dial defaults
+                    # to the real verified-TLS mailbox adapter.
+                    (build_dir/'adapter.go').write_text('''package main
+import (
+ "context"
+ "itom.local/core/servercfg"
+ "itom.local/core/tunnel"
+)
+func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo string)error {
+ return tunnel.ServeIntegrationFixture(ctx,cfg,dir,nil,nil)
+}
+''')
+                module = ('module itom.local/performanceworker\n\ngo 1.27.1\n\n'
+                          'require itom.local/core v0.0.0\n'
+                          f'replace itom.local/core => {json.dumps(str(core))}\n'
+                          f'replace github.com/emersion/go-imap/v2 => {json.dumps(str(core/"third_party/go-imap"))}\n'
+                          f'replace itom.local/mailstream => {json.dumps(str(sources["candidate"].parent/"mailstream"))}\n')
+                (build_dir/'go.mod').write_text(module)
+                subprocess.run([args.go, 'mod', 'tidy'], cwd=build_dir, env=env,
+                               stdout=build_log, stderr=subprocess.STDOUT, check=True)
+                tags = ['-tags=itomtest'] if label == 'rc2' else []
+                subprocess.run([args.go, 'build', *tags, '-trimpath', '-o', str(work/(label+'-worker')), '.'],
+                               cwd=build_dir, env=env, stdout=build_log, stderr=subprocess.STDOUT, check=True)
+        try:
+            for label, core in (list(sources.items()) if args.order == 'baseline-first' else reversed(list(sources.items()))):
+                if args.only and args.only != label:
+                    continue
+                private = work/(label+'-provider')
+                private.mkdir()
+                provider_log = (output/(label+'-provider.log')).open('w')
+                provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
+                                             '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                            stdout=provider_log, stderr=subprocess.STDOUT)
+                try:
+                    for _ in range(200):
+                        if (private/'provider.json').exists():
+                            break
+                        if provider.poll() is not None:
+                            raise RuntimeError('provider startup failed')
+                        time.sleep(.025)
+                    info = json.loads((private/'provider.json').read_text())
+                    child_env = dict(env, SSL_CERT_FILE=info['root'])
+                    command = [str(work/(label+'-worker')), '-provider', str(private/'provider.json'),
+                               '-out', str(output/(label+'.json')), '-state', str(work/(label+'-state')),
+                               '-label', label, '-duration', args.duration, '-streams', str(args.streams),
+                               '-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
+                               '-cpu', str(output/(label+'.pprof'))]
+                    if args.duplex:
+                        command.append('-duplex')
+                    started = time.monotonic()
+                    with (output/(label+'-worker.log')).open('w') as log:
+                        try:
+                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=max(150,2*float(args.duration.removesuffix('s'))+120))
+                            status = result.returncode
+                        except subprocess.TimeoutExpired:
+                            status = 'timeout'
+                    manifest['attempts'].append({'version': label, 'exit_status': status,
+                                                 'elapsed_seconds': time.monotonic()-started})
+                    print(label, 'status:', status, 'result:', output/(label+'.json'), flush=True)
+                finally:
+                    provider.terminate()
+                    try:
+                        provider.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        provider.kill(); provider.wait()
+                    provider_log.close()
+        finally:
+            manifest['core_unchanged'] = {label: fingerprint(core) == manifest['core_sha256'][label]
+                                          for label, core in sources.items()}
+            manifest['mailstream_unchanged']=fingerprint(sources['candidate'].parent/'mailstream')==manifest['mailstream_sha256']
+            (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+    for label in sources:
+        p = output/(label+'.json')
+        if p.exists():
+            result = json.loads(p.read_text())
+            print(label, 'success:', result['success'], 'stage:', result['stage'])
+            for phase in result.get('Phases') or []:
+                print(' ', phase['name'], {k: round(phase[k]['full_phase_mbps'], 2) for k in ('upload', 'download')})
+
+
+if __name__ == '__main__':
+    main()

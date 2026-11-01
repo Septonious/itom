@@ -43,7 +43,7 @@ func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
 	}
 }
 func runApplication(t *testing.T, maintenance, stalled bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 	accounts, cleanupCalls := applicationMailServer(t, maintenance, stalled)
 	serverLink, err := NewStoredIMAPLink(ctx, "application", accounts, false, t.TempDir())
@@ -77,7 +77,10 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 	}))
 	defer func() { cancel(); origin.Close() }()
 	// An application-sized object independent of controller constants.
-	payload := make([]byte, 4_325_376)
+	// A 20 MB application object crosses full retained segments even when
+	// publication coalescing is effective. The old 4 MB object exercised
+	// only a partial segment after the throughput improvements.
+	payload := make([]byte, 20_123_456)
 	if _, err = rand.Read(payload); err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +99,7 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 		baseTransport := origin.Client().Transport.(*http.Transport).Clone()
 		baseTransport.DialContext = func(ctx context.Context, _, target string) (net.Conn, error) { return session.OpenTCP(ctx, target) }
 		baseTransport.ForceAttemptHTTP2 = false
-		client := &http.Client{Transport: baseTransport, Timeout: 15 * time.Second}
+		client := &http.Client{Transport: baseTransport, Timeout: 60 * time.Second}
 		response, err := client.Post(origin.URL, "application/octet-stream", bytes.NewReader(payload))
 		if err != nil {
 			session.Close()

@@ -1,0 +1,33 @@
+ITOM source revision: itom-1-1-0-mailstream-dev1
+Go toolchain: 1.27.1
+Preparing Go toolchain from the verified cache or archive.
+$ go version
+$ go mod tidy
+$ go mod verify
+all modules verified
+$ go list -mod=readonly -m -json all
+$ go list -mod=readonly ./...
+Full independent session safety suite; no performance qualification claim.
+$ go test -mod=readonly -json -count=1 -timeout=300s ./...
+$ go test -mod=readonly -count=1 -timeout=360s ./...
+ok  	itom.local/mailstream	14.699s
+?   	itom.local/mailstream/cmd/itom-mailstream	[no test files]
+$ go test -mod=readonly -count=1 -timeout=120s ./...
+ok  	itom.local/mobile	2.767s
+$ go test -mod=readonly -json -count=1 -timeout=300s -race ./...
+$ go test -mod=readonly -count=1 -timeout=360s -race ./...
+ok  	itom.local/mailstream	210.471s
+?   	itom.local/mailstream/cmd/itom-mailstream	[no test files]
+$ go test -mod=readonly -count=1 -timeout=120s -race ./...
+ok  	itom.local/mobile	2.805s
+$ go test -mod=readonly -p=1 -count=1 -timeout=120s -race ./...
+?   	github.com/emersion/go-imap/v2	[no test files]
+?   	github.com/emersion/go-imap/v2/cmd/imapmemserver	[no test files]
+ok  	github.com/emersion/go-imap/v2/imapclient	1.156s
+ok  	github.com/emersion/go-imap/v2/imapserver	1.013s
+?   	github.com/emersion/go-imap/v2/imapserver/imapmemserver	[no test files]
+?   	github.com/emersion/go-imap/v2/internal	[no test files]
+ok  	github.com/emersion/go-imap/v2/internal/imapnum	1.052s
+?   	github.com/emersion/go-imap/v2/internal/imapwire	[no test files]
+ok  	github.com/emersion/go-imap/v2/internal/utf7	1.019s
+$ go vet -mod=readonly ./...

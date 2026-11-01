@@ -29,6 +29,7 @@ type Stream struct {
 	hasFinal, writeClosed                            bool
 	err                                              error
 	readDeadline, writeDeadline                      time.Time
+	bulkWriteCompleted                               time.Time // owned by writeMu
 	receiveLimit, peerWindow                         int
 	closeOnce                                        sync.Once
 }
@@ -226,7 +227,11 @@ func (s *Stream) Read(p []byte) (int, error) {
 				s.receiveLimit = streamWindow
 				grew = true
 			}
-			sendWindow := grew || consumed-s.advertised >= streamPrefix
+			// The first window expansion remains immediate. Once bulk is
+			// established, amortize credit announcements across 256 KiB.
+			// Even 64 active streams leave at most 16 MiB unannounced,
+			// below the shared 60 MiB bulk allowance. Close reports the tail.
+			sendWindow := grew || consumed-s.advertised >= initialStreamWindow
 			if sendWindow {
 				s.advertised = consumed
 			}
@@ -304,7 +309,12 @@ func (s *Stream) Write(p []byte) (int, error) {
 		if !deadline.IsZero() {
 			ctx, cancel = context.WithDeadline(ctx, deadline)
 		}
-		err := s.session.send(ctx, frame{kind: frameData, stream: s.id, offset: offset, data: p[:n]}, n <= 4096)
+		// Tiny TLS/HTTP framing writes adjacent to a bulk write belong
+		// to its DATA batch. Treating every trailer as interactive filled
+		// the control writer with bulk framing. An isolated small write
+		// still dispatches immediately; this test never waits or buffers.
+		priority := n <= 4096 && time.Since(s.bulkWriteCompleted) > 2*time.Millisecond
+		err := s.session.send(ctx, frame{kind: frameData, stream: s.id, offset: offset, data: p[:n]}, priority)
 		cancel()
 		if err != nil {
 			s.mu.Lock()
@@ -323,6 +333,9 @@ func (s *Stream) Write(p []byte) (int, error) {
 			return written, err
 		}
 		written += n
+		if !priority {
+			s.bulkWriteCompleted = time.Now()
+		}
 		p = p[n:]
 	}
 	return written, nil

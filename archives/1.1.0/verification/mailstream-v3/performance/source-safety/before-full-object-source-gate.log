@@ -1,0 +1,16 @@
+ITOM source revision: itom-1-1-0-mailstream-dev1
+test_launcher: passed
+test_core_tools: passed
+Offline source checks passed: 12 Python files, 11 XML files, source-set boundaries.
+93 Kotlin test cases are present but NOT executed by this check.
+Android compilation, lint, and device tests are NOT performed by this command.
+Go compilation and Go tests are NOT performed; use target core for the local Go gate.
+Go: version
+Go: mod tidy
+Go: mod verify
+Go: list -mod=readonly -m -json all
+Go: list -mod=readonly ./...
+Go: test -mod=readonly -json -count=1 -timeout=300s ./...
+Go: test -mod=readonly -count=1 -timeout=120s ./...
+Core gate failed. Log: /workspace/work/rc8/repository/archives/1.1.0/source/dist/core-build.log
+ITOM build: Command '['/workspace/work/v110/mailstream-build-cache/go-1.27.1-linux-amd64/go/bin/go', 'test', '-mod=readonly', '-count=1', '-timeout=120s', './...']' returned non-zero exit status 1.

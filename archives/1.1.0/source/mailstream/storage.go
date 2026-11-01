@@ -9,7 +9,9 @@ import (
 	imap "github.com/emersion/go-imap/v2"
 )
 
-const segmentAppends = 8
+// At most 32 bounded MIME containers (under 12 MiB encoded) per segment.
+// This amortizes CREATE/SELECT without exceeding the per-account retained cap.
+const segmentAppends = 32
 
 type Retirement struct {
 	Session    SessionID
