@@ -24,6 +24,12 @@ credentials and client keys are reused. No legacy wallets or journals are reset.
 
 ## What has been checked
 
+The downloaded server passed ten native startup cycles with 10 and 15 accounts,
+including server restarts and preserved client state, reaching 30/30 and 45/45
+roles. Native DNS, TCP/UDP 53, named HTTPS, SOCKS/TUN and SIGKILL recovery passed
+three independent process runs. APK hashes, both JNI architectures and the
+persistent signature were verified.
+
 Local whole-application checks use verified TLS IMAP and HTTPS, normal and race
 builds, native SOCKS/TUN traffic, request half-close, clean restarts, SIGKILL
 recovery, admission limits and unavailable/stalled cleanup. A 60-second transfer

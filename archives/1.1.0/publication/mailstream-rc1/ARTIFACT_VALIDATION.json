@@ -1,0 +1,85 @@
+{
+  "source_commit": "f60dc3cfa9bf8a589d06728a17371858a3de76a2",
+  "server_sha256": {
+    "amd64": "ea099e9e91d173450da6bf2cc5da375f258132ea29607208408835016b7c11bb",
+    "arm64": "899cf2bcb0f9a67934fc09f7c69d14772b570f678e8a7c5e4efab227c6701b68"
+  },
+  "apk_sha256": "a2899089ced893fde909bd8446da287043a121cf5c0ffbde9be7a50d7807a849",
+  "exit_code": 0,
+  "tests": [
+    {
+      "name": "hosted-startup10-0",
+      "Action": "pass",
+      "startup_ms": 2456,
+      "lines": 30
+    },
+    {
+      "name": "hosted-startup10-1",
+      "Action": "pass",
+      "startup_ms": 2105,
+      "lines": 30
+    },
+    {
+      "name": "hosted-startup10-2",
+      "Action": "pass",
+      "startup_ms": 2213,
+      "lines": 30
+    },
+    {
+      "name": "hosted-startup10-3",
+      "Action": "pass",
+      "startup_ms": 2303,
+      "lines": 30
+    },
+    {
+      "name": "hosted-startup10-4",
+      "Action": "pass",
+      "startup_ms": 2139,
+      "lines": 30
+    },
+    {
+      "name": "hosted-startup15-0",
+      "Action": "pass",
+      "startup_ms": 2378,
+      "lines": 45
+    },
+    {
+      "name": "hosted-startup15-1",
+      "Action": "pass",
+      "startup_ms": 1995,
+      "lines": 45
+    },
+    {
+      "name": "hosted-startup15-2",
+      "Action": "pass",
+      "startup_ms": 2401,
+      "lines": 45
+    },
+    {
+      "name": "hosted-startup15-3",
+      "Action": "pass",
+      "startup_ms": 2272,
+      "lines": 45
+    },
+    {
+      "name": "hosted-startup15-4",
+      "Action": "pass",
+      "startup_ms": 2179,
+      "lines": 45
+    },
+    {
+      "name": "dns-and-named-native-https-events-0",
+      "Action": "pass"
+    },
+    {
+      "name": "dns-and-named-native-https-events-1",
+      "Action": "pass"
+    },
+    {
+      "name": "dns-and-named-native-https-events-2",
+      "Action": "pass"
+    }
+  ],
+  "android_device_qualified": false,
+  "provider_qualified": false
+}
