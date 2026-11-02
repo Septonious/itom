@@ -85,6 +85,13 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 		t.Fatal(err)
 	}
 	for round := 0; round < 3; round++ {
+		// The first transfer crosses complete retained segments. Restart
+		// checks need a fresh TLS handshake and an object beyond initial
+		// credit, not three copies of the same large-object stress test.
+		payload := payload
+		if round > 0 {
+			payload = payload[:1_234_567]
+		}
 		start := time.Now()
 		startup, stop := context.WithTimeout(ctx, 10*time.Second)
 		session, err := Connect(startup, clientLink, "application", psk)

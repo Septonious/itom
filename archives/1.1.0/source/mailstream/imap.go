@@ -108,6 +108,7 @@ type IMAPLink struct {
 	login            chan struct{}
 	retirements      chan Retirement
 	events           []MailEvent
+	eventNext        int
 	ownedMaintenance []*MaintenancePool
 	store            *retentionStore
 	closeErr         error

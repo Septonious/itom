@@ -1,4 +1,4 @@
-name: Build matched mailbox-stream RC2 weak-link fixes for testing
+name: Build matched mailbox-stream RC2 with constrained-link acceptance
 on:
   push:
     branches: ["codex/v1.1.0-mailbox-stream-v3"]

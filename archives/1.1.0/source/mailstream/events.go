@@ -18,14 +18,18 @@ func (l *IMAPLink) note(operation, account string, packet []byte, generation uin
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(l.events) == 512 {
-		copy(l.events, l.events[1:])
-		l.events = l.events[:511]
+	event := MailEvent{operation, account, id, sequence, generation, control}
+	if len(l.events) < 512 {
+		l.events = append(l.events, event)
+	} else {
+		l.events[l.eventNext] = event
+		l.eventNext = (l.eventNext + 1) % len(l.events)
 	}
-	l.events = append(l.events, MailEvent{operation, account, id, sequence, generation, control})
 }
 func (l *IMAPLink) Events() []MailEvent {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return append([]MailEvent(nil), l.events...)
+	events := make([]MailEvent, 0, len(l.events))
+	events = append(events, l.events[l.eventNext:]...)
+	return append(events, l.events[:l.eventNext]...)
 }
