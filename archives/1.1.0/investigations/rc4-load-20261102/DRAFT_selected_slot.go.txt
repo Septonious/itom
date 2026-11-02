@@ -1,0 +1,86 @@
+// PROPOSED ONLY. This file is outside the active source tree and is not built.
+// The workspace failed before this CLOSE revision could be applied or tested.
+// Integrate with the two-slot prototype only after reviewing AUDIT.md.
+//
+// Required prototype fields: after uint32, consumed imap.UIDSet, validity uint32,
+// phase atomic.Int32, and client *imapclient.Client. limit bounds raw-socket IO.
+// Only the reader of a fresh session-owned DATA slot may call this function.
+
+func (p *mailPipe) reclaimSelected(expected string) error {
+    box := p.client.Mailbox()
+    if box == nil || box.Name != expected ||
+        box.NumMessages != segmentAppends || p.after != segmentAppends {
+        return ErrProtocol
+    }
+    uids, ok := p.consumed.Nums()
+    if !ok || len(uids) != segmentAppends {
+        return ErrProtocol
+    }
+    for i, uid := range uids {
+        if uid == 0 || i > 0 && uid <= uids[i-1] {
+            return ErrProtocol
+        }
+    }
+
+    stop := p.limit(10 * time.Second)
+    defer stop()
+
+    p.phase.Store(7)
+    if err := p.client.Store(p.consumed, &imap.StoreFlags{
+        Op: imap.StoreFlagsAdd, Silent: true,
+        Flags: []imap.Flag{imap.FlagDeleted},
+    }, nil).Close(); err != nil {
+        return err
+    }
+
+    // There are exactly the verified consumed messages in this dedicated
+    // slot. The producer cannot reuse it until reclamation is acknowledged
+    // and every previous APPEND tag and packet receipt is terminal.
+    //
+    // CLOSE releases the reader's selection as it removes marked messages.
+    // This deliberately does not use UID EXPUNGE or folder DELETE.
+    p.phase.Store(8)
+    if err := p.client.UnselectAndExpunge().Wait(); err != nil {
+        return err
+    }
+
+    p.phase.Store(9)
+    status, err := p.client.Status(expected, &imap.StatusOptions{
+        NumMessages: true, UIDValidity: true,
+    }).Wait()
+    if err != nil {
+        return err
+    }
+    if status.UIDValidity != p.validity ||
+        status.NumMessages == nil || *status.NumMessages != 0 {
+        return ErrProtocol
+    }
+    return nil
+}
+
+// Producer-side release from the locally tested prototype. Keep the same
+// three terminal conditions when replacing UID EXPUNGE with CLOSE.
+// Called with account.mu held; refundLocked durably writes the new charge.
+func (a *mailAccountState) releaseReclaimedLocked() error {
+    for key, record := range a.segments {
+        if !record.reclaimed || record.appendPending != 0 ||
+            len(record.awaiting) != 0 {
+            continue
+        }
+        if err := a.refundLocked(record.bytes); err != nil {
+            return err
+        }
+        delete(a.segments, key)
+        a.retired.Add(1)
+        a.bulkBlocked = false
+    }
+    return nil
+}
+
+// Physical names repeat every two logical generations. The APPEND owner must
+// defer DATA generation n while its record for n-2 remains. Deferred DATA must
+// not prevent control messages, tagged completions, or teardown being serviced.
+const dataSlots uint32 = 2
+func (l *IMAPLink) segmentFolder(id SessionID, out bool, generation uint32) string {
+    return fmt.Sprintf("%s-%08x", l.dataFolder(id, out), generation%dataSlots)
+}
