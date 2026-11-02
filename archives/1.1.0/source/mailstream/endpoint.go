@@ -276,13 +276,14 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 				continue
 			}
 			release = nextRelease
-			active = newSession(ctx, link, candidate.cipher, true, dial)
-			activeDone = active.Done()
 			plain, _ := (frame{kind: frameReadyAck}).encode()
 			reply, _, err := candidate.cipher.seal(plain)
 			if err != nil {
 				return err
 			}
+			// Reserve nonce zero for READY_ACK before any session worker can seal.
+			active = newSession(ctx, link, candidate.cipher, true, dial)
+			activeDone = active.Done()
 			current = &candidateSession{cipher: candidate.cipher, hello: candidate.hello, reply: reply, created: candidate.created}
 			delete(pending, id)
 			if err = link.Send(ctx, reply, true); err != nil && !errors.Is(err, ErrCapacity) {

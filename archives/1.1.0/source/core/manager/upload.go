@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-const BuildRevision = "tmp-update1"
+const BuildRevision = "tmp-update2"
 
 // InstallLatestUpload is a one-shot update from a manually uploaded file, not
 // a watcher of the shared temporary directory. Only validated bytes enter the

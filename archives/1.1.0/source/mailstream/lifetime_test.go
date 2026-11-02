@@ -13,6 +13,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	imap "github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapserver"
 )
 
 type shutdownDialer struct{ connection *shutdownConn }
@@ -144,5 +147,29 @@ func TestEstablishedHTTPSOutlivesDialTimeout(t *testing.T) {
 	case <-done:
 	case <-time.After(2 * time.Second):
 		t.Fatal("session shutdown did not join")
+	}
+}
+
+// A provider can accept LOGIN but never finish a mailbox command. The client
+// decoder replaces socket read deadlines while processing responses.
+type slowSelection struct{ imapserver.Session }
+
+func (s slowSelection) Select(name string, options *imap.SelectOptions) (*imap.SelectData, error) {
+	time.Sleep(500 * time.Millisecond)
+	return s.Session.Select(name, options)
+}
+func TestMailboxCommandBoundSurvivesDecoderDeadlineChanges(t *testing.T) {
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return slowSelection{s} })
+	pipe, err := openMailPipe(context.Background(), accounts[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pipe.close()
+	stop := pipe.limit(75 * time.Millisecond)
+	defer stop()
+	start := time.Now()
+	_, err = pipe.selectLog("bounded-mailbox", false)
+	if err == nil || time.Since(start) > 300*time.Millisecond {
+		t.Fatalf("mailbox command exceeded independent bound: elapsed=%v err=%v", time.Since(start), err)
 	}
 }

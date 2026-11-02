@@ -59,10 +59,22 @@ func (u *UI) system(action string) error {
 	if runtime.GOOS != "linux" {
 		return errors.New("service management requires Linux and systemd")
 	}
+	if action == "restart" {
+		if err := u.system("stop"); err != nil {
+			return err
+		}
+		return u.system("start")
+	}
 	c := exec.Command("systemctl", action, "itom.service")
 	c.Stdout = u.Out
 	c.Stderr = u.Out
-	return c.Run()
+	if err := c.Run(); err != nil {
+		return err
+	}
+	if action == "stop" {
+		return ResetCapacityState(u.State)
+	}
+	return nil
 }
 func (u *UI) stopped() error {
 	if u.stoppedCheck != nil {
@@ -504,10 +516,10 @@ func installData(data []byte, out io.Writer) error {
 		cmd := exec.Command("systemctl", args...)
 		cmd.Stdout, cmd.Stderr = out, out
 		return cmd.Run()
-	}, out)
+	}, out, func() error { return ResetCapacityState("/var/lib/itom") })
 }
 
-func installFiles(data []byte, dst, unitPath string, run func(...string) error, out io.Writer) error {
+func installFiles(data []byte, dst, unitPath string, run func(...string) error, out io.Writer, reset ...func() error) error {
 	if len(data) == 0 || len(data) > 100<<20 {
 		return errors.New("binary is empty or exceeds limit")
 	}
@@ -551,6 +563,18 @@ func installFiles(data []byte, dst, unitPath string, run func(...string) error, 
 	if e = run("enable", "itom.service"); e != nil {
 		rollback()
 		return e
+	}
+	if len(reset) > 0 {
+		if wasActive {
+			if e = run("stop", "itom.service"); e != nil {
+				rollback()
+				return e
+			}
+		}
+		if e = reset[0](); e != nil {
+			rollback()
+			return e
+		}
 	}
 	if wasActive {
 		if e = run("restart", "itom.service"); e == nil {

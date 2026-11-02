@@ -94,6 +94,10 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 	go func() { defer s.wg.Done(); s.receiveLoop() }()
 	go func() { defer s.wg.Done(); s.dispatchLoop() }()
 	go func() { defer s.wg.Done(); s.receiptLoop() }()
+	if routes, ok := link.(accountAnnouncer); ok {
+		s.wg.Add(1)
+		go func() { defer s.wg.Done(); s.announceRoutes(routes) }()
+	}
 	if storage, ok := link.(StorageLink); ok {
 		s.wg.Add(1)
 		go func() {
@@ -482,6 +486,12 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameRouteReady {
+		if f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
+			return ErrProtocol
+		}
+		return nil
+	}
 	if f.kind == frameRetired || f.kind == frameCollect || f.kind == frameCollected {
 		if f.stream != 0 || f.offset > uint64(^uint32(0)) || !validIdentity(string(f.data)) {
 			return ErrProtocol

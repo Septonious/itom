@@ -45,6 +45,13 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
 		}
 		return err
 	}
+	if err := u.stopped(); err != nil {
+		return err
+	}
+	if err := ResetCapacityState(u.State); err != nil {
+		return err
+	}
+	fmt.Fprintln(u.Out, "Local server capacity counters reset.")
 	fmt.Fprintln(u.Out, "Permanently deletes ALL accessible folders and messages in this account, including non-ITOM mail. INBOX and folders protected by the provider are emptied. Stop all clients using this account. Other accounts are unaffected.")
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Minute)
 	defer cancel()
@@ -97,7 +104,7 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
 	} else {
 		fmt.Fprintln(u.Out, "Full purge was not confirmed. The result may be partial; open this option again to inspect folders.")
 	}
-	fmt.Fprintln(u.Out, "ITOM configuration and journals are preserved. Required folders are recreated at startup. Purging does not refund uncertain quota debt.")
+	fmt.Fprintln(u.Out, "ITOM configuration is preserved. Local capacity counters are reset for this purge attempt. Required folders are recreated at startup.")
 	return err
 }
 
@@ -119,6 +126,13 @@ func (u *UI) waitAdmin(ctx context.Context, d time.Duration) error {
 // admin connections at once and inserts a cool-down between accounts so a
 // provider does not see a burst of DELETE/EXPUNGE operations from ITOM.
 func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
+	if err := u.stopped(); err != nil {
+		return err
+	}
+	if err := ResetCapacityState(u.State); err != nil {
+		return err
+	}
+	fmt.Fprintln(u.Out, "Local server capacity counters reset.")
 	if len(cfg.Accounts) == 0 {
 		return errors.New("no mail accounts")
 	}
@@ -170,7 +184,7 @@ func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
 	if len(failures) != 0 {
 		return fmt.Errorf("full purge completed with errors: %s", strings.Join(failures, "; "))
 	}
-	fmt.Fprintln(u.Out, "\nAll mail accounts were purged serially. ITOM configuration and physical-debt journals were preserved.")
+	fmt.Fprintln(u.Out, "\nAll mail accounts were purged serially. ITOM configuration is preserved; local capacity counters are reset.")
 	return nil
 }
 

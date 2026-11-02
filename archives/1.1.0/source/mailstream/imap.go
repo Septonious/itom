@@ -198,7 +198,7 @@ func (l *IMAPLink) controlFolder(out bool) string {
 	if uplink {
 		direction = "c2s"
 	}
-	return "itom3-" + l.identity + "-control-" + direction
+	return "itom3-" + l.identity + "-control-v4-" + direction
 }
 func (l *IMAPLink) dataFolder(id SessionID, out bool) string {
 	direction := "s2c"
@@ -556,7 +556,8 @@ func (a *mailAccountState) attach(id SessionID) error {
 		a.fail()
 		return err
 	}
-	_ = p.conn.SetDeadline(time.Now().Add(15 * time.Second))
+	stopSelect := p.limit(15 * time.Second)
+	defer stopSelect()
 	if _, err = p.selectLog(a.link.segmentFolder(id, false, 0), false); err != nil {
 		if life.Err() != nil {
 			p.close()
@@ -567,7 +568,7 @@ func (a *mailAccountState) attach(id SessionID) error {
 		a.fail()
 		return err
 	}
-	_ = p.conn.SetDeadline(time.Time{})
+	stopSelect()
 	a.configureSegments(p, id)
 	p.onPacket = func(packet []byte) {
 		a.downBytes.Add(uint64(len(packet)))
@@ -658,7 +659,8 @@ func (a *mailAccountState) run() {
 		a.link.note("received", a.config.ID, packet, 0, true)
 	}
 	a.phase("control_select")
-	_ = control.conn.SetDeadline(time.Now().Add(15 * time.Second))
+	stopSelect := control.limit(15 * time.Second)
+	defer stopSelect()
 	if _, err = control.selectLog(a.link.controlFolder(false), true); err != nil {
 		a.failedStage("control_select", err)
 		<-a.link.login
@@ -674,7 +676,7 @@ func (a *mailAccountState) run() {
 			return
 		}
 	}
-	_ = control.conn.SetDeadline(time.Time{})
+	stopSelect()
 	var writer *mailPipe
 	if a.link.client {
 		a.phase("writer_login")
@@ -1138,7 +1140,8 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		return nil, ErrClosed
 	}
 	conn := tls.Client(raw, &tls.Config{ServerName: a.Host, RootCAs: a.Roots, MinVersion: tls.VersionTLS12})
-	_ = raw.SetDeadline(time.Now().Add(15 * time.Second))
+	stopDialIO := context.AfterFunc(dial, func() { raw.Close() })
+	defer stopDialIO()
 	if err = conn.HandshakeContext(dial); err != nil {
 		raw.Close()
 		return nil, ErrAuth
@@ -1157,9 +1160,20 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		p.close()
 		return nil, ErrAuth
 	}
-	_ = raw.SetDeadline(time.Time{})
+	if !stopDialIO() {
+		p.close()
+		return nil, ErrAuth
+	}
 	return p, nil
 }
+
+// The IMAP decoder changes read deadlines internally; a socket deadline alone
+// cannot bound LOGIN/SELECT. A timer interrupts the underlying transport.
+func (p *mailPipe) limit(d time.Duration) func() bool {
+	timer := time.AfterFunc(d, func() { p.conn.NetConn().Close() })
+	return timer.Stop
+}
+
 func (p *mailPipe) close() {
 	p.closeOnce.Do(func() {
 		close(p.done)

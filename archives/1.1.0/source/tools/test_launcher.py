@@ -52,9 +52,9 @@ class LauncherTests(unittest.TestCase):
 
     def test_public_release_consistent_across_gradle_server_and_archive(self):
         info = check_sources.validate_release_identity(check_sources.ROOT)
-        self.assertEqual("MAILSTREAM-RC3", info["release"])
-        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC3-debug.apk", build.public_apk_name(info))
-        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC3-sources.zip", info["archive_name"])
+        self.assertEqual("MAILSTREAM-RC4", info["release"])
+        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC4-debug.apk", build.public_apk_name(info))
+        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC4-sources.zip", info["archive_name"])
 
     def test_public_release_mismatch_is_fatal(self):
         info = build.read_source_info()

@@ -17,7 +17,7 @@ import (
 	"runtime"
 )
 
-const revision = "itom-1-1-0-mailstream-rc3"
+const revision = "itom-1-1-0-mailstream-rc4"
 
 func run(args []string) error {
 	command := "menu"
@@ -118,6 +118,9 @@ func run(args []string) error {
 		if e != nil {
 			return e
 		}
+		if e = manager.PrepareCapacityPolicy(*state); e != nil {
+			return e
+		}
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, terminationSignal())
 		defer stop()
 		var logger func(string)
@@ -131,6 +134,11 @@ func run(args []string) error {
 		admin := adminserver.New(ctx, *state)
 		defer admin.Close()
 		e = tunnel.ServeManaged(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial)
+		if ctx.Err() != nil {
+			if resetErr := manager.ResetCapacityState(*state); resetErr != nil {
+				return errors.Join(e, resetErr)
+			}
+		}
 		if errors.Is(e, context.Canceled) {
 			return nil
 		}

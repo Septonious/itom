@@ -40,10 +40,8 @@ func (a *mailAccountState) recoverHistorical(p *mailPipe) error {
 		return nil
 	}
 	a.phase("historical_recovery")
-	if err := p.conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
-		return err
-	}
-	defer p.conn.SetDeadline(time.Time{})
+	stop := p.limit(10 * time.Second)
+	defer stop()
 	rows, err := p.client.List("", "itom3-"+a.link.identity+"-*", nil).Collect()
 	if err != nil {
 		return err
