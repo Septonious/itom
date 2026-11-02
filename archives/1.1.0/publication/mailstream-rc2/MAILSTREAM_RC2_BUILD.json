@@ -1,0 +1,152 @@
+{
+  "release": "ITOM 1.1.0 MAILSTREAM-RC2",
+  "source_commit": "3606523d58f59027dc66c31340849fa86d25e656",
+  "build_run_id": 41442662275,
+  "source_acceptance_run_id": 41442662522,
+  "weak_link_run_id": 41443234227,
+  "weak_link_runner_commit": "45fa9d882925c70280d9646de7dca17c44439186",
+  "build_url": "https://github.com/Septonious/itom/actions/runs/41442662275",
+  "qualification_url": "https://github.com/Septonious/itom/actions/runs/41443234227",
+  "initial_weak_link_runner_failed_before_transport_test": "Optional cgroup cpu.max metadata absent on hosted runner; corrected outside frozen runtime source, successful separate qualification run required",
+  "artifact_validation_pending": false,
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "7fd396eff3319c278d555f23f0544afe0a261d5c59fc4a35b3f887ced6849a86",
+  "signed_apk_bytes": 53629268,
+  "source_ci_apk_sha256": "42838998494ff915de42b70d7d37b61f87a52ac353b2d098842d70113ff8891b",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "7f9d0061b7cf23e91b7a9a20eee7fa9373b45470447a9737b0db9556d50da5d6",
+    "arm64": "6a9dc33a62f8626490f070ed8681db33d7d92f57d4e725a5b1a2ea56c51cf798"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10127,
+    "version_name": "1.1.0-mailstream-rc2-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "8eb95a0f72b60052feaad48272a3446226d2e531f0093c29febd0972f0042c08",
+    "lib/armeabi-v7a/libgojni.so": "3dab678319ba4cd8cd7d37b6f87839caaf809f81590defc17d1f11cedbe81b0f"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2427,
+      "NativeRPCMS": 320,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 147,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2131,
+      "NativeRPCMS": 360,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 171,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2460,
+      "NativeRPCMS": 282,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 258,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2398,
+      "NativeRPCMS": 336,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 133,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2146,
+      "NativeRPCMS": 497,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 197,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2547,
+      "NativeRPCMS": 392,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 129,
+      "protected_sockets": 45
+    }
+  ],
+  "checks": {
+    "native_startup_10_accounts": true,
+    "native_startup_15_accounts": true,
+    "seven_mbps_upload_cancel_download_new_https_and_recovery": true,
+    "all_account_metrics_populated": true,
+    "normal_race_native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "jni_hashes_and_revision": true,
+    "persistent_signer_verified": true
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "weak_link": {
+    "shared_client_mbps": 7,
+    "streams": 4,
+    "fresh_https_after_cancellation": true,
+    "post_rtt_ms": [
+      127.438,
+      129.872,
+      114.828,
+      172.256,
+      158.34,
+      125.289,
+      113.387,
+      172.465,
+      151.306,
+      148.039,
+      159.307,
+      178.919
+    ],
+    "loaded_max_rtt_ms": 1643.771,
+    "active_lines": 30,
+    "connection_rejections": 0,
+    "account_reconnects": false,
+    "session_closed": false,
+    "payload_mbps": {
+      "upload": 4.600297229565844,
+      "download": 4.554343009620011
+    }
+  },
+  "high_rate_model": "Measurements vary materially on this 2-CPU shared fixture. Frozen RC2 smoke measured 116/219 Mbps; repeated unchanged RC1 measured 245/198 and 127/231 Mbps. This does not qualify sustained real-provider bandwidth or establish a precise regression percentage.",
+  "limitations": [
+    "Historical client-produced DATA and append-only control logs are not fully reclaimed",
+    "Recovery after clearing private app data or fully exhausting control capacity is unqualified",
+    "Refused/uncertain deletion retains debt",
+    "Rambler/carrier/Android device performance remains to be tested"
+  ],
+  "installation": "Update both endpoints in place; run downloaded server and choose 11 then 9; preserve existing profile and private data"
+}

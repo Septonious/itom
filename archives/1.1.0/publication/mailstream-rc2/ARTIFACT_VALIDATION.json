@@ -1,0 +1,16 @@
+{
+  "source_commit": "3606523d58f59027dc66c31340849fa86d25e656",
+  "exit_code": 0,
+  "checks": {
+    "native_startup_10_accounts": true,
+    "native_startup_15_accounts": true,
+    "seven_mbps_upload_cancel_download_new_https_and_recovery": true,
+    "all_account_metrics_populated": true,
+    "normal_race_native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "jni_hashes_and_revision": true,
+    "persistent_signer_verified": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false
+}
