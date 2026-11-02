@@ -70,6 +70,9 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 				if f.kind != frameReadyAck {
 					continue
 				}
+				if confirmed, ok := link.(interface{ ConfirmPeer([]byte) }); ok {
+					confirmed.ConfirmPeer(packet)
+				}
 				// Admission is authenticated before either endpoint's extra
 				// DATA reader can consume the provider's connection allowance.
 				if err = link.Attach(ctx, h.id); err != nil {

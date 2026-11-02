@@ -18,6 +18,17 @@ func (l *IMAPLink) note(operation, account string, packet []byte, generation uin
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	if operation == "received" && control && packet[4] == sealed {
+		key := receivedRoute{id, sequence}
+		if _, exists := l.receivedRoutes[key]; !exists {
+			if len(l.receivedRoutes) == len(l.routeKeys) {
+				delete(l.receivedRoutes, l.routeKeys[l.routeNext])
+			}
+			l.routeKeys[l.routeNext] = key
+			l.routeNext = (l.routeNext + 1) % len(l.routeKeys)
+		}
+		l.receivedRoutes[key] = account
+	}
 	event := MailEvent{operation, account, id, sequence, generation, control}
 	if len(l.events) < 512 {
 		l.events = append(l.events, event)

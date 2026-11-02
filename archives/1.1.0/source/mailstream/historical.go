@@ -2,8 +2,10 @@ package mailstream
 
 import (
 	"encoding/hex"
+	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	imap "github.com/emersion/go-imap/v2"
 )
@@ -30,75 +32,34 @@ func (l *IMAPLink) oldOutbound(name string, current SessionID) bool {
 	return err == nil && id != (SessionID{}) && id != current
 }
 
-// Caller holds Account.mu. The existing independent maintenance connection
-// and bounded timeout isolate collection from delivery. Failure retains debt.
-func (a *mailAccountState) collectHistoricalLocked() {
-	if a.link.client || a.id == (SessionID{}) || a.historicalQueued || a.historicalRefused {
-		return
+// Historical metadata work runs once, before this account advertises serving
+// roles. Providers can serialize namespace operations across all sockets of an
+// account; a separate maintenance socket alone does not isolate live traffic.
+func (a *mailAccountState) recoverHistorical(p *mailPipe) error {
+	if a.link.client || a.recovered == 0 {
+		return nil
 	}
-	id := a.id
-	if a.historicalFor == id && len(a.historicalFolders) == 0 {
-		return
+	a.phase("historical_recovery")
+	if err := p.conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return err
 	}
-	var folder string
-	if a.historicalFor == id {
-		folder = a.historicalFolders[0]
+	defer p.conn.SetDeadline(time.Time{})
+	rows, err := p.client.List("", "itom3-"+a.link.identity+"-*", nil).Collect()
+	if err != nil {
+		return err
 	}
-	err := a.config.Maintenance.submit(maintenanceJob{ctx: a.ctx, run: func(p *mailPipe) error {
-		if !a.attachMu.TryLock() {
-			a.mu.Lock()
-			a.historicalQueued = false
-			a.mu.Unlock()
-			return nil
-		}
-		defer a.attachMu.Unlock()
-		a.mu.Lock()
-		current := a.id
-		a.mu.Unlock()
+	if len(rows) > 4096 {
+		return ErrCapacity
+	}
+	for _, row := range rows {
 		a.link.mu.Lock()
-		attached := a.link.attached
+		current := a.link.attached
 		a.link.mu.Unlock()
-		if current != id || attached != id {
-			a.mu.Lock()
-			a.historicalQueued = false
-			a.mu.Unlock()
-			return nil
+		folder := row.Mailbox
+		if !a.link.oldOutbound(folder, current) {
+			continue
 		}
-		if folder == "" {
-			rows, err := p.client.List("", "itom3-"+a.link.identity+"-*", nil).Collect()
-			if err != nil {
-				return err
-			}
-			var folders []string
-			for _, row := range rows {
-				if a.link.oldOutbound(row.Mailbox, id) {
-					a.mu.Lock()
-					known := false
-					for _, owned := range a.segments {
-						if owned.folder == row.Mailbox {
-							known = true
-							break
-						}
-					}
-					a.mu.Unlock()
-					if known {
-						continue
-					}
-					if len(folders) >= 4096 {
-						return ErrCapacity
-					}
-					folders = append(folders, row.Mailbox)
-				}
-			}
-			a.mu.Lock()
-			a.historicalFor, a.historicalFolders, a.historicalQueued = id, folders, false
-			a.mu.Unlock()
-			return nil
-		}
-		if !a.link.oldOutbound(folder, id) {
-			return ErrProtocol
-		}
-		selected, err := p.client.Select(folder, &imap.SelectOptions{ReadOnly: true}).Wait()
+		selected, err := p.client.Select(folder, nil).Wait()
 		if err != nil {
 			return err
 		}
@@ -107,29 +68,42 @@ func (a *mailAccountState) collectHistoricalLocked() {
 		}
 		bytes := int64(0)
 		if selected.NumMessages > 0 {
-			rows, err := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: selected.NumMessages}}, &imap.FetchOptions{RFC822Size: true}).Collect()
+			messages, err := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: selected.NumMessages}}, &imap.FetchOptions{RFC822Size: true}).Collect()
 			if err != nil {
 				return err
 			}
-			if len(rows) != int(selected.NumMessages) {
+			if len(messages) != int(selected.NumMessages) {
 				return ErrProtocol
 			}
-			for _, row := range rows {
-				if row.RFC822Size <= 0 || row.RFC822Size > 2*maxMailPlain {
+			for _, message := range messages {
+				if message.RFC822Size <= 0 || message.RFC822Size > 2*maxMailPlain {
 					return ErrProtocol
 				}
-				bytes += row.RFC822Size
+				bytes += message.RFC822Size
 			}
 		}
-		// Never CLOSE/EXPUNGE. Without UNSELECT select an existing control
-		// folder read-only on this maintenance connection, then DELETE.
 		if p.client.Caps().Has(imap.CapUnselect) {
 			err = p.client.Unselect().Wait()
 		} else {
-			_, err = p.client.Select(a.link.controlFolder(false), &imap.SelectOptions{ReadOnly: true}).Wait()
+			// Never select a live control folder on a second connection, and
+			// never CLOSE/EXPUNGE a mailbox. This empty parking folder is ours.
+			parking := "itom3-" + a.link.identity + "-maintenance"
+			if e := p.client.Create(parking, nil).Wait(); e != nil {
+				var tagged *imap.Error
+				if !errors.As(e, &tagged) {
+					return e
+				}
+			}
+			_, err = p.client.Select(parking, nil).Wait()
 		}
 		if err != nil {
 			return err
+		}
+		a.link.mu.Lock()
+		current = a.link.attached
+		a.link.mu.Unlock()
+		if !a.link.oldOutbound(folder, current) {
+			continue
 		}
 		if err = p.client.Delete(folder).Wait(); err != nil {
 			return err
@@ -142,26 +116,16 @@ func (a *mailAccountState) collectHistoricalLocked() {
 			return ErrProtocol
 		}
 		a.mu.Lock()
-		defer a.mu.Unlock()
-		// Refund actual deleted RFC822 bytes only. Unknown APPEND outcomes
-		// and unused crash reservations remain charged conservatively.
 		if bytes > int64(a.spent) {
+			a.mu.Unlock()
 			return ErrStorage
 		}
-		if err := a.refundLocked(int(bytes)); err != nil {
+		err = a.refundLocked(int(bytes))
+		a.mu.Unlock()
+		if err != nil {
 			return err
 		}
 		a.retired.Add(1)
-		a.historicalFolders = a.historicalFolders[1:]
-		a.historicalQueued = false
-		return nil
-	}, failed: func(error) {
-		a.mu.Lock()
-		a.historicalRefused = true
-		a.historicalQueued = false
-		a.mu.Unlock()
-	}})
-	if err == nil {
-		a.historicalQueued = true
 	}
+	return nil
 }

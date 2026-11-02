@@ -339,6 +339,10 @@ func (s noCleanupSession) Append(folder string, r imap.LiteralReader, opts *imap
 }
 
 func applicationMailServer(t *testing.T, maintenance, stalled bool) ([]MailAccount, *cleanupCounters) {
+	return applicationMailServerWrapped(t, maintenance, stalled, nil)
+}
+
+func applicationMailServerWrapped(t *testing.T, maintenance, stalled bool, wrap func(imapserver.Session) imapserver.Session) ([]MailAccount, *cleanupCounters) {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -368,7 +372,11 @@ func applicationMailServer(t *testing.T, maintenance, stalled bool) ([]MailAccou
 		accounts = append(accounts, MailAccount{ID: username, Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, Username: username, Password: "fixture-private", Roots: roots})
 	}
 	server := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return noCleanupSession{backend.NewSession(), calls, maintenance, map[string]int{}}, nil, nil
+		var session imapserver.Session = noCleanupSession{backend.NewSession(), calls, maintenance, map[string]int{}}
+		if wrap != nil {
+			session = wrap(session)
+		}
+		return session, nil, nil
 	}})
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()

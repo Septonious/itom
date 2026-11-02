@@ -168,7 +168,6 @@ func (l *IMAPLink) collectSegments() {
 				a.mu.Unlock()
 				continue
 			}
-			a.collectHistoricalLocked()
 			queue := func(key segmentKey, record *segmentRecord) {
 				if record.remote && record.deleted {
 					select {

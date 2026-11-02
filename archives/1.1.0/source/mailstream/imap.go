@@ -58,36 +58,35 @@ type mailCommand struct {
 	done chan error
 }
 type mailAccountState struct {
-	link                                *IMAPLink
-	config                              MailAccount
-	ctx                                 context.Context
-	cancel                              context.CancelFunc
-	mu                                  sync.Mutex
-	ready, failed                       bool
-	stage                               string
-	failure                             string
-	control, writer, data               *mailPipe
-	dataDone                            chan struct{}
-	id                                  SessionID
-	attachMu                            sync.Mutex
-	fast                                chan mailWork
-	bulk                                chan mailWork
-	spent                               int
-	queuedBytes                         int
-	reserved, recovered                 int
-	storageKey                          []byte
-	appended, received                  atomic.Uint64
-	retired                             atomic.Uint64
-	segments                            map[segmentKey]*segmentRecord
-	writerOps                           chan writerOperation
-	remoteSegments                      map[segmentKey]*segmentRecord
-	delivery                            [replaySlots]deliverySample
-	streams                             map[uint32]bool
-	rtt, rttAt                          time.Duration
-	upBytes, downBytes                  atomic.Uint64
-	historicalFor                       SessionID
-	historicalFolders                   []string
-	historicalQueued, historicalRefused bool
+	link                  *IMAPLink
+	config                MailAccount
+	ctx                   context.Context
+	cancel                context.CancelFunc
+	mu                    sync.Mutex
+	ready, failed         bool
+	stage                 string
+	failure               string
+	control, writer, data *mailPipe
+	dataDone              chan struct{}
+	attachStop, dataStop  context.CancelFunc
+	id                    SessionID
+	attachMu              sync.Mutex
+	fast                  chan mailWork
+	bulk                  chan mailWork
+	spent                 int
+	queuedBytes           int
+	reserved, recovered   int
+	storageKey            []byte
+	appended, received    atomic.Uint64
+	retired               atomic.Uint64
+	segments              map[segmentKey]*segmentRecord
+	writerOps             chan writerOperation
+	remoteSegments        map[segmentKey]*segmentRecord
+	delivery              [replaySlots]deliverySample
+	streams               map[uint32]bool
+	rtt, rttAt            time.Duration
+	upBytes, downBytes    atomic.Uint64
+	recoveryFailure       string
 }
 
 type IMAPLink struct {
@@ -109,6 +108,11 @@ type IMAPLink struct {
 	retirements      chan Retirement
 	events           []MailEvent
 	eventNext        int
+	receivedRoutes   map[receivedRoute]string
+	routeKeys        [replaySlots]receivedRoute
+	routeNext        int
+	peerSession      SessionID
+	peers            map[string]bool
 	ownedMaintenance []*MaintenancePool
 	store            *retentionStore
 	closeErr         error
@@ -150,6 +154,8 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	lifetime, cancel := context.WithCancel(ctx)
 	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4)}
 	l.store = store
+	l.receivedRoutes = map[receivedRoute]string{}
+	l.peers = map[string]bool{}
 	l.retirements = make(chan Retirement, 64)
 	for _, config := range accounts {
 		life, stop := context.WithCancel(lifetime)
@@ -262,10 +268,16 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 	if l.ctx.Err() != nil {
 		return nil, ErrClosed
 	}
-	if _, _, _, err := parseHeader(body); err != nil {
-		return nil, err
+	kind, packetID, _, parseErr := parseHeader(body)
+	if parseErr != nil {
+		return nil, parseErr
 	}
 	l.mu.Lock()
+	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
+	var peerAllowed [20]bool
+	for i, a := range l.accounts {
+		peerAllowed[i] = (!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]
+	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
 	if priority {
 		l.roundRobin++
@@ -277,6 +289,9 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
 		a := l.accounts[(start+n)%len(l.accounts)]
+		if !peerAllowed[(start+n)%len(l.accounts)] {
+			continue
+		}
 		if a == exclude || !a.mu.TryLock() {
 			continue
 		}
@@ -288,6 +303,9 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
 		available := a.ready && !a.failed && (priority || a.id != (SessionID{})) && a.spent+a.queuedBytes+work.charge <= budget
+		if matched {
+			available = available && a.id == packetID
+		}
 		if !available {
 			a.mu.Unlock()
 			continue
@@ -341,6 +359,9 @@ func (l *IMAPLink) Attach(ctx context.Context, id SessionID) error {
 		results := make(chan error, len(l.accounts))
 		started := 0
 		for _, a := range l.accounts {
+			if !l.peerAllows(a.config.ID, id) {
+				continue
+			}
 			a.mu.Lock()
 			ready := a.ready && !a.failed
 			done := ready && a.id == id
@@ -389,6 +410,14 @@ func (l *IMAPLink) Detach(id SessionID) {
 	}
 	l.attached = SessionID{}
 	l.mu.Unlock()
+	for _, a := range l.accounts {
+		a.mu.Lock()
+		stop := a.attachStop
+		a.mu.Unlock()
+		if stop != nil {
+			stop()
+		}
+	}
 	for _, a := range l.accounts {
 		a.attachMu.Lock()
 		a.mu.Lock()
@@ -461,10 +490,15 @@ func (a *mailAccountState) failedStage(stage string, err error) {
 func (a *mailAccountState) closeData() {
 	a.mu.Lock()
 	old, done := a.data, a.dataDone
+	stop := a.dataStop
+	a.dataStop = nil
 	a.data = nil
 	a.dataDone = nil
 	a.id = SessionID{}
 	a.mu.Unlock()
+	if stop != nil {
+		stop()
+	}
 	if old != nil {
 		old.close()
 	}
@@ -473,6 +507,9 @@ func (a *mailAccountState) closeData() {
 	}
 }
 func (a *mailAccountState) attach(id SessionID) error {
+	if !a.link.peerAllows(a.config.ID, id) {
+		return ErrCapacity
+	}
 	a.attachMu.Lock()
 	defer a.attachMu.Unlock()
 	a.link.mu.Lock()
@@ -492,23 +529,45 @@ func (a *mailAccountState) attach(id SessionID) error {
 	}
 	a.mu.Unlock()
 	a.closeData()
+	life, stop := context.WithCancel(a.ctx)
+	attached := false
+	a.mu.Lock()
+	a.attachStop = stop
+	a.mu.Unlock()
+	defer func() {
+		a.mu.Lock()
+		a.attachStop = nil
+		a.mu.Unlock()
+		if !attached {
+			stop()
+		}
+	}()
 	if !a.link.client {
 		if err := a.changeWriter(true); err != nil {
 			return err
 		}
 	}
-	p, err := openMailPipe(a.ctx, a.config)
+	p, err := openMailPipe(life, a.config)
 	if err != nil {
+		if life.Err() != nil {
+			return ErrClosed
+		}
 		a.failedStage("data_login", err)
 		a.fail()
 		return err
 	}
+	_ = p.conn.SetDeadline(time.Now().Add(15 * time.Second))
 	if _, err = p.selectLog(a.link.segmentFolder(id, false, 0), false); err != nil {
+		if life.Err() != nil {
+			p.close()
+			return ErrClosed
+		}
 		a.failedStage("data_select", err)
 		p.close()
 		a.fail()
 		return err
 	}
+	_ = p.conn.SetDeadline(time.Time{})
 	a.configureSegments(p, id)
 	p.onPacket = func(packet []byte) {
 		a.downBytes.Add(uint64(len(packet)))
@@ -524,6 +583,8 @@ func (a *mailAccountState) attach(id SessionID) error {
 	done := make(chan struct{})
 	a.mu.Lock()
 	a.data, a.dataDone, a.id = p, done, id
+	a.dataStop = stop
+	attached = true
 	clear(a.streams)
 	a.mu.Unlock()
 	go func() {
@@ -564,24 +625,59 @@ func (a *mailAccountState) run() {
 	case <-a.ctx.Done():
 		return
 	}
+	a.phase("control_login")
 	control, err := openMailPipe(a.ctx, a.config)
 	if err != nil {
 		a.failedStage("control_login", err)
 		<-a.link.login
 		return
 	}
+	if err = a.recoverHistorical(control); err != nil {
+		a.mu.Lock()
+		a.recoveryFailure = "HISTORICAL_RECOVERY_PAUSED"
+		a.mu.Unlock()
+		if errors.Is(err, ErrStorage) {
+			a.failedStage("historical_recovery", err)
+			control.close()
+			<-a.link.login
+			return
+		}
+		// Unknown or refused cleanup never resets debt. Start the control
+		// owner on a fresh bounded socket after closing the recovery socket.
+		control.close()
+		control, err = openMailPipe(a.ctx, a.config)
+		if err != nil {
+			a.failedStage("control_login", err)
+			<-a.link.login
+			return
+		}
+	}
 	defer control.close()
 	control.onPacket = func(packet []byte) {
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, 0, true)
 	}
+	a.phase("control_select")
+	_ = control.conn.SetDeadline(time.Now().Add(15 * time.Second))
 	if _, err = control.selectLog(a.link.controlFolder(false), true); err != nil {
 		a.failedStage("control_select", err)
 		<-a.link.login
 		return
 	}
+	// Create both control namespaces before serving. Do not run a
+	// redundant CREATE for every small packet during an active session.
+	if createErr := control.client.Create(a.link.controlFolder(true), nil).Wait(); createErr != nil {
+		var tagged *imap.Error
+		if !errors.As(createErr, &tagged) {
+			a.failedStage("control_create", createErr)
+			<-a.link.login
+			return
+		}
+	}
+	_ = control.conn.SetDeadline(time.Time{})
 	var writer *mailPipe
 	if a.link.client {
+		a.phase("writer_login")
 		writer, err = openMailPipe(a.ctx, a.config)
 	}
 	<-a.link.login
@@ -605,7 +701,9 @@ func (a *mailAccountState) run() {
 	id := a.link.attached
 	a.link.mu.Unlock()
 	if id != (SessionID{}) {
-		go func() { _ = a.attach(id) }()
+		if a.link.peerAllows(a.config.ID, id) {
+			go func() { _ = a.attach(id) }()
+		}
 	}
 	readDone := make(chan struct{})
 	go func() {
@@ -616,7 +714,7 @@ func (a *mailAccountState) run() {
 		}
 	}()
 	defer func() { a.cancel(); control.close(); <-readDone }()
-	created := map[string]bool{}
+	created := map[string]bool{a.link.controlFolder(true): true}
 	dataAppends := map[SessionID]uint32{}
 	completed := make(chan error, 4)
 	inFlight := 0
@@ -814,12 +912,6 @@ func (a *mailAccountState) run() {
 			// Its receive owner serializes this small bootstrap APPEND with
 			// IDLE. Active traffic always has an independent APPEND writer.
 			err := control.execute(a.ctx, func(p *mailPipe) error {
-				if err := p.client.Create(folder, nil).Wait(); err != nil {
-					var status *imap.Error
-					if !errors.As(err, &status) {
-						return err
-					}
-				}
 				cmd, err := p.startAppend(folder, encoded)
 				if err != nil {
 					return err
@@ -921,6 +1013,11 @@ type MailSnapshot struct {
 	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
+	RecoveryFailure            string              `json:"recovery_failure,omitempty"`
+	ControlPhase               int32               `json:"control_phase"`
+	ControlCursor              uint32              `json:"control_cursor"`
+	ControlCount               uint32              `json:"control_count"`
+	PeerVerified               bool                `json:"peer_verified"`
 	Account                    string              `json:"account"`
 	Stage                      string              `json:"stage"`
 	Failure                    string              `json:"failure,omitempty"`
@@ -943,7 +1040,13 @@ type MailAccountSnapshot struct {
 
 func (l *IMAPLink) Snapshot() MailSnapshot {
 	s := MailSnapshot{Accounts: len(l.accounts), Durable: l.store != nil}
-	for _, a := range l.accounts {
+	l.mu.Lock()
+	var verified [20]bool
+	for i, a := range l.accounts {
+		verified[i] = l.peers[a.config.ID]
+	}
+	l.mu.Unlock()
+	for i, a := range l.accounts {
 		a.mu.Lock()
 		if a.ready {
 			s.Ready++
@@ -963,6 +1066,15 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
+		line.PeerVerified = verified[i]
+		line.RecoveryFailure = a.recoveryFailure
+		if a.control != nil {
+			line.ControlPhase = a.control.phase.Load()
+			line.ControlCursor = a.control.cursor.Load()
+			if box := a.control.client.Mailbox(); box != nil {
+				line.ControlCount = box.NumMessages
+			}
+		}
 		line.RTTMillis = measuredMillis(a.rtt)
 		line.RTTFresh = a.rttAt != 0 && time.Duration(time.Now().UnixNano())-a.rttAt < 30*time.Second
 		line.UploadBytes, line.DownloadBytes = a.upBytes.Load(), a.downBytes.Load()
@@ -1026,13 +1138,14 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		return nil, ErrClosed
 	}
 	conn := tls.Client(raw, &tls.Config{ServerName: a.Host, RootCAs: a.Roots, MinVersion: tls.VersionTLS12})
+	_ = raw.SetDeadline(time.Now().Add(15 * time.Second))
 	if err = conn.HandshakeContext(dial); err != nil {
-		conn.Close()
+		raw.Close()
 		return nil, ErrAuth
 	}
 	p := &mailPipe{conn: conn, wake: make(chan struct{}, 1), done: make(chan struct{})}
 	p.commands = make(chan mailCommand, 1)
-	p.cancel = context.AfterFunc(ctx, func() { conn.Close() })
+	p.cancel = context.AfterFunc(ctx, func() { raw.Close() })
 	changed := func() {
 		select {
 		case p.wake <- struct{}{}:
@@ -1044,10 +1157,19 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		p.close()
 		return nil, ErrAuth
 	}
+	_ = raw.SetDeadline(time.Time{})
 	return p, nil
 }
 func (p *mailPipe) close() {
-	p.closeOnce.Do(func() { close(p.done); p.cancel(); p.conn.Close(); p.client.Close() })
+	p.closeOnce.Do(func() {
+		close(p.done)
+		p.cancel()
+		// TLS CloseNotify can wait for a peer which is stuck in an IMAP
+		// command. Close the underlying transport first so reader teardown
+		// never serializes ten five-second TLS shutdown waits.
+		p.conn.NetConn().Close()
+		p.client.Close()
+	})
 }
 func (p *mailPipe) execute(ctx context.Context, run func(*mailPipe) error) error {
 	cmd := mailCommand{run: run, done: make(chan error, 1)}
@@ -1147,7 +1269,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			cmd := p.client.Fetch(imap.SeqSet{{Start: p.after + 1, Stop: stop}}, &imap.FetchOptions{UID: true, RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
 			for row := cmd.Next(); row != nil; row = cmd.Next() {
 				if p.invalid.Load() || row.SeqNum != p.after+1 || row.SeqNum > stop {
-					p.conn.Close()
+					p.conn.NetConn().Close()
 					cmd.Close()
 					return ErrProtocol
 				}
@@ -1159,21 +1281,21 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 						size = value.Size
 					case imapclient.FetchItemDataBodySection:
 						if raw != nil || value.Literal == nil {
-							p.conn.Close()
+							p.conn.NetConn().Close()
 							cmd.Close()
 							return ErrProtocol
 						}
 						var err error
 						raw, err = io.ReadAll(io.LimitReader(value.Literal, 2*maxMailPlain+1))
 						if err != nil || len(raw) > 2*maxMailPlain {
-							p.conn.Close()
+							p.conn.NetConn().Close()
 							cmd.Close()
 							return ErrCapacity
 						}
 					}
 				}
 				if raw == nil || int64(len(raw)) != size {
-					p.conn.Close()
+					p.conn.NetConn().Close()
 					cmd.Close()
 					return ErrProtocol
 				}
@@ -1186,11 +1308,11 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 						select {
 						case out <- body:
 						case <-p.done:
-							p.conn.Close()
+							p.conn.NetConn().Close()
 							cmd.Close()
 							return ErrClosed
 						case <-ctx.Done():
-							p.conn.Close()
+							p.conn.NetConn().Close()
 							cmd.Close()
 							return ctx.Err()
 						}
@@ -1231,7 +1353,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 				return ErrClosed
 			case <-ctx.Done():
 				repair.Stop()
-				p.conn.Close()
+				p.conn.NetConn().Close()
 				idle.Close()
 				<-idleDone
 				return ctx.Err()

@@ -394,6 +394,9 @@ func (s *Session) receiveLoop() {
 				s.fail(err)
 				return
 			}
+			if confirmed, ok := s.link.(interface{ ConfirmPeer([]byte) }); ok {
+				confirmed.ConfirmPeer(wire)
+			}
 			// Replayed ciphertext cannot prolong an abandoned server session's
 			// physical connection reservation. This is a lifetime lease, not CC.
 			if seq > s.highest {
@@ -567,10 +570,15 @@ func (s *Session) apply(f frame) error {
 }
 
 func (s *Session) serveStream(stream *Stream, target string) {
-	ctx, cancel := context.WithTimeout(s.ctx, 10*time.Second)
+	ctx, cancel := context.WithCancel(s.ctx)
 	defer cancel()
+	dialTimeout := time.AfterFunc(10*time.Second, cancel)
 	conn, err := s.dial(ctx, "tcp", target)
-	if err != nil {
+	dialCompleted := dialTimeout.Stop()
+	if err != nil || !dialCompleted {
+		if conn != nil {
+			conn.Close()
+		}
 		stream.Close()
 		return
 	}

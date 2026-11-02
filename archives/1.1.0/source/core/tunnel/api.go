@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-1-0-mailstream-rc2"
+const TransportRevision = "itom-1-1-0-mailstream-rc3"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -154,6 +154,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	identity := profileIdentity(p)
 	configHash := profileConfigHash(p)
 	var progressMu sync.Mutex
+	var observedSession *mailstream.Session
 	report := func(failure string, link *mailstream.IMAPLink) {
 		progressMu.Lock()
 		defer progressMu.Unlock()
@@ -166,6 +167,12 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		record := map[string]any{"Event": "startup", "Revision": TransportRevision, "Progress": progress, "SampledAtMS": time.Now().UnixMilli()}
 		if link != nil {
 			record["Mail"] = link.Snapshot()
+		}
+		if observedSession != nil {
+			record["Session"] = observedSession.Snapshot()
+		}
+		if failure != "" && link != nil {
+			record["Events"] = link.Events()
 		}
 		_ = trace.record(record)
 		if o.Progress != nil {
@@ -230,8 +237,14 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	}
 	client = &Client{session: session, link: link, profile: p, cancel: cancel, trace: trace}
 	progressMu.Lock()
+	observedSession = session
 	stage = "PATH"
 	progressMu.Unlock()
+	defer func() {
+		if !owned && err != nil {
+			report(failureCode(err), link)
+		}
+	}()
 	report("", link)
 	if err = verifyDataPath(startup, session); err != nil {
 		session.Close()
