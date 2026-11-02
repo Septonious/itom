@@ -49,7 +49,7 @@ func checkIMAP(ctx context.Context, cfg servercfg.Config, account string, out io
 	if err != nil {
 		detail := mailbox.ConnectionDetail(err)
 		if detail.Stage == "" {
-			detail = mailbox.ConnectionFailure{Stage: "connect", Reason: "other"}
+			detail = mailbox.ConnectionFailure{Stage: "connect", Reason: mailbox.FailureReason(err)}
 		}
 		fmt.Fprintf(out, "account=%s outcome=failed stage=%s reason=%s elapsed_ms=%d\n", selected.Mail.Username, detail.Stage, detail.Reason, time.Since(start).Milliseconds())
 		return errors.New("IMAP_CHECK_FAILED")

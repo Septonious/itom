@@ -52,8 +52,8 @@ def main():
         parser.error('client rate must be positive; cancellation must be a duration in seconds')
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.duration) or float(args.duration[:-1]) <= 0:
         parser.error('duration must be positive seconds, e.g. 12s or 0.5s')
-    if not 1 <= args.accounts <= 20 or not 1 <= args.streams <= 16:
-        parser.error('accounts must be 1..20 and streams 1..16')
+    if not 1 <= args.accounts <= 20 or not 1 <= args.streams <= 48:
+        parser.error('accounts must be 1..20 and streams 1..48')
     if not 1 <= args.idle_probes <= 100 or not 1 <= args.post_probes <= 100:
         parser.error('probe counts must be 1..100')
     if args.zero_latency and args.worst_latency:

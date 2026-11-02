@@ -343,9 +343,13 @@ func dialNetwork(ctx context.Context, cfg Config, folders []string, testTLS *tls
 	}
 	if ctx.Err() != nil {
 		cli.Close()
-		return nil, ctx.Err()
+		return nil, connectionFailed("IMAP_AUTH_OR_GREETING_FAILED", stage, ctx.Err())
 	}
 	caps := cli.Caps()
+	if ctx.Err() != nil {
+		cli.Close()
+		return nil, connectionFailed("IMAP_CAPABILITY_FAILED", "capability", ctx.Err())
+	}
 	out := &Client{c: cli, conn: conn, folders: allowed, updates: updates, tailNotified: tailNotified}
 	out.literalMode = "synchronizing"
 	if caps.Has(imap.CapLiteralPlus) {

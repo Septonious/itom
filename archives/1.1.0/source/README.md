@@ -1,42 +1,36 @@
-# ITOM 1.1.0 mailbox stream rewrite — development only
+# ITOM 1.1.0 MAILSTREAM-RC5 — experimental testing release
 
-The active Android bridge and server now use the new `mailstream` module.
-The former session-v2 transport and its synthetic qualification tools are
-preserved under `../retired-v2/`, outside the active source modules. Existing
-profiles are accepted; neither side opens or resets old wallets or journals.
+The active Android bridge and server use `mailstream`. Both endpoints must use
+this matched RC. Install the signed APK in place, preserving its private data
+and profile. Update the server with manager option 18 (newest ITOM `.bin` in
+`/tmp`) or `sudo itom update-from-tmp`.
 
-This is **MAILSTREAM-DEV1**, not a testing RC. Old-session reclamation after process
-restarts, retirement of discovery logs, sustained provider performance and
-Android device qualification remain unfinished. Do not replace a deployed
-service with this development snapshot.
+RC5 replaces live DATA folder deletion and maintenance logins with two reusable
+slots per account, session and direction. A reader validates a complete slot,
+marks its exact consumed UIDs, uses standard CLOSE and verifies emptiness with
+STATUS before confirming reclamation. No UID EXPUNGE or UIDPLUS is required.
+Small traffic continues on the independent control path. The existing delivery
+windows, congestion controller, Noise encryption and stream reliability remain.
 
-Retention accounting now survives process death in a separate store. Cleanup
-uses an independent server connection; a hung command pauses maintenance and
-preserves debt without stopping delivery. The native proof includes SIGKILL
-and a fresh client process. Old-session reclamation is still unfinished.
+Server-local capacity resets on manual stop/restart/update and an IMAP purge
+attempt. That reset does not delete provider mail. Unexpected crashes preserve
+uncertain debt. Old-session ownership and discovery-log retirement remain
+limitations for sustained unattended use; this is a testing release.
 
-The new engine uses verified TLS IMAP, fresh Noise sessions, independent TCP
-streams, immediate dispatch for small writes and bounded bulk batching. It does
-not require UIDPLUS, permanent keywords or UID EXPUNGE. Connection readiness
-requires an authenticated 16 KiB DATA echo and a measured mailbox ping.
+The manager's account check now measures TCP/TLS/LOGIN/NOOP without selecting
+legacy transport folders, and reports the failed stage. Account RTT and direct
+IMAP latency remain separate measurements in diagnostics.
 
-Three physical roles per account are shown in the app. At ten connections per
-account and two enabled users, one user can be active while the other receives
-an authenticated capacity refusal. Same-user VPN restarts reuse that admission.
-Dead sessions release their DATA readers after a 30-second silence lease;
-this does not alter bulk pacing or cap bandwidth based on RTT.
+Targets remain 300 ms idle/light-load RTT, 2000 ms under load and sustained
+100 Mbps each direction. Local TLS IMAP/HTTPS checks cannot establish these
+results on Rambler or mobile networks. See [the transport contract](mailstream/REWRITE.md).
 
-Read [the replacement contract and remaining work](mailstream/REWRITE.md).
-The performance targets remain 300 ms maximum idle/light-load RTT, 2000 ms under
-load, and sustained 100 Mbps in each direction. Local integrity checks do not
-establish these results on Rambler or mobile networks.
+DNS races 31.131.251.83 and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional
+IMAP fallback starts only after both fail and lasts until VPN restart. There
+is no DoH or DoT. App theme and settings are unchanged.
 
-The direct DNS settings and application theme are retained. DNS races
-31.131.251.83 and 185.22.234.229 over UDP/TCP 53 within 250 ms. Optional IMAP
-fallback starts only after both fail and lasts until VPN restart. No DoH or DoT.
-
-Source checks: `python3 tools/check_sources.py`. The Go gate is
-`python3 tools/build.py core --race`; it covers the new module, server and native
-bridge. The application scenario also runs the actual native SOCKS and IPv4 TUN
-entry points over an independent TLS IMAP provider. Packaging remains a
-local development action, with no field-performance qualification implied.
+Checks: `python3 tools/check_sources.py` and `python3 tools/build.py core --race`.
+The latter includes real TLS IMAP, HTTPS, native SOCKS/TUN, restart, SDK and
+pinned IMAP library checks. The separate qualification harness measures actual
+verified application bytes with variable client/provider delay and shared wire
+capacity. It does not report controller estimates as throughput.

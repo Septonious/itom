@@ -28,19 +28,10 @@ import (
 // This is one whole-path acceptance scenario, not a controller throughput
 // formula or substituted grant fixture: verified TLS IMAP, fresh Noise startup,
 // real TCP, real HTTPS, a body larger than initial credit, then user restarts.
-// It intentionally provides no UIDPLUS and can refuse cleanup commands. It
-// cannot establish real-provider performance or sustained reclamation.
+// CLOSE reclamation is performed on the selected reader and never opens
+// another account connection or deletes a folder during delivery.
 func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
-	for _, scenario := range []struct {
-		name                 string
-		maintenance, stalled bool
-	}{
-		{"retirement_available", true, false},
-		{"retirement_refused", false, false},
-		{"retirement_stalled", false, true},
-	} {
-		t.Run(scenario.name, func(t *testing.T) { runApplication(t, scenario.maintenance, scenario.stalled) })
-	}
+	runApplication(t, true, false)
 }
 func runApplication(t *testing.T, maintenance, stalled bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -169,42 +160,17 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 			}
 		}
 	}
-	if cleanupCalls.expunge.Load() != 0 {
-		t.Fatal("delivery used EXPUNGE", cleanupCalls.expunge.Load())
+	if cleanupCalls.delete.Load() != 0 {
+		t.Fatal("live delivery attempted folder deletion")
 	}
-	if cleanupCalls.delete.Load() == 0 {
-		t.Fatal("segment retirement never exercised")
+	if cleanupCalls.expunge.Load() == 0 {
+		t.Fatal("consumed-slot CLOSE reclamation was not exercised")
 	}
 	retired := clientLink.Snapshot().Retired + serverLink.Snapshot().Retired
-	if maintenance && retired == 0 {
-		t.Fatal("successful deletion never released its own new segment storage")
+	if retired == 0 {
+		t.Fatal("verified slot reclamation never released capacity")
 	}
-	if !maintenance && retired != 0 {
-		t.Fatal("refused deletion released storage", retired)
-	}
-	t.Logf("segment_delete_attempts=%d verified_retirements=%d", cleanupCalls.delete.Load(), retired)
-	if !maintenance && clientLink.Snapshot().RetainedBytes == 0 {
-		t.Fatal("refused maintenance erased retention debt")
-	}
-	if stalled {
-		server := serverLink.Snapshot()
-		if server.Failed != 0 || server.Ready != len(accounts) || clientLink.Snapshot().Failed != 0 {
-			t.Fatalf("stalled DELETE failed delivery accounts: %+v", server)
-		}
-		if cleanupCalls.delete.Load() > int64(len(accounts)) {
-			t.Fatal("stalled command triggered maintenance reconnects", cleanupCalls.delete.Load())
-		}
-		paused := 0
-		for _, a := range server.Lines {
-			if a.Maintenance.Paused {
-				paused++
-			}
-		}
-		if paused == 0 {
-			t.Fatal("stalled maintenance never entered its bounded pause")
-		}
-		t.Logf("stalled DELETE isolated: paused_pools=%d, account_failures=0, no maintenance reconnects", paused)
-	}
+	t.Logf("consumed_slot_close_commands=%d reclaimed_generations=%d", cleanupCalls.expunge.Load(), retired)
 	cancel()
 	select {
 	case <-serverDone:
@@ -310,9 +276,12 @@ type cleanupCounters struct {
 	release         chan struct{}
 }
 
-func (s noCleanupSession) Expunge(*imapserver.ExpungeWriter, *imap.UIDSet) error {
+func (s noCleanupSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) error {
 	s.calls.expunge.Add(1)
-	return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "cleanup unavailable"}
+	if uids != nil {
+		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "UID EXPUNGE forbidden; CLOSE required"}
+	}
+	return s.Session.Expunge(w, uids)
 }
 func (s noCleanupSession) Delete(folder string) error {
 	s.calls.delete.Add(1)
@@ -371,7 +340,7 @@ func applicationMailServerWrapped(t *testing.T, maintenance, stalled bool, wrap 
 		backend.AddUser(imapmemserver.NewUser(username, "fixture-private"))
 		accounts = append(accounts, MailAccount{ID: username, Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, Username: username, Password: "fixture-private", Roots: roots})
 	}
-	server := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
+	server := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		var session imapserver.Session = noCleanupSession{backend.NewSession(), calls, maintenance, map[string]int{}}
 		if wrap != nil {
 			session = wrap(session)

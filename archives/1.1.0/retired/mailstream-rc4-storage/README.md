@@ -1,0 +1,1 @@
+Retired RC4 folder-deletion storage logic and its older tests. Its stalled-command model did not represent provider account-wide locking after DELETE. The active replacement uses consumed-slot CLOSE, empty STATUS verification and two reusable DATA slots. UID EXPUNGE is not used.

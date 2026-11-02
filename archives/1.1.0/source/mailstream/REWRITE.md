@@ -1,231 +1,91 @@
-# Mailbox stream transport: replacement implementation
+# Mailbox stream transport contract — MAILSTREAM-RC5
 
-This directory is the active rewrite on `codex/v1.1.0-mailbox-stream-v3`.
-RC1.13 and the abandoned probe changes are not its runtime. The old development
-branch is preserved for recovery and evidence. Nothing here opens, migrates,
-deletes or refunds old wallets, grants, journals or transport mailboxes.
+The first working field release achieved approximately 170 ms idle RTT and up
+to 50 Mbps before speedtests failed. RC4 traces then show maintenance pausing on
+five accounts, their control cursors freezing, and a subsequent handshake
+waiting behind session teardown. The trace does not distinguish a hung extra
+LOGIN from a hung first DELETE. The older transaction capture separately shows
+UID EXPUNGE timing out after successful APPEND/FETCH/STORE. Neither command is
+a sound live delivery prerequisite. The old implementation remains in git and
+`../../retired/mailstream-rc4-storage/` for evidence, outside the active modules.
 
-## Why the previous transport is being replaced
+## Session and delivery
 
-The real-provider diagnostic reproduces UID EXPUNGE hanging for the entire
-30-second command lifetime after successful APPEND, BODY verification and STORE.
-The transport then turns one mailbox's maintenance failure into a global
-permission failure. Earlier changes only moved that dependency between initial
-startup, the first DATA exchange and the next VPN restart. The old adapter did
-not establish a successful deletion baseline in that diagnostic: its probe
-stopped during MIME verification. That is not evidence that UID EXPUNGE works.
+Fresh Noise NNpsk0 sessions bind the configured per-client 32-byte PSK and
+protocol identity. Startup requires bidirectional encrypted DATA echo and a
+mailbox ping. Any healthy account can establish contact; no anchor account,
+wallet reconciliation, legacy mailbox scan or deletion gates readiness.
 
-## Replacement contract
+The pinned go-imap client owns response parsing and literal grammar. Each
+active endpoint has three sockets per account: control reader, DATA reader and
+APPEND writer. There is no extra maintenance login. A standing server identity
+keeps its control reader and opens DATA/writer after authenticated admission.
+Provider socket budgets include all configured identities. Same-user replacement
+joins the old DATA reader before releasing admission; the authenticated silence
+lease handles abandoned peers independently of throughput control.
 
-* A fresh Noise NNpsk0 handshake establishes a new ephemeral session, with the
-  configured per-client 32-byte PSK and protocol identity bound into the transcript.
-  Bidirectional encrypted application traffic establishes readiness.
-* Every account is independent. Any healthy account can carry startup. There is
-  no elected anchor, global CONTROL grant, wallet-history reconciliation or
-  mailbox cleanup prerequisite for opening a connection.
-* Standard go-imap owns the parser and literal grammar. There is no replacement
-  hand-written IMAP response parser. UIDPLUS and custom flags are not protocol
-  requirements. UID EXPUNGE is never a delivery primitive.
-* One permanent request/response log per direction discovers sessions. Every
-  session has separate directional DATA mailboxes, so a reconnect does not scan
-  retained DATA from previous sessions. Control discovery is bounded and uses
-  UIDVALIDITY/UIDNEXT hints only as cursors, never as authentication.
-* Runtime TCP streams have independent offsets, receive windows and lifecycle.
-  Slow consumers cannot block the receive loop for other streams. Session-wide
-  memory and in-flight bounds provide backpressure without a global stop/wait
-  grant exchange. ACKs report actual delivery; they do not refund legacy quota.
-* Small writes dispatch immediately. Bulk uses bounded chunks and parallel
-  account workers. Measured delivery and queue occupancy can adjust bulk
-  concurrency; an isolated RTT increase must not collapse a bulk window.
-* Cleanup is an independent owner with a finite physical retention budget.
-  Completed session/segment mailboxes can be deleted only after their receiver
-  has drained and unselected them. No failed deletion is treated as success.
-  An exhausted physical budget eventually stops publication on that account;
-  a storage limit cannot be fixed by pretending that mail disappeared.
-* The client has three roles per account: control receive, DATA receive and
-  APPEND writer. A standing server identity keeps only its control socket and
-  opens the writer/DATA pair after authentication. One separately budgeted
-  server maintenance connection per account is shared across identities and
-  retires both directions. Failed maintenance never reconnects a delivery role.
+TCP streams have independent offsets and receive windows. Slow application
+consumers cannot block every receive stream. Small writes dispatch immediately;
+bulk batches only mail already queued. Existing bounded delivery/consumption
+windows and throughput controller are retained in RC5. Mailbox receipts do not
+release application-consumption credit. Late WINDOW/FIN and resets preserve
+stream EOF and byte integrity. Control uses measured NOOP polling; DATA uses
+IDLE plus bounded tail repair for missing/coalesced notifications.
 
-## One integrated rewrite, not another chain of RC patches
+## Two-slot reclamation
 
-The implementation covers the authenticated envelope, reliable message delivery,
-per-stream TCP forwarding, standard IMAP backend, account supervision, independent
-maintenance, Android bridge and diagnostics as one design. These are implementation
-areas of one replacement, not separately shippable transport RCs. The old branch
-must not become the fallback data path.
+Each account/session/direction has two fresh DATA folders. Logical generation
+increases monotonically and selects physical slot `generation % 2`. A generation
+contains exactly 32 bounded MIME containers. At most two generations can be
+unreclaimed; the writer cannot reuse a slot while its earlier ownership record
+remains. A blocked DATA slot does not prevent control messages, APPEND completion
+processing or shutdown, and routing can use another account.
 
-The first commits implement the new protocol and stream engine, bounded bulk
-batching, pipelined APPEND completion and a standalone IMAP prototype. Full DATA
-segments now rotate to fresh folders. Retirement requires authenticated packet
-receipts, peer confirmation that its reader has selected the next segment, and
-terminal completion of every APPEND to the old one. A separate owner then uses
-DELETE plus an independent absence LIST; UID EXPUNGE is not used. Refusal keeps
-the exact segment's debt and does not block connection readiness.
+The sole DATA reader validates sequence, MIME size and the exact UID set. Only
+when all 32 messages are consumed and the selected mailbox contains exactly
+those messages does it STORE Deleted for those exact UIDs. Standard CLOSE then
+expunges the fully drained, dedicated slot and unselects it. STATUS must prove
+zero messages and unchanged UIDVALIDITY. The reader selects the next slot before
+sending authenticated reclamation confirmation over control.
 
-The application scenario exposed two separate requirements. Retirement must wait
-for APPEND completion even after another connection can read the BODY. More
-fundamentally, EXISTS/IDLE notifications can be missing/coalesced: seven visible
-messages could strand a segment whose eighth APPEND was already published. The
-receiver now repairs its observed tail with bounded STATUS/UIDVALIDITY checks,
-on a service-time-dependent interval. Notifications remain wake hints. The scenario
-preserves the earlier failures and deliberately makes a last BODY visible before
-returning its APPEND completion. Both available and refused retirement then pass
-three real HTTPS/session-restart cycles. None of this establishes provider RTT.
+The producer releases the exact generation's retained-byte charge only after
+that confirmation, terminal completion of all its APPEND tags and packet
+receipts. A BODY may become visible before its APPEND tag; the application test
+explicitly delays that final tag. Missing or ambiguous outcomes keep the charge
+and prevent slot reuse. No folder DELETE, UID EXPUNGE, broad EXPUNGE command or
+maintenance socket participates. CLOSE remains subject to live-provider testing;
+a successful loopback server is not evidence that every provider implements it
+promptly.
 
-The active source now contains this module as `source/mailstream`; the Android
-native boundary and actual `ServeManaged` use it. Session-v2 and its synthetic
-qualification tools are preserved under `retired-v2/`, outside the compiled and
-packaged source. The native application proof runs the real protected socket,
-SOCKS and IPv4 TUN entry points against an independent verified-TLS IMAP server.
-It checks actual HTTPS upload/download bytes, startup DATA readiness, user
-restarts and server-exit counters. The app displays three physical roles per
-account and preserves the direct DNS settings.
+The independent TLS IMAP regression models account-wide locks if DELETE or
+UID EXPUNGE is attempted. It requires 36 MiB of random, byte-verified HTTPS in
+both directions, physical slot reuse, bounded folder count and an immediate
+fresh session. It asserts that neither poison command ran and CLOSE did run.
 
-Per-stream windows grow from 256 KiB to 32 MiB once actual consumption reaches
-64 KiB. Bulk uses a shared 60 MiB outstanding-byte allowance; small prefixes
-have a separate aggregate 4 MiB bound. Mailbox receipts do not free this credit:
-only actual application consumption or an acknowledged terminal reset can.
-WINDOW updates and graceful FIN offsets remain valid after local close, so
-late receipts do not truncate a response. The application proof includes a
-request half-close followed by a complete 1 MiB response and EOF.
+## Capacity and operations
 
-Server admission occurs after authenticated READY and before either side opens
-its DATA reader. With two enabled profiles and ten provider sockets/account,
-one profile may be active while the second receives an encrypted BUSY response.
-The same identity can replace its own session. Server DATA readers join before
-their admission is released. A 30-second authenticated-silence lease releases an
-abandoned session; this is independent of throughput and RTT control. The whole
-native scenario enforces a ten-connection provider limit, checks that a second
-identity is refused, and then checks a same-identity restart. The unselected
-APPEND owner sends a bounded asynchronous NOOP when idle.
+Retention is durable and bound to physical account identity. Unknown APPEND
+outcomes remain charged. Crashed/old sessions are not automatically deleted or
+refunded; only aggregate debt survives process death. Discovery logs remain
+append-only. These are sustained-use limitations, not solved by slot recycling.
 
-The changed startup order exposed a library completion race: go-imap beta.8
-signalled command completion before publishing SELECT's mailbox state. An
-immediately started receiver could see Mailbox()==nil and fail an account.
-The pinned fork now completes state transitions before waking Wait. The manifest
-is updated, the full library suite passes, and the failed application cohort is
-retained beside the corrected run. No custom response parser was introduced.
+The user-selected policy resets server-local counters on manual stop, restart,
+update and IMAP purge attempts, including a failed purge. It does not remove
+provider folders, credentials or profiles. Unexpected crashes preserve debt.
+Client private state must be kept when updating the signed APK. The manager's
+account check tests authentication/NOOP without selecting old DATA folders and
+reports stage/reason rather than printing blank fields on context timeouts.
 
-Retirement no longer borrows the control socket. Only the server performs
-DELETE/LIST, on one maintenance connection per physical account shared across
-configured identities. Client publication asks for collection only after all
-APPEND tags and receipts are terminal. The server checks that its reader has
-unselected the exact generation, deletes it, independently checks absence, then
-returns an authenticated collection confirmation. Only that confirmation frees
-client retention. Unknown maintenance outcomes pause that owner for its lifetime,
-with debt intact and no socket-reopen loop. A blocked-DELETE application scenario
-completes three HTTPS/restart cycles and checks responsive control, zero account
-failures and no maintenance reconnects. Server admission reserves this socket:
-3P + 3A + 1 provider connections/account for P configured and A active identities.
-At P=2/A=1 this fits the existing default of ten.
+## Validation and limits
 
-Old-session physical reclamation and control-log retirement,
-full sustained physical reclamation, Android device qualification and rollout
-qualification remain explicit unfinished work until their code is present.
-No APK or testing RC is qualified by a compiling protocol core.
+Local tests use verified TLS IMAP sockets, real HTTP/TLS bytes, SOCKS and IPv4
+TUN native boundaries, cancellation, restarts and provider socket limits. The
+qualification runner varies client/provider delay and shared link capacity,
+retains failed runs, and measures full-phase verified payload throughput. A
+short local 280/313 Mbps result is not a sustained Rambler/mobile measurement.
+Targets are 300 ms idle/light RTT, 2000 ms loaded RTT and sustained 100 Mbps
+upload/download where path capacity permits. On a 7 Mbps link, integrity,
+responsive control and cancellation recovery are the appropriate requirements.
 
-The standalone `cmd/itom-mailstream` command supports a server and a loopback
-SOCKS5 TCP client. It uses a new JSON profile (`identity`, a base64 32-byte
-`psk_base64`, and `accounts` containing `id`, `host`, `port`, `username`,
-`password`). This is not the existing APK's profile format. Its prototype storage
-bound is 64 MiB of retained attempted physical mail per profile/account/direction. The
-app, server and standalone command use separate durable accounting; restarting
-the process does not refund prior storage. The standalone command requires an
-explicit private `--state` directory. It must not be
-installed as a replacement service while old-session reclamation is unfinished.
-
-The first whole-application acceptance run exposed an IDLE ownership bug on
-the second session: closing an old DATA socket did not wake its local IDLE waiter.
-The corrected owner explicitly wakes and joins it before opening the replacement,
-and distinguishes that intentional switch from a carrier failure. The same
-scenario then passed all three session starts, each with 4,325,376 HTTPS bytes
-up and down. Loopback startup/RTT measurements are not mobile/provider results.
-
-## Acceptance and release boundary
-
-Only whole-path scenarios should drive promotion: verified TLS IMAP, actual TCP
-and HTTPS forwarding, simultaneous directions, repeated user restarts, account
-loss, stalled maintenance, receiver backpressure and application silence. Test
-the built client/server entry points rather than substitute grants or a controller
-formula. Retain failures. Synthetic bandwidth is not real-provider bandwidth.
-
-The targets remain maximum 300 ms idle/light-load RTT (250 ms later if validated),
-maximum 2000 ms under load, and sustained 100 Mbps in each direction for client
-IMAP latency varying 10–50 ms and server IMAP latency varying 20–40 ms. There is
-no fixed 2 ms or 20 ms server timing assumption. Startup/TLS failures, stream
-corruption and account reconnects under load are not acceptable release results.
-
-The existing app's final direct-DNS policy remains the product requirement:
-31.131.251.83 and 185.22.234.229 raced over UDP/TCP 53, 250 ms total timeout;
-optional IMAP fallback only after both fail, sticky until the user restarts VPN;
-no DoH/DoT. This protocol implementation must not silently change that policy.
-
-## Durable reservation accounting
-
-The app, server and standalone command use a new bbolt retention store, separate
-from legacy financial state. Publication reserves durable space before APPEND;
-512 KiB reservation batches avoid an fsync for each small packet. Conservative
-crash uncertainty, including a maximum pending mail body, stays below 1 MiB per
-account. Clean shutdown returns unused reservation after the publisher joins.
-A verified deletion/collection confirmation persists the refund before local
-capacity is released. Existing files with missing or mismatched metadata fail
-closed and are never reinitialized. Diagnostics report reserved, retained and
-recovered bytes, plus the maintenance connection's paused state.
-
-The application cohort recreates the client runtime from its private state
-between HTTPS sessions and checks that charged bytes return unchanged. The
-actual native process scenario kills the first client with SIGKILL after real
-SOCKS/TUN transfers, then launches an independent process on the same state;
-publication debt and working HTTPS survive. This does not establish recovery
-from Android data clearing/reinstallation, disk loss or a missing private store.
-
-Only aggregate debt is durable at this checkpoint. The ownership records needed
-to reclaim old-session mail after a process restart are not yet durable; that
-old debt remains charged. Discovery logs also remain append-only. Resolving
-both is required before sustained-use or reinstall qualification. No release
-claim follows from passing the current bounded application cohort.
-
-## Comparing actual application speed with RC2
-
-The separate `../../qualification` harness builds the same HTTPS worker against
-frozen RC2 and this runtime, retaining each one's own pinned client dependency.
-It uses verified TLS IMAP sockets and finite shared wire capacity, with client
-RTT varying from 10 to 50 ms and server RTT from 20 to 40 ms. It measures verified
-application bytes across ramp and drain, not controller capacity estimates.
-Functional success and RTT/bandwidth target success are reported separately.
-
-Those comparisons exposed avoidable work on the latency path. The control
-reader now uses service-time-dependent NOOP polling instead of repeated
-IDLE/DONE/FETCH cycles; small application messages avoid the extra IDLE exit
-round trip. DATA keeps IDLE with independent tail repair, and skips STATUS when
-a fresh EXISTS already announces unread mail. Bulk account selection fills a
-bounded 128 KiB publication quantum before moving on, spilling immediately if
-that account's queue is full. It never waits for an unavailable account.
-
-DATA segments hold at most 32 bounded MIME containers (under 12 MiB encoded)
-instead of eight. This reduces CREATE/SELECT/retirement overhead within the
-existing retained-byte cap. Neither the receive memory limit nor the bulk
-window is increased. Both endpoints must use the matching development build.
-The benchmark also retains simultaneous-direction failures; a high one-way
-download figure alone does not satisfy the two-direction target.
-
-This work does not establish provider or Android performance. See the harness
-README and retained evidence for model limits and the exact conditions of each
-comparison. The release blockers above remain in force.
-
-The frozen candidate keeps the 32 MiB pending-byte bound while allowing 2048
-packets, amortizes established WINDOW updates over 256 KiB, and keeps adjacent
-bulk framing on DATA. Initial isolated small writes/open/ping messages may use
-two distinct accounts with identical ciphertext and deduplication. Receipt
-batches retain their ciphertext across local writer backpressure. Dispatch
-orders eligible packets outside the session lock after one scan per wake.
-See the performance evidence for passing and failed variants.
-
-The user has selected these settings for bounded real-provider testing. Further
-throughput tuning is frozen. Experimental testing is separate from production
-readiness: old-session ownership reclamation, discovery-log retirement and
-reinstall recovery remain unfinished. Private state must be preserved; no
-legacy accounting is reset. Matched client/server artifacts, cold startup and
-actual native application paths must pass before publishing the testing build.
+No release is field-qualified until a matched app/server passes actual use.
+The direct DNS policy, application theme and persistent signing key are retained.

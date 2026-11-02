@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"itom.local/core/mailbox"
+	"itom.local/core/probe"
 	"itom.local/core/servercfg"
 	"os"
 	"os/exec"
@@ -426,17 +427,11 @@ func (u *UI) check() error {
 	if len(c.Users) == 0 {
 		return errors.New("add a client first")
 	}
-	folders := []string{c.Users[0].Up, c.Users[0].Down}
+	fmt.Fprintln(u.Out, "Checking TCP, TLS, LOGIN and NOOP. Legacy transport folders are not selected.")
 	for _, a := range c.Accounts {
 		ctx, stop := context.WithTimeout(context.Background(), 45*time.Second)
-		e := mailbox.CheckFolders(ctx, a.Mail, folders)
+		_ = probe.CheckIMAP(ctx, c, a.ID, u.Out)
 		stop()
-		if e != nil {
-			d := mailbox.ConnectionDetail(e)
-			fmt.Fprintf(u.Out, "%s [%s]: %v (stage=%s reason=%s response_code=%s)\n", a.Mail.Username, a.ID, e, d.Stage, d.Reason, d.ResponseCode)
-		} else {
-			fmt.Fprintf(u.Out, "%s [%s]: TLS / LOGIN / folders OK\n", a.Mail.Username, a.ID)
-		}
 	}
 	return nil
 }
