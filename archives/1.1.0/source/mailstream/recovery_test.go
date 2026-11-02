@@ -77,6 +77,26 @@ func TestHTTPSRestartReclaimsHistoricalServerData(t *testing.T) {
 			if err != nil || !bytes.Equal(body, payload) {
 				t.Fatalf("HTTPS integrity: %v", err)
 			}
+			// Accounts join asynchronously after authenticated remote readiness.
+			// Require real per-account receipt samples, allowing the same probe
+			// traffic used by the app instead of assuming a GET used every route.
+			metricsDeadline := time.Now().Add(3 * time.Second)
+			for time.Now().Before(metricsDeadline) {
+				complete := true
+				for _, line := range client.Snapshot().Lines {
+					complete = complete && line.RTTMillis > 0 && line.IMAPLatencyMillis > 0 && line.DownloadBytes > 0
+				}
+				if complete {
+					break
+				}
+				probe, stop := context.WithTimeout(ctx, time.Second)
+				_, err := session.Ping(probe)
+				stop()
+				if err != nil {
+					t.Fatal("account metrics probe", err)
+				}
+				time.Sleep(20 * time.Millisecond)
+			}
 			for _, line := range client.Snapshot().Lines {
 				if line.RTTMillis <= 0 || line.IMAPLatencyMillis <= 0 || line.DownloadBytes == 0 {
 					t.Fatalf("account metrics missing: %+v", line)

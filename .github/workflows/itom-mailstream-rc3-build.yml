@@ -1,3 +1,4 @@
+# Require receipt samples after asynchronous account admission in restart regression.
 name: Build matched mailbox-stream RC3 with constrained-link acceptance
 on:
   push:
