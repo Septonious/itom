@@ -36,3 +36,14 @@ This is model evidence, not proof of Rambler CLOSE behavior or field throughput.
 Old-session debt and append-only discovery logs remain limitations. Manual
 server stop/restart/update/purge still reset server-local capacity as requested;
 a local reset does not remove inaccessible provider mail.
+
+A longer, four-stream RC5 candidate run (30 seconds per direction) found another
+independent failure during upload: all accounts remained healthy, but a tiny
+HTTPS application ping timed out as the bulk delivery window shrank. There were
+542 queued packets, 5.6 MB pending and a delivery allowance of 876 KB. Priority
+DATA still shared bulk byte admission and flight gating. A focused real-HTTPS
+regression holds already accepted bulk, applies the reduced allowance and
+reproduces fresh TLS timeout. The finite interactive reserve makes that case
+pass normally and under race instrumentation, then recovers all 4 MiB of the
+original eight uploads. A second check verifies the 64-packet bound, oversized
+DATA exclusion, protocol reserve and capacity return on stream cancellation.

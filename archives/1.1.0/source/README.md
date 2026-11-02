@@ -11,6 +11,8 @@ marks its exact consumed UIDs, uses standard CLOSE and verifies emptiness with
 STATUS before confirming reclamation. No UID EXPUNGE or UIDPLUS is required.
 Small traffic continues on the independent control path. The existing delivery
 windows, congestion controller, Noise encryption and stream reliability remain.
+A finite small-message reserve prevents old bulk from starving a fresh HTTPS
+handshake after the delivery window shrinks.
 
 Server-local capacity resets on manual stop/restart/update and an IMAP purge
 attempt. That reset does not delete provider mail. Unexpected crashes preserve

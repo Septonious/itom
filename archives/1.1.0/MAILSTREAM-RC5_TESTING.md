@@ -9,7 +9,8 @@ The change removes live folder DELETE, UID EXPUNGE and extra maintenance
 connections. Two DATA slots are reused only after exact consumption, CLOSE,
 empty STATUS verification and authenticated confirmation. Packet receipts and
 APPEND completion must also finish before capacity is released. Existing
-throughput windows and small-packet dispatch are retained.
+throughput windows are retained. A bounded small-message reserve keeps fresh
+TLS/HTTPS from waiting behind old bulk after a delivery-window reduction.
 
 Manager option 6 now checks TCP/TLS/LOGIN/NOOP without touching legacy folders
 and reports stage, reason and timings. Manual server stop/restart/update/purge

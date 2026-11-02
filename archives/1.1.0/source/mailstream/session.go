@@ -31,9 +31,10 @@ const (
 	maxPendingBytes     = 32 << 20
 	// Bound bytes independently of packet count: TLS/HTTP framing can
 	// otherwise exhaust 512 slots with only a few MiB actually in flight.
-	maxPendingPackets = 2048
-	controlReserve    = 64
-	replaySlots       = 4096
+	maxPendingPackets       = 2048
+	controlReserve          = 64
+	interactiveReserveBytes = controlReserve * (4096 + 13 + headerSize + 16)
+	replaySlots             = 4096
 )
 
 type pendingPacket struct {
@@ -164,6 +165,11 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 	if err != nil {
 		return err
 	}
+	// Only isolated small DATA may use the finite interactive reserve.
+	// Large frames always retain the bulk admission and flight limits.
+	if f.kind == frameData && len(f.data) > 4096 {
+		priority = false
+	}
 	for {
 		s.mu.Lock()
 		if s.err != nil {
@@ -177,14 +183,28 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 			return ErrClosed
 		}
 		limit := maxPendingPackets
+		byteLimit := min(maxPendingBytes, 2*s.delivery.allowance())
 		if priority {
 			limit += controlReserve
+			byteLimit = maxPendingBytes + interactiveReserveBytes
+			if f.kind != frameData {
+				// Protocol credit/reset/reclamation must survive even a full
+				// interactive reserve as well as a full bulk queue.
+				limit += controlReserve
+				byteLimit += controlReserve * 1024
+			}
 		}
-		byteLimit := min(maxPendingBytes, 2*s.delivery.allowance())
-		if priority && f.kind != frameData {
-			byteLimit = maxPendingBytes + controlReserve*1024
+		room := len(s.pending) < limit && s.pendingBytes+len(plain)+headerSize+16 <= byteLimit
+		if room && priority && f.kind == frameData {
+			interactive := 0
+			for _, p := range s.pending {
+				if p.priority && p.kind == frameData {
+					interactive++
+				}
+			}
+			room = interactive < controlReserve
 		}
-		if len(s.pending) < limit && s.pendingBytes+len(plain)+headerSize+16 <= byteLimit {
+		if room {
 			wire, seq, err := s.cipher.seal(plain)
 			if err == nil {
 				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream}
@@ -332,7 +352,7 @@ func (s *Session) dispatchLoop() {
 				s.mu.Unlock()
 				continue
 			}
-			if selected.kind == frameData && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
+			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
 				s.mu.Unlock()
 				continue
 			}

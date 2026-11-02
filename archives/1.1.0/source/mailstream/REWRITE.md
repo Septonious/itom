@@ -27,7 +27,12 @@ lease handles abandoned peers independently of throughput control.
 TCP streams have independent offsets and receive windows. Slow application
 consumers cannot block every receive stream. Small writes dispatch immediately;
 bulk batches only mail already queued. Existing bounded delivery/consumption
-windows and throughput controller are retained in RC5. Mailbox receipts do not
+windows and throughput controller are retained in RC5. Isolated DATA writes of
+at most 4096 bytes have a separate 64-packet reserve, with protocol capacity
+reserved beyond it. They can enter and dispatch even when older bulk exceeds
+a newly reduced delivery window. Larger writes cannot claim this reserve. The
+regression opens real HTTPS while bulk is held, then verifies all original
+upload bytes after resuming delivery. Mailbox receipts do not
 release application-consumption credit. Late WINDOW/FIN and resets preserve
 stream EOF and byte integrity. Control uses measured NOOP polling; DATA uses
 IDLE plus bounded tail repair for missing/coalesced notifications.

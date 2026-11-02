@@ -50,6 +50,38 @@ jobs:
             ${{ env.SOURCE }}/dist/core-*.log
             weak-link-evidence/
           if-no-files-found: error
+  throughput:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Sustained one/four streams and 32-stream HTTPS under variable delay
+        run: |
+          set -euo pipefail
+          for streams in 1 4 32; do
+            duration=30s
+            if [ "$streams" = 32 ]; then duration=12s; fi
+            python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out "throughput-$streams" --only candidate --duration "$duration" --streams "$streams" --idle-probes 4 --post-probes 8
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for streams in (1,4,32):
+              d=json.loads(Path(f'throughput-{streams}/candidate.json').read_text())
+              assert d['success'] and d['stage']=='complete',d.get('error')
+              assert all(p['success'] for p in d['Phases'])
+              assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+              assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+              assert d['Provider']['connection_rejections']==0
+              assert max(d['IdleMS']+d['AfterMS'])<=300
+              assert max(d['LoadedMS'])<=2000
+              if streams in (1,4): assert d['targets']['full_phase_100mbps']
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-rc5-throughput, path: "throughput-*/", if-no-files-found: error}
   linux:
     # Build independently; publication still requires complete safety checks.
     runs-on: ubuntu-latest
