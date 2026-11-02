@@ -1,0 +1,229 @@
+{
+  "release": "ITOM 1.1.0 MAILSTREAM-RC3",
+  "source_commit": "f25dcf6c003094e4f7105272c4ac08c3820b1f6f",
+  "build_run_id": 41455740251,
+  "source_acceptance_run_id": 41455740233,
+  "weak_link_run_id": 41455740251,
+  "weak_link_runner_commit": "f25dcf6c003094e4f7105272c4ac08c3820b1f6f",
+  "build_url": "https://github.com/Septonious/itom/actions/runs/41455740251",
+  "artifact_validation_pending": false,
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "d44aa96d235c3408dfd850e8a9cb4ac7eb1023fbd251efa40af11c8d1af39a5f",
+  "signed_apk_bytes": 53645652,
+  "source_ci_apk_sha256": "dc27337f2c80be3379a17c5b9479ddf7461b2476f354849c0cb89d6615c95322",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "b6eaebec7defe8563bfb1f4ef23feb564ec041758271c2a137e8fadbafd17a0c",
+    "arm64": "dccb3ce56c220298cce3acf49feb12dc6acd44236569e411dda6ba79f41deb14"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10128,
+    "version_name": "1.1.0-mailstream-rc3-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "db0c98a783877cb4038e5b477eb6f0f3330b6481c5bf5299d27513b18092f674",
+    "lib/armeabi-v7a/libgojni.so": "baabfa9ec65d2ec2a3fade92a56f8bc81adb939284b646b601c5b6b287d9f66a"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2212,
+      "NativeRPCMS": 294,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 107,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2795,
+      "NativeRPCMS": 223,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 152,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2101,
+      "NativeRPCMS": 219,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 135,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 4921,
+      "NativeRPCMS": 433,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 1160,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2230,
+      "NativeRPCMS": 221,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 117,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2457,
+      "NativeRPCMS": 274,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 119,
+      "protected_sockets": 45
+    }
+  ],
+  "checks": {
+    "native_startup_10_accounts": true,
+    "native_startup_15_accounts": true,
+    "seven_mbps_upload_cancel_download_new_https_and_recovery": true,
+    "all_account_metrics_populated": true,
+    "normal_race_native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "jni_hashes_and_revision": true,
+    "persistent_signer_verified": true,
+    "historical_metadata_restart_regression": true,
+    "uneven_remote_readiness_regression": true,
+    "tls_shutdown_bound": true,
+    "dial_deadline_ends_after_establishment": true
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "weak_link": {
+    "shared_client_mbps": 7,
+    "streams": 4,
+    "fresh_https_after_cancellation": true,
+    "initial_idle_ms": [
+      154.411,
+      249.09,
+      218.675,
+      538.83
+    ],
+    "post_rtt_ms": [
+      224.068,
+      123.398,
+      142.947,
+      160.979,
+      148.789,
+      120.222,
+      188.817,
+      170.854,
+      158.555,
+      176.889,
+      157.179,
+      159.422
+    ],
+    "loaded_max_rtt_ms": 1608.667,
+    "active_lines": 30,
+    "connection_rejections": 0,
+    "account_reconnects": false,
+    "session_closed": false,
+    "payload_mbps": {
+      "upload": 4.518542757054171,
+      "download": 4.346759185803084
+    }
+  },
+  "hosted_weak_link": {
+    "success": true,
+    "initial_idle_ms": [
+      130.101,
+      109.847,
+      127.697,
+      179.359
+    ],
+    "post_rtt_ms": [
+      133.97,
+      134.405,
+      128.432,
+      148.21,
+      157.642,
+      101.398,
+      110.992,
+      121.252
+    ],
+    "payload_mbps": {
+      "upload": 4.605210609331834,
+      "download": 4.303259341856463
+    }
+  },
+  "high_rate_models": {
+    "high-rate-single": {
+      "streams": 1,
+      "payload_mbps": {
+        "upload": 104.82160778038687,
+        "download": 220.9117049308786
+      },
+      "idle_ms": [
+        142.593,
+        141.456,
+        135.611,
+        166.515
+      ],
+      "post_rtt_ms": [
+        124.594,
+        141.372,
+        152.352,
+        165.387
+      ],
+      "loaded_max_ms": 796.392
+    },
+    "high-rate": {
+      "streams": 4,
+      "payload_mbps": {
+        "upload": 60.81372064522371,
+        "download": 34.460375436217106
+      },
+      "idle_ms": [
+        127.581,
+        128.268,
+        147.84,
+        190.518
+      ],
+      "post_rtt_ms": [
+        139.959,
+        147.944,
+        152.821,
+        151.039
+      ],
+      "loaded_max_ms": 2705.084
+    }
+  },
+  "regression_before_after": {
+    "serialized_historical_metadata": "RC2 logic: startup HTTPS deadline; RC3: both simultaneous and uneven recovery pass",
+    "dial_lifetime": "RC2 logic: established HTTPS dies at ~11s; RC3: verified response survives 11s origin delay"
+  },
+  "limitations": [
+    "Local weak-link initial idle maximum was 538.83 ms, and one 15-account startup ping was 1160 ms; a universal 300 ms ceiling is not established.",
+    "The four-stream high-rate model was slower than the single-stream model; no real-provider throughput qualification is claimed.",
+    "Historical client-produced DATA and append-only control logs are not fully reclaimed.",
+    "Recovery after clearing private app data or exhausting control capacity remains unqualified; preserve app state.",
+    "Unverified or refused deletion retains charged debt."
+  ],
+  "installation": "Update both endpoints; use manager option18 or sudo itom update-from-tmp; install the APK in place preserving app data and profile."
+}
