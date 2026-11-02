@@ -1,0 +1,165 @@
+name: Build frozen mailbox-stream RC2 for real-provider testing
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: [".github/workflows/itom-mailstream-rc2-build.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+  SOURCE: archives/1.1.0/source
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Complete normal and race application, native recovery, SDK and source checks
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-0-mailstream-rc2
+      - name: Four-stream 7 Mbps transfer cancellation and new HTTPS recovery
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out weak-link-evidence --only candidate --client-mbps 7 --duration 20s --cancel-download-after 12s --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('weak-link-evidence/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete',d.get('error')
+          assert len(d['Phases'])==2 and all(p['success'] for p in d['Phases'])
+          assert not d['diagnostics']['Session']['closed']
+          assert d['diagnostics']['Mail']['failed_accounts']==0
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert all(v>0 for v in d['AfterMS'])
+          assert all(l['IMAPLatencyMillis']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert any(l['RTTMillis']>0 and l['DownloadBytes']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert d['Provider']['connection_rejections']==0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc2-safety
+          path: |
+            ${{ env.SOURCE }}/dist/core-*.json
+            ${{ env.SOURCE }}/dist/core-*.jsonl
+            ${{ env.SOURCE }}/dist/core-*.log
+            weak-link-evidence/
+          if-no-files-found: error
+  linux:
+    # Build independently; publication still requires complete safety checks.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Build matched server binaries and source archive
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.0-MAILSTREAM-RC2-linux-$arch.bin" ./cmd/itom)
+          done
+          release-assets/ITOM-1.1.0-MAILSTREAM-RC2-linux-amd64.bin version
+          python3 "$SOURCE/tools/package_sources.py" --output release-assets/ITOM-1.1.0-MAILSTREAM-RC2-sources.zip
+          cp archives/1.1.0/MAILSTREAM-RC2_TESTING.md release-assets/
+          printf '%s\n' "$GITHUB_SHA" > release-assets/SOURCE_COMMIT
+          (cd release-assets && sha256sum *.bin *.zip > NATIVE_SOURCE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc2-linux-amd64
+          path: release-assets/*-linux-amd64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc2-linux-arm64
+          path: release-assets/*-linux-arm64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc2-linux-source
+          path: |
+            release-assets/*.zip
+            release-assets/*.md
+            release-assets/SOURCE_COMMIT
+            release-assets/NATIVE_SOURCE_SHA256SUMS
+          if-no-files-found: error
+  android:
+    # Build independently; publication still requires safety AND both builds.
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "17"}
+      - name: Build both JNI architectures, compile, unit tests and fatal lint
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-0-mailstream-rc2 --accept-android-licenses
+      - name: Export bounded APK parts and public signing verification tools
+        run: |
+          set -euo pipefail
+          mkdir -p apk-parts android-evidence signing-tools
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.0-MAILSTREAM-RC2-debug.apk'
+          raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
+          report=json.loads((source/'dist/build-report.json').read_text())
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-mailstream-rc2'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10127,'version_name':'1.1.0-mailstream-rc2-debug'}
+          parts=[]
+          for n,start in enumerate(range(0,len(raw),8*1024*1024)):
+              part=raw[start:start+8*1024*1024];name=f'rc2-apk.part{n:02d}'
+              Path('apk-parts',name).write_bytes(part)
+              parts.append({'name':name,'bytes':len(part),'sha256':hashlib.sha256(part).hexdigest()})
+          Path('android-evidence/manifest.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'apk_bytes':len(raw),'apk_sha256':hashlib.sha256(raw).hexdigest(),'parts':parts},indent=2)+'\n')
+          PY
+          cp "$SOURCE"/dist/{build-report.json,test-summary.json} android-evidence/
+          signer="$(find "$HOME/.cache/itom-build" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -name apksigner.jar -type f -print -quit)"
+          test -f "$signer"
+          cp "$signer" signing-tools/
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-android-evidence, path: android-evidence/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-signing-tools, path: signing-tools/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part00, path: apk-parts/rc2-apk.part00, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part01, path: apk-parts/rc2-apk.part01, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part02, path: apk-parts/rc2-apk.part02, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part03, path: apk-parts/rc2-apk.part03, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part04, path: apk-parts/rc2-apk.part04, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part05, path: apk-parts/rc2-apk.part05, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part06, path: apk-parts/rc2-apk.part06, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part07, path: apk-parts/rc2-apk.part07, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part08, path: apk-parts/rc2-apk.part08, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part09, path: apk-parts/rc2-apk.part09, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part10, path: apk-parts/rc2-apk.part10, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part11, path: apk-parts/rc2-apk.part11, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part12, path: apk-parts/rc2-apk.part12, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part13, path: apk-parts/rc2-apk.part13, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part14, path: apk-parts/rc2-apk.part14, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc2-apk-part15, path: apk-parts/rc2-apk.part15, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc2-android-build-logs
+          path: |
+            ${{ env.SOURCE }}/dist/*.log
+            ${{ env.SOURCE }}/dist/*.json
+            ${{ env.SOURCE }}/android/app/build/reports/lint-results.*
+          if-no-files-found: warn
