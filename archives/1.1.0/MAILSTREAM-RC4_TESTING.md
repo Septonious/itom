@@ -22,6 +22,14 @@ The controller and bandwidth settings remain unchanged. DNS settings, per-accoun
 
 Published evidence records the reproduced failure, corrected startup echo/HTTPS, command-bound tests, capacity reset and crash-policy tests, normal/race tests, native startup/restarts, weak-network cancellation/recovery, and Android compilation/tests/lint. These are local provider models; real-world verification is still required. Performance targets remain unqualified across all workloads.
 
+## Recorded local results
+
+Six compiled-server/native-client startup cycles passed, including server restarts: 30/30 lines for ten accounts and 45/45 for fifteen. Startup took 1.79–2.30 seconds; reported RTT was 84–228 ms. After graceful shutdown, direct inspection found every server account counter at zero across both configured identities (20 entries with ten accounts and 30 with fifteen).
+
+On a shared 7 Mbps client path, four streams completed transfer, deliberate download cancellation, and fresh HTTPS recovery. All thirty lines and per-account RTT measurements remained available; no account failed and no connection was rejected. Initial idle RTT was 125–148 ms, post-load RTT 102–187 ms, and loaded maximum 1534 ms. Payload rates were 4.42/4.14 Mbps.
+
+The ten-second high-rate models measured 154/231 Mbps with one stream and 240/203 Mbps with four streams (upload/download). These short loopback-provider models do not qualify sustained real-provider bandwidth. The hosted weak-network check also passed: idle 133–169 ms, post-load 110–179 ms, loaded maximum 1136 ms.
+
 ## Installation
 
 Upload the matching ITOM .bin to /tmp and run `sudo itom update-from-tmp` (manager option 18), then install the matched APK over the existing app. Keep the existing profile and app data. The first RC4 server start clears the old local capacity counters automatically. No additional mailbox deletion is required to perform that reset.

@@ -1,0 +1,253 @@
+{
+  "release": "ITOM 1.1.0 MAILSTREAM-RC4",
+  "source_commit": "7fd2187278c4b9563f709d982562c43d21bae0fe",
+  "build_run_id": 41461453281,
+  "source_acceptance_run_id": 41461453082,
+  "weak_link_run_id": 41461453281,
+  "weak_link_runner_commit": "7fd2187278c4b9563f709d982562c43d21bae0fe",
+  "build_url": "https://github.com/Septonious/itom/actions/runs/41461453281",
+  "artifact_validation_pending": false,
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "2938762a74e0f69a830b2cb940e32c10bfc2ba8cfe2f50bb3e96679767c95fd6",
+  "signed_apk_bytes": 53678420,
+  "source_ci_apk_sha256": "08628a7659c8cc04f9c7a984148b99c07864018992f6c599dd34ff07ea56688e",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "76d18ab193dfd3ad7b9112ac4b61e8ced62f9ccf16b2e2b81a069653e96e7321",
+    "arm64": "8073077ad8aa0ddddd84a411dffd887df3e129b955255b0e487feb7891c6c519"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10129,
+    "version_name": "1.1.0-mailstream-rc4-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "8760534dc4d9dcea3f7fe13d9afa9601ddd2418e15544aa460583454f3ce7e37",
+    "lib/armeabi-v7a/libgojni.so": "7e5c085c2a2b9bcd8890f2c4aaf27c9b1a3f9404ce04748ee59d96b8b10c65ff"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2302,
+      "NativeRPCMS": 219,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 84,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1978,
+      "NativeRPCMS": 301,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 228,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1972,
+      "NativeRPCMS": 336,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 117,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2275,
+      "NativeRPCMS": 257,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 89,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1790,
+      "NativeRPCMS": 280,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 105,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2057,
+      "NativeRPCMS": 310,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 121,
+      "protected_sockets": 45
+    }
+  ],
+  "checks": {
+    "native_startup_10_accounts": true,
+    "native_startup_15_accounts": true,
+    "seven_mbps_upload_cancel_download_new_https_and_recovery": true,
+    "all_account_metrics_populated": true,
+    "normal_race_native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "jni_hashes_and_revision": true,
+    "persistent_signer_verified": true,
+    "historical_metadata_restart_regression": true,
+    "uneven_remote_readiness_regression": true,
+    "tls_shutdown_bound": true,
+    "dial_deadline_ends_after_establishment": true,
+    "dirty_capacity_echo_and_late_free_route": true,
+    "manual_stop_counters_zero_in_compiled_server": true,
+    "purge_failure_still_clears_local_capacity": true,
+    "live_capacity_reset_refused": true,
+    "crash_reset_policy_verified": true
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "weak_link": {
+    "shared_client_mbps": 7,
+    "streams": 4,
+    "fresh_https_after_cancellation": true,
+    "initial_idle_ms": [
+      135.277,
+      139.226,
+      125.321,
+      147.993
+    ],
+    "post_rtt_ms": [
+      148.666,
+      132.303,
+      121.427,
+      186.775,
+      143.776,
+      103.34,
+      101.565,
+      170.699,
+      166.444,
+      156.905,
+      184.597,
+      150.082
+    ],
+    "loaded_max_rtt_ms": 1533.818,
+    "active_lines": 30,
+    "connection_rejections": 0,
+    "account_reconnects": false,
+    "session_closed": false,
+    "payload_mbps": {
+      "upload": 4.421766277378179,
+      "download": 4.138871062864148
+    }
+  },
+  "hosted_weak_link": {
+    "success": true,
+    "initial_idle_ms": [
+      133.297,
+      136.586,
+      137.193,
+      169.382
+    ],
+    "post_rtt_ms": [
+      139.355,
+      127.548,
+      133.831,
+      157.422,
+      150.857,
+      116.98,
+      110.214,
+      179.349
+    ],
+    "payload_mbps": {
+      "upload": 4.621187002319387,
+      "download": 4.390654825860051
+    }
+  },
+  "high_rate_models": {
+    "high-rate-single": {
+      "streams": 1,
+      "payload_mbps": {
+        "upload": 153.89850158785333,
+        "download": 231.45554277023805
+      },
+      "idle_ms": [
+        115.057,
+        124.318,
+        129.985,
+        164.692
+      ],
+      "post_rtt_ms": [
+        117.822,
+        135.842,
+        122.225,
+        127.648
+      ],
+      "loaded_max_ms": 905.466
+    },
+    "high-rate": {
+      "streams": 4,
+      "payload_mbps": {
+        "upload": 239.62675161898483,
+        "download": 203.02888269942073
+      },
+      "idle_ms": [
+        135.361,
+        134.612,
+        141.601,
+        162.541
+      ],
+      "post_rtt_ms": [
+        130.012,
+        121.729,
+        142.935,
+        127.232
+      ],
+      "loaded_max_ms": 861.578
+    }
+  },
+  "regression_before_after": {
+    "dirty_capacity_echo": "RC3: 16 KiB echo delivery succeeds inbound, but return path times out; RC4: late free account is authenticated without application traffic and echo plus HTTPS succeed",
+    "imap_command_bound": "An independent timer interrupts a slow mailbox command even when the decoder changes socket read deadlines"
+  },
+  "manual_stop_capacity": {
+    "10": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 20
+    },
+    "15": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 30
+    }
+  },
+  "capacity_reset_policy": {
+    "manual_stop": true,
+    "manual_restart": true,
+    "update_including_old_manager": true,
+    "purge_attempt_even_if_provider_fails": true,
+    "normal_crash_recovery_kept": true,
+    "server_profiles_and_credentials_preserved": true
+  },
+  "limitations": [
+    "Performance ceilings are not established universally; inspect all idle, loaded, and multi-stream measurements in the evidence.",
+    "No real-provider throughput qualification is claimed.",
+    "A local capacity reset does not delete provider mail; inaccessible old folders remain on the provider.",
+    "Client private data and existing profiles should be preserved when updating."
+  ],
+  "installation": "Update both endpoints; use manager option18 or sudo itom update-from-tmp; install the APK in place preserving app data and profile."
+}
