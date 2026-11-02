@@ -30,6 +30,7 @@ jobs:
           assert d['success'] and d['stage']=='complete',d.get('error')
           assert len(d['Phases'])==2 and all(p['success'] for p in d['Phases'])
           assert not d['diagnostics']['Session']['closed']
+          assert d['diagnostics']['Session']['delivery_flight_bytes']==0 and d['diagnostics']['Session']['bulk_outstanding_bytes']==0
           assert d['diagnostics']['Mail']['failed_accounts']==0
           assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
           assert all(v>0 for v in d['AfterMS'])

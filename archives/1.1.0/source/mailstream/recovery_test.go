@@ -31,6 +31,7 @@ func TestHTTPSRestartReclaimsHistoricalServerData(t *testing.T) {
 	origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write(payload) }))
 	defer origin.Close()
 	var recovered int
+	var preserved []string
 	for cycle := 0; cycle < 2; cycle++ {
 		server, err := NewStoredIMAPLink(ctx, "recovery", accounts, false, serverState)
 		if err != nil {
@@ -56,6 +57,17 @@ func TestHTTPSRestartReclaimsHistoricalServerData(t *testing.T) {
 		transport.DialContext = func(ctx context.Context, _, target string) (net.Conn, error) { return session.OpenTCP(ctx, target) }
 		transport.ForceAttemptHTTP2 = false
 		if cycle == 0 {
+			// Exercise actual provider mailbox boundaries: a collector must
+			// preserve legacy, another identity and client-produced DATA.
+			preserved = []string{"legacy-wallet-mail", "itom3-other-01010101010101010101010101010101-s2c-00000000", server.segmentFolder(session.cipher.id, false, 0)}
+			seed, err := openMailPipe(ctx, accounts[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, folder := range preserved {
+				_ = seed.client.Create(folder, nil).Wait()
+			}
+			seed.close()
 			response, err := (&http.Client{Transport: transport, Timeout: 10 * time.Second}).Get(origin.URL)
 			if err != nil {
 				t.Fatal(err)
@@ -81,6 +93,18 @@ func TestHTTPSRestartReclaimsHistoricalServerData(t *testing.T) {
 			if snapshot := server.Snapshot(); snapshot.RetainedBytes >= recovered/4 || snapshot.Failed != 0 {
 				t.Fatalf("historical capacity not recovered: before=%d after=%+v", recovered, snapshot)
 			}
+			probe, err := openMailPipe(ctx, accounts[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, folder := range preserved {
+				rows, err := probe.client.List("", folder, nil).Collect()
+				if err != nil || len(rows) != 1 {
+					probe.close()
+					t.Fatalf("collector removed protected namespace %q: %v", folder, err)
+				}
+			}
+			probe.close()
 		}
 		transport.CloseIdleConnections()
 		session.Close()

@@ -523,6 +523,7 @@ func (a *mailAccountState) attach(id SessionID) error {
 	done := make(chan struct{})
 	a.mu.Lock()
 	a.data, a.dataDone, a.id = p, done, id
+	clear(a.streams)
 	a.mu.Unlock()
 	go func() {
 		defer close(done)
