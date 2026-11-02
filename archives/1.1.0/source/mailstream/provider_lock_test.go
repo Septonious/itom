@@ -84,7 +84,7 @@ func (s *deletionLockSession) Fetch(w *imapserver.FetchWriter, set imap.NumSet, 
 // Require a real duplex HTTPS transfer across repeated mailbox turnovers,
 // followed by an immediate user disconnect and a fresh authenticated HTTPS.
 func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 	fixture := &deletionLockFixture{release: make(chan struct{})}
 	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &deletionLockSession{Session: s, owner: fixture} })
@@ -133,7 +133,9 @@ func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
 		if cycle > 0 {
 			object = payload[:123456]
 		}
-		response, requestErr := (&http.Client{Transport: transport, Timeout: 30 * time.Second}).Post(origin.URL, "application/octet-stream", bytes.NewReader(object))
+		// This is a byte-integrity and ownership check, including under -race
+		// on a two-core host. Performance has a separate uninstrumented runner.
+		response, requestErr := (&http.Client{Transport: transport, Timeout: 90 * time.Second}).Post(origin.URL, "application/octet-stream", bytes.NewReader(object))
 		var body []byte
 		if requestErr == nil {
 			body, requestErr = io.ReadAll(response.Body)

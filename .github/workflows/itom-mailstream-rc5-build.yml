@@ -1,4 +1,5 @@
 # Require bounded slot reuse, provider-lock avoidance and restart recovery.
+# Instrumented integrity tests and uninstrumented throughput checks are separate.
 name: Build matched mailbox-stream RC5 with constrained-link acceptance
 on:
   push:
