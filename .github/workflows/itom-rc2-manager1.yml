@@ -1,0 +1,88 @@
+name: Test and publish RC2 server manager upload updater
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: [".github/workflows/itom-rc2-manager1.yml"]
+permissions: {contents: write}
+jobs:
+  server-manager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: "off"
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Require unchanged RC2 transport and Android sources
+        run: |
+          set -euo pipefail
+          git fetch origin 3606523d58f59027dc66c31340849fa86d25e656 --no-tags
+          git diff --name-only 3606523d58f59027dc66c31340849fa86d25e656 HEAD -- archives/1.1.0/source > "$RUNNER_TEMP/changed-source.txt"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          for name in Path(os.environ['RUNNER_TEMP'],'changed-source.txt').read_text().splitlines():
+              assert name.startswith('archives/1.1.0/source/core/manager/') or name=='archives/1.1.0/source/core/cmd/itom/main.go',name
+          PY
+          python3 archives/1.1.0/source/tools/check_sources.py
+      - name: Full core checks and race-tested upload selection and rollback
+        working-directory: archives/1.1.0/source/core
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/release-assets"
+          go test -json -count=1 -timeout=180s ./... > "$GITHUB_WORKSPACE/release-assets/core-tests.jsonl"
+          go test -race -json -count=1 -timeout=120s ./manager ./cmd/itom > "$GITHUB_WORKSPACE/release-assets/updater-race-tests.jsonl"
+          go vet ./manager ./cmd/itom
+      - name: Build both server architectures and verify manager identity
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            (cd archives/1.1.0/source/core && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.0-MAILSTREAM-RC2-manager1-linux-$arch.bin" ./cmd/itom)
+          done
+          release-assets/ITOM-1.1.0-MAILSTREAM-RC2-manager1-linux-amd64.bin version | tee release-assets/VERSION.txt
+          grep -F 'itom-1-1-0-mailstream-rc2 linux amd64 manager tmp-update1' release-assets/VERSION.txt
+          cp archives/1.1.0/RC2_MANAGER1.md release-assets/
+          cp "$RUNNER_TEMP/changed-source.txt" release-assets/CHANGED_SOURCE.txt
+          git rev-parse HEAD > release-assets/SOURCE_COMMIT
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path('release-assets')
+          results={}
+          for name in ('core-tests.jsonl','updater-race-tests.jsonl'):
+              rows=[json.loads(l) for l in (root/name).read_text().splitlines() if l.startswith('{')]
+              assert not any(r.get('Action')=='fail' for r in rows),name
+              results[name]=sum(r.get('Action')=='pass' and bool(r.get('Test')) for r in rows)
+              assert results[name]>0,name
+          metadata={'source_commit':os.environ['GITHUB_SHA'],'transport_baseline':'3606523d58f59027dc66c31340849fa86d25e656','transport_revision':'itom-1-1-0-mailstream-rc2','manager_revision':'tmp-update1','android_apk_unchanged':True,'tests':results}
+          (root/'MANAGER_BUILD.json').write_text(json.dumps(metadata,indent=2)+'\n')
+          (root/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(root.iterdir()) if p.is_file() and p.name!='SHA256SUMS'))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: rc2-manager1-tested-assets, path: release-assets/, if-no-files-found: error}
+      - name: Publish manager update with existing RC2 APK compatibility
+        run: |
+          set -euo pipefail
+          tag=v1.1.0-mailstream-rc2-manager1
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-mailstream-rc2-manager1")' > "$RUNNER_TEMP/existing.json"
+          if [ -s "$RUNNER_TEMP/existing.json" ]; then
+            python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing.json"))["draft"], "Refusing to overwrite a published release"'
+          else
+            gh release create "$tag" --draft --prerelease --latest=false --target "$GITHUB_SHA" --title 'MAILSTREAM-RC2 — server manager upload updater' --notes-file archives/1.1.0/RC2_MANAGER1.md
+          fi
+          gh release upload "$tag" release-assets/* --clobber
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-mailstream-rc2-manager1")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          release=json.loads(Path(os.environ['RUNNER_TEMP'],'release.json').read_text());assert release['draft'] and release['prerelease']
+          assets={a['name']:a for a in release['assets']}
+          for p in Path('release-assets').iterdir():
+              if p.is_file():assert assets[p.name]['size']==p.stat().st_size and assets[p.name]['digest']=='sha256:'+hashlib.sha256(p.read_bytes()).hexdigest(),p.name
+          PY
+          gh release edit "$tag" --draft=false --prerelease --latest=false

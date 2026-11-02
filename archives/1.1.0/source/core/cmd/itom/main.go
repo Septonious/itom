@@ -26,11 +26,17 @@ func run(args []string) error {
 		args = args[1:]
 	}
 	if command == "version" || command == "--version" {
-		fmt.Println("ITOM", revision, runtime.GOOS, runtime.GOARCH)
+		fmt.Println("ITOM", revision, runtime.GOOS, runtime.GOARCH, "manager", manager.BuildRevision)
 		return nil
 	}
 	if command == "install" {
 		return manager.Install()
+	}
+	if command == "update-from-tmp" {
+		if len(args) != 0 {
+			return errors.New("update-from-tmp takes no arguments")
+		}
+		return manager.InstallLatestUpload(os.Stdout)
 	}
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	state := flags.String("state", "/var/lib/itom", "private state directory")
@@ -154,7 +160,7 @@ func run(args []string) error {
 		fmt.Printf("Noise + IMAP roundtrip OK; account=%s RTT=%s\n", *account, rtt.Round(1e6))
 		return nil
 	default:
-		return errors.New("commands: menu, serve, probe, imap-check, install, uninstall, traffic, message, version, journal-profile, diagnostics")
+		return errors.New("commands: menu, serve, probe, imap-check, install, update-from-tmp, uninstall, traffic, message, version, journal-profile, diagnostics")
 	}
 }
 func main() {

@@ -87,7 +87,7 @@ func (u *UI) Run() error {
 		return e
 	}
 	for {
-		fmt.Fprintln(u.Out, "\nITOM — server manager\nEncrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n0. Exit")
+		fmt.Fprintln(u.Out, "\nITOM — server manager\nEncrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n18. Update from newest ITOM .bin in /tmp\n0. Exit")
 		s, e := u.ask("Selection")
 		if e == io.EOF {
 			return nil
@@ -130,6 +130,11 @@ func (u *UI) Run() error {
 			e = u.followTraffic()
 		case "17":
 			e = u.serverMessage()
+		case "18":
+			e = InstallLatestUpload(u.Out)
+			if e == nil {
+				return reopenManager(u.State)
+			}
 		case "16":
 			var removed bool
 			removed, e = u.uninstall()
@@ -447,12 +452,19 @@ WantedBy=multi-user.target
 // Install copies the manually supplied running binary atomically, preserving
 // /var/lib/itom. An active service is restarted, with binary rollback on failure.
 func Install() error {
+	if e := installGuard(); e != nil {
+		return e
+	}
+	return installCurrent()
+}
+
+func installGuard() error {
 	if g, e := servercfg.GuardStatus("/var/lib/itom/server.db"); e == nil && g.Active() {
 		return servercfg.ErrGuardPending
 	} else if e != nil && !os.IsNotExist(e) {
 		return e
 	}
-	return installCurrent()
+	return nil
 }
 
 // InstallGuarded is restricted to the already armed independent admin helper.
@@ -467,6 +479,18 @@ func InstallGuarded(state, id string) error {
 	return installCurrent()
 }
 func installCurrent() error {
+	src, e := os.Executable()
+	if e != nil {
+		return e
+	}
+	data, e := os.ReadFile(src)
+	if e != nil {
+		return e
+	}
+	return installData(data, os.Stdout)
+}
+
+func installData(data []byte, out io.Writer) error {
 	if runtime.GOOS != "linux" || os.Geteuid() != 0 {
 		return errors.New("installation requires Linux, sudo and systemd")
 	}
@@ -476,25 +500,23 @@ func installCurrent() error {
 	if e := os.MkdirAll("/var/lib/itom", 0700); e != nil {
 		return e
 	}
-	src, e := os.Executable()
-	if e != nil {
-		return e
+	return installFiles(data, "/usr/local/bin/itom", "/etc/systemd/system/itom.service", func(args ...string) error {
+		cmd := exec.Command("systemctl", args...)
+		cmd.Stdout, cmd.Stderr = out, out
+		return cmd.Run()
+	}, out)
+}
+
+func installFiles(data []byte, dst, unitPath string, run func(...string) error, out io.Writer) error {
+	if len(data) == 0 || len(data) > 100<<20 {
+		return errors.New("binary is empty or exceeds limit")
 	}
-	dst := "/usr/local/bin/itom"
-	wasActive := exec.Command("systemctl", "is-active", "--quiet", "itom.service").Run() == nil
+	wasActive := run("is-active", "--quiet", "itom.service") == nil
 	old, e := os.ReadFile(dst)
 	hadOld := e == nil
 	if e != nil && !os.IsNotExist(e) {
 		return e
 	}
-	data, e := os.ReadFile(src)
-	if e != nil {
-		return e
-	}
-	if len(data) > 100<<20 {
-		return errors.New("binary exceeds limit")
-	}
-	unitPath := "/etc/systemd/system/itom.service"
 	oldUnit, ue := os.ReadFile(unitPath)
 	if ue != nil && !os.IsNotExist(ue) {
 		return ue
@@ -505,38 +527,42 @@ func installCurrent() error {
 	rollback := func() {
 		if hadOld {
 			_ = atomicFile(dst, old, 0755)
+		} else {
+			_ = os.Remove(dst)
 		}
 		if ue == nil {
 			_ = atomicFile(unitPath, oldUnit, 0644)
+		} else {
+			_ = os.Remove(unitPath)
 		}
-		_ = exec.Command("systemctl", "daemon-reload").Run()
+		_ = run("daemon-reload")
 		if wasActive {
-			_ = exec.Command("systemctl", "restart", "itom.service").Run()
+			_ = run("restart", "itom.service")
 		}
 	}
 	if e = atomicFile(unitPath, []byte(unit), 0644); e != nil {
 		rollback()
 		return e
 	}
-	if e = exec.Command("systemctl", "daemon-reload").Run(); e != nil {
+	if e = run("daemon-reload"); e != nil {
 		rollback()
 		return e
 	}
-	if e = exec.Command("systemctl", "enable", "itom.service").Run(); e != nil {
+	if e = run("enable", "itom.service"); e != nil {
 		rollback()
 		return e
 	}
 	if wasActive {
-		if e = exec.Command("systemctl", "restart", "itom.service").Run(); e == nil {
+		if e = run("restart", "itom.service"); e == nil {
 			time.Sleep(500 * time.Millisecond)
-			e = exec.Command("systemctl", "is-active", "--quiet", "itom.service").Run()
+			e = run("is-active", "--quiet", "itom.service")
 		}
 		if e != nil {
 			rollback()
 			return errors.New("restart failed; previous binary restored")
 		}
 	}
-	fmt.Println("ITOM installed. Open the manager with sudo itom. Configuration preserved.")
+	fmt.Fprintln(out, "ITOM installed. Open the manager with sudo itom. Configuration preserved.")
 	return nil
 }
 func atomicFile(path string, data []byte, mode os.FileMode) error {
