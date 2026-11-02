@@ -35,6 +35,8 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--baseline', type=Path, default=ROOT.parent.parent/'1.0.0-rc2/source/core')
     parser.add_argument('--candidate', type=Path, default=ROOT.parent/'source/core')
+    parser.add_argument('--client-mbps', type=int, default=500)
+    parser.add_argument('--cancel-download-after', default='0s')
     parser.add_argument('--accounts', type=int, default=10)
     parser.add_argument('--duration', default='12s')
     parser.add_argument('--streams', type=int, default=1)
@@ -46,6 +48,8 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
+    if args.client_mbps <= 0 or not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.cancel_download_after):
+        parser.error('client rate must be positive; cancellation must be a duration in seconds')
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.duration) or float(args.duration[:-1]) <= 0:
         parser.error('duration must be positive seconds, e.g. 12s or 0.5s')
     if not 1 <= args.accounts <= 20 or not 1 <= args.streams <= 16:
@@ -66,6 +70,7 @@ def main():
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
     manifest = {'go': version, 'accounts': args.accounts, 'duration': args.duration,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
+                'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
                 'latency_model': 'zero' if args.zero_latency else 'constant-worst' if args.worst_latency else 'independent-variable',
                 'rtt_step_ms': {'client': 500, 'server': 700},
@@ -76,7 +81,7 @@ def main():
                 'harness_sha256': fingerprint(ROOT),
                 'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                 'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),
-                'provider_shared_mbps': {'client_both_directions': 500, 'server_both_directions': 1000},
+                'provider_shared_mbps': {'client_both_directions': args.client_mbps, 'server_both_directions': 1000},
                 'field_performance_qualified': False, 'attempts': []}
     with tempfile.TemporaryDirectory(prefix='itom-speed-') as temp:
         work = Path(temp)
@@ -125,7 +130,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                 private.mkdir()
                 provider_log = (output/(label+'-provider.log')).open('w')
                 provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
-                                             '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                             '-client-mbps', str(args.client_mbps), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
                                             stdout=provider_log, stderr=subprocess.STDOUT)
                 try:
                     for _ in range(200):
@@ -139,6 +144,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                     command = [str(work/(label+'-worker')), '-provider', str(private/'provider.json'),
                                '-out', str(output/(label+'.json')), '-state', str(work/(label+'-state')),
                                '-label', label, '-duration', args.duration, '-streams', str(args.streams),
+                               '-cancel-download-after', args.cancel_download_after,
                                '-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
                                '-cpu', str(output/(label+'.pprof'))]
                     if args.duplex:

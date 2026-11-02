@@ -1,4 +1,4 @@
-name: Build frozen mailbox-stream RC2 for real-provider testing
+name: Build matched mailbox-stream RC2 weak-link fixes for testing
 on:
   push:
     branches: ["codex/v1.1.0-mailbox-stream-v3"]

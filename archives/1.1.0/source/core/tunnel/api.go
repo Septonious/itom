@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-1-0-mailstream-rc1"
+const TransportRevision = "itom-1-1-0-mailstream-rc2"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -60,6 +60,10 @@ type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
 	Ready                           bool
 	ActiveLines, TotalLines         int
+	RTTMillis, IMAPLatencyMillis    int64
+	RTTFresh                        bool
+	UploadBytes, DownloadBytes      uint64
+	TCPStreams                      int
 }
 type ProbeSnapshot struct {
 	Samples, Failures      uint64
@@ -343,6 +347,7 @@ func (c *Client) Failure() string {
 func (c *Client) Snapshot() ClientSnapshot {
 	mail := c.link.Snapshot()
 	session := c.session.Snapshot()
+	streams := c.session.ActiveStreams()
 	s := ClientSnapshot{Stats: Stats{TotalLines: 3 * len(c.profile.Accounts), TCP: session.Streams}, SampledAtMS: time.Now().UnixMilli()}
 	for _, line := range mail.Lines {
 		account := line.Account
@@ -363,7 +368,9 @@ func (c *Client) Snapshot() ClientSnapshot {
 			active++
 		}
 		s.ActiveLines += active
-		s.Lines = append(s.Lines, LineDiagnostic{Account: account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == 3, ActiveLines: active, TotalLines: 3})
+		s.Lines = append(s.Lines, LineDiagnostic{Account: account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == 3, ActiveLines: active, TotalLines: 3,
+			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
+			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams)})
 	}
 	c.mu.Lock()
 	s.RTTMillis = c.probe.RTTMillis

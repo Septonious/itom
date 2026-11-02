@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC1",
-  "revision": "itom-1-1-0-mailstream-rc1",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC1-sources.zip",
+  "release": "MAILSTREAM-RC2",
+  "revision": "itom-1-1-0-mailstream-rc2",
+  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC2-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "EXPERIMENTAL TESTING RC: frozen transport; local functional and sustained model checks passed; real-provider and Android-device qualification pending; bounded retention",
-  "android_version_name": "1.1.0-mailstream-rc1",
-  "android_version_code": 10126,
+  "qualification": "EXPERIMENTAL TESTING RC: receipt-paced delivery, bounded retries, per-account telemetry and verified historical outbound collection; field confirmation pending",
+  "android_version_name": "1.1.0-mailstream-rc2",
+  "android_version_code": 10127,
   "android_application_id": "org.itom.client",
   "build_allowed": true
 }

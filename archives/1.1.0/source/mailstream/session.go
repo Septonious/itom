@@ -61,6 +61,7 @@ type Session struct {
 	nextStream      uint32
 	pending         map[uint64]*pendingPacket
 	pendingBytes    int
+	delivery        deliveryWindow
 	changed         chan struct{}
 	wake            chan struct{}
 	input           chan []byte
@@ -166,13 +167,18 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 			s.mu.Unlock()
 			return err
 		}
+		if terminal := s.closedStreams[f.stream]; terminal != nil && terminal.state == closedAbort &&
+			(f.kind == frameData || f.kind == frameFIN || f.kind == frameOpen || f.kind == frameOpenOK) {
+			s.mu.Unlock()
+			return ErrClosed
+		}
 		limit := maxPendingPackets
 		if priority {
 			limit += controlReserve
 		}
-		byteLimit := maxPendingBytes
-		if priority {
-			byteLimit += controlReserve * 1024
+		byteLimit := min(maxPendingBytes, 2*s.delivery.allowance())
+		if priority && f.kind != frameData {
+			byteLimit = maxPendingBytes + controlReserve*1024
 		}
 		if len(s.pending) < limit && s.pendingBytes+len(plain)+headerSize+16 <= byteLimit {
 			wire, seq, err := s.cipher.seal(plain)
@@ -294,7 +300,7 @@ func (s *Session) dispatchLoop() {
 		s.mu.Lock()
 		rto := min(8*time.Second, max(750*time.Millisecond, 2*s.rtt+4*s.variation))
 		for seq, p := range s.pending {
-			if p.sent.IsZero() || now.Sub(p.sent) >= rto {
+			if p.sent.IsZero() || now.Sub(p.sent) >= retryAfter(p, rto) {
 				batch = append(batch, candidate{seq, p})
 			}
 		}
@@ -311,14 +317,22 @@ func (s *Session) dispatchLoop() {
 			}
 			return cmp.Compare(a.sequence, b.sequence)
 		})
-		for _, next := range batch[:min(32, len(batch))] {
+		sent := 0
+		for _, next := range batch {
+			if sent >= 32 {
+				break
+			}
 			s.mu.Lock()
 			selected := next.packet
 			if s.pending[next.sequence] != selected {
 				s.mu.Unlock()
 				continue
 			}
-			if selected.attempts >= 8 {
+			if selected.kind == frameData && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
+				s.mu.Unlock()
+				continue
+			}
+			if selected.attempts >= 8 && time.Since(time.Unix(0, s.lastInbound.Load())) > 2*time.Minute {
 				s.mu.Unlock()
 				s.fail(errors.New("MAILSTREAM_DELIVERY_TIMEOUT"))
 				return
@@ -343,8 +357,16 @@ func (s *Session) dispatchLoop() {
 				s.fail(err)
 				return
 			}
+			if observer, ok := s.link.(interface {
+				TrackStream(SessionID, uint64, uint32)
+			}); ok {
+				observer.TrackStream(s.cipher.id, next.sequence, selected.stream)
+			}
 			s.mu.Lock()
 			if p := s.pending[next.sequence]; p == selected {
+				if p.attempts == 0 && p.kind == frameData {
+					s.delivery.flight += len(p.wire)
+				}
 				if p.attempts != 0 {
 					s.retransmissions++
 				}
@@ -352,6 +374,7 @@ func (s *Session) dispatchLoop() {
 				p.attempts++
 			}
 			s.mu.Unlock()
+			sent++
 		}
 	}
 }
@@ -391,6 +414,13 @@ func (s *Session) receiveLoop() {
 					p := s.pending[id]
 					if p == nil {
 						continue
+					}
+					if p.kind == frameData && p.attempts > 0 {
+						sample := time.Duration(0)
+						if p.attempts == 1 {
+							sample = time.Since(p.sent)
+						}
+						s.delivery.delivered(len(p.wire), sample, time.Now())
 					}
 					if p.attempts == 1 && !p.sent.IsZero() {
 						sample := time.Since(p.sent)
@@ -634,6 +664,8 @@ type Snapshot struct {
 	Retransmissions     uint64 `json:"retransmissions"`
 	BulkOutstanding     uint64 `json:"bulk_outstanding_bytes"`
 	ReceiveBuffered     int64  `json:"receive_buffered_bytes"`
+	DeliveryFlight      int    `json:"delivery_flight_bytes"`
+	DeliveryWindow      int    `json:"delivery_window_bytes"`
 }
 
 func (s *Session) Snapshot() Snapshot {
@@ -641,7 +673,8 @@ func (s *Session) Snapshot() Snapshot {
 	defer s.mu.Unlock()
 	snapshot := Snapshot{Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
-		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions}
+		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
+		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
 	if s.err != nil {
 		snapshot.Failure = s.err.Error()
 	}

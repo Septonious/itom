@@ -136,8 +136,9 @@ func run() error {
 	variable := flag.Bool("variable", true, "10-50 ms client, 20-40 ms server RTT")
 	accounts := flag.Int("accounts", 10, "physical accounts")
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
+	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	flag.Parse()
-	if *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -177,7 +178,7 @@ func run() error {
 		return &session{Session: backend.NewSession(), counts: stats}, nil, nil
 	}})
 	defer provider.Close()
-	clientNet := &network{start: time.Now(), bitsPerSecond: 500_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
+	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
 	serverNet := &network{start: clientNet.start, bitsPerSecond: 1_000_000_000, step: 700 * time.Millisecond, rtts: []time.Duration{0}}
 	if *variable {
 		clientNet.rtts = []time.Duration{10 * time.Millisecond, 25 * time.Millisecond, 50 * time.Millisecond, 35 * time.Millisecond}
@@ -220,7 +221,7 @@ func run() error {
 	web := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	defer web.Close()
 	go web.Serve(control)
-	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_shared_mbps": 500, "server_shared_mbps": 1000}
+	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
 	body, _ := json.MarshalIndent(ready, "", "  ")
 	if err = os.WriteFile(filepath.Join(*dir, "provider.json"), body, 0600); err != nil {
 		return err

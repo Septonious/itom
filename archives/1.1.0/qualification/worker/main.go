@@ -129,6 +129,7 @@ func run() (err error) {
 	duration := flag.Duration("duration", 12*time.Second, "application send duration per phase")
 	streams := flag.Int("streams", 1, "simultaneous streams per direction")
 	duplex := flag.Bool("duplex", false, "simultaneous upload and download")
+	cancelDownload := flag.Duration("cancel-download-after", 0, "simulate a timed speedtest abandoning its download, then verify a new HTTPS connection")
 	idleProbes := flag.Int("idle-probes", 20, "small HTTPS messages before load")
 	postProbes := flag.Int("post-probes", 12, "small HTTPS messages after load")
 	cpu := flag.String("cpu", "", "CPU profile")
@@ -194,6 +195,7 @@ func run() (err error) {
 	up, down := &clock{}, &clock{}
 	origin := http.Server{ReadHeaderTimeout: 10 * time.Second}
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, "fresh HTTPS works") })
 	mux.HandleFunc("/upload", func(w http.ResponseWriter, q *http.Request) {
 		defer q.Body.Close()
 		buffer := make([]byte, 64<<10)
@@ -450,7 +452,18 @@ func run() (err error) {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					response, e := httpClient.Get("https://fixture.example/download")
+					requestCtx := ctx
+					stopRequest := func() {}
+					if *cancelDownload > 0 {
+						requestCtx, stopRequest = context.WithTimeout(ctx, *cancelDownload)
+					}
+					defer stopRequest()
+					request, e := http.NewRequestWithContext(requestCtx, http.MethodGet, "https://fixture.example/download", nil)
+					if e != nil {
+						errs <- e
+						return
+					}
+					response, e := httpClient.Do(request)
 					if e != nil {
 						errs <- e
 						return
@@ -472,6 +485,9 @@ func run() (err error) {
 							return
 						}
 						if e != nil {
+							if *cancelDownload > 0 && offset > 128<<10 && errors.Is(requestCtx.Err(), context.DeadlineExceeded) {
+								return
+							}
 							errs <- e
 							return
 						}
@@ -523,6 +539,19 @@ func run() (err error) {
 		return err
 	}
 	r.Stage = "post_load"
+	// A pre-existing chat stream alone cannot prove that new browser/TLS
+	// connections still work after the speedtest resets its bulk streams.
+	freshTransport := transport.Clone()
+	defer freshTransport.CloseIdleConnections()
+	freshResponse, freshErr := (&http.Client{Transport: freshTransport, Timeout: 5 * time.Second}).Get("https://fixture.example/health")
+	if freshErr != nil {
+		return fmt.Errorf("fresh HTTPS after load: %w", freshErr)
+	}
+	freshBody, freshErr := io.ReadAll(io.LimitReader(freshResponse.Body, 128))
+	freshResponse.Body.Close()
+	if freshErr != nil || string(freshBody) != "fresh HTTPS works" {
+		return fmt.Errorf("fresh HTTPS body after load: %q %v", freshBody, freshErr)
+	}
 	if err = mark(); err != nil {
 		return err
 	}

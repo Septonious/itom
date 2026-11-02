@@ -156,6 +156,7 @@ func (s *Stream) accept(f frame) error {
 			return ErrProtocol
 		}
 		s.err = ErrClosed
+		s.session.abandonStream(s.id)
 		if err := s.consumedLocked(s.sendOffset); err != nil {
 			return err
 		}
@@ -386,6 +387,9 @@ func (s *Stream) Close() error {
 		s.mu.Unlock()
 		if graceful {
 			_ = s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed, data: binary.BigEndian.AppendUint32(nil, uint32(window))}, true)
+		}
+		if !graceful {
+			s.session.abandonStream(s.id)
 		}
 		if !graceful && !peerReset {
 			ctx, cancel := context.WithTimeout(s.session.ctx, time.Second)

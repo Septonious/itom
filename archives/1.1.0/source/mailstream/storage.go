@@ -54,8 +54,23 @@ func (l *IMAPLink) Retirements() <-chan Retirement { return l.retirements }
 // retirement frames. They can release only this new Link's exact owned segment
 // records. Nothing here opens, changes or refunds a legacy wallet/journal.
 func (l *IMAPLink) Acknowledge(id SessionID, sequence uint64) {
+	l.releaseDelivery(id, sequence, true)
+}
+
+func (l *IMAPLink) Abandon(id SessionID, sequence uint64) {
+	l.releaseDelivery(id, sequence, false)
+}
+
+func (l *IMAPLink) releaseDelivery(id SessionID, sequence uint64, measured bool) {
 	for _, a := range l.accounts {
 		a.mu.Lock()
+		sample := &a.delivery[sequence%replaySlots]
+		if sample.id == id && sample.sequence == sequence && !sample.started.IsZero() {
+			if measured && !sample.retried {
+				a.rtt, a.rttAt = time.Since(sample.started), time.Duration(time.Now().UnixNano())
+			}
+			*sample = deliverySample{}
+		}
 		for key, segment := range a.segments {
 			if key.session == id {
 				delete(segment.awaiting, sequence)
@@ -153,6 +168,7 @@ func (l *IMAPLink) collectSegments() {
 				a.mu.Unlock()
 				continue
 			}
+			a.collectHistoricalLocked()
 			queue := func(key segmentKey, record *segmentRecord) {
 				if record.remote && record.deleted {
 					select {
