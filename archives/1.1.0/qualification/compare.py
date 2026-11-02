@@ -74,7 +74,7 @@ def main():
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
                 'latency_model': 'zero' if args.zero_latency else 'constant-worst' if args.worst_latency else 'independent-variable',
                 'rtt_step_ms': {'client': 500, 'server': 700},
-                'host': {'machine': platform.machine(), 'kernel': platform.release(), 'cpu_max': Path('/sys/fs/cgroup/cpu.max').read_text().strip()},
+                'host': {'machine': platform.machine(), 'kernel': platform.release(), 'cpu_max': Path('/sys/fs/cgroup/cpu.max').read_text().strip() if Path('/sys/fs/cgroup/cpu.max').exists() else None},
                 'core_sha256': {label: fingerprint(core) for label, core in sources.items()},
                 'application_worker_sha256': hashlib.sha256((ROOT/'worker/main.go').read_bytes()).hexdigest(),
                 'provider_sha256': fingerprint(ROOT/'provider'),

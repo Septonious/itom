@@ -1,0 +1,51 @@
+name: Qualify frozen MAILSTREAM-RC2 on a constrained mobile link
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: [".github/workflows/itom-mailstream-rc2-qualification.yml", "archives/1.1.0/qualification/compare.py"]
+permissions: {contents: read, actions: read}
+jobs:
+  weak-link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Require identical runtime source to the matched artifact build
+        run: |
+          git fetch origin 3606523d58f59027dc66c31340849fa86d25e656 --no-tags
+          git diff --exit-code 3606523d58f59027dc66c31340849fa86d25e656 HEAD -- archives/1.1.0/source
+      - name: Require complete normal and race gates from the artifact build
+        uses: actions/download-artifact@v4
+        with: {name: mailstream-rc2-safety, run-id: 41442662275, github-token: "${{ github.token }}", path: previous-safety}
+      - name: Verify the core report, then repeat the previously unstarted weak-link gate
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          files=list(Path('previous-safety').rglob('core-report.json'));assert len(files)==1
+          d=json.loads(files[0].read_text());assert d['status']=='passed' and d['stage']=='complete'
+          for name in ('mailstream_normal_tests','mailstream_race_tests','native_normal_tests','native_race_tests','imap_fork_tests','vet'):assert d[name]=='passed',name
+          assert d['tests']['failed']==d['race_tests']['failed']==0
+          PY
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out weak-link-evidence --only candidate --client-mbps 7 --duration 20s --cancel-download-after 12s --streams 4 --idle-probes 4 --post-probes 12
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('weak-link-evidence/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete',d.get('error')
+          assert len(d['Phases'])==2 and all(p['success'] for p in d['Phases'])
+          s=d['diagnostics']['Session'];assert not s['closed'] and s['delivery_flight_bytes']==s['bulk_outstanding_bytes']==0
+          assert d['diagnostics']['Mail']['failed_accounts']==0
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert all(l['IMAPLatencyMillis']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert any(l['RTTMillis']>0 and l['DownloadBytes']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert d['Provider']['connection_rejections']==0
+          assert max(d['AfterMS'])<=300, d['AfterMS']
+          Path('weak-link-evidence/SOURCE_COMMIT').write_text('3606523d58f59027dc66c31340849fa86d25e656\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-rc2-weak-link, path: "weak-link-evidence/", if-no-files-found: error}
