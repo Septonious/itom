@@ -26,3 +26,36 @@ This is experimental. CLOSE behavior on Rambler, sustained throughput and real
 Android/mobile performance still need field confirmation. No universal speed
 or RTT guarantee follows from loopback tests. Old-session debt and append-only
 control logs remain sustained-use limitations.
+
+## Verified model results
+
+All Mbps below are verified application bytes divided by full phase time,
+including TLS, ramp and drain. These are TLS IMAP/HTTPS models with independently
+varying client/provider delay and a shared wire limit, not Rambler measurements.
+
+| Host / streams | Seconds per direction | Upload Mbps | Download Mbps | Max idle/post RTT ms | Max loaded RTT ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Hosted / 1 | 30 | 253.7 | 307.9 | 174.4 | 415.9 |
+| Hosted / 4 | 30 | 247.6 | 298.8 | 188.2 | 451.6 |
+| Hosted / 32 | 12 | 218.6 | 266.2 | 178.9 | 389.8 |
+| Local two-core / 1 | 30 | 167.4 | 216.7 | 237.9 | 842.5 |
+| Local two-core / 4 | 30 | 216.2 | 178.3 | 277.7 | 1100.4 |
+| Local two-core / 32 | 12 | 92.9 | 196.1 | 173.2 | 1155.8 |
+
+The hosted 1/4/32-stream matrix passed all reported targets, including the
+rolling throughput and pause checks. The slower local 32-stream short run
+missed 100 Mbps upload; some longer local cases retained pauses and rolling
+throughput misses. Both sets are included in the evidence. Host/model results
+cannot guarantee provider or Android performance.
+
+The local four-stream 7 Mbps wire-cap test completed cancellation and fresh
+HTTPS recovery with no failed accounts and post-load RTT below 196 ms. Six
+actual compiled-server/native startup cycles passed: three at 30/30 lines and
+three at 45/45 lines, including server restarts and authentication/admin RPC.
+All server capacity entries were zero after manual shutdown.
+
+Normal/race/native/SDK/vet checks passed, together with Android's 93 domain and
+8 app tests and zero lint errors. The APK retains the existing signing key.
+The focused regressions verify 36 MiB in each direction plus reconnect with
+DELETE/UID EXPUNGE poisoned, and fresh HTTPS while bulk exceeds a reduced
+delivery window. Neither result establishes live Rambler CLOSE behavior.

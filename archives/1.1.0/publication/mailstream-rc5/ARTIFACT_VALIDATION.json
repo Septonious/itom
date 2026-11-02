@@ -1,0 +1,23 @@
+{
+  "source_commit": "62d1d73dfb7ae011cf4aeca93a856039ac5bab1e",
+  "exit_code": 0,
+  "checks": {
+    "hosted_1_4_32_stream_target_matrix": true,
+    "fresh_tls_survives_bulk_window_shrink": true,
+    "bounded_small_message_and_protocol_reserves": true,
+    "six_compiled_server_native_startups": true,
+    "four_stream_7_mbps_cancel_and_fresh_https": true,
+    "thirty_two_stream_verified_https": true,
+    "provider_account_lock_commands_avoided": true,
+    "bounded_data_slot_reuse": true,
+    "receipt_and_append_completion_before_refund": true,
+    "normal_and_race_tests": true,
+    "native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "matched_jni_revision_and_hashes": true,
+    "persistent_signer_verified": true,
+    "manual_stop_capacity_cleared": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false
+}
