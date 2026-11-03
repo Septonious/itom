@@ -61,10 +61,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		}
 		// Allow throughput-oriented headroom under load, without admitting
 		// tens of seconds of work merely because receive memory is free.
-		// A half second of measured delivery headroom accommodates mailbox
-		// batching without making the faster idle path cap sustained bandwidth.
-		// The bound stays finite and adapts in bytes to the measured link rate.
-		horizon := 500 * time.Millisecond
+		horizon := min(500*time.Millisecond, 2*w.base+250*time.Millisecond)
 		target := int(w.rate * horizon.Seconds())
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))
 		w.start, w.acked = now, 0
