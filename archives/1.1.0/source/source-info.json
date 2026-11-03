@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC5",
-  "revision": "itom-1-1-0-mailstream-rc5",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC5-sources.zip",
+  "release": "MAILSTREAM-RC6",
+  "revision": "itom-1-1-0-mailstream-rc6",
+  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC6-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "EXPERIMENTAL TESTING RC: two reusable DATA slots, CLOSE plus empty STATUS verification, no live DELETE/UID EXPUNGE/maintenance login; real-provider confirmation pending",
-  "android_version_name": "1.1.0-mailstream-rc5",
-  "android_version_code": 10130,
+  "qualification": "EXPERIMENTAL TESTING RC: reader-independent server-owned verified reclamation, cleanup failure containment, prompt session teardown and isolated native DNS/TCP admission; live-provider confirmation pending",
+  "android_version_name": "1.1.0-mailstream-rc6",
+  "android_version_code": 10131,
   "android_application_id": "org.itom.client",
   "build_allowed": true
 }

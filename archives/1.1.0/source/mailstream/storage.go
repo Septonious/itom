@@ -3,9 +3,10 @@ package mailstream
 import (
 	"context"
 	"fmt"
-	imap "github.com/emersion/go-imap/v2"
 	"sync"
 	"time"
+
+	imap "github.com/emersion/go-imap/v2"
 )
 
 const segmentAppends = 32
@@ -396,29 +397,32 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.UIDValidity != rec.validity || box.NumMessages != segmentAppends {
 		return ErrProtocol
 	}
+	// All messages are already drained and owned. Pipeline these commands so
+	// optional reclamation needs two provider round trips (SELECT, then the
+	// mutation/audit batch), rather than occupying a writer for five or six.
 	c.stage("store")
-	if err = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
+	store := p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
+	p.allowExpunge.Store(true)
+	defer p.allowExpunge.Store(false)
+	expunge := p.client.Expunge()
+	audit := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
+	if err = store.Close(); err != nil {
 		return err
 	}
 	c.stage("expunge")
-	p.allowExpunge.Store(true)
-	_, err = p.client.Expunge().Collect()
-	p.allowExpunge.Store(false)
-	if err != nil {
+	if _, err = expunge.Collect(); err != nil {
 		return err
 	}
 	c.stage("status")
-	status, err := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
+	status, err := audit.Wait()
 	if err != nil {
 		return err
 	}
 	if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages != 0 {
 		return ErrProtocol
 	}
-	c.stage("restore")
-	if _, err = p.client.Select(job.account.link.controlFolder(true), nil).Wait(); err != nil {
-		return err
-	}
+	// APPEND is valid in selected state. Staying on this proved-empty DATA
+	// slot avoids another round trip; no CLOSE/UNSELECT is needed.
 	return nil
 }
 func (a *mailAccountState) finishCollection(job cleanupJob) error {

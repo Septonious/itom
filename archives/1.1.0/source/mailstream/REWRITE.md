@@ -1,13 +1,12 @@
-# Mailbox stream transport contract — MAILSTREAM-RC5
+# Mailbox stream transport contract — MAILSTREAM-RC6
 
-The first working field release achieved approximately 170 ms idle RTT and up
-to 50 Mbps before speedtests failed. RC4 traces then show maintenance pausing on
-five accounts, their control cursors freezing, and a subsequent handshake
-waiting behind session teardown. The trace does not distinguish a hung extra
-LOGIN from a hung first DELETE. The older transaction capture separately shows
-UID EXPUNGE timing out after successful APPEND/FETCH/STORE. Neither command is
-a sound live delivery prerequisite. The old implementation remains in git and
-`../../retired/mailstream-rc4-storage/` for evidence, outside the active modules.
+RC5 field traces show nine client accounts failing at the first 32-message DATA
+boundary while executing CLOSE, despite low direct IMAP latency. A separate
+real TCP regression reproduces session replacement blocked by a silent origin
+after request half-close. Native counters also expose worker refusals; a focused
+regression proves that idle DNS associations could occupy every TCP worker.
+RC6 addresses these independent failures. The previous storage implementation
+is preserved outside the active modules in `../../retired/mailstream-rc5-storage/`.
 
 ## Session and delivery
 
@@ -16,81 +15,98 @@ protocol identity. Startup requires bidirectional encrypted DATA echo and a
 mailbox ping. Any healthy account can establish contact; no anchor account,
 wallet reconciliation, legacy mailbox scan or deletion gates readiness.
 
-The pinned go-imap client owns response parsing and literal grammar. Each
-active endpoint has three sockets per account: control reader, DATA reader and
-APPEND writer. There is no extra maintenance login. A standing server identity
-keeps its control reader and opens DATA/writer after authenticated admission.
-Provider socket budgets include all configured identities. Same-user replacement
-joins the old DATA reader before releasing admission; the authenticated silence
-lease handles abandoned peers independently of throughput control.
+The pinned go-imap client owns response parsing and literal grammar. An active
+endpoint has three sockets per account: control reader, DATA reader and APPEND
+writer. A standing server identity keeps its control reader and opens the other
+roles after authenticated admission. Provider admission includes all configured
+identities. Same-user replacement joins the old DATA reader; the authenticated
+silence lease handles abandoned peers independently of throughput control.
 
-TCP streams have independent offsets and receive windows. Slow application
-consumers cannot block every receive stream. Small writes dispatch immediately;
-bulk batches only mail already queued. Existing bounded delivery/consumption
-windows and throughput controller are retained in RC5. Isolated DATA writes of
-at most 4096 bytes have a separate 64-packet reserve, with protocol capacity
-reserved beyond it. They can enter and dispatch even when older bulk exceeds
-a newly reduced delivery window. Larger writes cannot claim this reserve. The
-regression opens real HTTPS while bulk is held, then verifies all original
-upload bytes after resuming delivery. Mailbox receipts do not
-release application-consumption credit. Late WINDOW/FIN and resets preserve
-stream EOF and byte integrity. Control uses measured NOOP polling; DATA uses
-IDLE plus bounded tail repair for missing/coalesced notifications.
+TCP streams have independent offsets and receive windows. Small writes dispatch
+immediately; bulk batches only mail already queued. A separate bounded reserve
+lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
+window. Mailbox receipts do not release application-consumption credit. Control
+uses measured NOOP polling; DATA uses IDLE and bounded tail repair. Stream reset
+and session cancellation close established exit sockets as well as mailbox
+streams. Request half-close preserves ordinary response delivery.
 
-## Two-slot reclamation
+## Reader-independent storage reclamation
 
-Each account/session/direction has two fresh DATA folders. Logical generation
-increases monotonically and selects physical slot `generation % 2`. A generation
-contains exactly 32 bounded MIME containers. At most two generations can be
-unreclaimed; the writer cannot reuse a slot while its earlier ownership record
-remains. A blocked DATA slot does not prevent control messages, APPEND completion
-processing or shutdown, and routing can use another account.
+A logical generation contains exactly 32 bounded MIME containers. Physical slots
+are assigned independently of generation, announced over authenticated reliable
+control, and never reused before verified collection. Normally a few slots
+alternate; unavailable housekeeping may retain more, up to 64 slots per
+account/session/direction and the unchanged 64 MiB per-account retained-byte
+budget. The 512 KiB protocol reserve remains. A DATA-capacity wait must not
+block control, APPEND completions, parking or shutdown.
 
-The sole DATA reader validates sequence, MIME size and the exact UID set. Only
-when all 32 messages are consumed and the selected mailbox contains exactly
-those messages does it STORE Deleted for those exact UIDs. Standard CLOSE then
-expunges the fully drained, dedicated slot and unselects it. STATUS must prove
-zero messages and unchanged UIDVALIDITY. The reader selects the next slot before
-sending authenticated reclamation confirmation over control.
+After validating all 32 messages and their exact UIDs, the reader SELECTs a
+session-specific parking mailbox, implicitly leaving the drained slot without
+expunging it. It reports retirement and waits for the announced next slot. The
+reader performs no CLOSE, DELETE, STORE or EXPUNGE, and never waits for physical
+collection before moving to a fresh slot.
 
-The producer releases the exact generation's retained-byte charge only after
-that confirmation, terminal completion of all its APPEND tags and packet
-receipts. A BODY may become visible before its APPEND tag; the application test
-explicitly delays that final tag. Missing or ambiguous outcomes keep the charge
-and prevent slot reuse. No folder DELETE, UID EXPUNGE, broad EXPUNGE command or
-maintenance socket participates. CLOSE remains subject to live-provider testing;
-a successful loopback server is not evidence that every provider implements it
-promptly.
+Only the server performs optional collection. For client uploads, its own
+reader supplies the exact consumed UID/UIDVALIDITY proof and it accepts a
+collection request only after client packet receipts and terminal APPENDs. For
+server downloads, exact tagged APPENDUID results supply the ownership proof;
+reader retirement, packet receipts and terminal tags are also required. A
+missing APPENDUID prevents that outbound refund; it does not invalidate delivered
+bytes. Sustained server-outbound reuse therefore needs UIDPLUS. Rambler advertised
+UIDPLUS in the supplied traces; this is not assumed for arbitrary providers.
 
-The independent TLS IMAP regression models account-wide locks if DELETE or
-UID EXPUNGE is attempted. It requires 36 MiB of random, byte-verified HTTPS in
-both directions, physical slot reuse, bounded folder count and an immediate
-fresh session. It asserts that neither poison command ran and CLOSE did run.
+One server-wide lease borrows an existing APPEND owner after draining its tags.
+Routing excludes that writer while leased; control and DATA readers remain
+independent. SELECT verifies the owned slot's UIDVALIDITY and 32-message count.
+Exact UID STORE, ordinary EXPUNGE and empty STATUS verification are pipelined.
+All tags and unchanged UIDVALIDITY plus zero messages are required for refund.
+The writer may remain selected: APPEND does not require unselection. No CLOSE,
+UID EXPUNGE, folder DELETE or extra maintenance login participates.
+
+An unknown or failed cleanup outcome opens a shared circuit breaker, preserves
+all charges, and stops further cleanup attempts. Only the borrowed writer is
+closed/reopened if necessary. It cannot cancel working readers or retire every
+account. Parking preempts that writer's raw socket and joins its command owners
+without treating expected cancellation as account failure. A reliable collection
+acknowledgement allows the client to refund its matching ownership record.
+
+## Native admission and diagnostics
+
+DNS has a separate bounded 64-worker pool; TCP retains its 128-worker budget.
+Answered idle UDP DNS associations release their worker after one second. Both
+UDP and TCP port 53 use the DNS pool. DNS/TCP worker refusals and occupancy are
+reported separately, alongside session-open refusals and cleanup circuit state,
+in periodic diagnostics. No targets, credentials or plaintext are added.
 
 ## Capacity and operations
 
 Retention is durable and bound to physical account identity. Unknown APPEND
-outcomes remain charged. Crashed/old sessions are not automatically deleted or
-refunded; only aggregate debt survives process death. Discovery logs remain
-append-only. These are sustained-use limitations, not solved by slot recycling.
+outcomes remain charged. Old/crashed sessions are not automatically deleted or
+refunded; discovery logs remain append-only. A provider that also stalls ordinary
+EXPUNGE can continue delivery within finite retained capacity, but cannot sustain
+unbounded transfers. Circuit isolation is not evidence that provider cleanup
+works. These sustained-use limitations remain visible in diagnostics.
 
-The user-selected policy resets server-local counters on manual stop, restart,
-update and IMAP purge attempts, including a failed purge. It does not remove
+Manual server stop/restart/update and IMAP purge attempts reset server-local
+counters, including failed purge attempts, as requested. This does not delete
 provider folders, credentials or profiles. Unexpected crashes preserve debt.
-Client private state must be kept when updating the signed APK. The manager's
-account check tests authentication/NOOP without selecting old DATA folders and
-reports stage/reason rather than printing blank fields on context timeouts.
+Install the signed APK in place and update both endpoints; RC6 uses a fresh
+control namespace. The existing profile and signing identity are retained.
+
+DNS races 31.131.251.83 and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional
+IMAP fallback begins only after both fail and stays active until user VPN restart.
+No DoH/DoT or app theme/settings changes are introduced.
 
 ## Validation and limits
 
-Local tests use verified TLS IMAP sockets, real HTTP/TLS bytes, SOCKS and IPv4
-TUN native boundaries, cancellation, restarts and provider socket limits. The
-qualification runner varies client/provider delay and shared link capacity,
-retains failed runs, and measures full-phase verified payload throughput. A
-short local 280/313 Mbps result is not a sustained Rambler/mobile measurement.
-Targets are 300 ms idle/light RTT, 2000 ms loaded RTT and sustained 100 Mbps
-upload/download where path capacity permits. On a 7 Mbps link, integrity,
-responsive control and cancellation recovery are the appropriate requirements.
+Regressions exercise the actual first-generation CLOSE stall, a second provider
+that stalls all reclamation, full download then fresh TLS upload, aborted TLS,
+reconnect with retained state, silent half-closed TCP origins, and native
+SOCKS/IPv4 TUN under simultaneous DNS pressure and fresh HTTPS bursts. Existing
+normal/race/SDK/vet and independently timed throughput/7 Mbps cohorts remain.
 
-No release is field-qualified until a matched app/server passes actual use.
-The direct DNS policy, application theme and persistent signing key are retained.
+Tests use verified TLS IMAP and real verified HTTPS bytes, variable propagation
+and shared link capacity. Targets remain 300 ms idle/light RTT, 2000 ms loaded
+RTT and sustained 100 Mbps each direction when capacity permits. Synthetic
+success is not live Rambler or Android/mobile qualification. No field guarantee
+follows from a short high-rate model run.

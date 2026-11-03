@@ -1,3 +1,12 @@
+# Current development: MAILSTREAM-RC6
+
+The active source is the mailbox-stream rewrite in [source/](source/README.md).
+See [RC6 testing notes](MAILSTREAM-RC6_TESTING.md) and the
+[RC5 field failure audit](investigations/rc5-field-20261103/AUDIT.md).
+The session-v2 status and older experiment results below are historical.
+
+---
+
 # ITOM 1.1.0 replacement transport — unqualified source
 
 The current development branch contains an independent transport rewrite.

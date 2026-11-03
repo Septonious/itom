@@ -19,12 +19,12 @@ import (
 )
 
 type deletionLockFixture struct {
-	accounts    sync.Map
-	release     chan struct{}
-	deletes     atomic.Int64
-	uidExpunges atomic.Int64
-	closes      atomic.Int64
-	folders     sync.Map
+	accounts     sync.Map
+	release      chan struct{}
+	deletes      atomic.Int64
+	uidExpunges  atomic.Int64
+	baseExpunges atomic.Int64
+	folders      sync.Map
 }
 type deletionLockSession struct {
 	imapserver.Session
@@ -49,15 +49,15 @@ func (s *deletionLockSession) Delete(name string) error {
 }
 
 // The historical provider capture timed out on UID EXPUNGE after a successful
-// STORE. Model that command as an account-wide lock too. CLOSE calls Expunge
-// with a nil UID set in this independent IMAP server.
+// STORE. Model that command as an account-wide lock too. Ordinary EXPUNGE
+// reaches this independent IMAP server with a nil UID set.
 func (s *deletionLockSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) error {
 	if uids != nil {
 		s.owner.uidExpunges.Add(1)
 		s.owner.accounts.Store(s.user, true)
 		<-s.owner.release
 	} else {
-		s.owner.closes.Add(1)
+		s.owner.baseExpunges.Add(1)
 	}
 	return s.Session.Expunge(w, uids)
 }
@@ -144,7 +144,7 @@ func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
 		if cycle == 0 && requestErr == nil {
 			for _, line := range client.Snapshot().Lines {
 				if line.DataGeneration < 2 {
-					t.Fatalf("fixture did not wrap the two slots: %+v", line)
+					t.Fatalf("fixture did not cross multiple logical generations: %+v", line)
 				}
 			}
 		}
@@ -165,9 +165,9 @@ func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
 	if folderCount > len(accounts)*2*int(dataSlots)*2 {
 		t.Fatalf("DATA folder count grew with throughput: %d", folderCount)
 	}
-	t.Logf("verified_bytes_each_direction=%d unique_DATA_folders=%d active_folder_deletes=%d uid_expunges=%d closes=%d", len(payload), folderCount, fixture.deletes.Load(), fixture.uidExpunges.Load(), fixture.closes.Load())
-	if fixture.deletes.Load() != 0 || fixture.uidExpunges.Load() != 0 || fixture.closes.Load() == 0 {
-		t.Fatal("active delivery must use CLOSE without DELETE or UID EXPUNGE")
+	t.Logf("verified_bytes_each_direction=%d unique_DATA_folders=%d active_folder_deletes=%d uid_expunges=%d baseExpunges=%d", len(payload), folderCount, fixture.deletes.Load(), fixture.uidExpunges.Load(), fixture.baseExpunges.Load())
+	if fixture.deletes.Load() != 0 || fixture.uidExpunges.Load() != 0 || fixture.baseExpunges.Load() == 0 {
+		t.Fatal("reclamation must use base EXPUNGE without DELETE or UID EXPUNGE")
 	}
 	if server.Snapshot().Failed != 0 {
 		t.Fatal("load failed carrier accounts")

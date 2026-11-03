@@ -1,38 +1,35 @@
-# ITOM 1.1.0 MAILSTREAM-RC5 — experimental testing release
+# ITOM 1.1.0 MAILSTREAM-RC6 — experimental testing candidate
 
-The active Android bridge and server use `mailstream`. Both endpoints must use
-this matched RC. Install the signed APK in place, preserving its private data
-and profile. Update the server with manager option 18 (newest ITOM `.bin` in
-`/tmp`) or `sudo itom update-from-tmp`.
+Update both the matched server binary and APK. Install the signed APK in place,
+preserving app data and the current profile. Upload the architecture-matched
+ITOM `.bin` to `/tmp`, then use manager option 18 or `sudo itom update-from-tmp`.
 
-RC5 replaces live DATA folder deletion and maintenance logins with two reusable
-slots per account, session and direction. A reader validates a complete slot,
-marks its exact consumed UIDs, uses standard CLOSE and verifies emptiness with
-STATUS before confirming reclamation. No UID EXPUNGE or UIDPLUS is required.
-Small traffic continues on the independent control path. The existing delivery
-windows, congestion controller, Noise encryption and stream reliability remain.
-A finite small-message reserve prevents old bulk from starving a fresh HTTPS
-handshake after the delivery window shrinks.
+RC5 field traces show accounts dying during reader-owned CLOSE at their first
+full DATA generation. RC6 moves storage reclamation entirely off delivery
+readers: readers switch to a fresh announced slot while the server optionally
+collects proved-drained slots using an existing writer. One failed collection
+opens a shared circuit breaker, preserves debt and keeps the other roles alive.
+There is no live CLOSE, UID EXPUNGE, folder DELETE or extra cleanup login.
 
-Server-local capacity resets on manual stop/restart/update and an IMAP purge
-attempt. That reset does not delete provider mail. Unexpected crashes preserve
-uncertain debt. Old-session ownership and discovery-log retirement remain
-limitations for sustained unattended use; this is a testing release.
+The release also fixes silent half-closed origins blocking VPN replacement and
+separates DNS worker admission from TCP so idle DNS flows cannot exhaust TCP's
+worker budget. New periodic diagnostics distinguish these failures. Stream
+windows, congestion controller, direct DNS policy, settings and theme are retained.
 
-The manager's account check now measures TCP/TLS/LOGIN/NOOP without selecting
-legacy transport folders, and reports the failed stage. Account RTT and direct
-IMAP latency remain separate measurements in diagnostics.
+The unchanged retained-byte cap and 64-slot fallback bound prevent unbounded
+mail growth. If ordinary provider EXPUNGE also fails, delivery can continue only
+within remaining finite capacity. UIDPLUS is needed for sustained server-outbound
+reclamation. Old-session debt and append-only discovery logs remain limitations.
+Manual server stop/restart/update/purge attempts reset server-local counters as
+requested; this does not delete provider mail. Unexpected crashes preserve debt.
 
-Targets remain 300 ms idle/light-load RTT, 2000 ms under load and sustained
-100 Mbps each direction. Local TLS IMAP/HTTPS checks cannot establish these
-results on Rambler or mobile networks. See [the transport contract](mailstream/REWRITE.md).
+See [the transport contract](mailstream/REWRITE.md) for ownership, cancellation,
+limits and validation. Run `python3 tools/check_sources.py` and
+`python3 tools/build.py core --race` for source/normal/race/native/SDK/vet gates.
+The separate qualification harness measures verified HTTPS application bytes,
+not controller estimates. Targets remain 300 ms idle/light RTT, 2000 ms loaded
+RTT and sustained 100 Mbps each direction where path capacity permits. This
+candidate still needs real Android/Rambler validation.
 
 DNS races 31.131.251.83 and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional
-IMAP fallback starts only after both fail and lasts until VPN restart. There
-is no DoH or DoT. App theme and settings are unchanged.
-
-Checks: `python3 tools/check_sources.py` and `python3 tools/build.py core --race`.
-The latter includes real TLS IMAP, HTTPS, native SOCKS/TUN, restart, SDK and
-pinned IMAP library checks. The separate qualification harness measures actual
-verified application bytes with variable client/provider delay and shared wire
-capacity. It does not report controller estimates as throughput.
+IMAP fallback starts only after both fail and lasts until VPN restart. No DoH/DoT.
