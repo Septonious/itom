@@ -127,6 +127,7 @@ func run() (err error) {
 	state := flag.String("state", "", "private state directory")
 	label := flag.String("label", "", "immutable source label")
 	duration := flag.Duration("duration", 12*time.Second, "application send duration per phase")
+	cycles := flag.Int("cycles", 1, "complete speedtests in the same VPN session")
 	streams := flag.Int("streams", 1, "simultaneous streams per direction")
 	duplex := flag.Bool("duplex", false, "simultaneous upload and download")
 	cancelDownload := flag.Duration("cancel-download-after", 0, "simulate a timed speedtest abandoning its download, then verify a new HTTPS connection")
@@ -134,6 +135,9 @@ func run() (err error) {
 	postProbes := flag.Int("post-probes", 12, "small HTTPS messages after load")
 	cpu := flag.String("cpu", "", "CPU profile")
 	flag.Parse()
+	if *cycles < 1 || *cycles > 5 {
+		return errors.New("cycles must be 1..5")
+	}
 	if *cpu != "" {
 		f, e := os.Create(*cpu)
 		if e != nil {
@@ -178,7 +182,7 @@ func run() (err error) {
 			_ = json.NewDecoder(response.Body).Decode(&r.Provider)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*(*duration)+90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*(*duration)*time.Duration(*cycles)+90*time.Second)
 	defer cancel()
 	cert, err := tls.LoadX509KeyPair(p.Root, p.Key)
 	if err != nil {
@@ -528,15 +532,18 @@ func run() (err error) {
 			}
 		}
 	}
-	if *duplex {
-		err = phase(true, true)
-	} else {
-		if err = phase(true, false); err == nil {
-			err = phase(false, true)
+	for cycle := 0; cycle < *cycles; cycle++ {
+		transport.CloseIdleConnections() // Each speedtest opens fresh TLS.
+		if *duplex {
+			err = phase(true, true)
+		} else {
+			if err = phase(true, false); err == nil {
+				err = phase(false, true)
+			}
 		}
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	r.Stage = "post_load"
 	// A pre-existing chat stream alone cannot prove that new browser/TLS

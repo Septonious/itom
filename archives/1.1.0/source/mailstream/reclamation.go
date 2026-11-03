@@ -24,13 +24,11 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		unqueue(false)
 		return
 	}
-	select {
-	case c.lease <- struct{}{}:
-	default:
+	if !c.acquire(a) {
 		unqueue(false)
 		return
 	}
-	defer func() { <-c.lease }()
+	defer c.release()
 	// Another identity may have opened the circuit while this owner waited.
 	if c.snapshot().Paused {
 		unqueue(true)
@@ -41,7 +39,9 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	a.link.notify()
 	p := *writer
 	budget := min(10*time.Second, max(2*time.Second, 8*p.service))
-	stop := p.limit(budget)
+	// In-flight bulk completion is not cleanup service time. On a weak
+	// shared link it may legitimately take longer than the metadata bound.
+	stop := p.limit(10 * time.Second)
 	c.stage("drain")
 	var err error
 	for *inFlight > 0 && err == nil {
@@ -52,12 +52,17 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 			err = a.ctx.Err()
 		}
 	}
+	drained := stop()
+	if err == nil && !drained {
+		err = context.DeadlineExceeded
+	}
+	stop = p.limit(budget)
 	if err == nil && !a.parking.Load() {
 		err = p.reclaim(job, c)
 	} else if err == nil {
 		err = context.Canceled
 	}
-	stopped := stop()
+	stopped := stop() && drained
 	if err == nil && stopped {
 		err = a.finishCollection(job)
 	}
@@ -81,10 +86,10 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		select {
 		case <-completed:
 		default:
-			goto drained
+			goto completionsDrained
 		}
 	}
-drained:
+completionsDrained:
 	*inFlight = 0
 	*writer = nil
 	a.mu.Lock()

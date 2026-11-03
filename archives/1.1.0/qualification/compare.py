@@ -39,6 +39,7 @@ def main():
     parser.add_argument('--cancel-download-after', default='0s')
     parser.add_argument('--accounts', type=int, default=10)
     parser.add_argument('--duration', default='12s')
+    parser.add_argument('--cycles', type=int, default=1)
     parser.add_argument('--streams', type=int, default=1)
     parser.add_argument('--duplex', action='store_true')
     parser.add_argument('--zero-latency', action='store_true')
@@ -54,6 +55,8 @@ def main():
         parser.error('duration must be positive seconds, e.g. 12s or 0.5s')
     if not 1 <= args.accounts <= 20 or not 1 <= args.streams <= 48:
         parser.error('accounts must be 1..20 and streams 1..48')
+    if not 1 <= args.cycles <= 5:
+        parser.error('cycles must be 1..5')
     if not 1 <= args.idle_probes <= 100 or not 1 <= args.post_probes <= 100:
         parser.error('probe counts must be 1..100')
     if args.zero_latency and args.worst_latency:
@@ -68,7 +71,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'go': version, 'accounts': args.accounts, 'duration': args.duration,
+    manifest = {'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -143,7 +146,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                     child_env = dict(env, SSL_CERT_FILE=info['root'])
                     command = [str(work/(label+'-worker')), '-provider', str(private/'provider.json'),
                                '-out', str(output/(label+'.json')), '-state', str(work/(label+'-state')),
-                               '-label', label, '-duration', args.duration, '-streams', str(args.streams),
+                               '-label', label, '-duration', args.duration, '-streams', str(args.streams), '-cycles', str(args.cycles),
                                '-cancel-download-after', args.cancel_download_after,
                                '-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
                                '-cpu', str(output/(label+'.pprof'))]
@@ -152,7 +155,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                     started = time.monotonic()
                     with (output/(label+'-worker.log')).open('w') as log:
                         try:
-                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=max(150,2*float(args.duration.removesuffix('s'))+120))
+                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=max(150,2*float(args.duration.removesuffix('s'))*args.cycles+120))
                             status = result.returncode
                         except subprocess.TimeoutExpired:
                             status = 'timeout'

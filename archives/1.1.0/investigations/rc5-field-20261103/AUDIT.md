@@ -72,3 +72,21 @@ It passes with zero TCP worker refusals. New diagnostics split DNS/TCP refusal
 counts and record them with periodic transport snapshots; session admission
 refusals are counted separately. This avoids attributing every pre-speedtest
 failure to the later storage cleanup failure without evidence.
+
+## Sustained-load follow-up before publication
+
+An intermediate RC6 candidate passed hosted throughput but failed the longer
+two-core four-stream upload near its end. Its trace shows several accounts at
+their physical byte cap while other accounts receive repeated collection turns.
+The single cleanup lease now queues account owners fairly; oldest eligible
+records share each writer across directions. In-flight bulk drain time has a
+separate bound from cleanup command service, avoiding false cleanup failures on
+weak links. After the first fairness fix the same 30-second four-stream model
+completed at 233.5 Mbps upload and 269.3 Mbps download with all reported targets
+passing. That intermediate evidence is retained, not treated as the final build.
+
+The qualification worker now supports repeated full speedtests in the same VPN
+session with fresh TLS each cycle. The matched release gate requires two
+30-second upload/download cycles for four streams, plus single/high-stream and
+weak-link cohorts. This explicitly tests that the first speedtest cannot consume
+all reusable capacity and prevent the next one. Final checks run on frozen source.

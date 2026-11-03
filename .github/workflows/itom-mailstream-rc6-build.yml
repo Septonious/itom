@@ -62,8 +62,10 @@ jobs:
           set -euo pipefail
           for streams in 1 4 32; do
             duration=30s
+            cycles=1
+            if [ "$streams" = 4 ]; then cycles=2; fi
             if [ "$streams" = 32 ]; then duration=12s; fi
-            python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out "throughput-$streams" --only candidate --duration "$duration" --streams "$streams" --idle-probes 4 --post-probes 8
+            python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out "throughput-$streams" --only candidate --duration "$duration" --cycles "$cycles" --streams "$streams" --idle-probes 4 --post-probes 8
           done
           python3 - <<'PY'
           import json
@@ -72,6 +74,7 @@ jobs:
               d=json.loads(Path(f'throughput-{streams}/candidate.json').read_text())
               assert d['success'] and d['stage']=='complete',d.get('error')
               assert all(p['success'] for p in d['Phases'])
+              assert len(d['Phases'])==(4 if streams==4 else 2)
               assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
               assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
               assert d['Provider']['connection_rejections']==0

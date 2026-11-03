@@ -55,7 +55,9 @@ missing APPENDUID prevents that outbound refund; it does not invalidate delivere
 bytes. Sustained server-outbound reuse therefore needs UIDPLUS. Rambler advertised
 UIDPLUS in the supplied traces; this is not assumed for arbitrary providers.
 
-One server-wide lease borrows an existing APPEND owner after draining its tags.
+One server-wide lease fairly queues account owners and borrows an existing
+APPEND owner after draining its tags. Oldest eligible ownership records share
+that owner across directions, so a download cannot starve upload refunds.
 Routing excludes that writer while leased; control and DATA readers remain
 independent. SELECT verifies the owned slot's UIDVALIDITY and 32-message count.
 Exact UID STORE, ordinary EXPUNGE and empty STATUS verification are pipelined.

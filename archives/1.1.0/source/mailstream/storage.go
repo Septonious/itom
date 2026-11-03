@@ -44,6 +44,7 @@ type segmentRecord struct {
 	proofUnknown                                           bool
 	retired, queued, refused, remote, requested, announced bool
 	collected                                              bool
+	readyAt                                                time.Time
 }
 type cleanupJob struct {
 	account *mailAccountState
@@ -54,9 +55,10 @@ type cleanupJob struct {
 // Shared by server identities. One unknown provider outcome stops all further
 // cleanup attempts; a provider quirk must not be applied to every account.
 type ReclamationCoordinator struct {
-	lease chan struct{}
-	mu    sync.Mutex
-	state ReclamationSnapshot
+	mu      sync.Mutex
+	state   ReclamationSnapshot
+	active  bool
+	waiting []*mailAccountState
 }
 type ReclamationSnapshot struct {
 	Paused    bool   `json:"paused"`
@@ -66,7 +68,38 @@ type ReclamationSnapshot struct {
 }
 
 func NewReclamationCoordinator() *ReclamationCoordinator {
-	return &ReclamationCoordinator{lease: make(chan struct{}, 1)}
+	return &ReclamationCoordinator{}
+}
+
+// Queue account owners, not individual generations. A hot account cannot win
+// the single provider lease repeatedly while another fills its physical cap.
+func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.state.Paused {
+		return false
+	}
+	found := false
+	for _, owner := range c.waiting {
+		found = found || owner == a
+	}
+	if !found {
+		c.waiting = append(c.waiting, a)
+	}
+	for len(c.waiting) > 0 && (c.waiting[0].ctx.Err() != nil || c.waiting[0].parking.Load()) {
+		c.waiting = c.waiting[1:]
+	}
+	if c.active || len(c.waiting) == 0 || c.waiting[0] != a {
+		return false
+	}
+	c.waiting = c.waiting[1:]
+	c.active = true
+	return true
+}
+func (c *ReclamationCoordinator) release() {
+	c.mu.Lock()
+	c.active = false
+	c.mu.Unlock()
 }
 func (c *ReclamationCoordinator) snapshot() ReclamationSnapshot {
 	c.mu.Lock()
@@ -335,6 +368,7 @@ func (l *IMAPLink) collectSegments() {
 		}
 		for _, a := range l.accounts {
 			a.mu.Lock()
+			var chosen *cleanupJob
 			queue := func(key segmentKey, rec *segmentRecord) {
 				if rec.remote && rec.collected {
 					select {
@@ -361,11 +395,13 @@ func (l *IMAPLink) collectSegments() {
 				if !rec.remote && (rec.proofUnknown || rec.appends != segmentAppends || rec.validity == 0) {
 					return
 				}
-				job := cleanupJob{a, key, rec}
-				select {
-				case a.writerOps <- writerOperation{cleanup: &job}:
-					rec.queued = true
-				default:
+				if rec.readyAt.IsZero() {
+					rec.readyAt = time.Now()
+				}
+				// Both directions share this writer. Collect the oldest eligible
+				// ownership record so a new download cannot starve upload refunds.
+				if chosen == nil || rec.readyAt.Before(chosen.record.readyAt) {
+					chosen = &cleanupJob{a, key, rec}
 				}
 			}
 			for key, rec := range a.segments {
@@ -374,6 +410,13 @@ func (l *IMAPLink) collectSegments() {
 			if !l.client {
 				for key, rec := range a.remoteSegments {
 					queue(key, rec)
+				}
+			}
+			if chosen != nil {
+				select {
+				case a.writerOps <- writerOperation{cleanup: chosen}:
+					chosen.record.queued = true
+				default:
 				}
 			}
 			a.mu.Unlock()
