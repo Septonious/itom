@@ -25,6 +25,7 @@ type cleanupFault struct {
 	closeSeen    atomic.Bool
 	baseAttempts atomic.Int64
 	blockBase    bool
+	owners       map[string]bool
 	release      chan struct{}
 }
 
@@ -46,10 +47,22 @@ func (f *cleanupFault) Write(p []byte) (int, error) {
 type cleanupFaultSession struct {
 	imapserver.Session
 	fault *cleanupFault
+	user  string
+}
+
+func (s *cleanupFaultSession) Login(user, password string) error {
+	s.user = user
+	return s.Session.Login(user, password)
 }
 
 func (s *cleanupFaultSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) error {
 	s.fault.baseAttempts.Add(1)
+	s.fault.mu.Lock()
+	if s.fault.owners == nil {
+		s.fault.owners = map[string]bool{}
+	}
+	s.fault.owners[s.user] = true
+	s.fault.mu.Unlock()
 	if s.fault.blockBase || s.fault.closeSeen.Load() || uids != nil {
 		<-s.fault.release
 	}
@@ -69,7 +82,7 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
 			defer cancel()
 			f := &cleanupFault{blockBase: blockBase, release: make(chan struct{})}
-			accounts, _ := applicationMailServerObserved(t, true, false, func(s imapserver.Session) imapserver.Session { return &cleanupFaultSession{s, f} }, f)
+			accounts, _ := applicationMailServerObserved(t, true, false, func(s imapserver.Session) imapserver.Session { return &cleanupFaultSession{Session: s, fault: f} }, f)
 			t.Cleanup(func() { close(f.release) })
 			server, err := NewStoredIMAPLink(ctx, "cleanup-field", accounts, false, t.TempDir())
 			if err != nil {
@@ -167,7 +180,10 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 				t.Fatal("delivery or housekeeping attempted CLOSE")
 			}
 			if blockBase {
-				if !server.Snapshot().Reclamation.Paused || f.baseAttempts.Load() != 1 {
+				f.mu.Lock()
+				owners := len(f.owners)
+				f.mu.Unlock()
+				if !server.Snapshot().Reclamation.Paused || f.baseAttempts.Load() < 1 || owners != 1 {
 					t.Fatalf("cleanup circuit breaker did not contain the failure: %+v attempts=%d", server.Snapshot().Reclamation, f.baseAttempts.Load())
 				}
 			} else if server.Snapshot().Reclamation.Completed == 0 {

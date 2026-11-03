@@ -1,11 +1,11 @@
-# Mailbox stream transport contract — MAILSTREAM-RC6
+# Mailbox stream transport contract — MAILSTREAM-RC7
 
 RC5 field traces show nine client accounts failing at the first 32-message DATA
 boundary while executing CLOSE, despite low direct IMAP latency. A separate
 real TCP regression reproduces session replacement blocked by a silent origin
 after request half-close. Native counters also expose worker refusals; a focused
 regression proves that idle DNS associations could occupy every TCP worker.
-RC6 addresses these independent failures. The previous storage implementation
+RC6 addressed these independent failures; RC7 adds automatic retention recovery. The previous storage implementation
 is preserved outside the active modules in `../../retired/mailstream-rc5-storage/`.
 
 ## Session and delivery
@@ -26,7 +26,7 @@ TCP streams have independent offsets and receive windows. Small writes dispatch
 immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
 window. Mailbox receipts do not release application-consumption credit. Control
-uses measured NOOP polling; DATA uses IDLE and bounded tail repair. Stream reset
+uses finite UID FETCH ranges and measured NOOP probes; DATA uses IDLE and bounded tail repair. Stream reset
 and session cancellation close established exit sockets as well as mailbox
 streams. Request half-close preserves ordinary response delivery.
 
@@ -68,7 +68,8 @@ The writer may remain selected: APPEND does not require unselection. No CLOSE,
 UID EXPUNGE, folder DELETE or extra maintenance login participates.
 
 An unknown or failed cleanup outcome opens a shared circuit breaker, preserves
-all charges, and stops further cleanup attempts. Only the borrowed writer is
+all charges, and limits retries to the affected account/folder with exponential
+backoff (2–64 seconds). Successful audited retry resumes the shared scheduler. Only the borrowed writer is
 closed/reopened if necessary. It cannot cancel working readers or retire every
 account. Parking preempts that writer's raw socket and joins its command owners
 without treating expected cancellation as account failure. A reliable collection
@@ -80,13 +81,43 @@ DNS has a separate bounded 64-worker pool; TCP retains its 128-worker budget.
 Answered idle UDP DNS associations release their worker after one second. Both
 UDP and TCP port 53 use the DNS pool. DNS/TCP worker refusals and occupancy are
 reported separately, alongside session-open refusals and cleanup circuit state,
-in periodic diagnostics. No targets, credentials or plaintext are added.
+in periodic diagnostics. RC7 also reports outstanding control messages, verified
+control collection, abandoned folders emptied/removed, storage recovery and
+maintenance failures. `control_cursor` is a UID, not a sequence count. No targets, credentials or plaintext are added.
 
 ## Capacity and operations
 
 Retention is durable and bound to physical account identity. Unknown APPEND
-outcomes remain charged. Old/crashed sessions are not automatically deleted or
-refunded; discovery logs remain append-only. A provider that also stalls ordinary
+outcomes remain charged. Control logs use UID cursors independent of shifting sequence numbers. Every
+32 consumed messages, authenticated peer watermarks permit server-owned prefix
+collection. While cleanup is healthy, ordinary publication stops at 128 outstanding tagged
+messages (plus bounded queued/in-flight work). If the provider refuses cleanup,
+control can use its remaining finite ordinary byte budget so packet receipts
+and fresh TLS do not deadlock behind the failed collection. Recovery messages
+have separate admission.
+Exact APPENDUID bytes are refunded only after a UIDVALIDITY-preserving empty
+prefix audit. Consumed prefixes retain short tails until a batch or idle sweep.
+
+At epoch replacement, LIST recognizes only this configured identity's exact
+old session and earlier control namespace grammar. Current-session folders and
+unrelated mail are excluded. Old partial DATA and control mail are emptied and
+audited before old aggregate debt is released; the client receives authenticated
+recovery confirmation. No manual mailbox purge is required for normal recovery.
+After all configured sessions stop and five seconds elapse, one optional login
+collects control tails and removes verified-empty abandoned folders. Admission
+cancels it. No DELETE or extra login runs while any session is active. Idle
+inventory repeats every 30 seconds. A DELETE failure has separate 30–480 second
+backoff and cannot block ordinary message reclamation. Physical folder removal
+requires the provider to support working DELETE; audited empty folders are safe
+to retain temporarily. The server must be running to perform maintenance.
+
+The 64 MiB ordinary budget stays fixed. A separate 64 KiB durable reserve carries
+only small bootstrap and authenticated recovery updates, preventing a full old
+ledger from blocking the very protocol needed to verify reclamation. It is not
+available to application DATA or ordinary control. Persisted total retention is
+strictly bounded by the sum; unknown APPEND charges remain until an eligible
+verified collection. This does not prove arbitrary provider crash timing: live
+provider mutation/visibility behavior still needs field confirmation. A provider that also stalls ordinary
 EXPUNGE can continue delivery within finite retained capacity, but cannot sustain
 unbounded transfers. Circuit isolation is not evidence that provider cleanup
 works. These sustained-use limitations remain visible in diagnostics.
@@ -94,7 +125,7 @@ works. These sustained-use limitations remain visible in diagnostics.
 Manual server stop/restart/update and IMAP purge attempts reset server-local
 counters, including failed purge attempts, as requested. This does not delete
 provider folders, credentials or profiles. Unexpected crashes preserve debt.
-Install the signed APK in place and update both endpoints; RC6 uses a fresh
+Install the signed APK in place and update both endpoints; RC7 uses a fresh
 control namespace. The existing profile and signing identity are retained.
 
 DNS races 31.131.251.83 and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional
@@ -108,6 +139,11 @@ that stalls all reclamation, full download then fresh TLS upload, aborted TLS,
 reconnect with retained state, silent half-closed TCP origins, and native
 SOCKS/IPv4 TUN under simultaneous DNS pressure and fresh HTTPS bursts. Existing
 normal/race/SDK/vet and independently timed throughput/7 Mbps cohorts remain.
+New regressions fill every old account ledger, seed retained partial DATA and
+control, run 180 HTTPS requests during control EXPUNGE, stop and reconnect after
+automatic offline collection, and verify unrelated mail is untouched. A lost
+successful EXPUNGE outcome must quarantine charges, retry and audit without a
+purge; recovery-only capacity must reject ordinary traffic.
 
 Tests use verified TLS IMAP and real verified HTTPS bytes, variable propagation
 and shared link capacity. Targets remain 300 ms idle/light RTT, 2000 ms loaded

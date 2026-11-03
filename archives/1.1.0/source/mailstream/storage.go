@@ -52,23 +52,35 @@ type cleanupJob struct {
 	record  *segmentRecord
 }
 
-// Shared by server identities. One unknown provider outcome stops all further
-// cleanup attempts; a provider quirk must not be applied to every account.
+// Shared by server identities. An unknown outcome quarantines cleanup to that
+// account and folder. Backoff retries re-audit it before other cleanup resumes.
 type ReclamationCoordinator struct {
-	mu      sync.Mutex
-	state   ReclamationSnapshot
-	active  bool
-	waiting []*mailAccountState
+	mu             sync.Mutex
+	state          ReclamationSnapshot
+	active         bool
+	waiting        []*mailAccountState
+	failedOwner    *mailAccountState
+	failedFolder   string
+	retryAt        time.Time
+	failures       uint
+	sessions       map[*IMAPLink]bool
+	quietSince     time.Time
+	idleStop       context.CancelFunc
+	deleteRetryAt  time.Time
+	deleteFailures uint
 }
 type ReclamationSnapshot struct {
-	Paused    bool   `json:"paused"`
-	Stage     string `json:"stage,omitempty"`
-	Failure   string `json:"failure,omitempty"`
-	Completed uint64 `json:"completed"`
+	Paused       bool   `json:"paused"`
+	Stage        string `json:"stage,omitempty"`
+	Failure      string `json:"failure,omitempty"`
+	Completed    uint64 `json:"completed"`
+	Folder       string `json:"folder,omitempty"`
+	RetryAtMS    int64  `json:"retry_at_ms,omitempty"`
+	DeletePaused bool   `json:"delete_paused"`
 }
 
 func NewReclamationCoordinator() *ReclamationCoordinator {
-	return &ReclamationCoordinator{}
+	return &ReclamationCoordinator{quietSince: time.Now()}
 }
 
 // Queue account owners, not individual generations. A hot account cannot win
@@ -76,7 +88,8 @@ func NewReclamationCoordinator() *ReclamationCoordinator {
 func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.state.Paused {
+	c.adoptRetryLocked(a)
+	if c.state.Paused && (c.failedOwner != a || time.Now().Before(c.retryAt)) {
 		return false
 	}
 	found := false
@@ -88,6 +101,15 @@ func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
 	}
 	for len(c.waiting) > 0 && (c.waiting[0].ctx.Err() != nil || c.waiting[0].parking.Load()) {
 		c.waiting = c.waiting[1:]
+	}
+	if c.state.Paused && c.failedOwner == a {
+		for i, owner := range c.waiting {
+			if owner == a {
+				c.waiting = append(c.waiting[:i], c.waiting[i+1:]...)
+				break
+			}
+		}
+		c.waiting = append([]*mailAccountState{a}, c.waiting...)
 	}
 	if c.active || len(c.waiting) == 0 || c.waiting[0] != a {
 		return false
@@ -111,16 +133,29 @@ func (c *ReclamationCoordinator) stage(stage string) {
 	c.state.Stage = stage
 	c.mu.Unlock()
 }
-func (c *ReclamationCoordinator) pause(reason string) {
+func (c *ReclamationCoordinator) pause(reason string, a *mailAccountState) {
 	c.mu.Lock()
 	c.state.Paused = true
 	c.state.Failure = reason
+	c.failedOwner = a
+	c.failedFolder = c.state.Folder
+	c.failures = min(c.failures+1, 6)
+	c.retryAt = time.Now().Add(time.Second * time.Duration(1<<c.failures))
+	c.state.RetryAtMS = c.retryAt.UnixMilli()
 	c.mu.Unlock()
 }
-func (c *ReclamationCoordinator) completed() {
+func (c *ReclamationCoordinator) completed(folder string) {
 	c.mu.Lock()
 	c.state.Completed++
 	c.state.Stage = "complete"
+	if !c.state.Paused || folder == c.failedFolder {
+		c.state.Paused = false
+		c.state.Failure = ""
+		c.state.RetryAtMS = 0
+		c.failedOwner = nil
+		c.failedFolder = ""
+		c.failures = 0
+	}
 	c.mu.Unlock()
 }
 
@@ -378,7 +413,7 @@ func (l *IMAPLink) collectSegments() {
 					}
 					return
 				}
-				if !rec.retired || rec.queued || rec.refused || rec.appendPending != 0 || len(rec.awaiting) != 0 {
+				if !rec.retired || rec.queued || rec.appendPending != 0 || len(rec.awaiting) != 0 {
 					return
 				}
 				if l.client {
@@ -389,7 +424,7 @@ func (l *IMAPLink) collectSegments() {
 					}
 					return
 				}
-				if rec.remote && !rec.requested || a.writer == nil || a.parking.Load() || a.reclaiming.Load() || l.reclaimer.snapshot().Paused {
+				if rec.remote && !rec.requested || a.writer == nil || a.parking.Load() || a.reclaiming.Load() || !l.reclaimer.permitted(a, rec.folder) {
 					return
 				}
 				if !rec.remote && (rec.proofUnknown || rec.appends != segmentAppends || rec.validity == 0) {
@@ -435,6 +470,7 @@ func (l *IMAPLink) collectSegments() {
 // commands drained. The exact consumed UID ownership proof is mandatory.
 func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	rec := job.record
+	c.folder(rec.folder)
 	uids, ok := rec.uids.Nums()
 	if !ok || len(uids) != segmentAppends || rec.validity == 0 {
 		return ErrProtocol
@@ -444,7 +480,13 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if err != nil {
 		return err
 	}
-	if box.UIDValidity != rec.validity || box.NumMessages != segmentAppends {
+	if box.UIDValidity != rec.validity {
+		return ErrProtocol
+	}
+	if box.NumMessages == 0 {
+		return nil
+	}
+	if box.NumMessages != segmentAppends {
 		return ErrProtocol
 	}
 	// All messages are already drained and owned. Pipeline these commands so
@@ -480,8 +522,14 @@ func (a *mailAccountState) finishCollection(job cleanupJob) error {
 	defer a.mu.Unlock()
 	a.collectRemote = !job.record.remote
 	if job.record.remote {
+		if a.remoteSegments[job.key] != job.record {
+			return nil
+		}
 		job.record.collected = true
 		job.record.queued = false
+		return nil
+	}
+	if a.segments[job.key] != job.record {
 		return nil
 	}
 	if err := a.refundLocked(job.record.bytes); err != nil {

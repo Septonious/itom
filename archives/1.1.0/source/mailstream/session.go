@@ -104,8 +104,18 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 		s.wg.Add(1)
 		go func() {
 			defer s.wg.Done()
+			tick := time.NewTicker(250 * time.Millisecond)
+			defer tick.Stop()
 			for {
 				select {
+				case <-tick.C:
+					if maintenance, ok := link.(maintenanceLink); ok {
+						for _, f := range maintenance.maintenanceFrames(s.cipher.id) {
+							if err := s.send(s.ctx, f, true); err != nil {
+								return
+							}
+						}
+					}
 				case <-s.ctx.Done():
 					return
 				case retired := <-storage.Retirements():
@@ -338,6 +348,14 @@ func (s *Session) dispatchLoop() {
 		// the entire map for every packet made a larger packet allowance
 		// consume CPU and delay incoming credit/control under bulk load.
 		slices.SortFunc(batch, func(a, b candidate) int {
+			ah := a.packet.kind == frameControlRead || a.packet.kind == frameControlCollected || a.packet.kind == frameStorageRecovered
+			bh := b.packet.kind == frameControlRead || b.packet.kind == frameControlCollected || b.packet.kind == frameStorageRecovered
+			if ah != bh {
+				if ah {
+					return -1
+				}
+				return 1
+			}
 			if a.packet.priority != b.packet.priority {
 				if a.packet.priority {
 					return -1
@@ -372,7 +390,12 @@ func (s *Session) dispatchLoop() {
 			s.mu.Unlock()
 			var err error
 			started := time.Now()
-			if fast, ok := s.link.(interface {
+			maintenance, storage := s.link.(interface {
+				SendHousekeeping(context.Context, []byte) error
+			})
+			if storage && (selected.kind == frameControlRead || selected.kind == frameControlCollected || selected.kind == frameStorageRecovered) {
+				err = maintenance.SendHousekeeping(s.ctx, wire)
+			} else if fast, ok := s.link.(interface {
 				SendInteractive(context.Context, []byte) error
 			}); interactive && ok {
 				err = fast.SendInteractive(s.ctx, wire)
@@ -514,6 +537,12 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameControlRead || f.kind == frameControlCollected || f.kind == frameStorageRecovered {
+		if maintenance, ok := s.link.(maintenanceLink); ok {
+			return maintenance.applyMaintenance(s.cipher.id, f)
+		}
+		return ErrProtocol
+	}
 	if f.kind == frameRouteReady {
 		if f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
 			return ErrProtocol

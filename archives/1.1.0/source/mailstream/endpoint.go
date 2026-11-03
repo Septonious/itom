@@ -168,6 +168,14 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 		case <-activeDone:
 			closeActive()
 		case <-ticker.C:
+			for old, candidate := range pending {
+				if time.Since(candidate.created) > 30*time.Second {
+					delete(pending, old)
+					if tracker, ok := link.(interface{ trackHandshake(SessionID, bool) }); ok {
+						tracker.trackHandshake(old, false)
+					}
+				}
+			}
 			if active != nil && options.IdleTimeout > 0 && time.Since(time.Unix(0, active.lastInbound.Load())) > options.IdleTimeout {
 				closeActive()
 			}
@@ -193,6 +201,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 				for old, candidate := range pending {
 					if time.Since(candidate.created) > 30*time.Second {
 						delete(pending, old)
+						if tracker, ok := link.(interface{ trackHandshake(SessionID, bool) }); ok {
+							tracker.trackHandshake(old, false)
+						}
 					}
 				}
 				if len(pending) >= 16 {
@@ -201,6 +212,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 				cipher, reply, err := respond(psk, identity, packet)
 				if err != nil {
 					continue
+				}
+				if tracker, ok := link.(interface{ trackHandshake(SessionID, bool) }); ok {
+					tracker.trackHandshake(id, true)
 				}
 				pending[id] = &candidateSession{cipher: cipher, hello: bytes.Clone(packet), reply: reply, created: time.Now()}
 				if err = link.Send(ctx, reply, true); err != nil && !errors.Is(err, ErrCapacity) {
@@ -273,6 +287,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 					nextRelease()
 				}
 				delete(pending, id)
+				if tracker, ok := link.(interface{ trackHandshake(SessionID, bool) }); ok {
+					tracker.trackHandshake(id, false)
+				}
 				continue
 			}
 			release = nextRelease
@@ -286,6 +303,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 			activeDone = active.Done()
 			current = &candidateSession{cipher: candidate.cipher, hello: candidate.hello, reply: reply, created: candidate.created}
 			delete(pending, id)
+			if tracker, ok := link.(interface{ trackHandshake(SessionID, bool) }); ok {
+				tracker.trackHandshake(id, false)
+			}
 			if err = link.Send(ctx, reply, true); err != nil && !errors.Is(err, ErrCapacity) {
 				return err
 			}

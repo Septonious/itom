@@ -37,22 +37,27 @@ type NetworkDialer interface {
 	DialContext(context.Context, string, string) (net.Conn, error)
 }
 
-// Prototype limits are actual bounds, not evidence of sustained reclamation.
-// This first implementation intentionally refuses publication once its finite
-// session budget is exhausted. The integrated segment-retirement owner must
-// replace this limit before the rewrite can become a sustained-use release.
+// Unverified provider storage is always charged against this finite budget.
+// Only audited collection may refund it; unavailable cleanup applies backpressure.
 const prototypePhysicalBudget = 64 << 20
+
+// A durable, finite escape hatch for authenticated storage recovery only.
+// Ordinary application/control traffic cannot borrow it.
+const maintenanceReserve = 64 << 10
+const maximumRetentionBudget = prototypePhysicalBudget + maintenanceReserve
 const maxMailPlain = 256 << 10
 
 type mailWork struct {
-	body    []byte
-	control bool
-	charge  int
+	body     []byte
+	control  bool
+	recovery bool
+	charge   int
 }
 type writerOperation struct {
-	cleanup *cleanupJob
-	enable  bool
-	done    chan error
+	cleanup     *cleanupJob
+	maintenance bool
+	enable      bool
+	done        chan error
 }
 type mailCommand struct {
 	run  func(*mailPipe) error
@@ -95,35 +100,38 @@ type mailAccountState struct {
 	rtt, rttAt            time.Duration
 	upBytes, downBytes    atomic.Uint64
 	recoveryFailure       string
+	maintenance           retentionMaintenance
 }
 
 type IMAPLink struct {
-	reclaimer      *ReclamationCoordinator
-	ctx            context.Context
-	cancel         context.CancelFunc
-	identity       string
-	client         bool
-	mu             sync.Mutex
-	accounts       []*mailAccountState
-	attached       SessionID
-	roundRobin     uint64
-	bulkAccount    uint64
-	bulkBytes      int
-	changed        chan struct{}
-	incoming       chan []byte
-	wg             sync.WaitGroup
-	closeOnce      sync.Once
-	login          chan struct{}
-	retirements    chan Retirement
-	events         []MailEvent
-	eventNext      int
-	receivedRoutes map[receivedRoute]string
-	routeKeys      [replaySlots]receivedRoute
-	routeNext      int
-	peerSession    SessionID
-	peers          map[string]bool
-	store          *retentionStore
-	closeErr       error
+	reclaimer           *ReclamationCoordinator
+	ctx                 context.Context
+	cancel              context.CancelFunc
+	identity            string
+	client              bool
+	mu                  sync.Mutex
+	accounts            []*mailAccountState
+	attached            SessionID
+	roundRobin          uint64
+	bulkAccount         uint64
+	bulkBytes           int
+	changed             chan struct{}
+	incoming            chan []byte
+	wg                  sync.WaitGroup
+	closeOnce           sync.Once
+	login               chan struct{}
+	retirements         chan Retirement
+	events              []MailEvent
+	eventNext           int
+	receivedRoutes      map[receivedRoute]string
+	routeKeys           [replaySlots]receivedRoute
+	routeNext           int
+	peerSession         SessionID
+	peers               map[string]bool
+	store               *retentionStore
+	closeErr            error
+	handshakes          map[SessionID]time.Time
+	handshakeGeneration uint64
 }
 
 func validIdentity(s string) bool {
@@ -195,6 +203,8 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	}
 	l.wg.Add(1)
 	go func() { defer l.wg.Done(); l.collectSegments() }()
+	l.wg.Add(1)
+	go func() { defer l.wg.Done(); l.maintainRetention() }()
 	return l, nil
 }
 
@@ -205,7 +215,7 @@ func (l *IMAPLink) controlFolder(out bool) string {
 	if uplink {
 		direction = "c2s"
 	}
-	return "itom3-" + l.identity + "-control-v6-" + direction
+	return "itom3-" + l.identity + "-control-v7-" + direction
 }
 func (l *IMAPLink) dataFolder(id SessionID, out bool) string {
 	direction := "s2c"
@@ -266,6 +276,15 @@ func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
 }
 
 func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude *mailAccountState) (*mailAccountState, error) {
+	kind, _, seq, err := parseHeader(body)
+	recovery := err == nil && len(body) <= 512 && (kind == hello || kind == accept || kind == sealed && seq == 0)
+	return l.sendClass(ctx, body, priority, exclude, recovery)
+}
+func (l *IMAPLink) SendHousekeeping(ctx context.Context, body []byte) error {
+	_, err := l.sendClass(ctx, body, true, nil, true)
+	return err
+}
+func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery bool) (*mailAccountState, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -289,7 +308,7 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 		start = int(l.bulkAccount % uint64(len(l.accounts)))
 	}
 	l.mu.Unlock()
-	work := mailWork{body: bytes.Clone(body), control: priority, charge: len(body)*3/2 + 512}
+	work := mailWork{body: bytes.Clone(body), control: priority, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
 		a := l.accounts[(start+n)%len(l.accounts)]
@@ -303,10 +322,13 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 			failed++
 		}
 		budget := prototypePhysicalBudget
+		if recovery {
+			budget = maximumRetentionBudget
+		}
 		if !priority {
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
-		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
+		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget && (!priority || recovery || len(a.maintenance.writes) < controlWindow || l.reclaimer.snapshot().Paused)
 		if matched {
 			available = available && a.id == packetID
 		}
@@ -355,6 +377,9 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 func (l *IMAPLink) Attach(ctx context.Context, id SessionID) error {
 	if id == (SessionID{}) {
 		return ErrProtocol
+	}
+	if !l.client {
+		l.reclaimer.sessionStarted(l)
 	}
 	l.mu.Lock()
 	l.attached = id
@@ -437,6 +462,9 @@ func (l *IMAPLink) Detach(id SessionID) {
 		a.attachMu.Unlock()
 	}
 	l.notify()
+	if !l.client {
+		l.reclaimer.sessionEnded(l)
+	}
 }
 
 func (a *mailAccountState) fail() {
@@ -541,6 +569,7 @@ func (a *mailAccountState) attach(id SessionID) error {
 			return err
 		}
 	}
+	a.beginEpoch(id)
 	p, err := openMailPipe(life, a.config)
 	if err != nil {
 		if life.Err() != nil {
@@ -599,6 +628,12 @@ func (a *mailAccountState) attach(id SessionID) error {
 }
 
 func (a *mailAccountState) changeWriter(enable bool) error {
+	a.mu.Lock()
+	interrupt := a.maintenance.cancel
+	a.mu.Unlock()
+	if interrupt != nil {
+		interrupt()
+	}
 	a.parking.Store(!enable)
 	if !enable {
 		a.mu.Lock()
@@ -641,6 +676,7 @@ func (a *mailAccountState) run() {
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, 0, true)
 	}
+	control.uidControl.Store(true)
 	a.phase("control_select")
 	stopSelect := control.limit(15 * time.Second)
 	defer stopSelect()
@@ -659,6 +695,16 @@ func (a *mailAccountState) run() {
 			return
 		}
 	}
+	initial, initialErr := control.client.Status(a.link.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true}).Wait()
+	if initialErr != nil || initial.UIDNext == 0 || initial.UIDValidity == 0 {
+		a.failedStage("control_inventory", ErrProtocol)
+		<-a.link.login
+		return
+	}
+	a.mu.Lock()
+	a.maintenance.initialOut = uidWatermark{initial.UIDValidity, uint32(initial.UIDNext) - 1}
+	a.maintenance.writes = make(map[imap.UID]controlWrite)
+	a.mu.Unlock()
 	stopSelect()
 	var writer *mailPipe
 	if a.link.client {
@@ -717,6 +763,11 @@ func (a *mailAccountState) run() {
 			}
 		}
 		if operation != nil {
+			if operation.maintenance {
+				a.processMaintenance(&writer, completed, &inFlight, &appendWait)
+				operation = nil
+				continue
+			}
 			if operation.cleanup != nil {
 				a.processCleanup(*operation.cleanup, &writer, completed, &inFlight, &appendWait)
 				operation = nil
@@ -879,7 +930,7 @@ func (a *mailAccountState) run() {
 				if e1 != nil || e2 != nil {
 					return
 				}
-				if batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
+				if next.recovery != work.recovery || batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
 					carry = &next
 					break collect
 				}
@@ -892,7 +943,7 @@ func (a *mailAccountState) run() {
 		}
 		encoded := encodeMail(packMail(packets))
 		a.mu.Lock()
-		overBudget := a.spent+len(encoded) > prototypePhysicalBudget
+		overBudget := a.spent+len(encoded) > maximumRetentionBudget
 		a.mu.Unlock()
 		if overBudget {
 			a.failedStage("retention_admission_invariant", ErrStorage)
@@ -921,7 +972,10 @@ func (a *mailAccountState) run() {
 				if err != nil {
 					return err
 				}
-				_, err = cmd.Wait()
+				result, err := cmd.Wait()
+				if err == nil {
+					a.controlAppended(result, len(encoded))
+				}
 				return err
 			})
 			if err != nil {
@@ -991,6 +1045,9 @@ func (a *mailAccountState) run() {
 			defer appendWait.Done()
 			result, err := cmd.Wait()
 			if err == nil {
+				if segment == nil {
+					a.controlAppended(result, len(encoded))
+				}
 				if segment != nil {
 					a.mu.Lock()
 					segment.appendPending--
@@ -1031,6 +1088,12 @@ type MailSnapshot struct {
 	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
+	ControlOutstanding         int    `json:"control_outstanding"`
+	ControlCollected           uint64 `json:"control_messages_collected"`
+	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
+	AbandonedRemoved           uint64 `json:"abandoned_folders_removed"`
+	StorageRecoveryReady       bool   `json:"storage_recovery_ready"`
+	MaintenanceFailure         string `json:"maintenance_failure,omitempty"`
 	Housekeeping               bool   `json:"housekeeping"`
 	RecoveryFailure            string `json:"recovery_failure,omitempty"`
 	ControlPhase               int32  `json:"control_phase"`
@@ -1084,6 +1147,12 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
+		line.ControlOutstanding = len(a.maintenance.writes)
+		line.ControlCollected = a.maintenance.controlMessages
+		line.AbandonedEmptied = a.maintenance.emptiedFolders
+		line.AbandonedRemoved = a.maintenance.removedFolders
+		line.StorageRecoveryReady = a.maintenance.recoveryReady || a.maintenance.recovered
+		line.MaintenanceFailure = a.maintenance.failure
 		line.PeerVerified = verified[i]
 		line.RecoveryFailure = a.recoveryFailure
 		if a.control != nil {
@@ -1137,11 +1206,15 @@ type mailPipe struct {
 	validity        uint32
 	service         time.Duration
 	knownFolders    map[string]bool // SELECT owner only; never shared with a writer
+	uidControl      atomic.Bool
 	latency         atomic.Int64
 }
 
 func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
-	dial, stop := context.WithTimeout(ctx, 15*time.Second)
+	return openMailPipeAttempt(ctx, ctx, a)
+}
+func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe, error) {
+	dial, stop := context.WithTimeout(attempt, 15*time.Second)
 	defer stop()
 	var d NetworkDialer = a.Dialer
 	if d == nil {
@@ -1172,7 +1245,7 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		}
 	}
 	p.client = imapclient.New(conn, &imapclient.Options{UnilateralDataHandler: &imapclient.UnilateralDataHandler{Mailbox: func(*imapclient.UnilateralDataMailbox) { changed() }, Expunge: func(uint32) {
-		if !p.allowExpunge.Load() {
+		if !p.allowExpunge.Load() && !p.uidControl.Load() {
 			p.invalid.Store(true)
 		}
 		changed()
@@ -1256,6 +1329,12 @@ func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error)
 	p.latency.Store(int64(p.service))
 	if tail {
 		p.after = selected.NumMessages
+		if p.uidControl.Load() {
+			if selected.UIDNext == 0 {
+				return nil, ErrProtocol
+			}
+			p.after = uint32(selected.UIDNext) - 1
+		}
 	}
 	p.cursor.Store(p.after)
 	return selected, nil
@@ -1271,6 +1350,9 @@ func (p *mailPipe) startAppend(folder string, body []byte) (*imapclient.AppendCo
 	return cmd, nil
 }
 func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
+	if p.uidControl.Load() {
+		return p.receiveControl(ctx, out)
+	}
 	for {
 		if ctx.Err() != nil {
 			return ctx.Err()

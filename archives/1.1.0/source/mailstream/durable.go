@@ -109,7 +109,7 @@ func (s *retentionStore) load(key []byte) (int, error) {
 		if raw == nil {
 			return nil
 		}
-		if len(raw) != 8 || binary.BigEndian.Uint64(raw) > prototypePhysicalBudget {
+		if len(raw) != 8 || binary.BigEndian.Uint64(raw) > maximumRetentionBudget {
 			return ErrStorage
 		}
 		value = int(binary.BigEndian.Uint64(raw))
@@ -121,7 +121,7 @@ func (s *retentionStore) load(key []byte) (int, error) {
 	return value, nil
 }
 func (s *retentionStore) put(key []byte, value int) error {
-	if value < 0 || value > prototypePhysicalBudget {
+	if value < 0 || value > maximumRetentionBudget {
 		return ErrStorage
 	}
 	s.mu.Lock()
@@ -153,14 +153,14 @@ func (s *retentionStore) close() error {
 // Account.mu serializes reservation, attempted publication and verified
 // collection. No session/global protocol lock is held for storage IO.
 func (a *mailAccountState) chargeLocked(n int) error {
-	if n < 0 || n > prototypePhysicalBudget-a.spent {
+	if n < 0 || n > maximumRetentionBudget-a.spent {
 		return ErrCapacity
 	}
 	wanted := a.spent + n
 	if wanted > a.reserved {
 		reserved := wanted
 		if a.link.store != nil {
-			reserved = min(prototypePhysicalBudget, ((wanted+reservationQuantum-1)/reservationQuantum)*reservationQuantum)
+			reserved = min(maximumRetentionBudget, ((wanted+reservationQuantum-1)/reservationQuantum)*reservationQuantum)
 			if err := a.link.store.put(a.storageKey, reserved); err != nil {
 				return err
 			}
@@ -171,6 +171,9 @@ func (a *mailAccountState) chargeLocked(n int) error {
 	return nil
 }
 func (a *mailAccountState) refundLocked(n int) error {
+	if n == 0 {
+		return nil
+	}
 	if n < 0 || n > a.spent || n > a.reserved {
 		return ErrStorage
 	}

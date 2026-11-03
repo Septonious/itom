@@ -1,35 +1,37 @@
-# ITOM 1.1.0 MAILSTREAM-RC6 — experimental testing candidate
+# ITOM 1.1.0 MAILSTREAM-RC7 — experimental testing candidate
 
-Update both the matched server binary and APK. Install the signed APK in place,
-preserving app data and the current profile. Upload the architecture-matched
-ITOM `.bin` to `/tmp`, then use manager option 18 or `sudo itom update-from-tmp`.
+Update both matched endpoints. Install the signed APK in place, preserving app
+data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then
+use manager option 18 or `sudo itom update-from-tmp`. RC7 uses a new control
+namespace and must not be mixed with RC6.
 
-RC5 field traces show accounts dying during reader-owned CLOSE at their first
-full DATA generation. RC6 moves storage reclamation entirely off delivery
-readers: readers switch to a fresh announced slot while the server optionally
-collects proved-drained slots using an existing writer. One failed collection
-opens a shared circuit breaker, preserves debt and keeps the other roles alive.
-There is no live CLOSE, UID EXPUNGE, folder DELETE or extra cleanup login.
+RC7 bounds control-mail publication and collects consumed control prefixes by
+UID, so ordinary EXPUNGE cannot shift the reader's cursor. Successful tagged
+APPENDUID ownership and a verified empty UID prefix are required for refunds.
+A fenced namespace inventory collects abandoned partial DATA and old control
+folders. Empty abandoned folders are deleted only while all server sessions
+are idle; fresh admission interrupts that maintenance. Unrelated mail and live
+session DATA are excluded. The server must remain running for idle maintenance;
+if stopped immediately, leftovers are revisited after the next start.
 
-The release also fixes silent half-closed origins blocking VPN replacement and
-separates DNS worker admission from TCP so idle DNS flows cannot exhaust TCP's
-worker budget. New periodic diagnostics distinguish these failures. Stream
-windows, congestion controller, direct DNS policy, settings and theme are retained.
+Failed collection quarantines that account/folder, preserves its charge and
+retries with bounded exponential backoff. Optional folder deletion has its own
+backoff. Neither operation can close delivery readers. The normal 64 MiB storage
+budget and 64 DATA slots remain; an additional finite 64 KiB durable reserve
+carries only bootstrap/recovery messages when an old ledger is full. Application
+traffic cannot use that reserve. Provider storage is never freed by resetting
+local counters alone. Manual stop/restart/update/purge retains its requested
+server-local reset behavior.
 
-The unchanged retained-byte cap and 64-slot fallback bound prevent unbounded
-mail growth. If ordinary provider EXPUNGE also fails, delivery can continue only
-within remaining finite capacity. UIDPLUS is needed for sustained server-outbound
-reclamation. Old-session debt and append-only discovery logs remain limitations.
-Manual server stop/restart/update/purge attempts reset server-local counters as
-requested; this does not delete provider mail. Unexpected crashes preserve debt.
+RC6 cancellation, half-close, native DNS/TCP admission, per-account diagnostics,
+stream windows and congestion controller are retained. DNS races 31.131.251.83
+and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional IMAP fallback starts only
+after both fail and lasts until VPN restart. No DoH/DoT or theme changes.
 
-See [the transport contract](mailstream/REWRITE.md) for ownership, cancellation,
-limits and validation. Run `python3 tools/check_sources.py` and
-`python3 tools/build.py core --race` for source/normal/race/native/SDK/vet gates.
-The separate qualification harness measures verified HTTPS application bytes,
-not controller estimates. Targets remain 300 ms idle/light RTT, 2000 ms loaded
-RTT and sustained 100 Mbps each direction where path capacity permits. This
-candidate still needs real Android/Rambler validation.
-
-DNS races 31.131.251.83 and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional
-IMAP fallback starts only after both fail and lasts until VPN restart. No DoH/DoT.
+See [the transport contract](mailstream/REWRITE.md). Source/normal/race/native/
+SDK/vet gates use `python3 tools/build.py core --race`. Independent TLS IMAP/HTTPS
+qualification measures actual verified bytes, not controller estimates. Targets
+remain 300 ms idle/light RTT, 2000 ms loaded RTT and sustained 100 Mbps each
+direction where path capacity permits. Real Rambler and Android/mobile behavior
+still requires field confirmation. Permanent provider mutation failures can
+exhaust finite storage; empty folders may remain until DELETE succeeds.

@@ -16,7 +16,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		job.record.refused = refused
 		a.mu.Unlock()
 	}
-	if c.snapshot().Paused {
+	if !c.permitted(a, job.record.folder) {
 		unqueue(true)
 		return
 	}
@@ -30,7 +30,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	}
 	defer c.release()
 	// Another identity may have opened the circuit while this owner waited.
-	if c.snapshot().Paused {
+	if !c.permitted(a, job.record.folder) {
 		unqueue(true)
 		return
 	}
@@ -67,7 +67,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
-		c.completed()
+		c.completed(job.record.folder)
 		return
 	}
 	// A cleanup refusal/timeout is not a carrier failure or deletion proof.
@@ -77,7 +77,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		if !stopped {
 			reason = "CLEANUP_TIMEOUT"
 		}
-		c.pause(reason)
+		c.pause(reason, a)
 	}
 	unqueue(true)
 	p.close()
