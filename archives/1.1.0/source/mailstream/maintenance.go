@@ -265,18 +265,24 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		a.mu.Unlock()
 		return "", nil
 	}
-	if cursor.Validity != 0 && (retry == l.controlFolder(false) || retry == "" && (cursor.UID-cin.UID >= controlBatch || idle && cursor.UID > cin.UID || recovering && !covers(cin, start) && start.Validity != 0)) {
+	a.mu.Lock()
+	preferOut := m.collectControlOut
+	a.mu.Unlock()
+	eligibleIn := cursor.Validity != 0 && (retry == l.controlFolder(false) || retry == "" && (cursor.UID-cin.UID >= controlBatch || idle && cursor.UID > cin.UID || recovering && !covers(cin, start) && start.Validity != 0))
+	eligibleOut := remote.Validity != 0 && (retry == l.controlFolder(true) || retry == "" && (remote.UID-cout.UID >= controlBatch || idle && remote.UID > cout.UID || recovering && !covers(cout, boundary)))
+	if eligibleIn && (!eligibleOut || !preferOut || retry == l.controlFolder(false)) {
 		proof, n, e := p.collectPrefix(c, l.controlFolder(false), cursor, false)
 		if e != nil {
 			return l.controlFolder(false), e
 		}
 		a.mu.Lock()
+		m.collectControlOut = true
 		m.clearedIn = proof
 		m.controlMessages += n
 		a.mu.Unlock()
 		return l.controlFolder(false), nil
 	}
-	if remote.Validity != 0 && (retry == l.controlFolder(true) || retry == "" && (remote.UID-cout.UID >= controlBatch || idle && remote.UID > cout.UID || recovering && !covers(cout, boundary))) {
+	if eligibleOut {
 		proof, n, e := p.collectPrefix(c, l.controlFolder(true), remote, false)
 		if e != nil {
 			return l.controlFolder(true), e
@@ -284,6 +290,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		a.mu.Lock()
 		e = a.refundControlLocked(proof)
 		if e == nil {
+			m.collectControlOut = false
 			m.clearedOut = proof
 			m.controlMessages += n
 		}

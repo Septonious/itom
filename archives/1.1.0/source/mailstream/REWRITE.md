@@ -90,7 +90,8 @@ maintenance failures. `control_cursor` is a UID, not a sequence count. No target
 Retention is durable and bound to physical account identity. Unknown APPEND
 outcomes remain charged. Control logs use UID cursors independent of shifting sequence numbers. Every
 32 consumed messages, authenticated peer watermarks permit server-owned prefix
-collection. Control uses the ordinary finite retained-byte budget and bounded actor queues.
+collection. Eligible control directions alternate so a continuous upload cannot
+starve downloaded control mail. Control uses the ordinary finite retained-byte budget and bounded actor queues.
 It does not impose another count-based gate on receipts: provider cleanup
 failure must not deadlock the acknowledgements needed to complete transfers.
 Recovery messages have separate admission.

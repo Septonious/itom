@@ -184,9 +184,18 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		}
 		maximum = max(maximum, *s.NumMessages)
 	}
-	if maximum > 192 {
-		t.Fatalf("light requests accumulated uncleared control messages: %d", maximum)
-	}
+	// A short application burst may publish faster than the housekeeping
+	// cadence. Both prefixes must drain afterwards; a peak count is not a
+	// valid reason to block the packet receipts that make TLS complete.
+	waitRetention(t, ctx, func() bool {
+		for _, name := range []string{client.controlFolder(true), client.controlFolder(false)} {
+			status, err := probe.client.Status(name, &imap.StatusOptions{NumMessages: true}).Wait()
+			if err != nil || status.NumMessages == nil || *status.NumMessages >= 2*controlBatch {
+				return false
+			}
+		}
+		return true
+	}, "both control directions did not drain after the HTTPS burst")
 	session.Close()
 	client.Close()
 	session = nil

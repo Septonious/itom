@@ -19,6 +19,7 @@ type controlWrite struct {
 	bytes    int
 }
 type retentionMaintenance struct {
+	collectControlOut                       bool
 	initialOut, remoteRead, remoteStartOut  uidWatermark
 	clearedIn, clearedOut, deleted, ackSent uidWatermark
 	writes                                  map[imap.UID]controlWrite
