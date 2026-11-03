@@ -173,6 +173,9 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 			} else if server.Snapshot().Reclamation.Completed == 0 {
 				t.Fatal("healthy base EXPUNGE was not exercised")
 			}
+			if !blockBase && (client.Snapshot().Retired == 0 || server.Snapshot().Retired == 0) {
+				t.Fatal("verified collection did not release capacity in both directions")
+			}
 			session.Close()
 			client.Close()
 			client, err = NewStoredIMAPLink(ctx, "cleanup-field", accounts, true, state)

@@ -88,6 +88,7 @@ type mailAccountState struct {
 	routeSession          SessionID
 	routeConsumed         uint32
 	parking, reclaiming   atomic.Bool
+	collectRemote         bool // Account.mu: alternate eligible ownership directions
 	writerOps             chan writerOperation
 	delivery              [replaySlots]deliverySample
 	streams               map[uint32]bool
@@ -1135,6 +1136,7 @@ type mailPipe struct {
 	allowExpunge    atomic.Bool
 	validity        uint32
 	service         time.Duration
+	knownFolders    map[string]bool // SELECT owner only; never shared with a writer
 	latency         atomic.Int64
 }
 
@@ -1230,16 +1232,22 @@ func (p *mailPipe) runCommand(cmd mailCommand) error {
 func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error) {
 	begin := time.Now()
 	p.phase.Store(2)
-	if err := p.client.Create(folder, nil).Wait(); err != nil {
-		var status *imap.Error
-		if !errors.As(err, &status) {
-			return nil, ErrClosed
+	if !p.knownFolders[folder] {
+		if err := p.client.Create(folder, nil).Wait(); err != nil {
+			var status *imap.Error
+			if !errors.As(err, &status) {
+				return nil, ErrClosed
+			}
 		}
 	}
 	selected, err := p.client.Select(folder, nil).Wait()
 	if err != nil || selected.UIDValidity == 0 {
 		return nil, ErrProtocol
 	}
+	if p.knownFolders == nil {
+		p.knownFolders = make(map[string]bool)
+	}
+	p.knownFolders[folder] = true
 	p.after = 0
 	p.confirmed = selected.NumMessages
 	p.validity = selected.UIDValidity

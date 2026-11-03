@@ -398,11 +398,18 @@ func (l *IMAPLink) collectSegments() {
 				if rec.readyAt.IsZero() {
 					rec.readyAt = time.Now()
 				}
-				// Both directions share this writer. Collect the oldest eligible
-				// ownership record so a new download cannot starve upload refunds.
-				if chosen == nil || rec.readyAt.Before(chosen.record.readyAt) {
-					chosen = &cleanupJob{a, key, rec}
+				// Alternate directions when both have eligible records. Age alone
+				// lets an earlier upload monopolize collection during a download.
+				if chosen != nil {
+					if rec.remote != chosen.record.remote {
+						if rec.remote != a.collectRemote {
+							return
+						}
+					} else if !rec.readyAt.Before(chosen.record.readyAt) {
+						return
+					}
 				}
+				chosen = &cleanupJob{a, key, rec}
 			}
 			for key, rec := range a.segments {
 				queue(key, rec)
@@ -471,6 +478,7 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 func (a *mailAccountState) finishCollection(job cleanupJob) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.collectRemote = !job.record.remote
 	if job.record.remote {
 		job.record.collected = true
 		job.record.queued = false

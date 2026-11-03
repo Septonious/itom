@@ -90,3 +90,17 @@ session with fresh TLS each cycle. The matched release gate requires two
 30-second upload/download cycles for four streams, plus single/high-stream and
 weak-link cohorts. This explicitly tests that the first speedtest cannot consume
 all reusable capacity and prevent the next one. Final checks run on frozen source.
+
+The repeated-test cohort then exposed a second fairness problem: strict age
+ordering let earlier upload reclamation monopolize the server writer while a
+new download filled its own retained-byte budget. Final selection alternates
+eligible directions and orders by age within each direction. Reader-owned
+mailbox creation is remembered only after successful SELECT, removing redundant
+CREATE round trips on parking/slot reuse. A healthy provider regression now
+requires verified capacity refunds on both endpoints. No byte cap was raised.
+
+One two-core full race run timed out in the existing two-second fresh-HTTPS
+probe, without a race report. Five focused unchanged repetitions and twenty
+additional diagnostic repetitions passed; the diagnostic copy changed only test
+logging. The failed run is retained and the complete final suite is repeated
+after the final runtime changes; no timeout or RTT threshold is relaxed.

@@ -56,8 +56,10 @@ bytes. Sustained server-outbound reuse therefore needs UIDPLUS. Rambler advertis
 UIDPLUS in the supplied traces; this is not assumed for arbitrary providers.
 
 One server-wide lease fairly queues account owners and borrows an existing
-APPEND owner after draining its tags. Oldest eligible ownership records share
-that owner across directions, so a download cannot starve upload refunds.
+APPEND owner after draining its tags. Eligible directions alternate, with oldest
+records first within a direction, so upload debt and active download storage
+cannot starve each other. Readers remember successful mailbox selection and
+avoid repeated CREATE commands for the same session-owned parking/DATA folder.
 Routing excludes that writer while leased; control and DATA readers remain
 independent. SELECT verifies the owned slot's UIDVALIDITY and 32-message count.
 Exact UID STORE, ordinary EXPUNGE and empty STATUS verification are pipelined.

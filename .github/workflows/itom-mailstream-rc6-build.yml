@@ -1,4 +1,4 @@
-# Require reader-independent reclamation, cleanup-fault containment and native DNS/TCP isolation.
+# Require reader-independent reclamation, fair account/direction turns and native DNS/TCP isolation.
 # Instrumented integrity tests and uninstrumented throughput checks are separate.
 name: Build matched mailbox-stream RC6 with constrained-link acceptance
 on:
