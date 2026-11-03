@@ -61,7 +61,9 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		}
 		// Allow throughput-oriented headroom under load, without admitting
 		// tens of seconds of work merely because receive memory is free.
-		horizon := min(500*time.Millisecond, 2*w.base+250*time.Millisecond)
+		// Bulk headroom follows delivered bandwidth, independently of a tiny
+		// probe's RTT. Half a second remains below the loaded-delay budget.
+		horizon := 500 * time.Millisecond
 		target := int(w.rate * horizon.Seconds())
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))
 		w.start, w.acked = now, 0
