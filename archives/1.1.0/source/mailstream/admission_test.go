@@ -118,8 +118,11 @@ func TestStartupWithUnevenRecoveredCapacity(t *testing.T) {
 	if err != nil || !bytes.Equal(body, payload) {
 		t.Fatalf("HTTPS integrity: %v bytes=%d", err, len(body))
 	}
-	if after := server.Snapshot().Lines[0].RetainedBytes; after < debt {
-		t.Fatalf("unverified historical debt was reset: before=%d after=%d", debt, after)
+	// RC7 may finish its verified empty-namespace recovery while HTTPS runs.
+	// Before that proof, the recovered historical charge must remain intact.
+	line := server.Snapshot().Lines[0]
+	if line.RetainedBytes < debt && !line.StorageRecoveryReady {
+		t.Fatalf("historical debt dropped before verified recovery: before=%d line=%+v", debt, line)
 	}
 	cancel()
 	session.Close()

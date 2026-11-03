@@ -1,4 +1,4 @@
-# RC7 final source: fair UID prefix collection; no DELETE or receipt count gate.
+# RC7: fair UID cleanup; full-ledger recovery asserts verified proof before refunds.
 name: Mailbox stream rewrite - application acceptance only
 on:
   push:
