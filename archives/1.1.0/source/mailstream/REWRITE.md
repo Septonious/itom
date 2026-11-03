@@ -26,7 +26,7 @@ TCP streams have independent offsets and receive windows. Small writes dispatch
 immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
 window. Mailbox receipts do not release application-consumption credit. Control
-uses finite UID FETCH ranges and measured NOOP probes; DATA uses IDLE and bounded tail repair. Stream reset
+uses absolute forward UID FETCH ranges and measured NOOP probes; DATA uses IDLE and bounded tail repair. Stream reset
 and session cancellation close established exit sockets as well as mailbox
 streams. Request half-close preserves ordinary response delivery.
 
@@ -88,7 +88,11 @@ maintenance failures. `control_cursor` is a UID, not a sequence count. No target
 ## Capacity and operations
 
 Retention is durable and bound to physical account identity. Unknown APPEND
-outcomes remain charged. Control logs use UID cursors independent of shifting sequence numbers. Every
+outcomes remain charged. Verified small refunds keep a conservative durable
+high-water reservation; disk refunds are batched in 512 KiB quanta. This removes
+per-prefix fsync without allowing unreserved publication, and clean close stores
+exact remaining debt. A crash may recover the unused reservation as additional
+conservative debt until verified namespace reconciliation. Control logs use UID cursors independent of shifting sequence numbers. Every
 32 consumed messages, authenticated peer watermarks permit server-owned prefix
 collection. Eligible control directions alternate so a continuous upload cannot
 starve downloaded control mail. Control uses the ordinary finite retained-byte budget and bounded actor queues.

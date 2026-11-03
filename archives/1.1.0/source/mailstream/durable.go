@@ -177,12 +177,20 @@ func (a *mailAccountState) refundLocked(n int) error {
 	if n < 0 || n > a.spent || n > a.reserved {
 		return ErrStorage
 	}
-	if a.link.store != nil {
-		if err := a.link.store.put(a.storageKey, a.reserved-n); err != nil {
+	// A durable overestimate is safe. Rewriting the ledger for each tiny
+	// control prefix puts fsync on the delivery/receipt path and creates stalls.
+	// Return disk reservation only in full quanta; clean close stores exact debt.
+	spent := a.spent - n
+	reserved := min(maximumRetentionBudget, ((spent+reservationQuantum-1)/reservationQuantum)*reservationQuantum)
+	if a.link.store == nil {
+		reserved = spent
+	} else if reserved < a.reserved && a.reserved-reserved >= reservationQuantum {
+		if err := a.link.store.put(a.storageKey, reserved); err != nil {
 			return err
 		}
+	} else {
+		reserved = a.reserved
 	}
-	a.spent -= n
-	a.reserved -= n
+	a.spent, a.reserved = spent, reserved
 	return nil
 }

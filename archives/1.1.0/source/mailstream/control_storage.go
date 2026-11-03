@@ -232,9 +232,9 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 }
 
 // UID FETCH does not depend on sequence positions, which change after EXPUNGE.
-// Every poll requests a finite UID range; no reversed n:* range re-reads the tail.
+// Polls use an absolute forward UID range; no reversed n:* range re-reads the tail.
 func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error {
-	lastProbe, lastRepair := time.Now(), time.Now()
+	lastProbe := time.Now()
 	for {
 		p.phase.Store(11)
 		select {
@@ -251,24 +251,12 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 		if p.after == math.MaxUint32 {
 			return ErrCapacity
 		}
-		end := uint32(min(uint64(math.MaxUint32), uint64(p.after)+64))
-		if time.Since(lastRepair) > time.Second {
-			box := p.client.Mailbox()
-			if box == nil {
-				return ErrProtocol
-			}
-			status, err := p.client.Status(box.Name, &imap.StatusOptions{UIDNext: true, UIDValidity: true}).Wait()
-			if err != nil {
-				return ErrClosed
-			}
-			if status.UIDValidity != p.validity || status.UIDNext == 0 {
-				return ErrProtocol
-			}
-			if uint32(status.UIDNext) > end {
-				end = uint32(status.UIDNext) - 1
-			}
-			lastRepair = time.Now()
-		}
+		// The upper bound is a literal maximum UID, never '*': n:* reverses
+		// when n is beyond the tail and can re-read an old message. A forward
+		// range crosses UID holes without STATUS on the selected mailbox or an
+		// extra round trip. FETCH streams its finite current snapshot; per-mail
+		// and actor byte limits still bound buffering.
+		end := uint32(math.MaxUint32)
 		before := p.after
 		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{UID: true, RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
 		for row := command.Next(); row != nil; row = command.Next() {

@@ -343,3 +343,62 @@ func TestRecoveryReserveCannotCarryOrdinaryTraffic(t *testing.T) {
 		t.Fatal("recovery exceeded finite hard bound", err)
 	}
 }
+
+// Tiny consumed-control refunds must not fsync for every packet. The durable
+// high-water reservation must still cover every attempted, unconfirmed APPEND
+// after a crash/reopen, and a full quantum can be returned after verified GC.
+func TestControlRefundsKeepCrashReservationWithoutPerPacketDiskWrites(t *testing.T) {
+	dir := t.TempDir()
+	store, err := openRetention(dir, "refund-quantum", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := []byte("account/fixture")
+	a := &mailAccountState{link: &IMAPLink{store: store}, storageKey: key}
+	a.mu.Lock()
+	if err = a.chargeLocked(reservationQuantum / 2); err != nil {
+		a.mu.Unlock()
+		t.Fatal(err)
+	}
+	beforeStats := store.db.Stats()
+	before := beforeStats.TxStats.GetWrite()
+	for range 1000 {
+		if err = a.refundLocked(128); err != nil {
+			a.mu.Unlock()
+			t.Fatal(err)
+		}
+		if err = a.chargeLocked(128); err != nil {
+			a.mu.Unlock()
+			t.Fatal(err)
+		}
+	}
+	afterStats := store.db.Stats()
+	after := afterStats.TxStats.GetWrite()
+	if after != before {
+		a.mu.Unlock()
+		t.Fatal("tiny control refunds rewrote the durable ledger", before, after)
+	}
+	if err = a.refundLocked(a.spent); err != nil {
+		a.mu.Unlock()
+		t.Fatal(err)
+	}
+	if err = a.chargeLocked(128); err != nil {
+		a.mu.Unlock()
+		t.Fatal(err)
+	}
+	attempted := a.spent
+	a.mu.Unlock()
+	if err = store.close(); err != nil {
+		t.Fatal(err)
+	}
+	recovered, err := openRetention(dir, "refund-quantum", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer recovered.close()
+	debt, err := recovered.load(key)
+	if err != nil || debt < attempted || debt > attempted+reservationQuantum {
+		t.Fatal("crash reservation lost unconfirmed APPEND debt", debt, attempted, err)
+	}
+	t.Logf("1000 tiny refund/reuse cycles added no disk writes; crash recovered %d bytes covering %d attempted bytes", debt, attempted)
+}
