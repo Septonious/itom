@@ -1,4 +1,4 @@
-# RC7: final measured bulk restart with bounded weak-link flight headroom.
+# RC7: measured bulk restart with finite half-second bandwidth headroom.
 # Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.
 # Instrumented integrity tests and uninstrumented throughput checks are separate.
 concurrency: {group: itom-mailstream-rc7-build, cancel-in-progress: true}
