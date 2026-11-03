@@ -1,3 +1,4 @@
+# RC7 final source: no automatic DELETE and no count gate on packet receipts.
 name: Mailbox stream rewrite - application acceptance only
 on:
   push:

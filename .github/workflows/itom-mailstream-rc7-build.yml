@@ -1,3 +1,4 @@
+# RC7 final source: no automatic DELETE and no count gate on packet receipts.
 # Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.
 # Instrumented integrity tests and uninstrumented throughput checks are separate.
 concurrency: {group: itom-mailstream-rc7-build, cancel-in-progress: true}
