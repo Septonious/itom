@@ -19,6 +19,8 @@ type controlWrite struct {
 	bytes    int
 }
 type retentionMaintenance struct {
+	controlBytes, incomingBytes             int
+	reads                                   map[imap.UID]controlWrite
 	requested                               bool
 	collectControlOut                       bool
 	initialOut, remoteRead, remoteStartOut  uidWatermark
@@ -210,7 +212,11 @@ func (a *mailAccountState) controlAppended(result *imap.AppendData, n int) {
 	if m.writes == nil {
 		m.writes = make(map[imap.UID]controlWrite)
 	}
+	if old, ok := m.writes[result.UID]; ok {
+		m.controlBytes -= old.bytes
+	}
 	m.writes[result.UID] = controlWrite{result.UIDValidity, n}
+	m.controlBytes += n
 }
 func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 	n := 0
@@ -224,6 +230,7 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 	}
 	for uid, w := range a.maintenance.writes {
 		if w.validity == mark.Validity && uint32(uid) <= mark.UID {
+			a.maintenance.controlBytes -= w.bytes
 			delete(a.maintenance.writes, uid)
 		}
 	}
@@ -291,6 +298,9 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 			}
 			packets, err := decodeMail(raw)
 			if err != nil {
+				if p.onControlConsumed != nil {
+					p.onControlConsumed(uid, p.validity, len(raw))
+				}
 				p.after = uint32(uid)
 				p.cursor.Store(p.after)
 				continue
@@ -309,6 +319,9 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 					command.Close()
 					return ErrClosed
 				}
+			}
+			if p.onControlConsumed != nil {
+				p.onControlConsumed(uid, p.validity, len(raw))
 			}
 			p.after = uint32(uid)
 			p.cursor.Store(p.after)
@@ -336,6 +349,31 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 				}
 			case <-time.After(time.Millisecond):
 			}
+		}
+	}
+}
+
+// Incoming control occupies the peer's reserve, not this endpoint's DATA debt.
+// Capture exact consumed MIME bytes so pressure is measured in both directions.
+func (a *mailAccountState) controlConsumed(uid imap.UID, validity uint32, n int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	m := &a.maintenance
+	if m.reads == nil {
+		m.reads = make(map[imap.UID]controlWrite)
+	}
+	if old, ok := m.reads[uid]; ok {
+		m.incomingBytes -= old.bytes
+	}
+	m.reads[uid] = controlWrite{validity, n}
+	m.incomingBytes += n
+}
+func (a *mailAccountState) controlInputCollectedLocked(mark uidWatermark) {
+	m := &a.maintenance
+	for uid, w := range m.reads {
+		if w.validity == mark.Validity && uint32(uid) <= mark.UID {
+			m.incomingBytes -= w.bytes
+			delete(m.reads, uid)
 		}
 	}
 }

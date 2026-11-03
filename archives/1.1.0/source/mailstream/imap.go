@@ -683,6 +683,9 @@ func (a *mailAccountState) run() {
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, 0, true)
 	}
+	if !a.link.client {
+		control.onControlConsumed = a.controlConsumed
+	}
 	control.uidControl.Store(true)
 	a.phase("control_select")
 	stopSelect := control.limit(15 * time.Second)
@@ -1095,6 +1098,8 @@ type MailSnapshot struct {
 	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
+	ControlOutgoingBytes       int    `json:"control_outgoing_retained_bytes"`
+	ControlIncomingBytes       int    `json:"control_incoming_retained_bytes"`
 	ControlOutstanding         int    `json:"control_outstanding"`
 	ControlCollected           uint64 `json:"control_messages_collected"`
 	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
@@ -1154,6 +1159,8 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
 		line.ControlOutstanding = len(a.maintenance.writes)
+		line.ControlOutgoingBytes = a.maintenance.controlBytes
+		line.ControlIncomingBytes = a.maintenance.incomingBytes
 		line.ControlCollected = a.maintenance.controlMessages
 		line.AbandonedEmptied = a.maintenance.emptiedFolders
 		line.StorageRecoveryReady = a.maintenance.recoveryReady || a.maintenance.recovered
@@ -1190,29 +1197,30 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 }
 
 type mailPipe struct {
-	client          *imapclient.Client
-	conn            *tls.Conn
-	cancel          func() bool
-	wake            chan struct{}
-	invalid         atomic.Bool
-	after           uint32
-	done            chan struct{}
-	closeOnce       sync.Once
-	commands        chan mailCommand
-	rotate          func(context.Context) error
-	onPacket        func([]byte)
-	generation      uint32
-	phase           atomic.Int32
-	cursor          atomic.Uint32
-	generationDebug atomic.Uint32
-	confirmed       uint32
-	consumed        imap.UIDSet
-	allowExpunge    atomic.Bool
-	validity        uint32
-	service         time.Duration
-	knownFolders    map[string]bool // SELECT owner only; never shared with a writer
-	uidControl      atomic.Bool
-	latency         atomic.Int64
+	client            *imapclient.Client
+	conn              *tls.Conn
+	cancel            func() bool
+	wake              chan struct{}
+	invalid           atomic.Bool
+	after             uint32
+	done              chan struct{}
+	closeOnce         sync.Once
+	commands          chan mailCommand
+	rotate            func(context.Context) error
+	onPacket          func([]byte)
+	onControlConsumed func(imap.UID, uint32, int)
+	generation        uint32
+	phase             atomic.Int32
+	cursor            atomic.Uint32
+	generationDebug   atomic.Uint32
+	confirmed         uint32
+	consumed          imap.UIDSet
+	allowExpunge      atomic.Bool
+	validity          uint32
+	service           time.Duration
+	knownFolders      map[string]bool // SELECT owner only; never shared with a writer
+	uidControl        atomic.Bool
+	latency           atomic.Int64
 }
 
 func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {

@@ -101,7 +101,9 @@ collection. Eligible control directions alternate so one cannot
 starve the other. After historical recovery, optional control-tail maintenance
 yields while bulk DATA is active and ordinary storage has headroom. It resumes
 after a 300 ms DATA quiet interval; DATA reclamation, historical recovery and
-retention pressure override this deferral. Control uses the ordinary finite retained-byte budget and bounded actor queues.
+control-byte pressure override this deferral. Incoming and outgoing consumed
+control MIME bytes are tracked independently of DATA debt, so a full DATA
+ledger does not divert its collection turns back to control-tail maintenance. Control uses the ordinary finite retained-byte budget and bounded actor queues.
 It does not impose another count-based gate on receipts: provider cleanup
 failure must not deadlock the acknowledgements needed to complete transfers.
 Recovery messages have separate admission.

@@ -308,6 +308,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		}
 		a.mu.Lock()
 		m.collectControlOut = true
+		a.controlInputCollectedLocked(proof)
 		m.clearedIn = proof
 		m.controlMessages += n
 		a.mu.Unlock()
@@ -584,7 +585,7 @@ func (c *ReclamationCoordinator) adoptRetryLocked(a *mailAccountState) {
 // DATA collection remains eligible. Bootstrap/historical recovery and real
 // retention pressure always override this optimization. Account.mu is held.
 func (a *mailAccountState) deferMaintenanceLocked() bool {
-	if !a.maintenance.recoveryReady || a.recovered != 0 || a.spent > prototypePhysicalBudget-2*reservationQuantum {
+	if !a.maintenance.recoveryReady || a.recovered != 0 || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 {
 		return false
 	}
 	last := a.link.lastBulk.Load()
