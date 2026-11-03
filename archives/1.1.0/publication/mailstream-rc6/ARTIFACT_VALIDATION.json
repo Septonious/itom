@@ -1,0 +1,25 @@
+{
+  "source_commit": "932496e4bcb7b0d44363f6c80f3bb9a4c50e4b92",
+  "exit_code": 0,
+  "checks": {
+    "hosted_1_4_32_stream_required_gates": true,
+    "two_complete_speedtests_same_session": true,
+    "close_stall_download_upload_reconnect": true,
+    "unknown_cleanup_outcome_isolated_and_charged": true,
+    "silent_half_closed_origin_replacement": true,
+    "dns_cannot_exhaust_tcp_worker_pool": true,
+    "actual_native_dns_https_burst": true,
+    "account_and_direction_cleanup_fairness": true,
+    "receipt_and_append_completion_before_refund": true,
+    "six_compiled_server_native_startups": true,
+    "four_stream_7_mbps_cancel_and_fresh_https": true,
+    "normal_and_race_tests": true,
+    "native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "matched_jni_revision_and_hashes": true,
+    "persistent_signer_verified": true,
+    "manual_stop_capacity_cleared": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false
+}

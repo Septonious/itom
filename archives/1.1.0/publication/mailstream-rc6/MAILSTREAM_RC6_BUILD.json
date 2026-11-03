@@ -1,0 +1,604 @@
+{
+  "release": "ITOM 1.1.0 MAILSTREAM-RC6",
+  "source_commit": "932496e4bcb7b0d44363f6c80f3bb9a4c50e4b92",
+  "build_run_id": 41598390569,
+  "source_acceptance_run_id": 41598390673,
+  "weak_link_run_id": 41598390569,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/41598390569",
+  "artifact_validation_pending": false,
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "b226ea18c89ab5b421e13bbab3b60dd3fda9cab0080353d8719677769c4e7151",
+  "signed_apk_bytes": 53678420,
+  "source_ci_apk_sha256": "0b61f4f93455a991dcf88f570f40fe21376474ace13140547aa6927644af99fa",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "1507550d1ce112fae3679b25d6d3336d53709b878a8f9756a275ef5d3a9d6bc8",
+    "arm64": "76f302193368d31a79247931a2f8956fa18d827035307003f94c55d95a83ee15"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10131,
+    "version_name": "1.1.0-mailstream-rc6-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "020ef6d919b81a2ca32d558c3b9113e2b888436ca62ee377c27a12848d36e4ca",
+    "lib/armeabi-v7a/libgojni.so": "c5c40961e74e373a08a529453d4c3e1af83c8ceccacb1934224c00b0f0a52e1a"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2188,
+      "NativeRPCMS": 257,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 102,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2162,
+      "NativeRPCMS": 329,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 132,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2052,
+      "NativeRPCMS": 383,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 188,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2246,
+      "NativeRPCMS": 223,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 87,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2160,
+      "NativeRPCMS": 552,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 117,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2524,
+      "NativeRPCMS": 215,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 150,
+      "protected_sockets": 45
+    }
+  ],
+  "checks": {
+    "hosted_1_4_32_stream_required_gates": true,
+    "two_complete_speedtests_same_session": true,
+    "close_stall_download_upload_reconnect": true,
+    "unknown_cleanup_outcome_isolated_and_charged": true,
+    "silent_half_closed_origin_replacement": true,
+    "dns_cannot_exhaust_tcp_worker_pool": true,
+    "actual_native_dns_https_burst": true,
+    "account_and_direction_cleanup_fairness": true,
+    "receipt_and_append_completion_before_refund": true,
+    "six_compiled_server_native_startups": true,
+    "four_stream_7_mbps_cancel_and_fresh_https": true,
+    "normal_and_race_tests": true,
+    "native_sdk_vet_and_imap_regressions": true,
+    "android_compile_tests_and_lint": true,
+    "matched_jni_revision_and_hashes": true,
+    "persistent_signer_verified": true,
+    "manual_stop_capacity_cleared": true
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "models": {
+    "weak-link": {
+      "streams": 4,
+      "cycles": 1,
+      "shared_client_mbps": 7,
+      "duration": "20s",
+      "payload_mbps": {
+        "upload": 4.622588218333624,
+        "download": 4.3466718692421775
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 4.622588218333624,
+          "seconds": 21.776392628
+        },
+        {
+          "direction": "download",
+          "mbps": 4.3466718692421775,
+          "seconds": 12.001450666
+        }
+      ],
+      "idle_ms": [
+        117.882,
+        115.128,
+        149.247,
+        168.307
+      ],
+      "post_rtt_ms": [
+        134.996,
+        126.961,
+        113.161,
+        178.912,
+        175.294,
+        114.515,
+        135.892,
+        157.097,
+        192.928,
+        185.467,
+        179.8,
+        169.476
+      ],
+      "loaded_max_ms": 993.693,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "success": true,
+      "terminal_teardown_snapshot": {
+        "pending_protocol_packets": 2,
+        "bulk_credit_awaiting_terminal_ack": 0
+      }
+    },
+    "high-rate-single": {
+      "streams": 1,
+      "cycles": 1,
+      "shared_client_mbps": 500,
+      "duration": "30s",
+      "payload_mbps": {
+        "upload": 228.20874242512375,
+        "download": 218.0270661174943
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 228.20874242512375,
+          "seconds": 30.730094796
+        },
+        {
+          "direction": "download",
+          "mbps": 218.0270661174943,
+          "seconds": 31.282641708
+        }
+      ],
+      "idle_ms": [
+        153.086,
+        138.846,
+        124.694,
+        164.84
+      ],
+      "post_rtt_ms": [
+        114.471,
+        127.014,
+        118.878,
+        153.981,
+        150.367,
+        131.427,
+        116.582,
+        151.074
+      ],
+      "loaded_max_ms": 618.277,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "success": true,
+      "terminal_teardown_snapshot": {
+        "pending_protocol_packets": 3,
+        "bulk_credit_awaiting_terminal_ack": 197385
+      }
+    },
+    "high-rate": {
+      "streams": 4,
+      "cycles": 2,
+      "shared_client_mbps": 500,
+      "duration": "30s",
+      "payload_mbps": {
+        "upload": 140.91487055294863,
+        "download": 209.3459151586577
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 239.05671013882548,
+          "seconds": 30.769940052
+        },
+        {
+          "direction": "download",
+          "mbps": 220.34672836859932,
+          "seconds": 31.795618641
+        },
+        {
+          "direction": "upload",
+          "mbps": 140.91487055294863,
+          "seconds": 30.468001107
+        },
+        {
+          "direction": "download",
+          "mbps": 209.3459151586577,
+          "seconds": 32.705089979
+        }
+      ],
+      "idle_ms": [
+        125.597,
+        123.09,
+        130.586,
+        173.072
+      ],
+      "post_rtt_ms": [
+        115.605,
+        144.601,
+        136.222,
+        172.081,
+        170.832,
+        114.024,
+        120.021,
+        190.683
+      ],
+      "loaded_max_ms": 414.63,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": false
+      },
+      "success": true,
+      "terminal_teardown_snapshot": {
+        "pending_protocol_packets": 6,
+        "bulk_credit_awaiting_terminal_ack": 329444
+      }
+    },
+    "high-stream": {
+      "streams": 32,
+      "cycles": 1,
+      "shared_client_mbps": 500,
+      "duration": "12s",
+      "payload_mbps": {
+        "upload": 212.18453024830313,
+        "download": 258.3032830459284
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 212.18453024830313,
+          "seconds": 12.391592907
+        },
+        {
+          "direction": "download",
+          "mbps": 258.3032830459284,
+          "seconds": 16.629643779
+        }
+      ],
+      "idle_ms": [
+        129.858,
+        117.047,
+        145.664,
+        151.624
+      ],
+      "post_rtt_ms": [
+        118.78,
+        132.939,
+        123.991,
+        141.317,
+        143.669,
+        124.608,
+        115.266,
+        153.08
+      ],
+      "loaded_max_ms": 394.758,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": true
+      },
+      "success": true,
+      "terminal_teardown_snapshot": {
+        "pending_protocol_packets": 34,
+        "bulk_credit_awaiting_terminal_ack": 3621472
+      }
+    }
+  },
+  "hosted_models": {
+    "1": {
+      "payload_mbps": {
+        "upload": 242.85717149897604,
+        "download": 223.82133304438307
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 242.85717149897604,
+          "seconds": 30.767683449
+        },
+        {
+          "direction": "download",
+          "mbps": 223.82133304438307,
+          "seconds": 31.583115907
+        }
+      ],
+      "idle_ms": [
+        124.74,
+        147.254,
+        123.024,
+        165.554
+      ],
+      "post_rtt_ms": [
+        147.69,
+        126.876,
+        124.948,
+        156.315,
+        141.826,
+        123.612,
+        102.761,
+        134.031
+      ],
+      "loaded_max_ms": 482.375,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      }
+    },
+    "4": {
+      "payload_mbps": {
+        "upload": 144.17315442241636,
+        "download": 220.66456680995012
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 245.65358691743185,
+          "seconds": 30.675682446
+        },
+        {
+          "direction": "download",
+          "mbps": 221.24900383190788,
+          "seconds": 31.528511854
+        },
+        {
+          "direction": "upload",
+          "mbps": 144.17315442241636,
+          "seconds": 30.714015142
+        },
+        {
+          "direction": "download",
+          "mbps": 220.66456680995012,
+          "seconds": 31.847235166
+        }
+      ],
+      "idle_ms": [
+        136.47,
+        109.646,
+        121.132,
+        180.985
+      ],
+      "post_rtt_ms": [
+        135.402,
+        126.781,
+        105.924,
+        145.758,
+        153.885,
+        118.537,
+        114.659,
+        158.398
+      ],
+      "loaded_max_ms": 440.968,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      }
+    },
+    "32": {
+      "payload_mbps": {
+        "upload": 252.73106631855364,
+        "download": 277.6541392258492
+      },
+      "phase_results": [
+        {
+          "direction": "upload",
+          "mbps": 252.73106631855364,
+          "seconds": 12.361884265
+        },
+        {
+          "direction": "download",
+          "mbps": 277.6541392258492,
+          "seconds": 15.544298486
+        }
+      ],
+      "idle_ms": [
+        130.367,
+        124.432,
+        128.977,
+        181.75
+      ],
+      "post_rtt_ms": [
+        119.508,
+        139.207,
+        122.432,
+        119.287,
+        141.865,
+        138.838,
+        111.311,
+        167.236
+      ],
+      "loaded_max_ms": 452.998,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": true
+      }
+    }
+  },
+  "strict_hosted_target_misses": {
+    "1": [
+      "no_half_second_stalls"
+    ],
+    "4": [
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "32": [
+      "ramp_100mbps_within_2s"
+    ]
+  },
+  "all_performance_targets_met": false,
+  "weak_link": {
+    "streams": 4,
+    "cycles": 1,
+    "shared_client_mbps": 7,
+    "duration": "20s",
+    "payload_mbps": {
+      "upload": 4.622588218333624,
+      "download": 4.3466718692421775
+    },
+    "phase_results": [
+      {
+        "direction": "upload",
+        "mbps": 4.622588218333624,
+        "seconds": 21.776392628
+      },
+      {
+        "direction": "download",
+        "mbps": 4.3466718692421775,
+        "seconds": 12.001450666
+      }
+    ],
+    "idle_ms": [
+      117.882,
+      115.128,
+      149.247,
+      168.307
+    ],
+    "post_rtt_ms": [
+      134.996,
+      126.961,
+      113.161,
+      178.912,
+      175.294,
+      114.515,
+      135.892,
+      157.097,
+      192.928,
+      185.467,
+      179.8,
+      169.476
+    ],
+    "loaded_max_ms": 993.693,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    },
+    "success": true,
+    "terminal_teardown_snapshot": {
+      "pending_protocol_packets": 2,
+      "bulk_credit_awaiting_terminal_ack": 0
+    },
+    "session_closed": false
+  },
+  "hosted_weak_link": {
+    "success": true,
+    "initial_idle_ms": [
+      146.103,
+      138.142,
+      128.807,
+      164.453
+    ],
+    "post_rtt_ms": [
+      145.275,
+      126.088,
+      153.228,
+      185.868,
+      143.889,
+      115.354,
+      100.634,
+      147.475
+    ]
+  },
+  "manual_stop_capacity": {
+    "10": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 20
+    },
+    "15": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 30
+    }
+  },
+  "regressions": {
+    "field": "RC5: nine client accounts fail at DATA cursor/count 32 during CLOSE, despite low direct IMAP latency.",
+    "before": "Frozen RC5 stalls during verified download and times out before upload; silent half-closed origin blocks replacement; idle DNS associations can reject TCP workers.",
+    "after": "RC6 completes verified 24 MiB download, fresh-TLS upload and post-reconnect download with CLOSE stalled; also survives all cleanup stalled with one isolated attempt and no failed accounts. Native SOCKS/TUN handles 32 fresh HTTPS posts alongside 128 DNS association attempts and 16 incomplete TLS sockets.",
+    "intermediate_failure": "An early RC6 local run timed out on loaded ping with uneven retained storage. Fair cleanup scheduling and repeated speedtest qualification were added before publication."
+  },
+  "limitations": [
+    "Ordinary EXPUNGE on Rambler still requires field confirmation. If it stalls, the circuit preserves debt and delivery can continue only within finite retained capacity.",
+    "Sustained server-outbound collection requires UIDPLUS APPENDUID ownership proof; missing proof is never refunded.",
+    "Local and hosted TLS IMAP models do not qualify real Android/mobile or Rambler performance.",
+    "Aggregate old-session debt and append-only discovery logs remain sustained-use limitations.",
+    "Manual local capacity resets do not delete provider mail or unlock provider accounts.",
+    "The strict ramp, rolling five-second throughput and half-second pause goals still have misses. This candidate passes the mandatory complete-transfer, average-rate and RTT model gates, not every performance goal. All target results and intermediate failures are retained."
+  ],
+  "installation": "Update both endpoints; server manager option 18 or sudo itom update-from-tmp. Install the signed APK in place preserving app data and profile."
+}
