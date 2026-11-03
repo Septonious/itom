@@ -15,7 +15,9 @@ immediate server shutdown defers remaining work to its next start.
 Cleanup failures retain their charges and retry with backoff. Readers remain
 independent of cleanup. A separate finite recovery-only reserve allows a full
 old ledger to recover without allowing application traffic beyond its normal
-budget. Diagnostics expose collection counts, abandoned-folder progress and
+budget. Bulk estimation now excludes interactive probes and restarts after
+application-limited gaps, fixing the second-transfer window collapse exposed by
+the faster control path. Diagnostics expose collection counts, abandoned-folder progress and
 recovery failures. RC6 cancellation, half-close and native DNS/TCP fixes remain.
 
 The release includes normal/race/native/SDK/vet, Android build/tests/lint,

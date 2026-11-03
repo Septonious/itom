@@ -475,7 +475,7 @@ func (s *Session) receiveLoop() {
 						if p.attempts == 1 {
 							sample = time.Since(p.sent)
 						}
-						s.delivery.delivered(len(p.wire), sample, time.Now())
+						s.delivery.delivered(len(p.wire), sample, time.Now(), !p.priority)
 					}
 					if p.attempts == 1 && !p.sent.IsZero() {
 						sample := time.Since(p.sent)

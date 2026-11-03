@@ -11,6 +11,7 @@ type deliveryWindow struct {
 	limit  int
 	base   time.Duration
 	start  time.Time
+	last   time.Time
 	acked  int
 	rate   float64
 }
@@ -24,8 +25,20 @@ func (w *deliveryWindow) allowance() int {
 	return w.limit
 }
 
-func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time) {
+func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool) {
 	w.flight -= n
+	// Interactive DATA bypasses the bulk allowance; its smaller, faster receipts
+	// cannot train the capacity estimate or minimum RTT of the bulk carrier.
+	if !bulk {
+		return
+	}
+	// Light probes and an idle opposite direction are not capacity samples.
+	// Restart from a safe flight bound, without dividing bytes by an idle gap.
+	if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
+		w.start, w.acked, w.rate = now, 0, 0
+		w.limit = initialDeliveryWindow
+	}
+	w.last = now
 	if sample > 0 && (w.base == 0 || sample < w.base) {
 		w.base = sample
 	}
@@ -36,10 +49,10 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time) {
 	if w.limit == 0 {
 		w.limit = initialDeliveryWindow
 	}
-	// Startup explores by delivered bytes, so faster paths grow faster.
-	if sample > 0 && sample <= 2*w.base {
-		w.limit = min(maxPendingBytes, w.limit+n)
-	}
+	// Delivered bytes explore capacity even when a full MIME container takes
+	// longer than a tiny idle probe. The measured-rate update below still bounds
+	// queued time on a weak link. Delay alone must not prevent bulk startup.
+	w.limit = min(maxPendingBytes, w.limit+n)
 	if elapsed := now.Sub(w.start); elapsed >= 250*time.Millisecond {
 		rate := float64(w.acked) / elapsed.Seconds()
 		if w.rate == 0 {

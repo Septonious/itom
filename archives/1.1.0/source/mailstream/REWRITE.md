@@ -25,7 +25,10 @@ silence lease handles abandoned peers independently of throughput control.
 TCP streams have independent offsets and receive windows. Small writes dispatch
 immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
-window. Mailbox receipts do not release application-consumption credit. Control
+window. Bulk growth uses delivered bytes and a measured-rate bound. Interactive
+DATA does not train the bulk estimator, and an idle/application-limited gap
+restarts its observation interval. A faster light probe cannot pin a later
+bulk burst to the initial flight window. Mailbox receipts do not release application-consumption credit. Control
 uses absolute forward UID FETCH ranges and measured NOOP probes; DATA uses IDLE and bounded tail repair. Stream reset
 and session cancellation close established exit sockets as well as mailbox
 streams. Request half-close preserves ordinary response delivery.
