@@ -49,10 +49,9 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.limit == 0 {
 		w.limit = initialDeliveryWindow
 	}
-	// Delivered bytes explore capacity even when a full MIME container takes
-	// longer than a tiny idle probe. The measured-rate update below still bounds
-	// queued time on a weak link. Delay alone must not prevent bulk startup.
-	w.limit = min(maxPendingBytes, w.limit+n)
+	// Grow from measured delivered rate, not a delay threshold or an entire
+	// extra flight per clustered ACK batch. The initial flight is enough to
+	// measure a fast path, while doubling it before a sample floods a 7 Mbps link.
 	if elapsed := now.Sub(w.start); elapsed >= 250*time.Millisecond {
 		rate := float64(w.acked) / elapsed.Seconds()
 		if w.rate == 0 {
@@ -62,7 +61,8 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		}
 		// Allow throughput-oriented headroom under load, without admitting
 		// tens of seconds of work merely because receive memory is free.
-		target := int(w.rate * (2*w.base + 250*time.Millisecond).Seconds())
+		horizon := min(500*time.Millisecond, 2*w.base+250*time.Millisecond)
+		target := int(w.rate * horizon.Seconds())
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))
 		w.start, w.acked = now, 0
 	}

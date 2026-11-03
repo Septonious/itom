@@ -57,3 +57,12 @@ Control reads use an absolute forward UID range, crossing holes without STATUS
 on a selected mailbox. A frozen RC6 reference also reproduced a local loaded
 ping timeout; its evidence is retained alongside candidate failures and final
 hosted/local qualification. No timeout is relaxed to make those results pass.
+
+The faster control path also exposed a pre-existing controller coupling: light
+DATA probes trained the bulk rate/minimum RTT across application-limited gaps,
+while delay-gated exploration could not grow the next full-container transfer.
+Bulk estimation now excludes interactive DATA, restarts its observation after
+idle gaps, and grows from measured delivered rate. Clustered byte-ACK growth
+was rejected after a 7 Mbps timeout; measured-rate flight headroom is bounded.
+The bounded variant completes the 7 Mbps download cancellation and new HTTPS
+check with zero failed accounts; final repeated-transfer qualification follows.
