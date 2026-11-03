@@ -57,6 +57,7 @@ type Client struct {
 	stack    *stack.Stack
 	wg       sync.WaitGroup
 	slots    chan struct{}
+	dnsSlots chan struct{}
 	dns      *fakeDNS
 	resolver *dnsResolver
 	listener net.Listener
@@ -91,7 +92,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 		}
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	c := &Client{ctx: ctx, cancel: cancel, host: host, slots: make(chan struct{}, 128)}
+	c := &Client{ctx: ctx, cancel: cancel, host: host, slots: make(chan struct{}, 128), dnsSlots: make(chan struct{}, 64)}
 	progress, stopProgress := reportStartup(ctx, cancel, host, 3*len(cfg.Profile.Accounts))
 	defer stopProgress()
 	control := func(_, _ string, r syscall.RawConn) error {
@@ -176,7 +177,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 		cancel()
 		return nil, e
 	}
-	c.pool, e = tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, Progress: progress})
+	c.pool, e = tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, Progress: progress, FrontendDiagnostics: func() any { return c.trafficSnapshot() }})
 	if e != nil {
 		c.Close()
 		return nil, e
@@ -310,7 +311,9 @@ func (c *Client) Snapshot() string {
 	return string(raw)
 }
 
-func (c *Client) worker(conn net.Conn, fn func()) {
+func (c *Client) worker(conn net.Conn, fn func())    { c.workerOn(conn, fn, c.slots, false) }
+func (c *Client) dnsWorker(conn net.Conn, fn func()) { c.workerOn(conn, fn, c.dnsSlots, true) }
+func (c *Client) workerOn(conn net.Conn, fn func(), slots chan struct{}, dns bool) {
 	c.mu.Lock()
 	if c.closed {
 		c.mu.Unlock()
@@ -318,9 +321,14 @@ func (c *Client) worker(conn net.Conn, fn func()) {
 		return
 	}
 	select {
-	case c.slots <- struct{}{}:
+	case slots <- struct{}{}:
 	default:
 		c.traffic.workerRefusals.Add(1)
+		if dns {
+			c.traffic.dnsWorkerRefusals.Add(1)
+		} else {
+			c.traffic.tcpWorkerRefusals.Add(1)
+		}
 		c.mu.Unlock()
 		conn.Close()
 		return
@@ -329,7 +337,7 @@ func (c *Client) worker(conn net.Conn, fn func()) {
 	c.mu.Unlock()
 	go func() {
 		defer c.wg.Done()
-		defer func() { <-c.slots }()
+		defer func() { <-slots }()
 		defer conn.Close()
 		stop := context.AfterFunc(c.ctx, func() { conn.Close() })
 		defer stop()
@@ -400,13 +408,13 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 	}
 }
 func (c *Client) handleTCP(conn adapter.TCPConn) {
+	if conn.ID().LocalPort == 53 {
+		c.dnsWorker(conn, func() { c.tcpDNS(conn) })
+		return
+	}
 	c.worker(conn, func() {
 		id := conn.ID()
 		host := id.LocalAddress.String()
-		if id.LocalPort == 53 {
-			c.tcpDNS(conn)
-			return
-		}
 		ctx, cancel := context.WithTimeout(c.ctx, 45*time.Second)
 		upstream, _, e := c.open(ctx, wire.Connect{Host: host, Port: id.LocalPort})
 		cancel()
@@ -467,7 +475,7 @@ func (c *Client) handleUDP(conn adapter.UDPConn) {
 		conn.Close()
 		return
 	}
-	c.worker(conn, func() { c.udpDNS(conn) })
+	c.dnsWorker(conn, func() { c.udpDNS(conn) })
 }
 
 type countStream struct {

@@ -4,45 +4,101 @@ import (
 	"context"
 	"fmt"
 	imap "github.com/emersion/go-imap/v2"
+	"sync"
 	"time"
 )
 
-// Two reusable DATA slots per direction/session. A slot cannot be reused until
-// its reader has verified exact UID removal and every APPEND/receipt is terminal.
 const segmentAppends = 32
-const dataSlots uint32 = 2
+
+// Normally two slots alternate. Unavailable housekeeping may retain additional
+// slots, within both this hard bound and the unchanged physical byte budget.
+const dataSlots uint32 = 64
 
 type Retirement struct {
 	Session    SessionID
 	Account    string
 	Generation uint32
 	Kind       byte
+	Slot       uint32
 }
 type StorageLink interface {
 	Retirements() <-chan Retirement
 	Acknowledge(SessionID, uint64) error
-	ConfirmReclaimed(Retirement) error
+	ConfirmRetired(Retirement) error
+	RequestCollection(Retirement) error
+	ConfirmCollection(Retirement) error
+	ConfirmRoute(Retirement) error
 }
 type segmentKey struct {
 	session    SessionID
 	generation uint32
 }
 type segmentRecord struct {
-	folder               string
-	bytes, appendPending int
-	awaiting             map[uint64]bool
-	reclaimed            bool
+	folder                                                 string
+	slot                                                   uint32
+	bytes, appendPending, appends                          int
+	awaiting                                               map[uint64]bool
+	uids                                                   imap.UIDSet
+	validity                                               uint32
+	proofUnknown                                           bool
+	retired, queued, refused, remote, requested, announced bool
+	collected                                              bool
+}
+type cleanupJob struct {
+	account *mailAccountState
+	key     segmentKey
+	record  *segmentRecord
 }
 
-func (l *IMAPLink) segmentFolder(id SessionID, out bool, generation uint32) string {
-	return fmt.Sprintf("%s-%08x", l.dataFolder(id, out), generation%dataSlots)
+// Shared by server identities. One unknown provider outcome stops all further
+// cleanup attempts; a provider quirk must not be applied to every account.
+type ReclamationCoordinator struct {
+	lease chan struct{}
+	mu    sync.Mutex
+	state ReclamationSnapshot
+}
+type ReclamationSnapshot struct {
+	Paused    bool   `json:"paused"`
+	Stage     string `json:"stage,omitempty"`
+	Failure   string `json:"failure,omitempty"`
+	Completed uint64 `json:"completed"`
+}
+
+func NewReclamationCoordinator() *ReclamationCoordinator {
+	return &ReclamationCoordinator{lease: make(chan struct{}, 1)}
+}
+func (c *ReclamationCoordinator) snapshot() ReclamationSnapshot {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.state
+}
+func (c *ReclamationCoordinator) stage(stage string) {
+	c.mu.Lock()
+	c.state.Stage = stage
+	c.mu.Unlock()
+}
+func (c *ReclamationCoordinator) pause(reason string) {
+	c.mu.Lock()
+	c.state.Paused = true
+	c.state.Failure = reason
+	c.mu.Unlock()
+}
+func (c *ReclamationCoordinator) completed() {
+	c.mu.Lock()
+	c.state.Completed++
+	c.state.Stage = "complete"
+	c.mu.Unlock()
+}
+
+func (l *IMAPLink) segmentFolder(id SessionID, out bool, slot uint32) string {
+	return fmt.Sprintf("%s-%08x", l.dataFolder(id, out), slot)
 }
 func (l *IMAPLink) Retirements() <-chan Retirement { return l.retirements }
 func (l *IMAPLink) Acknowledge(id SessionID, sequence uint64) error {
 	return l.releaseDelivery(id, sequence, true)
 }
 func (l *IMAPLink) Abandon(id SessionID, sequence uint64) {
-	if err := l.releaseDelivery(id, sequence, false); err != nil {
+	if l.releaseDelivery(id, sequence, false) != nil {
 		l.cancel()
 	}
 }
@@ -56,110 +112,328 @@ func (l *IMAPLink) releaseDelivery(id SessionID, sequence uint64, measured bool)
 			}
 			*sample = deliverySample{}
 		}
-		for key, record := range a.segments {
+		for key, r := range a.segments {
 			if key.session == id {
-				delete(record.awaiting, sequence)
+				delete(r.awaiting, sequence)
 			}
 		}
-		err := a.releaseReclaimedLocked()
 		a.mu.Unlock()
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
-func (a *mailAccountState) releaseReclaimedLocked() error {
-	for key, record := range a.segments {
-		if !record.reclaimed || record.appendPending != 0 || len(record.awaiting) != 0 {
-			continue
-		}
-		if err := a.refundLocked(record.bytes); err != nil {
-			return err
-		}
-		delete(a.segments, key)
-		a.retired.Add(1)
-		a.bulkBlocked = false
-	}
-	return nil
-}
-func (l *IMAPLink) ConfirmReclaimed(r Retirement) error {
+func (l *IMAPLink) account(name string) *mailAccountState {
 	for _, a := range l.accounts {
-		if a.config.ID == r.Account {
-			a.mu.Lock()
-			defer a.mu.Unlock()
-			if record := a.segments[segmentKey{r.Session, r.Generation}]; record != nil {
-				record.reclaimed = true
-			}
-			return a.releaseReclaimedLocked()
+		if a.config.ID == name {
+			return a
 		}
 	}
-	return ErrProtocol
+	return nil
 }
-
-// A full DATA slot is consumed by this connection's sole reader. No DELETE,
-// maintenance login, or UID EXPUNGE is used during delivery. CLOSE expunges
-// the verified, fully consumed slot and leaves this reader unselected. The
-// authenticated reclamation receipt is sent only after STATUS proves emptiness.
-func (p *mailPipe) reclaimSelected(expected string) error {
-	box := p.client.Mailbox()
-	if box == nil || box.Name != expected || box.NumMessages != segmentAppends || p.after != segmentAppends {
+func (l *IMAPLink) ConfirmRetired(r Retirement) error {
+	a := l.account(r.Account)
+	if a == nil {
 		return ErrProtocol
 	}
-	uids, ok := p.consumed.Nums()
-	if !ok || len(uids) != segmentAppends {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if rec := a.segments[segmentKey{r.Session, r.Generation}]; rec != nil {
+		rec.retired = true
+	}
+	return nil
+}
+func (l *IMAPLink) RequestCollection(r Retirement) error {
+	if l.client {
 		return ErrProtocol
 	}
-	for i, uid := range uids {
-		if uid == 0 || i > 0 && uid <= uids[i-1] {
+	a := l.account(r.Account)
+	if a == nil {
+		return ErrProtocol
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if rec := a.remoteSegments[segmentKey{r.Session, r.Generation}]; rec != nil {
+		rec.requested = true
+	}
+	return nil
+}
+func (l *IMAPLink) ConfirmCollection(r Retirement) error {
+	if !l.client {
+		return ErrProtocol
+	}
+	a := l.account(r.Account)
+	if a == nil {
+		return ErrProtocol
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	key := segmentKey{r.Session, r.Generation}
+	rec := a.segments[key]
+	if rec == nil {
+		return nil
+	}
+	if !rec.queued || !rec.retired || rec.appendPending != 0 || len(rec.awaiting) != 0 {
+		return ErrProtocol
+	}
+	if err := a.refundLocked(rec.bytes); err != nil {
+		return err
+	}
+	delete(a.segments, key)
+	a.retired.Add(1)
+	a.bulkBlocked = false
+	return nil
+}
+func (l *IMAPLink) ConfirmRoute(r Retirement) error {
+	if r.Slot >= dataSlots {
+		return ErrProtocol
+	}
+	a := l.account(r.Account)
+	if a == nil {
+		return ErrProtocol
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.routeSession != r.Session {
+		a.routeSession = r.Session
+		a.routes = map[uint32]uint32{}
+		a.routeConsumed = 0
+	}
+	if r.Generation <= a.routeConsumed {
+		return nil
+	}
+	if old, ok := a.routes[r.Generation]; ok {
+		if old != r.Slot {
 			return ErrProtocol
 		}
+		return nil
 	}
-	stop := p.limit(10 * time.Second)
-	defer stop()
-	p.phase.Store(7)
-	if err := p.client.Store(p.consumed, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
-		return err
+	if len(a.routes) >= int(dataSlots) {
+		return ErrCapacity
 	}
-	p.phase.Store(8)
-	if err := p.client.UnselectAndExpunge().Wait(); err != nil {
-		return err
-	}
-	p.phase.Store(9)
-	status, err := p.client.Status(expected, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
-	if err != nil {
-		return err
-	}
-	if status.UIDValidity != p.validity || status.NumMessages == nil || *status.NumMessages != 0 {
-		return ErrProtocol
-	}
+	a.routes[r.Generation] = r.Slot
+	close(a.routesChanged)
+	a.routesChanged = make(chan struct{})
 	return nil
 }
+
+// Called under Account.mu by the sole APPEND actor. A slot remains occupied
+// until verified empty collection, terminal APPENDs and authenticated receipts.
+func (a *mailAccountState) prepareSegmentLocked(id SessionID, generation uint32) (*segmentRecord, error) {
+	key := segmentKey{id, generation}
+	rec := a.segments[key]
+	if rec == nil {
+		var used [dataSlots]bool
+		for k, r := range a.segments {
+			if k.session == id {
+				used[r.slot] = true
+			}
+		}
+		var slot uint32
+		for slot < dataSlots && used[slot] {
+			slot++
+		}
+		if slot == dataSlots {
+			a.bulkBlocked = true
+			return nil, ErrCapacity
+		}
+		rec = &segmentRecord{folder: a.link.segmentFolder(id, true, slot), slot: slot, awaiting: map[uint64]bool{}}
+		a.segments[key] = rec
+	}
+	if generation > 0 && !rec.announced {
+		select {
+		case a.link.retirements <- Retirement{Session: id, Account: a.config.ID, Generation: generation, Kind: frameSegment, Slot: rec.slot}:
+			rec.announced = true
+		default:
+			return nil, ErrCapacity
+		}
+	}
+	a.bulkBlocked = false
+	return rec, nil
+}
+func (a *mailAccountState) waitRoute(ctx context.Context, p *mailPipe, id SessionID, generation uint32) (uint32, error) {
+	tick := time.NewTicker(30 * time.Second)
+	defer tick.Stop()
+	for {
+		a.mu.Lock()
+		slot, ok := a.routes[generation]
+		changed := a.routesChanged
+		if a.routeSession == id && ok {
+			delete(a.routes, generation)
+			a.routeConsumed = generation
+			a.mu.Unlock()
+			return slot, nil
+		}
+		a.mu.Unlock()
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		case <-p.done:
+			return 0, ErrClosed
+		case <-changed:
+		case <-tick.C:
+			stop := p.limit(10 * time.Second)
+			err := p.client.Noop().Wait()
+			stop()
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+}
 func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
-	generation := uint32(0)
+	generation, slot := uint32(0), uint32(0)
 	p.rotate = func(ctx context.Context) error {
 		if generation == ^uint32(0) {
 			return ErrCapacity
 		}
-		if err := p.reclaimSelected(a.link.segmentFolder(id, false, generation)); err != nil {
-			a.failedStage("data_slot_reclaim", err)
+		box := p.client.Mailbox()
+		uids, ok := p.consumed.Nums()
+		if box == nil || box.Name != a.link.segmentFolder(id, false, slot) || box.NumMessages != segmentAppends || p.after != segmentAppends || !ok || len(uids) != segmentAppends {
+			return ErrProtocol
+		}
+		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, remote: true, retired: true}
+		// SELECT implicitly leaves the drained mailbox without expunging it. No
+		// storage mutation or reclamation command runs on the delivery reader.
+		parking := a.link.dataFolder(id, false) + "-park"
+		if _, err := p.selectLog(parking, false); err != nil {
 			return err
 		}
-		old := generation
-		generation++
-		p.generation = generation
-		if _, err := p.selectLog(a.link.segmentFolder(id, false, generation), false); err != nil {
-			a.failedStage("data_slot_select", err)
-			return err
+		if !a.link.client {
+			a.mu.Lock()
+			a.remoteSegments[segmentKey{id, generation}] = proof
+			a.mu.Unlock()
 		}
-		p.generationDebug.Store(generation)
 		select {
-		case a.link.retirements <- Retirement{id, a.config.ID, old, frameReclaimed}:
-			return nil
-		case <-p.done:
-			return ErrClosed
+		case a.link.retirements <- Retirement{Session: id, Account: a.config.ID, Generation: generation, Kind: frameRetired}:
 		case <-ctx.Done():
 			return ctx.Err()
 		}
+		generation++
+		p.generation = generation
+		p.generationDebug.Store(generation)
+		p.phase.Store(10)
+		next, err := a.waitRoute(ctx, p, id, generation)
+		if err != nil {
+			return err
+		}
+		slot = next
+		if _, err = p.selectLog(a.link.segmentFolder(id, false, slot), false); err != nil {
+			return err
+		}
+		return nil
 	}
+}
+
+func (l *IMAPLink) collectSegments() {
+	tick := time.NewTicker(50 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case <-l.ctx.Done():
+			return
+		case <-tick.C:
+		}
+		for _, a := range l.accounts {
+			a.mu.Lock()
+			queue := func(key segmentKey, rec *segmentRecord) {
+				if rec.remote && rec.collected {
+					select {
+					case l.retirements <- Retirement{Session: key.session, Account: a.config.ID, Generation: key.generation, Kind: frameCollected}:
+						delete(a.remoteSegments, key)
+					default:
+					}
+					return
+				}
+				if !rec.retired || rec.queued || rec.refused || rec.appendPending != 0 || len(rec.awaiting) != 0 {
+					return
+				}
+				if l.client {
+					select {
+					case l.retirements <- Retirement{Session: key.session, Account: a.config.ID, Generation: key.generation, Kind: frameCollect}:
+						rec.queued = true
+					default:
+					}
+					return
+				}
+				if rec.remote && !rec.requested || a.writer == nil || a.parking.Load() || a.reclaiming.Load() || l.reclaimer.snapshot().Paused {
+					return
+				}
+				if !rec.remote && (rec.proofUnknown || rec.appends != segmentAppends || rec.validity == 0) {
+					return
+				}
+				job := cleanupJob{a, key, rec}
+				select {
+				case a.writerOps <- writerOperation{cleanup: &job}:
+					rec.queued = true
+				default:
+				}
+			}
+			for key, rec := range a.segments {
+				queue(key, rec)
+			}
+			if !l.client {
+				for key, rec := range a.remoteSegments {
+					queue(key, rec)
+				}
+			}
+			a.mu.Unlock()
+		}
+	}
+}
+
+// Only the existing server APPEND owner calls this, with all its tagged
+// commands drained. The exact consumed UID ownership proof is mandatory.
+func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
+	rec := job.record
+	uids, ok := rec.uids.Nums()
+	if !ok || len(uids) != segmentAppends || rec.validity == 0 {
+		return ErrProtocol
+	}
+	c.stage("select")
+	box, err := p.client.Select(rec.folder, nil).Wait()
+	if err != nil {
+		return err
+	}
+	if box.UIDValidity != rec.validity || box.NumMessages != segmentAppends {
+		return ErrProtocol
+	}
+	c.stage("store")
+	if err = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
+		return err
+	}
+	c.stage("expunge")
+	p.allowExpunge.Store(true)
+	_, err = p.client.Expunge().Collect()
+	p.allowExpunge.Store(false)
+	if err != nil {
+		return err
+	}
+	c.stage("status")
+	status, err := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
+	if err != nil {
+		return err
+	}
+	if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages != 0 {
+		return ErrProtocol
+	}
+	c.stage("restore")
+	if _, err = p.client.Select(job.account.link.controlFolder(true), nil).Wait(); err != nil {
+		return err
+	}
+	return nil
+}
+func (a *mailAccountState) finishCollection(job cleanupJob) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if job.record.remote {
+		job.record.collected = true
+		job.record.queued = false
+		return nil
+	}
+	if err := a.refundLocked(job.record.bytes); err != nil {
+		return err
+	}
+	delete(a.segments, job.key)
+	a.retired.Add(1)
+	a.bulkBlocked = false
+	return nil
 }

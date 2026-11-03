@@ -23,14 +23,15 @@ import (
 )
 
 type MailAccount struct {
-	ID       string         `json:"id"`
-	Host     string         `json:"host"`
-	Port     int            `json:"port"`
-	Username string         `json:"username"`
-	Password string         `json:"password"`
-	Roots    *x509.CertPool `json:"-"` // trusted test CA; verification always enabled
-	DialIP   string         `json:"dial_ip,omitempty"`
-	Dialer   NetworkDialer  `json:"-"`
+	Reclamation *ReclamationCoordinator `json:"-"`
+	ID          string                  `json:"id"`
+	Host        string                  `json:"host"`
+	Port        int                     `json:"port"`
+	Username    string                  `json:"username"`
+	Password    string                  `json:"password"`
+	Roots       *x509.CertPool          `json:"-"` // trusted test CA; verification always enabled
+	DialIP      string                  `json:"dial_ip,omitempty"`
+	Dialer      NetworkDialer           `json:"-"`
 }
 type NetworkDialer interface {
 	DialContext(context.Context, string, string) (net.Conn, error)
@@ -49,8 +50,9 @@ type mailWork struct {
 	charge  int
 }
 type writerOperation struct {
-	enable bool
-	done   chan error
+	cleanup *cleanupJob
+	enable  bool
+	done    chan error
 }
 type mailCommand struct {
 	run  func(*mailPipe) error
@@ -80,6 +82,12 @@ type mailAccountState struct {
 	appended, received    atomic.Uint64
 	retired               atomic.Uint64
 	segments              map[segmentKey]*segmentRecord
+	remoteSegments        map[segmentKey]*segmentRecord
+	routes                map[uint32]uint32
+	routesChanged         chan struct{}
+	routeSession          SessionID
+	routeConsumed         uint32
+	parking, reclaiming   atomic.Bool
 	writerOps             chan writerOperation
 	delivery              [replaySlots]deliverySample
 	streams               map[uint32]bool
@@ -89,6 +97,7 @@ type mailAccountState struct {
 }
 
 type IMAPLink struct {
+	reclaimer      *ReclamationCoordinator
 	ctx            context.Context
 	cancel         context.CancelFunc
 	identity       string
@@ -152,6 +161,10 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	lifetime, cancel := context.WithCancel(ctx)
 	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4)}
 	l.store = store
+	l.reclaimer = accounts[0].Reclamation
+	if l.reclaimer == nil {
+		l.reclaimer = NewReclamationCoordinator()
+	}
 	l.receivedRoutes = map[receivedRoute]string{}
 	l.peers = map[string]bool{}
 	l.retirements = make(chan Retirement, 64)
@@ -159,6 +172,9 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 		life, stop := context.WithCancel(lifetime)
 		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, fast: make(chan mailWork, 32), bulk: make(chan mailWork, 8)}
 		a.segments = map[segmentKey]*segmentRecord{}
+		a.remoteSegments = map[segmentKey]*segmentRecord{}
+		a.routes = map[uint32]uint32{}
+		a.routesChanged = make(chan struct{})
 		a.streams = map[uint32]bool{}
 		a.writerOps = make(chan writerOperation, 1)
 		a.storageKey = retentionKey(config)
@@ -176,6 +192,8 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 		l.wg.Add(1)
 		go func() { defer l.wg.Done(); a.run() }()
 	}
+	l.wg.Add(1)
+	go func() { defer l.wg.Done(); l.collectSegments() }()
 	return l, nil
 }
 
@@ -186,7 +204,7 @@ func (l *IMAPLink) controlFolder(out bool) string {
 	if uplink {
 		direction = "c2s"
 	}
-	return "itom3-" + l.identity + "-control-v5-" + direction
+	return "itom3-" + l.identity + "-control-v6-" + direction
 }
 func (l *IMAPLink) dataFolder(id SessionID, out bool) string {
 	direction := "s2c"
@@ -287,7 +305,7 @@ func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude
 		if !priority {
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
-		available := a.ready && !a.failed && (priority || a.id != (SessionID{}) && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
+		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
 		if matched {
 			available = available && a.id == packetID
 		}
@@ -580,6 +598,15 @@ func (a *mailAccountState) attach(id SessionID) error {
 }
 
 func (a *mailAccountState) changeWriter(enable bool) error {
+	a.parking.Store(!enable)
+	if !enable {
+		a.mu.Lock()
+		writer := a.writer
+		a.mu.Unlock()
+		if writer != nil {
+			writer.conn.NetConn().Close()
+		}
+	}
 	op := writerOperation{enable: enable, done: make(chan error, 1)}
 	select {
 	case a.writerOps <- op:
@@ -689,13 +716,18 @@ func (a *mailAccountState) run() {
 			}
 		}
 		if operation != nil {
+			if operation.cleanup != nil {
+				a.processCleanup(*operation.cleanup, &writer, completed, &inFlight, &appendWait)
+				operation = nil
+				continue
+			}
 			// Only the APPEND owner opens/closes its writer. Drain tagged
 			// completions before returning the physical slot to admission.
 			for inFlight > 0 {
 				select {
 				case err := <-completed:
 					inFlight--
-					if err != nil {
+					if err != nil && !a.parking.Load() {
 						operation.done <- err
 						return
 					}
@@ -712,7 +744,7 @@ func (a *mailAccountState) run() {
 				}
 				writer, err = openMailPipe(a.ctx, a.config)
 				<-a.link.login
-				if err != nil {
+				if err != nil && !a.parking.Load() {
 					operation.done <- err
 					a.failedStage("writer_login", err)
 					return
@@ -734,7 +766,7 @@ func (a *mailAccountState) run() {
 				return
 			case err := <-completed:
 				inFlight--
-				if err != nil {
+				if err != nil && !a.parking.Load() {
 					return
 				}
 			}
@@ -743,7 +775,7 @@ func (a *mailAccountState) run() {
 		select {
 		case err := <-completed:
 			inFlight--
-			if err != nil {
+			if err != nil && !a.parking.Load() {
 				return
 			}
 			continue
@@ -771,7 +803,7 @@ func (a *mailAccountState) run() {
 						go func() {
 							defer appendWait.Done()
 							err := cmd.Wait()
-							if err != nil {
+							if err != nil && !a.parking.Load() && !a.reclaiming.Load() {
 								a.failedStage("writer_keepalive", err)
 							}
 							select {
@@ -783,7 +815,7 @@ func (a *mailAccountState) run() {
 					continue
 				case err := <-completed:
 					inFlight--
-					if err != nil {
+					if err != nil && !a.parking.Load() {
 						return
 					}
 					continue
@@ -812,10 +844,12 @@ func (a *mailAccountState) run() {
 			}
 			generation = dataAppends[packetID] / segmentAppends
 			a.mu.Lock()
-			blocked := generation >= dataSlots && a.segments[segmentKey{packetID, generation - dataSlots}] != nil
-			a.bulkBlocked = blocked
+			record, prepareErr := a.prepareSegmentLocked(packetID, generation)
+			if prepareErr == nil {
+				folder = record.folder
+			}
 			a.mu.Unlock()
-			if blocked {
+			if prepareErr != nil {
 				carry = &work
 				select {
 				case <-a.ctx.Done():
@@ -825,7 +859,6 @@ func (a *mailAccountState) run() {
 				continue
 			}
 
-			folder = a.link.segmentFolder(packetID, true, generation)
 		}
 		// Drain only mail already queued. An isolated small write never
 		// starts an aggregation timer or waits to fill a bulk batch.
@@ -907,6 +940,12 @@ func (a *mailAccountState) run() {
 			if err := writer.client.Create(folder, nil).Wait(); err != nil {
 				var status *imap.Error
 				if !errors.As(err, &status) {
+					if a.parking.Load() {
+						a.mu.Lock()
+						a.queuedBytes -= queuedCharge
+						a.mu.Unlock()
+						continue
+					}
 					return
 				}
 			}
@@ -923,12 +962,9 @@ func (a *mailAccountState) run() {
 		if !work.control {
 			key := segmentKey{dataID, generation}
 			record := a.segments[key]
-			if record == nil {
-				record = &segmentRecord{folder: folder, awaiting: map[uint64]bool{}}
-				a.segments[key] = record
-			}
 			record.bytes += len(encoded)
 			record.appendPending++
+			record.appends++
 			segment = record
 			for _, packet := range packets {
 				_, _, seq, _ := parseHeader(packet)
@@ -943,18 +979,26 @@ func (a *mailAccountState) run() {
 		cmd, startErr := writer.startAppend(folder, encoded)
 		lastWrite = time.Now()
 		if startErr != nil {
+			if a.parking.Load() {
+				continue
+			}
 			return
 		}
 		inFlight++
 		appendWait.Add(1)
 		go func() {
 			defer appendWait.Done()
-			_, err := cmd.Wait()
+			result, err := cmd.Wait()
 			if err == nil {
 				if segment != nil {
 					a.mu.Lock()
 					segment.appendPending--
-					err = a.releaseReclaimedLocked()
+					if result == nil || result.UID == 0 || result.UIDValidity == 0 || segment.validity != 0 && segment.validity != result.UIDValidity {
+						segment.proofUnknown = true
+					} else {
+						segment.validity = result.UIDValidity
+						segment.uids.AddNum(result.UID)
+					}
 					a.mu.Unlock()
 				}
 				a.appended.Add(1)
@@ -971,6 +1015,7 @@ func (a *mailAccountState) run() {
 }
 
 type MailSnapshot struct {
+	Reclamation    ReclamationSnapshot   `json:"reclamation"`
 	Accounts       int                   `json:"accounts"`
 	Ready          int                   `json:"ready_accounts"`
 	Writers        int                   `json:"writer_accounts"`
@@ -985,6 +1030,7 @@ type MailSnapshot struct {
 	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
+	Housekeeping               bool   `json:"housekeeping"`
 	RecoveryFailure            string `json:"recovery_failure,omitempty"`
 	ControlPhase               int32  `json:"control_phase"`
 	ControlCursor              uint32 `json:"control_cursor"`
@@ -1010,7 +1056,7 @@ type MailAccountSnapshot struct {
 }
 
 func (l *IMAPLink) Snapshot() MailSnapshot {
-	s := MailSnapshot{Accounts: len(l.accounts), Durable: l.store != nil}
+	s := MailSnapshot{Accounts: len(l.accounts), Durable: l.store != nil, Reclamation: l.reclaimer.snapshot()}
 	l.mu.Lock()
 	var verified [20]bool
 	for i, a := range l.accounts {
@@ -1035,7 +1081,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.RetainedBytes += a.spent
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
-		line := MailAccountSnapshot{Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
 		line.PeerVerified = verified[i]
 		line.RecoveryFailure = a.recoveryFailure
@@ -1086,6 +1132,7 @@ type mailPipe struct {
 	generationDebug atomic.Uint32
 	confirmed       uint32
 	consumed        imap.UIDSet
+	allowExpunge    atomic.Bool
 	validity        uint32
 	service         time.Duration
 	latency         atomic.Int64
@@ -1122,7 +1169,12 @@ func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {
 		default:
 		}
 	}
-	p.client = imapclient.New(conn, &imapclient.Options{UnilateralDataHandler: &imapclient.UnilateralDataHandler{Mailbox: func(*imapclient.UnilateralDataMailbox) { changed() }, Expunge: func(uint32) { p.invalid.Store(true); changed() }}})
+	p.client = imapclient.New(conn, &imapclient.Options{UnilateralDataHandler: &imapclient.UnilateralDataHandler{Mailbox: func(*imapclient.UnilateralDataMailbox) { changed() }, Expunge: func(uint32) {
+		if !p.allowExpunge.Load() {
+			p.invalid.Store(true)
+		}
+		changed()
+	}}})
 	if err = p.client.Login(a.Username, a.Password).Wait(); err != nil {
 		p.close()
 		return nil, ErrAuth

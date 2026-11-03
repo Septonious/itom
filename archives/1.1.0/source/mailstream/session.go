@@ -68,6 +68,7 @@ type Session struct {
 	input           chan []byte
 	receipts        chan uint64
 	receiptRetries  atomic.Uint64
+	openRefusals    atomic.Uint64
 	retransmissions uint64
 	seen            [replaySlots]uint64
 	seenValid       [replaySlots]bool
@@ -113,9 +114,13 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 					}
 					kind := retired.Kind
 					if kind == 0 {
-						kind = frameReclaimed
+						kind = frameRetired
 					}
-					if err := s.send(s.ctx, frame{kind: kind, offset: uint64(retired.Generation), data: []byte(retired.Account)}, true); err != nil {
+					data := []byte(retired.Account)
+					if kind == frameSegment {
+						data = binary.BigEndian.AppendUint32(data, retired.Slot)
+					}
+					if err := s.send(s.ctx, frame{kind: kind, offset: uint64(retired.Generation), data: data}, true); err != nil {
 						return
 					}
 				}
@@ -515,14 +520,32 @@ func (s *Session) apply(f frame) error {
 		}
 		return nil
 	}
-	if f.kind == frameReclaimed {
-		if f.stream != 0 || f.offset > uint64(^uint32(0)) || !validIdentity(string(f.data)) {
+	if f.kind == frameSegment {
+		if f.stream != 0 || f.offset > uint64(^uint32(0)) || len(f.data) < 5 || !validIdentity(string(f.data[:len(f.data)-4])) {
 			return ErrProtocol
 		}
 		if storage, ok := s.link.(StorageLink); ok {
-			return storage.ConfirmReclaimed(Retirement{s.cipher.id, string(f.data), uint32(f.offset), frameReclaimed})
+			return storage.ConfirmRoute(Retirement{Session: s.cipher.id, Account: string(f.data[:len(f.data)-4]), Generation: uint32(f.offset), Slot: binary.BigEndian.Uint32(f.data[len(f.data)-4:])})
 		}
 		return ErrProtocol
+	}
+	if f.kind == frameRetired || f.kind == frameCollect || f.kind == frameCollected {
+		if f.stream != 0 || f.offset > uint64(^uint32(0)) || !validIdentity(string(f.data)) {
+			return ErrProtocol
+		}
+		storage, ok := s.link.(StorageLink)
+		if !ok {
+			return ErrProtocol
+		}
+		r := Retirement{Session: s.cipher.id, Account: string(f.data), Generation: uint32(f.offset)}
+		switch f.kind {
+		case frameRetired:
+			return storage.ConfirmRetired(r)
+		case frameCollect:
+			return storage.RequestCollection(r)
+		case frameCollected:
+			return storage.ConfirmCollection(r)
+		}
 	}
 	if f.kind == framePing || f.kind == framePong {
 		if f.stream != 0 || len(f.data) != 0 {
@@ -629,6 +652,7 @@ func (s *Session) OpenTCP(ctx context.Context, target string) (net.Conn, error) 
 		return nil, err
 	}
 	if len(s.streams) >= maxStreams || s.nextStream > 131071 {
+		s.openRefusals.Add(1)
 		s.mu.Unlock()
 		return nil, ErrCapacity
 	}
@@ -685,6 +709,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	OpenRefusals        uint64 `json:"open_refusals"`
 	Streams             int    `json:"streams"`
 	PendingPackets      int    `json:"pending_packets"`
 	PendingBytes        int    `json:"pending_bytes"`
@@ -702,7 +727,7 @@ type Snapshot struct {
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{OpenRefusals: s.openRefusals.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}

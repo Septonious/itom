@@ -59,6 +59,7 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		return errors.New("MAILSTREAM_SOCKET_BUDGET")
 	}
 	admission := &sessionAdmission{limit: slots, owners: map[string]int{}}
+	reclaimer := mailstream.NewReclamationCoordinator()
 	active := 0
 	for _, u := range c.Users {
 		if !u.Enabled {
@@ -66,7 +67,7 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		}
 		active++
 		p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: c.Server, Provider: c.Provider, User: u, Accounts: c.Accounts, Transport: c.TransportForUsers()}
-		go func() { done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, log, managed) }()
+		go func() { done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, reclaimer, log, managed) }()
 	}
 	if active == 0 {
 		return servercfg.ErrConfig
@@ -80,12 +81,15 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 	}
 	return result
 }
-func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, reclaimer *mailstream.ReclamationCoordinator, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
 	accounts, key, err := profileAccounts(p, &net.Dialer{Timeout: 15 * time.Second}, nil)
 	if err != nil {
 		return err
 	}
 	defer clear(key)
+	for i := range accounts {
+		accounts[i].Reclamation = reclaimer
+	}
 	identity := profileIdentity(p)
 	link, err := mailstream.NewStoredIMAPLink(ctx, identity, accounts, false, filepath.Dir(trace.path))
 	if err != nil {

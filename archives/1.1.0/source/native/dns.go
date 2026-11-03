@@ -118,7 +118,7 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 func (c *Client) udpDNS(conn net.Conn) {
 	buf := make([]byte, 4096)
 	for {
-		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		conn.SetReadDeadline(time.Now().Add(time.Second))
 		n, e := conn.Read(buf)
 		if e != nil {
 			return

@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -109,6 +110,7 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 				t.Fatalf("%s size=%d body=%d err=%v diagnostics=%s", mode, size, len(got), e, c.Diagnostics())
 			}
 		}
+		verifyNativeDNSAndSocketBurst(t, c, tr)
 		tr.CloseIdleConnections()
 	}
 	var stats map[string]any
@@ -148,4 +150,69 @@ func headerIPv4EmptySubnet() tcpip.Subnet {
 		panic(e)
 	}
 	return s
+}
+
+// Hold the same idle DNS associations that previously consumed TCP workers,
+// alongside background TLS sockets and a speedtest-like HTTPS connection burst.
+func verifyNativeDNSAndSocketBurst(t *testing.T, c *Client, base *http.Transport) {
+	t.Helper()
+	var idle []net.Conn
+	defer func() {
+		for _, conn := range idle {
+			conn.Close()
+		}
+	}()
+	for range 128 {
+		a, b := net.Pipe()
+		idle = append(idle, b)
+		c.handleUDP(dnsAssociation{a})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	for range 16 {
+		conn, err := base.DialContext(ctx, "tcp", "203.0.113.80:443")
+		if err != nil {
+			t.Fatal("background connection admission:", err)
+		}
+		idle = append(idle, conn)
+		conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+		if _, err = conn.Write([]byte{0x16, 0x03, 0x01}); err != nil {
+			t.Fatal("background TLS admission:", err)
+		}
+	}
+	burst := base.Clone()
+	burst.TLSHandshakeTimeout = 5 * time.Second
+	burst.ResponseHeaderTimeout = 5 * time.Second
+	burst.DisableKeepAlives = true
+	defer burst.CloseIdleConnections()
+	result := make(chan error, 32)
+	payload := bytes.Repeat([]byte{0x37}, 16<<10)
+	for range 32 {
+		go func() {
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://example.com/", bytes.NewReader(payload))
+			if err != nil {
+				result <- err
+				return
+			}
+			response, err := (&http.Client{Transport: burst}).Do(req)
+			if err == nil {
+				body, e := io.ReadAll(response.Body)
+				response.Body.Close()
+				err = e
+				if err == nil && !bytes.Equal(body, payload) {
+					err = fmt.Errorf("burst integrity: got %d bytes", len(body))
+				}
+			}
+			result <- err
+		}()
+	}
+	for range 32 {
+		if err := <-result; err != nil {
+			t.Fatal("native HTTPS burst under DNS pressure:", err)
+		}
+	}
+	if s := c.trafficSnapshot(); s.TCPWorkerRefusals != 0 {
+		t.Fatalf("DNS starved TCP admission: %+v", s)
+	}
+	t.Log("32 fresh native HTTPS connections passed alongside 16 background sockets and 128 idle DNS association attempts")
 }

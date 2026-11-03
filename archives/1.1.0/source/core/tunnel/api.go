@@ -39,9 +39,11 @@ type Stats struct {
 	RTTMillis                    int64
 }
 type ClientOptions struct {
-	Diagnostics bool
-	TLSConfig   *tls.Config
-	Progress    func(StartupProgress)
+	// FrontendDiagnostics supplies only cumulative, credential-free native counters.
+	FrontendDiagnostics func() any
+	Diagnostics         bool
+	TLSConfig           *tls.Config
+	Progress            func(StartupProgress)
 }
 type StartupProgress struct {
 	Stage, ConfigHash, FailureReason string
@@ -258,7 +260,14 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	stage = "READY"
 	progressMu.Unlock()
 	report("", link)
-	_ = trace.record(map[string]any{"Event": "client_runtime", "Revision": TransportRevision, "Client": client.Snapshot(), "Session": session.Snapshot(), "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
+	recordRuntime := func() {
+		event := map[string]any{"Event": "client_runtime", "Revision": TransportRevision, "Client": client.Snapshot(), "Session": session.Snapshot(), "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()}
+		if o.FrontendDiagnostics != nil {
+			event["Native"] = o.FrontendDiagnostics()
+		}
+		_ = trace.record(event)
+	}
+	recordRuntime()
 	owned = true
 	client.workers.Add(1)
 	go func() {
@@ -278,7 +287,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 				_, _ = client.samplePing(probe)
 				done()
 				if o.Diagnostics {
-					_ = trace.record(map[string]any{"Event": "client_runtime", "Revision": TransportRevision, "Client": client.Snapshot(), "Session": session.Snapshot(), "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
+					recordRuntime()
 				}
 			}
 		}

@@ -48,3 +48,27 @@ untagged base-EXPUNGE updates, failed/blocked housekeeping, exact ownership and
 no premature refunds, complete download then upload, many aborted TLS streams,
 user reconnect while a half-closed origin stays silent, and the existing
 normal/race/native/weak-link and throughput acceptance cohorts.
+
+## Native admission gap
+
+The client export records 70 worker refusals, 89 failed opens (20 timeouts),
+156 established opens, 15 blocked IPv6 attempts, zero DNS lookup failures and
+1383 rejected non-DNS UDP packets. The old aggregate refusal counter did not
+identify which frontend pool was full, and these counters were absent from the
+periodic runtime trace, so they cannot be aligned precisely with the first
+CLOSE failure.
+
+The native bridge used the same 128 workers for TCP and DNS associations. UDP
+DNS associations retained a worker for 30 idle seconds. A focused regression
+reproduces a rejected TCP worker after filling that budget with idle DNS flows.
+The fix gives DNS its own bounded 64-worker budget, releases answered idle UDP
+DNS associations after one second, and keeps TCP's existing bound. Both UDP and
+TCP DNS use the separate budget. Direct resolver endpoints, 250 ms exchange
+budget, first-answer race and optional session-long IMAP fallback are unchanged.
+
+The actual native SOCKS/TUN proof now includes 32 concurrent fresh HTTPS posts
+alongside 16 incomplete background TLS sockets and 128 DNS-association attempts.
+It passes with zero TCP worker refusals. New diagnostics split DNS/TCP refusal
+counts and record them with periodic transport snapshots; session admission
+refusals are counted separately. This avoids attributing every pre-speedtest
+failure to the later storage cleanup failure without evidence.

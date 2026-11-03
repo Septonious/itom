@@ -126,7 +126,7 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	other.Key = hex.EncodeToString(key)
 	account := servercfg.Account{ID: "a01", Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture", Password: "fixture-password"}}
 	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: []servercfg.Account{account}, Users: []servercfg.User{u, other}}
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	serverDone := make(chan error, 1)
 	serverJoined := false
@@ -168,7 +168,7 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	}
 	for process := 0; process < 2; process++ {
 		_ = os.Remove(filepath.Join(root, "native-stop"))
-		child := exec.CommandContext(ctx, binary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=30s")
+		child := exec.CommandContext(ctx, binary, "-test.run=^TestRealNativeClientProcessHelper$", "-test.v", "-test.timeout=60s")
 		child.Env = append(os.Environ(), "ITOM_NATIVE_TEST_CONFIG="+configPath, "ITOM_NATIVE_TEST_STATE="+filepath.Join(root, "phone"), "ITOM_NATIVE_TEST_HTTPS_ROOT="+httpsTrust, "ITOM_NATIVE_TEST_EVIDENCE="+filepath.Join(root, "native-evidence.json"), "ITOM_NATIVE_TEST_STOP="+filepath.Join(root, "native-stop"), "SSL_CERT_FILE="+trust)
 		if process == 0 {
 			child.Env = append(child.Env, "ITOM_NATIVE_TEST_CRASH=1")

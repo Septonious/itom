@@ -28,7 +28,7 @@ import (
 // This is one whole-path acceptance scenario, not a controller throughput
 // formula or substituted grant fixture: verified TLS IMAP, fresh Noise startup,
 // real TCP, real HTTPS, a body larger than initial credit, then user restarts.
-// CLOSE reclamation is performed on the selected reader and never opens
+// server-owned reclamation is performed on the selected reader and never opens
 // another account connection or deletes a folder during delivery.
 func TestApplicationHTTPSAndUserRestarts(t *testing.T) {
 	runApplication(t, true, false)
@@ -164,13 +164,13 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 		t.Fatal("live delivery attempted folder deletion")
 	}
 	if cleanupCalls.expunge.Load() == 0 {
-		t.Fatal("consumed-slot CLOSE reclamation was not exercised")
+		t.Fatal("consumed-slot server-owned reclamation was not exercised")
 	}
 	retired := clientLink.Snapshot().Retired + serverLink.Snapshot().Retired
 	if retired == 0 {
 		t.Fatal("verified slot reclamation never released capacity")
 	}
-	t.Logf("consumed_slot_close_commands=%d reclaimed_generations=%d", cleanupCalls.expunge.Load(), retired)
+	t.Logf("verified_base_expunge_commands=%d reclaimed_generations=%d", cleanupCalls.expunge.Load(), retired)
 	cancel()
 	select {
 	case <-serverDone:
@@ -279,7 +279,7 @@ type cleanupCounters struct {
 func (s noCleanupSession) Expunge(w *imapserver.ExpungeWriter, uids *imap.UIDSet) error {
 	s.calls.expunge.Add(1)
 	if uids != nil {
-		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "UID EXPUNGE forbidden; CLOSE required"}
+		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "UID EXPUNGE forbidden; ordinary EXPUNGE required"}
 	}
 	return s.Session.Expunge(w, uids)
 }
@@ -312,6 +312,10 @@ func applicationMailServer(t *testing.T, maintenance, stalled bool) ([]MailAccou
 }
 
 func applicationMailServerWrapped(t *testing.T, maintenance, stalled bool, wrap func(imapserver.Session) imapserver.Session) ([]MailAccount, *cleanupCounters) {
+	return applicationMailServerObserved(t, maintenance, stalled, wrap, nil)
+}
+
+func applicationMailServerObserved(t *testing.T, maintenance, stalled bool, wrap func(imapserver.Session) imapserver.Session, debug io.Writer) ([]MailAccount, *cleanupCounters) {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -340,7 +344,7 @@ func applicationMailServerWrapped(t *testing.T, maintenance, stalled bool, wrap 
 		backend.AddUser(imapmemserver.NewUser(username, "fixture-private"))
 		accounts = append(accounts, MailAccount{ID: username, Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, Username: username, Password: "fixture-private", Roots: roots})
 	}
-	server := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
+	server := imapserver.New(&imapserver.Options{DebugWriter: debug, Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		var session imapserver.Session = noCleanupSession{backend.NewSession(), calls, maintenance, map[string]int{}}
 		if wrap != nil {
 			session = wrap(session)
