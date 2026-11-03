@@ -10,6 +10,19 @@ import (
 // owner never wait for this optional operation. Parking preempts its raw IO.
 func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, completed chan error, inFlight *int, wait *sync.WaitGroup) {
 	c := a.link.reclaimer
+	// A DATA job cannot repeatedly consume this account's global FIFO turn
+	// while its queued control maintenance loses the lease. Donate the turn
+	// to requested maintenance; DATA remains eligible for the next turn.
+	a.mu.Lock()
+	maintenance := a.maintenance.requested
+	if maintenance {
+		job.record.queued = false
+	}
+	a.mu.Unlock()
+	if maintenance {
+		a.processMaintenance(writer, completed, inFlight, wait)
+		return
+	}
 	unqueue := func(refused bool) {
 		a.mu.Lock()
 		job.record.queued = false

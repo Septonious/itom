@@ -266,6 +266,37 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return "", nil
 	}
 	a.mu.Lock()
+	inventoryComplete := m.inventoried && m.folderIndex == len(m.folders)
+	a.mu.Unlock()
+	if !idle && inventoryComplete && start.Validity != 0 && covers(cin, start) && covers(cout, boundary) {
+		a.mu.Lock()
+		if !m.recoveryReady {
+			refund := a.recovered
+			for key, r := range a.segments {
+				if key.session != id {
+					refund += r.bytes
+				}
+			}
+			if e := a.refundLocked(refund); e != nil {
+				a.mu.Unlock()
+				return "", e
+			}
+			a.recovered = 0
+			for key := range a.segments {
+				if key.session != id {
+					delete(a.segments, key)
+				}
+			}
+			for key := range a.remoteSegments {
+				if key.session != id {
+					delete(a.remoteSegments, key)
+				}
+			}
+			m.recoveryReady = true
+		}
+		a.mu.Unlock()
+	}
+	a.mu.Lock()
 	preferOut := m.collectControlOut
 	a.mu.Unlock()
 	eligibleIn := cursor.Validity != 0 && (retry == l.controlFolder(false) || retry == "" && (cursor.UID-cin.UID >= controlBatch || idle && cursor.UID > cin.UID || recovering && !covers(cin, start) && start.Validity != 0))
@@ -323,34 +354,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 
 		return folder, nil
 	}
-	if !idle && start.Validity != 0 && covers(cin, start) && covers(cout, boundary) {
-		a.mu.Lock()
-		if !m.recoveryReady {
-			refund := a.recovered
-			for key, r := range a.segments {
-				if key.session != id {
-					refund += r.bytes
-				}
-			}
-			if e := a.refundLocked(refund); e != nil {
-				a.mu.Unlock()
-				return "", e
-			}
-			a.recovered = 0
-			for key := range a.segments {
-				if key.session != id {
-					delete(a.segments, key)
-				}
-			}
-			for key := range a.remoteSegments {
-				if key.session != id {
-					delete(a.remoteSegments, key)
-				}
-			}
-			m.recoveryReady = true
-		}
-		a.mu.Unlock()
-	}
+
 	if idle {
 		a.mu.Lock()
 		m.lastIdle = time.Now()
@@ -392,6 +396,7 @@ func (l *IMAPLink) maintainRetention() {
 				select {
 				case a.writerOps <- writerOperation{maintenance: true}:
 					m.pending = true
+					m.requested = true
 				default:
 				}
 				a.mu.Unlock()
@@ -452,6 +457,9 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 		return
 	}
 	defer c.release()
+	a.mu.Lock()
+	a.maintenance.requested = false
+	a.mu.Unlock()
 	ctx, cancel := context.WithCancel(a.ctx)
 	defer cancel()
 	a.mu.Lock()
