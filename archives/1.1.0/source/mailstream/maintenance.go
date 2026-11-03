@@ -390,6 +390,10 @@ func (l *IMAPLink) maintainRetention() {
 		if !active {
 			due = time.Since(m.lastIdle) >= 30*time.Second
 		}
+		if active && a.deferMaintenanceLocked() {
+			a.mu.Unlock()
+			continue
+		}
 		if ready && !m.pending && due && (!active || a.needsMaintenanceLocked()) && l.reclaimer.permitted(a, "") {
 			m.lastAttempt = time.Now()
 			if active {
@@ -453,6 +457,15 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan error, inFlight *int, wait *sync.WaitGroup) {
 	defer func() { a.mu.Lock(); a.maintenance.pending = false; a.maintenance.cancel = nil; a.mu.Unlock() }()
 	c := a.link.reclaimer
+	a.mu.Lock()
+	deferred := a.deferMaintenanceLocked()
+	if deferred {
+		a.maintenance.requested = false
+	}
+	a.mu.Unlock()
+	if deferred {
+		return
+	}
 	if *writer == nil || a.parking.Load() || !c.permitted(a, "") || !c.acquire(a) {
 		return
 	}
@@ -565,4 +578,15 @@ func (c *ReclamationCoordinator) adoptRetryLocked(a *mailAccountState) {
 	if old != nil && old != a && old.ctx.Err() != nil && old.link.identity == a.link.identity && old.config.ID == a.config.ID {
 		c.failedOwner = a
 	}
+}
+
+// Control tails can wait during a bulk burst when storage has ample headroom.
+// DATA collection remains eligible. Bootstrap/historical recovery and real
+// retention pressure always override this optimization. Account.mu is held.
+func (a *mailAccountState) deferMaintenanceLocked() bool {
+	if !a.maintenance.recoveryReady || a.recovered != 0 || a.spent > prototypePhysicalBudget-2*reservationQuantum {
+		return false
+	}
+	last := a.link.lastBulk.Load()
+	return last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond
 }

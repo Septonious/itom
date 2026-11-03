@@ -104,6 +104,7 @@ type mailAccountState struct {
 }
 
 type IMAPLink struct {
+	lastBulk            atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
 	cancel              context.CancelFunc
@@ -308,6 +309,9 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 		start = int(l.bulkAccount % uint64(len(l.accounts)))
 	}
 	l.mu.Unlock()
+	if !priority {
+		l.lastBulk.Store(time.Now().UnixNano())
+	}
 	work := mailWork{body: bytes.Clone(body), control: priority, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
@@ -594,6 +598,9 @@ func (a *mailAccountState) attach(id SessionID) error {
 	stopSelect()
 	a.configureSegments(p, id)
 	p.onPacket = func(packet []byte) {
+		if len(packet) > 4096 {
+			a.link.lastBulk.Store(time.Now().UnixNano())
+		}
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, p.generation, false)
 	}

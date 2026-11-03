@@ -14,7 +14,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// while its queued control maintenance loses the lease. Donate the turn
 	// to requested maintenance; DATA remains eligible for the next turn.
 	a.mu.Lock()
-	maintenance := a.maintenance.requested
+	maintenance := a.maintenance.requested && !a.deferMaintenanceLocked()
 	if maintenance {
 		job.record.queued = false
 	}

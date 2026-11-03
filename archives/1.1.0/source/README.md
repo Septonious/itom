@@ -16,7 +16,8 @@ session DATA are excluded. The server must remain running for idle maintenance;
 if stopped immediately, leftovers are revisited after the next start.
 
 Failed collection quarantines that account/folder, preserves its charge and
-retries with bounded exponential backoff. Collection cannot close delivery readers. The normal 64 MiB storage
+retries with bounded exponential backoff. Collection cannot close delivery readers. Optional control-tail cleanup yields
+during bulk DATA when storage has headroom, then resumes at a quiet interval. The normal 64 MiB storage
 budget and 64 DATA slots remain; an additional finite 64 KiB durable reserve
 carries only bootstrap/recovery messages when an old ledger is full. Application
 traffic cannot use that reserve. Provider storage is never freed by resetting

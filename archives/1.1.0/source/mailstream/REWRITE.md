@@ -94,8 +94,11 @@ per-prefix fsync without allowing unreserved publication, and clean close stores
 exact remaining debt. A crash may recover the unused reservation as additional
 conservative debt until verified namespace reconciliation. Control logs use UID cursors independent of shifting sequence numbers. Every
 32 consumed messages, authenticated peer watermarks permit server-owned prefix
-collection. Eligible control directions alternate so a continuous upload cannot
-starve downloaded control mail. Control uses the ordinary finite retained-byte budget and bounded actor queues.
+collection. Eligible control directions alternate so one cannot
+starve the other. After historical recovery, optional control-tail maintenance
+yields while bulk DATA is active and ordinary storage has headroom. It resumes
+after a 300 ms DATA quiet interval; DATA reclamation, historical recovery and
+retention pressure override this deferral. Control uses the ordinary finite retained-byte budget and bounded actor queues.
 It does not impose another count-based gate on receipts: provider cleanup
 failure must not deadlock the acknowledgements needed to complete transfers.
 Recovery messages have separate admission.
