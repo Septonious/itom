@@ -313,26 +313,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		m.folderIndex++
 		m.emptiedFolders++
 		a.mu.Unlock()
-		if idle && c.deleteAllowed() {
-			if e = ctx.Err(); e != nil {
-				return folder, e
-			}
-			if _, e = p.client.Select(l.controlFolder(true), nil).Wait(); e != nil {
-				return folder, e
-			}
-			c.stage("offline_delete")
-			if e = p.client.Delete(folder).Wait(); e != nil {
-				c.deleteFailed()
-				a.mu.Lock()
-				m.failure = "FOLDER_DELETE_UNAVAILABLE"
-				a.mu.Unlock()
-				return folder, errOptionalDelete
-			}
-			c.deleteSucceeded()
-			a.mu.Lock()
-			m.removedFolders++
-			a.mu.Unlock()
-		}
+
 		return folder, nil
 	}
 	if !idle && start.Validity != 0 && covers(cin, start) && covers(cout, boundary) {
@@ -370,8 +351,6 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	}
 	return "", nil
 }
-
-var errOptionalDelete = errors.New("MAILSTREAM_OPTIONAL_DELETE")
 
 func (l *IMAPLink) maintainRetention() {
 	if l.client {
@@ -438,7 +417,7 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 	defer func() { a.mu.Lock(); a.maintenance.cancel = nil; a.mu.Unlock() }()
 	p, e := openMailPipe(ctx, a.config)
 	if e != nil {
-		if ctx.Err() == nil {
+		if a.ctx.Err() == nil && !errors.Is(ctx.Err(), context.Canceled) {
 			c.folder("")
 			c.pause("MAINTENANCE_LOGIN_FAILED", a)
 		}
@@ -452,12 +431,10 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 		c.completed(folder)
 		return
 	}
-	if ctx.Err() != nil {
+	if a.ctx.Err() != nil || errors.Is(ctx.Err(), context.Canceled) {
 		return
 	}
-	if !errors.Is(e, errOptionalDelete) {
-		c.pause("MAINTENANCE_FAILED", a)
-	}
+	c.pause("MAINTENANCE_FAILED", a)
 }
 
 // Live maintenance borrows the existing APPEND actor; it never owns a reader.
@@ -573,23 +550,4 @@ func (c *ReclamationCoordinator) adoptRetryLocked(a *mailAccountState) {
 	if old != nil && old != a && old.ctx.Err() != nil && old.link.identity == a.link.identity && old.config.ID == a.config.ID {
 		c.failedOwner = a
 	}
-}
-func (c *ReclamationCoordinator) deleteAllowed() bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return !c.state.DeletePaused || !time.Now().Before(c.deleteRetryAt)
-}
-func (c *ReclamationCoordinator) deleteFailed() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.state.DeletePaused = true
-	c.deleteFailures = min(c.deleteFailures+1, 5)
-	c.deleteRetryAt = time.Now().Add(min(10*time.Minute, 15*time.Second*time.Duration(1<<c.deleteFailures)))
-}
-func (c *ReclamationCoordinator) deleteSucceeded() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.state.DeletePaused = false
-	c.deleteFailures = 0
-	c.deleteRetryAt = time.Time{}
 }

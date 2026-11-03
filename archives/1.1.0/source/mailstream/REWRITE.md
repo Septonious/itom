@@ -82,7 +82,7 @@ Answered idle UDP DNS associations release their worker after one second. Both
 UDP and TCP port 53 use the DNS pool. DNS/TCP worker refusals and occupancy are
 reported separately, alongside session-open refusals and cleanup circuit state,
 in periodic diagnostics. RC7 also reports outstanding control messages, verified
-control collection, abandoned folders emptied/removed, storage recovery and
+control collection, abandoned folders emptied, storage recovery and
 maintenance failures. `control_cursor` is a UID, not a sequence count. No targets, credentials or plaintext are added.
 
 ## Capacity and operations
@@ -104,12 +104,11 @@ unrelated mail are excluded. Old partial DATA and control mail are emptied and
 audited before old aggregate debt is released; the client receives authenticated
 recovery confirmation. No manual mailbox purge is required for normal recovery.
 After all configured sessions stop and five seconds elapse, one optional login
-collects control tails and removes verified-empty abandoned folders. Admission
-cancels it. No DELETE or extra login runs while any session is active. Idle
-inventory repeats every 30 seconds. A DELETE failure has separate 30–480 second
-backoff and cannot block ordinary message reclamation. Physical folder removal
-requires the provider to support working DELETE; audited empty folders are safe
-to retain temporarily. The server must be running to perform maintenance.
+collects control tails and empties abandoned folders. Admission
+cancels it. No extra login runs while any session is active. Idle
+inventory repeats every 30 seconds. Folder DELETE is never automatic, including
+at idle: field evidence shows that this command can lock the whole account.
+Audited empty folders remain, without retained message bodies. The server must be running to perform maintenance.
 
 The 64 MiB ordinary budget stays fixed. A separate 64 KiB durable reserve carries
 only small bootstrap and authenticated recovery updates, preventing a full old

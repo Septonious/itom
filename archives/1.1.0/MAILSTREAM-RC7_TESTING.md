@@ -7,8 +7,9 @@ part of this update. RC7 uses a fresh control namespace; do not mix with RC6.
 
 Control messages are now collected automatically using stable UID cursors.
 Abandoned partial DATA and old control folders are inventoried and emptied
-within the configured identity's namespace. Verified-empty old folders are
-removed while all sessions are idle. Leave the server running for that work;
+within the configured identity's namespace. Empty old folders are retained
+because provider DELETE can lock an entire account. Idle control tails are
+collected after sessions stop. Leave the server running for that work;
 immediate server shutdown defers remaining work to its next start.
 
 Cleanup failures retain their charges and retry with backoff. Readers remain
@@ -20,8 +21,8 @@ recovery failures. RC6 cancellation, half-close and native DNS/TCP fixes remain.
 The release includes normal/race/native/SDK/vet, Android build/tests/lint,
 verified HTTPS transfer and constrained-link evidence. Model success does not
 guarantee live Rambler mutation behavior. If provider EXPUNGE permanently fails,
-finite storage can still be exhausted; failed DELETE can leave empty folders
-until its retry succeeds. Targets remain 300 ms idle/light RTT, 2000 ms loaded
+finite storage can still be exhausted. Empty folders are harmless retained
+containers; automatic cleanup never uses DELETE. Targets remain 300 ms idle/light RTT, 2000 ms loaded
 RTT and sustained 100 Mbps each direction when the path permits. Strict ramp,
 rolling-throughput and pause targets are reported individually, including misses.
 

@@ -20,22 +20,22 @@ type controlWrite struct {
 	bytes    int
 }
 type retentionMaintenance struct {
-	initialOut, remoteRead, remoteStartOut          uidWatermark
-	clearedIn, clearedOut, deleted, ackSent         uidWatermark
-	writes                                          map[imap.UID]controlWrite
-	pending                                         bool
-	cancel                                          context.CancelFunc
-	lastAttempt, lastIdle                           time.Time
-	epoch, reportEpoch                              SessionID
-	lastReport                                      time.Time
-	reportUID                                       uint32
-	recovered, recoveryReady, recoverySent          bool
-	folders                                         []string
-	folderIndex                                     int
-	inventoried                                     bool
-	boundaryOut                                     uidWatermark
-	failure                                         string
-	removedFolders, emptiedFolders, controlMessages uint64
+	initialOut, remoteRead, remoteStartOut  uidWatermark
+	clearedIn, clearedOut, deleted, ackSent uidWatermark
+	writes                                  map[imap.UID]controlWrite
+	pending                                 bool
+	cancel                                  context.CancelFunc
+	lastAttempt, lastIdle                   time.Time
+	epoch, reportEpoch                      SessionID
+	lastReport                              time.Time
+	reportUID                               uint32
+	recovered, recoveryReady, recoverySent  bool
+	folders                                 []string
+	folderIndex                             int
+	inventoried                             bool
+	boundaryOut                             uidWatermark
+	failure                                 string
+	emptiedFolders, controlMessages         uint64
 }
 
 type maintenanceLink interface {

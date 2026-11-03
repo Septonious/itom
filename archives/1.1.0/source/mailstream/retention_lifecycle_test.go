@@ -38,7 +38,9 @@ func waitRetention(t *testing.T, ctx context.Context, check func() bool, descrip
 func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	accounts, _ := applicationMailServer(t, true, false)
+	fixture := &deletionLockFixture{release: make(chan struct{})}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &deletionLockSession{Session: s, owner: fixture} })
+	t.Cleanup(func() { close(fixture.release) })
 	state := t.TempDir()
 	store, e := openRetention(state, "retention-life", true)
 	if e != nil {
@@ -71,7 +73,20 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 	if e = store.close(); e != nil {
 		t.Fatal(e)
 	}
-	server, e := NewStoredIMAPLink(ctx, "retention-life", accounts, false, t.TempDir())
+	serverState := t.TempDir()
+	serverStore, e := openRetention(serverState, "retention-life", false)
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, a := range accounts {
+		if e = serverStore.put(retentionKey(a), prototypePhysicalBudget); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if e = serverStore.close(); e != nil {
+		t.Fatal(e)
+	}
+	server, e := NewStoredIMAPLink(ctx, "retention-life", accounts, false, serverState)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -177,11 +192,14 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 	session = nil
 	client = nil
 	tr.CloseIdleConnections()
-	// A provider-side observer waits for automatic idle collection, not a purge.
+	// Empty folders remain: DELETE can account-lock the field provider. Idle
+	// control-tail collection must still work without any manual provider purge.
 	waitRetention(t, ctx, func() bool {
-		folders, err := probe.client.List("", oldName, nil).Collect()
-		return err == nil && len(folders) == 0
-	}, "offline collector did not remove the old empty DATA folder")
+		server.mu.Lock()
+		idle := server.attached == (SessionID{})
+		server.mu.Unlock()
+		return idle
+	}, "server did not release stopped session")
 	user, e := probe.client.Status(foreign, &imap.StatusOptions{NumMessages: true}).Wait()
 	if e != nil || user.NumMessages == nil || *user.NumMessages != 1 {
 		t.Fatal("cleanup touched unrelated user mail", e)
@@ -191,6 +209,9 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 			s, err := probe.client.Status(name, &imap.StatusOptions{NumMessages: true}).Wait()
 			return err == nil && s.NumMessages != nil && *s.NumMessages == 0
 		}, "idle control tail was not automatically emptied")
+	}
+	if fixture.deletes.Load() != 0 || fixture.uidExpunges.Load() != 0 {
+		t.Fatal("cleanup used an account-locking provider command")
 	}
 	client, e = NewStoredIMAPLink(ctx, "retention-life", accounts, true, state)
 	if e != nil {
@@ -203,7 +224,7 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 	if _, e = session.Ping(ctx); e != nil {
 		t.Fatal("post-cleanup round trip", e)
 	}
-	t.Logf("full-ledger recovery; HTTPS=180; maximum observed control messages=%d; partial DATA and idle control removed; unrelated mail preserved; reconnect succeeded", maximum)
+	t.Logf("full-ledger recovery; HTTPS=180; maximum observed control messages=%d; partial DATA and idle control emptied; DELETE never attempted; unrelated mail preserved; reconnect succeeded", maximum)
 }
 
 // The first EXPUNGE deletes the messages but loses its successful outcome.

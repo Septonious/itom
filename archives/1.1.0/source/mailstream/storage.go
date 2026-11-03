@@ -55,28 +55,25 @@ type cleanupJob struct {
 // Shared by server identities. An unknown outcome quarantines cleanup to that
 // account and folder. Backoff retries re-audit it before other cleanup resumes.
 type ReclamationCoordinator struct {
-	mu             sync.Mutex
-	state          ReclamationSnapshot
-	active         bool
-	waiting        []*mailAccountState
-	failedOwner    *mailAccountState
-	failedFolder   string
-	retryAt        time.Time
-	failures       uint
-	sessions       map[*IMAPLink]bool
-	quietSince     time.Time
-	idleStop       context.CancelFunc
-	deleteRetryAt  time.Time
-	deleteFailures uint
+	mu           sync.Mutex
+	state        ReclamationSnapshot
+	active       bool
+	waiting      []*mailAccountState
+	failedOwner  *mailAccountState
+	failedFolder string
+	retryAt      time.Time
+	failures     uint
+	sessions     map[*IMAPLink]bool
+	quietSince   time.Time
+	idleStop     context.CancelFunc
 }
 type ReclamationSnapshot struct {
-	Paused       bool   `json:"paused"`
-	Stage        string `json:"stage,omitempty"`
-	Failure      string `json:"failure,omitempty"`
-	Completed    uint64 `json:"completed"`
-	Folder       string `json:"folder,omitempty"`
-	RetryAtMS    int64  `json:"retry_at_ms,omitempty"`
-	DeletePaused bool   `json:"delete_paused"`
+	Paused    bool   `json:"paused"`
+	Stage     string `json:"stage,omitempty"`
+	Failure   string `json:"failure,omitempty"`
+	Completed uint64 `json:"completed"`
+	Folder    string `json:"folder,omitempty"`
+	RetryAtMS int64  `json:"retry_at_ms,omitempty"`
 }
 
 func NewReclamationCoordinator() *ReclamationCoordinator {
