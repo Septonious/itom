@@ -90,11 +90,10 @@ maintenance failures. `control_cursor` is a UID, not a sequence count. No target
 Retention is durable and bound to physical account identity. Unknown APPEND
 outcomes remain charged. Control logs use UID cursors independent of shifting sequence numbers. Every
 32 consumed messages, authenticated peer watermarks permit server-owned prefix
-collection. While cleanup is healthy, ordinary publication stops at 128 outstanding tagged
-messages (plus bounded queued/in-flight work). If the provider refuses cleanup,
-control can use its remaining finite ordinary byte budget so packet receipts
-and fresh TLS do not deadlock behind the failed collection. Recovery messages
-have separate admission.
+collection. Control uses the ordinary finite retained-byte budget and bounded actor queues.
+It does not impose another count-based gate on receipts: provider cleanup
+failure must not deadlock the acknowledgements needed to complete transfers.
+Recovery messages have separate admission.
 Exact APPENDUID bytes are refunded only after a UIDVALIDITY-preserving empty
 prefix audit. Consumed prefixes retain short tails until a batch or idle sweep.
 

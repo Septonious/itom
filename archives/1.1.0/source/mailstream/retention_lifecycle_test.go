@@ -184,8 +184,8 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		}
 		maximum = max(maximum, *s.NumMessages)
 	}
-	if maximum > controlWindow+64 {
-		t.Fatalf("control messages grew beyond the finite publication window: %d", maximum)
+	if maximum > 192 {
+		t.Fatalf("light requests accumulated uncleared control messages: %d", maximum)
 	}
 	session.Close()
 	client.Close()

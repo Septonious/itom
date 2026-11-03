@@ -5,7 +5,7 @@ data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then
 use manager option 18 or `sudo itom update-from-tmp`. RC7 uses a new control
 namespace and must not be mixed with RC6.
 
-RC7 bounds control-mail publication and collects consumed control prefixes by
+RC7 collects consumed control prefixes by
 UID, so ordinary EXPUNGE cannot shift the reader's cursor. Successful tagged
 APPENDUID ownership and a verified empty UID prefix are required for refunds.
 A fenced namespace inventory collects abandoned partial DATA and old control

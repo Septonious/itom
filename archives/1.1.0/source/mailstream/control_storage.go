@@ -12,7 +12,6 @@ import (
 )
 
 const controlBatch = 32
-const controlWindow = 128
 
 type uidWatermark struct{ Validity, UID uint32 }
 type controlWrite struct {

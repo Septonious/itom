@@ -328,7 +328,7 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 		if !priority {
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
-		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget && (!priority || recovery || len(a.maintenance.writes) < controlWindow || l.reclaimer.snapshot().Paused)
+		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
 		if matched {
 			available = available && a.id == packetID
 		}
