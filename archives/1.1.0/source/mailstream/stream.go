@@ -15,6 +15,8 @@ import (
 // Each stream has independent receive storage and absolute consumed-byte
 // credit. The mail receive owner never waits for an application Read or dial.
 type Stream struct {
+	ctx                                              context.Context
+	cancel                                           context.CancelFunc
 	session                                          *Session
 	id                                               uint32
 	readMu, writeMu                                  sync.Mutex
@@ -43,7 +45,8 @@ const (
 func (s *Stream) StreamID() uint64 { return uint64(s.id) }
 
 func newStream(session *Session, id uint32) *Stream {
-	return &Stream{session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), chunks: map[uint64][]byte{}, receiveLimit: initialStreamWindow, peerWindow: initialStreamWindow}
+	ctx, cancel := context.WithCancel(session.ctx)
+	return &Stream{ctx: ctx, cancel: cancel, session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), chunks: map[uint64][]byte{}, receiveLimit: initialStreamWindow, peerWindow: initialStreamWindow}
 }
 func (s *Stream) notifyLocked() { close(s.changed); s.changed = make(chan struct{}) }
 func (s *Stream) markOpen() {
@@ -56,6 +59,7 @@ func (s *Stream) markOpen() {
 	s.notifyLocked()
 }
 func (s *Stream) abort(err error) {
+	s.cancel()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.err == nil {
@@ -155,6 +159,7 @@ func (s *Stream) accept(f frame) error {
 		if f.offset != 0 || len(f.data) != 0 {
 			return ErrProtocol
 		}
+		s.cancel()
 		s.err = ErrClosed
 		s.session.abandonStream(s.id)
 		if err := s.consumedLocked(s.sendOffset); err != nil {
@@ -361,6 +366,7 @@ func (s *Stream) CloseWrite() error {
 }
 func (s *Stream) Close() error {
 	s.closeOnce.Do(func() {
+		s.cancel()
 		s.mu.Lock()
 		graceful := s.err == nil && s.writeClosed && s.hasFinal && s.readOffset == s.final
 		peerReset := errors.Is(s.err, ErrClosed)

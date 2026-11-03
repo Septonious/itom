@@ -589,7 +589,7 @@ func (s *Session) apply(f frame) error {
 }
 
 func (s *Session) serveStream(stream *Stream, target string) {
-	ctx, cancel := context.WithCancel(s.ctx)
+	ctx, cancel := context.WithCancel(stream.ctx)
 	defer cancel()
 	dialTimeout := time.AfterFunc(10*time.Second, cancel)
 	conn, err := s.dial(ctx, "tcp", target)
@@ -602,6 +602,10 @@ func (s *Session) serveStream(stream *Stream, target string) {
 		return
 	}
 	defer conn.Close()
+	// An established exit socket must end on stream reset or session
+	// replacement, including when one bridge leg already reached FIN.
+	stopClose := context.AfterFunc(ctx, func() { conn.Close() })
+	defer stopClose()
 	if err = s.send(s.ctx, frame{kind: frameOpenOK, stream: stream.id}, true); err != nil {
 		stream.Close()
 		return
