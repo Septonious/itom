@@ -1,4 +1,4 @@
-# Mailbox stream transport contract — MAILSTREAM-RC7
+# Mailbox stream transport contract — MAILSTREAM-RC8
 
 RC5 field traces show nine client accounts failing at the first 32-message DATA
 boundary while executing CLOSE, despite low direct IMAP latency. A separate
@@ -25,7 +25,9 @@ silence lease handles abandoned peers independently of throughput control.
 TCP streams have independent offsets and receive windows. Small writes dispatch
 immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
-window. Bulk growth uses delivered bytes and a measured-rate bound. Interactive
+window. Bulk growth covers measured DATA-receipt RTT plus finite queue headroom.
+A saturated sender probes by at most 50% once per complete observation round;
+500 ms of extra DATA delay stops probing and restores the measured-rate bound. Interactive
 DATA does not train the bulk estimator, and an idle/application-limited gap
 restarts its observation interval. A faster light probe cannot pin a later
 bulk burst to the initial flight window. Mailbox receipts do not release application-consumption credit. Control
@@ -161,3 +163,10 @@ and shared link capacity. Targets remain 300 ms idle/light RTT, 2000 ms loaded
 RTT and sustained 100 Mbps each direction when capacity permits. Synthetic
 success is not live Rambler or Android/mobile qualification. No field guarantee
 follows from a short high-rate model run.
+
+RC8 keeps 64 active streams and the original receive-memory bound. Excess local
+OPEN calls wait within their caller context; close wakes waiters. Remote admission
+withholds an OPEN receipt when a prior RESET is still in flight. Diagnostics
+separate capacity waits from refusals and expose bulk receipt RTT, delivered rate
+and flight saturation. This addresses the RC7 field burst without increasing
+per-stream receive-credit allocations.

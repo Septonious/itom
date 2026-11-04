@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -39,8 +40,9 @@ type counts struct {
 }
 type session struct {
 	imapserver.Session
-	counts *counts
-	user   string
+	counts    *counts
+	user      string
+	bulkDelay time.Duration
 }
 
 func (s *session) Login(user, password string) error {
@@ -74,6 +76,11 @@ func (s *session) count(command string) {
 }
 func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOptions) (*imap.AppendData, error) {
 	s.count("APPEND")
+	// Provider work is distinct from TCP RTT. Serial DATA publication can
+	// remain slow even while NOOP/control is fast, as in RC7 field uploads.
+	if !strings.Contains(folder, "-control-") && s.bulkDelay > 0 {
+		time.Sleep(s.bulkDelay)
+	}
 	size := r.Size()
 	data, err := s.Session.Append(folder, r, o)
 	if err == nil {
@@ -137,8 +144,9 @@ func run() error {
 	accounts := flag.Int("accounts", 10, "physical accounts")
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
+	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	flag.Parse()
-	if *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -175,7 +183,7 @@ func run() error {
 	}
 	stats := &counts{live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return &session{Session: backend.NewSession(), counts: stats}, nil, nil
+		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

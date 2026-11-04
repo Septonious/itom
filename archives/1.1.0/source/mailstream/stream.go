@@ -389,6 +389,7 @@ func (s *Stream) Close() error {
 		s.session.mu.Lock()
 		delete(s.session.streams, s.id)
 		s.session.closedStreams[s.id] = terminal
+		s.session.notifyLocked()
 		s.session.mu.Unlock()
 		s.mu.Unlock()
 		if graceful {

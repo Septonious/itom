@@ -7,13 +7,14 @@ import "time"
 // not dump the entire 32 MiB memory allowance onto a slow mobile reader.
 // All fields are owned by Session.mu.
 type deliveryWindow struct {
-	flight int
-	limit  int
-	base   time.Duration
-	start  time.Time
-	last   time.Time
-	acked  int
-	rate   float64
+	flight  int
+	limit   int
+	base    time.Duration
+	start   time.Time
+	last    time.Time
+	acked   int
+	rate    float64
+	limited bool // unsent DATA encountered the delivery-flight bound
 }
 
 const initialDeliveryWindow = 512 << 10
@@ -37,6 +38,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
 		w.start, w.acked, w.rate = now, 0, 0
 		w.limit = initialDeliveryWindow
+		w.base = 0
 	}
 	w.last = now
 	if sample > 0 && (w.base == 0 || sample < w.base) {
@@ -52,21 +54,28 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	// Grow from measured delivered rate, not a delay threshold or an entire
 	// extra flight per clustered ACK batch. The initial flight is enough to
 	// measure a fast path, while doubling it before a sample floods a 7 Mbps link.
-	if elapsed := now.Sub(w.start); elapsed >= 250*time.Millisecond {
+	if elapsed := now.Sub(w.start); elapsed >= max(250*time.Millisecond, w.base) {
 		rate := float64(w.acked) / elapsed.Seconds()
 		if w.rate == 0 {
 			w.rate = rate
 		} else {
 			w.rate = (w.rate + rate) / 2
 		}
-		// Allow throughput-oriented headroom under load, without admitting
-		// tens of seconds of work merely because receive memory is free.
-		// Bulk headroom follows delivered bandwidth, independently of a tiny
-		// probe's RTT. Half a second remains below the loaded-delay budget.
-		horizon := 500 * time.Millisecond
+		// Receipts include mailbox visibility and the return control path.
+		// Cover bulk propagation as well as finite queue headroom: a fixed
+		// 500 ms horizon trapped slower receipts at the initial 512 KiB.
+		horizon := min(w.base, 750*time.Millisecond) + 500*time.Millisecond
 		target := int(w.rate * horizon.Seconds())
+		// Rate is itself window-limited while unsent DATA is waiting.
+		// Probe once per observation round, never per clustered receipt.
+		// Stop probing after 500 ms extra DATA queueing; measured bandwidth
+		// then bounds flight on a slow mobile link.
+		if w.limited && sample > 0 && sample <= w.base+500*time.Millisecond {
+			target = max(target, w.allowance()+w.allowance()/2)
+		}
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))
 		w.start, w.acked = now, 0
+		w.limited = false
 	}
 }
 

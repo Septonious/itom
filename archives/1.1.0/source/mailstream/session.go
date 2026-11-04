@@ -69,6 +69,7 @@ type Session struct {
 	receipts        chan uint64
 	receiptRetries  atomic.Uint64
 	openRefusals    atomic.Uint64
+	openWaits       atomic.Uint64
 	retransmissions uint64
 	seen            [replaySlots]uint64
 	seenValid       [replaySlots]bool
@@ -376,6 +377,7 @@ func (s *Session) dispatchLoop() {
 				continue
 			}
 			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
+				s.delivery.limited = true
 				s.mu.Unlock()
 				continue
 			}
@@ -622,7 +624,9 @@ func (s *Session) apply(f frame) error {
 		s.mu.Lock()
 		if len(s.streams) >= maxStreams {
 			s.mu.Unlock()
-			return s.trySend(frame{kind: frameReset, stream: f.stream}, true)
+			// A close RESET can cross a new OPEN. Withhold its receipt
+			// until a slot frees instead of aborting the new connection.
+			return ErrCapacity
 		}
 		stream = newStream(s, f.stream)
 		s.streams[f.stream] = stream
@@ -674,16 +678,39 @@ func (s *Session) OpenTCP(ctx context.Context, target string) (net.Conn, error) 
 	if _, _, err := net.SplitHostPort(target); err != nil {
 		return nil, ErrProtocol
 	}
-	s.mu.Lock()
-	if s.err != nil {
-		err := s.err
+	waited := false
+	for {
+		s.mu.Lock()
+		if err := ctx.Err(); err != nil {
+			s.mu.Unlock()
+			return nil, err
+		}
+		if s.err != nil {
+			err := s.err
+			s.mu.Unlock()
+			return nil, err
+		}
+		if s.nextStream > 131071 {
+			s.openRefusals.Add(1)
+			s.mu.Unlock()
+			return nil, ErrCapacity
+		}
+		if len(s.streams) < maxStreams {
+			break
+		}
+		if !waited {
+			s.openWaits.Add(1)
+			waited = true
+		}
+		change := s.changed
 		s.mu.Unlock()
-		return nil, err
-	}
-	if len(s.streams) >= maxStreams || s.nextStream > 131071 {
-		s.openRefusals.Add(1)
-		s.mu.Unlock()
-		return nil, ErrCapacity
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-s.ctx.Done():
+			return nil, ErrClosed
+		case <-change:
+		}
 	}
 	stream := newStream(s, s.nextStream)
 	s.nextStream += 2
@@ -738,7 +765,11 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	BulkReceiptRTTMS    int64  `json:"bulk_receipt_min_rtt_ms"`
+	BulkDeliveryRateBPS int64  `json:"bulk_delivery_bytes_per_second"`
+	BulkWindowLimited   bool   `json:"bulk_window_limited"`
 	OpenRefusals        uint64 `json:"open_refusals"`
+	OpenWaits           uint64 `json:"open_capacity_waits"`
 	Streams             int    `json:"streams"`
 	PendingPackets      int    `json:"pending_packets"`
 	PendingBytes        int    `json:"pending_bytes"`
@@ -756,7 +787,7 @@ type Snapshot struct {
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{OpenRefusals: s.openRefusals.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited, OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}

@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC7",
-  "revision": "itom-1-1-0-mailstream-rc7",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC7-sources.zip",
+  "release": "MAILSTREAM-RC8",
+  "revision": "itom-1-1-0-mailstream-rc8",
+  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC8-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "EXPERIMENTAL TESTING RC: UID control collection, automatic abandoned-session recovery, bounded retry and isolated cleanup; live-provider confirmation pending",
-  "android_version_name": "1.1.0-mailstream-rc7",
-  "android_version_code": 10132,
+  "qualification": "EXPERIMENTAL TESTING RC: RC7 cleanup plus deadline-bounded burst admission and demand-aware bulk flight probing; live-provider confirmation pending",
+  "android_version_name": "1.1.0-mailstream-rc8",
+  "android_version_code": 10133,
   "android_application_id": "org.itom.client",
   "build_allowed": true
 }
