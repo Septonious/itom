@@ -1,0 +1,21 @@
+{
+  "source_commit": "66625b9c3dd40ff7ed60e338bfcae72ee4e9f8e6",
+  "exit_code": 0,
+  "checks": {
+    "normal_and_race_native_sdk_vet": true,
+    "android_compile_tests_lint": true,
+    "persistent_signer_and_matched_jni": true,
+    "actual_downloaded_server_six_startups": true,
+    "manual_stop_capacity_reset": true,
+    "fast_path_1_4_32_stream_complete": true,
+    "fast_path_1_4_stream_100mbps": true,
+    "two_complete_cycles_same_session": true,
+    "slow_publication_upload_improved_over_frozen_rc7": true,
+    "weak_link_cancel_then_fresh_https": true,
+    "weak_link_idle_and_loaded_rtt": true,
+    "deadline_bounded_admission_and_full_64_plus_16_burst": true,
+    "rc7_cleanup_and_reconnect_regressions": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false
+}
