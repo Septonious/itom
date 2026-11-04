@@ -87,6 +87,48 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: mailstream-rc8-throughput, path: "throughput-*/", if-no-files-found: error}
+  field-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Compare frozen RC7 and RC8 with slow DATA publication and fast control
+        run: |
+          set -euo pipefail
+          reference=eb16f16a6f19257964977ce28881b89d90af4384
+          git fetch origin "$reference" --no-tags
+          mkdir reference-source
+          git archive "$reference" archives/1.1.0/source | tar -x -C reference-source
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out field-rc7 --candidate "$GITHUB_WORKSPACE/reference-source/archives/1.1.0/source/core" --only candidate --bulk-publish-delay-ms 200 --duration 16s --streams 4 --idle-probes 4 --post-probes 4
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out field-rc8 --only candidate --bulk-publish-delay-ms 200 --duration 16s --streams 4 --idle-probes 4 --post-probes 4
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          old=json.loads(Path('field-rc7/candidate.json').read_text())
+          new=json.loads(Path('field-rc8/candidate.json').read_text())
+          for d in (old,new):
+              assert d['success'] and d['stage']=='complete' and all(p['success'] for p in d['Phases'])
+              assert not d['diagnostics']['Session']['closed'] and d['diagnostics']['Mail']['failed_accounts']==0
+              assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          def upload(d):
+              p=d['Phases'][0]
+              return p['upload']['full_phase_mbps']
+          # Field replay must demonstrate an improvement, independently of
+          # the ordinary wire-rate gate. Service delay also bounds the fixture.
+          assert upload(new)>1.5*upload(old),(upload(old),upload(new))
+          Path('FIELD_COMPARISON.json').write_text(json.dumps({'rc7_upload_mbps':upload(old),'rc8_upload_mbps':upload(new),'improvement_ratio':upload(new)/upload(old),'real_provider_tested':False},indent=2)+'\n')
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc8-field-replay
+          path: |
+            field-rc7/
+            field-rc8/
+            FIELD_COMPARISON.json
+          if-no-files-found: error
   linux:
     # Build independently; publication still requires complete safety checks.
     runs-on: ubuntu-latest
