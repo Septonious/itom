@@ -38,6 +38,7 @@ jobs:
           assert d['diagnostics']['Mail']['failed_accounts']==0
           assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
           assert all(v>0 for v in d['AfterMS'])
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
           assert all(l['IMAPLatencyMillis']>0 for l in d['diagnostics']['Client']['Lines'])
           assert any(l['RTTMillis']>0 and l['DownloadBytes']>0 for l in d['diagnostics']['Client']['Lines'])
           assert d['Provider']['connection_rejections']==0

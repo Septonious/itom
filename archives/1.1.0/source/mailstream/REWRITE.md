@@ -27,7 +27,7 @@ immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
 window. Bulk growth covers measured DATA-receipt RTT plus finite queue headroom.
 A saturated sender probes by at most 50% once per complete observation round;
-500 ms of extra DATA delay stops probing and restores the measured-rate bound. Interactive
+350 ms of extra DATA delay stops probing and restores the measured-rate bound. Interactive
 DATA does not train the bulk estimator, and an idle/application-limited gap
 restarts its observation interval. A faster light probe cannot pin a later
 bulk burst to the initial flight window. Mailbox receipts do not release application-consumption credit. Control

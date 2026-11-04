@@ -64,11 +64,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		// Receipts include mailbox visibility and the return control path.
 		// Cover bulk propagation as well as finite queue headroom: a fixed
 		// 500 ms horizon trapped slower receipts at the initial 512 KiB.
-		horizon := min(w.base, 750*time.Millisecond) + 500*time.Millisecond
+		horizon := min(w.base, 750*time.Millisecond) + 350*time.Millisecond
 		target := int(w.rate * horizon.Seconds())
 		// Rate is itself window-limited while unsent DATA is waiting.
 		// Probe once per observation round, never per clustered receipt.
-		// Stop probing after 500 ms extra DATA queueing; measured bandwidth
+		// Stop probing after 350 ms extra DATA queueing; measured bandwidth
 		// then bounds flight on a slow mobile link.
 		if w.limited && sample > 0 && sample <= w.base+500*time.Millisecond {
 			target = max(target, w.allowance()+w.allowance()/2)
