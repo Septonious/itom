@@ -1,0 +1,136 @@
+name: Publish verified matched mailbox-stream RC7 testing assets
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: [".github/workflows/itom-mailstream-rc7-publish.yml"]
+permissions: {contents: write, actions: read}
+concurrency: {group: itom-mailstream-rc7-publication, cancel-in-progress: false}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: 41677382150
+      SOURCE_CI_RUN: 41677382308
+      QUALIFICATION_RUN: 41677382150
+      SOURCE_SHA: eb16f16a6f19257964977ce28881b89d90af4384
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require exact source and all matched builds and safety checks
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_SHA" --no-tags
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.0/source
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" > "$RUNNER_TEMP/upstream.json"
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN/jobs?per_page=100" > "$RUNNER_TEMP/jobs.json"
+          gh api "repos/$GH_REPO/actions/runs/$SOURCE_CI_RUN" > "$RUNNER_TEMP/source-ci.json"
+          gh api "repos/$GH_REPO/actions/runs/$QUALIFICATION_RUN" > "$RUNNER_TEMP/qualification.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          run=json.loads((root/'upstream.json').read_text());assert run['head_sha']==os.environ['SOURCE_SHA'] and run['status']=='completed' and run['conclusion']=='success'
+          jobs=json.loads((root/'jobs.json').read_text())['jobs']
+          for name in ('safety','throughput','linux','android'):
+              hits=[j for j in jobs if j['name']==name];assert len(hits)==1 and hits[0]['conclusion']=='success',name
+          source=json.loads((root/'source-ci.json').read_text());assert source['head_sha']==os.environ['SOURCE_SHA'] and source['conclusion']=='success'
+          qualification=json.loads((root/'qualification.json').read_text());assert qualification['head_sha']=='eb16f16a6f19257964977ce28881b89d90af4384' and qualification['conclusion']=='success'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mailstream-rc7-linux-*
+          merge-multiple: true
+          run-id: 41677382150
+          github-token: ${{ github.token }}
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc7-android-evidence, run-id: 41677382150, github-token: "${{ github.token }}", path: android-evidence}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-rc7-apk-part*", merge-multiple: true, run-id: 41677382150, github-token: "${{ github.token }}", path: apk-parts}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc7-signing-tools, run-id: 41677382150, github-token: "${{ github.token }}", path: signing-tools}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc7-safety, run-id: 41677382150, github-token: "${{ github.token }}", path: evidence/hosted-safety}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc7-throughput, run-id: 41677382150, github-token: "${{ github.token }}", path: evidence/hosted-throughput}
+      - name: Verify complete artifacts, public signature patch and local startup evidence
+        run: |
+          set -euo pipefail
+          (cd release-assets && sha256sum --check NATIVE_SOURCE_SHA256SUMS)
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          source=os.environ['SOURCE_SHA'];r=Path('release-assets');pub=Path('archives/1.1.0/publication/mailstream-rc7')
+          assert (r/'SOURCE_COMMIT').read_text().strip()==source
+          manifest=json.loads(Path('android-evidence/manifest.json').read_text());assert manifest['source_commit']==source
+          parts=[]
+          for part in manifest['parts']:
+              raw=Path('apk-parts',part['name']).read_bytes();assert len(raw)==part['bytes'] and hashlib.sha256(raw).hexdigest()==part['sha256'];parts.append(raw)
+          apk=b''.join(parts);assert len(apk)==manifest['apk_bytes'] and hashlib.sha256(apk).hexdigest()==manifest['apk_sha256']
+          Path('original.apk').write_bytes(apk)
+          report=json.loads(Path('android-evidence/build-report.json').read_text())
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-mailstream-rc7'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10132,'version_name':'1.1.0-mailstream-rc7-debug'} and report['sha256']==manifest['apk_sha256']
+          for name in ('domain_tests','app_unit_tests'):
+              assert report[name]['tests']>0 and report[name]['failures']==report[name]['errors']==report[name]['skipped']==0
+          assert report['lint']['errors']==0
+          reports=list(Path('evidence/hosted-safety').rglob('core-report.json'));assert len(reports)==1
+          safety=json.loads(reports[0].read_text());assert safety['status']=='passed' and safety['stage']=='complete'
+          for name in ('mailstream_normal_tests','mailstream_race_tests','native_normal_tests','native_race_tests','imap_fork_tests','vet'):assert safety[name]=='passed',name
+          assert safety['tests']['failed']==safety['race_tests']['failed']==0
+          release=json.loads((pub/'MAILSTREAM_RC7_BUILD.json').read_text());validation=json.loads((pub/'ARTIFACT_VALIDATION.json').read_text())
+          assert release['source_commit']==validation['source_commit']==source and not release['artifact_validation_pending']
+          assert validation['exit_code']==0 and validation['checks'] and all(validation['checks'].values())
+          assert release['weak_link_run_id']==41677382150 and release['source_acceptance_run_id']==41677382308
+          assert release['weak_link']['session_closed']==False and max(release['weak_link']['post_rtt_ms'])<=300
+          assert release['checks']['hosted_1_4_32_stream_required_gates']
+          for count in (1,4,32):
+              data=json.loads(Path(f'evidence/hosted-throughput/throughput-{count}/candidate.json').read_text())
+              assert data['success'] and all(data['targets'][name] for name in ('full_phase_100mbps','idle_and_light_rtt','loaded_rtt'))
+          assert release['startup_cycles']==6 and release['server_restarts_in_startup_checks']==2 and release['signer_unchanged']
+          for arch,digest in release['server_sha256'].items():assert hashlib.sha256((r/f'ITOM-1.1.0-MAILSTREAM-RC7-linux-{arch}.bin').read_bytes()).hexdigest()==digest
+          PY
+          python3 archives/1.1.0/publication/mailstream-rc7/restore_signed_apk.py original.apk release-assets/ITOM-1.1.0-MAILSTREAM-RC7.apk
+          java -jar signing-tools/apksigner.jar verify --verbose --print-certs release-assets/ITOM-1.1.0-MAILSTREAM-RC7.apk > release-assets/SIGNER.txt
+          python3 - <<'PY'
+          import hashlib,json,zipfile
+          from pathlib import Path
+          signer=Path('release-assets/SIGNER.txt').read_text();assert 'Signer #1 certificate SHA-256 digest: 47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6' in signer
+          assert 'Verified using v3 scheme (APK Signature Scheme v3): true' in signer
+          report=json.loads(Path('android-evidence/build-report.json').read_text())
+          with zipfile.ZipFile('release-assets/ITOM-1.1.0-MAILSTREAM-RC7.apk') as archive:
+              for name,digest in report['apk_native_libraries'].items():
+                  raw=archive.read(name);assert hashlib.sha256(raw).hexdigest()==digest and b'itom-1-1-0-mailstream-rc7' in raw and b'itom.local/mailstream' in raw
+          PY
+          cp android-evidence/build-report.json release-assets/ANDROID_BUILD.json
+          cp archives/1.1.0/publication/mailstream-rc7/{MAILSTREAM_RC7_BUILD.json,MAILSTREAM_RC7_SOURCE_MANIFEST.json,ARTIFACT_VALIDATION.json,MAILSTREAM-RC7-evidence.zip} release-assets/
+          cp archives/1.1.0/MAILSTREAM-RC7_TESTING.md release-assets/
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          root=Path('release-assets');(root/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(root.iterdir()) if p.is_file() and p.name!='SHA256SUMS'))
+          PY
+      - name: Publish downloadable prerelease after all verification
+        run: |
+          set -euo pipefail
+          tag=v1.1.0-mailstream-rc7
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-mailstream-rc7")' > "$RUNNER_TEMP/existing.json"
+          if [ -s "$RUNNER_TEMP/existing.json" ]; then
+            python3 -c 'import json,os; assert json.load(open(os.environ["RUNNER_TEMP"]+"/existing.json"))["draft"], "Refusing to overwrite a published release"'
+          else
+            gh release create "$tag" --draft --prerelease --latest=false --target "$SOURCE_SHA" --title 'ITOM 1.1.0 MAILSTREAM-RC7 — automatic control cleanup and retained-session recovery' --notes-file archives/1.1.0/MAILSTREAM-RC7_TESTING.md
+          fi
+          gh release upload "$tag" release-assets/* --clobber
+          gh api "repos/$GH_REPO/releases?per_page=100" --jq '.[] | select(.tag_name == "v1.1.0-mailstream-rc7")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          release=json.loads(Path(os.environ['RUNNER_TEMP'],'release.json').read_text());assert release['draft'] and release['prerelease']
+          assets={a['name']:a for a in release['assets']}
+          for p in Path('release-assets').iterdir():
+              if p.is_file():assert assets[p.name]['size']==p.stat().st_size and assets[p.name]['digest']=='sha256:'+hashlib.sha256(p.read_bytes()).hexdigest(),p.name
+          PY
+          gh release edit "$tag" --draft=false --prerelease --latest=false
+          gh release view "$tag" --json url,isDraft,isPrerelease,assets

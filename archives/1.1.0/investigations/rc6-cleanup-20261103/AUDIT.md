@@ -66,3 +66,10 @@ idle gaps, and grows from measured delivered rate. Clustered byte-ACK growth
 was rejected after a 7 Mbps timeout; measured-rate flight headroom is bounded.
 The bounded variant completes the 7 Mbps download cancellation and new HTTPS
 check with zero failed accounts; final repeated-transfer qualification follows.
+
+Final source selected for publication: `eb16f16a6f19257964977ce28881b89d90af4384`.
+Control pressure now measures consumed incoming and owned outgoing MIME bytes,
+not total DATA debt, so DATA capacity pressure does not hand its GC turns back
+to control tails. Bulk headroom uses a finite half second of measured delivery,
+independently of the faster probe RTT. Hosted final-source gates pass. The
+publication evidence records prior local failures and interrupted work separately.

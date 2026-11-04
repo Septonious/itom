@@ -1,0 +1,405 @@
+{
+  "release": "ITOM 1.1.0 MAILSTREAM-RC7",
+  "source_commit": "eb16f16a6f19257964977ce28881b89d90af4384",
+  "build_run_id": 41677382150,
+  "source_acceptance_run_id": 41677382308,
+  "weak_link_run_id": 41677382150,
+  "build_url": "https://github.com/Septonious/itom/actions/runs/41677382150",
+  "artifact_validation_pending": false,
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "6b9289e9c93c6cb0ffed7d055912138275d8f51be0b57004375c84f7dcf274ad",
+  "signed_apk_bytes": 53858644,
+  "source_ci_apk_sha256": "21b479630f995b236fbb46e3562efc8876d525fcfc154651516aa8735073aa8e",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "d4593c636d22f0f0366ea187fc89f12c5e9ebd51cfb3b8375bf13c733123afc5",
+    "arm64": "45f9afa14afe8a11a00f4c4ec8acfef4072844ca5f879eb3d949521399fb1017"
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10132,
+    "version_name": "1.1.0-mailstream-rc7-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "fce9e1df9f762e7704a47760c447f83d30a4416d3a93ae516969406f64867293",
+    "lib/armeabi-v7a/libgojni.so": "dbff65bf8c3badb771ae41d44f75759c2806cabc1960645220e2d719d00df744"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 1948,
+      "NativeRPCMS": 136,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 59,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1902,
+      "NativeRPCMS": 99,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 49,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1989,
+      "NativeRPCMS": 144,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 84,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2015,
+      "NativeRPCMS": 98,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 73,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1958,
+      "NativeRPCMS": 139,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 49,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1962,
+      "NativeRPCMS": 92,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 87,
+      "protected_sockets": 45
+    }
+  ],
+  "checks": {
+    "hosted_1_4_32_stream_required_gates": true,
+    "two_complete_speedtests_same_session": true,
+    "uid_control_expunge_without_reader_failure": true,
+    "full_client_and_server_ledgers_recover": true,
+    "partial_abandoned_data_and_control_emptied": true,
+    "unrelated_mail_preserved": true,
+    "idle_cleanup_then_reconnect": true,
+    "no_automatic_delete_even_at_idle": true,
+    "unknown_cleanup_result_retried_and_audited": true,
+    "recovery_capacity_excludes_application_traffic": true,
+    "provider_cleanup_fault_download_upload_reconnect": true,
+    "normal_and_race_tests": true,
+    "native_sdk_vet": true,
+    "six_compiled_server_native_startups": true,
+    "weak_link_cancel_then_fresh_https": true,
+    "android_compile_tests_lint": true,
+    "matched_jni_revision_and_hashes": true,
+    "persistent_signer_verified": true,
+    "bulk_restart_after_fast_probes": true,
+    "manual_stop_capacity_cleared": true,
+    "small_refunds_avoid_per_packet_fsync_with_crash_debt_preserved": true
+  },
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "models": {},
+  "local_final_attempts": {
+    "high-rate": {
+      "matches_final_runtime": true,
+      "success": false,
+      "stage": "upload",
+      "error": "loaded ping: i/o timeout",
+      "targets": null,
+      "runtime_fingerprints": {
+        "mailstream_sha256": "8fce083639d86bda8c0ee528c2877da280ba0d0b4c3879482027b780a8548972",
+        "core_sha256": {
+          "rc2": "4b6b7435358fb97d4294ede9fcb8d6b94ce9f5b0a9d1bd095ab7c689755221c7",
+          "candidate": "b8043e9997662bacc9d45eedd1bc0c76718f4d532f7ae3a12b57187b896571a5"
+        }
+      }
+    }
+  },
+  "local_full_gate": {
+    "source_revision": "itom-1-1-0-mailstream-rc7",
+    "status": "passed",
+    "stage": "complete",
+    "error": null
+  },
+  "validation_scope": {
+    "normal_and_race_tests": "matched hosted core gate and independent source acceptance",
+    "local_replays": "actual downloaded server startup matrix and cleanup regressions"
+  },
+  "hosted_models": {
+    "1": {
+      "streams": 1,
+      "cycles": 1,
+      "payload_mbps": {
+        "upload": 172.3555411530651,
+        "download": 191.22958077366462
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 172.3555411530651,
+          "seconds": 35.754470734
+        },
+        {
+          "direction": "download",
+          "mbps": 191.22958077366462,
+          "seconds": 37.212658184
+        }
+      ],
+      "idle_ms": [
+        77.393,
+        71.302,
+        64.027,
+        73.33
+      ],
+      "post_rtt_ms": [
+        100.874,
+        86.59,
+        87.588,
+        86.929,
+        69.97,
+        94.875,
+        95.845,
+        83.281
+      ],
+      "loaded_max_ms": 390.275,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": false
+      },
+      "success": true
+    },
+    "4": {
+      "streams": 4,
+      "cycles": 2,
+      "payload_mbps": {
+        "upload": 107.98438374289219,
+        "download": 194.20946418743736
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 167.79395710950308,
+          "seconds": 35.601624605
+        },
+        {
+          "direction": "download",
+          "mbps": 199.55160257713447,
+          "seconds": 35.955017085
+        },
+        {
+          "direction": "upload",
+          "mbps": 107.98438374289219,
+          "seconds": 30.651007389
+        },
+        {
+          "direction": "download",
+          "mbps": 194.20946418743736,
+          "seconds": 33.507443539
+        }
+      ],
+      "idle_ms": [
+        69.722,
+        74.19,
+        60.019,
+        74.91
+      ],
+      "post_rtt_ms": [
+        88.114,
+        60.845,
+        68.326,
+        62.426,
+        62.177,
+        58.166,
+        72.321,
+        98.146
+      ],
+      "loaded_max_ms": 421.923,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": false
+      },
+      "success": true
+    },
+    "32": {
+      "streams": 32,
+      "cycles": 1,
+      "payload_mbps": {
+        "upload": 245.83520729825057,
+        "download": 308.0389886875108
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 245.83520729825057,
+          "seconds": 12.384476778
+        },
+        {
+          "direction": "download",
+          "mbps": 308.0389886875108,
+          "seconds": 15.486664634
+        }
+      ],
+      "idle_ms": [
+        96.056,
+        65.3,
+        61.435,
+        62.66
+      ],
+      "post_rtt_ms": [
+        64.715,
+        87.62,
+        59.665,
+        65.446,
+        60.356,
+        57.888,
+        86.662,
+        89.316
+      ],
+      "loaded_max_ms": 341.507,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "success": true
+    }
+  },
+  "strict_hosted_target_misses": {
+    "1": [
+      "no_half_second_stalls",
+      "rolling_5s_100mbps"
+    ],
+    "4": [
+      "no_half_second_stalls",
+      "rolling_5s_100mbps"
+    ],
+    "32": []
+  },
+  "all_performance_targets_met": false,
+  "weak_link": {
+    "streams": 4,
+    "cycles": 1,
+    "payload_mbps": {
+      "upload": 4.656807963882425,
+      "download": 4.521517349480176
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 4.656807963882425,
+        "seconds": 21.728957858
+      },
+      {
+        "direction": "download",
+        "mbps": 4.521517349480176,
+        "seconds": 12.001174784
+      }
+    ],
+    "idle_ms": [
+      69.396,
+      133.016,
+      65.317,
+      68.243
+    ],
+    "post_rtt_ms": [
+      83.879,
+      95.737,
+      69.408,
+      57.431,
+      69.096,
+      63.992,
+      60.108,
+      116.754
+    ],
+    "loaded_max_ms": 960.527,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    },
+    "success": true,
+    "session_closed": false,
+    "scope": "hosted"
+  },
+  "hosted_weak_link": {
+    "success": true,
+    "initial_idle_ms": [
+      69.396,
+      133.016,
+      65.317,
+      68.243
+    ],
+    "post_rtt_ms": [
+      83.879,
+      95.737,
+      69.408,
+      57.431,
+      69.096,
+      63.992,
+      60.108,
+      116.754
+    ]
+  },
+  "manual_stop_capacity": {
+    "10": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 20
+    },
+    "15": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 30
+    }
+  },
+  "limits": [
+    "Real provider and Android/mobile qualification remains pending.",
+    "Permanent EXPUNGE failure can still exhaust finite retained storage; retries cannot force a failed provider to mutate.",
+    "Empty folders are retained deliberately: automatic cleanup never uses provider DELETE because field evidence shows account-lock risk.",
+    "Automatic cleanup must run while the server is running; immediate stop defers leftovers until restart.",
+    "Sustained outbound refunds require exact APPENDUID ownership proof.",
+    "Synthetic crash/visibility behavior is not evidence of every provider delayed-commit timing.",
+    "All ramp, rolling-throughput and pause flags are retained, including misses.",
+    "Preserved local timing attempts include loaded-ping timeouts and an unfinished full gate; they are recorded separately and are not counted as passes. Hosted final-source gates passed."
+  ],
+  "installation": "Update both endpoints; server manager option 18 or sudo itom update-from-tmp. Install the signed APK in place preserving app data/profile."
+}

@@ -1,0 +1,29 @@
+{
+  "source_commit": "eb16f16a6f19257964977ce28881b89d90af4384",
+  "exit_code": 0,
+  "checks": {
+    "hosted_1_4_32_stream_required_gates": true,
+    "two_complete_speedtests_same_session": true,
+    "uid_control_expunge_without_reader_failure": true,
+    "full_client_and_server_ledgers_recover": true,
+    "partial_abandoned_data_and_control_emptied": true,
+    "unrelated_mail_preserved": true,
+    "idle_cleanup_then_reconnect": true,
+    "no_automatic_delete_even_at_idle": true,
+    "unknown_cleanup_result_retried_and_audited": true,
+    "recovery_capacity_excludes_application_traffic": true,
+    "provider_cleanup_fault_download_upload_reconnect": true,
+    "normal_and_race_tests": true,
+    "native_sdk_vet": true,
+    "six_compiled_server_native_startups": true,
+    "weak_link_cancel_then_fresh_https": true,
+    "android_compile_tests_lint": true,
+    "matched_jni_revision_and_hashes": true,
+    "persistent_signer_verified": true,
+    "bulk_restart_after_fast_probes": true,
+    "manual_stop_capacity_cleared": true,
+    "small_refunds_avoid_per_packet_fsync_with_crash_debt_preserved": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false
+}
