@@ -15,6 +15,8 @@ It does not claim live-provider performance qualification.
 - Exchange authenticated pressure/clear notifications in both directions.
   Notifications never refund debt; verified recovery proofs still do. This
   handles a manually reset server paired with a full client, and the reverse.
+- Drain ordinary APPEND replies before acquiring the shared mutation lease,
+  allowing another ready account to collect during that wait.
 - Keep ready DATA collection turns from being donated to historical sweeps.
   Amortize exact DATA collection over 128 bounded containers instead of 32,
   without delaying individual small writes or increasing the 64 MiB account cap.

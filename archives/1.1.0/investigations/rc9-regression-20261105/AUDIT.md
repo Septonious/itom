@@ -47,3 +47,12 @@ No automatic folder DELETE is introduced. Empty owned folders remain. Idle
 cleanup requires the server process to remain running after VPN disconnection.
 No credentials, account addresses, profile keys or raw field archives are
 included in this audit.
+
+The first frozen 128-container candidate completes the hosted interference case,
+but its third upload reaches 98.02 Mbps and correctly fails the unchanged 100 Mbps
+gate. Ordinary hosted 1/4/32-stream cases pass. An additional scheduling defect is
+reproducible without a throughput formula: a blocked ordinary APPEND completion
+owns the global mutation lease, denying an independent ready account. The final
+candidate drains ordinary tags before acquiring that lease. Physical mutation
+remains serialized, and cancellation before mutation neither refunds debt nor
+quarantines unrelated accounts.

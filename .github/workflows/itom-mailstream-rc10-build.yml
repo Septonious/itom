@@ -1,3 +1,4 @@
+# Drain terminal APPEND replies before the global mutation lease.
 # Ordered pressure/clear versions ignore delayed notifications across account lanes.
 # RC10: retain RC7 controller; stop idle feedback; defer historical work; amortize DATA collection.
 # Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.

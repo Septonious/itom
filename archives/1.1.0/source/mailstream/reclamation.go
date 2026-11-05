@@ -37,16 +37,6 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		unqueue(false)
 		return
 	}
-	if !c.acquire(a) {
-		unqueue(false)
-		return
-	}
-	defer c.release()
-	// Another identity may have opened the circuit while this owner waited.
-	if !c.permitted(a, job.record.folder) {
-		unqueue(true)
-		return
-	}
 	a.reclaiming.Store(true)
 	defer a.reclaiming.Store(false)
 	a.link.notify()
@@ -55,7 +45,6 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// In-flight bulk completion is not cleanup service time. On a weak
 	// shared link it may legitimately take longer than the metadata bound.
 	stop := p.limit(10 * time.Second)
-	c.stage("drain")
 	var err error
 	for *inFlight > 0 && err == nil {
 		select {
@@ -68,6 +57,22 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	drained := stop()
 	if err == nil && !drained {
 		err = context.DeadlineExceeded
+	}
+	// Drain this account's ordinary APPEND tags before taking the shared
+	// mutation lease. Other ready accounts can collect during this wait.
+	// No mailbox mutation or capacity refund has occurred yet.
+	leased := false
+	if err == nil && drained {
+		if !c.acquire(a) {
+			unqueue(false)
+			return
+		}
+		leased = true
+		defer c.release()
+		if !c.permitted(a, job.record.folder) {
+			unqueue(true)
+			return
+		}
 	}
 	stop = p.limit(budget)
 	if err == nil && !a.parking.Load() {
@@ -85,14 +90,14 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	}
 	// A cleanup refusal/timeout is not a carrier failure or deletion proof.
 	// Stop trying other accounts, preserve debt, and restore only this writer.
-	if !a.parking.Load() && a.ctx.Err() == nil {
+	if leased && !a.parking.Load() && a.ctx.Err() == nil {
 		reason := "CLEANUP_FAILED"
 		if !stopped {
 			reason = "CLEANUP_TIMEOUT"
 		}
 		c.pause(reason, a)
 	}
-	unqueue(true)
+	unqueue(leased)
 	p.close()
 	wait.Wait()
 	for {
