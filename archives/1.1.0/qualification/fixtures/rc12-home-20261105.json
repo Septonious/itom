@@ -1,0 +1,18 @@
+{
+  "revision": "itom-1-1-0-mailstream-rc12",
+  "direct_access_mbps": 500,
+  "speedtests": [
+    {"download_mbps": 68.2, "upload_mbps": 38.0, "idle_ms": 198, "loaded_download_ms": 320, "loaded_upload_ms": 437},
+    {"download_mbps": 73.9, "upload_mbps": 32.0, "idle_ms": 196, "loaded_download_ms": 284, "loaded_upload_ms": 329},
+    {"download_mbps": 95.6, "upload_mbps": 41.0, "idle_ms": 169, "loaded_download_ms": 270, "loaded_upload_ms": 436}
+  ],
+  "ready_roles_both_endpoints": 30,
+  "failed_accounts_both_endpoints": 0,
+  "client_initial_recovered_bytes": 289534752,
+  "client_final_retained_bytes": 533071028,
+  "server_final_retained_bytes": 544442024,
+  "server_local_retired_segments": 1,
+  "reclamation_failures": ["MAINTENANCE_FAILED", "CLEANUP_FAILED", "CLEANUP_TIMEOUT"],
+  "mutation_or_audit_command_responsible": "not resolved by old combined stage",
+  "credentials_or_plaintext_payloads_included": false
+}

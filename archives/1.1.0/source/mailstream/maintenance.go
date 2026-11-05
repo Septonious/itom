@@ -9,25 +9,9 @@ import (
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
-	"github.com/emersion/go-imap/v2/imapclient"
 )
 
 func (c *ReclamationCoordinator) folder(s string) { c.mu.Lock(); c.state.Folder = s; c.mu.Unlock() }
-func (c *ReclamationCoordinator) permitted(a *mailAccountState, f string) bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.adoptRetryLocked(a)
-	return !c.state.Paused || c.failedOwner == a && !time.Now().Before(c.retryAt) && (f == "" || f == c.failedFolder)
-}
-func (c *ReclamationCoordinator) retryFolder(a *mailAccountState) string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.adoptRetryLocked(a)
-	if c.state.Paused && c.failedOwner == a {
-		return c.failedFolder
-	}
-	return ""
-}
 func (c *ReclamationCoordinator) sessionStarted(l *IMAPLink) {
 	c.mu.Lock()
 	if c.sessions == nil {
@@ -46,23 +30,6 @@ func (c *ReclamationCoordinator) sessionEnded(l *IMAPLink) {
 	if len(c.sessions) == 0 {
 		c.quietSince = time.Now()
 	}
-	c.mu.Unlock()
-}
-func (c *ReclamationCoordinator) idleLease(a *mailAccountState, cancel context.CancelFunc) bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.adoptRetryLocked(a)
-	if len(c.sessions) != 0 || c.active || !c.quietSince.IsZero() && time.Since(c.quietSince) < 5*time.Second || c.state.Paused && (c.failedOwner != a || time.Now().Before(c.retryAt)) {
-		return false
-	}
-	c.active = true
-	c.idleStop = cancel
-	return true
-}
-func (c *ReclamationCoordinator) endIdle() {
-	c.mu.Lock()
-	c.active = false
-	c.idleStop = nil
 	c.mu.Unlock()
 }
 
@@ -131,7 +98,9 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 		}
 		target.UID = uint32(selected.UIDNext) - 1
 	}
-	if target.UID == 0 {
+	if target.UID == 0 || selected.NumMessages == 0 && uint32(selected.UIDNext) > target.UID {
+		// Empty historical slots already have authoritative SELECT proof.
+		// Do not spend FETCH/audit round trips on thousands of empty slots.
 		return target, 0, nil
 	}
 	set := imap.UIDSet{{Start: 1, Stop: imap.UID(target.UID)}}
@@ -153,7 +122,7 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if len(rows) > 0 {
 		c.stage("maintenance_expunge")
 		p.allowExpunge.Store(true)
-		_, e = p.deleteUIDs(owned, "")
+		_, e = p.deleteUIDs(owned, "", c.stage)
 		p.allowExpunge.Store(false)
 		if e != nil {
 			return uidWatermark{}, 0, e
@@ -167,7 +136,7 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if len(remaining) > 0 {
 		return uidWatermark{}, 0, ErrProtocol
 	}
-	status, e := p.client.Status(folder, &imap.StatusOptions{UIDValidity: true, NumMessages: true}).Wait()
+	status, e := p.inventoryMailbox(folder, &imap.StatusOptions{UIDValidity: true, NumMessages: true})
 	if e != nil {
 		return uidWatermark{}, 0, e
 	}
@@ -213,7 +182,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		quiet := len(l.handshakes) == 0 && l.attached == (SessionID{})
 		l.mu.Unlock()
 		if quiet {
-			status, err := p.client.Status(l.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true}).Wait()
+			status, err := p.inventoryMailbox(l.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true})
 			if err != nil {
 				return l.controlFolder(true), err
 			}
@@ -246,7 +215,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		if len(owned) > 16384 {
 			return "", ErrCapacity
 		}
-		status, e := p.client.Status(l.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true}).Wait()
+		status, e := p.inventoryMailbox(l.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true})
 		if e != nil {
 			return "", e
 		}
@@ -441,7 +410,7 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 	folder, e := a.maintenanceStep(ctx, p, true)
 	timely := stop()
 	if e == nil && timely {
-		c.completed(folder)
+		c.completed(a, folder)
 		return
 	}
 	if a.ctx.Err() != nil || errors.Is(ctx.Err(), context.Canceled) {
@@ -463,10 +432,9 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	if deferred {
 		return
 	}
-	if *writer == nil || a.parking.Load() || !c.permitted(a, "") || !c.acquire(a) {
+	if *writer == nil || a.parking.Load() || !c.permitted(a, "") {
 		return
 	}
-	defer c.release()
 	a.mu.Lock()
 	a.maintenance.requested = false
 	a.mu.Unlock()
@@ -491,6 +459,14 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 		}
 	}
 	drained := stop()
+	leased := false
+	if e == nil && drained {
+		if !c.acquire(a) {
+			return
+		}
+		leased = true
+		defer c.release()
+	}
 	stop = p.limit(2 * time.Second)
 	folder := ""
 	if e == nil && drained {
@@ -498,10 +474,10 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	}
 	timely := stop() && drained
 	if e == nil && timely {
-		c.completed(folder)
+		c.completed(a, folder)
 		return
 	}
-	if ctx.Err() == nil && !a.parking.Load() {
+	if leased && ctx.Err() == nil && !a.parking.Load() {
 		reason := "MAINTENANCE_FAILED"
 		if !timely {
 			reason = "MAINTENANCE_TIMEOUT"
@@ -561,15 +537,6 @@ func (a *mailAccountState) needsMaintenanceLocked() bool {
 	return max(m.controlBytes, m.incomingBytes) >= reservationQuantum/2
 }
 
-// A stopped endpoint must not permanently own the provider retry circuit.
-// Ownership can move only to the same configured identity and account.
-func (c *ReclamationCoordinator) adoptRetryLocked(a *mailAccountState) {
-	old := c.failedOwner
-	if old != nil && old != a && old.ctx.Err() != nil && old.link.identity == a.link.identity && old.config.ID == a.config.ID {
-		c.failedOwner = a
-	}
-}
-
 // Control tails can wait during a bulk burst when storage has ample headroom.
 // DATA collection remains eligible. Capacity-critical historical recovery and real
 // retention pressure always override this optimization. Account.mu is held.
@@ -585,22 +552,40 @@ func (a *mailAccountState) deferMaintenanceLocked() bool {
 // streaming response queue undrained. UID STORE can receive unsolicited FETCH
 // and EXPUNGE before its tagged completion. Pipe cancellation/deadline aborts
 // both streams; the auxiliary drain always joins, including on an error.
-func (p *mailPipe) deleteUIDs(owned imap.UIDSet, auditFolder string) (*imap.StatusData, error) {
+func (p *mailPipe) deleteUIDs(owned imap.UIDSet, auditFolder string, stages ...func(string)) (*imap.StatusData, error) {
 	store := p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
 	storeDone := make(chan error, 1)
 	go func() { storeDone <- store.Close() }()
 	expunge := p.client.Expunge()
-	var audit *imapclient.StatusCommand
-	if auditFolder != "" {
-		audit = p.client.Status(auditFolder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
-	}
 	_, expungeErr := expunge.Collect()
 	storeErr := <-storeDone
 	if e := errors.Join(storeErr, expungeErr); e != nil {
 		return nil, e
 	}
-	if audit != nil {
-		return audit.Wait()
+	if auditFolder != "" {
+		if len(stages) > 0 {
+			stages[0]("audit_select")
+		}
+		return p.inventoryMailbox(auditFolder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
 	}
 	return nil, nil
+}
+
+// STATUS on a selected mailbox is discouraged by IMAP and can block provider
+// metadata operations. Re-SELECT after all mutation replies gives authoritative
+// count/validity. Only this pipe's owning actor may call this helper.
+func (p *mailPipe) inventoryMailbox(folder string, options *imap.StatusOptions) (*imap.StatusData, error) {
+	if box := p.client.Mailbox(); box != nil && box.Name == folder {
+		d, err := p.client.Select(folder, nil).Wait()
+		if err != nil {
+			return nil, err
+		}
+		s := &imap.StatusData{Mailbox: folder, UIDNext: d.UIDNext, UIDValidity: d.UIDValidity}
+		if options.NumMessages {
+			n := d.NumMessages
+			s.NumMessages = &n
+		}
+		return s, nil
+	}
+	return p.client.Status(folder, options).Wait()
 }

@@ -3,7 +3,6 @@ package mailstream
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
@@ -52,110 +51,6 @@ type cleanupJob struct {
 	account *mailAccountState
 	key     segmentKey
 	record  *segmentRecord
-}
-
-// Shared by server identities. An unknown outcome quarantines cleanup to that
-// account and folder. Backoff retries re-audit it before other cleanup resumes.
-type ReclamationCoordinator struct {
-	mu           sync.Mutex
-	state        ReclamationSnapshot
-	active       bool
-	waiting      []*mailAccountState
-	failedOwner  *mailAccountState
-	failedFolder string
-	retryAt      time.Time
-	failures     uint
-	sessions     map[*IMAPLink]bool
-	quietSince   time.Time
-	idleStop     context.CancelFunc
-}
-type ReclamationSnapshot struct {
-	Paused    bool   `json:"paused"`
-	Stage     string `json:"stage,omitempty"`
-	Failure   string `json:"failure,omitempty"`
-	Completed uint64 `json:"completed"`
-	Folder    string `json:"folder,omitempty"`
-	RetryAtMS int64  `json:"retry_at_ms,omitempty"`
-}
-
-func NewReclamationCoordinator() *ReclamationCoordinator {
-	return &ReclamationCoordinator{quietSince: time.Now()}
-}
-
-// Queue account owners, not individual generations. A hot account cannot win
-// the single provider lease repeatedly while another fills its physical cap.
-func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.adoptRetryLocked(a)
-	if c.state.Paused && (c.failedOwner != a || time.Now().Before(c.retryAt)) {
-		return false
-	}
-	found := false
-	for _, owner := range c.waiting {
-		found = found || owner == a
-	}
-	if !found {
-		c.waiting = append(c.waiting, a)
-	}
-	for len(c.waiting) > 0 && (c.waiting[0].ctx.Err() != nil || c.waiting[0].parking.Load()) {
-		c.waiting = c.waiting[1:]
-	}
-	if c.state.Paused && c.failedOwner == a {
-		for i, owner := range c.waiting {
-			if owner == a {
-				c.waiting = append(c.waiting[:i], c.waiting[i+1:]...)
-				break
-			}
-		}
-		c.waiting = append([]*mailAccountState{a}, c.waiting...)
-	}
-	if c.active || len(c.waiting) == 0 || c.waiting[0] != a {
-		return false
-	}
-	c.waiting = c.waiting[1:]
-	c.active = true
-	return true
-}
-func (c *ReclamationCoordinator) release() {
-	c.mu.Lock()
-	c.active = false
-	c.mu.Unlock()
-}
-func (c *ReclamationCoordinator) snapshot() ReclamationSnapshot {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.state
-}
-func (c *ReclamationCoordinator) stage(stage string) {
-	c.mu.Lock()
-	c.state.Stage = stage
-	c.mu.Unlock()
-}
-func (c *ReclamationCoordinator) pause(reason string, a *mailAccountState) {
-	c.mu.Lock()
-	c.state.Paused = true
-	c.state.Failure = reason
-	c.failedOwner = a
-	c.failedFolder = c.state.Folder
-	c.failures = min(c.failures+1, 6)
-	c.retryAt = time.Now().Add(time.Second * time.Duration(1<<c.failures))
-	c.state.RetryAtMS = c.retryAt.UnixMilli()
-	c.mu.Unlock()
-}
-func (c *ReclamationCoordinator) completed(folder string) {
-	c.mu.Lock()
-	c.state.Completed++
-	c.state.Stage = "complete"
-	if !c.state.Paused || folder == c.failedFolder {
-		c.state.Paused = false
-		c.state.Failure = ""
-		c.state.RetryAtMS = 0
-		c.failedOwner = nil
-		c.failedFolder = ""
-		c.failures = 0
-	}
-	c.mu.Unlock()
 }
 
 func (l *IMAPLink) segmentFolder(id SessionID, out bool, slot uint32) string {
@@ -493,7 +388,7 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
 	c.stage("store_expunge")
-	status, err := p.deleteUIDs(rec.uids, rec.folder)
+	status, err := p.deleteUIDs(rec.uids, rec.folder, c.stage)
 	if err != nil {
 		return err
 	}

@@ -187,7 +187,7 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 				f.mu.Lock()
 				owners := len(f.owners)
 				f.mu.Unlock()
-				if !server.Snapshot().Reclamation.Paused || f.baseAttempts.Load() < 1 || owners != 1 {
+				if !server.Snapshot().Reclamation.Paused || f.baseAttempts.Load() < 1 || owners < 1 || owners > len(accounts) {
 					t.Fatalf("cleanup circuit breaker did not contain the failure: %+v attempts=%d", server.Snapshot().Reclamation, f.baseAttempts.Load())
 				}
 			} else {

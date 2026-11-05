@@ -43,17 +43,21 @@ type counts struct {
 }
 type session struct {
 	imapserver.Session
-	counts              *counts
-	user                string
-	bulkDelay           time.Duration
-	prefill             int
-	earlyExpunge        bool
-	metadataDelay       time.Duration
-	historyFolders      int
-	dataFetchDelay      time.Duration
-	selectedFolder      string
-	existingCreateStall time.Duration
-	selectRefusals      int
+	counts               *counts
+	user                 string
+	bulkDelay            time.Duration
+	prefill              int
+	earlyExpunge         bool
+	metadataDelay        time.Duration
+	historyFolders       int
+	dataFetchDelay       time.Duration
+	selectedFolder       string
+	appendService        time.Duration
+	appendOrdinal        uint64
+	rejectSelectedStatus bool
+	mutated              bool
+	existingCreateStall  time.Duration
+	selectRefusals       int
 }
 
 func (s *session) Login(user, password string) error {
@@ -115,6 +119,18 @@ func (s *session) List(w *imapserver.ListWriter, ref string, patterns []string, 
 func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOptions) (*imap.AppendData, error) {
 	defer s.accountWork(false)()
 	s.count("APPEND")
+	if strings.Contains(folder, "-control-") {
+		s.count("APPEND_CONTROL")
+	} else {
+		s.count("APPEND_DATA")
+	}
+	if s.appendService > 0 {
+		s.appendOrdinal++
+		// Fixed metadata/service cost, distinct from low NOOP/network RTT.
+		// Independent account/command phases prevent synchronized ACK trains.
+		phase := int(s.appendOrdinal+uint64(len(s.user))+uint64(s.user[len(s.user)-1]))%5 - 2
+		time.Sleep(s.appendService + time.Duration(phase)*s.appendService/6)
+	}
 	// Provider work is distinct from TCP RTT. Serial DATA publication can
 	// remain slow even while NOOP/control is fast, as in RC7 field uploads.
 	if !strings.Contains(folder, "-control-") && s.bulkDelay > 0 {
@@ -255,6 +271,10 @@ func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.Stor
 func (s *session) Status(folder string, o *imap.StatusOptions) (*imap.StatusData, error) {
 	defer s.accountWork(true)()
 	s.count("STATUS")
+	if s.rejectSelectedStatus && s.mutated && s.selectedFolder == folder {
+		s.count("REJECTED_SELECTED_STATUS")
+		return nil, &imap.Error{Type: imap.StatusResponseTypeNo, Text: "post-mutation selected STATUS unsupported in fixture"}
+	}
 	return s.Session.Status(folder, o)
 }
 func (s *session) Poll(w *imapserver.UpdateWriter, expunge bool) error {
@@ -268,7 +288,11 @@ func (s *session) Idle(w *imapserver.UpdateWriter, stop <-chan struct{}) error {
 func (s *session) Expunge(w *imapserver.ExpungeWriter, set *imap.UIDSet) error {
 	defer s.accountWork(true)()
 	s.count("EXPUNGE")
-	return s.Session.Expunge(w, set)
+	err := s.Session.Expunge(w, set)
+	if err == nil {
+		s.mutated = true
+	}
+	return err
 }
 
 func main() {
@@ -286,6 +310,8 @@ func run() error {
 	clientDownload := flag.Int64("client-download-mbps", 0, "independent shared downlink rate; requires uplink rate")
 	existingStall := flag.Duration("existing-create-stall", 0, "existing control CREATE stall on accounts a02/a03/a05/a10; SELECT/STATUS remain responsive")
 	selectRefusals := flag.Int("startup-select-refusals", 0, "temporary control SELECT refusals per affected folder, shared across connections")
+	appendService := flag.Duration("append-service", 0, "all APPEND per-command provider cost, with independent bounded jitter")
+	rejectSelected := flag.Bool("reject-selected-status", false, "reject selected STATUS after EXPUNGE, while SELECT and other account operations work")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
@@ -294,7 +320,7 @@ func run() error {
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -336,7 +362,7 @@ func run() error {
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

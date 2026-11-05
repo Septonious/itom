@@ -85,11 +85,11 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
-		c.completed(job.record.folder)
+		c.completed(a, job.record.folder)
 		return
 	}
 	// A cleanup refusal/timeout is not a carrier failure or deletion proof.
-	// Stop trying other accounts, preserve debt, and restore only this writer.
+	// Quarantine this physical account, preserve debt, and restore only its writer.
 	if leased && !a.parking.Load() && a.ctx.Err() == nil {
 		reason := "CLEANUP_FAILED"
 		if !stopped {

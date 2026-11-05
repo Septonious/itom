@@ -64,45 +64,48 @@ type mailCommand struct {
 	done chan error
 }
 type mailAccountState struct {
-	link                  *IMAPLink
-	config                MailAccount
-	ctx                   context.Context
-	cancel                context.CancelFunc
-	mu                    sync.Mutex
-	ready, failed         bool
-	stage                 string
-	failure               string
-	startupAttempts       uint32
-	startupRetryAt        time.Time
-	control, writer, data *mailPipe
-	dataDone              chan struct{}
-	attachStop, dataStop  context.CancelFunc
-	id                    SessionID
-	attachMu              sync.Mutex
-	fast                  chan mailWork
-	bulk                  chan mailWork
-	spent                 int
-	queuedBytes           int
-	bulkBlocked           bool
-	reserved, recovered   int
-	storageKey            []byte
-	appended, received    atomic.Uint64
-	retired               atomic.Uint64
-	segments              map[segmentKey]*segmentRecord
-	remoteSegments        map[segmentKey]*segmentRecord
-	routes                map[uint32]uint32
-	routesChanged         chan struct{}
-	routeSession          SessionID
-	routeConsumed         uint32
-	parking, reclaiming   atomic.Bool
-	collectRemote         bool // Account.mu: alternate eligible ownership directions
-	writerOps             chan writerOperation
-	delivery              [replaySlots]deliverySample
-	streams               map[uint32]bool
-	rtt, rttAt            time.Duration
-	upBytes, downBytes    atomic.Uint64
-	recoveryFailure       string
-	maintenance           retentionMaintenance
+	link                                *IMAPLink
+	config                              MailAccount
+	ctx                                 context.Context
+	cancel                              context.CancelFunc
+	mu                                  sync.Mutex
+	ready, failed                       bool
+	stage                               string
+	failure                             string
+	startupAttempts                     uint32
+	startupRetryAt                      time.Time
+	control, writer, data               *mailPipe
+	dataDone                            chan struct{}
+	attachStop, dataStop                context.CancelFunc
+	id                                  SessionID
+	attachMu                            sync.Mutex
+	fast                                chan mailWork
+	bulk                                chan mailWork
+	spent                               int
+	queuedBytes                         int
+	bulkBlocked                         bool
+	reserved, recovered                 int
+	storageKey                          []byte
+	appended, received                  atomic.Uint64
+	dataAppendCount, controlAppendCount atomic.Uint64
+	dataMIMEBytes, controlMIMEBytes     atomic.Uint64
+	appendLatency                       atomic.Int64
+	retired                             atomic.Uint64
+	segments                            map[segmentKey]*segmentRecord
+	remoteSegments                      map[segmentKey]*segmentRecord
+	routes                              map[uint32]uint32
+	routesChanged                       chan struct{}
+	routeSession                        SessionID
+	routeConsumed                       uint32
+	parking, reclaiming                 atomic.Bool
+	collectRemote                       bool // Account.mu: alternate eligible ownership directions
+	writerOps                           chan writerOperation
+	delivery                            [replaySlots]deliverySample
+	streams                             map[uint32]bool
+	rtt, rttAt                          time.Duration
+	upBytes, downBytes                  atomic.Uint64
+	recoveryFailure                     string
+	maintenance                         retentionMaintenance
 }
 
 type IMAPLink struct {
@@ -118,6 +121,7 @@ type IMAPLink struct {
 	roundRobin          uint64
 	bulkAccount         uint64
 	bulkBytes           int
+	bulkPackets         int
 	changed             chan struct{}
 	incoming            chan []byte
 	wg                  sync.WaitGroup
@@ -182,7 +186,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	l.retirements = make(chan Retirement, 64)
 	for _, config := range accounts {
 		life, stop := context.WithCancel(lifetime)
-		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, fast: make(chan mailWork, 32), bulk: make(chan mailWork, 8)}
+		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, fast: make(chan mailWork, 32), bulk: make(chan mailWork, 16)}
 		a.segments = map[segmentKey]*segmentRecord{}
 		a.remoteSegments = map[segmentKey]*segmentRecord{}
 		a.routes = map[uint32]uint32{}
@@ -360,12 +364,16 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 				l.mu.Lock()
 				index := uint64((start + n) % len(l.accounts))
 				if l.bulkAccount != index {
-					l.bulkAccount, l.bulkBytes = index, 0
+					l.bulkAccount, l.bulkBytes, l.bulkPackets = index, 0, 0
 				}
-				l.bulkBytes += len(body)
-				if l.bulkBytes >= maxMailPlain/2 {
+				l.bulkBytes += len(body) + 4
+				l.bulkPackets++
+				// Fill by actual packet size, including bundle framing. TLS
+				// records are often much smaller than maxPayload; a fixed
+				// worst-case quantum left most client containers half empty.
+				if l.bulkPackets >= 16 || l.bulkBytes+len(body)+4+6 > maxMailPlain {
 					l.bulkAccount = (index + 1) % uint64(len(l.accounts))
-					l.bulkBytes = 0
+					l.bulkBytes, l.bulkPackets = 0, 0
 				}
 				l.mu.Unlock()
 			}
@@ -712,6 +720,7 @@ func (a *mailAccountState) run() {
 	keepalive := time.NewTicker(30 * time.Second)
 	defer keepalive.Stop()
 	lastWrite := time.Now()
+	var lastBulkWrite time.Time
 	var carry *mailWork
 	var operation *writerOperation
 	for {
@@ -872,8 +881,9 @@ func (a *mailAccountState) run() {
 			}
 
 		}
-		// Drain only mail already queued. An isolated small write never
-		// starts an aggregation timer or waits to fill a bulk batch.
+		// Control and the first isolated DATA publication never wait. Only
+		// an established bulk burst may spend one millisecond filling an
+		// already-bounded MIME container, amortizing provider APPEND cost.
 		packets := [][]byte{work.body}
 		queuedCharge := work.charge
 		batchBytes := 6 + 4 + len(work.body)
@@ -881,25 +891,48 @@ func (a *mailAccountState) run() {
 		if work.control {
 			q = a.fast
 		}
+		var coalesce *time.Timer
+		var coalesced <-chan time.Time
+		if !work.control && inFlight > 0 && time.Since(lastBulkWrite) < 250*time.Millisecond {
+			coalesce = time.NewTimer(time.Millisecond)
+			coalesced = coalesce.C
+		}
 	collect:
 		for len(packets) < 16 && carry == nil {
+			var next mailWork
 			select {
-			case next := <-q:
-				_, firstID, _, e1 := parseHeader(work.body)
-				_, nextID, _, e2 := parseHeader(next.body)
-				if e1 != nil || e2 != nil {
-					return
-				}
-				if next.recovery != work.recovery || batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
-					carry = &next
+			case next = <-q:
+			default:
+				if coalesced == nil || len(a.fast) > 0 {
 					break collect
 				}
-				packets = append(packets, next.body)
-				queuedCharge += next.charge
-				batchBytes += 4 + len(next.body)
-			default:
+				select {
+				case next = <-q:
+				case <-coalesced:
+					break collect
+				case <-a.ctx.Done():
+					coalesce.Stop()
+					return
+				}
+			}
+			_, firstID, _, e1 := parseHeader(work.body)
+			_, nextID, _, e2 := parseHeader(next.body)
+			if e1 != nil || e2 != nil {
+				if coalesce != nil {
+					coalesce.Stop()
+				}
+				return
+			}
+			if next.recovery != work.recovery || batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
+				carry = &next
 				break collect
 			}
+			packets = append(packets, next.body)
+			queuedCharge += next.charge
+			batchBytes += 4 + len(next.body)
+		}
+		if coalesce != nil {
+			coalesce.Stop()
 		}
 		encoded := encodeMail(packMail(packets))
 		a.mu.Lock()
@@ -927,6 +960,7 @@ func (a *mailAccountState) run() {
 			// Before admission the server owns one selected control socket.
 			// Its receive owner serializes this small bootstrap APPEND with
 			// IDLE. Active traffic always has an independent APPEND writer.
+			appendStarted := time.Now()
 			err := control.execute(a.ctx, func(p *mailPipe) error {
 				cmd, err := p.startAppend(folder, encoded)
 				if err != nil {
@@ -942,7 +976,7 @@ func (a *mailAccountState) run() {
 				a.failedStage("bootstrap_append", err)
 				return
 			}
-			a.appended.Add(1)
+			a.appendCompleted(true, len(encoded), appendStarted)
 			for _, packet := range packets {
 				a.upBytes.Add(uint64(len(packet)))
 			}
@@ -991,8 +1025,12 @@ func (a *mailAccountState) run() {
 		for _, packet := range packets {
 			a.link.note("append", a.config.ID, packet, generation, work.control)
 		}
+		appendStarted := time.Now()
 		cmd, startErr := writer.startAppend(folder, encoded)
 		lastWrite = time.Now()
+		if !work.control {
+			lastBulkWrite = lastWrite
+		}
 		if startErr != nil {
 			if a.parking.Load() {
 				continue
@@ -1019,7 +1057,7 @@ func (a *mailAccountState) run() {
 					}
 					a.mu.Unlock()
 				}
-				a.appended.Add(1)
+				a.appendCompleted(segment == nil, len(encoded), appendStarted)
 				for _, packet := range packets {
 					a.upBytes.Add(uint64(len(packet)))
 				}
@@ -1063,6 +1101,12 @@ type MailAccountSnapshot struct {
 	ControlPhase               int32  `json:"control_phase"`
 	ControlCursor              uint32 `json:"control_cursor"`
 	ControlCount               uint32 `json:"control_count"`
+	DataAppended               uint64 `json:"data_appended_messages"`
+	ControlAppended            uint64 `json:"control_appended_messages"`
+	DataMIMEBytes              uint64 `json:"data_mime_bytes"`
+	ControlMIMEBytes           uint64 `json:"control_mime_bytes"`
+	AppendCompletionMS         int64  `json:"append_completion_ms"`
+	QueuedMIMEBytes            int    `json:"queued_mime_bytes"`
 	StartupAttempts            uint32 `json:"startup_attempts"`
 	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
 	PeerVerified               bool   `json:"peer_verified"`
@@ -1112,6 +1156,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
+		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()
+		line.AppendCompletionMS = time.Duration(a.appendLatency.Load()).Milliseconds()
+		line.QueuedMIMEBytes = a.queuedBytes
 		line.StartupAttempts = a.startupAttempts
 		if !a.startupRetryAt.IsZero() {
 			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()
@@ -1519,7 +1567,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 			if refresh {
 				// A timer and EXISTS may become ready together. Freshly
 				// announced mail does not need a second tail-discovery round
-				// trip. Missing notifications still require STATUS repair.
+				// trip. Missing notifications still require a fresh selection audit.
 				if current := p.client.Mailbox(); current != nil && current.Name == mbox.Name && current.NumMessages > p.after {
 					continue
 				}
@@ -1528,7 +1576,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 				// stranded forever by a lost or coalesced notification.
 				p.phase.Store(6)
 				begin := time.Now()
-				status, err := p.client.Status(mbox.Name, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
+				status, err := p.inventoryMailbox(mbox.Name, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
 				if err != nil {
 					return ErrClosed
 				}
@@ -1634,4 +1682,28 @@ func packMail(packets [][]byte) []byte {
 		body = append(body, packet...)
 	}
 	return body
+}
+
+// Tagged publication service time is different from the control reader's NOOP
+// RTT. Physical message counts/bytes expose coalescing and provider-command
+// cost without exporting credentials, packet contents or a synthetic speed.
+func (a *mailAccountState) appendCompleted(control bool, n int, started time.Time) {
+	a.appended.Add(1)
+	if control {
+		a.controlAppendCount.Add(1)
+		a.controlMIMEBytes.Add(uint64(n))
+	} else {
+		a.dataAppendCount.Add(1)
+		a.dataMIMEBytes.Add(uint64(n))
+	}
+	sample := int64(time.Since(started))
+	for old := a.appendLatency.Load(); ; old = a.appendLatency.Load() {
+		next := sample
+		if old > 0 {
+			next = (7*old + sample) / 8
+		}
+		if a.appendLatency.CompareAndSwap(old, next) {
+			break
+		}
+	}
 }
