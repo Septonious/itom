@@ -36,3 +36,49 @@ network RTT, asymmetric 50/35 Mbps and 7 Mbps links, fresh TLS after cancellatio
 manual VPN reconnects, actual server restarts and shutdown capacity reset.
 Controlled model results and every failed observation remain distinct from field
 measurements. Passing a model is not live Rambler or Android-device qualification.
+
+## Exact-source verification
+
+Runtime source: `d59dbc47c10673d753daadf8e4c7bfb51f97899d`.
+Build run: https://github.com/Septonious/itom/actions/runs/42099145973
+Independent application acceptance: https://github.com/Septonious/itom/actions/runs/42099145688
+All eight build/qualification jobs and independent acceptance passed without a
+retry of this frozen source. Android: 93 domain tests, 8 application tests,
+zero lint errors, both ARM JNI libraries. The existing persistent signer is used.
+
+Full-phase application throughput, Mbps (two sequential 30-second cycles where
+shown; control/MIME overhead is excluded from the throughput numerator):
+
+| Controlled scenario | Upload | Download | Maximum idle/post RTT | Maximum loaded RTT |
+| --- | --- | --- | --- | --- |
+| Home model, independent APPEND service cost | 104.01 / 103.50 | 128.84 / 126.02 | 223.62 ms | 580.16 ms |
+| Server DATA FETCH delayed 350 ms | 116.03 / 108.87 | 342.46 / 345.55 | 93.72 ms | 268.52 ms |
+| Ordinary four streams | 251.32 / 294.29 | 326.08 / 328.40 | 92.95 ms | 584.60 ms |
+| Corporate 50/35 Mbps link | 24.45 / 24.43 | 35.27 / 35.14 | 86.86 ms | 1342.03 ms |
+| 7 Mbps link, download cancellation and fresh HTTPS | 4.74 | 4.52 before cancellation | 91.92 ms | 1761.43 ms |
+
+All modeled transfers completed their prescribed operation, with 30/30 roles,
+zero account failures and zero connection-limit rejections. The 7 Mbps scenario
+intentionally cancels its download and verifies new HTTPS traffic afterward.
+Ordinary one- and 32-stream tests, retained control history and account metadata
+interference also passed. The 100 Mbps full-phase goal passed in the high-capacity
+models, including the new costly-APPEND model. It did **not** pass every rolling
+five-second window or the two-second ramp criterion in the costly-APPEND and
+delayed-FETCH models. Some other models recorded half-second stalls. All target
+results are retained in `MAILSTREAM_RC13_BUILD.json`; this is not a claim that
+the sustained goal has been fully achieved. Low-capacity models cannot meet a
+100 Mbps target.
+
+The frozen RC12 selected-mailbox STATUS and global quarantine failures reproduced
+and the candidate fixed both. Repeated HTTPS verified 128 MiB in each direction
+across two finite-budget accounts, requiring audited physical storage reuse.
+The downloaded amd64 server passed six startup/manual VPN reconnect cycles
+(three with 10 accounts, three with 15), actual server restarts, and shutdown
+local-capacity reset checks. Server and native source checksums match this SHA.
+
+The two-CPU local workspace's aggregate mailstream race run exhausted its
+360-second package budget during the final storage-reuse test; no data race was
+reported. That timeout is retained alongside the separate mailstream race run
+with a larger package budget. Scenario deadlines and runtime source were not
+changed. The complete unchanged hosted normal/race/SDK/fork/vet gate passed;
+the local initial aggregate is not presented as a passing full gate.

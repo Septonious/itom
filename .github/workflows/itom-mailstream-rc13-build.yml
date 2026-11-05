@@ -1,18 +1,8 @@
-# Frozen RC12 qualification is reproducible by manual dispatch; publication verifies the corrected delivery runner.
-# Include the RC12 testing notes and field audit in the native source artifact.
-# Include the RC12 launcher identity assertion in exact-source artifacts.
-# RC12: upload-only measured headroom, compressed-receipt rate protection and server FETCH amortization.
-# Drain terminal APPEND replies before the global mutation lease.
-# Ordered pressure/clear versions ignore delayed notifications across account lanes.
-# RC10: retain RC7 controller; stop idle feedback; defer historical work; amortize DATA collection.
-# Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.
-# Cold compilation has its own harness budget; each compiled regression still has a ten-second execution bound.
+# Frozen RC13 qualification remains available by manual dispatch.
+# Independent service-cost and delayed-FETCH models retain all strict misses.
 concurrency: {group: itom-mailstream-rc13-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC13 with constrained-link acceptance
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc13-build.yml"]
   workflow_dispatch:
 permissions: {contents: read}
 env:

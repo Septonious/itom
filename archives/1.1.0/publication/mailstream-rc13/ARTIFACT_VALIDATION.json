@@ -1,0 +1,21 @@
+{
+  "source_commit": "d59dbc47c10673d753daadf8e4c7bfb51f97899d",
+  "scope": "artifact identity and functional/safety checks",
+  "exit_code": 0,
+  "checks": {
+    "exact_source_and_native_artifacts": true,
+    "normal_race_sdk_fork_vet": true,
+    "android_tests_lint_jni": true,
+    "persistent_signer": true,
+    "six_actual_server_startup_reconnects": true,
+    "manual_stop_capacity_reset": true,
+    "all_model_transfers_complete_no_account_failures": true,
+    "all_model_idle_loaded_rtt_limits": true,
+    "weak_link_cancel_and_fresh_https": true,
+    "frozen_rc12_failures_reproduced_and_fixed": true,
+    "finite_physical_budget_audited_reuse": true,
+    "no_incompatible_selected_status": true,
+    "pre_service_startup_recovery_preserved": true
+  },
+  "field_qualified": false
+}
