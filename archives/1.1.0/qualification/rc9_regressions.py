@@ -10,7 +10,7 @@ cases=[('rc8_cleanup',a.reference/'mailstream','.', 'TestRetainedControlCleanupW
 results={}
 for name,cwd,target,test,expected in cases:
  command=['go','test','-json','-count=1','-timeout=10s','-run','^'+test+'$',target]
- run=subprocess.run(command,cwd=cwd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=25)
+ run=subprocess.run(command,cwd=cwd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=180)
  (a.out/(name+'.jsonl')).write_text(run.stdout)
  events=[]
  for line in run.stdout.splitlines():

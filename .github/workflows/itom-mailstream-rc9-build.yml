@@ -1,6 +1,6 @@
 # RC9: restore RC7 controller; cancel streaming decoder waits; serialize mutation responses.
 # Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.
-# Cold compilation has its own harness budget; each regression still has a ten-second execution bound.
+# Cold compilation has its own harness budget; each compiled regression still has a ten-second execution bound.
 concurrency: {group: itom-mailstream-rc9-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC9 with constrained-link acceptance
 on:
