@@ -38,6 +38,11 @@ of initial debt. Cold-start transfers and their performance remain recorded;
 after production audits clear that debt, another upload/download pair verifies
 that bandwidth returns. No fixture modifies a running ledger or grants credit.
 
+Established streams advertise consumed-byte credit every 512 KiB; the first
+64 KiB window expansion and close/cancel tails remain immediate. Even all 64
+supported streams leave at most 32 MiB unannounced, below the unchanged shared
+60 MiB allowance. A 64-stream TLS integrity test exercises this bound.
+
 Tests cover unread controls, partial historical deletion, slow provider mutations,
 early EXPUNGE bursts, repeated transfers with retained controls and per-message
 mutation service cost. These costs are explicit stress hypotheses, not a claim

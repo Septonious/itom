@@ -234,10 +234,10 @@ func (s *Stream) Read(p []byte) (int, error) {
 				grew = true
 			}
 			// The first window expansion remains immediate. Once bulk is
-			// established, amortize credit announcements across 256 KiB.
-			// Even 64 active streams leave at most 16 MiB unannounced,
+			// established, amortize credit announcements across 512 KiB.
+			// Even 64 active streams leave at most 32 MiB unannounced,
 			// below the shared 60 MiB bulk allowance. Close reports the tail.
-			sendWindow := grew || consumed-s.advertised >= initialStreamWindow
+			sendWindow := grew || consumed-s.advertised >= 2*initialStreamWindow
 			if sendWindow {
 				s.advertised = consumed
 			}

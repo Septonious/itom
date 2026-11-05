@@ -60,3 +60,11 @@ bound for that same circuit-breaker requirement. A private shortened diagnostic
 fixture caught an active-scope boundary incorrectly constraining idle collection;
 the production idle path and a dedicated regression were corrected. The normal
 full-ledger and cleanup-fault lifecycle cohort then passed in 73.9 seconds.
+
+The 256-row cold replay cleared all 534,773,760 bytes and completed its transfers;
+its final upload returned to 107.5 Mbps, but download was only 78.3 Mbps. This
+remaining miss is retained. Established bulk credit updates now cover 512 KiB
+instead of 256 KiB, reducing costly control publications and their collection
+work. The first receive-window expansion and close/cancel tail stay immediate.
+All 64 supported streams can leave at most 32 MiB unannounced, below the unchanged
+60 MiB shared allowance. A 64-stream TLS upload/response integrity test passed.
