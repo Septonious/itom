@@ -56,3 +56,5 @@ owns the global mutation lease, denying an independent ready account. The final
 candidate drains ordinary tags before acquiring that lease. Physical mutation
 remains serialized, and cancellation before mutation neither refunds debt nor
 quarantines unrelated accounts.
+
+Final exact-source candidate `b6d53de7ec97bef2d90582186a8398e409eed283` passes required hosted/source/Android checks, three-cycle account-interference acceptance, six server startup cycles and manual-stop capacity reset verification. Pressure updates carry monotonic per-account versions, so a delayed ON cannot override a newer CLEAR. Unknown outcomes and deferred historical debt remain charged. Remaining strict target misses are retained in publication metadata.

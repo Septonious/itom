@@ -67,3 +67,27 @@ For field testing, enable diagnostics before connecting, test MULTI without a
 preceding SINGLE run, then SINGLE, another MULTI, and manual VPN reconnect.
 Preserve the app/server exports if a phase fails. Observe idle RTT and uploads
 as well as download speed. No additional mailbox purge is part of this test.
+
+## Final exact-source verification
+
+Source `b6d53de7ec97bef2d90582186a8398e409eed283` passes the [matched build and acceptance gates](https://github.com/Septonious/itom/actions/runs/42016829274) and [independent source checks](https://github.com/Septonious/itom/actions/runs/42016829270). Normal/race application, native and SDK tests, the IMAP fork checks and vet pass. Android passes 93 domain tests, 8 app tests and lint with zero errors. Both JNI libraries, server binaries and source archive are verified. The persistent Android signer is unchanged.
+
+Six actual-server startup/reconnect cycles pass: three at 30/30 roles and three at 45/45, including server restarts and verified manual-stop local-capacity resets. The RC9 idle feedback is reproduced against frozen source; pressure clearing, delayed-update ordering, asymmetric full ledgers, active historical deferral and automatic idle cleanup pass.
+
+The following are controlled TLS IMAP/HTTPS models, not live-provider results.
+
+| Model / streams / cycle | Upload Mbps | Download Mbps | Max idle/post ms | Max loaded ms |
+| --- | ---: | ---: | ---: | ---: |
+| ordinary / 1 / 1 | 225.3 | 280.5 | 118.2 | 631.4 |
+| ordinary / 4 / 1 | 143.4 | 209.0 | 120.6 | 768.5 |
+| ordinary / 4 / 2 | 192.7 | 309.0 | 120.6 | 768.5 |
+| ordinary / 32 / 1 | 269.1 | 305.9 | 122.1 | 343.1 |
+| retained control / 4 / 1 | 284.4 | 320.5 | 108.5 | 305.0 |
+| retained control / 4 / 2 | 218.6 | 329.0 | 108.5 | 305.0 |
+| 40 old folders + metadata cost / 4 / 1 | 269.0 | 165.3 | 205.9 | 466.9 |
+| 40 old folders + metadata cost / 4 / 2 | 192.5 | 193.4 | 205.9 | 466.9 |
+| 40 old folders + metadata cost / 4 / 3 | 114.6 | 296.3 | 205.9 | 466.9 |
+
+The 7 Mbps shared-link cancellation/recovery model completes at 4.72/4.46 Mbps upload/download, with maximum idle/post RTT 87.9 ms and loaded RTT 1119.6 ms. No account fails or is rejected.
+
+The account-interference gate completes three full speedtests above 100 Mbps phase averages, with no active historical LIST. Full-phase capable-path and idle/loaded RTT gates pass. Strict pause/rolling-throughput misses remain in the raw evidence and metadata; all sustained-window and live-provider goals are not claimed complete.
