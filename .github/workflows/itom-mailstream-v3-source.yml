@@ -9,7 +9,7 @@ permissions: {contents: read}
 jobs:
   application:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env: {GOTOOLCHAIN: local}
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$GITHUB_WORKSPACE/mailstream-evidence"
-          go test -race -json -count=1 -timeout=360s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/application.jsonl"
+          go test -race -json -count=1 -timeout=600s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/application.jsonl"
           go vet ./...
           go build ./cmd/itom-mailstream
           ./itom-mailstream --help

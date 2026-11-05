@@ -894,10 +894,10 @@ func (a *mailAccountState) run() {
 		var coalesce *time.Timer
 		var coalesced <-chan time.Time
 		if !work.control && inFlight > 0 && time.Since(lastBulkWrite) < 250*time.Millisecond {
-			// Spend at most four milliseconds on an established bulk
+			// Spend at most eight milliseconds on an established bulk
 			// container when tagged APPEND service is expensive. Small
 			// control and the first publication bypass this timer.
-			delay := min(4*time.Millisecond, max(time.Millisecond, time.Duration(a.appendLatency.Load())/32))
+			delay := min(8*time.Millisecond, max(time.Millisecond, time.Duration(a.appendLatency.Load())/16))
 			coalesce = time.NewTimer(delay)
 			coalesced = coalesce.C
 		}

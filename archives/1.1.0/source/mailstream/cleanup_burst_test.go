@@ -51,9 +51,15 @@ func TestRetainedControlCleanupWithEarlyExpungeBurst(t *testing.T) {
 	done := make(chan error, 1)
 	start := time.Now()
 	go func() {
-		proof, n, e := p.collectPrefix(NewReclamationCoordinator(), folder, uidWatermark{}, true)
-		if e == nil && (proof.UID != 300 || n != 300) {
-			e = ErrProtocol
+		// Exercise a >128-response burst directly; production maintenance now
+		// bounds each page and does not need an unbounded UID inventory.
+		box, e := p.client.Select(folder, nil).Wait()
+		if e == nil {
+			var proof *imap.StatusData
+			proof, e = p.deleteUIDs(imap.UIDSet{{Start: 1, Stop: 300}}, folder)
+			if e == nil && (proof.UIDValidity != box.UIDValidity || *proof.NumMessages != 0) {
+				e = ErrProtocol
+			}
 		}
 		done <- e
 	}()

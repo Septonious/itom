@@ -5,7 +5,7 @@ p=argparse.ArgumentParser();p.add_argument('--reference',type=Path,required=True
 source=Path(__file__).resolve().parents[1]/'source';a.out.mkdir(parents=True,exist_ok=True)
 # Only tests are added to the frozen reference. Its implementation is untouched.
 for rel in ['mailstream/cleanup_burst_test.go','core/third_party/go-imap/imapclient/close_backpressure_test.go']:
- shutil.copy2(source/rel,a.reference/rel)
+ shutil.copy2(Path(__file__).resolve().parent/'fixtures/rc8/cleanup_burst_test.go' if rel=='mailstream/cleanup_burst_test.go' else source/rel,a.reference/rel)
 cases=[('rc8_cleanup',a.reference/'mailstream','.', 'TestRetainedControlCleanupWithEarlyExpungeBurst','retained control cleanup did not finish'),('rc8_close',a.reference/'core/third_party/go-imap','./imapclient','TestCloseInterruptsUndrainedExpungeBurst','Close is stuck behind an undrained EXPUNGE'),('candidate_cleanup',source/'mailstream','.','TestRetainedControlCleanupWithEarlyExpungeBurst',None),('candidate_close',source/'core/third_party/go-imap','./imapclient','TestCloseInterruptsUndrainedExpungeBurst',None),('candidate_manager',source/'core','./manager','TestSystemctlHonorsDeadlineInsteadOfHangingMenu',None)]
 results={}
 for name,cwd,target,test,expected in cases:

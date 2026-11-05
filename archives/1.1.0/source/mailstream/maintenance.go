@@ -77,73 +77,98 @@ func nonexistent(e error) bool {
 	return errors.As(e, &status) && status.Code == imap.ResponseCodeNonExistent
 }
 
-// Inventory exact UIDs before STORE. Higher control UIDs can arrive concurrently.
-func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool) (uidWatermark, uint64, error) {
+// A collection turn owns at most one bounded prefix. Provider mutation service
+// time need not resemble NOOP latency; a busy folder must not turn every retry
+// into the same unbounded STORE. Only audited UIDs advance the credit fence.
+const collectionPageSize = 128
+const collectionTimeout = 8 * time.Second
+
+func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool) (uidWatermark, uint64, bool, error) {
 	c.folder(folder)
 	c.stage("maintenance_select")
 	selected, e := p.client.Select(folder, nil).Wait()
 	if e != nil {
 		if whole && nonexistent(e) {
-			return target, 0, nil
+			return target, 0, true, nil
 		}
-		return uidWatermark{}, 0, e
+		return uidWatermark{}, 0, false, e
 	}
 	if target.Validity != 0 && target.Validity != selected.UIDValidity {
-		return uidWatermark{}, 0, ErrProtocol
+		return uidWatermark{}, 0, false, ErrProtocol
 	}
 	target.Validity = selected.UIDValidity
 	if whole {
 		if selected.UIDNext == 0 {
-			return uidWatermark{}, 0, ErrProtocol
+			return uidWatermark{}, 0, false, ErrProtocol
 		}
 		target.UID = uint32(selected.UIDNext) - 1
 	}
+	requested := target.UID
 	if target.UID == 0 || selected.NumMessages == 0 && uint32(selected.UIDNext) > target.UID {
-		// Empty historical slots already have authoritative SELECT proof.
-		// Do not spend FETCH/audit round trips on thousands of empty slots.
-		return target, 0, nil
+		return target, 0, true, nil
 	}
-	set := imap.UIDSet{{Start: 1, Stop: imap.UID(target.UID)}}
+	if selected.NumMessages == 0 {
+		return uidWatermark{}, 0, false, ErrProtocol
+	}
 	c.stage("maintenance_inventory")
-	rows, e := p.client.Fetch(set, &imap.FetchOptions{UID: true, RFC822Size: true}).Collect()
+	// Sequence order is UID order. New messages may arrive above the frozen UID
+	// fence; they are inventoried but never marked deleted or acknowledged here.
+	count := min(uint32(collectionPageSize), selected.NumMessages)
+	rows, e := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: count}}, &imap.FetchOptions{UID: true}).Collect()
 	if e != nil {
-		return uidWatermark{}, 0, e
+		return uidWatermark{}, 0, false, e
+	}
+	if uint32(len(rows)) > count {
+		return uidWatermark{}, 0, false, ErrProtocol
+	}
+	var last imap.UID
+	for _, row := range rows {
+		if row.UID == 0 {
+			return uidWatermark{}, 0, false, ErrProtocol
+		}
+		last = max(last, row.UID)
+	}
+	if selected.NumMessages > count && last != 0 && uint32(last) < target.UID {
+		target.UID = uint32(last)
 	}
 	var owned imap.UIDSet
-	for _, r := range rows {
-		if r.UID == 0 || uint32(r.UID) > target.UID {
-			return uidWatermark{}, 0, ErrProtocol
+	var removed uint64
+	for _, row := range rows {
+		if uint32(row.UID) <= target.UID {
+			owned.AddNum(row.UID)
+			removed++
 		}
-		owned.AddNum(r.UID)
 	}
-	if whole && uint32(len(rows)) != selected.NumMessages {
-		return uidWatermark{}, 0, ErrProtocol
-	}
-	if len(rows) > 0 {
-		c.stage("maintenance_expunge")
+	if removed > 0 {
 		p.allowExpunge.Store(true)
 		_, e = p.deleteUIDs(owned, "", c.stage)
 		p.allowExpunge.Store(false)
 		if e != nil {
-			return uidWatermark{}, 0, e
+			return uidWatermark{}, 0, false, e
 		}
 	}
 	c.stage("maintenance_audit")
+	set := imap.UIDSet{{Start: 1, Stop: imap.UID(target.UID)}}
 	remaining, e := p.client.Fetch(set, &imap.FetchOptions{UID: true}).Collect()
 	if e != nil {
-		return uidWatermark{}, 0, e
+		return uidWatermark{}, 0, false, e
 	}
-	if len(remaining) > 0 {
-		return uidWatermark{}, 0, ErrProtocol
+	if len(remaining) != 0 {
+		return uidWatermark{}, 0, false, ErrProtocol
 	}
+	c.stage("audit_select")
 	status, e := p.inventoryMailbox(folder, &imap.StatusOptions{UIDValidity: true, NumMessages: true})
 	if e != nil {
-		return uidWatermark{}, 0, e
+		return uidWatermark{}, 0, false, e
 	}
-	if status.UIDValidity != target.Validity || status.NumMessages == nil || whole && *status.NumMessages != 0 {
-		return uidWatermark{}, 0, ErrProtocol
+	if status.UIDValidity != target.Validity || status.NumMessages == nil {
+		return uidWatermark{}, 0, false, ErrProtocol
 	}
-	return target, uint64(len(rows)), nil
+	complete := target.UID == requested
+	if whole {
+		complete = *status.NumMessages == 0
+	}
+	return target, removed, complete, nil
 }
 
 func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idle bool) (string, error) {
@@ -267,7 +292,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	eligibleIn := cursor.Validity != 0 && (retry == l.controlFolder(false) || retry == "" && (cursor.UID-cin.UID >= controlBatch || idle && cursor.UID > cin.UID || recovering && !covers(cin, start) && start.Validity != 0))
 	eligibleOut := remote.Validity != 0 && (retry == l.controlFolder(true) || retry == "" && (remote.UID-cout.UID >= controlBatch || idle && remote.UID > cout.UID || recovering && !covers(cout, boundary)))
 	if eligibleIn && (!eligibleOut || !preferOut || retry == l.controlFolder(false)) {
-		proof, n, e := p.collectPrefix(c, l.controlFolder(false), cursor, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(false), cursor, false)
 		if e != nil {
 			return l.controlFolder(false), e
 		}
@@ -280,7 +305,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return l.controlFolder(false), nil
 	}
 	if eligibleOut {
-		proof, n, e := p.collectPrefix(c, l.controlFolder(true), remote, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(true), remote, false)
 		if e != nil {
 			return l.controlFolder(true), e
 		}
@@ -295,7 +320,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return l.controlFolder(true), e
 	}
 	if historical && retry != "" && retry != l.controlFolder(false) && retry != l.controlFolder(true) && l.obsoleteFolder(retry, id) {
-		_, _, e := p.collectPrefix(c, retry, uidWatermark{}, true)
+		_, _, _, e := p.collectPrefix(c, retry, uidWatermark{}, true)
 		return retry, e
 	}
 	if retry != "" {
@@ -309,13 +334,15 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	}
 	a.mu.Unlock()
 	if folder != "" {
-		_, _, e := p.collectPrefix(c, folder, uidWatermark{}, true)
+		_, _, complete, e := p.collectPrefix(c, folder, uidWatermark{}, true)
 		if e != nil {
 			return folder, e
 		}
 		a.mu.Lock()
-		m.folderIndex++
-		m.emptiedFolders++
+		if complete {
+			m.folderIndex++
+			m.emptiedFolders++
+		}
 		a.mu.Unlock()
 
 		return folder, nil
@@ -382,7 +409,7 @@ func (l *IMAPLink) maintainRetention() {
 	}
 }
 func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
-	ctx, cancel := context.WithTimeout(l.ctx, 2*time.Second)
+	ctx, cancel := context.WithTimeout(l.ctx, collectionTimeout)
 	defer cancel()
 	c := l.reclaimer
 	if !c.idleLease(a, cancel) {
@@ -406,7 +433,7 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 		return
 	}
 	defer p.close()
-	stop := p.limit(2 * time.Second)
+	stop := p.limit(collectionTimeout)
 	folder, e := a.maintenanceStep(ctx, p, true)
 	timely := stop()
 	if e == nil && timely {
@@ -467,7 +494,7 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 		leased = true
 		defer c.release()
 	}
-	stop = p.limit(2 * time.Second)
+	stop = p.limit(collectionTimeout)
 	folder := ""
 	if e == nil && drained {
 		folder, e = a.maintenanceStep(ctx, p, false)
@@ -548,24 +575,26 @@ func (a *mailAccountState) deferMaintenanceLocked() bool {
 	return last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond
 }
 
-// deleteUIDs preserves the mutation/audit pipeline without leaving either
-// streaming response queue undrained. UID STORE can receive unsolicited FETCH
-// and EXPUNGE before its tagged completion. Pipe cancellation/deadline aborts
-// both streams; the auxiliary drain always joins, including on an error.
+// Mutation commands have tagged completion fences. Never ask a provider to
+// EXPUNGE while its STORE is still pending. STORE may itself emit unsolicited
+// FETCH/EXPUNGE; drain its stream before starting the next command.
 func (p *mailPipe) deleteUIDs(owned imap.UIDSet, auditFolder string, stages ...func(string)) (*imap.StatusData, error) {
+	stage := func(name string) {
+		if len(stages) > 0 {
+			stages[0](name)
+		}
+	}
+	stage("store_flags")
 	store := p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
-	storeDone := make(chan error, 1)
-	go func() { storeDone <- store.Close() }()
-	expunge := p.client.Expunge()
-	_, expungeErr := expunge.Collect()
-	storeErr := <-storeDone
-	if e := errors.Join(storeErr, expungeErr); e != nil {
-		return nil, e
+	if err := store.Close(); err != nil {
+		return nil, err
+	}
+	stage("expunge")
+	if err := p.client.Expunge().Close(); err != nil {
+		return nil, err
 	}
 	if auditFolder != "" {
-		if len(stages) > 0 {
-			stages[0]("audit_select")
-		}
+		stage("audit_select")
 		return p.inventoryMailbox(auditFolder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
 	}
 	return nil, nil

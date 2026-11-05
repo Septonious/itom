@@ -11,14 +11,15 @@ import (
 // further collection on the same physical account, not independent accounts.
 // A timeout never grants storage credit. Only the later physical audit does.
 type ReclamationCoordinator struct {
-	mu          sync.Mutex
-	state       ReclamationSnapshot
-	active      bool
-	waiting     []*mailAccountState
-	quarantines map[string]*reclamationFailure
-	sessions    map[*IMAPLink]bool
-	quietSince  time.Time
-	idleStop    context.CancelFunc
+	mu           sync.Mutex
+	state        ReclamationSnapshot
+	active       bool
+	waiting      []*mailAccountState
+	quarantines  map[string]*reclamationFailure
+	sessions     map[*IMAPLink]bool
+	quietSince   time.Time
+	idleStop     context.CancelFunc
+	stageStarted time.Time
 }
 type reclamationFailure struct {
 	owner                 *mailAccountState
@@ -27,13 +28,16 @@ type reclamationFailure struct {
 	failures              uint
 }
 type ReclamationSnapshot struct {
-	Paused      bool                    `json:"paused"`
-	Stage       string                  `json:"stage,omitempty"`
-	Failure     string                  `json:"failure,omitempty"`
-	Completed   uint64                  `json:"completed"`
-	Folder      string                  `json:"folder,omitempty"`
-	RetryAtMS   int64                   `json:"retry_at_ms,omitempty"`
-	Quarantines []ReclamationQuarantine `json:"quarantined_accounts,omitempty"`
+	StageElapsedMS      int64                   `json:"stage_elapsed_ms"`
+	LastStage           string                  `json:"last_stage,omitempty"`
+	LastStageDurationMS int64                   `json:"last_stage_duration_ms,omitempty"`
+	Paused              bool                    `json:"paused"`
+	Stage               string                  `json:"stage,omitempty"`
+	Failure             string                  `json:"failure,omitempty"`
+	Completed           uint64                  `json:"completed"`
+	Folder              string                  `json:"folder,omitempty"`
+	RetryAtMS           int64                   `json:"retry_at_ms,omitempty"`
+	Quarantines         []ReclamationQuarantine `json:"quarantined_accounts,omitempty"`
 }
 type ReclamationQuarantine struct {
 	Account   string `json:"account"`
@@ -105,8 +109,16 @@ func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
 func (c *ReclamationCoordinator) release() { c.mu.Lock(); c.active = false; c.mu.Unlock() }
 func (c *ReclamationCoordinator) stage(stage string) {
 	c.mu.Lock()
-	c.state.Stage = stage
+	c.recordStageLocked(stage)
 	c.mu.Unlock()
+}
+func (c *ReclamationCoordinator) recordStageLocked(stage string) {
+	if !c.stageStarted.IsZero() {
+		c.state.LastStage = c.state.Stage
+		c.state.LastStageDurationMS = time.Since(c.stageStarted).Milliseconds()
+	}
+	c.state.Stage = stage
+	c.stageStarted = time.Now()
 }
 func (c *ReclamationCoordinator) pause(reason string, a *mailAccountState) {
 	c.mu.Lock()
@@ -128,7 +140,7 @@ func (c *ReclamationCoordinator) completed(a *mailAccountState, folder string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.state.Completed++
-	c.state.Stage = "complete"
+	c.recordStageLocked("complete")
 	if f := c.failureLocked(a); f != nil && f.owner == a && f.folder == folder {
 		delete(c.quarantines, reclamationAccountKey(a))
 	}
@@ -137,6 +149,9 @@ func (c *ReclamationCoordinator) snapshot() ReclamationSnapshot {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	s := c.state
+	if c.active && !c.stageStarted.IsZero() {
+		s.StageElapsedMS = time.Since(c.stageStarted).Milliseconds()
+	}
 	s.Paused = len(c.quarantines) > 0
 	for _, f := range c.quarantines {
 		s.Quarantines = append(s.Quarantines, ReclamationQuarantine{f.owner.config.ID, f.folder, f.stage, f.reason, f.retryAt.UnixMilli()})

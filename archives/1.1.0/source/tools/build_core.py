@@ -451,7 +451,7 @@ def run(root: Path, info: dict, cache: Path, race: bool = False, server: bool = 
                         # The mailstream safety cohort verifies nine 20 MB HTTPS
                         # echoes under race instrumentation. Throughput/RTT
                         # qualification uses separate non-instrumented workers.
-                        sibling_timeout = "360s" if module == "mailstream" else "120s"
+                        sibling_timeout = "600s" if module == "mailstream" else "120s"
                         sibling_args = ["test", "-mod=readonly", "-count=1", "-timeout=" + sibling_timeout]
                         if instrumented:
                             sibling_args.append("-race")

@@ -41,7 +41,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	defer a.reclaiming.Store(false)
 	a.link.notify()
 	p := *writer
-	budget := min(10*time.Second, max(2*time.Second, 8*p.service))
+	budget := collectionTimeout
 	// In-flight bulk completion is not cleanup service time. On a weak
 	// shared link it may legitimately take longer than the metadata bound.
 	stop := p.limit(10 * time.Second)

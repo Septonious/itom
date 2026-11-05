@@ -383,8 +383,8 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages != segmentAppends {
 		return ErrProtocol
 	}
-	// Both streaming replies are drained concurrently before the audit result
-	// is used. This keeps the bounded mutation/audit pipeline throughput.
+	// Drain each tagged mutation before the next operation. The final SELECT
+	// remains mandatory before any physical capacity is refunded.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
 	c.stage("store_expunge")

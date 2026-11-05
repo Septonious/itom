@@ -53,6 +53,7 @@ type session struct {
 	dataFetchDelay       time.Duration
 	selectedFolder       string
 	appendService        time.Duration
+	mutationRowCost      time.Duration
 	appendOrdinal        uint64
 	rejectSelectedStatus bool
 	mutated              bool
@@ -257,6 +258,16 @@ func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.Fetc
 func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.StoreFlags, o *imap.StoreOptions) error {
 	defer s.accountWork(true)()
 	s.count("STORE")
+	if s.mutationRowCost > 0 {
+		if set, ok := set.(imap.UIDSet); ok {
+			if nums, ok := set.Nums(); ok {
+				s.counts.Lock()
+				s.counts.commands["MAX_STORE_ROWS"] = max(s.counts.commands["MAX_STORE_ROWS"], uint64(len(nums)))
+				s.counts.Unlock()
+				time.Sleep(s.mutationRowCost * time.Duration(len(nums)))
+			}
+		}
+	}
 	err := s.Session.Store(w, set, f, o)
 	if err == nil && s.earlyExpunge && f.Op == imap.StoreFlagsAdd {
 		for _, flag := range f.Flags {
@@ -310,6 +321,7 @@ func run() error {
 	clientDownload := flag.Int64("client-download-mbps", 0, "independent shared downlink rate; requires uplink rate")
 	existingStall := flag.Duration("existing-create-stall", 0, "existing control CREATE stall on accounts a02/a03/a05/a10; SELECT/STATUS remain responsive")
 	selectRefusals := flag.Int("startup-select-refusals", 0, "temporary control SELECT refusals per affected folder, shared across connections")
+	mutationRowCost := flag.Duration("mutation-row-cost", 0, "per UID STORE service time; independent of APPEND and NOOP")
 	appendService := flag.Duration("append-service", 0, "all APPEND per-command provider cost, with independent bounded jitter")
 	rejectSelected := flag.Bool("reject-selected-status", false, "reject selected STATUS after EXPUNGE, while SELECT and other account operations work")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
@@ -320,7 +332,7 @@ func run() error {
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -362,7 +374,7 @@ func run() error {
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
