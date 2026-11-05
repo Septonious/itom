@@ -1,4 +1,11 @@
-# ITOM 1.1.0 MAILSTREAM-RC10 — experimental testing candidate
+# ITOM 1.1.0 MAILSTREAM-RC11 — experimental upload testing candidate
+
+RC10 remains the first user-confirmed field-ready baseline. RC11 changes client
+upload flight headroom and delivery-rate sampling, and increases the server
+upload FETCH batch from eight to 32 already-available containers. Initial credit,
+server download control, mailbox ownership/cleanup, DNS, app identity and signer
+are preserved. New body receipt RTT diagnostics support field comparison. Update
+both endpoints for the upload changes; preserve app data and profiles.
 
 Update both matched endpoints. Install the signed APK in place, preserving app
 data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then

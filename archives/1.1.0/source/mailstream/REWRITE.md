@@ -1,4 +1,4 @@
-# Mailbox stream transport contract — MAILSTREAM-RC10
+# Mailbox stream transport contract — MAILSTREAM-RC11
 
 RC5 field traces show nine client accounts failing at the first 32-message DATA
 boundary while executing CLOSE, despite low direct IMAP latency. A separate
@@ -178,3 +178,19 @@ before consuming the pipelined audit result. Provider EXPUNGE bursts may arrive
 before UID STORE tagged completion; neither response queue remains undrained. Explicit client close and operation deadlines cancel
 stream delivery as well as socket IO, so a full 128-response buffer cannot
 prevent decoder shutdown. Empty folders remain; automatic DELETE is forbidden.
+
+## RC11 upload headroom
+
+RC10 is the frozen field-ready baseline. Only client outbound DATA uses the
+adaptive extension: actual allowance blocking plus measured bulk receipt RTT
+can increase the delivered-rate horizon, capped at 1.25 seconds. Initial flight
+remains 512 KiB. Each first publication records delivery-byte and send/delivery
+timestamps; rate samples use the larger interval to resist compressed receipts.
+Interactive/control probes cannot train bulk capacity. RESET releases its bulk
+flight charge. Server download control retains RC10's half-second policy.
+
+Server upload readers stream up to 32 already-available containers per FETCH;
+client download readers retain eight. There is no wait for a fuller batch, no
+additional role/socket, and no change to 128-container retirement or exact UIDs.
+Synthetic delayed-body-FETCH performance does not certify live-provider upload
+speed. Existing cleanup timeout/retry observations remain under investigation.

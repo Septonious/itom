@@ -179,6 +179,19 @@ func (s *session) Delete(folder string) error { s.count("DELETE"); return s.Sess
 func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
 	defer s.accountWork(false)()
 	s.count("FETCH")
+	if o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
+		if seq, ok := set.(imap.SeqSet); ok {
+			var rows uint64
+			for _, r := range seq {
+				if r.Start > 0 && r.Stop >= r.Start {
+					rows += uint64(r.Stop - r.Start + 1)
+				}
+			}
+			s.counts.Lock()
+			s.counts.commands["MAX_DATA_FETCH_ROWS"] = max(s.counts.commands["MAX_DATA_FETCH_ROWS"], rows)
+			s.counts.Unlock()
+		}
+	}
 	if s.dataFetchDelay > 0 && o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
 		s.count("DELAYED_DATA_FETCH")
 		time.Sleep(s.dataFetchDelay)
