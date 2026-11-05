@@ -43,15 +43,17 @@ type counts struct {
 }
 type session struct {
 	imapserver.Session
-	counts         *counts
-	user           string
-	bulkDelay      time.Duration
-	prefill        int
-	earlyExpunge   bool
-	metadataDelay  time.Duration
-	historyFolders int
-	dataFetchDelay time.Duration
-	selectedFolder string
+	counts              *counts
+	user                string
+	bulkDelay           time.Duration
+	prefill             int
+	earlyExpunge        bool
+	metadataDelay       time.Duration
+	historyFolders      int
+	dataFetchDelay      time.Duration
+	selectedFolder      string
+	existingCreateStall time.Duration
+	selectRefusals      int
 }
 
 func (s *session) Login(user, password string) error {
@@ -135,7 +137,38 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 	}
 	return data, err
 }
+func (s *session) affectedControl(folder string) bool {
+	return strings.Contains(folder, "-control-") && (s.user == "a02" || s.user == "a03" || s.user == "a05" || s.user == "a10")
+}
+func (s *session) seedExistingControls(folder string) {
+	if s.existingCreateStall == 0 || !s.affectedControl(folder) {
+		return
+	}
+	s.counts.Lock()
+	defer s.counts.Unlock()
+	key := "existing/" + s.user
+	if s.counts.seeded[key] {
+		return
+	}
+	s.counts.seeded[key] = true
+	prefix := strings.Split(folder, "-control-")[0] + "-control-v7-"
+	_ = s.Session.Create(prefix+"c2s", nil)
+	_ = s.Session.Create(prefix+"s2c", nil)
+}
 func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData, error) {
+	s.seedExistingControls(folder)
+	if s.selectRefusals > 0 && s.affectedControl(folder) {
+		s.counts.Lock()
+		key := "REFUSED_SELECT/" + s.user + "/" + folder
+		refuse := s.counts.commands[key] < uint64(s.selectRefusals)
+		if refuse {
+			s.counts.commands[key]++
+		}
+		s.counts.Unlock()
+		if refuse {
+			return nil, &imap.Error{Type: imap.StatusResponseTypeNo, Code: imap.ResponseCodeUnavailable, Text: "temporary fixture mailbox unavailable"}
+		}
+	}
 	defer s.accountWork(true)()
 	s.count("SELECT")
 	data, err := s.Session.Select(folder, o)
@@ -146,6 +179,13 @@ func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData
 }
 func (s *session) Create(folder string, o *imap.CreateOptions) error {
 	s.count("CREATE")
+	s.seedExistingControls(folder)
+	if s.existingCreateStall > 0 && s.affectedControl(folder) {
+		if _, err := s.Session.Status(folder, &imap.StatusOptions{UIDNext: true}); err == nil {
+			s.count("STALLED_EXISTING_CONTROL_CREATE")
+			time.Sleep(s.existingCreateStall)
+		}
+	}
 	err := s.Session.Create(folder, o)
 	if strings.Contains(folder, "-control-") && s.historyFolders > 0 {
 		s.counts.Lock()
@@ -242,6 +282,10 @@ func run() error {
 	variable := flag.Bool("variable", true, "10-50 ms client, 20-40 ms server RTT")
 	accounts := flag.Int("accounts", 10, "physical accounts")
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
+	clientUpload := flag.Int64("client-upload-mbps", 0, "independent shared uplink rate; requires downlink rate")
+	clientDownload := flag.Int64("client-download-mbps", 0, "independent shared downlink rate; requires uplink rate")
+	existingStall := flag.Duration("existing-create-stall", 0, "existing control CREATE stall on accounts a02/a03/a05/a10; SELECT/STATUS remain responsive")
+	selectRefusals := flag.Int("startup-select-refusals", 0, "temporary control SELECT refusals per affected folder, shared across connections")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
@@ -250,7 +294,7 @@ func run() error {
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -292,10 +336,14 @@ func run() error {
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
+	if *clientUpload > 0 {
+		clientNet.readBitsPerSecond = *clientUpload * 1_000_000
+		clientNet.writeBitsPerSecond = *clientDownload * 1_000_000
+	}
 	serverNet := &network{start: clientNet.start, bitsPerSecond: 1_000_000_000, step: 700 * time.Millisecond, rtts: []time.Duration{0}}
 	if *variable {
 		clientNet.rtts = []time.Duration{10 * time.Millisecond, 25 * time.Millisecond, 50 * time.Millisecond, 35 * time.Millisecond}
@@ -341,7 +389,7 @@ func run() error {
 	web := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	defer web.Close()
 	go web.Serve(control)
-	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
+	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_upload_mbps": *clientUpload, "client_download_mbps": *clientDownload, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
 	body, _ := json.MarshalIndent(ready, "", "  ")
 	if err = os.WriteFile(filepath.Join(*dir, "provider.json"), body, 0600); err != nil {
 		return err

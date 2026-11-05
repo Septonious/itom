@@ -42,6 +42,10 @@ def main():
     parser.add_argument('--prefill-control', type=int, default=0)
     parser.add_argument('--early-store-expunge', action='store_true')
     parser.add_argument('--bulk-publish-delay-ms', type=int, default=0)
+    parser.add_argument('--client-upload-mbps',type=int,default=0)
+    parser.add_argument('--client-download-mbps',type=int,default=0)
+    parser.add_argument('--existing-create-stall-ms',type=int,default=0)
+    parser.add_argument('--startup-select-refusals',type=int,default=0)
     parser.add_argument('--client-mbps', type=int, default=500)
     parser.add_argument('--cancel-download-after', default='0s')
     parser.add_argument('--accounts', type=int, default=10)
@@ -56,6 +60,8 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
+    if args.client_upload_mbps<0 or args.client_download_mbps<0 or (args.client_upload_mbps==0)!=(args.client_download_mbps==0) or not 0<=args.existing_create_stall_ms<=30000 or not 0<=args.startup_select_refusals<=8:
+        parser.error('invalid directional rate or startup fault')
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s",args.idle_observe) or float(args.idle_observe[:-1])>120:
         parser.error('idle observation must be 0..120 seconds')
     if not 0<=args.upload_fetch_delay_ms<=1000:
@@ -84,7 +90,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
+    manifest = {'client_upload_mbps':args.client_upload_mbps,'client_download_mbps':args.client_download_mbps,'existing_create_stall_ms':args.existing_create_stall_ms,'startup_select_refusals':args.startup_select_refusals,'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -146,7 +152,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                 private.mkdir()
                 provider_log = (output/(label+'-provider.log')).open('w')
                 provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
-                                             '-upload-fetch-delay',f'{args.upload_fetch_delay_ms}ms','-history-folders',str(args.history_folders),'-account-metadata-delay',f'{args.account_metadata_delay_ms}ms','-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                             '-client-upload-mbps',str(args.client_upload_mbps),'-client-download-mbps',str(args.client_download_mbps),'-existing-create-stall',f'{args.existing_create_stall_ms}ms','-startup-select-refusals',str(args.startup_select_refusals),'-upload-fetch-delay',f'{args.upload_fetch_delay_ms}ms','-history-folders',str(args.history_folders),'-account-metadata-delay',f'{args.account_metadata_delay_ms}ms','-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
                                             stdout=provider_log, stderr=subprocess.STDOUT)
                 try:
                     for _ in range(200):

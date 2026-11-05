@@ -14,26 +14,35 @@ import (
 // sockets and both directions share this endpoint's finite serialization rate.
 // This models application-visible RTT/bandwidth, not radio loss or kernel cwnd.
 type network struct {
-	mu            sync.Mutex
-	next          time.Time
-	start         time.Time
-	bitsPerSecond int64
-	rtts          []time.Duration
-	step          time.Duration
-	bytes         atomic.Uint64
-	queued        atomic.Int64
-	peak          atomic.Int64
+	mu                                    sync.Mutex
+	next                                  time.Time
+	start                                 time.Time
+	readBitsPerSecond, writeBitsPerSecond int64
+	readNext, writeNext                   time.Time
+	bitsPerSecond                         int64
+	rtts                                  []time.Duration
+	step                                  time.Duration
+	bytes                                 atomic.Uint64
+	queued                                atomic.Int64
+	peak                                  atomic.Int64
 }
 
-func (n *network) schedule(size int) time.Time {
+func (n *network) schedule(size int, outgoing bool) time.Time {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	now := time.Now()
-	begin := maxTime(now, n.next)
-	serialization := time.Duration((int64(size)*8*int64(time.Second) + n.bitsPerSecond - 1) / n.bitsPerSecond)
-	n.next = begin.Add(serialization)
+	rate, next := n.bitsPerSecond, &n.next
+	if n.readBitsPerSecond > 0 && n.writeBitsPerSecond > 0 {
+		rate, next = n.readBitsPerSecond, &n.readNext
+		if outgoing {
+			rate, next = n.writeBitsPerSecond, &n.writeNext
+		}
+	}
+	begin := maxTime(now, *next)
+	serialization := time.Duration((int64(size)*8*int64(time.Second) + rate - 1) / rate)
+	*next = begin.Add(serialization)
 	rtt := n.rtts[int(time.Since(n.start)/n.step)%len(n.rtts)]
-	return n.next.Add(rtt / 2)
+	return next.Add(rtt / 2)
 }
 func maxTime(a, b time.Time) time.Time {
 	if a.After(b) {
@@ -82,7 +91,7 @@ func (c *delayedConn) readPump() {
 		p := packet{err: err}
 		if n > 0 {
 			p.body = body[:n]
-			p.ready = c.network.schedule(n)
+			p.ready = c.network.schedule(n, false)
 			c.network.enqueued(n)
 			c.network.bytes.Add(uint64(n))
 		}
@@ -204,7 +213,7 @@ func (c *delayedConn) Write(body []byte) (int, error) {
 	n := 0
 	for len(body) > 0 {
 		size := min(len(body), 16<<10)
-		p := packet{body: append([]byte(nil), body[:size]...), ready: c.network.schedule(size)}
+		p := packet{body: append([]byte(nil), body[:size]...), ready: c.network.schedule(size, true)}
 		c.network.enqueued(size)
 		c.pending.Add(int64(size))
 		select {

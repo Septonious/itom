@@ -72,6 +72,8 @@ type mailAccountState struct {
 	ready, failed         bool
 	stage                 string
 	failure               string
+	startupAttempts       uint32
+	startupRetryAt        time.Time
 	control, writer, data *mailPipe
 	dataDone              chan struct{}
 	attachStop, dataStop  context.CancelFunc
@@ -669,66 +671,11 @@ func (a *mailAccountState) changeWriter(enable bool) error {
 
 func (a *mailAccountState) run() {
 	defer a.fail()
-	select {
-	case a.link.login <- struct{}{}:
-	case <-a.ctx.Done():
-		return
-	}
-	a.phase("control_login")
-	control, err := openMailPipe(a.ctx, a.config)
+	control, writer, err := a.startControls()
 	if err != nil {
-		a.failedStage("control_login", err)
-		<-a.link.login
 		return
 	}
 	defer control.close()
-	control.onPacket = func(packet []byte) {
-		a.downBytes.Add(uint64(len(packet)))
-		a.link.note("received", a.config.ID, packet, 0, true)
-	}
-	if !a.link.client {
-		control.onControlConsumed = a.controlConsumed
-	}
-	control.uidControl.Store(true)
-	a.phase("control_select")
-	stopSelect := control.limit(15 * time.Second)
-	defer stopSelect()
-	if _, err = control.selectLog(a.link.controlFolder(false), true); err != nil {
-		a.failedStage("control_select", err)
-		<-a.link.login
-		return
-	}
-	// Create both control namespaces before serving. Do not run a
-	// redundant CREATE for every small packet during an active session.
-	if createErr := control.client.Create(a.link.controlFolder(true), nil).Wait(); createErr != nil {
-		var tagged *imap.Error
-		if !errors.As(createErr, &tagged) {
-			a.failedStage("control_create", createErr)
-			<-a.link.login
-			return
-		}
-	}
-	initial, initialErr := control.client.Status(a.link.controlFolder(true), &imap.StatusOptions{UIDNext: true, UIDValidity: true}).Wait()
-	if initialErr != nil || initial.UIDNext == 0 || initial.UIDValidity == 0 {
-		a.failedStage("control_inventory", ErrProtocol)
-		<-a.link.login
-		return
-	}
-	a.mu.Lock()
-	a.maintenance.initialOut = uidWatermark{initial.UIDValidity, uint32(initial.UIDNext) - 1}
-	a.maintenance.writes = make(map[imap.UID]controlWrite)
-	a.mu.Unlock()
-	stopSelect()
-	var writer *mailPipe
-	if a.link.client {
-		a.phase("writer_login")
-		writer, err = openMailPipe(a.ctx, a.config)
-	}
-	<-a.link.login
-	if err != nil {
-		a.failedStage("writer_login", err)
-		return
-	}
 	var appendWait sync.WaitGroup
 	defer func() {
 		if writer != nil {
@@ -738,7 +685,7 @@ func (a *mailAccountState) run() {
 	}()
 	a.mu.Lock()
 	a.control, a.writer, a.ready = control, writer, true
-	a.stage = "serving"
+	a.stage, a.failure = "serving", ""
 	a.mu.Unlock()
 	a.link.notify()
 	a.link.mu.Lock()
@@ -1116,6 +1063,8 @@ type MailAccountSnapshot struct {
 	ControlPhase               int32  `json:"control_phase"`
 	ControlCursor              uint32 `json:"control_cursor"`
 	ControlCount               uint32 `json:"control_count"`
+	StartupAttempts            uint32 `json:"startup_attempts"`
+	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
 	PeerVerified               bool   `json:"peer_verified"`
 	Account                    string `json:"account"`
 	Stage                      string `json:"stage"`
@@ -1163,6 +1112,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line.StartupAttempts = a.startupAttempts
+		if !a.startupRetryAt.IsZero() {
+			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()
+		}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
 		line.ControlOutstanding = len(a.maintenance.writes)
 		line.ControlOutgoingBytes = a.maintenance.controlBytes
@@ -1329,16 +1282,38 @@ func (p *mailPipe) runCommand(cmd mailCommand) error {
 func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error) {
 	begin := time.Now()
 	p.phase.Store(2)
-	if !p.knownFolders[folder] {
-		if err := p.client.Create(folder, nil).Wait(); err != nil {
-			var status *imap.Error
-			if !errors.As(err, &status) {
+	var selected *imap.SelectData
+	var err error
+	if tail {
+		// Existing control folders must be opened without a redundant
+		// CREATE. Some providers serialize or stall that metadata mutation
+		// even though SELECT/STATUS on the same folder are responsive.
+		selected, err = p.client.Select(folder, nil).Wait()
+		if err != nil && !missingMailbox(err) {
+			if taggedNo(err) {
+				return nil, ErrProtocol
+			}
+			return nil, ErrClosed
+		}
+		if err != nil {
+			selected = nil
+		}
+	}
+	if selected == nil {
+		if !p.knownFolders[folder] {
+			if err := p.client.Create(folder, nil).Wait(); err != nil && !taggedNo(err) {
 				return nil, ErrClosed
 			}
 		}
+		selected, err = p.client.Select(folder, nil).Wait()
 	}
-	selected, err := p.client.Select(folder, nil).Wait()
-	if err != nil || selected.UIDValidity == 0 {
+	if err != nil {
+		if !taggedNo(err) {
+			return nil, ErrClosed
+		}
+		return nil, ErrProtocol
+	}
+	if selected == nil || selected.UIDValidity == 0 {
 		return nil, ErrProtocol
 	}
 	if p.knownFolders == nil {
