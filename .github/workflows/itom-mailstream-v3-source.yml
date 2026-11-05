@@ -1,4 +1,4 @@
-# RC9: interrupt streaming decoder waits and verify retained-control reply ordering and prompt shutdown.
+# RC9: interrupt streaming decoder waits and verify retained-control reply drains, throughput and prompt shutdown.
 name: Mailbox stream rewrite - application acceptance only
 on:
   push:

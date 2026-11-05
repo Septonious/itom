@@ -170,8 +170,8 @@ separate capacity waits from refusals and expose bulk receipt RTT, delivered rat
 and flight saturation. This addresses the RC7 field burst without increasing
 per-stream receive-credit allocations.
 
-RC9 completes UID STORE before starting EXPUNGE. Provider EXPUNGE bursts may
-arrive before UID STORE tagged completion; no undrained streaming command is
-pipelined behind it. Explicit client close and operation deadlines cancel
+RC9 drains UID STORE and EXPUNGE responses concurrently and joins both drains
+before consuming the pipelined audit result. Provider EXPUNGE bursts may arrive
+before UID STORE tagged completion; neither response queue remains undrained. Explicit client close and operation deadlines cancel
 stream delivery as well as socket IO, so a full 128-response buffer cannot
 prevent decoder shutdown. Empty folders remain; automatic DELETE is forbidden.

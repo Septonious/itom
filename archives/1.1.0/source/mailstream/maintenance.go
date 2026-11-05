@@ -9,6 +9,7 @@ import (
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapclient"
 )
 
 func (c *ReclamationCoordinator) folder(s string) { c.mu.Lock(); c.state.Folder = s; c.mu.Unlock() }
@@ -152,21 +153,10 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if len(rows) > 0 {
 		c.stage("maintenance_expunge")
 		p.allowExpunge.Store(true)
-		// UID STORE may return unsolicited EXPUNGE replies before its
-		// tagged completion. Do not register an EXPUNGE command whose
-		// bounded reply buffer is not being drained yet.
-		e = p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close()
-		if e != nil {
-			p.allowExpunge.Store(false)
-			return uidWatermark{}, 0, e
-		}
-		_, ee := p.client.Expunge().Collect()
+		_, e = p.deleteUIDs(owned, "")
 		p.allowExpunge.Store(false)
 		if e != nil {
 			return uidWatermark{}, 0, e
-		}
-		if ee != nil {
-			return uidWatermark{}, 0, ee
 		}
 	}
 	c.stage("maintenance_audit")
@@ -595,4 +585,28 @@ func (a *mailAccountState) deferMaintenanceLocked() bool {
 	}
 	last := a.link.lastBulk.Load()
 	return last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond
+}
+
+// deleteUIDs preserves the mutation/audit pipeline without leaving either
+// streaming response queue undrained. UID STORE can receive unsolicited FETCH
+// and EXPUNGE before its tagged completion. Pipe cancellation/deadline aborts
+// both streams; the auxiliary drain always joins, including on an error.
+func (p *mailPipe) deleteUIDs(owned imap.UIDSet, auditFolder string) (*imap.StatusData, error) {
+	store := p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
+	storeDone := make(chan error, 1)
+	go func() { storeDone <- store.Close() }()
+	expunge := p.client.Expunge()
+	var audit *imapclient.StatusCommand
+	if auditFolder != "" {
+		audit = p.client.Status(auditFolder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
+	}
+	_, expungeErr := expunge.Collect()
+	storeErr := <-storeDone
+	if e := errors.Join(storeErr, expungeErr); e != nil {
+		return nil, e
+	}
+	if audit != nil {
+		return audit.Wait()
+	}
+	return nil, nil
 }

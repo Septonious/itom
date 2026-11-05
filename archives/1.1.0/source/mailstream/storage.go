@@ -486,20 +486,12 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages != segmentAppends {
 		return ErrProtocol
 	}
-	// Finish each streaming mutation before starting the next command.
-	// Providers may emit EXPUNGE notifications during UID STORE.
+	// Both streaming replies are drained concurrently before the audit result
+	// is used. This keeps the bounded mutation/audit pipeline throughput.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
-	c.stage("store")
-	if err = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
-		return err
-	}
-	c.stage("expunge")
-	if _, err = p.client.Expunge().Collect(); err != nil {
-		return err
-	}
-	c.stage("status")
-	status, err := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
+	c.stage("store_expunge")
+	status, err := p.deleteUIDs(rec.uids, rec.folder)
 	if err != nil {
 		return err
 	}
