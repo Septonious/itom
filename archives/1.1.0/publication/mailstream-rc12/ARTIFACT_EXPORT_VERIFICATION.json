@@ -1,0 +1,92 @@
+{
+  "verified_at_utc": "2026-11-05T15:44:35.692753+00:00",
+  "source_commit": "45052ad0054580c9fb89f5609d7a745e2e38f447",
+  "artifact_export_run_id": 42057465841,
+  "all_14_exported_files_downloaded_and_sha256_verified": true,
+  "persistent_android_signer_unchanged": true,
+  "github_release_page_published": false,
+  "release_creation_blocker": "GitHub Actions contents-write token receives HTTP403 Resource not accessible by integration; source tag created successfully, release creation still denied",
+  "performance_qualified": false,
+  "known_failed_gate": "350 ms delayed-FETCH 100 Mbps upload; both attempts retained",
+  "rc10_title_and_all_14_asset_ids_sizes_and_digests_unchanged": true,
+  "artifacts": [
+    {
+      "id": 13429998033,
+      "name": "ITOM-MAILSTREAM-RC12-server-arm64",
+      "url": "https://github.com/Septonious/itom/actions/runs/42057465841/artifacts/13429998033"
+    },
+    {
+      "id": 13429988139,
+      "name": "ITOM-MAILSTREAM-RC12-server-amd64",
+      "url": "https://github.com/Septonious/itom/actions/runs/42057465841/artifacts/13429988139"
+    },
+    {
+      "id": 13429863234,
+      "name": "ITOM-MAILSTREAM-RC12-sources-and-evidence",
+      "url": "https://github.com/Septonious/itom/actions/runs/42057465841/artifacts/13429863234"
+    },
+    {
+      "id": 13428884443,
+      "name": "ITOM-MAILSTREAM-RC12-signed-Android",
+      "url": "https://github.com/Septonious/itom/actions/runs/42057465841/artifacts/13428884443"
+    }
+  ],
+  "files": {
+    "ITOM-1.1.0-MAILSTREAM-RC12-linux-arm64.bin": {
+      "size": 12217957,
+      "digest": "sha256:035f2bdbff994b1583e2baca84efbde5b7b1bd9c974a667d8dc6db60fea0bbb5"
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC12-linux-amd64.bin": {
+      "size": 13222408,
+      "digest": "sha256:f2069046568f9461e7e65623c6f800baf953058cc368012336e7099745fb0675"
+    },
+    "ANDROID_BUILD.json": {
+      "size": 2519,
+      "digest": "sha256:5747c13f768402e4d5611f7fa81b65c1b08d3487af36e7c6883b5c30e895030c"
+    },
+    "ARTIFACT_VALIDATION.json": {
+      "size": 1734,
+      "digest": "sha256:c06fb718e997db39b51d3f443d9ca0ee507bedcbb59e5a7c035500ee61528a0f"
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC12-sources.zip": {
+      "size": 1703092,
+      "digest": "sha256:5a01b3f511b70f55e9f179057de7f3977c4bbbaaa439a95f6d3d0861fc76e3ab"
+    },
+    "MAILSTREAM-RC12-evidence.zip": {
+      "size": 768192,
+      "digest": "sha256:ab992bcc6e6ae274da306b3c66ec6d4569239de72bb20b85287b0621ea630977"
+    },
+    "MAILSTREAM-RC12_TESTING.md": {
+      "size": 5786,
+      "digest": "sha256:5052f6c2ef4c77092e858a7ed3a0784c79d06ae61822b3cab2d1ef8b3ffda0bf"
+    },
+    "MAILSTREAM_RC12_BUILD.json": {
+      "size": 21543,
+      "digest": "sha256:926e3574b4945c74e15dddec330ecdd356965f94506fd620091274361f663825"
+    },
+    "MAILSTREAM_RC12_SOURCE_MANIFEST.json": {
+      "size": 79221,
+      "digest": "sha256:07e763dc54719380579daefc8552e5355e008ae58c07a6b0a8144944af91935a"
+    },
+    "NATIVE_SOURCE_SHA256SUMS": {
+      "size": 323,
+      "digest": "sha256:85d98ec4d64d8d33673353435c4bad060e9cfc5c2c3bb0f057a3d9d56c0f003a"
+    },
+    "SHA256SUMS": {
+      "size": 1228,
+      "digest": "sha256:842a3cb24974c89860ae8dda12052c6d9f07a81f44e18200d8d9cf4989d04f49"
+    },
+    "SIGNER.txt": {
+      "size": 951,
+      "digest": "sha256:4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d"
+    },
+    "SOURCE_COMMIT": {
+      "size": 41,
+      "digest": "sha256:a075a4c13db815bbe487121ebad2f577edc15aa7f5fca874ff8dce0194f2ccf4"
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC12.apk": {
+      "size": 53891412,
+      "digest": "sha256:07b80be56453e0950acc58e29f5e28ebda4a2c52695058d675385adbfd1f2161"
+    }
+  }
+}

@@ -1,8 +1,6 @@
 name: Publish verified RC12 signed testing artifacts
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc12-artifacts.yml"]
+  workflow_dispatch:
 permissions: {contents: read, actions: read}
 concurrency: {group: itom-mailstream-rc12-artifacts, cancel-in-progress: false}
 jobs:
