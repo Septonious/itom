@@ -349,8 +349,8 @@ func (s *Session) dispatchLoop() {
 		// the entire map for every packet made a larger packet allowance
 		// consume CPU and delay incoming credit/control under bulk load.
 		slices.SortFunc(batch, func(a, b candidate) int {
-			ah := a.packet.kind == frameControlRead || a.packet.kind == frameControlCollected || a.packet.kind == frameStorageRecovered
-			bh := b.packet.kind == frameControlRead || b.packet.kind == frameControlCollected || b.packet.kind == frameStorageRecovered
+			ah := a.packet.kind == frameControlRead || a.packet.kind == frameControlCollected || a.packet.kind == frameStorageRecovered || a.packet.kind == frameStoragePressure
+			bh := b.packet.kind == frameControlRead || b.packet.kind == frameControlCollected || b.packet.kind == frameStorageRecovered || b.packet.kind == frameStoragePressure
 			if ah != bh {
 				if ah {
 					return -1
@@ -395,7 +395,7 @@ func (s *Session) dispatchLoop() {
 			maintenance, storage := s.link.(interface {
 				SendHousekeeping(context.Context, []byte) error
 			})
-			if storage && (selected.kind == frameControlRead || selected.kind == frameControlCollected || selected.kind == frameStorageRecovered) {
+			if storage && (selected.kind == frameControlRead || selected.kind == frameControlCollected || selected.kind == frameStorageRecovered || selected.kind == frameStoragePressure) {
 				err = maintenance.SendHousekeeping(s.ctx, wire)
 			} else if fast, ok := s.link.(interface {
 				SendInteractive(context.Context, []byte) error
@@ -539,7 +539,7 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
-	if f.kind == frameControlRead || f.kind == frameControlCollected || f.kind == frameStorageRecovered {
+	if f.kind == frameControlRead || f.kind == frameControlCollected || f.kind == frameStorageRecovered || f.kind == frameStoragePressure {
 		if maintenance, ok := s.link.(maintenanceLink); ok {
 			return maintenance.applyMaintenance(s.cipher.id, f)
 		}

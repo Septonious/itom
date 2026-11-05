@@ -68,10 +68,10 @@ func runApplication(t *testing.T, maintenance, stalled bool) {
 	}))
 	defer func() { cancel(); origin.Close() }()
 	// An application-sized object independent of controller constants.
-	// A 20 MB application object crosses full retained segments even when
+	// A 64 MiB application object crosses full retained segments even when
 	// publication coalescing is effective. The old 4 MB object exercised
 	// only a partial segment after the throughput improvements.
-	payload := make([]byte, 20_123_456)
+	payload := make([]byte, 64<<20)
 	if _, err = rand.Read(payload); err != nil {
 		t.Fatal(err)
 	}

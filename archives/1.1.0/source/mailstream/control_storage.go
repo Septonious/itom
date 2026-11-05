@@ -19,26 +19,27 @@ type controlWrite struct {
 	bytes    int
 }
 type retentionMaintenance struct {
-	controlBytes, incomingBytes             int
-	reads                                   map[imap.UID]controlWrite
-	requested                               bool
-	collectControlOut                       bool
-	initialOut, remoteRead, remoteStartOut  uidWatermark
-	clearedIn, clearedOut, deleted, ackSent uidWatermark
-	writes                                  map[imap.UID]controlWrite
-	pending                                 bool
-	cancel                                  context.CancelFunc
-	lastAttempt, lastIdle                   time.Time
-	epoch, reportEpoch                      SessionID
-	lastReport                              time.Time
-	reportUID                               uint32
-	recovered, recoveryReady, recoverySent  bool
-	folders                                 []string
-	folderIndex                             int
-	inventoried                             bool
-	boundaryOut                             uidWatermark
-	failure                                 string
-	emptiedFolders, controlMessages         uint64
+	controlBytes, incomingBytes                    int
+	reads                                          map[imap.UID]controlWrite
+	requested                                      bool
+	collectControlOut                              bool
+	initialOut, remoteRead, remoteStartOut         uidWatermark
+	clearedIn, clearedOut, deleted, ackSent        uidWatermark
+	writes                                         map[imap.UID]controlWrite
+	pending                                        bool
+	cancel                                         context.CancelFunc
+	lastAttempt, lastIdle                          time.Time
+	epoch, reportEpoch                             SessionID
+	lastReport                                     time.Time
+	reportUID                                      uint32
+	recovered, recoveryReady, recoverySent         bool
+	peerPressure, pressureSent, advertisedPressure bool
+	folders                                        []string
+	folderIndex                                    int
+	inventoried                                    bool
+	boundaryOut                                    uidWatermark
+	failure                                        string
+	emptiedFolders, controlMessages                uint64
 }
 
 type maintenanceLink interface {
@@ -63,6 +64,7 @@ func (a *mailAccountState) beginEpoch(id SessionID) {
 	m.recoveryReady = false
 	m.recoverySent = false
 	m.recovered = false
+	m.peerPressure, m.pressureSent, m.advertisedPressure = false, false, false
 	m.reportEpoch = SessionID{}
 	m.lastIdle = time.Time{}
 }
@@ -92,17 +94,29 @@ func (l *IMAPLink) maintenanceFrames(id SessionID) []frame {
 		if l.client && m.epoch != id {
 			m.epoch = id
 			m.recovered = false
+			m.peerPressure, m.pressureSent, m.advertisedPressure = false, false, false
 			m.reportEpoch = SessionID{}
 		}
 		if a.failed || a.control == nil || m.epoch != id {
 			a.mu.Unlock()
 			continue
 		}
+		// Pressure requests work, never a capacity refund. Historical debt remains
+		// charged until the peer returns an audited recovery proof.
+		pressure := a.storagePressureLocked()
+		if pressure && !m.pressureSent || m.pressureSent && m.advertisedPressure != pressure {
+			value := byte(0)
+			if pressure {
+				value = 1
+			}
+			frames = append(frames, frame{kind: frameStoragePressure, data: append([]byte(a.config.ID), value)})
+			m.pressureSent, m.advertisedPressure = true, pressure
+		}
 		if l.client {
 			cursor := a.control.cursor.Load()
 			fresh := m.reportEpoch != id
 			delta := cursor - m.reportUID
-			if fresh || delta >= controlBatch || !m.recovered && cursor != m.reportUID && time.Since(m.lastReport) >= time.Second {
+			if fresh || delta >= controlBatch || !m.recovered && a.historyRequiredLocked() && cursor != m.reportUID && time.Since(m.lastReport) >= time.Second {
 				data := putWatermark([]byte(a.config.ID), uidWatermark{a.control.validity, cursor})
 				data = putWatermark(data, m.initialOut)
 				frames = append(frames, frame{kind: frameControlRead, data: data})
@@ -137,6 +151,11 @@ func (l *IMAPLink) applyMaintenance(id SessionID, f frame) error {
 			return ErrProtocol
 		}
 		extra = 8
+	case frameStoragePressure:
+		extra = 1
+		if len(f.data) == 0 || f.data[len(f.data)-1] > 1 {
+			return ErrProtocol
+		}
 	case frameStorageRecovered:
 		if !l.client {
 			return ErrProtocol
@@ -158,6 +177,8 @@ func (l *IMAPLink) applyMaintenance(id SessionID, f frame) error {
 		return ErrCapacity
 	} // Role attachment can finish after the first authenticated update.
 	switch f.kind {
+	case frameStoragePressure:
+		m.peerPressure = f.data[len(f.data)-1] == 1
 	case frameControlRead:
 		read, start := readWatermark(f.data[len(f.data)-16:]), readWatermark(f.data[len(f.data)-8:])
 		if read.Validity == 0 || start.Validity == 0 {
@@ -376,4 +397,26 @@ func (a *mailAccountState) controlInputCollectedLocked(mark uidWatermark) {
 			delete(m.reads, uid)
 		}
 	}
+}
+
+// A quarter of the finite physical budget remains available when historical
+// recovery is requested. Deferral never changes the persisted debt.
+func (a *mailAccountState) storagePressureLocked() bool {
+	if a.spent+a.queuedBytes < prototypePhysicalBudget*3/4 {
+		return false
+	}
+	// Current-session DATA has its own exact retirement/collection path.
+	// Its backlog must not trigger an unrelated historical namespace sweep.
+	if a.recovered > 0 {
+		return true
+	}
+	for key, rec := range a.segments {
+		if key.session != a.maintenance.epoch && rec.bytes > 0 {
+			return true
+		}
+	}
+	return false
+}
+func (a *mailAccountState) historyRequiredLocked() bool {
+	return a.storagePressureLocked() || a.maintenance.peerPressure
 }

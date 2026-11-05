@@ -204,7 +204,8 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		cursor = uidWatermark{a.control.validity, a.control.cursor.Load()}
 	}
 	remote, start, cin, cout, boundary := m.remoteRead, m.remoteStartOut, m.clearedIn, m.clearedOut, m.boundaryOut
-	recovering := !m.recoveryReady
+	historical := idle || a.historyRequiredLocked()
+	recovering := historical && !m.recoveryReady
 	a.mu.Unlock()
 	if idle {
 		l.mu.Lock()
@@ -229,7 +230,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	a.mu.Lock()
 	inventoried := m.inventoried
 	a.mu.Unlock()
-	if !inventoried && retry == "" {
+	if historical && !inventoried && retry == "" {
 		c.folder("")
 		c.stage("maintenance_list")
 		folders, e := p.client.List("", "itom3-"+l.identity+"-*", nil).Collect()
@@ -263,7 +264,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	a.mu.Lock()
 	inventoryComplete := m.inventoried && m.folderIndex == len(m.folders)
 	a.mu.Unlock()
-	if !idle && inventoryComplete && start.Validity != 0 && covers(cin, start) && covers(cout, boundary) {
+	if historical && !idle && inventoryComplete && start.Validity != 0 && covers(cin, start) && covers(cout, boundary) {
 		a.mu.Lock()
 		if !m.recoveryReady {
 			refund := a.recovered
@@ -324,7 +325,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		a.mu.Unlock()
 		return l.controlFolder(true), e
 	}
-	if retry != "" && retry != l.controlFolder(false) && retry != l.controlFolder(true) && l.obsoleteFolder(retry, id) {
+	if historical && retry != "" && retry != l.controlFolder(false) && retry != l.controlFolder(true) && l.obsoleteFolder(retry, id) {
 		_, _, e := p.collectPrefix(c, retry, uidWatermark{}, true)
 		return retry, e
 	}
@@ -334,7 +335,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	a.mu.Lock()
 	i := m.folderIndex
 	folder := ""
-	if i < len(m.folders) {
+	if historical && i < len(m.folders) {
 		folder = m.folders[i]
 	}
 	a.mu.Unlock()
@@ -552,19 +553,12 @@ func (l *IMAPLink) trackHandshake(id SessionID, present bool) {
 // Account.mu is held by the scheduler.
 func (a *mailAccountState) needsMaintenanceLocked() bool {
 	m := &a.maintenance
-	if !m.inventoried || m.folderIndex < len(m.folders) {
+	if a.historyRequiredLocked() && !m.recoveryReady {
 		return true
 	}
-	if a.control != nil {
-		mark := uidWatermark{a.control.validity, a.control.cursor.Load()}
-		if mark.UID-m.clearedIn.UID >= controlBatch || !m.recoveryReady && m.remoteStartOut.Validity != 0 && !covers(m.clearedIn, m.remoteStartOut) {
-			return true
-		}
-	}
-	if m.remoteRead.Validity != 0 && (m.remoteRead.UID-m.clearedOut.UID >= controlBatch || !m.recoveryReady && !covers(m.clearedOut, m.boundaryOut)) {
-		return true
-	}
-	return !m.recoveryReady && m.remoteStartOut.Validity != 0 && covers(m.clearedIn, m.remoteStartOut) && covers(m.clearedOut, m.boundaryOut)
+	// Small control tails are cheap to retain. Do not interrupt an APPEND
+	// actor merely because housekeeping advanced a UID or old folders exist.
+	return max(m.controlBytes, m.incomingBytes) >= reservationQuantum/2
 }
 
 // A stopped endpoint must not permanently own the provider retry circuit.
@@ -577,10 +571,10 @@ func (c *ReclamationCoordinator) adoptRetryLocked(a *mailAccountState) {
 }
 
 // Control tails can wait during a bulk burst when storage has ample headroom.
-// DATA collection remains eligible. Bootstrap/historical recovery and real
+// DATA collection remains eligible. Capacity-critical historical recovery and real
 // retention pressure always override this optimization. Account.mu is held.
 func (a *mailAccountState) deferMaintenanceLocked() bool {
-	if !a.maintenance.recoveryReady || a.recovered != 0 || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 {
+	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 {
 		return false
 	}
 	last := a.link.lastBulk.Load()

@@ -1,9 +1,16 @@
-# ITOM 1.1.0 MAILSTREAM-RC9 — experimental testing candidate
+# ITOM 1.1.0 MAILSTREAM-RC10 — experimental testing candidate
 
 Update both matched endpoints. Install the signed APK in place, preserving app
 data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then
 use manager option 18 or `sudo itom update-from-tmp`. RC7 uses a new control
 namespace and must not be mixed with RC6.
+
+RC10 retains RC7's measured-rate controller. It removes idle control-report
+feedback, defers historical sweeps while the VPN has ample capacity, and
+amortizes DATA collection over 128 containers. Capacity pressure and clear
+notifications work in both directions without authorizing refunds. Current DATA
+collection cannot be diverted by unrelated historical debt. Install both RC10
+endpoints; their pressure notifications require matching transport code.
 
 RC7 collects consumed control prefixes by
 UID, so ordinary EXPUNGE cannot shift the reader's cursor. Successful tagged

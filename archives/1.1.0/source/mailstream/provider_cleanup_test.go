@@ -113,11 +113,15 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 					session.Close()
 				}
 			}()
-			payload := make([]byte, 24<<20)
+			payload := make([]byte, 64<<20)
 			if _, err = rand.Read(payload); err != nil {
 				t.Fatal(err)
 			}
 			origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/after" {
+					w.Write(payload[:1<<20])
+					return
+				}
 				if r.Method == http.MethodPost {
 					body, e := io.ReadAll(r.Body)
 					if e != nil || !bytes.Equal(body, payload) {
@@ -186,8 +190,8 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 				if !server.Snapshot().Reclamation.Paused || f.baseAttempts.Load() < 1 || owners != 1 {
 					t.Fatalf("cleanup circuit breaker did not contain the failure: %+v attempts=%d", server.Snapshot().Reclamation, f.baseAttempts.Load())
 				}
-			} else if server.Snapshot().Reclamation.Completed == 0 {
-				t.Fatal("healthy base EXPUNGE was not exercised")
+			} else {
+				waitRetention(t, ctx, func() bool { return client.Snapshot().Retired > 0 && server.Snapshot().Retired > 0 }, "healthy audited DATA collection never released capacity in both directions")
 			}
 			if !blockBase && (client.Snapshot().Retired == 0 || server.Snapshot().Retired == 0) {
 				t.Fatal("verified collection did not release capacity in both directions")
@@ -204,13 +208,13 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 			if err != nil {
 				t.Fatal("reconnect after load:", err)
 			}
-			response, err = (&http.Client{Transport: transport(session), Timeout: 90 * time.Second}).Get(origin.URL)
+			response, err = (&http.Client{Transport: transport(session), Timeout: 90 * time.Second}).Get(origin.URL + "/after")
 			if err != nil {
 				t.Fatal("fresh HTTPS after reconnect:", err)
 			}
 			body, err = io.ReadAll(response.Body)
 			response.Body.Close()
-			if err != nil || !bytes.Equal(body, payload) {
+			if err != nil || !bytes.Equal(body, payload[:1<<20]) {
 				t.Fatal("reconnected HTTPS integrity", err)
 			}
 			if client.Snapshot().Failed != 0 || server.Snapshot().Failed != 0 {

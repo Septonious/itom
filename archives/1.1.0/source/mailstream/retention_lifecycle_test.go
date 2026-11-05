@@ -36,6 +36,20 @@ func waitRetention(t *testing.T, ctx context.Context, check func() bool, descrip
 // an ordinary HTTPS session, hundreds of light requests, user stop, new session.
 // Cleanup must exclude user mail and live DATA, then remove fenced leftovers.
 func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		clientDebt, serverDebt int
+		deferHistory           bool
+	}{
+		{"both_full", prototypePhysicalBudget, prototypePhysicalBudget, false},
+		{"client_full_server_reset", prototypePhysicalBudget, 0, false},
+		{"server_full_client_cleared", 0, prototypePhysicalBudget, false},
+		{"ample_headroom", 1 << 20, 0, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) { testRetentionLifecycle(t, tc.clientDebt, tc.serverDebt, tc.deferHistory) })
+	}
+}
+func testRetentionLifecycle(t *testing.T, clientDebt, serverDebt int, deferHistory bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	fixture := &deletionLockFixture{release: make(chan struct{})}
@@ -66,7 +80,7 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		}
 	}
 	for _, a := range accounts {
-		if e = store.put(retentionKey(a), prototypePhysicalBudget); e != nil {
+		if e = store.put(retentionKey(a), clientDebt); e != nil {
 			t.Fatal(e)
 		}
 	}
@@ -79,7 +93,7 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		t.Fatal(e)
 	}
 	for _, a := range accounts {
-		if e = serverStore.put(retentionKey(a), prototypePhysicalBudget); e != nil {
+		if e = serverStore.put(retentionKey(a), serverDebt); e != nil {
 			t.Fatal(e)
 		}
 	}
@@ -132,20 +146,22 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		}
 	})
 
-	waitRetention(t, ctx, func() bool {
-		for _, a := range client.accounts {
-			a.mu.Lock()
-			ready := a.maintenance.recovered && a.recovered == 0
-			a.mu.Unlock()
-			if !ready {
-				return false
+	if !deferHistory {
+		waitRetention(t, ctx, func() bool {
+			for _, a := range client.accounts {
+				a.mu.Lock()
+				ready := a.maintenance.recovered && a.recovered == 0
+				a.mu.Unlock()
+				if !ready {
+					return false
+				}
 			}
+			return true
+		}, "verified old-scope reconciliation did not finish")
+		status, e := probe.client.Status(oldName, &imap.StatusOptions{NumMessages: true}).Wait()
+		if e != nil || status.NumMessages == nil || *status.NumMessages != 0 {
+			t.Fatal("partial old DATA was not emptied", e)
 		}
-		return true
-	}, "verified old-scope reconciliation did not finish")
-	status, e := probe.client.Status(oldName, &imap.StatusOptions{NumMessages: true}).Wait()
-	if e != nil || status.NumMessages == nil || *status.NumMessages != 0 {
-		t.Fatal("partial old DATA was not emptied", e)
 	}
 	origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, "verified small HTTPS") }))
 	defer origin.Close()
@@ -184,18 +200,22 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 		}
 		maximum = max(maximum, *s.NumMessages)
 	}
-	// A short application burst may publish faster than the housekeeping
-	// cadence. Both prefixes must drain afterwards; a peak count is not a
-	// valid reason to block the packet receipts that make TLS complete.
-	waitRetention(t, ctx, func() bool {
-		for _, name := range []string{client.controlFolder(true), client.controlFolder(false)} {
-			status, err := probe.client.Status(name, &imap.StatusOptions{NumMessages: true}).Wait()
-			if err != nil || status.NumMessages == nil || *status.NumMessages >= 2*controlBatch {
-				return false
+	// Active control tails remain bounded in bytes. Historical sweeps must
+	// not run merely because a previous session left folders or small debt.
+	if deferHistory {
+		status, err := probe.client.Status(oldName, &imap.StatusOptions{NumMessages: true}).Wait()
+		if err != nil || status.NumMessages == nil || *status.NumMessages != 1 {
+			t.Fatal("historical sweep interrupted an active session with headroom", err)
+		}
+		for _, a := range server.accounts {
+			a.mu.Lock()
+			inventoried := a.maintenance.inventoried
+			a.mu.Unlock()
+			if inventoried {
+				t.Fatal("active session enumerated historical folders without capacity pressure")
 			}
 		}
-		return true
-	}, "both control directions did not drain after the HTTPS burst")
+	}
 	session.Close()
 	client.Close()
 	session = nil
@@ -219,6 +239,10 @@ func TestAutomaticControlAndAbandonedSessionCleanup(t *testing.T) {
 			return err == nil && s.NumMessages != nil && *s.NumMessages == 0
 		}, "idle control tail was not automatically emptied")
 	}
+	waitRetention(t, ctx, func() bool {
+		s, err := probe.client.Status(oldName, &imap.StatusOptions{NumMessages: true}).Wait()
+		return err == nil && s.NumMessages != nil && *s.NumMessages == 0
+	}, "deferred historical DATA did not drain automatically while idle")
 	if fixture.deletes.Load() != 0 || fixture.uidExpunges.Load() != 0 {
 		t.Fatal("cleanup used an account-locking provider command")
 	}
@@ -277,6 +301,15 @@ func TestCleanupRetriesUnknownOutcomeWithoutManualPurge(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer server.Close()
+	for _, a := range server.accounts {
+		a.mu.Lock()
+		a.spent = prototypePhysicalBudget * 3 / 4
+		a.reserved, a.recovered = a.spent, a.spent
+		if err := server.store.put(a.storageKey, a.spent); err != nil {
+			t.Fatal(err)
+		}
+		a.mu.Unlock()
+	}
 	client, err := NewStoredIMAPLink(ctx, "retry-life", accounts, true, t.TempDir())
 	if err != nil {
 		t.Fatal(err)

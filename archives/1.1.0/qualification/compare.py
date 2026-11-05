@@ -35,6 +35,9 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--baseline', type=Path, default=ROOT.parent.parent/'1.0.0-rc2/source/core')
     parser.add_argument('--candidate', type=Path, default=ROOT.parent/'source/core')
+    parser.add_argument('--history-folders',type=int,default=0)
+    parser.add_argument('--account-metadata-delay-ms',type=int,default=0)
+    parser.add_argument('--idle-observe',default='0s')
     parser.add_argument('--prefill-control', type=int, default=0)
     parser.add_argument('--early-store-expunge', action='store_true')
     parser.add_argument('--bulk-publish-delay-ms', type=int, default=0)
@@ -52,6 +55,10 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s",args.idle_observe) or float(args.idle_observe[:-1])>120:
+        parser.error('idle observation must be 0..120 seconds')
+    if not 0<=args.history_folders<=1000 or not 0<=args.account_metadata_delay_ms<=1000:
+        parser.error('history folders and metadata delay must be 0..1000')
     if not 0 <= args.prefill_control <= 1000 or not 0 <= args.bulk_publish_delay_ms <= 1000 or args.client_mbps <= 0 or not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.cancel_download_after):
         parser.error('client rate must be positive; cancellation must be a duration in seconds')
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.duration) or float(args.duration[:-1]) <= 0:
@@ -74,7 +81,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
+    manifest = {'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -136,7 +143,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                 private.mkdir()
                 provider_log = (output/(label+'-provider.log')).open('w')
                 provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
-                                             '-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                             '-history-folders',str(args.history_folders),'-account-metadata-delay',f'{args.account_metadata_delay_ms}ms','-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
                                             stdout=provider_log, stderr=subprocess.STDOUT)
                 try:
                     for _ in range(200):
@@ -151,14 +158,14 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                                '-out', str(output/(label+'.json')), '-state', str(work/(label+'-state')),
                                '-label', label, '-duration', args.duration, '-streams', str(args.streams), '-cycles', str(args.cycles),
                                '-cancel-download-after', args.cancel_download_after,
-                               '-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
+                               '-idle-observe',args.idle_observe,'-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
                                '-cpu', str(output/(label+'.pprof'))]
                     if args.duplex:
                         command.append('-duplex')
                     started = time.monotonic()
                     with (output/(label+'-worker.log')).open('w') as log:
                         try:
-                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=max(150,2*float(args.duration.removesuffix('s'))*args.cycles+120))
+                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=float(args.idle_observe.removesuffix('s'))+max(150,2*float(args.duration.removesuffix('s'))*args.cycles+120))
                             status = result.returncode
                         except subprocess.TimeoutExpired:
                             status = 'timeout'

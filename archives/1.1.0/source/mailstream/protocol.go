@@ -179,6 +179,7 @@ const (
 	frameControlRead
 	frameControlCollected
 	frameStorageRecovered
+	frameStoragePressure
 )
 
 type frame struct {
@@ -189,7 +190,7 @@ type frame struct {
 }
 
 func (f frame) encode() ([]byte, error) {
-	if f.kind < frameReady || f.kind > frameStorageRecovered || len(f.data) > maxPayload-13 {
+	if f.kind < frameReady || f.kind > frameStoragePressure || len(f.data) > maxPayload-13 {
 		return nil, ErrProtocol
 	}
 	b := make([]byte, 13+len(f.data))
@@ -200,7 +201,7 @@ func (f frame) encode() ([]byte, error) {
 	return b, nil
 }
 func decodeFrame(b []byte) (frame, error) {
-	if len(b) < 13 || b[0] < frameReady || b[0] > frameStorageRecovered {
+	if len(b) < 13 || b[0] < frameReady || b[0] > frameStoragePressure {
 		return frame{}, ErrProtocol
 	}
 	return frame{kind: b[0], stream: binary.BigEndian.Uint32(b[1:]), offset: binary.BigEndian.Uint64(b[5:]), data: b[13:]}, nil

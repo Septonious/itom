@@ -131,6 +131,7 @@ func run() (err error) {
 	streams := flag.Int("streams", 1, "simultaneous streams per direction")
 	duplex := flag.Bool("duplex", false, "simultaneous upload and download")
 	cancelDownload := flag.Duration("cancel-download-after", 0, "simulate a timed speedtest abandoning its download, then verify a new HTTPS connection")
+	idleObserve := flag.Duration("idle-observe", 0, "minimum observation time before load")
 	idleProbes := flag.Int("idle-probes", 20, "small HTTPS messages before load")
 	postProbes := flag.Int("post-probes", 12, "small HTTPS messages after load")
 	cpu := flag.String("cpu", "", "CPU profile")
@@ -358,7 +359,8 @@ func run() (err error) {
 	if err = mark(); err != nil {
 		return err
 	}
-	for i := 0; i < *idleProbes; i++ {
+	idleStart := time.Now()
+	for i := 0; i < *idleProbes || time.Since(idleStart) < *idleObserve; i++ {
 		ms, e := ping()
 		if e != nil {
 			return e

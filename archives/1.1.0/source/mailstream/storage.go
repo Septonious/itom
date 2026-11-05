@@ -9,7 +9,9 @@ import (
 	imap "github.com/emersion/go-imap/v2"
 )
 
-const segmentAppends = 32
+// Amortize audited metadata work over a larger bounded generation. This does
+// not batch interactive writes: each small packet is still published promptly.
+const segmentAppends = 128
 
 // Normally two slots alternate. Unavailable housekeeping may retain additional
 // slots, within both this hard bound and the unchanged physical byte budget.

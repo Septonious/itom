@@ -1103,6 +1103,9 @@ type MailAccountSnapshot struct {
 	ControlOutstanding         int    `json:"control_outstanding"`
 	ControlCollected           uint64 `json:"control_messages_collected"`
 	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
+	StorageRecoveryDeferred    bool   `json:"storage_recovery_deferred"`
+	StoragePressure            bool   `json:"storage_pressure"`
+	PeerStoragePressure        bool   `json:"peer_storage_pressure"`
 	StorageRecoveryReady       bool   `json:"storage_recovery_ready"`
 	MaintenanceFailure         string `json:"maintenance_failure,omitempty"`
 	Housekeeping               bool   `json:"housekeeping"`
@@ -1163,6 +1166,9 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.ControlIncomingBytes = a.maintenance.incomingBytes
 		line.ControlCollected = a.maintenance.controlMessages
 		line.AbandonedEmptied = a.maintenance.emptiedFolders
+		line.StorageRecoveryDeferred = !a.maintenance.recoveryReady && !a.maintenance.recovered && !a.historyRequiredLocked()
+		line.StoragePressure = a.storagePressureLocked()
+		line.PeerStoragePressure = a.maintenance.peerPressure
 		line.StorageRecoveryReady = a.maintenance.recoveryReady || a.maintenance.recovered
 		line.MaintenanceFailure = a.maintenance.failure
 		line.PeerVerified = verified[i]

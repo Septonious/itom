@@ -1,4 +1,4 @@
-# Mailbox stream transport contract — MAILSTREAM-RC9
+# Mailbox stream transport contract — MAILSTREAM-RC10
 
 RC5 field traces show nine client accounts failing at the first 32-message DATA
 boundary while executing CLOSE, despite low direct IMAP latency. A separate
@@ -36,7 +36,7 @@ streams. Request half-close preserves ordinary response delivery.
 
 ## Reader-independent storage reclamation
 
-A logical generation contains exactly 32 bounded MIME containers. Physical slots
+A logical generation contains exactly 128 bounded MIME containers. Physical slots
 are assigned independently of generation, announced over authenticated reliable
 control, and never reused before verified collection. Normally a few slots
 alternate; unavailable housekeeping may retain more, up to 64 slots per
@@ -44,7 +44,7 @@ account/session/direction and the unchanged 64 MiB per-account retained-byte
 budget. The 512 KiB protocol reserve remains. A DATA-capacity wait must not
 block control, APPEND completions, parking or shutdown.
 
-After validating all 32 messages and their exact UIDs, the reader SELECTs a
+After validating all 128 messages and their exact UIDs, the reader SELECTs a
 session-specific parking mailbox, implicitly leaving the drained slot without
 expunging it. It reports retirement and waits for the announced next slot. The
 reader performs no CLOSE, DELETE, STORE or EXPUNGE, and never waits for physical
@@ -65,7 +65,7 @@ records first within a direction, so upload debt and active download storage
 cannot starve each other. Readers remember successful mailbox selection and
 avoid repeated CREATE commands for the same session-owned parking/DATA folder.
 Routing excludes that writer while leased; control and DATA readers remain
-independent. SELECT verifies the owned slot's UIDVALIDITY and 32-message count.
+independent. SELECT verifies the owned slot's UIDVALIDITY and 128-message count.
 Exact UID STORE, ordinary EXPUNGE and empty STATUS verification are pipelined.
 All tags and unchanged UIDVALIDITY plus zero messages are required for refund.
 The writer may remain selected: APPEND does not require unselection. No CLOSE,
@@ -97,14 +97,17 @@ high-water reservation; disk refunds are batched in 512 KiB quanta. This removes
 per-prefix fsync without allowing unreserved publication, and clean close stores
 exact remaining debt. A crash may recover the unused reservation as additional
 conservative debt until verified namespace reconciliation. Control logs use UID cursors independent of shifting sequence numbers. Every
-32 consumed messages, authenticated peer watermarks permit server-owned prefix
-collection. Eligible control directions alternate so one cannot
-starve the other. After historical recovery, optional control-tail maintenance
-yields while bulk DATA is active and ordinary storage has headroom. It resumes
-after a 300 ms DATA quiet interval; DATA reclamation, historical recovery and
-control-byte pressure override this deferral. Incoming and outgoing consumed
-control MIME bytes are tracked independently of DATA debt, so a full DATA
-ledger does not divert its collection turns back to control-tail maintenance. Control uses the ordinary finite retained-byte budget and bounded actor queues.
+32 consumed messages, authenticated peer watermarks advance the consumed
+prefix. Small control tails remain until their retained bytes justify collection
+or the VPN becomes idle. Eligible directions alternate. Historical inventory and
+sweeps are deferred while an active VPN has headroom, even if previous recovery
+has not finished. Either endpoint can request urgent historical recovery when
+historical debt and total reservations reach three quarters of the finite budget;
+pressure clears when that condition ends. Current DATA debt alone cannot trigger
+an unrelated namespace sweep, and a ready DATA collection turn is donated only
+for real control-byte pressure. Pressure notifications never authorize refunds.
+Incoming and outgoing control MIME bytes are tracked independently of DATA debt.
+Control uses the ordinary finite retained-byte budget and bounded actor queues.
 It does not impose another count-based gate on receipts: provider cleanup
 failure must not deadlock the acknowledgements needed to complete transfers.
 Recovery messages have separate admission.

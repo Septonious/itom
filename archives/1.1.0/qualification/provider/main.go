@@ -37,14 +37,18 @@ type counts struct {
 	appendBytes        uint64
 	appendSizes        map[string]uint64
 	failures           uint64
+	metadata           map[string]*sync.RWMutex
+	seeded             map[string]bool
 }
 type session struct {
 	imapserver.Session
-	counts       *counts
-	user         string
-	bulkDelay    time.Duration
-	prefill      int
-	earlyExpunge bool
+	counts         *counts
+	user           string
+	bulkDelay      time.Duration
+	prefill        int
+	earlyExpunge   bool
+	metadataDelay  time.Duration
+	historyFolders int
 }
 
 func (s *session) Login(user, password string) error {
@@ -76,7 +80,35 @@ func (s *session) count(command string) {
 	s.counts.commands[command]++
 	s.counts.Unlock()
 }
+
+// This optional fixture models account-wide interference from folder work.
+// It is a stress hypothesis, not a claim about the provider's implementation.
+func (s *session) accountWork(metadata bool) func() {
+	if s.metadataDelay == 0 {
+		return func() {}
+	}
+	s.counts.Lock()
+	m := s.counts.metadata[s.user]
+	if m == nil {
+		m = &sync.RWMutex{}
+		s.counts.metadata[s.user] = m
+	}
+	s.counts.Unlock()
+	if metadata {
+		m.Lock()
+		time.Sleep(s.metadataDelay)
+		return m.Unlock
+	}
+	m.RLock()
+	return m.RUnlock
+}
+func (s *session) List(w *imapserver.ListWriter, ref string, patterns []string, o *imap.ListOptions) error {
+	s.count("LIST")
+	defer s.accountWork(true)()
+	return s.Session.List(w, ref, patterns, o)
+}
 func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOptions) (*imap.AppendData, error) {
+	defer s.accountWork(false)()
 	s.count("APPEND")
 	// Provider work is distinct from TCP RTT. Serial DATA publication can
 	// remain slow even while NOOP/control is fast, as in RC7 field uploads.
@@ -101,12 +133,31 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 	return data, err
 }
 func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData, error) {
+	defer s.accountWork(true)()
 	s.count("SELECT")
 	return s.Session.Select(folder, o)
 }
 func (s *session) Create(folder string, o *imap.CreateOptions) error {
 	s.count("CREATE")
 	err := s.Session.Create(folder, o)
+	if strings.Contains(folder, "-control-") && s.historyFolders > 0 {
+		s.counts.Lock()
+		seed := !s.counts.seeded[s.user]
+		s.counts.seeded[s.user] = true
+		s.counts.Unlock()
+		if seed {
+			prefix := strings.Split(folder, "-control-")[0]
+			for i := 0; i < s.historyFolders; i++ {
+				name := fmt.Sprintf("%s-%032x-c2s-00000000", prefix, i+1)
+				if e := s.Session.Create(name, nil); e != nil {
+					return e
+				}
+				if _, e := s.Session.Append(name, strings.NewReader("Subject: old fixture\r\n\r\nretained"), &imap.AppendOptions{}); e != nil {
+					return e
+				}
+			}
+		}
+	}
 	if err == nil && s.prefill > 0 && strings.Contains(folder, "-control-") {
 		raw := []byte("MIME-Version: 1.0\r\nContent-Transfer-Encoding: base64\r\n\r\nb2xkIGNvbnRyb2wgZml4dHVyZQ==\r\n")
 		for i := 0; i < s.prefill; i++ {
@@ -119,10 +170,12 @@ func (s *session) Create(folder string, o *imap.CreateOptions) error {
 }
 func (s *session) Delete(folder string) error { s.count("DELETE"); return s.Session.Delete(folder) }
 func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
+	defer s.accountWork(false)()
 	s.count("FETCH")
 	return s.Session.Fetch(w, set, o)
 }
 func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.StoreFlags, o *imap.StoreOptions) error {
+	defer s.accountWork(true)()
 	s.count("STORE")
 	err := s.Session.Store(w, set, f, o)
 	if err == nil && s.earlyExpunge && f.Op == imap.StoreFlagsAdd {
@@ -136,6 +189,7 @@ func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.Stor
 	return err
 }
 func (s *session) Status(folder string, o *imap.StatusOptions) (*imap.StatusData, error) {
+	defer s.accountWork(true)()
 	s.count("STATUS")
 	return s.Session.Status(folder, o)
 }
@@ -148,6 +202,7 @@ func (s *session) Idle(w *imapserver.UpdateWriter, stop <-chan struct{}) error {
 	return s.Session.Idle(w, stop)
 }
 func (s *session) Expunge(w *imapserver.ExpungeWriter, set *imap.UIDSet) error {
+	defer s.accountWork(true)()
 	s.count("EXPUNGE")
 	return s.Session.Expunge(w, set)
 }
@@ -166,9 +221,11 @@ func run() error {
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
+	metadataDelay := flag.Duration("account-metadata-delay", 0, "account-wide metadata service cost; blocks concurrent data on that account")
+	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -203,9 +260,9 @@ func run() error {
 	for n := 0; n < *accounts; n++ {
 		backend.AddUser(imapmemserver.NewUser(fmt.Sprintf("a%02d", n+1), "fixture-only"))
 	}
-	stats := &counts{live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
+	stats := &counts{metadata: map[string]*sync.RWMutex{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early}, nil, nil
+		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

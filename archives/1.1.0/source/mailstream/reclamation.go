@@ -10,11 +10,11 @@ import (
 // owner never wait for this optional operation. Parking preempts its raw IO.
 func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, completed chan error, inFlight *int, wait *sync.WaitGroup) {
 	c := a.link.reclaimer
-	// A DATA job cannot repeatedly consume this account's global FIFO turn
-	// while its queued control maintenance loses the lease. Donate the turn
-	// to requested maintenance; DATA remains eligible for the next turn.
+	// Only real control-byte pressure can donate a ready DATA collection turn.
+	// Historical folder sweeps must not starve the exact current-session
+	// collection that is already able to release physical capacity.
 	a.mu.Lock()
-	maintenance := a.maintenance.requested && !a.deferMaintenanceLocked()
+	maintenance := a.maintenance.requested && max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2
 	if maintenance {
 		job.record.queued = false
 	}
