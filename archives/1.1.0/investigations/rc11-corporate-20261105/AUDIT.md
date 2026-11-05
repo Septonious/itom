@@ -83,3 +83,22 @@ The previous cleanup/decoder, idle feedback, slow receipt, 7 Mbps cancellation,
 account metadata interference and fast-link throughput gates remain required.
 No physical storage is refunded for an unverified deletion. The release is a
 matched test candidate, pending real-provider confirmation.
+
+## Final qualification limits
+
+The matched run completes all functional/safety, Android, ordinary throughput,
+corporate replay and retained-history checks. The synthetic 350 ms upload FETCH
+100 Mbps performance gate fails in both attempts: 98.70/102.97 Mbps initially,
+then 82.70/93.05 Mbps. All transfers complete and no accounts fail. The gate is
+left failed; neither the controller nor its threshold is changed to obtain a
+pass. RC12 is published for startup-recovery testing with unqualified performance,
+not as a newly field-ready candidate. Both attempts remain in the release evidence.
+
+The upload job's renamed workflow initially called the startup regression runner
+against frozen RC10, rather than the intended delivery regression runner. Its
+full transfer measurements are valid. The runner path is corrected for future
+builds; the correct frozen-RC10 delivery regression passes separately locally
+and is required again in publication. This is a qualification wiring correction,
+with no change to the packaged transport source.
+
+Final exact-source startup-recovery candidate `45052ad0054580c9fb89f5609d7a745e2e38f447` passes functional/safety/source/Android checks, with the delayed-FETCH 100 Mbps gate explicitly failed after two attempts, three-cycle account-interference and two completed delayed-FETCH uploads, six server startup cycles and manual-stop capacity reset verification. RC10 remains the first field-ready baseline. Client upload samples resist compressed ACKs; download control remains at RC10. Field cleanup timeout observations are not declared fixed. Unknown outcomes and deferred historical debt remain charged. Remaining strict target misses are retained in publication metadata.

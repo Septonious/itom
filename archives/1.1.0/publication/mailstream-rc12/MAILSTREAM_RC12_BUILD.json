@@ -1,0 +1,916 @@
+{
+  "source_commit": "45052ad0054580c9fb89f5609d7a745e2e38f447",
+  "build_run_id": 42050253417,
+  "source_acceptance_run_id": 42050253387,
+  "release": "ITOM 1.1.0 MAILSTREAM-RC12",
+  "artifact_validation_pending": false,
+  "known_failed_gate": {
+    "job": "upload-replay",
+    "requirement": "full_phase_100mbps",
+    "attempts": 2,
+    "functional_transfers_completed": true
+  },
+  "functional_and_safety_qualified": true,
+  "performance_qualified": false,
+  "build_run_conclusion": "failure",
+  "field_qualified": false,
+  "android_device_qualified": false,
+  "real_provider_tested": false,
+  "signed_apk_sha256": "07b80be56453e0950acc58e29f5e28ebda4a2c52695058d675385adbfd1f2161",
+  "signed_apk_bytes": 53891412,
+  "source_ci_apk_sha256": "4dffffa67facd03a8743113c73261be842657fed7d752b253d2d2514628fab77",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10137,
+    "version_name": "1.1.0-mailstream-rc12-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "bd047d40a78463cc585562005afaef0c1ea327a55514459e153a4f9cb0fb2790",
+    "lib/armeabi-v7a/libgojni.so": "a5ef47e814ad9e1e05649e5c97240f3e33dda03bc76b562999a07fb5c12a9aaf"
+  },
+  "server_sha256": {
+    "amd64": "f2069046568f9461e7e65623c6f800baf953058cc368012336e7099745fb0675",
+    "arm64": "035f2bdbff994b1583e2baca84efbde5b7b1bd9c974a667d8dc6db60fea0bbb5"
+  },
+  "startup_cycles": 6,
+  "server_restarts_in_startup_checks": 2,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 1959,
+      "NativeRPCMS": 129,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 71,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1998,
+      "NativeRPCMS": 138,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 56,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1993,
+      "NativeRPCMS": 119,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 57,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2083,
+      "NativeRPCMS": 130,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 50,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1922,
+      "NativeRPCMS": 137,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 105,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1968,
+      "NativeRPCMS": 169,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 54,
+      "protected_sockets": 45
+    }
+  ],
+  "manual_stop_capacity": {
+    "10": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 20
+    },
+    "15": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 30
+    }
+  },
+  "checks": {
+    "normal_and_race_native_sdk_vet": true,
+    "android_compile_tests_lint": true,
+    "persistent_signer_and_matched_jni": true,
+    "actual_downloaded_server_six_startups": true,
+    "manual_stop_capacity_reset": true,
+    "fast_path_1_4_32_stream_complete": true,
+    "fast_path_1_4_stream_100mbps": true,
+    "two_complete_cycles_same_session": true,
+    "frozen_rc8_cleanup_and_close_failures_reproduced_and_fixed": true,
+    "weak_link_cancel_then_fresh_https": true,
+    "weak_link_idle_and_loaded_rtt": true,
+    "deadline_bounded_admission_and_full_64_plus_16_burst": true,
+    "rc7_cleanup_and_reconnect_regressions": true,
+    "rc9_idle_feedback_reproduced_and_fixed": true,
+    "asymmetric_full_ledger_and_idle_deferral": true,
+    "three_cycles_account_metadata_interference_100mbps": true,
+    "ordinary_append_drain_does_not_own_global_lease": true,
+    "rc10_slow_bulk_receipts_reproduced_and_fixed": true,
+    "compressed_receipts_keep_slow_flight_bounded": true,
+    "two_delayed_fetch_uploads_complete_without_account_failures": true,
+    "rc11_existing_create_and_temporary_setup_failures_reproduced": true,
+    "corporate_reference_reproduces_18_of_30_roles": true,
+    "corporate_recovery_reaches_30_of_30_without_healthy_restarts": true,
+    "asymmetric_50_down_35_up_two_cycles": true
+  },
+  "initial_delayed_upload": {
+    "success": true,
+    "streams": 4,
+    "cycles": 2,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 0,
+    "early_store_expunge": false,
+    "payload_mbps": {
+      "upload": 98.69899509889679,
+      "download": 309.85589884480675
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 98.69899509889679
+      },
+      {
+        "direction": "download",
+        "mbps": 309.85589884480675
+      },
+      {
+        "direction": "upload",
+        "mbps": 102.9715529430462
+      },
+      {
+        "direction": "download",
+        "mbps": 328.55967796965587
+      }
+    ],
+    "idle_ms": [
+      85.816,
+      84.609,
+      88.024,
+      68.424
+    ],
+    "post_rtt_ms": [
+      82.814,
+      95.408,
+      61.985,
+      61.579,
+      65.193,
+      58.684,
+      88.849,
+      85.711
+    ],
+    "loaded_max_ms": 266.161,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": true,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "qualification_repeat_reason": "One variance check after the first delayed-FETCH upload measured 98.7 Mbps, below the 100 Mbps full-phase gate. The repeat measured 82.7/93.1 Mbps. Both failed performance gates and their raw evidence are retained; no further sampling or controller tuning was performed.",
+  "hosted_corporate": {
+    "success": true,
+    "streams": 4,
+    "cycles": 2,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 0,
+    "early_store_expunge": false,
+    "payload_mbps": {
+      "upload": 23.644874327146894,
+      "download": 34.693796397004
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 23.644874327146894
+      },
+      {
+        "direction": "download",
+        "mbps": 34.693796397004
+      },
+      {
+        "direction": "upload",
+        "mbps": 24.654606467006428
+      },
+      {
+        "direction": "download",
+        "mbps": 35.35328247851762
+      }
+    ],
+    "idle_ms": [
+      71.004,
+      72.494,
+      58.08,
+      68.089
+    ],
+    "post_rtt_ms": [
+      77.272,
+      85.444,
+      90.799,
+      78.796,
+      72.645,
+      57.848,
+      95.521,
+      93.453
+    ],
+    "loaded_max_ms": 1360.866,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": true,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "corporate_regressions": {
+    "rc11_existing_folders": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "rc11_temporary_account": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_account_recovery": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "hosted_models": {
+    "1": {
+      "success": true,
+      "streams": 1,
+      "cycles": 1,
+      "bulk_publish_delay_ms": 0,
+      "prefill_control": 0,
+      "early_store_expunge": false,
+      "payload_mbps": {
+        "upload": 284.18165445005445,
+        "download": 312.98478358354106
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 284.18165445005445
+        },
+        {
+          "direction": "download",
+          "mbps": 312.98478358354106
+        }
+      ],
+      "idle_ms": [
+        82.455,
+        80.087,
+        83.337,
+        83.393
+      ],
+      "post_rtt_ms": [
+        81.656,
+        70.214,
+        89.592,
+        97.98,
+        57.026,
+        65.551,
+        95.329,
+        82.446
+      ],
+      "loaded_max_ms": 297.815,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      }
+    },
+    "4": {
+      "success": true,
+      "streams": 4,
+      "cycles": 2,
+      "bulk_publish_delay_ms": 0,
+      "prefill_control": 0,
+      "early_store_expunge": false,
+      "payload_mbps": {
+        "upload": 270.0880089840378,
+        "download": 323.74413681961056
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 270.0880089840378
+        },
+        {
+          "direction": "download",
+          "mbps": 323.74413681961056
+        },
+        {
+          "direction": "upload",
+          "mbps": 270.24034541239246
+        },
+        {
+          "direction": "download",
+          "mbps": 329.9161762680384
+        }
+      ],
+      "idle_ms": [
+        83.979,
+        85.846,
+        81.34,
+        87.488
+      ],
+      "post_rtt_ms": [
+        61.65,
+        68.382,
+        70.491,
+        74.259,
+        76.797,
+        83.202,
+        62.571,
+        86.829
+      ],
+      "loaded_max_ms": 422.437,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      }
+    },
+    "32": {
+      "success": true,
+      "streams": 32,
+      "cycles": 1,
+      "bulk_publish_delay_ms": 0,
+      "prefill_control": 0,
+      "early_store_expunge": false,
+      "payload_mbps": {
+        "upload": 276.9799268628767,
+        "download": 318.20618136833906
+      },
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 276.9799268628767
+        },
+        {
+          "direction": "download",
+          "mbps": 318.20618136833906
+        }
+      ],
+      "idle_ms": [
+        78.251,
+        91.852,
+        76.393,
+        91.155
+      ],
+      "post_rtt_ms": [
+        61.052,
+        74.467,
+        95.848,
+        86.293,
+        80.367,
+        89.839,
+        86.113,
+        81.578
+      ],
+      "loaded_max_ms": 344.82,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      }
+    }
+  },
+  "hosted_weak_link": {
+    "success": true,
+    "streams": 4,
+    "cycles": 1,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 0,
+    "early_store_expunge": false,
+    "payload_mbps": {
+      "upload": 4.762847394293085,
+      "download": 4.464365810507812
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 4.762847394293085
+      },
+      {
+        "direction": "download",
+        "mbps": 4.464365810507812
+      }
+    ],
+    "idle_ms": [
+      91.929,
+      87.809,
+      67.623,
+      67.042
+    ],
+    "post_rtt_ms": [
+      58.415,
+      80.061,
+      66.964,
+      75.249,
+      96.655,
+      82.58,
+      109.694,
+      93.414
+    ],
+    "loaded_max_ms": 1615.923,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "retained_history": {
+    "success": true,
+    "streams": 4,
+    "cycles": 2,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 300,
+    "early_store_expunge": true,
+    "payload_mbps": {
+      "upload": 197.55081377539875,
+      "download": 321.4917326968571
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 279.9065007352857
+      },
+      {
+        "direction": "download",
+        "mbps": 321.4917326968571
+      },
+      {
+        "direction": "upload",
+        "mbps": 197.55081377539875
+      },
+      {
+        "direction": "download",
+        "mbps": 325.64285812426203
+      }
+    ],
+    "idle_ms": [
+      95.993,
+      63.724,
+      68.207,
+      88.52
+    ],
+    "post_rtt_ms": [
+      62.693,
+      55.184,
+      66.084,
+      64.3,
+      65.327,
+      61.016,
+      65.077,
+      57.652
+    ],
+    "loaded_max_ms": 323.057,
+    "targets": {
+      "full_phase_100mbps": true,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": true,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "account_interference": {
+    "success": true,
+    "streams": 4,
+    "cycles": 3,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 300,
+    "early_store_expunge": true,
+    "payload_mbps": {
+      "upload": 106.90586249030152,
+      "download": 188.7367748012594
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 268.4989060737666
+      },
+      {
+        "direction": "download",
+        "mbps": 188.7367748012594
+      },
+      {
+        "direction": "upload",
+        "mbps": 172.79947801825202
+      },
+      {
+        "direction": "download",
+        "mbps": 215.56820583672624
+      },
+      {
+        "direction": "upload",
+        "mbps": 106.90586249030152
+      },
+      {
+        "direction": "download",
+        "mbps": 266.2796382560869
+      }
+    ],
+    "idle_ms": [
+      88.004,
+      103.618,
+      83.669,
+      62.772,
+      170.478,
+      102.153,
+      72.808,
+      94.425,
+      136.003,
+      121.617,
+      98.619,
+      146.144,
+      126.574,
+      91.725,
+      117.067,
+      53.557,
+      63.728,
+      57.001,
+      94.972,
+      92.946,
+      102.43,
+      171.154,
+      130.951,
+      141.876,
+      112.806,
+      109.782,
+      69.406,
+      97.553,
+      49.922,
+      107.84,
+      71.588,
+      69.43,
+      97.366,
+      84.147,
+      82.872,
+      77.698,
+      92.478,
+      116.493,
+      89.923,
+      151.367,
+      82.798,
+      158.148,
+      80.725,
+      119.429,
+      95.373,
+      82.483,
+      107.073,
+      59.551,
+      106.183,
+      64.797,
+      127.626,
+      100.491,
+      147.66,
+      89.721,
+      109.198,
+      104.984,
+      89.762,
+      75.488,
+      44.538,
+      70.956,
+      98.448,
+      111.692,
+      108.662,
+      112.248,
+      169.095,
+      105.337,
+      135.217,
+      102.286,
+      79.437,
+      80.655,
+      135.099,
+      64.676,
+      74.851,
+      52.824,
+      80.356,
+      68.35,
+      76.34,
+      96.084,
+      101.555,
+      79.391,
+      123.198,
+      128.321,
+      147.499,
+      95.87,
+      82.504,
+      120.696,
+      87.945,
+      33.243,
+      36.615,
+      56.671,
+      42.605,
+      84.574,
+      69.731,
+      77.652,
+      115.609,
+      104.975,
+      135.326,
+      110.81,
+      95.02,
+      107.985,
+      69.623,
+      91.14,
+      92.82,
+      106.931,
+      72.857,
+      72.493,
+      69.259,
+      103.458,
+      63.119,
+      73.158,
+      74.446,
+      121.632,
+      130.109,
+      88.499,
+      126.867,
+      96.176,
+      92.04,
+      79.495,
+      56.218,
+      68.685,
+      47,
+      82.273,
+      83.63,
+      89.762,
+      113.279,
+      92.809,
+      121.716,
+      127.96,
+      153.057,
+      144.815,
+      92.031,
+      74.908,
+      63.681,
+      57.93,
+      56.094,
+      80.982,
+      78.467,
+      86.056,
+      66.719,
+      111.56,
+      124.378,
+      126.887,
+      130.254,
+      131.785,
+      118.434,
+      107.794,
+      102.515
+    ],
+    "post_rtt_ms": [
+      97.498,
+      95.097,
+      69.588,
+      87.79,
+      112.393,
+      106.855,
+      101.339,
+      82.787
+    ],
+    "loaded_max_ms": 361.085,
+    "targets": {
+      "full_phase_100mbps": true,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": true,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "feedback_regressions": {
+    "rc9_feedback": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "rc9_append_drain_lease": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_append_drain_lease": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "candidate_feedback_and_pressure": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "candidate_lifecycle": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "delayed_upload": {
+    "success": true,
+    "streams": 4,
+    "cycles": 2,
+    "bulk_publish_delay_ms": 0,
+    "prefill_control": 0,
+    "early_store_expunge": false,
+    "payload_mbps": {
+      "upload": 82.70494582069983,
+      "download": 298.4978103233693
+    },
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 82.70494582069983
+      },
+      {
+        "direction": "download",
+        "mbps": 298.4978103233693
+      },
+      {
+        "direction": "upload",
+        "mbps": 93.05260531941553
+      },
+      {
+        "direction": "download",
+        "mbps": 299.96236602377405
+      }
+    ],
+    "idle_ms": [
+      84.16,
+      64.486,
+      70.899,
+      76.74
+    ],
+    "post_rtt_ms": [
+      80.813,
+      62.219,
+      82.787,
+      66.919,
+      81.172,
+      92.466,
+      77.689,
+      123.478
+    ],
+    "loaded_max_ms": 929.166,
+    "targets": {
+      "full_phase_100mbps": false,
+      "idle_and_light_rtt": true,
+      "loaded_rtt": true,
+      "no_half_second_stalls": false,
+      "ramp_100mbps_within_2s": false,
+      "rolling_5s_100mbps": false
+    }
+  },
+  "upload_regressions": {
+    "rc10_slow_receipts": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_slow_receipts_and_compression": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "delivery_regression_runner_corrected_in_publication": true,
+  "matched_upload_job_startup_regressions_against_rc10": {
+    "rc11_existing_folders": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "rc11_temporary_account": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_account_recovery": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "field_ready_baseline": "MAILSTREAM-RC10",
+  "upload_headroom_client_only": true,
+  "regression_replays": {
+    "rc8_cleanup": {
+      "verified": true,
+      "exit_status": 1,
+      "test": "TestRetainedControlCleanupWithEarlyExpungeBurst",
+      "expected_reference_failure": true
+    },
+    "rc8_close": {
+      "verified": true,
+      "exit_status": 1,
+      "test": "TestCloseInterruptsUndrainedExpungeBurst",
+      "expected_reference_failure": true
+    },
+    "candidate_cleanup": {
+      "verified": true,
+      "exit_status": 0,
+      "test": "TestRetainedControlCleanupWithEarlyExpungeBurst",
+      "expected_reference_failure": false
+    },
+    "candidate_close": {
+      "verified": true,
+      "exit_status": 0,
+      "test": "TestCloseInterruptsUndrainedExpungeBurst",
+      "expected_reference_failure": false
+    },
+    "candidate_manager": {
+      "verified": true,
+      "exit_status": 0,
+      "test": "TestSystemctlHonorsDeadlineInsteadOfHangingMenu",
+      "expected_reference_failure": false
+    }
+  },
+  "startup_recovery": "SELECT/STATUS before CREATE; pre-service failures retry fresh sockets with bounded backoff; healthy carriers preserved",
+  "controller": "RC10 download controller preserved; client upload headroom uses compression-safe packet delivery samples; server upload FETCH streams up to 32 available containers",
+  "strict_hosted_target_misses": {
+    "1": [
+      "no_half_second_stalls"
+    ],
+    "4": [
+      "no_half_second_stalls"
+    ],
+    "32": [],
+    "account_interference": [
+      "no_half_second_stalls",
+      "rolling_5s_100mbps"
+    ],
+    "delayed_upload": [
+      "full_phase_100mbps",
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "initial_delayed_upload": [
+      "full_phase_100mbps",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ]
+  },
+  "all_performance_targets_met": false,
+  "android_domain_tests": 93,
+  "android_app_unit_tests": 8,
+  "android_lint_errors": 0,
+  "limits": [
+    "Synthetic TLS IMAP provider checks are not live Rambler or Android-device qualification.",
+    "The account-interference and delayed upload-body FETCH fixtures are stress hypotheses, not measured Rambler internals.",
+    "All strict pause and rolling-throughput misses remain reported; phase-average throughput is not every-window sustained throughput.",
+    "RC10 remains the first field-ready candidate; the live-provider 100 Mbps upload goal is unverified for RC12. Cleanup timeout/retry observations remain unresolved.",
+    "Provider EXPUNGE can stall. Unknown outcomes remain charged. Empty folders intentionally remain.",
+    "Install both matching endpoints; persistent signing preserves Android profiles and data."
+  ]
+}

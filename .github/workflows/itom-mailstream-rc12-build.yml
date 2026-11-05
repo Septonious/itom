@@ -1,3 +1,4 @@
+# Frozen RC12 qualification is reproducible by manual dispatch; publication verifies the corrected delivery runner.
 # Include the RC12 testing notes and field audit in the native source artifact.
 # Include the RC12 launcher identity assertion in exact-source artifacts.
 # RC12: upload-only measured headroom, compressed-receipt rate protection and server FETCH amortization.
@@ -9,9 +10,6 @@
 concurrency: {group: itom-mailstream-rc12-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC12 with constrained-link acceptance
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc12-build.yml"]
   workflow_dispatch:
 permissions: {contents: read}
 env:
@@ -285,7 +283,7 @@ jobs:
           git fetch origin b6d53de7ec97bef2d90582186a8398e409eed283 --no-tags
           mkdir rc10-source
           git archive b6d53de7ec97bef2d90582186a8398e409eed283 archives/1.1.0/source | tar -x -C rc10-source
-          python3 archives/1.1.0/qualification/rc12_regressions.py --reference "$GITHUB_WORKSPACE/rc10-source/archives/1.1.0/source" --out upload-regressions
+          python3 archives/1.1.0/qualification/rc11_regressions.py --reference "$GITHUB_WORKSPACE/rc10-source/archives/1.1.0/source" --out upload-regressions
       - name: Two full 30-second uploads with delayed server DATA reads
         run: |
           set -euo pipefail

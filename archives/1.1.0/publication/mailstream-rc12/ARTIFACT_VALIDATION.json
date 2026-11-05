@@ -1,0 +1,40 @@
+{
+  "source_commit": "45052ad0054580c9fb89f5609d7a745e2e38f447",
+  "exit_code": 0,
+  "checks": {
+    "normal_and_race_native_sdk_vet": true,
+    "android_compile_tests_lint": true,
+    "persistent_signer_and_matched_jni": true,
+    "actual_downloaded_server_six_startups": true,
+    "manual_stop_capacity_reset": true,
+    "fast_path_1_4_32_stream_complete": true,
+    "fast_path_1_4_stream_100mbps": true,
+    "two_complete_cycles_same_session": true,
+    "frozen_rc8_cleanup_and_close_failures_reproduced_and_fixed": true,
+    "weak_link_cancel_then_fresh_https": true,
+    "weak_link_idle_and_loaded_rtt": true,
+    "deadline_bounded_admission_and_full_64_plus_16_burst": true,
+    "rc7_cleanup_and_reconnect_regressions": true,
+    "rc9_idle_feedback_reproduced_and_fixed": true,
+    "asymmetric_full_ledger_and_idle_deferral": true,
+    "three_cycles_account_metadata_interference_100mbps": true,
+    "ordinary_append_drain_does_not_own_global_lease": true,
+    "rc10_slow_bulk_receipts_reproduced_and_fixed": true,
+    "compressed_receipts_keep_slow_flight_bounded": true,
+    "two_delayed_fetch_uploads_complete_without_account_failures": true,
+    "rc11_existing_create_and_temporary_setup_failures_reproduced": true,
+    "corporate_reference_reproduces_18_of_30_roles": true,
+    "corporate_recovery_reaches_30_of_30_without_healthy_restarts": true,
+    "asymmetric_50_down_35_up_two_cycles": true
+  },
+  "startup_cycles": 6,
+  "android_device_qualified": false,
+  "scope": "artifact identity and functional/safety checks only",
+  "performance_qualified": false,
+  "known_failed_gate": {
+    "job": "upload-replay",
+    "requirement": "full_phase_100mbps",
+    "attempts": 2,
+    "functional_transfers_completed": true
+  }
+}
