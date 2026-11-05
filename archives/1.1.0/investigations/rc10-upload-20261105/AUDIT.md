@@ -56,3 +56,5 @@ and no flight or stream credit left after cancellation and fresh HTTPS recovery.
 An independent compressed-receipt FIFO test also keeps the slow flight bounded.
 The longer delayed-read model is repeated against this exact implementation
 before any upload-target qualification is claimed.
+
+Final exact-source candidate `e3c61864048be2e9a7e4b328b5324a2d91f88d4b` passes required hosted/source/Android checks, three-cycle account-interference and two delayed-FETCH upload acceptance, six server startup cycles and manual-stop capacity reset verification. RC10 remains the first field-ready baseline. Client upload samples resist compressed ACKs; download control remains at RC10. Field cleanup timeout observations are not declared fixed. Unknown outcomes and deferred historical debt remain charged. Remaining strict target misses are retained in publication metadata.
