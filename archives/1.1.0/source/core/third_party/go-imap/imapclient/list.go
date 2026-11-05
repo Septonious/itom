@@ -2,6 +2,7 @@ package imapclient
 
 import (
 	"fmt"
+	"net"
 	"strings"
 	"unicode/utf8"
 
@@ -109,11 +110,19 @@ func (c *Client) handleList() error {
 	case *ListCommand:
 		if cmd.returnStatus {
 			if cmd.pendingData != nil {
-				cmd.mailboxes <- cmd.pendingData
+				select {
+				case cmd.mailboxes <- cmd.pendingData:
+				case <-c.abortCh:
+					return net.ErrClosed
+				}
 			}
 			cmd.pendingData = data
 		} else {
-			cmd.mailboxes <- data
+			select {
+			case cmd.mailboxes <- data:
+			case <-c.abortCh:
+				return net.ErrClosed
+			}
 		}
 	case *SelectCommand:
 		cmd.data.List = data

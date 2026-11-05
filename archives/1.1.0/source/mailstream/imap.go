@@ -1250,7 +1250,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 	}
 	p := &mailPipe{conn: conn, wake: make(chan struct{}, 1), done: make(chan struct{})}
 	p.commands = make(chan mailCommand, 1)
-	p.cancel = context.AfterFunc(ctx, func() { raw.Close() })
+
 	changed := func() {
 		select {
 		case p.wake <- struct{}{}:
@@ -1263,6 +1263,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 		}
 		changed()
 	}}})
+	p.cancel = context.AfterFunc(ctx, func() { raw.Close(); p.client.Close() })
 	if err = p.client.Login(a.Username, a.Password).Wait(); err != nil {
 		p.close()
 		return nil, ErrAuth
@@ -1277,7 +1278,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 // The IMAP decoder changes read deadlines internally; a socket deadline alone
 // cannot bound LOGIN/SELECT. A timer interrupts the underlying transport.
 func (p *mailPipe) limit(d time.Duration) func() bool {
-	timer := time.AfterFunc(d, func() { p.conn.NetConn().Close() })
+	timer := time.AfterFunc(d, func() { p.conn.NetConn().Close(); p.client.Close() })
 	return timer.Stop
 }
 

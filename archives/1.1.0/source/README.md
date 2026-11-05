@@ -1,4 +1,4 @@
-# ITOM 1.1.0 MAILSTREAM-RC8 — experimental testing candidate
+# ITOM 1.1.0 MAILSTREAM-RC9 — experimental testing candidate
 
 Update both matched endpoints. Install the signed APK in place, preserving app
 data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then

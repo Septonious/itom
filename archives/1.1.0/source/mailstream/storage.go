@@ -486,24 +486,20 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages != segmentAppends {
 		return ErrProtocol
 	}
-	// All messages are already drained and owned. Pipeline these commands so
-	// optional reclamation needs two provider round trips (SELECT, then the
-	// mutation/audit batch), rather than occupying a writer for five or six.
-	c.stage("store")
-	store := p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
+	// Finish each streaming mutation before starting the next command.
+	// Providers may emit EXPUNGE notifications during UID STORE.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
-	expunge := p.client.Expunge()
-	audit := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
-	if err = store.Close(); err != nil {
+	c.stage("store")
+	if err = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); err != nil {
 		return err
 	}
 	c.stage("expunge")
-	if _, err = expunge.Collect(); err != nil {
+	if _, err = p.client.Expunge().Collect(); err != nil {
 		return err
 	}
 	c.stage("status")
-	status, err := audit.Wait()
+	status, err := p.client.Status(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true}).Wait()
 	if err != nil {
 		return err
 	}

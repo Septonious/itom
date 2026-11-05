@@ -35,6 +35,8 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--baseline', type=Path, default=ROOT.parent.parent/'1.0.0-rc2/source/core')
     parser.add_argument('--candidate', type=Path, default=ROOT.parent/'source/core')
+    parser.add_argument('--prefill-control', type=int, default=0)
+    parser.add_argument('--early-store-expunge', action='store_true')
     parser.add_argument('--bulk-publish-delay-ms', type=int, default=0)
     parser.add_argument('--client-mbps', type=int, default=500)
     parser.add_argument('--cancel-download-after', default='0s')
@@ -50,7 +52,7 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
-    if not 0 <= args.bulk_publish_delay_ms <= 1000 or args.client_mbps <= 0 or not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.cancel_download_after):
+    if not 0 <= args.prefill_control <= 1000 or not 0 <= args.bulk_publish_delay_ms <= 1000 or args.client_mbps <= 0 or not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.cancel_download_after):
         parser.error('client rate must be positive; cancellation must be a duration in seconds')
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?s", args.duration) or float(args.duration[:-1]) <= 0:
         parser.error('duration must be positive seconds, e.g. 12s or 0.5s')
@@ -72,7 +74,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
+    manifest = {'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -134,7 +136,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                 private.mkdir()
                 provider_log = (output/(label+'-provider.log')).open('w')
                 provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
-                                             '-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                             '-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
                                             stdout=provider_log, stderr=subprocess.STDOUT)
                 try:
                     for _ in range(200):

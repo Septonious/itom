@@ -1,4 +1,4 @@
-# Mailbox stream transport contract — MAILSTREAM-RC8
+# Mailbox stream transport contract — MAILSTREAM-RC9
 
 RC5 field traces show nine client accounts failing at the first 32-message DATA
 boundary while executing CLOSE, despite low direct IMAP latency. A separate
@@ -25,9 +25,8 @@ silence lease handles abandoned peers independently of throughput control.
 TCP streams have independent offsets and receive windows. Small writes dispatch
 immediately; bulk batches only mail already queued. A separate bounded reserve
 lets small DATA and fresh TLS proceed when earlier bulk exceeds a reduced
-window. Bulk growth covers measured DATA-receipt RTT plus finite queue headroom.
-A saturated sender probes by at most 50% once per complete observation round;
-350 ms of extra DATA delay stops probing and restores the measured-rate bound. Interactive
+window. Bulk growth uses the RC7 measured-rate controller and bounded flight allowance.
+RC8 demand probing is reverted after the field queue/retransmission regression. Interactive
 DATA does not train the bulk estimator, and an idle/application-limited gap
 restarts its observation interval. A faster light probe cannot pin a later
 bulk burst to the initial flight window. Mailbox receipts do not release application-consumption credit. Control
@@ -170,3 +169,9 @@ withholds an OPEN receipt when a prior RESET is still in flight. Diagnostics
 separate capacity waits from refusals and expose bulk receipt RTT, delivered rate
 and flight saturation. This addresses the RC7 field burst without increasing
 per-stream receive-credit allocations.
+
+RC9 completes UID STORE before starting EXPUNGE. Provider EXPUNGE bursts may
+arrive before UID STORE tagged completion; no undrained streaming command is
+pipelined behind it. Explicit client close and operation deadlines cancel
+stream delivery as well as socket IO, so a full 128-response buffer cannot
+prevent decoder shutdown. Empty folders remain; automatic DELETE is forbidden.

@@ -152,10 +152,15 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if len(rows) > 0 {
 		c.stage("maintenance_expunge")
 		p.allowExpunge.Store(true)
-		store := p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil)
-		expunge := p.client.Expunge()
-		e = store.Close()
-		_, ee := expunge.Collect()
+		// UID STORE may return unsolicited EXPUNGE replies before its
+		// tagged completion. Do not register an EXPUNGE command whose
+		// bounded reply buffer is not being drained yet.
+		e = p.client.Store(owned, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close()
+		if e != nil {
+			p.allowExpunge.Store(false)
+			return uidWatermark{}, 0, e
+		}
+		_, ee := p.client.Expunge().Collect()
 		p.allowExpunge.Store(false)
 		if e != nil {
 			return uidWatermark{}, 0, e
@@ -482,7 +487,7 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	a.reclaiming.Store(true)
 	defer a.reclaiming.Store(false)
 	p := *writer
-	interrupt := context.AfterFunc(ctx, func() { p.conn.NetConn().Close() })
+	interrupt := context.AfterFunc(ctx, func() { p.conn.NetConn().Close(); p.client.Close() })
 	defer interrupt()
 	stop := p.limit(10 * time.Second)
 	var e error

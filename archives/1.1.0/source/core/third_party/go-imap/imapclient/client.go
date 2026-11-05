@@ -151,6 +151,9 @@ type Client struct {
 	greetingRecv bool
 	greetingErr  error
 
+	abortCh   chan struct{}
+	abortOnce sync.Once
+
 	decCh  chan struct{}
 	decErr error
 
@@ -188,6 +191,7 @@ func New(conn net.Conn, options *Options) *Client {
 		dec:        imapwire.NewDecoder(br, imapwire.ConnSideClient),
 		greetingCh: make(chan struct{}),
 		decCh:      make(chan struct{}),
+		abortCh:    make(chan struct{}),
 		state:      imap.ConnStateNone,
 		enabled:    make(imap.CapSet),
 	}
@@ -396,6 +400,7 @@ func (c *Client) Closed() <-chan struct{} {
 
 // Close immediately closes the connection.
 func (c *Client) Close() error {
+	c.abortOnce.Do(func() { close(c.abortCh) })
 	c.mutex.Lock()
 	alreadyClosed := c.closed
 	c.closed = true
@@ -550,7 +555,10 @@ func (c *Client) completeCommand(cmd command, err error) {
 		}
 	case *ListCommand:
 		if cmd.pendingData != nil {
-			cmd.mailboxes <- cmd.pendingData
+			select {
+			case cmd.mailboxes <- cmd.pendingData:
+			case <-c.abortCh:
+			}
 		}
 		close(cmd.mailboxes)
 	case *FetchCommand:
@@ -580,6 +588,7 @@ func (c *Client) registerContReq(cmd command) *imapwire.ContinuationRequest {
 }
 
 func (c *Client) closeWithError(err error) {
+	c.abortOnce.Do(func() { close(c.abortCh) })
 	c.conn.Close()
 
 	c.mutex.Lock()

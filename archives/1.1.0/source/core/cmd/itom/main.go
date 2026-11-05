@@ -17,7 +17,7 @@ import (
 	"runtime"
 )
 
-const revision = "itom-1-1-0-mailstream-rc8"
+const revision = "itom-1-1-0-mailstream-rc9"
 
 func run(args []string) error {
 	command := "menu"

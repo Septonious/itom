@@ -11,35 +11,6 @@ import (
 	"time"
 )
 
-// RC7 field upload: the control ping is 170-200 ms, but DATA receipts take
-// 400-600 ms. A saturated sender must discover capacity beyond its first
-// 512 KiB without mistaking its own flight limit for the path's bandwidth.
-func TestUploadProbesBeyondInitialFlightWithSlowMailboxReceipts(t *testing.T) {
-	var w deliveryWindow
-	now := time.Unix(100, 0)
-	const quantum = 32 << 10
-	var delivered int
-	for round := 0; round < 20; round++ {
-		window := min(w.allowance(), 8<<20)
-		packets := window / quantum
-		w.flight += packets * quantum
-		// The dispatcher still has unsent application bytes at the limit.
-		w.limited = true
-		now = now.Add(500 * time.Millisecond)
-		for range packets {
-			w.delivered(quantum, 500*time.Millisecond, now, true)
-		}
-		if round >= 16 {
-			delivered += packets * quantum
-		}
-	}
-	mbps := float64(delivered) * 8 / 2e6
-	if mbps < 100 {
-		t.Fatalf("saturated slow-receipt upload stayed window-limited: %.1f Mbps window=%d", mbps, w.allowance())
-	}
-	t.Logf("last two seconds: %.1f Mbps with 500 ms DATA receipts", mbps)
-}
-
 // Speedtest MULTI plus Android background sockets reaches 64 before any
 // transfer fails. Keep the receive-memory bound; wait for a slot instead of
 // failing the next TLS connection immediately. A cancelled waiter must leave

@@ -2,6 +2,7 @@ package imapclient
 
 import (
 	"github.com/emersion/go-imap/v2"
+	"net"
 )
 
 // Expunge sends an EXPUNGE command.
@@ -32,7 +33,11 @@ func (c *Client) handleExpunge(seqNum uint32) error {
 
 	cmd := findPendingCmdByType[*ExpungeCommand](c)
 	if cmd != nil {
-		cmd.seqNums <- seqNum
+		select {
+		case cmd.seqNums <- seqNum:
+		case <-c.abortCh:
+			return net.ErrClosed
+		}
 	} else if handler := c.options.unilateralDataHandler().Expunge; handler != nil {
 		handler(seqNum)
 	}

@@ -40,9 +40,11 @@ type counts struct {
 }
 type session struct {
 	imapserver.Session
-	counts    *counts
-	user      string
-	bulkDelay time.Duration
+	counts       *counts
+	user         string
+	bulkDelay    time.Duration
+	prefill      int
+	earlyExpunge bool
 }
 
 func (s *session) Login(user, password string) error {
@@ -104,7 +106,16 @@ func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData
 }
 func (s *session) Create(folder string, o *imap.CreateOptions) error {
 	s.count("CREATE")
-	return s.Session.Create(folder, o)
+	err := s.Session.Create(folder, o)
+	if err == nil && s.prefill > 0 && strings.Contains(folder, "-control-") {
+		raw := []byte("MIME-Version: 1.0\r\nContent-Transfer-Encoding: base64\r\n\r\nb2xkIGNvbnRyb2wgZml4dHVyZQ==\r\n")
+		for i := 0; i < s.prefill; i++ {
+			if _, err = s.Session.Append(folder, strings.NewReader(string(raw)), &imap.AppendOptions{}); err != nil {
+				return err
+			}
+		}
+	}
+	return err
 }
 func (s *session) Delete(folder string) error { s.count("DELETE"); return s.Session.Delete(folder) }
 func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
@@ -113,7 +124,16 @@ func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.Fetc
 }
 func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.StoreFlags, o *imap.StoreOptions) error {
 	s.count("STORE")
-	return s.Session.Store(w, set, f, o)
+	err := s.Session.Store(w, set, f, o)
+	if err == nil && s.earlyExpunge && f.Op == imap.StoreFlagsAdd {
+		for _, flag := range f.Flags {
+			if flag == imap.FlagDeleted {
+				s.count("EARLY_EXPUNGE")
+				return s.Session.Expunge(&imapserver.ExpungeWriter{}, nil)
+			}
+		}
+	}
+	return err
 }
 func (s *session) Status(folder string, o *imap.StatusOptions) (*imap.StatusData, error) {
 	s.count("STATUS")
@@ -145,8 +165,10 @@ func run() error {
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
+	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
+	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -183,7 +205,7 @@ func run() error {
 	}
 	stats := &counts{live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay}, nil, nil
+		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

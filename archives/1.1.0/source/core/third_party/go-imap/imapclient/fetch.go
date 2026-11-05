@@ -3,6 +3,7 @@ package imapclient
 import (
 	"fmt"
 	"io"
+	"net"
 	netmail "net/mail"
 	"strings"
 	"time"
@@ -651,7 +652,10 @@ func (c *Client) handleFetch(seqNum uint32) error {
 		if cmd != nil {
 			cmd := cmd.(*FetchCommand)
 			matched = cmd
-			cmd.msgs <- msg
+			select {
+			case cmd.msgs <- msg:
+			case <-c.abortCh:
+			}
 		} else if handler := c.options.unilateralDataHandler().Fetch; handler != nil {
 			go handler(msg)
 		} else {
@@ -857,9 +861,17 @@ func (c *Client) handleFetch(seqNum uint32) error {
 		if done != nil {
 			c.setReadTimeout(literalReadTimeout)
 		}
-		items <- item
+		select {
+		case items <- item:
+		case <-c.abortCh:
+			return net.ErrClosed
+		}
 		if done != nil {
-			<-done
+			select {
+			case <-done:
+			case <-c.abortCh:
+				return net.ErrClosed
+			}
 			c.setReadTimeout(respReadTimeout)
 		}
 		return nil

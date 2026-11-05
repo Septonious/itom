@@ -66,10 +66,7 @@ func (u *UI) system(action string) error {
 		}
 		return u.system("start")
 	}
-	c := exec.Command("systemctl", action, "itom.service")
-	c.Stdout = u.Out
-	c.Stderr = u.Out
-	if err := c.Run(); err != nil {
+	if err := boundedSystemctl(u.Out, action, "itom.service"); err != nil {
 		return err
 	}
 	if action == "stop" {
@@ -445,7 +442,7 @@ Type=simple
 ExecStart=/usr/local/bin/itom serve --state /var/lib/itom
 Restart=on-failure
 RestartSec=10
-TimeoutStopSec=45
+TimeoutStopSec=10
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
@@ -508,9 +505,7 @@ func installData(data []byte, out io.Writer) error {
 		return e
 	}
 	return installFiles(data, "/usr/local/bin/itom", "/etc/systemd/system/itom.service", func(args ...string) error {
-		cmd := exec.Command("systemctl", args...)
-		cmd.Stdout, cmd.Stderr = out, out
-		return cmd.Run()
+		return boundedSystemctl(out, args...)
 	}, out, func() error { return ResetCapacityState("/var/lib/itom") })
 }
 
