@@ -434,3 +434,19 @@ jobs:
             repeated-regressions/
             repeated-cleanup/
           if-no-files-found: error
+
+  recovered-client-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Cold transfers with 535 MB persisted debt, then verify bandwidth after audited recovery
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out recovered-client --only candidate --recovered-client-mib 51 --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --history-folders 2 --duration 30s --cycles 3 --streams 4 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_recovered.py recovered-client
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-rc14-recovered-client, path: recovered-client/, if-no-files-found: error}
