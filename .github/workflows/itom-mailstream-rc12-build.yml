@@ -1,3 +1,4 @@
+# Include the RC12 launcher identity assertion in exact-source artifacts.
 # RC12: upload-only measured headroom, compressed-receipt rate protection and server FETCH amortization.
 # Drain terminal APPEND replies before the global mutation lease.
 # Ordered pressure/clear versions ignore delayed notifications across account lanes.
