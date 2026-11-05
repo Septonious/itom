@@ -596,6 +596,9 @@ func (a *mailAccountState) attach(id SessionID) error {
 		return err
 	}
 	stopSelect()
+	if !a.link.client {
+		p.fetchBatch = 32
+	} // Server upload reader amortizes slow body FETCH.
 	a.configureSegments(p, id)
 	p.onPacket = func(packet []byte) {
 		if len(packet) > 4096 {
@@ -1203,6 +1206,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 }
 
 type mailPipe struct {
+	fetchBatch        uint32 // immutable after attachment; zero preserves the eight-container default
 	client            *imapclient.Client
 	conn              *tls.Conn
 	cancel            func() bool
@@ -1406,7 +1410,12 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 		}
 		if messages > p.after {
 			p.phase.Store(1)
-			stop := min(messages, p.after+8)
+			batch := p.fetchBatch
+			if batch == 0 {
+				batch = 8
+			}
+			// Fetch only the available backlog. Small reads never wait for a batch.
+			stop := min(messages, p.after+batch)
 			if p.rotate != nil {
 				stop = min(stop, segmentAppends)
 			}

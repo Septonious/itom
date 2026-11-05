@@ -7,17 +7,23 @@ import "time"
 // not dump the entire 32 MiB memory allowance onto a slow mobile reader.
 // All fields are owned by Session.mu.
 type deliveryWindow struct {
-	flight  int
-	limit   int
-	base    time.Duration
-	start   time.Time
-	last    time.Time
-	acked   int
-	rate    float64
-	limited bool // diagnostic only: RC8 demand probing is disabled
+	flight   int
+	limit    int
+	base     time.Duration
+	start    time.Time
+	last     time.Time
+	acked    int
+	rate     float64
+	limited  bool // flight allowance blocked a queued bulk packet since the last rate sample
+	bulkRTT  time.Duration
+	adaptive bool
 }
 
 const initialDeliveryWindow = 512 << 10
+
+// Leave one second of the two-second loaded-RTT budget for protocol/control.
+// This is a ceiling on measured-rate headroom, never an initial flight grant.
+const maxBulkDeliveryHorizon = time.Second
 
 func (w *deliveryWindow) allowance() int {
 	if w.limit == 0 {
@@ -28,9 +34,6 @@ func (w *deliveryWindow) allowance() int {
 
 func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool) {
 	w.flight -= n
-	if w.flight < w.allowance() {
-		w.limited = false
-	}
 	// Interactive DATA bypasses the bulk allowance; its smaller, faster receipts
 	// cannot train the capacity estimate or minimum RTT of the bulk carrier.
 	if !bulk {
@@ -41,8 +44,16 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
 		w.start, w.acked, w.rate = now, 0, 0
 		w.limit = initialDeliveryWindow
+		w.bulkRTT = 0
 	}
 	w.last = now
+	if sample > 0 {
+		if w.bulkRTT == 0 {
+			w.bulkRTT = sample
+		} else {
+			w.bulkRTT = (7*w.bulkRTT + sample) / 8
+		}
+	}
 	if sample > 0 && (w.base == 0 || sample < w.base) {
 		w.base = sample
 	}
@@ -69,6 +80,17 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		// probe's RTT. Half a second remains below the loaded-delay budget.
 		horizon := 500 * time.Millisecond
 		target := int(w.rate * horizon.Seconds())
+		// A full flight cannot discover a capable path when its bulk receipt
+		// RTT approaches/exceeds the fixed half-second rate horizon. Small
+		// NOOP/control RTTs do not describe this DATA path. Add bounded BDP
+		// headroom only after actual bulk allowance blocking, using delivered
+		// rate and smoothed bulk receipts; do not blindly probe on each ACK.
+		if w.adaptive && w.limited && w.bulkRTT > 250*time.Millisecond {
+			horizon = min(maxBulkDeliveryHorizon, max(horizon, 2*w.bulkRTT))
+			desired := int(w.rate * horizon.Seconds())
+			target = max(target, desired)
+		}
+		w.limited = false
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))
 		w.start, w.acked = now, 0
 	}

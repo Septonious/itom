@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -49,6 +50,8 @@ type session struct {
 	earlyExpunge   bool
 	metadataDelay  time.Duration
 	historyFolders int
+	dataFetchDelay time.Duration
+	selectedFolder string
 }
 
 func (s *session) Login(user, password string) error {
@@ -135,7 +138,11 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData, error) {
 	defer s.accountWork(true)()
 	s.count("SELECT")
-	return s.Session.Select(folder, o)
+	data, err := s.Session.Select(folder, o)
+	if err == nil {
+		s.selectedFolder = folder
+	}
+	return data, err
 }
 func (s *session) Create(folder string, o *imap.CreateOptions) error {
 	s.count("CREATE")
@@ -172,6 +179,10 @@ func (s *session) Delete(folder string) error { s.count("DELETE"); return s.Sess
 func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
 	defer s.accountWork(false)()
 	s.count("FETCH")
+	if s.dataFetchDelay > 0 && o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
+		s.count("DELAYED_DATA_FETCH")
+		time.Sleep(s.dataFetchDelay)
+	}
 	return s.Session.Fetch(w, set, o)
 }
 func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.StoreFlags, o *imap.StoreOptions) error {
@@ -219,13 +230,14 @@ func run() error {
 	accounts := flag.Int("accounts", 10, "physical accounts")
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
+	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
 	metadataDelay := flag.Duration("account-metadata-delay", 0, "account-wide metadata service cost; blocks concurrent data on that account")
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -261,8 +273,13 @@ func run() error {
 		backend.AddUser(imapmemserver.NewUser(fmt.Sprintf("a%02d", n+1), "fixture-only"))
 	}
 	stats := &counts{metadata: map[string]*sync.RWMutex{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
-	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
-		return &session{Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+	var uploadReaderPort atomic.Int32
+	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(conn *imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
+		delay := time.Duration(0)
+		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
+			delay = *uploadFetchDelay
+		}
+		return &session{dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
@@ -276,12 +293,15 @@ func run() error {
 		serverNet.rtts = []time.Duration{40 * time.Millisecond}
 	}
 	ports := []int{}
-	for _, network := range []*network{clientNet, serverNet} {
+	for side, network := range []*network{clientNet, serverNet} {
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			return err
 		}
 		ports = append(ports, listener.Addr().(*net.TCPAddr).Port)
+		if side == 1 {
+			uploadReaderPort.Store(int32(ports[side]))
+		}
 		tlsListener := tls.NewListener(shapedListener{listener, ctx, network}, &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12})
 		go func() { _ = provider.Serve(tlsListener) }()
 	}

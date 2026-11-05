@@ -87,6 +87,7 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 		dial = publicDial
 	}
 	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan uint64, 1024), pings: map[uint64]chan struct{}{}}
+	s.delivery.adaptive = !server // Upload-only; preserve RC10 download control.
 	s.closedStreams = map[uint32]*terminalStream{}
 	s.lastInbound.Store(time.Now().UnixNano())
 	// Sequence zero was the authenticated READY/READY_ACK. It must never
@@ -765,6 +766,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	BulkSmoothedRTTMS   int64  `json:"bulk_receipt_rtt_ms"`
 	BulkReceiptRTTMS    int64  `json:"bulk_receipt_min_rtt_ms"`
 	BulkDeliveryRateBPS int64  `json:"bulk_delivery_bytes_per_second"`
 	BulkWindowLimited   bool   `json:"bulk_window_limited"`
@@ -787,7 +789,7 @@ type Snapshot struct {
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited, OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
