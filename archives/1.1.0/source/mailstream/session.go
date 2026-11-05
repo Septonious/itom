@@ -38,12 +38,13 @@ const (
 )
 
 type pendingPacket struct {
-	wire     []byte
-	priority bool
-	sent     time.Time
-	attempts int
-	kind     byte
-	stream   uint32
+	deliveryMark deliveryMark
+	wire         []byte
+	priority     bool
+	sent         time.Time
+	attempts     int
+	kind         byte
+	stream       uint32
 }
 
 type Session struct {
@@ -420,7 +421,7 @@ func (s *Session) dispatchLoop() {
 			s.mu.Lock()
 			if p := s.pending[next.sequence]; p == selected {
 				if p.attempts == 0 && p.kind == frameData {
-					s.delivery.flight += len(p.wire)
+					p.deliveryMark = s.delivery.sent(len(p.wire), started, !p.priority)
 				}
 				if p.attempts != 0 {
 					s.retransmissions++
@@ -478,7 +479,7 @@ func (s *Session) receiveLoop() {
 						if p.attempts == 1 {
 							sample = time.Since(p.sent)
 						}
-						s.delivery.delivered(len(p.wire), sample, time.Now(), !p.priority)
+						s.delivery.delivered(len(p.wire), sample, time.Now(), !p.priority, p.deliveryMark)
 					}
 					if p.attempts == 1 && !p.sent.IsZero() {
 						sample := time.Since(p.sent)

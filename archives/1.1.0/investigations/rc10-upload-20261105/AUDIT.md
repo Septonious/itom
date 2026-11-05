@@ -24,7 +24,7 @@ The upload prototype retains the initial 512 KiB grant, finite memory/retention,
 control reserve, DNS and cleanup ownership rules. Only client outbound bulk can
 use bounded extra measured-rate headroom when actual queued DATA exhausts its
 flight allowance. Direct/control probes cannot train that bulk RTT. The maximum
-horizon is one second. Server download control retains RC10 behavior.
+horizon is 1.25 seconds. Server download control retains RC10 behavior.
 
 Server upload readers request at most 32 already-available containers instead
 of eight, streaming each bounded body; no timer waits for a fuller batch.
@@ -38,3 +38,21 @@ A larger-headroom intermediate still averaged only 67 Mbps and was rejected.
 These are prototypes, not field qualification or a claim of sustained 100 Mbps.
 Longer repeated transfers, constrained-link latency and the established RC10
 regression gates are required before packaging a successor.
+
+The 30-second delayed-read prototype reached 115.1/113.2 Mbps uploads, but its
+weak-link test failed a loaded ping. It was not packaged. Compressed receipts
+inflated a short ACK-arrival rate estimate and admitted several MiB of flight
+on a 7 Mbps shared link. The corrected prototype records delivered-byte and
+sending/delivery timestamps with each first publication, caps the rate sample
+using the larger of its send and delivery intervals, and counts each reliable
+DATA acknowledgement once. Application-idle time is excluded from fresh bursts;
+RESET removes its bulk-flight charge. This estimator and additional headroom
+apply only to client outbound DATA. The server's download controller remains
+at RC10 behavior.
+
+The corrected 7 Mbps whole-path model completes at 4.72/4.39 Mbps upload/download,
+with 101 ms maximum idle/post RTT and 1709 ms loaded RTT, no failed accounts,
+and no flight or stream credit left after cancellation and fresh HTTPS recovery.
+An independent compressed-receipt FIFO test also keeps the slow flight bounded.
+The longer delayed-read model is repeated against this exact implementation
+before any upload-target qualification is claimed.

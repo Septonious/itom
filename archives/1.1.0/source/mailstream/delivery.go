@@ -6,24 +6,33 @@ import "time"
 // separately using authenticated delivery receipts. A fast mailbox server must
 // not dump the entire 32 MiB memory allowance onto a slow mobile reader.
 // All fields are owned by Session.mu.
+type deliveryMark struct {
+	delivered                    uint64
+	deliveredAt, firstSent, sent time.Time
+}
+
 type deliveryWindow struct {
-	flight   int
-	limit    int
-	base     time.Duration
-	start    time.Time
-	last     time.Time
-	acked    int
-	rate     float64
-	limited  bool // flight allowance blocked a queued bulk packet since the last rate sample
-	bulkRTT  time.Duration
-	adaptive bool
+	bulkFlight             int
+	totalDelivered         uint64
+	deliveredAt, firstSent time.Time
+	rateSampleMax          float64
+	flight                 int
+	limit                  int
+	base                   time.Duration
+	start                  time.Time
+	last                   time.Time
+	acked                  int
+	rate                   float64
+	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
+	bulkRTT                time.Duration
+	adaptive               bool
 }
 
 const initialDeliveryWindow = 512 << 10
 
-// Leave one second of the two-second loaded-RTT budget for protocol/control.
+// Leave 750 ms of the two-second loaded-RTT budget for protocol/control.
 // This is a ceiling on measured-rate headroom, never an initial flight grant.
-const maxBulkDeliveryHorizon = time.Second
+const maxBulkDeliveryHorizon = 1250 * time.Millisecond
 
 func (w *deliveryWindow) allowance() int {
 	if w.limit == 0 {
@@ -32,7 +41,7 @@ func (w *deliveryWindow) allowance() int {
 	return w.limit
 }
 
-func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool) {
+func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool, marks ...deliveryMark) {
 	w.flight -= n
 	// Interactive DATA bypasses the bulk allowance; its smaller, faster receipts
 	// cannot train the capacity estimate or minimum RTT of the bulk carrier.
@@ -45,6 +54,23 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		w.start, w.acked, w.rate = now, 0, 0
 		w.limit = initialDeliveryWindow
 		w.bulkRTT = 0
+		w.rateSampleMax = 0
+	}
+	if len(marks) > 0 && !marks[0].sent.IsZero() {
+		m := marks[0]
+		w.bulkFlight = max(0, w.bulkFlight-n)
+		w.totalDelivered += uint64(n)
+		// Use both the sending interval and the delivery interval recorded
+		// with this packet. A compressed ACK train cannot turn a slow link
+		// into an apparently fast one merely by arriving within 250 ms.
+		interval := max(m.sent.Sub(m.firstSent), now.Sub(m.deliveredAt))
+		if interval > 0 && w.totalDelivered >= m.delivered {
+			w.rateSampleMax = max(w.rateSampleMax, float64(w.totalDelivered-m.delivered)/interval.Seconds())
+		}
+		w.deliveredAt = now
+		if m.sent.After(w.firstSent) {
+			w.firstSent = m.sent
+		}
 	}
 	w.last = now
 	if sample > 0 {
@@ -69,6 +95,10 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	// measure a fast path, while doubling it before a sample floods a 7 Mbps link.
 	if elapsed := now.Sub(w.start); elapsed >= 250*time.Millisecond {
 		rate := float64(w.acked) / elapsed.Seconds()
+		if w.rateSampleMax > 0 {
+			rate = min(rate, w.rateSampleMax)
+		}
+		w.rateSampleMax = 0
 		if w.rate == 0 {
 			w.rate = rate
 		} else {
@@ -118,6 +148,9 @@ func (s *Session) abandonStream(stream uint32) {
 		s.pendingBytes -= len(p.wire)
 		if p.kind == frameData && p.attempts > 0 {
 			s.delivery.flight -= len(p.wire)
+			if !p.priority {
+				s.delivery.bulkFlight = max(0, s.delivery.bulkFlight-len(p.wire))
+			}
 		}
 		delete(s.pending, seq)
 		sequences = append(sequences, seq)
@@ -129,4 +162,22 @@ func (s *Session) abandonStream(stream uint32) {
 			storage.Abandon(s.cipher.id, seq)
 		}
 	}
+}
+
+// Capture delivery state at first publication. The initial flight of a fresh
+// burst starts a new sending interval, excluding application-idle time.
+func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
+	w.flight += n
+	if !bulk || !w.adaptive {
+		return deliveryMark{}
+	}
+	if w.bulkFlight == 0 {
+		w.firstSent = now
+	}
+	w.bulkFlight += n
+	at := w.deliveredAt
+	if at.Before(w.firstSent) {
+		at = w.firstSent
+	}
+	return deliveryMark{w.totalDelivered, at, w.firstSent, now}
 }
