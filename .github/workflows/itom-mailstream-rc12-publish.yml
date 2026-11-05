@@ -1,8 +1,6 @@
 name: Publish verified matched mailbox-stream RC12 testing assets
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc12-publish.yml"]
+  workflow_dispatch:
 permissions: {contents: write, actions: read}
 concurrency: {group: itom-mailstream-rc12-publication, cancel-in-progress: false}
 jobs:
