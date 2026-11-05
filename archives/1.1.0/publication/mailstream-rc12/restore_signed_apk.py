@@ -13,7 +13,7 @@ for op in patch['operations']:
         parts.append(source[offset:offset+size])
     else:parts.append(base64.b64decode(op['literal'],validate=True))
 result=b''.join(parts)
-metadata=json.loads((root/'MAILSTREAM_RC11_BUILD.json').read_text())
+metadata=json.loads((root/'MAILSTREAM_RC12_BUILD.json').read_text())
 assert len(result)==patch['result_bytes']
 assert hashlib.sha256(result).hexdigest()==patch['result_sha256']==metadata['signed_apk_sha256']
 Path(sys.argv[2]).write_bytes(result)

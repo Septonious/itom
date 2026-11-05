@@ -1,4 +1,4 @@
-name: Publish verified matched mailbox-stream RC11 testing assets
+name: Publish verified matched mailbox-stream RC12 testing assets
 on:
   push:
     branches: ["codex/v1.1.0-mailbox-stream-v3"]
