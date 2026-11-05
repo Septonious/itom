@@ -1,7 +1,7 @@
 # Frozen RC14 qualification remains available by manual dispatch.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 concurrency: {group: itom-mailstream-rc14-build, cancel-in-progress: true}
-name: Build matched mailbox-stream RC13 with constrained-link acceptance
+name: Build matched mailbox-stream RC14 with constrained-link acceptance
 on:
   push:
     branches: ["codex/v1.1.0-mailbox-stream-v3"]

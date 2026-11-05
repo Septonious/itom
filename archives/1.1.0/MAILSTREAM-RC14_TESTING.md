@@ -18,7 +18,8 @@ outcome is refunded. All physical retention and protocol caps remain unchanged.
 The existing writer may spend up to eight seconds on an optional bounded
 collection turn, independent of NOOP/APPEND timing. Only one mutation lease is
 active globally; dispatch excludes its borrowed writer and uses other accounts.
-Receivers remain independent. User cancellation still interrupts raw IO.
+Already accepted control packets are published before optional cleanup may
+borrow the actor. Receivers remain independent. User cancellation still interrupts raw IO.
 There are no extra connections, folder DELETE, CLOSE or UID EXPUNGE commands.
 Reclamation diagnostics distinguish STORE, EXPUNGE and audit stages and record
 stage duration, making the next field capture more specific.

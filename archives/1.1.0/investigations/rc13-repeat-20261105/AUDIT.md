@@ -33,7 +33,8 @@ before EXPUNGE is issued, followed by fresh SELECT proof. Optional collection
 has an eight-second hard bound independent of NOOP/APPEND timing. The borrowed
 writer remains excluded from dispatch while other accounts carry traffic. No
 reader is closed for cleanup, no extra connection is introduced, and cancellation
-still interrupts raw IO. Unknown outcomes remain charged and quarantined.
+still interrupts raw IO. Optional cleanup yields to already accepted control
+packets before excluding its writer from new dispatch. Unknown outcomes remain charged and quarantined.
 
 New tests preserve unread/future controls during paged deletion, require every
 historical page before emptiness proof, reproduce a useful 2.4-second mutation

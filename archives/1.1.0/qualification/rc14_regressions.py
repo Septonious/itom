@@ -9,7 +9,8 @@ name='slow_mutation_field_test.go'
 results={}
 for label,root,pattern,expected in [
  ('rc13_slow_mutation',a.reference,'^TestSlowMutationKeepsWriterAndReleasesOnlyAuditedDebt$','provider mutation budget discarded useful progress'),
- ('candidate_bounded_collection',source,'^Test(CollectionPagesPreserveUnconsumedControlTail|AbandonedFolderNeedsAllPagesBeforeEmptyProof|SlowMutationKeepsWriterAndReleasesOnlyAuditedDebt|RetainedControlCleanupWithEarlyExpungeBurst)$',None)]:
+ ('rc13_queued_control',a.reference,'^TestOptionalCollectionYieldsToAcceptedControl$','optional collection blocked accepted control'),
+ ('candidate_bounded_collection',source,'^Test(OptionalCollectionYieldsToAcceptedControl|CollectionPagesPreserveUnconsumedControlTail|AbandonedFolderNeedsAllPagesBeforeEmptyProof|SlowMutationKeepsWriterAndReleasesOnlyAuditedDebt|RetainedControlCleanupWithEarlyExpungeBurst)$',None)]:
  r=subprocess.run(['go','test','-json','-count=1','-timeout=45s','-run',pattern,'.'],cwd=root/'mailstream',stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=180)
  (a.out/(label+'.jsonl')).write_text(r.stdout)
  if expected:assert r.returncode!=0 and expected in r.stdout,r.stdout[-4000:]

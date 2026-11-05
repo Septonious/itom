@@ -470,7 +470,9 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	a.mu.Lock()
 	a.maintenance.cancel = cancel
 	a.mu.Unlock()
-	a.reclaiming.Store(true)
+	if !a.borrowWriterForCollection() {
+		return
+	}
 	defer a.reclaiming.Store(false)
 	p := *writer
 	interrupt := context.AfterFunc(ctx, func() { p.conn.NetConn().Close(); p.client.Close() })

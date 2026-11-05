@@ -37,7 +37,10 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		unqueue(false)
 		return
 	}
-	a.reclaiming.Store(true)
+	if !a.borrowWriterForCollection() {
+		unqueue(false)
+		return
+	}
 	defer a.reclaiming.Store(false)
 	a.link.notify()
 	p := *writer
@@ -123,4 +126,16 @@ completionsDrained:
 		}
 	}
 	a.link.notify()
+}
+
+// Admission and this check share Account.mu. A control packet accepted before
+// exclusion must be published before optional metadata work can borrow its actor.
+func (a *mailAccountState) borrowWriterForCollection() bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if len(a.fast) != 0 || a.parking.Load() {
+		return false
+	}
+	a.reclaiming.Store(true)
+	return true
 }

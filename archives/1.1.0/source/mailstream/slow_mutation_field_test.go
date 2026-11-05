@@ -69,3 +69,35 @@ func TestSlowMutationKeepsWriterAndReleasesOnlyAuditedDebt(t *testing.T) {
 		t.Fatalf("provider mutation budget discarded useful progress: same_writer=%v debt=%d retired=%d reclamation=%+v", p == original, a.spent, a.retired.Load(), c.snapshot())
 	}
 }
+
+func TestOptionalCollectionYieldsToAcceptedControl(t *testing.T) {
+	for _, maintenance := range []bool{false, true} {
+		accounts, _ := applicationMailServer(t, true, false)
+		ctx, cancel := context.WithCancel(context.Background())
+		p, err := openMailPipe(ctx, accounts[0])
+		if err != nil {
+			cancel()
+			t.Fatal(err)
+		}
+		c := NewReclamationCoordinator()
+		l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{}), attached: SessionID{1}}
+		a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, fast: make(chan mailWork, 1)}
+		a.fast <- mailWork{control: true}
+		a.maintenance.epoch = l.attached
+		a.maintenance.controlBytes = reservationQuantum / 2
+		var joined sync.WaitGroup
+		inFlight := 0
+		original := p
+		if maintenance {
+			a.processMaintenance(&p, make(chan error, 1), &inFlight, &joined)
+		} else {
+			rec := &segmentRecord{queued: true}
+			a.processCleanup(cleanupJob{account: a, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+		}
+		if p != original || a.reclaiming.Load() || len(a.fast) != 1 || c.snapshot().Completed != 0 || c.snapshot().Paused {
+			t.Fatal("optional collection blocked accepted control", maintenance, c.snapshot())
+		}
+		p.close()
+		cancel()
+	}
+}
