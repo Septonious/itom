@@ -1,0 +1,42 @@
+name: Mark RC10 as the first field-ready candidate without replacing artifacts
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: [".github/workflows/itom-mailstream-rc10-field-ready.yml"]
+permissions: {contents: write}
+jobs:
+  mark-field-ready:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve the verified release and append user field confirmation
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/releases/tags/v1.1.0-mailstream-rc10" > before.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('before.json').read_text())
+          assert not d['draft'] and d['prerelease'] and d['target_commitish']=='b6d53de7ec97bef2d90582186a8398e409eed283'
+          assert len(d['assets'])==14
+          apk=next(a for a in d['assets'] if a['name']=='ITOM-1.1.0-MAILSTREAM-RC10.apk')
+          assert apk['digest']=='sha256:3cf9c4620712e22f739587f562d850b0a434fe86caf9134b8f71f621272079a3'
+          body=d['body'] or ''
+          if '# RC10 — first field-ready candidate' not in body:
+              body+='\n\n'+Path('archives/1.1.0/FIELD_READY_BASELINE.md').read_text()
+          Path('field-ready-notes.md').write_text(body)
+          PY
+          gh release edit v1.1.0-mailstream-rc10 --title 'ITOM 1.1.0 MAILSTREAM-RC10 — first field-ready candidate' --notes-file field-ready-notes.md
+          gh api "repos/$GH_REPO/releases/tags/v1.1.0-mailstream-rc10" > after.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a,b=[json.loads(Path(n+'.json').read_text()) for n in ('before','after')]
+          def assets(d):return sorted((x['id'],x['name'],x['size'],x['digest']) for x in d['assets'])
+          assert assets(a)==assets(b) and a['target_commitish']==b['target_commitish']
+          assert a['prerelease']==b['prerelease'] and not b['draft']
+          print('First field-ready designation applied; all 14 original assets and source target unchanged.')
+          PY

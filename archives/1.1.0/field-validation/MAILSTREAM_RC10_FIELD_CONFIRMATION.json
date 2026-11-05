@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "release": "MAILSTREAM-RC10",
+  "designation": "first_field_ready_candidate",
+  "confirmed_by_user": true,
+  "confirmation_date": "2026-11-05",
+  "source_commit": "b6d53de7ec97bef2d90582186a8398e409eed283",
+  "apk_sha256": "3cf9c4620712e22f739587f562d850b0a434fe86caf9134b8f71f621272079a3",
+  "field_results": [
+    {
+      "download_mbps": 94.6,
+      "upload_mbps": 12.5,
+      "idle_rtt_ms": 213,
+      "download_loaded_rtt_ms": 269,
+      "upload_loaded_rtt_ms": 244,
+      "jitter_ms": 81
+    },
+    {
+      "download_mbps": 105,
+      "upload_mbps": 46.4,
+      "idle_rtt_ms": 161,
+      "download_loaded_rtt_ms": 261,
+      "upload_loaded_rtt_ms": 271,
+      "jitter_ms": 16
+    }
+  ],
+  "client_export": {
+    "phase": "CONNECTED",
+    "active_lines": 30,
+    "total_lines": 30,
+    "rtt_ms": 164,
+    "error_code": null
+  },
+  "remaining_goal": {
+    "upload_mbps": 100
+  },
+  "cleanup_timeouts_observed": true,
+  "universal_production_qualification": false,
+  "original_release_assets_unchanged": true
+}
