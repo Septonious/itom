@@ -1,3 +1,4 @@
+# Ordered pressure/clear versions ignore delayed notifications across account lanes.
 # RC10: retain RC7 controller; stop idle feedback; defer historical work; amortize DATA collection.
 # Require automatic UID control and abandoned-session cleanup, retry recovery and native DNS/TCP isolation.
 # Cold compilation has its own harness budget; each compiled regression still has a ten-second execution bound.

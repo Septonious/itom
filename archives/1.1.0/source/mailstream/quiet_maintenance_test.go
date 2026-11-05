@@ -39,7 +39,7 @@ func TestPeerPressureRequestsRecoveryWithoutForgivingDebt(t *testing.T) {
 	a := &mailAccountState{link: l, config: MailAccount{ID: "a01"}, control: &mailPipe{}, spent: 1 << 20, recovered: 1 << 20}
 	a.maintenance.epoch = id
 	l.accounts = []*mailAccountState{a}
-	packet, err := (frame{kind: frameStoragePressure, data: append([]byte("a01"), 1)}).encode()
+	packet, err := (frame{kind: frameStoragePressure, offset: 1, data: append([]byte("a01"), 1)}).encode()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,11 +54,20 @@ func TestPeerPressureRequestsRecoveryWithoutForgivingDebt(t *testing.T) {
 		t.Fatal("pressure must request audited work, never refund debt")
 	}
 	f.data[len(f.data)-1] = 0
+	f.offset = 2
 	if err = l.applyMaintenance(id, f); err != nil {
 		t.Fatal(err)
 	}
 	if a.historyRequiredLocked() || a.spent != 1<<20 || a.recovered != 1<<20 {
 		t.Fatal("cleared peer pressure must stop urgent history without forgiving debt")
+	}
+	f.offset = 1
+	f.data[len(f.data)-1] = 1
+	if err = l.applyMaintenance(id, f); err != nil {
+		t.Fatal(err)
+	}
+	if a.historyRequiredLocked() {
+		t.Fatal("delayed old pressure notification overrode a newer clear")
 	}
 }
 

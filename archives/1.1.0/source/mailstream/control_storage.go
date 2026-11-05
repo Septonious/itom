@@ -34,6 +34,7 @@ type retentionMaintenance struct {
 	reportUID                                      uint32
 	recovered, recoveryReady, recoverySent         bool
 	peerPressure, pressureSent, advertisedPressure bool
+	pressureVersion, peerPressureVersion           uint64
 	folders                                        []string
 	folderIndex                                    int
 	inventoried                                    bool
@@ -65,6 +66,7 @@ func (a *mailAccountState) beginEpoch(id SessionID) {
 	m.recoverySent = false
 	m.recovered = false
 	m.peerPressure, m.pressureSent, m.advertisedPressure = false, false, false
+	m.pressureVersion, m.peerPressureVersion = 0, 0
 	m.reportEpoch = SessionID{}
 	m.lastIdle = time.Time{}
 }
@@ -95,6 +97,7 @@ func (l *IMAPLink) maintenanceFrames(id SessionID) []frame {
 			m.epoch = id
 			m.recovered = false
 			m.peerPressure, m.pressureSent, m.advertisedPressure = false, false, false
+			m.pressureVersion, m.peerPressureVersion = 0, 0
 			m.reportEpoch = SessionID{}
 		}
 		if a.failed || a.control == nil || m.epoch != id {
@@ -109,7 +112,8 @@ func (l *IMAPLink) maintenanceFrames(id SessionID) []frame {
 			if pressure {
 				value = 1
 			}
-			frames = append(frames, frame{kind: frameStoragePressure, data: append([]byte(a.config.ID), value)})
+			m.pressureVersion++
+			frames = append(frames, frame{kind: frameStoragePressure, offset: m.pressureVersion, data: append([]byte(a.config.ID), value)})
 			m.pressureSent, m.advertisedPressure = true, pressure
 		}
 		if l.client {
@@ -153,7 +157,7 @@ func (l *IMAPLink) applyMaintenance(id SessionID, f frame) error {
 		extra = 8
 	case frameStoragePressure:
 		extra = 1
-		if len(f.data) == 0 || f.data[len(f.data)-1] > 1 {
+		if f.offset == 0 || len(f.data) == 0 || f.data[len(f.data)-1] > 1 {
 			return ErrProtocol
 		}
 	case frameStorageRecovered:
@@ -163,7 +167,7 @@ func (l *IMAPLink) applyMaintenance(id SessionID, f frame) error {
 	default:
 		return ErrProtocol
 	}
-	if f.stream != 0 || f.offset != 0 || len(f.data) <= extra || !validIdentity(string(f.data[:len(f.data)-extra])) {
+	if f.stream != 0 || f.kind != frameStoragePressure && f.offset != 0 || len(f.data) <= extra || !validIdentity(string(f.data[:len(f.data)-extra])) {
 		return ErrProtocol
 	}
 	a := l.account(string(f.data[:len(f.data)-extra]))
@@ -178,6 +182,10 @@ func (l *IMAPLink) applyMaintenance(id SessionID, f frame) error {
 	} // Role attachment can finish after the first authenticated update.
 	switch f.kind {
 	case frameStoragePressure:
+		if f.offset <= m.peerPressureVersion {
+			return nil
+		}
+		m.peerPressureVersion = f.offset
 		m.peerPressure = f.data[len(f.data)-1] == 1
 	case frameControlRead:
 		read, start := readWatermark(f.data[len(f.data)-16:]), readWatermark(f.data[len(f.data)-8:])
