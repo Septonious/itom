@@ -5,8 +5,11 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -22,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	bolt "go.etcd.io/bbolt"
 	"itom.local/core/mailbox"
 	"itom.local/core/servercfg"
 	"itom.local/core/tunnel"
@@ -103,16 +107,18 @@ func (c *clock) stop(duration time.Duration) time.Time {
 }
 
 type result struct {
-	Version                   string `json:"version"`
-	Success                   bool   `json:"success"`
-	Stage                     string `json:"stage"`
-	Error                     string `json:"error,omitempty"`
-	StartupMS                 int64  `json:"startup_ms"`
-	IdleMS, LoadedMS, AfterMS []float64
-	Phases                    []map[string]any
-	Provider                  any
-	Diagnostics               json.RawMessage `json:"diagnostics,omitempty"`
-	Targets                   map[string]bool `json:"targets"`
+	RecoveryCompletedBeforePhase int    `json:"recovery_completed_before_phase,omitempty"`
+	InitialRecoveredClientBytes  int64  `json:"initial_recovered_client_bytes,omitempty"`
+	Version                      string `json:"version"`
+	Success                      bool   `json:"success"`
+	Stage                        string `json:"stage"`
+	Error                        string `json:"error,omitempty"`
+	StartupMS                    int64  `json:"startup_ms"`
+	IdleMS, LoadedMS, AfterMS    []float64
+	Phases                       []map[string]any
+	Provider                     any
+	Diagnostics                  json.RawMessage `json:"diagnostics,omitempty"`
+	Targets                      map[string]bool `json:"targets"`
 }
 
 func main() {
@@ -127,6 +133,7 @@ func run() (err error) {
 	state := flag.String("state", "", "private state directory")
 	label := flag.String("label", "", "immutable source label")
 	duration := flag.Duration("duration", 12*time.Second, "application send duration per phase")
+	recoveredMiB := flag.Int("recovered-client-mib", 0, "conservative crash-retention debt per client account, seeded only in generated fixture state")
 	cycles := flag.Int("cycles", 1, "complete speedtests in the same VPN session")
 	streams := flag.Int("streams", 1, "simultaneous streams per direction")
 	duplex := flag.Bool("duplex", false, "simultaneous upload and download")
@@ -136,7 +143,7 @@ func run() (err error) {
 	postProbes := flag.Int("post-probes", 12, "small HTTPS messages after load")
 	cpu := flag.String("cpu", "", "CPU profile")
 	flag.Parse()
-	if *cycles < 1 || *cycles > 5 {
+	if *recoveredMiB < 0 || *recoveredMiB > 64 || *cycles < 1 || *cycles > 5 {
 		return errors.New("cycles must be 1..5")
 	}
 	if *cpu != "" {
@@ -183,7 +190,11 @@ func run() (err error) {
 			_ = json.NewDecoder(response.Body).Decode(&r.Provider)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*(*duration)*time.Duration(*cycles)+90*time.Second)
+	budget := 2*(*duration)*time.Duration(*cycles) + 90*time.Second
+	if *recoveredMiB > 0 {
+		budget += 60*time.Second + 2*(*duration)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
 	cert, err := tls.LoadX509KeyPair(p.Root, p.Key)
 	if err != nil {
@@ -286,6 +297,15 @@ func run() (err error) {
 	profile := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: cfg.Server, Provider: cfg.Provider, User: user, Accounts: append([]servercfg.Account(nil), cfg.Accounts...), Transport: cfg.Transport}
 	for i := range profile.Accounts {
 		profile.Accounts[i].Mail.Port = p.ClientPort
+	}
+	if *recoveredMiB > 0 {
+		if *label != "candidate" {
+			return errors.New("recovered debt fixture is candidate-only")
+		}
+		if err = seedRecoveredClient(filepath.Join(*state, "client"), profile, *recoveredMiB); err != nil {
+			return err
+		}
+		r.InitialRecoveredClientBytes = int64(*recoveredMiB) * (1 << 20) * int64(len(profile.Accounts))
 	}
 	r.Stage = "startup"
 	started := time.Now()
@@ -547,6 +567,45 @@ func run() (err error) {
 			return err
 		}
 	}
+	if *recoveredMiB > 0 {
+		r.Stage = "recovery_completion"
+		stop := time.Now().Add(60 * time.Second)
+		for {
+			var snapshot struct {
+				Mail struct {
+					Recovered int64 `json:"recovered_retention_bytes"`
+				}
+			}
+			if e := json.Unmarshal([]byte(client.Diagnostics()), &snapshot); e != nil {
+				return e
+			}
+			if snapshot.Mail.Recovered == 0 {
+				break
+			}
+			if time.Now().After(stop) {
+				return errors.New("old retention debt did not reconcile within bounded post-load recovery")
+			}
+			ms, e := ping()
+			if e != nil {
+				return e
+			}
+			r.AfterMS = append(r.AfterMS, ms)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(500 * time.Millisecond):
+			}
+		}
+		// Retain all cold-start measurements, then verify useful bandwidth returns
+		// after production has audited and released the old reservation.
+		r.RecoveryCompletedBeforePhase = len(r.Phases)
+		if err = phase(true, false); err != nil {
+			return err
+		}
+		if err = phase(false, true); err != nil {
+			return err
+		}
+	}
 	r.Stage = "post_load"
 	// A pre-existing chat stream alone cannot prove that new browser/TLS
 	// connections still work after the speedtest resets its bulk streams.
@@ -649,4 +708,42 @@ func targets(r result) map[string]bool {
 		}
 	}
 	return t
+}
+
+// Conservative crash debt can exceed the surviving message bytes. The generated
+// provider independently seeds retained controls/history; only production audited
+// recovery can release this old reservation. No running ledger is edited.
+func seedRecoveredClient(dir string, p servercfg.Profile, mib int) error {
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+	b := append(append([]byte("ITOM-mailstream-profile\x00"), p.Server[:]...), []byte("\x00"+p.User.ID)...)
+	h := sha256.Sum256(b)
+	identity := hex.EncodeToString(h[:16])
+	path := filepath.Join(dir, "mailstream-"+identity+"-c2s.db")
+	if _, err := os.Lstat(path); !os.IsNotExist(err) {
+		return errors.New("fixture ledger must not already exist")
+	}
+	db, err := bolt.Open(path, 0600, nil)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	return db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucket([]byte("mailstream-retention-v1"))
+		if err != nil {
+			return err
+		}
+		if err = bucket.Put([]byte("binding"), []byte(identity+"/c2s")); err != nil {
+			return err
+		}
+		for _, account := range p.Accounts {
+			name := net.JoinHostPort(strings.ToLower(account.Mail.Host), strconv.Itoa(account.Mail.Port)) + "\x00" + strings.ToLower(account.Mail.Username)
+			key := sha256.Sum256([]byte(name))
+			if err = bucket.Put([]byte("account/"+hex.EncodeToString(key[:])), binary.BigEndian.AppendUint64(nil, uint64(mib)*(1<<20))); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

@@ -10,7 +10,7 @@ if a.require_goal:assert d['targets']['full_phase_100mbps']
 diag=d['diagnostics']
 assert not diag['Session']['closed'] and diag['Mail']['failed_accounts']==0
 assert diag['Client']['ActiveLines']==diag['Client']['TotalLines']==30
-assert d['Provider']['connection_rejections']==0 and d['Provider']['commands']['MAX_STORE_ROWS']<=128
+assert d['Provider']['connection_rejections']==0 and d['Provider']['commands']['MAX_STORE_ROWS']<=256
 assert diag['Mail']['retired_segments']>0
 assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
 server=[]

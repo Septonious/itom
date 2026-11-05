@@ -80,7 +80,7 @@ func nonexistent(e error) bool {
 // A collection turn owns at most one bounded prefix. Provider mutation service
 // time need not resemble NOOP latency; a busy folder must not turn every retry
 // into the same unbounded STORE. Only audited UIDs advance the credit fence.
-const collectionPageSize = 128
+const collectionPageSize = 256
 const collectionTimeout = 8 * time.Second
 
 func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool) (uidWatermark, uint64, bool, error) {
@@ -291,8 +291,22 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	a.mu.Unlock()
 	eligibleIn := cursor.Validity != 0 && (retry == l.controlFolder(false) || retry == "" && (cursor.UID-cin.UID >= controlBatch || idle && cursor.UID > cin.UID || recovering && !covers(cin, start) && start.Validity != 0))
 	eligibleOut := remote.Validity != 0 && (retry == l.controlFolder(true) || retry == "" && (remote.UID-cout.UID >= controlBatch || idle && remote.UID > cout.UID || recovering && !covers(cout, boundary)))
+	inputTarget, outputTarget := cursor, remote
+	if recovering && !idle {
+		// Finish the frozen pre-session scope before chasing live control tails.
+		// An authenticated consumption watermark remains the deletion ceiling.
+		eligibleIn = start.Validity != 0 && cursor.Validity == start.Validity && !covers(cin, start) && (cursor.Validity != cin.Validity || cursor.UID > cin.UID)
+		eligibleOut = boundary.Validity != 0 && remote.Validity == boundary.Validity && !covers(cout, boundary) && (remote.Validity != cout.Validity || remote.UID > cout.UID)
+		if eligibleIn {
+			inputTarget.UID = min(cursor.UID, start.UID)
+		}
+		if eligibleOut {
+			outputTarget.UID = min(remote.UID, boundary.UID)
+		}
+	}
+
 	if eligibleIn && (!eligibleOut || !preferOut || retry == l.controlFolder(false)) {
-		proof, n, _, e := p.collectPrefix(c, l.controlFolder(false), cursor, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(false), inputTarget, false)
 		if e != nil {
 			return l.controlFolder(false), e
 		}
@@ -305,7 +319,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return l.controlFolder(false), nil
 	}
 	if eligibleOut {
-		proof, n, _, e := p.collectPrefix(c, l.controlFolder(true), remote, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(true), outputTarget, false)
 		if e != nil {
 			return l.controlFolder(true), e
 		}
@@ -371,7 +385,20 @@ func (l *IMAPLink) maintainRetention() {
 		case <-tick.C:
 		}
 		a := l.accounts[next%len(l.accounts)]
-		next++
+		preferred := l.reclaimer.recoveryCandidate(l)
+		if preferred != nil {
+			preferred.mu.Lock()
+			due := !preferred.maintenance.pending && time.Since(preferred.maintenance.lastAttempt) >= 500*time.Millisecond
+			preferred.mu.Unlock()
+			if !due {
+				preferred = nil
+			}
+		}
+		if preferred != nil {
+			a = preferred
+		} else {
+			next++
+		}
 		l.mu.Lock()
 		id := l.attached
 		l.mu.Unlock()
@@ -438,6 +465,10 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 	timely := stop()
 	if e == nil && timely {
 		c.completed(a, folder)
+		a.mu.Lock()
+		continuing := a.historyRequiredLocked() && !a.maintenance.recoveryReady
+		a.mu.Unlock()
+		c.preferRecovery(a, continuing && folder != "")
 		return
 	}
 	if a.ctx.Err() != nil || errors.Is(ctx.Err(), context.Canceled) {
@@ -504,6 +535,10 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	timely := stop() && drained
 	if e == nil && timely {
 		c.completed(a, folder)
+		a.mu.Lock()
+		continuing := a.historyRequiredLocked() && !a.maintenance.recoveryReady
+		a.mu.Unlock()
+		c.preferRecovery(a, continuing && folder != "")
 		return
 	}
 	if leased && ctx.Err() == nil && !a.parking.Load() {

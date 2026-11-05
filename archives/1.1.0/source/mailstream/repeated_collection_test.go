@@ -17,11 +17,11 @@ func TestCollectionPagesPreserveUnconsumedControlTail(t *testing.T) {
 	}
 	defer p.close()
 	folder := "itom3-paged-control-v7-c2s"
-	r := seedCollectionFolder(t, p, folder, 300)
+	r := seedCollectionFolder(t, p, folder, 600)
 	c := NewReclamationCoordinator()
-	target := uidWatermark{r.validity, 220}
+	target := uidWatermark{r.validity, 400}
 	first, n, done, err := p.collectPrefix(c, folder, target, false)
-	if err != nil || done || n != 128 || first.UID != 128 {
+	if err != nil || done || n != 256 || first.UID != 256 {
 		t.Fatalf("first bounded proof: %+v count=%d done=%v err=%v", first, n, done, err)
 	}
 	cmd, err := p.startAppend(folder, []byte("new unconsumed control"))
@@ -32,11 +32,11 @@ func TestCollectionPagesPreserveUnconsumedControlTail(t *testing.T) {
 		t.Fatal(err)
 	}
 	second, n, done, err := p.collectPrefix(c, folder, target, false)
-	if err != nil || !done || n != 92 || second != target {
+	if err != nil || !done || n != 144 || second != target {
 		t.Fatalf("consumption fence: %+v count=%d done=%v err=%v", second, n, done, err)
 	}
-	remaining, err := p.client.Fetch(imap.UIDSet{{Start: 221, Stop: 301}}, &imap.FetchOptions{UID: true}).Collect()
-	if err != nil || len(remaining) != 81 {
+	remaining, err := p.client.Fetch(imap.UIDSet{{Start: 401, Stop: 601}}, &imap.FetchOptions{UID: true}).Collect()
+	if err != nil || len(remaining) != 201 {
 		t.Fatalf("future controls were lost: count=%d err=%v", len(remaining), err)
 	}
 }
@@ -51,8 +51,8 @@ func TestAbandonedFolderNeedsAllPagesBeforeEmptyProof(t *testing.T) {
 	}
 	defer p.close()
 	folder := "itom3-paged-old-data"
-	seedCollectionFolder(t, p, folder, 300)
-	for i, want := range []uint64{128, 128, 44} {
+	seedCollectionFolder(t, p, folder, 600)
+	for i, want := range []uint64{256, 256, 88} {
 		_, n, done, e := p.collectPrefix(NewReclamationCoordinator(), folder, uidWatermark{}, true)
 		if e != nil || n != want || done != (i == 2) {
 			t.Fatalf("page%d count=%d done=%v err=%v", i, n, done, e)

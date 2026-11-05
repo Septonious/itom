@@ -1,8 +1,6 @@
 name: Qualify frozen MAILSTREAM-RC2 on a constrained mobile link
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc2-qualification.yml", "archives/1.1.0/qualification/compare.py"]
+  workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
   weak-link:

@@ -8,10 +8,14 @@ the next run fell to 69.4/11.2 Mbps. Nine client accounts approached their physi
 retention caps while nine server accounts reported cleanup timeouts. Their mail
 carriers stayed connected. The current change targets storage reuse after load.
 
-Control and historical cleanup now inventories at most 128 sequence positions
+Control and historical cleanup now inventories at most 256 sequence positions
 per turn and mutates only UIDs within the authenticated consumed prefix. Audited
 partial proofs advance control credit; historical folders advance only when all
-pages prove emptiness. A live unread tail is preserved. STORE is drained to tagged
+pages prove emptiness. A live unread tail is preserved. Active recovery finishes frozen pre-session
+control boundaries rather than chasing a growing live tail. A recovery owner
+receives at most two preferred turns before an ordinary FIFO collection turn;
+its ready actor is revisited promptly. Idle cleanup still sweeps the full quiet
+scope after disconnect. STORE is drained to tagged
 completion before EXPUNGE, then fresh SELECT verifies the deletion. No unknown
 outcome is refunded. All physical retention and protocol caps remain unchanged.
 
@@ -28,6 +32,11 @@ Established bulk bursts may coalesce for up to eight milliseconds, scaled by
 APPEND completion time, to fill existing bounded containers. Isolated small
 writes and priority control bypass this timer. Queue, MIME and flight limits
 remain unchanged.
+
+A persisted 51 MiB/account crash reservation reproduces approximately 535 MB
+of initial debt. Cold-start transfers and their performance remain recorded;
+after production audits clear that debt, another upload/download pair verifies
+that bandwidth returns. No fixture modifies a running ledger or grants credit.
 
 Tests cover unread controls, partial historical deletion, slow provider mutations,
 early EXPUNGE bursts, repeated transfers with retained controls and per-message

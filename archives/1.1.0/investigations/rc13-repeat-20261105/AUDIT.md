@@ -23,7 +23,7 @@ pipeline defect or an exact provider mutation duration.
 The implementation gave an entire inventory/STORE/EXPUNGE/audit only two seconds,
 and attempted the full consumed control prefix at once. A folder with roughly
 1,000–1,500 controls repeatedly retries the same large operation after abort.
-The candidate inventories at most 128 sequence positions, deletes only UIDs
+The candidate inventories at most 256 sequence positions, deletes only UIDs
 within the authenticated consumed prefix, and audits that bounded prefix before
 advancing credit. Historical folders advance only after all pages prove emptiness.
 The global mutation lease and all physical byte caps remain unchanged.
@@ -43,3 +43,20 @@ regression. The provider model adds per-row mutation cost, independent of RTT
 and APPEND cost, plus repeated complete speedtests with retained control history.
 These model costs are explicit stress hypotheses; real provider behavior still
 requires field confirmation. Raw account captures remain private.
+
+The first paged prototype kept uploads near 98–100 Mbps with fresh credit, but
+a new persisted 51 MiB/account fixture reproduced upload timeouts with about
+535 MB of old debt. A first recovery preference completed transfers but left
+320.9 MB unreconciled after three runs; prompt scheduling reduced that to one
+remaining account before the bounded post-load check. These failures remain
+recorded. The candidate uses 256-row pages to reduce metadata round trips,
+finishes frozen pre-session boundaries with bounded preference, and preserves
+full quiet-scope collection after disconnect. The cold measurements are retained
+separately from a final bandwidth pair after audited old-debt recovery.
+
+The previous safety gate also exposed a test checking for quarantine before the
+new eight-second deadline elapsed. It now waits within a twelve-second test
+bound for that same circuit-breaker requirement. A private shortened diagnostic
+fixture caught an active-scope boundary incorrectly constraining idle collection;
+the production idle path and a dedicated regression were corrected. The normal
+full-ledger and cleanup-fault lifecycle cohort then passed in 73.9 seconds.

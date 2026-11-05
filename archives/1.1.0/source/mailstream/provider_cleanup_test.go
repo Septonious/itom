@@ -184,6 +184,9 @@ func TestDownloadUploadAndReconnectDespiteProviderCleanupFaults(t *testing.T) {
 				t.Fatal("delivery or housekeeping attempted CLOSE")
 			}
 			if blockBase {
+				deadline, stopDeadline := context.WithTimeout(ctx, 12*time.Second)
+				defer stopDeadline()
+				waitRetention(t, deadline, func() bool { return server.Snapshot().Reclamation.Paused }, "stalled cleanup did not reach its bounded timeout")
 				f.mu.Lock()
 				owners := len(f.owners)
 				f.mu.Unlock()

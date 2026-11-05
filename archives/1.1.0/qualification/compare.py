@@ -46,6 +46,7 @@ def main():
     parser.add_argument('--client-download-mbps',type=int,default=0)
     parser.add_argument('--existing-create-stall-ms',type=int,default=0)
     parser.add_argument('--startup-select-refusals',type=int,default=0)
+    parser.add_argument('--recovered-client-mib',type=int,default=0)
     parser.add_argument('--mutation-row-cost-ms',type=int,default=0)
     parser.add_argument('--append-service-ms',type=int,default=0)
     parser.add_argument('--reject-selected-status',action='store_true')
@@ -63,6 +64,7 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
+    if not 0<=args.recovered_client_mib<=64: parser.error('recovered debt must be 0..64 MiB per account')
     if not 0<=args.mutation_row_cost_ms<=20: parser.error('mutation row cost must be 0..20 ms')
     if not 0<=args.append_service_ms<=1000: parser.error("append service must be 0..1000 ms")
     if args.client_upload_mbps<0 or args.client_download_mbps<0 or (args.client_upload_mbps==0)!=(args.client_download_mbps==0) or not 0<=args.existing_create_stall_ms<=30000 or not 0<=args.startup_select_refusals<=8:
@@ -95,7 +97,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'mutation_row_cost_ms':args.mutation_row_cost_ms,'append_service_ms':args.append_service_ms,'reject_selected_status':args.reject_selected_status,'client_upload_mbps':args.client_upload_mbps,'client_download_mbps':args.client_download_mbps,'existing_create_stall_ms':args.existing_create_stall_ms,'startup_select_refusals':args.startup_select_refusals,'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
+    manifest = {'recovered_client_mib':args.recovered_client_mib,'mutation_row_cost_ms':args.mutation_row_cost_ms,'append_service_ms':args.append_service_ms,'reject_selected_status':args.reject_selected_status,'client_upload_mbps':args.client_upload_mbps,'client_download_mbps':args.client_download_mbps,'existing_create_stall_ms':args.existing_create_stall_ms,'startup_select_refusals':args.startup_select_refusals,'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -170,7 +172,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                     child_env = dict(env, SSL_CERT_FILE=info['root'])
                     command = [str(work/(label+'-worker')), '-provider', str(private/'provider.json'),
                                '-out', str(output/(label+'.json')), '-state', str(work/(label+'-state')),
-                               '-label', label, '-duration', args.duration, '-streams', str(args.streams), '-cycles', str(args.cycles),
+                               '-label', label,'-recovered-client-mib',str(args.recovered_client_mib), '-duration', args.duration, '-streams', str(args.streams), '-cycles', str(args.cycles),
                                '-cancel-download-after', args.cancel_download_after,
                                '-idle-observe',args.idle_observe,'-idle-probes', str(args.idle_probes), '-post-probes', str(args.post_probes),
                                '-cpu', str(output/(label+'.pprof'))]
@@ -179,7 +181,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                     started = time.monotonic()
                     with (output/(label+'-worker.log')).open('w') as log:
                         try:
-                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=float(args.idle_observe.removesuffix('s'))+max(150,2*float(args.duration.removesuffix('s'))*args.cycles+120))
+                            result = subprocess.run(command, env=child_env, stdout=log, stderr=subprocess.STDOUT, timeout=float(args.idle_observe.removesuffix('s'))+max(150,2*float(args.duration.removesuffix('s'))*args.cycles+120)+(60+2*float(args.duration.removesuffix('s')) if args.recovered_client_mib else 0))
                             status = result.returncode
                         except subprocess.TimeoutExpired:
                             status = 'timeout'

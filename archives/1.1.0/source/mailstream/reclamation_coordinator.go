@@ -11,15 +11,18 @@ import (
 // further collection on the same physical account, not independent accounts.
 // A timeout never grants storage credit. Only the later physical audit does.
 type ReclamationCoordinator struct {
-	mu           sync.Mutex
-	state        ReclamationSnapshot
-	active       bool
-	waiting      []*mailAccountState
-	quarantines  map[string]*reclamationFailure
-	sessions     map[*IMAPLink]bool
-	quietSince   time.Time
-	idleStop     context.CancelFunc
-	stageStarted time.Time
+	mu            sync.Mutex
+	state         ReclamationSnapshot
+	active        bool
+	waiting       []*mailAccountState
+	quarantines   map[string]*reclamationFailure
+	sessions      map[*IMAPLink]bool
+	quietSince    time.Time
+	idleStop      context.CancelFunc
+	stageStarted  time.Time
+	recoveryOwner *mailAccountState
+	recoveryUntil time.Time
+	recoveryTurns int
 }
 type reclamationFailure struct {
 	owner                 *mailAccountState
@@ -96,16 +99,88 @@ func (c *ReclamationCoordinator) acquire(a *mailAccountState) bool {
 	if !found {
 		c.waiting = append(c.waiting, a)
 	}
-	for len(c.waiting) > 0 && (c.waiting[0].ctx.Err() != nil || c.waiting[0].parking.Load() || !c.permittedLocked(c.waiting[0], "")) {
-		c.waiting = c.waiting[1:]
+	live := c.waiting[:0]
+	for _, owner := range c.waiting {
+		if owner.ctx.Err() == nil && !owner.parking.Load() && c.permittedLocked(owner, "") {
+			live = append(live, owner)
+		}
 	}
-	if c.active || len(c.waiting) == 0 || c.waiting[0] != a {
+	c.waiting = live
+
+	if c.active || len(c.waiting) == 0 {
 		return false
 	}
-	c.waiting = c.waiting[1:]
+	preferred := c.recoveryOwner
+	if preferred != nil && (time.Now().After(c.recoveryUntil) || preferred.ctx.Err() != nil || preferred.parking.Load() || !c.permittedLocked(preferred, "")) {
+		c.recoveryOwner = nil
+		preferred = nil
+		c.recoveryTurns = 0
+	}
+	chosen := 0
+	if preferred != nil {
+		if c.recoveryTurns < 2 {
+			chosen = -1
+			for i, owner := range c.waiting {
+				if owner == preferred {
+					chosen = i
+					break
+				}
+			}
+			// A bounded preference lets one old reservation become reusable sooner.
+			// If its actor is busy, expiry permits ordinary FIFO work to continue.
+			if chosen < 0 {
+				return false
+			}
+		} else {
+			for i, owner := range c.waiting {
+				if owner != preferred {
+					chosen = i
+					break
+				}
+			}
+		}
+	}
+	if c.waiting[chosen] != a {
+		return false
+	}
+	c.waiting = append(c.waiting[:chosen], c.waiting[chosen+1:]...)
+	if preferred != nil && a == preferred {
+		c.recoveryTurns++
+	} else {
+		c.recoveryTurns = 0
+	}
 	c.active = true
 	return true
 }
+func (c *ReclamationCoordinator) preferRecovery(a *mailAccountState, continuing bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !continuing {
+		if c.recoveryOwner == a {
+			c.recoveryOwner = nil
+			c.recoveryTurns = 0
+		}
+		return
+	}
+	if c.recoveryOwner == nil || c.recoveryOwner == a {
+		c.recoveryOwner = a
+		c.recoveryUntil = time.Now().Add(2500 * time.Millisecond)
+	}
+}
+
+// Revisit a ready recovery owner promptly instead of waiting a complete
+// account round. The mutation lease still admits ordinary FIFO work after two
+// preferred turns; this helper never acquires a writer or a mutation lease.
+func (c *ReclamationCoordinator) recoveryCandidate(l *IMAPLink) *mailAccountState {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	a := c.recoveryOwner
+	if c.active || a == nil || a.link != l || time.Now().After(c.recoveryUntil) || a.ctx.Err() != nil || a.parking.Load() || !c.permittedLocked(a, "") {
+		return nil
+	}
+	return a
+}
+
 func (c *ReclamationCoordinator) release() { c.mu.Lock(); c.active = false; c.mu.Unlock() }
 func (c *ReclamationCoordinator) stage(stage string) {
 	c.mu.Lock()
@@ -131,6 +206,10 @@ func (c *ReclamationCoordinator) pause(reason string, a *mailAccountState) {
 	if f == nil {
 		f = &reclamationFailure{}
 		c.quarantines[key] = f
+	}
+	if c.recoveryOwner == a {
+		c.recoveryOwner = nil
+		c.recoveryTurns = 0
 	}
 	f.owner, f.folder, f.stage, f.reason = a, c.state.Folder, c.state.Stage, reason
 	f.failures = min(f.failures+1, 6)
