@@ -67,7 +67,7 @@ type Session struct {
 	changed         chan struct{}
 	wake            chan struct{}
 	input           chan []byte
-	receipts        chan uint64
+	receipts        chan receiptRequest
 	receiptRetries  atomic.Uint64
 	openRefusals    atomic.Uint64
 	openWaits       atomic.Uint64
@@ -87,7 +87,7 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 	if dial == nil {
 		dial = publicDial
 	}
-	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan uint64, 1024), pings: map[uint64]chan struct{}{}}
+	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan receiptRequest, 1024), pings: map[uint64]chan struct{}{}}
 	s.delivery.adaptive = !server // Upload-only; preserve RC10 download control.
 	s.closedStreams = map[uint32]*terminalStream{}
 	s.lastInbound.Store(time.Now().UnixNano())
@@ -247,6 +247,11 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 	}
 }
 
+type receiptRequest struct {
+	sequence uint64
+	bulk     bool
+}
+
 func (s *Session) receiptLoop() {
 	timer := time.NewTimer(time.Hour)
 	if !timer.Stop() {
@@ -254,6 +259,7 @@ func (s *Session) receiptLoop() {
 	}
 	defer timer.Stop()
 	batch := make([]uint64, 0, 32)
+	var deadline time.Time
 	var wire []byte
 	flush := func() error {
 		if len(batch) == 0 {
@@ -295,11 +301,22 @@ func (s *Session) receiptLoop() {
 		select {
 		case <-s.ctx.Done():
 			return
-		case seq := <-input:
+		case request := <-input:
+			now := time.Now()
 			if len(batch) == 0 {
-				timer.Reset(2 * time.Millisecond)
+				delay := 2 * time.Millisecond
+				if request.bulk {
+					delay = 8 * time.Millisecond
+				}
+				deadline = now.Add(delay)
+				timer.Reset(delay)
+			} else if !request.bulk {
+				// Interactive/control receipts preempt a bulk-only batch.
+				// Bulk still fits the unchanged32-sequence wire format.
+				deadline = minTime(deadline, now.Add(2*time.Millisecond))
+				timer.Reset(max(0, time.Until(deadline)))
 			}
-			batch = append(batch, seq)
+			batch = append(batch, request.sequence)
 			if len(batch) == 32 {
 				if !timer.Stop() {
 					select {
@@ -532,7 +549,7 @@ func (s *Session) receiveLoop() {
 				s.highest = max(s.highest, seq)
 			}
 			select {
-			case s.receipts <- seq:
+			case s.receipts <- receiptRequest{sequence: seq, bulk: f.kind == frameData && len(f.data) > 4096}:
 			case <-s.ctx.Done():
 				return
 			}
@@ -798,4 +815,11 @@ func (s *Session) Snapshot() Snapshot {
 		snapshot.Failure = s.err.Error()
 	}
 	return snapshot
+}
+
+func minTime(a, b time.Time) time.Time {
+	if a.Before(b) {
+		return a
+	}
+	return b
 }

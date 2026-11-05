@@ -882,7 +882,7 @@ func (a *mailAccountState) run() {
 
 		}
 		// Control and the first isolated DATA publication never wait. Only
-		// an established bulk burst may spend one millisecond filling an
+		// an established bulk burst may spend a few bounded milliseconds filling an
 		// already-bounded MIME container, amortizing provider APPEND cost.
 		packets := [][]byte{work.body}
 		queuedCharge := work.charge
@@ -894,7 +894,11 @@ func (a *mailAccountState) run() {
 		var coalesce *time.Timer
 		var coalesced <-chan time.Time
 		if !work.control && inFlight > 0 && time.Since(lastBulkWrite) < 250*time.Millisecond {
-			coalesce = time.NewTimer(time.Millisecond)
+			// Spend at most four milliseconds on an established bulk
+			// container when tagged APPEND service is expensive. Small
+			// control and the first publication bypass this timer.
+			delay := min(4*time.Millisecond, max(time.Millisecond, time.Duration(a.appendLatency.Load())/32))
+			coalesce = time.NewTimer(delay)
 			coalesced = coalesce.C
 		}
 	collect:

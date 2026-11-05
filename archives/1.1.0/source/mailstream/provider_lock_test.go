@@ -101,7 +101,8 @@ func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
 	}
 	done := make(chan error, 1)
 	go func() { done <- Serve(ctx, server, "deletion-lock", key, (&net.Dialer{}).DialContext, nil) }()
-	payload := make([]byte, 96<<20)
+	// Larger bounded containers still need to cross two logical turns per account.
+	payload := make([]byte, 144<<20)
 	if _, err = rand.Read(payload); err != nil {
 		t.Fatal(err)
 	}
