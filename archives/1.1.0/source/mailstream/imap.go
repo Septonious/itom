@@ -841,55 +841,61 @@ func (a *mailAccountState) run() {
 			}
 		}
 		var work mailWork
-		select {
-		case err := <-completed:
-			inFlight--
-			if err != nil && !a.parking.Load() {
-				return
-			}
-			continue
-		case work = <-a.fast:
-		default:
-			if carry != nil {
-				work = *carry
-				carry = nil
-			} else {
-				select {
-				case <-a.ctx.Done():
+		if carry != nil && carry.control {
+			// A control packet carried across a batch boundary is already
+			// accepted. New feedback must not overtake it indefinitely.
+			work, carry = *carry, nil
+		} else {
+			select {
+			case err := <-completed:
+				inFlight--
+				if err != nil && !a.parking.Load() {
 					return
-				case op := <-a.writerOps:
-					operation = &op
-					continue
-				case <-keepalive.C:
-					if writer != nil && inFlight == 0 && time.Since(lastWrite) >= 30*time.Second {
-						// An unselected APPEND connection cannot use IDLE.
-						// Keep its login alive without blocking the fast queue
-						// while waiting for the tagged NOOP completion.
-						cmd := writer.client.Noop()
-						lastWrite = time.Now()
-						inFlight++
-						appendWait.Add(1)
-						go func() {
-							defer appendWait.Done()
-							err := cmd.Wait()
-							if err != nil && !a.parking.Load() && !a.reclaiming.Load() {
-								a.failedStage("writer_keepalive", err)
-							}
-							select {
-							case completed <- err:
-							case <-a.ctx.Done():
-							}
-						}()
-					}
-					continue
-				case err := <-completed:
-					inFlight--
-					if err != nil && !a.parking.Load() {
+				}
+				continue
+			case work = <-a.fast:
+			default:
+				if carry != nil {
+					work = *carry
+					carry = nil
+				} else {
+					select {
+					case <-a.ctx.Done():
 						return
+					case op := <-a.writerOps:
+						operation = &op
+						continue
+					case <-keepalive.C:
+						if writer != nil && inFlight == 0 && time.Since(lastWrite) >= 30*time.Second {
+							// An unselected APPEND connection cannot use IDLE.
+							// Keep its login alive without blocking the fast queue
+							// while waiting for the tagged NOOP completion.
+							cmd := writer.client.Noop()
+							lastWrite = time.Now()
+							inFlight++
+							appendWait.Add(1)
+							go func() {
+								defer appendWait.Done()
+								err := cmd.Wait()
+								if err != nil && !a.parking.Load() && !a.reclaiming.Load() {
+									a.failedStage("writer_keepalive", err)
+								}
+								select {
+								case completed <- err:
+								case <-a.ctx.Done():
+								}
+							}()
+						}
+						continue
+					case err := <-completed:
+						inFlight--
+						if err != nil && !a.parking.Load() {
+							return
+						}
+						continue
+					case work = <-a.fast:
+					case work = <-a.bulk:
 					}
-					continue
-				case work = <-a.fast:
-				case work = <-a.bulk:
 				}
 			}
 		}
