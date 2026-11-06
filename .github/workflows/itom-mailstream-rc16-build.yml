@@ -3,9 +3,6 @@
 concurrency: {group: itom-mailstream-rc16-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC16 with constrained-link acceptance
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: ["archives/1.1.0/source/**", "archives/1.1.0/qualification/**", ".github/workflows/itom-mailstream-rc16-build.yml"]
   workflow_dispatch:
 permissions: {contents: read}
 env:
