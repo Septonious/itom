@@ -84,6 +84,14 @@ phases change from 55.7/57.4 to 53.9/53.2 Mbps. All transfers complete with
 claim a physical-provider speedup. The final matched build must independently
 repeat the comparison and all existing safety/throughput gates.
 
+The initial fixed-256-KiB pacing prototype is rejected: it lowers ten-second
+MULTI upload phases to 59–79 Mbps in the unrestricted service-cost model.
+A rate-sized burst alone restores download but leaves upload ramp too slow.
+The revised candidate permits the controller's existing fast startup when bulk
+queue delay is low, retaining conservative pacing under queue growth and the
+original interactive drain guard. The unchanged short-transfer gate must pass;
+reducing loaded delay cannot justify accepting a throughput regression.
+
 There is also a substantial idle IMAP-path component: client/server direct
 command timing and mailbox publication/polling differ from a direct VLESS route.
 Pacing targets added queue delay and variation; it does not claim to eliminate
