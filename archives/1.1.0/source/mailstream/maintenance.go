@@ -504,7 +504,7 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 	if !a.borrowWriterForCollection() {
 		return
 	}
-	defer a.reclaiming.Store(false)
+	defer a.returnCollectionWriter()
 	p := *writer
 	interrupt := context.AfterFunc(ctx, func() { p.conn.NetConn().Close(); p.client.Close() })
 	defer interrupt()

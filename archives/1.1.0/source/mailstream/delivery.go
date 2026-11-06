@@ -23,6 +23,8 @@ type deliveryWindow struct {
 	last                   time.Time
 	acked                  int
 	rate                   float64
+	ratePeak               float64
+	ratePeakAt             time.Time
 	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
 	bulkRTT                time.Duration
 	adaptive               bool
@@ -55,6 +57,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		w.limit = initialDeliveryWindow
 		w.bulkRTT = 0
 		w.rateSampleMax = 0
+		w.ratePeak, w.ratePeakAt = 0, time.Time{}
 	}
 	if len(marks) > 0 && !marks[0].sent.IsZero() {
 		m := marks[0]
@@ -99,26 +102,20 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 			rate = min(rate, w.rateSampleMax)
 		}
 		w.rateSampleMax = 0
-		if w.rate == 0 {
-			w.rate = rate
-		} else {
-			w.rate = (w.rate + rate) / 2
+		// A single sparse receipt batch is not a capacity drop. Keep a short
+		// peak of compression-safe delivery samples; expire it promptly when
+		// a genuinely slower path supplies lower samples for a full second.
+		if rate >= w.ratePeak || now.Sub(w.ratePeakAt) >= time.Second {
+			w.ratePeak, w.ratePeakAt = rate, now
 		}
-		// Allow throughput-oriented headroom under load, without admitting
-		// tens of seconds of work merely because receive memory is free.
-		// Bulk headroom follows delivered bandwidth, independently of a tiny
-		// probe's RTT. Half a second remains below the loaded-delay budget.
-		horizon := 500 * time.Millisecond
+		w.rate = w.ratePeak
+		// Use the minimum bulk path RTT plus a finite queue allowance. A
+		// larger queued RTT must never itself increase the flight allowance.
+		horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
 		target := int(w.rate * horizon.Seconds())
-		// A full flight cannot discover a capable path when its bulk receipt
-		// RTT approaches/exceeds the fixed half-second rate horizon. Small
-		// NOOP/control RTTs do not describe this DATA path. Add bounded BDP
-		// headroom only after actual bulk allowance blocking, using delivered
-		// rate and smoothed bulk receipts; do not blindly probe on each ACK.
-		if w.adaptive && w.limited && w.bulkRTT > 250*time.Millisecond {
-			horizon = min(maxBulkDeliveryHorizon, max(horizon, 2*w.bulkRTT))
-			desired := int(w.rate * horizon.Seconds())
-			target = max(target, desired)
+		if w.limited && w.bulkRTT <= w.base+250*time.Millisecond {
+			// ACK-clocked growth discovers capacity within a short transfer.
+			target = max(target, w.allowance()+w.acked)
 		}
 		w.limited = false
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))

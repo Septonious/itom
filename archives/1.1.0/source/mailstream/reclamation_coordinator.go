@@ -14,6 +14,7 @@ type ReclamationCoordinator struct {
 	mu            sync.Mutex
 	state         ReclamationSnapshot
 	active        bool
+	borrowed      map[*mailAccountState]bool
 	waiting       []*mailAccountState
 	quarantines   map[string]*reclamationFailure
 	sessions      map[*IMAPLink]bool

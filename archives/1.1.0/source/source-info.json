@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC14",
-  "revision": "itom-1-1-0-mailstream-rc14",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC14-sources.zip",
+  "release": "MAILSTREAM-RC15",
+  "revision": "itom-1-1-0-mailstream-rc15",
+  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC15-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
   "qualification": "Testing candidate: portable selected-mailbox audits, physical-account cleanup isolation, bounded bulk coalescing and receipt amortization; field sustained 100 Mbps remains unverified",
-  "android_version_name": "1.1.0-mailstream-rc14",
-  "android_version_code": 10139,
+  "android_version_name": "1.1.0-mailstream-rc15",
+  "android_version_code": 10140,
   "android_application_id": "org.itom.client",
   "build_allowed": true,
   "field_ready_baseline": "MAILSTREAM-RC10 source b6d53de7ec97bef2d90582186a8398e409eed283"

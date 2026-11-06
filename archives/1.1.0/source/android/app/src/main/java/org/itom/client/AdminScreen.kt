@@ -297,9 +297,9 @@ private enum class AdminSection(val label: String, val description: String, val 
 }
 
 @Composable private fun AdminCategoryRow(first: AdminSection, second: AdminSection, onSelect: (AdminSection) -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         listOf(first, second).forEach { item ->
-            InfoCard(Modifier.weight(1f), accent = Blue, onClick = { onSelect(item) }) {
+            InfoCard(Modifier.weight(1f).fillMaxHeight(), accent = Blue, onClick = { onSelect(item) }) {
                 AppIcon(item.glyph, Modifier.size(24.dp), Blue)
                 Text(item.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 SmallNote(item.description)

@@ -41,7 +41,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		unqueue(false)
 		return
 	}
-	defer a.reclaiming.Store(false)
+	defer a.returnCollectionWriter()
 	a.link.notify()
 	p := *writer
 	budget := collectionTimeout
@@ -133,9 +133,30 @@ completionsDrained:
 func (a *mailAccountState) borrowWriterForCollection() bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if len(a.fast) != 0 || a.parking.Load() {
+	if len(a.fast) != 0 || a.parking.Load() || a.reclaiming.Load() {
 		return false
 	}
+	c := a.link.reclaimer
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// One writer may drain while another mutates. Other accounts continue
+	// publishing; a shared mutation lease alone did not bound pre-lease drains.
+	if len(c.borrowed) >= 2 {
+		return false
+	}
+	if c.borrowed == nil {
+		c.borrowed = map[*mailAccountState]bool{}
+	}
+	c.borrowed[a] = true
 	a.reclaiming.Store(true)
 	return true
+}
+
+func (a *mailAccountState) returnCollectionWriter() {
+	c := a.link.reclaimer
+	c.mu.Lock()
+	delete(c.borrowed, a)
+	a.reclaiming.Store(false)
+	c.mu.Unlock()
+	a.link.notify()
 }
