@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "release": "MAILSTREAM-RC18",
+  "source_commit": "59f062d5120946185700607af32ce89dd1aafb73",
+  "designation": "first release reliably meeting the throughput and reliability goals",
+  "user_accepted": true,
+  "accepted_on": "2026-11-07",
+  "basis": "User field acceptance, two speedtest screenshots and matched Android/server captures; not a new laboratory certification",
+  "measurements": [
+    {
+      "download_mbps": 109,
+      "upload_mbps": 131,
+      "idle_rtt_ms": 153,
+      "download_loaded_rtt_ms": 313,
+      "upload_loaded_rtt_ms": 334,
+      "jitter_ms": 11
+    },
+    {
+      "download_mbps": 143,
+      "upload_mbps": 144,
+      "idle_rtt_ms": 161,
+      "download_loaded_rtt_ms": 297,
+      "upload_loaded_rtt_ms": 332,
+      "jitter_ms": 16
+    }
+  ],
+  "capture_sha256": {
+    "server": "cb05ef4ec1c834e8465cba07f053037acc99b9cb0f064c228fe7531a5bd66234",
+    "android": "c28103b669978a6e5a202b28f33235f57545bb43c0c1011dd9454fcbc060604d"
+  },
+  "observations": {
+    "accounts": 10,
+    "lanes": 30,
+    "carrier_failures": 0,
+    "dns_failures": 0,
+    "dns_worker_refusals": 0,
+    "tcp_worker_refusals": 0,
+    "dns_cache_hits": 432,
+    "dns_cache_misses": 101,
+    "dns_shared_queries": 3,
+    "minimum_observed_interactive_receipt_rtt_ms": 133,
+    "native_open_failures_cumulative": 111,
+    "native_open_timeouts": 0,
+    "non_dns_udp_blocked_cumulative": 1819
+  },
+  "remaining_work": [
+    "Display sampled per-account rates in diagnostics",
+    "Clarify overlapping account stream usage versus established TCP connections and opening tunnel streams",
+    "Reduce interactive RTT without throughput or stability regressions"
+  ],
+  "gaming_scope": "Current transport forwards TCP and DNS; general UDP gaming traffic is not supported. Sub-100-ms RTT and gaming readiness are not field-verified.",
+  "immutable_history": "RC18 source tag, binaries, signed APK and original build/export reports remain unchanged. RC10 retains the earlier first-field-ready historical milestone."
+}

@@ -1,0 +1,6 @@
+{
+  "release": "MAILSTREAM-RC18",
+  "source_commit": "59f062d5120946185700607af32ce89dd1aafb73",
+  "milestone": "first_reliable_goals_release",
+  "acceptance": "publication/mailstream-rc18/FIELD_ACCEPTANCE.json"
+}
