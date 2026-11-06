@@ -86,3 +86,19 @@ same tests now complete receipt/refund work during blocked IO, preserve concurre
 refunds, add zero disk writes on reuse, cover attempted bytes after crash reopen,
 and persist exact debt on clean close. A crash can conservatively recover up to
 the unchanged physical cap. The old-debt replay therefore remains required.
+
+Source d66775c passed the independent local repeated replay at 116.1/117.3/116.6
+Mbps upload and 148.4/137.8/129.5 Mbps download; maximum idle/post RTT was 260.4 ms
+and loaded RTT 594.1 ms. Hosted repeated testing completed all six transfers at
+117.0/118.6/116.8 Mbps upload and 144.3/129.1/118.4 Mbps download, with 230.8 ms
+maximum idle/post RTT and 603.3 ms loaded RTT. Hosted collection retired 79 client
+and 60 server DATA segments and collected 8,960 controls without quarantine.
+
+The hosted 534,773,760-byte old-debt replay completed all cold transfers and
+audited that debt to zero. Cold upload averages were 29.7/35.6/68.5 Mbps; after
+recovery the final pair reached 119.7 Mbps upload and 125.7 Mbps download. This
+does not claim 100 Mbps during old-debt recovery. The actual candidate server
+binary passed three startup/reconnect rounds each with 10 and 15 accounts;
+manual stop reset its local account ledgers. Twenty targeted race scenarios
+passed, including journal isolation and 64-stream TLS shared-credit integrity.
+Live provider/device performance still requires the next field test.
