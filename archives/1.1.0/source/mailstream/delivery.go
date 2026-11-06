@@ -27,6 +27,7 @@ type deliveryWindow struct {
 	ratePeakAt             time.Time
 	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
 	bulkRTT                time.Duration
+	horizon                time.Duration
 	adaptive               bool
 }
 
@@ -55,7 +56,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
 		w.start, w.acked, w.rate = now, 0, 0
 		w.limit = initialDeliveryWindow
-		w.bulkRTT = 0
+		w.bulkRTT, w.horizon = 0, 0
 		w.rateSampleMax = 0
 		w.ratePeak, w.ratePeakAt = 0, time.Time{}
 	}
@@ -117,9 +118,22 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		}
 		w.rate = w.ratePeak
 		// Use the minimum bulk path RTT plus a finite queue allowance. A
-		// larger queued RTT must never itself increase the flight allowance.
+		// small setup response can have a much faster FETCH/receipt path than
+		// full DATA. When we blocked queued bytes, probe beyond that baseline
+		// using measured delivery rate. Otherwise rate * baseline reinforces
+		// a 512 KiB / bulk-RTT ceiling forever, even on a capable mobile link.
 		horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
+		if w.limited {
+			horizon = max(horizon, min(maxBulkDeliveryHorizon, 2*w.bulkRTT))
+		}
+		w.horizon = horizon
 		target := int(w.rate * horizon.Seconds())
+		if !lowQueue {
+			// Slow/compressed callbacks may permit a rate-based probe, never
+			// an unmeasured extra flight. Grow by at most bytes just delivered;
+			// the independent send/delivery clock still bounds the rate sample.
+			target = min(target, w.allowance()+w.acked)
+		}
 		if lowQueue {
 			// A partially filled publication or sparse receipt sample is not
 			// congestion. Preserve the byte-clocked allowance until queue delay

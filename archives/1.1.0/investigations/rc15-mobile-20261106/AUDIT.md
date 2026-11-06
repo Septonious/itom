@@ -1,0 +1,43 @@
+# RC15 mobile delivery-window audit
+
+The supplied mobile comparison reports ITOM at 4.56/26.4 and 14.1/20.3 Mbps
+(download/upload), against VLESS at 76.1/91.8 Mbps. Idle latency is 273–305 ms
+for ITOM and 50 ms for VLESS. The direct tunnel establishes that the access link
+can perform better; it does not measure the independent mail-provider route.
+Raw exports remain private. Older rotated revisions are excluded below.
+
+All ten accounts and thirty roles remain ready. There are no account failures
+or cleanup quarantines. Receive buffers are almost empty and no retention cap
+is reached. The client's approximately 136 MB of recovered debt stays deferred
+with ample headroom; the server begins with no recovered debt. Cleanup does
+almost no work during the measurements. This is not the earlier housekeeping
+writer-exclusion or physical-capacity failure.
+
+During the first download, the server holds its delivery allowance at 524,288
+bytes, has queued packets and reports flight-limited operation. Bulk receipt RTT
+is approximately 719–1,022 ms, while the minimum retained from setup traffic is
+358 ms. Half a MiB per 0.8–1 second limits delivery to about 4–5 Mbps, matching
+the screenshot. The second transfer briefly grows to about 1.7–2.3 MB, then
+contracts repeatedly. Upload flight is also small for its bulk receipt latency.
+
+RC15 permits byte-clocked growth only below minimum bulk RTT plus 250 ms. Its
+rate target uses that same short baseline. A capable link with slower full-DATA
+FETCH callbacks therefore cannot escape its initial flight: the controller
+measures its own limit, treats bulk callback delay as congestion, and reinforces
+the low rate. A short setup response can establish this baseline even though
+interactive packets themselves are excluded from the estimator.
+
+The candidate allows a rate-based probe when real queued bulk work was blocked
+by the flight allowance. Probe horizon is at most 1.25 seconds, and a slow-RTT
+probe can grow by at most the bytes just acknowledged. Independent send and
+delivery intervals still guard against compressed receipts. Initial flight,
+physical capacity, memory caps, connection count, controls, cleanup and DNS
+policy remain unchanged. The chosen horizon is included in runtime diagnostics.
+
+An independent FIFO/batched-callback regression reproduces the plateau at
+5.1 Mbps on frozen RC15 despite 80 Mbps capacity. The initial controller change
+reaches 78.4 Mbps in the final five seconds of both 20-second transfers. A true
+7 Mbps path delivers 6.9 Mbps with peak allowance approximately 1.1 MB and
+maximum bulk RTT 1.3 seconds. Existing compressed-ACK, short-repeat and slow
+receipt regressions also pass. These controller simulations are not full IMAP
+or real-provider qualification. Full TLS replays and safety checks follow.

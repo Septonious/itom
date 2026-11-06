@@ -64,7 +64,7 @@ func TestApplicationCopyPreservesReplyAfterUploadHalfClose(t *testing.T) {
 	}
 }
 func TestExperimentalCandidateCannotMasqueradeAsStableRelease(t *testing.T) {
-	if !strings.HasSuffix(Version(), "-mailstream-rc15") {
+	if !strings.HasSuffix(Version(), "-mailstream-rc16") {
 		t.Fatal("unfinished rewrite must retain its explicit development identity")
 	}
 }
