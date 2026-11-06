@@ -1,0 +1,94 @@
+name: Export verified RC18 signed testing artifacts
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: ["archives/1.1.0/publication/mailstream-rc18/**", "archives/1.1.0/MAILSTREAM-RC18_TESTING.md", ".github/workflows/itom-mailstream-rc18-artifacts.yml"]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency: {group: itom-mailstream-rc18-artifacts, cancel-in-progress: false}
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_CI_SHA: 59f062d5120946185700607af32ce89dd1aafb73
+      SOURCE_SHA: 59f062d5120946185700607af32ce89dd1aafb73
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require exact source and successful matched builds and acceptance
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_SHA" "$SOURCE_CI_SHA" --no-tags
+          git diff --exit-code "$SOURCE_SHA" "$SOURCE_CI_SHA" -- archives/1.1.0/source
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.0/source
+          gh api "repos/$GH_REPO/actions/runs/42295626432" > "$RUNNER_TEMP/build.json"
+          gh api "repos/$GH_REPO/actions/runs/42295626432/jobs?filter=all&per_page=100" > "$RUNNER_TEMP/jobs.json"
+          gh api "repos/$GH_REPO/actions/runs/42295626062" > "$RUNNER_TEMP/acceptance.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          for name in ('build','acceptance'):
+              run=json.loads((root/(name+'.json')).read_text())
+              assert run['head_sha']==os.environ['SOURCE_SHA' if name=='build' else 'SOURCE_CI_SHA'] and run['status']=='completed' and run['conclusion']=='success'
+          executions=json.loads((root/'jobs.json').read_text())['jobs']
+          latest={}
+          for job in executions:
+              key=(job.get('run_attempt',1),job['id'])
+              prior=latest.get(job['name'])
+              if prior is None or key>(prior.get('run_attempt',1),prior['id']):latest[job['name']]=job
+          jobs=list(latest.values())
+          assert {j['name']for j in jobs}=={'safety','throughput','field-replay','upload-replay','corporate-replay','home-service-replay','repeated-cleanup-replay','recovered-client-replay','short-runs','mobile-replay','linux','android','paged-collection','paced-field-replay'}
+          assert all(j['conclusion']=='success'for j in jobs)
+          PY
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-rc18-linux-*", merge-multiple: true, run-id: 42295626432, github-token: "${{ github.token }}", path: release-assets}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-android-evidence, run-id: 42295626432, github-token: "${{ github.token }}", path: android-evidence}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-rc18-apk-part*", merge-multiple: true, run-id: 42295626432, github-token: "${{ github.token }}", path: apk-parts}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-signing-tools, run-id: 42295626432, github-token: "${{ github.token }}", path: signing-tools}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-safety, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-safety}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-throughput, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-throughput}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-field-replay, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-field}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-upload-replay, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-upload}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-corporate-replay, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-corporate}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-home-service, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-home}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-repeated-cleanup, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-repeated}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-recovered-client, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-recovered/recovered-client}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-short-runs, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-short}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-mobile-replay, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-mobile}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-paged-collection, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-paged}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-rc18-paced-field, run-id: 42295626432, github-token: "${{ github.token }}", path: evidence/hosted-paced}
+      - name: Verify source fingerprints, all model gates, signature and exact export bytes
+        run: python3 archives/1.1.0/publication/mailstream-rc18/verify_export.py
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-MAILSTREAM-RC18-signed-Android, path: release-assets/ITOM-1.1.0-MAILSTREAM-RC18.apk, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-MAILSTREAM-RC18-server-amd64, path: release-assets/ITOM-1.1.0-MAILSTREAM-RC18-linux-amd64.bin, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-MAILSTREAM-RC18-server-arm64, path: release-assets/ITOM-1.1.0-MAILSTREAM-RC18-linux-arm64.bin, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-MAILSTREAM-RC18-sources-and-evidence
+          path: |
+            release-assets/*
+            !release-assets/*.apk
+            !release-assets/*.bin
+          if-no-files-found: error
+          retention-days: 90
