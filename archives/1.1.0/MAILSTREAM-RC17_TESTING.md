@@ -13,6 +13,9 @@ storage charge remains until an empty-folder audit completes. Foreign UIDs,
 changed validity and unknown outcomes never authorize a refund. Historical and
 consumed-prefix collection use the same byte limit and ownership fences.
 
+Housekeeping diagnostics capture one ownership instant rather than mixing flags
+from different times; the existing two-writer admission limit stays unchanged.
+
 Matched normal/race, SDK, pinned-fork, Android, restart, weak-link, mobile,
 corporate, short-transfer and repeated-cleanup checks remain mandatory. An
 additional fault model refuses deletions over four MiB and requires automatic

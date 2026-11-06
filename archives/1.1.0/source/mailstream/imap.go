@@ -1184,6 +1184,14 @@ type MailAccountSnapshot struct {
 
 func (l *IMAPLink) Snapshot() MailSnapshot {
 	s := MailSnapshot{Accounts: len(l.accounts), Durable: l.store != nil, Reclamation: l.reclaimer.snapshot()}
+	// Capture ownership together: reading per-account flags while writers turn
+	// over can splice more than two different owners into one snapshot.
+	l.reclaimer.mu.Lock()
+	borrowed := make(map[*mailAccountState]bool, len(l.reclaimer.borrowed))
+	for a := range l.reclaimer.borrowed {
+		borrowed[a] = true
+	}
+	l.reclaimer.mu.Unlock()
 	l.mu.Lock()
 	var verified [20]bool
 	for i, a := range l.accounts {
@@ -1208,7 +1216,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.RetainedBytes += a.spent
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
-		line := MailAccountSnapshot{Housekeeping: a.reclaiming.Load(), Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line := MailAccountSnapshot{Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
 		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()
 		line.AppendCompletionMS = time.Duration(a.appendLatency.Load()).Milliseconds()

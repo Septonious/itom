@@ -90,19 +90,25 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		// A bounded, audited page is useful progress, not a refusal. Keep the
 		// entire physical charge and ownership proof until the folder is empty.
 		// Finish this direction before alternating, so partial work yields usable
-		// capacity. Return this writer and the shared FIFO lease between pages.
+		// capacity. The existing bounded two-turn preference makes one reservation
+		// reusable promptly, while yielding to peers and returning the writer and
+		// mutation lease between pages.
 		a.mu.Lock()
 		a.collectRemote = job.record.remote
 		job.record.queued, job.record.refused = false, true
 		a.collectionPaged = true
 		a.mu.Unlock()
 		c.completed(a, job.record.folder)
+		c.preferRecovery(a, true)
 		return
 	}
 	if err == nil && stopped {
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
+		if job.record.refused {
+			c.preferRecovery(a, false)
+		}
 		c.completed(a, job.record.folder)
 		return
 	}

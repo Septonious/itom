@@ -33,9 +33,9 @@ A physical account remembers bounded retry mode until it closes, avoiding a
 new full-generation refusal on every later folder.
 Each successful page returns its writer and shared lease. The complete charge
 remains until a fresh empty SELECT; partial work never sends COLLECTED or
-refunds capacity. It finishes that direction before alternating and returns the shared FIFO
-lease between pages. DATA collection does not change the separate historical
-recovery preference. Startup, delivery controller, quotas, profile/crypto identity, DNS and UI
+refunds capacity. It finishes that direction before alternating and uses the existing bounded
+two-turn preference only for partial retry progress. Healthy DATA collection
+does not clear historical-recovery preference. Startup, delivery controller, quotas, profile/crypto identity, DNS and UI
 remain RC16's.
 
 Three frozen-RC16 regressions reproduce oversized DATA deletion, partial-retry
@@ -79,6 +79,13 @@ An initial record-only fallback still repeated full-size refusals on later
 generations and failed the complete transfer check. Remembering bounded mode
 on the account fixed that sequence: ten initial refusals, then accepted retry
 pages no larger than 4,189,714 bytes, 15 client/10 server audited retirements,
-30/30 roles, no final quarantine, idle/post <=224 ms and loaded <=532 ms. The
-final candidate leaves historical-recovery preference untouched and uses FIFO
-lease fairness between DATA pages. Fault-model throughput misses remain visible.
+30/30 roles, no final quarantine, idle/post <=224 ms and loaded <=532 ms. A FIFO-only retry prototype spread partial work across full accounts and
+stalled before making capacity reusable. The final candidate retains bounded
+continuation preference for partial work and preserves healthy-path preference. Fault-model throughput misses remain visible.
+
+A short-run trace exposed mixed-time housekeeping diagnostics: independently
+reading each account's flag can report three owners despite the coordinator's
+locked hard limit of two. A concurrent ownership-turnover regression reproduces
+this. Snapshot now copies the coordinator ownership set under its lock, releases
+that lock before reading accounts, and reports that one ownership instant. No
+admission limit or lock order is changed.
