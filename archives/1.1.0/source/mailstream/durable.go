@@ -20,11 +20,12 @@ import (
 
 var ErrStorage = errors.New("MAILSTREAM_STORAGE")
 
-// Durable reservation precedes publication. Reserving ahead bounds crash
-// uncertainty below 1 MiB/account, including the in-progress mail body, without
-// fsync on each small packet. Clean close
-// returns unused reservation only after the APPEND owner joins. Unknown
-// attempted APPENDs remain charged. This store never opens a legacy wallet.
+// Durable reservation precedes publication. A connected account retains its
+// bounded high-water reservation so verified collection and reuse need no fsync.
+// Clean close stores exact remaining debt after the APPEND owner joins. A crash
+// can recover that high-water overestimate, up to maximumRetentionBudget; only
+// audited recovery refunds it. Unknown attempted APPENDs remain charged.
+// This store never opens a legacy wallet.
 const reservationQuantum = 512 << 10
 
 type retentionStore struct {
@@ -150,8 +151,10 @@ func (s *retentionStore) close() error {
 	return nil
 }
 
-// Account.mu serializes reservation, attempted publication and verified
-// collection. No session/global protocol lock is held for storage IO.
+// Called with Account.mu by the sole APPEND actor, before publication. Release
+// the account lock during durable growth: receipts and verified refunds also
+// use it. queuedBytes preserves admission for this pending MIME body while IO
+// waits. No other actor charges; concurrent refunds can only lower spent.
 func (a *mailAccountState) chargeLocked(n int) error {
 	if n < 0 || n > maximumRetentionBudget-a.spent {
 		return ErrCapacity
@@ -161,13 +164,19 @@ func (a *mailAccountState) chargeLocked(n int) error {
 		reserved := wanted
 		if a.link.store != nil {
 			reserved = min(maximumRetentionBudget, ((wanted+reservationQuantum-1)/reservationQuantum)*reservationQuantum)
-			if err := a.link.store.put(a.storageKey, reserved); err != nil {
+			a.queuedBytes += n
+			a.mu.Unlock()
+			err := a.link.store.put(a.storageKey, reserved)
+			a.mu.Lock()
+			a.queuedBytes -= n
+			if err != nil {
 				return err
 			}
 		}
 		a.reserved = reserved
 	}
-	a.spent = wanted
+	// A verified refund may have completed while growing the reservation.
+	a.spent += n
 	return nil
 }
 func (a *mailAccountState) refundLocked(n int) error {
@@ -177,20 +186,12 @@ func (a *mailAccountState) refundLocked(n int) error {
 	if n < 0 || n > a.spent || n > a.reserved {
 		return ErrStorage
 	}
-	// A durable overestimate is safe. Rewriting the ledger for each tiny
-	// control prefix puts fsync on the delivery/receipt path and creates stalls.
-	// Return disk reservation only in full quanta; clean close stores exact debt.
-	spent := a.spent - n
-	reserved := min(maximumRetentionBudget, ((spent+reservationQuantum-1)/reservationQuantum)*reservationQuantum)
+	// Keep the durable high water for the life of this account. Large DATA
+	// generations are refunded on the protocol receipt path too; returning and
+	// recharging them would put repeated fsyncs on every speedtest cycle.
+	a.spent -= n
 	if a.link.store == nil {
-		reserved = spent
-	} else if reserved < a.reserved && a.reserved-reserved >= reservationQuantum {
-		if err := a.link.store.put(a.storageKey, reserved); err != nil {
-			return err
-		}
-	} else {
-		reserved = a.reserved
+		a.reserved = a.spent
 	}
-	a.spent, a.reserved = spent, reserved
 	return nil
 }

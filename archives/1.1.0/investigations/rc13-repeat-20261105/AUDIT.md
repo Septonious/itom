@@ -68,3 +68,21 @@ instead of 256 KiB, reducing costly control publications and their collection
 work. The first receive-window expansion and close/cancel tail stay immediate.
 All 64 supported streams can leave at most 32 MiB unannounced, below the unchanged
 60 MiB shared allowance. A 64-stream TLS upload/response integrity test passed.
+
+Hosted source 66d3071 completed every repeated transfer at 108–117 Mbps upload
+and 113–145 Mbps download, but one loaded probe reached 2,397 ms. This fails the
+2,000 ms gate; that build is not published. Other constrained-link gates passed.
+The captured queue and flight data do not establish that a larger network queue
+caused this outlier. Code inspection instead exposed a separate blocking path:
+receipt and stream tracking wait on account locks also held during journal IO.
+This is a demonstrated implementation defect, not proof of the specific outlier's
+cause or a measurement of provider behavior.
+
+A deterministic blocked-journal test reproduced that receipt stall. Twenty large
+8 MiB refund/reuse cycles also added 123 disk writes in the previous code. The
+candidate retains the durable high water while connected and releases the account
+lock during growth, while keeping the pending body in admission accounting. The
+same tests now complete receipt/refund work during blocked IO, preserve concurrent
+refunds, add zero disk writes on reuse, cover attempted bytes after crash reopen,
+and persist exact debt on clean close. A crash can conservatively recover up to
+the unchanged physical cap. The old-debt replay therefore remains required.

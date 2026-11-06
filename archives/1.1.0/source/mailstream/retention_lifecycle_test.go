@@ -379,7 +379,7 @@ func TestRecoveryReserveCannotCarryOrdinaryTraffic(t *testing.T) {
 
 // Tiny consumed-control refunds must not fsync for every packet. The durable
 // high-water reservation must still cover every attempted, unconfirmed APPEND
-// after a crash/reopen, and a full quantum can be returned after verified GC.
+// after a crash/reopen. Clean link close returns unused durable reservation.
 func TestControlRefundsKeepCrashReservationWithoutPerPacketDiskWrites(t *testing.T) {
 	dir := t.TempDir()
 	store, err := openRetention(dir, "refund-quantum", true)

@@ -92,11 +92,12 @@ maintenance failures. `control_cursor` is a UID, not a sequence count. No target
 ## Capacity and operations
 
 Retention is durable and bound to physical account identity. Unknown APPEND
-outcomes remain charged. Verified small refunds keep a conservative durable
-high-water reservation; disk refunds are batched in 512 KiB quanta. This removes
-per-prefix fsync without allowing unreserved publication, and clean close stores
-exact remaining debt. A crash may recover the unused reservation as additional
-conservative debt until verified namespace reconciliation. Control logs use UID cursors independent of shifting sequence numbers. Every
+outcomes remain charged. Verified refunds keep a conservative durable high-water
+reservation while the account is connected. Reuse within that reservation needs
+no disk writes; growth releases the account lock while preserving admission for
+the pending body, then waits for durable completion before APPEND. Clean close
+stores exact remaining debt. A crash may recover the bounded high water, up to
+the unchanged physical cap, until verified namespace reconciliation. Control logs use UID cursors independent of shifting sequence numbers. Every
 32 consumed messages, authenticated peer watermarks advance the consumed
 prefix. Small control tails remain until their retained bytes justify collection
 or the VPN becomes idle. Eligible directions alternate. Historical inventory and

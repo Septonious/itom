@@ -43,6 +43,14 @@ Established streams advertise consumed-byte credit every 512 KiB; the first
 supported streams leave at most 32 MiB unannounced, below the unchanged shared
 60 MiB allowance. A 64-stream TLS integrity test exercises this bound.
 
+Audited DATA and control refunds keep a bounded durable high-water reservation
+until clean close. Repeated reuse within that reservation needs no journal IO.
+Growth preserves admission for the pending body, releases the account lock for
+the durable write and completes it before publication. Receipts and route
+tracking can proceed during slow disk IO. Clean close stores exact debt; a crash
+may conservatively recover the high water up to the unchanged physical cap and
+requires audited reconciliation. No unverified capacity is refunded.
+
 Tests cover unread controls, partial historical deletion, slow provider mutations,
 early EXPUNGE bursts, repeated transfers with retained controls and per-message
 mutation service cost. These costs are explicit stress hypotheses, not a claim
