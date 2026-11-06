@@ -1,0 +1,284 @@
+package mailstream
+
+import (
+	"bytes"
+	"context"
+	"sync"
+	"testing"
+	"time"
+
+	imap "github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapserver"
+)
+
+type byteCollectionFixture struct {
+	mu        sync.Mutex
+	sizes     map[string]map[imap.UID]int64
+	deleted   map[string]map[imap.UID]bool
+	oversized int
+}
+type byteCollectionSession struct {
+	imapserver.Session
+	fixture        *byteCollectionFixture
+	user, selected string
+}
+
+func (s *byteCollectionSession) Login(u, p string) error { s.user = u; return s.Session.Login(u, p) }
+func (s *byteCollectionSession) Select(n string, o *imap.SelectOptions) (*imap.SelectData, error) {
+	d, e := s.Session.Select(n, o)
+	if e == nil {
+		s.selected = n
+	}
+	return d, e
+}
+func (s *byteCollectionSession) Append(n string, r imap.LiteralReader, o *imap.AppendOptions) (*imap.AppendData, error) {
+	size := r.Size()
+	d, e := s.Session.Append(n, r, o)
+	if e == nil {
+		s.fixture.mu.Lock()
+		key := s.user + "/" + n
+		if s.fixture.sizes[key] == nil {
+			s.fixture.sizes[key] = map[imap.UID]int64{}
+		}
+		s.fixture.sizes[key][d.UID] = size
+		s.fixture.mu.Unlock()
+	}
+	return d, e
+}
+func (s *byteCollectionSession) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.StoreFlags, o *imap.StoreOptions) error {
+	e := s.Session.Store(w, set, f, o)
+	if e != nil {
+		return e
+	}
+	for _, flag := range f.Flags {
+		if flag != imap.FlagDeleted {
+			continue
+		}
+		uids, ok := set.(imap.UIDSet)
+		if !ok {
+			continue
+		}
+		nums, ok := uids.Nums()
+		if !ok {
+			continue
+		}
+		s.fixture.mu.Lock()
+		key := s.user + "/" + s.selected
+		if s.fixture.deleted[key] == nil {
+			s.fixture.deleted[key] = map[imap.UID]bool{}
+		}
+		for _, uid := range nums {
+			if f.Op == imap.StoreFlagsAdd {
+				s.fixture.deleted[key][uid] = true
+			} else if f.Op == imap.StoreFlagsDel {
+				delete(s.fixture.deleted[key], uid)
+			}
+		}
+		s.fixture.mu.Unlock()
+	}
+	return nil
+}
+func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UIDSet) error {
+	s.fixture.mu.Lock()
+	key := s.user + "/" + s.selected
+	var size int64
+	for uid := range s.fixture.deleted[key] {
+		size += s.fixture.sizes[key][uid]
+	}
+	if size > 4<<20 {
+		s.fixture.oversized++
+		s.fixture.mu.Unlock()
+		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
+	}
+	s.fixture.mu.Unlock()
+	e := s.Session.Expunge(w, u)
+	if e == nil {
+		s.fixture.mu.Lock()
+		clear(s.fixture.deleted[key])
+		s.fixture.mu.Unlock()
+	}
+	return e
+}
+
+func seedSizedCollection(t *testing.T, p *mailPipe, folder string, size int) *segmentRecord {
+	t.Helper()
+	if e := p.client.Create(folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	rec := &segmentRecord{folder: folder, queued: true, retired: true, appends: 128}
+	raw := bytes.Repeat([]byte{'x'}, size)
+	for range 128 {
+		cmd, e := p.startAppend(folder, raw)
+		if e != nil {
+			t.Fatal(e)
+		}
+		d, e := cmd.Wait()
+		if e != nil {
+			t.Fatal(e)
+		}
+		rec.uids.AddNum(d.UID)
+		rec.validity = d.UIDValidity
+		rec.bytes += len(raw)
+	}
+	return rec
+}
+
+// A previously timed-out full deletion may have left every owned UID flagged.
+// Each turn must stay below the provider's byte budget, retain all debt during
+// partial progress, keep the carrier, then refund only after the empty audit.
+func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
+	f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer func() {
+		if p != nil {
+			p.close()
+		}
+	}()
+	rec := seedSizedCollection(t, p, "itom3-byte-page", 128<<10)
+	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	if e = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); e != nil {
+		t.Fatal(e)
+	}
+	original := p
+	c := NewReclamationCoordinator()
+	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	key := segmentKey{session: SessionID{1}}
+	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
+	originalDebt := a.spent
+	turns := 0
+	var joined sync.WaitGroup
+	inFlight := 0
+	for a.spent > 0 && turns < 10 {
+		turns++
+		rec.queued = true
+		a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+		if p != original || c.snapshot().Paused {
+			t.Fatalf("bounded DATA collection failed: same_writer=%v state=%+v", p == original, c.snapshot())
+		}
+		if a.spent > 0 && (a.spent != originalDebt || a.retired.Load() != 0) {
+			t.Fatalf("partial collection refunded unaudited debt: remaining=%d retired=%d", a.spent, a.retired.Load())
+		}
+	}
+	if turns < 2 || a.spent != 0 || a.retired.Load() != 1 || f.oversized != 0 {
+		t.Fatalf("bounded DATA collection did not finish safely: turns=%d debt=%d retired=%d oversize=%d", turns, a.spent, a.retired.Load(), f.oversized)
+	}
+	t.Logf("%d bounded collection turns; debt retained until empty-folder audit", turns)
+}
+
+func TestDataCollectionResumesAfterPartialUnknownOutcome(t *testing.T) {
+	accounts, _ := applicationMailServer(t, true, false)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	rec := seedSizedCollection(t, p, "itom3-partial-result", 1024)
+	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	uids, _ := rec.uids.Nums()
+	var partial imap.UIDSet
+	for _, uid := range uids[:32] {
+		partial.AddNum(uid)
+	}
+	if _, e = p.deleteUIDs(partial, rec.folder); e != nil {
+		t.Fatal(e)
+	}
+	if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator()); e != nil {
+		t.Fatalf("partial DATA outcome cannot resume: %v", e)
+	}
+	if p.client.Mailbox().NumMessages != 0 {
+		t.Fatal("resumed collection lacked empty audit")
+	}
+}
+
+func TestDataCollectionRejectsUnprovedUIDInPartialFolder(t *testing.T) {
+	accounts, _ := applicationMailServer(t, true, false)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	rec := seedSizedCollection(t, p, "itom3-unproved-result", 1024)
+	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	uids, _ := rec.uids.Nums()
+	var partial imap.UIDSet
+	for _, uid := range uids[:32] {
+		partial.AddNum(uid)
+	}
+	if _, e = p.deleteUIDs(partial, rec.folder); e != nil {
+		t.Fatal(e)
+	}
+	cmd, e := p.startAppend(rec.folder, []byte("unproved message must remain"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	foreign, e := cmd.Wait()
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator()); e != ErrProtocol {
+		t.Fatalf("unproved UID accepted: %v", e)
+	}
+	rows, e := p.client.Fetch(imap.UIDSetNum(foreign.UID), &imap.FetchOptions{UID: true}).Collect()
+	if e != nil || len(rows) != 1 {
+		t.Fatal("unproved message was removed", e)
+	}
+}
+
+func TestHistoricalCollectionPagesRespectConsumedUIDFence(t *testing.T) {
+	f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	rec := seedSizedCollection(t, p, "itom3-history-byte-page", 128<<10)
+	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	nums, _ := rec.uids.Nums()
+	target := uidWatermark{Validity: rec.validity, UID: uint32(nums[63])}
+	var eligible imap.UIDSet
+	for _, uid := range nums[:64] {
+		eligible.AddNum(uid)
+	}
+	if e = p.client.Store(eligible, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); e != nil {
+		t.Fatal(e)
+	}
+	c := NewReclamationCoordinator()
+	proof, n, complete, e := p.collectPrefix(c, rec.folder, target, false)
+	if e != nil || complete || n == 0 || n >= 64 || proof.UID >= target.UID {
+		t.Fatalf("historical DATA ignored byte page or consumed fence: n=%d complete=%v err=%v", n, complete, e)
+	}
+	for !complete {
+		proof, n, complete, e = p.collectPrefix(c, rec.folder, target, false)
+		if e != nil {
+			t.Fatal(e)
+		}
+	}
+	if proof != target || p.client.Mailbox().NumMessages != 64 || f.oversized != 0 {
+		t.Fatalf("historical collection crossed live UID fence: proof=%+v remaining=%d", proof, p.client.Mailbox().NumMessages)
+	}
+	rows, e := p.client.Fetch(imap.UIDSet{{Start: nums[64], Stop: nums[127]}}, &imap.FetchOptions{UID: true}).Collect()
+	if e != nil || len(rows) != 64 {
+		t.Fatal("unconsumed tail changed", e)
+	}
+}

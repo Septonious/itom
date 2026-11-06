@@ -50,6 +50,9 @@ func NewStoredIMAPLink(ctx context.Context, identity string, accounts []MailAcco
 	return link, nil
 }
 func openRetention(dir, identity string, client bool) (*retentionStore, error) {
+	// Capacity belongs to this mailbox layout, whose folders are disjoint from
+	// the previous layout. No legacy store or folder migration is performed.
+	identity = "m1-" + identity
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, ErrStorage
 	}

@@ -719,7 +719,7 @@ func seedRecoveredClient(dir string, p servercfg.Profile, mib int) error {
 	}
 	b := append(append([]byte("ITOM-mailstream-profile\x00"), p.Server[:]...), []byte("\x00"+p.User.ID)...)
 	h := sha256.Sum256(b)
-	identity := hex.EncodeToString(h[:16])
+	identity := "m1-" + hex.EncodeToString(h[:16])
 	path := filepath.Join(dir, "mailstream-"+identity+"-c2s.db")
 	if _, err := os.Lstat(path); !os.IsNotExist(err) {
 		return errors.New("fixture ledger must not already exist")

@@ -4,7 +4,7 @@ from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('directory',type=Path);p.add_argument('--reference',type=Path,required=True);a=p.parse_args()
 d=json.loads((a.directory/'candidate.json').read_text());ref=json.loads((a.reference/'candidate.json').read_text())
 m=json.loads((a.directory/'manifest.json').read_text());oldm=json.loads((a.reference/'manifest.json').read_text())
-for key in ('client_upload_mbps','client_download_mbps','upload_fetch_delay_ms','download_fetch_delay_ms','large_data_fetch_delay_only','append_service_ms','streams','duration','cycles','variable_latency'):
+for key in ('max_expunge_mib','client_upload_mbps','client_download_mbps','upload_fetch_delay_ms','download_fetch_delay_ms','large_data_fetch_delay_only','append_service_ms','streams','duration','cycles','variable_latency'):
  assert m[key]==oldm[key],key
 assert (m['client_upload_mbps'],m['client_download_mbps'],m['upload_fetch_delay_ms'],m['download_fetch_delay_ms'],m['append_service_ms'])==(95,80,500,600,60)
 assert m['streams']==16 and m['cycles']==2 and m['duration']=='12s'

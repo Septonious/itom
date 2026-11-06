@@ -2,13 +2,14 @@ package mailstream
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapclient"
 )
 
 func (c *ReclamationCoordinator) folder(s string) { c.mu.Lock(); c.state.Folder = s; c.mu.Unlock() }
@@ -33,45 +34,6 @@ func (c *ReclamationCoordinator) sessionEnded(l *IMAPLink) {
 	c.mu.Unlock()
 }
 
-// Only recognized folders in this configured identity's namespace qualify.
-func (l *IMAPLink) obsoleteFolder(name string, current SessionID) bool {
-	prefix := "itom3-" + l.identity + "-"
-	if !strings.HasPrefix(name, prefix) {
-		return false
-	}
-	s := strings.TrimPrefix(name, prefix)
-	if s == "control-c2s" || s == "control-s2c" {
-		return true
-	}
-	for _, v := range []string{"1", "2", "3", "4", "5", "6"} {
-		if s == "control-v"+v+"-c2s" || s == "control-v"+v+"-s2c" {
-			return true
-		}
-	}
-	if len(s) < 36 || s[32] != '-' {
-		return false
-	}
-	raw, e := hex.DecodeString(s[:32])
-	if e != nil || len(raw) != 16 {
-		return false
-	}
-	var id SessionID
-	copy(id[:], raw)
-	if id == current {
-		return false
-	}
-	rest := s[33:]
-	for _, d := range []string{"c2s", "s2c"} {
-		if rest == d || rest == d+"-park" {
-			return true
-		}
-		if strings.HasPrefix(rest, d+"-") && len(rest) == len(d)+9 {
-			_, e := hex.DecodeString(rest[len(d)+1:])
-			return e == nil
-		}
-	}
-	return false
-}
 func nonexistent(e error) bool {
 	var status *imap.Error
 	return errors.As(e, &status) && status.Code == imap.ResponseCodeNonExistent
@@ -82,6 +44,59 @@ func nonexistent(e error) bool {
 // into the same unbounded STORE. Only audited UIDs advance the credit fence.
 const collectionPageSize = 256
 const collectionTimeout = 8 * time.Second
+
+// A DATA generation can contain tens of MiB even with only 128 messages.
+// Bound mutation work by actual MIME bytes, independently of the UID page cap.
+const collectionPageBytes = 4 << 20
+
+func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
+	sort.Slice(rows, func(i, j int) bool { return rows[i].UID < rows[j].UID })
+	var last imap.UID
+	var bytes int64
+	full, skipped := false, false
+	end = fence
+	for _, row := range rows {
+		if row.UID == 0 || row.UID == last || row.RFC822Size < 0 {
+			return nil, nil, 0, 0, ErrProtocol
+		}
+		last = row.UID
+		if uint32(row.UID) > fence {
+			continue
+		}
+		if count > 0 && row.RFC822Size > collectionPageBytes-bytes {
+			full = true
+		}
+		if !full {
+			owned.AddNum(row.UID)
+			bytes += row.RFC822Size
+			count++
+			end = uint32(row.UID)
+			continue
+		}
+		skipped = true
+		// An older timed-out attempt may have flagged the entire generation.
+		// Clear only proved-owned later UIDs before ordinary EXPUNGE so this
+		// turn cannot silently expand back into the original huge deletion.
+		for _, flag := range row.Flags {
+			if strings.EqualFold(string(flag), string(imap.FlagDeleted)) {
+				deferred.AddNum(row.UID)
+				break
+			}
+		}
+	}
+	if !skipped {
+		end = fence
+	}
+	return
+}
+
+func (p *mailPipe) clearDeferredDeletion(uids imap.UIDSet, stage func(string)) error {
+	if len(uids) == 0 {
+		return nil
+	}
+	stage("clear_deferred_flags")
+	return p.client.Store(uids, &imap.StoreFlags{Op: imap.StoreFlagsDel, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close()
+}
 
 func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool) (uidWatermark, uint64, bool, error) {
 	c.folder(folder)
@@ -114,7 +129,7 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	// Sequence order is UID order. New messages may arrive above the frozen UID
 	// fence; they are inventoried but never marked deleted or acknowledged here.
 	count := min(uint32(collectionPageSize), selected.NumMessages)
-	rows, e := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: count}}, &imap.FetchOptions{UID: true}).Collect()
+	rows, e := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: count}}, &imap.FetchOptions{UID: true, Flags: true, RFC822Size: true}).Collect()
 	if e != nil {
 		return uidWatermark{}, 0, false, e
 	}
@@ -131,17 +146,17 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if selected.NumMessages > count && last != 0 && uint32(last) < target.UID {
 		target.UID = uint32(last)
 	}
-	var owned imap.UIDSet
-	var removed uint64
-	for _, row := range rows {
-		if uint32(row.UID) <= target.UID {
-			owned.AddNum(row.UID)
-			removed++
-		}
+	owned, deferred, fence, removed, e := mutationPage(rows, target.UID)
+	if e != nil {
+		return uidWatermark{}, 0, false, e
 	}
+	target.UID = fence
 	if removed > 0 {
 		p.allowExpunge.Store(true)
-		_, e = p.deleteUIDs(owned, "", c.stage)
+		e = p.clearDeferredDeletion(deferred, c.stage)
+		if e == nil {
+			_, e = p.deleteUIDs(owned, "", c.stage)
+		}
 		p.allowExpunge.Store(false)
 		if e != nil {
 			return uidWatermark{}, 0, false, e
@@ -227,7 +242,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	if historical && !inventoried && retry == "" {
 		c.folder("")
 		c.stage("maintenance_list")
-		folders, e := p.client.List("", "itom3-"+l.identity+"-*", nil).Collect()
+		folders, e := p.client.List("", l.folderPrefix()+"-*", nil).Collect()
 		if e != nil {
 			return "", e
 		}

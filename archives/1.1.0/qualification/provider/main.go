@@ -8,6 +8,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"encoding/pem"
 	"flag"
@@ -41,6 +43,8 @@ type counts struct {
 	metadata           map[string]*sync.RWMutex
 	seeded             map[string]bool
 	largeData          map[string]bool
+	messageSizes       map[string]map[imap.UID]int64
+	deletedUIDs        map[string]map[imap.UID]bool
 }
 type session struct {
 	imapserver.Session
@@ -53,6 +57,7 @@ type session struct {
 	historyFolders       int
 	dataFetchDelay       time.Duration
 	largeDataDelayOnly   bool
+	maxExpungeBytes      int64
 	selectedFolder       string
 	appendService        time.Duration
 	mutationRowCost      time.Duration
@@ -122,7 +127,7 @@ func (s *session) List(w *imapserver.ListWriter, ref string, patterns []string, 
 func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOptions) (*imap.AppendData, error) {
 	defer s.accountWork(false)()
 	s.count("APPEND")
-	if strings.Contains(folder, "-control-") {
+	if isControlFolder(folder) {
 		s.count("APPEND_CONTROL")
 	} else {
 		s.count("APPEND_DATA")
@@ -136,7 +141,7 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 	}
 	// Provider work is distinct from TCP RTT. Serial DATA publication can
 	// remain slow even while NOOP/control is fast, as in RC7 field uploads.
-	if !strings.Contains(folder, "-control-") && s.bulkDelay > 0 {
+	if !isControlFolder(folder) && s.bulkDelay > 0 {
 		time.Sleep(s.bulkDelay)
 	}
 	size := r.Size()
@@ -152,15 +157,45 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 		s.counts.Lock()
 		s.counts.appendBytes += uint64(size)
 		s.counts.appendSizes[bucket]++
-		if !strings.Contains(folder, "-control-") && size > 65536 {
+		if s.maxExpungeBytes > 0 {
+			key := s.user + "/" + folder
+			if s.counts.messageSizes[key] == nil {
+				s.counts.messageSizes[key] = map[imap.UID]int64{}
+			}
+			s.counts.messageSizes[key][data.UID] = size
+		}
+		if !isControlFolder(folder) && size > 65536 {
 			s.counts.largeData[s.user+"/"+folder] = true
 		}
 		s.counts.Unlock()
 	}
 	return data, err
 }
+
+// The fixture supports frozen reference names as well as the current layout.
+func compactControl(folder string) bool {
+	return strings.HasPrefix(folder, "itom-") && len(folder) == 31 && folder[27:30] == "-c-" && (folder[30] == 'u' || folder[30] == 'd')
+}
+func isControlFolder(folder string) bool {
+	return compactControl(folder) || strings.Contains(folder, "-control-")
+}
+func fixturePrefix(folder string) string {
+	if compactControl(folder) {
+		return folder[:27]
+	}
+	return strings.Split(folder, "-control-")[0]
+}
+func fixtureHistoryFolder(folder string, ordinal int) string {
+	prefix := fixturePrefix(folder)
+	if compactControl(folder) {
+		var id [16]byte
+		binary.BigEndian.PutUint64(id[8:], uint64(ordinal))
+		return prefix + "-" + base64.RawURLEncoding.EncodeToString(id[:]) + "-u-00"
+	}
+	return fmt.Sprintf("%s-%032x-c2s-00000000", prefix, ordinal)
+}
 func (s *session) affectedControl(folder string) bool {
-	return strings.Contains(folder, "-control-") && (s.user == "a02" || s.user == "a03" || s.user == "a05" || s.user == "a10")
+	return isControlFolder(folder) && (s.user == "a02" || s.user == "a03" || s.user == "a05" || s.user == "a10")
 }
 func (s *session) seedExistingControls(folder string) {
 	if s.existingCreateStall == 0 || !s.affectedControl(folder) {
@@ -173,9 +208,14 @@ func (s *session) seedExistingControls(folder string) {
 		return
 	}
 	s.counts.seeded[key] = true
-	prefix := strings.Split(folder, "-control-")[0] + "-control-v7-"
-	_ = s.Session.Create(prefix+"c2s", nil)
-	_ = s.Session.Create(prefix+"s2c", nil)
+	prefix := fixturePrefix(folder)
+	if compactControl(folder) {
+		_ = s.Session.Create(prefix+"-c-u", nil)
+		_ = s.Session.Create(prefix+"-c-d", nil)
+	} else {
+		_ = s.Session.Create(prefix+"-control-v7-c2s", nil)
+		_ = s.Session.Create(prefix+"-control-v7-s2c", nil)
+	}
 }
 func (s *session) Select(folder string, o *imap.SelectOptions) (*imap.SelectData, error) {
 	s.seedExistingControls(folder)
@@ -209,15 +249,14 @@ func (s *session) Create(folder string, o *imap.CreateOptions) error {
 		}
 	}
 	err := s.Session.Create(folder, o)
-	if strings.Contains(folder, "-control-") && s.historyFolders > 0 {
+	if isControlFolder(folder) && s.historyFolders > 0 {
 		s.counts.Lock()
 		seed := !s.counts.seeded[s.user]
 		s.counts.seeded[s.user] = true
 		s.counts.Unlock()
 		if seed {
-			prefix := strings.Split(folder, "-control-")[0]
 			for i := 0; i < s.historyFolders; i++ {
-				name := fmt.Sprintf("%s-%032x-c2s-00000000", prefix, i+1)
+				name := fixtureHistoryFolder(folder, i+1)
 				if e := s.Session.Create(name, nil); e != nil {
 					return e
 				}
@@ -227,7 +266,7 @@ func (s *session) Create(folder string, o *imap.CreateOptions) error {
 			}
 		}
 	}
-	if err == nil && s.prefill > 0 && strings.Contains(folder, "-control-") {
+	if err == nil && s.prefill > 0 && isControlFolder(folder) {
 		raw := []byte("MIME-Version: 1.0\r\nContent-Transfer-Encoding: base64\r\n\r\nb2xkIGNvbnRyb2wgZml4dHVyZQ==\r\n")
 		for i := 0; i < s.prefill; i++ {
 			if _, err = s.Session.Append(folder, strings.NewReader(string(raw)), &imap.AppendOptions{}); err != nil {
@@ -241,7 +280,7 @@ func (s *session) Delete(folder string) error { s.count("DELETE"); return s.Sess
 func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
 	defer s.accountWork(false)()
 	s.count("FETCH")
-	if o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
+	if o != nil && len(o.BodySection) > 0 && !isControlFolder(s.selectedFolder) {
 		if seq, ok := set.(imap.SeqSet); ok {
 			var rows uint64
 			for _, r := range seq {
@@ -254,7 +293,7 @@ func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.Fetc
 			s.counts.Unlock()
 		}
 	}
-	if s.dataFetchDelay > 0 && o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
+	if s.dataFetchDelay > 0 && o != nil && len(o.BodySection) > 0 && !isControlFolder(s.selectedFolder) {
 		s.counts.Lock()
 		delay := !s.largeDataDelayOnly || s.counts.largeData[s.user+"/"+s.selectedFolder]
 		s.counts.Unlock()
@@ -279,6 +318,30 @@ func (s *session) Store(w *imapserver.FetchWriter, set imap.NumSet, f *imap.Stor
 		}
 	}
 	err := s.Session.Store(w, set, f, o)
+	if err == nil && s.maxExpungeBytes > 0 {
+		if ids, ok := set.(imap.UIDSet); ok {
+			if nums, ok := ids.Nums(); ok {
+				s.counts.Lock()
+				key := s.user + "/" + s.selectedFolder
+				if s.counts.deletedUIDs[key] == nil {
+					s.counts.deletedUIDs[key] = map[imap.UID]bool{}
+				}
+				for _, flag := range f.Flags {
+					if flag != imap.FlagDeleted {
+						continue
+					}
+					for _, uid := range nums {
+						if f.Op == imap.StoreFlagsAdd {
+							s.counts.deletedUIDs[key][uid] = true
+						} else if f.Op == imap.StoreFlagsDel {
+							delete(s.counts.deletedUIDs[key], uid)
+						}
+					}
+				}
+				s.counts.Unlock()
+			}
+		}
+	}
 	if err == nil && s.earlyExpunge && f.Op == imap.StoreFlagsAdd {
 		for _, flag := range f.Flags {
 			if flag == imap.FlagDeleted {
@@ -309,9 +372,29 @@ func (s *session) Idle(w *imapserver.UpdateWriter, stop <-chan struct{}) error {
 func (s *session) Expunge(w *imapserver.ExpungeWriter, set *imap.UIDSet) error {
 	defer s.accountWork(true)()
 	s.count("EXPUNGE")
+	if s.maxExpungeBytes > 0 {
+		s.counts.Lock()
+		key := s.user + "/" + s.selectedFolder
+		var size int64
+		for uid := range s.counts.deletedUIDs[key] {
+			size += s.counts.messageSizes[key][uid]
+		}
+		s.counts.commands["MAX_EXPUNGE_BYTES"] = max(s.counts.commands["MAX_EXPUNGE_BYTES"], uint64(size))
+		if size > s.maxExpungeBytes {
+			s.counts.commands["REJECTED_OVERSIZED_EXPUNGE"]++
+			s.counts.Unlock()
+			return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
+		}
+		s.counts.Unlock()
+	}
 	err := s.Session.Expunge(w, set)
 	if err == nil {
 		s.mutated = true
+		if s.maxExpungeBytes > 0 {
+			s.counts.Lock()
+			clear(s.counts.deletedUIDs[s.user+"/"+s.selectedFolder])
+			s.counts.Unlock()
+		}
 	}
 	return err
 }
@@ -338,13 +421,14 @@ func run() error {
 	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	downloadFetchDelay := flag.Duration("download-fetch-delay", 0, "client DATA-body FETCH service delay; independent of NOOP/control and server upload reads")
 	largeDataDelayOnly := flag.Bool("large-data-fetch-delay-only", false, "apply DATA FETCH delay only after a >64 KiB MIME container in that account folder; small setup remains fast")
+	maxExpungeMiB := flag.Int64("max-expunge-mib", 0, "reject mutation batches above this MIME-byte budget; zero disables this independent stress hypothesis")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
 	metadataDelay := flag.Duration("account-metadata-delay", 0, "account-wide metadata service cost; blocks concurrent data on that account")
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *downloadFetchDelay < 0 || *downloadFetchDelay > time.Second || *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *maxExpungeMiB < 0 || *maxExpungeMiB > 64 || *downloadFetchDelay < 0 || *downloadFetchDelay > time.Second || *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -379,14 +463,14 @@ func run() error {
 	for n := 0; n < *accounts; n++ {
 		backend.AddUser(imapmemserver.NewUser(fmt.Sprintf("a%02d", n+1), "fixture-only"))
 	}
-	stats := &counts{metadata: map[string]*sync.RWMutex{}, largeData: map[string]bool{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
+	stats := &counts{messageSizes: map[string]map[imap.UID]int64{}, deletedUIDs: map[string]map[imap.UID]bool{}, metadata: map[string]*sync.RWMutex{}, largeData: map[string]bool{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
 	var uploadReaderPort atomic.Int32
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(conn *imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		delay := *downloadFetchDelay
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{largeDataDelayOnly: *largeDataDelayOnly, mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{maxExpungeBytes: *maxExpungeMiB * (1 << 20), largeDataDelayOnly: *largeDataDelayOnly, mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

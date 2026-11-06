@@ -24,7 +24,7 @@ type existingCreateStall struct {
 }
 
 func (s existingCreateStall) Create(name string, options *imap.CreateOptions) error {
-	if s.armed.Load() && strings.Contains(name, "-control-") {
+	if s.armed.Load() && (strings.Contains(name, "-control-") || strings.HasSuffix(name, "-c-u") || strings.HasSuffix(name, "-c-d")) {
 		if _, err := s.Session.Status(name, &imap.StatusOptions{UIDNext: true}); err == nil {
 			s.calls.Add(1)
 			<-s.stop
@@ -49,8 +49,8 @@ func TestExistingControlFoldersStartWithoutRedundantCreate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, dir := range []string{"c2s", "s2c"} {
-			if err := p.client.Create("itom3-existing-control-v7-"+dir, nil).Wait(); err != nil {
+		for _, out := range []bool{false, true} {
+			if err := p.client.Create((&IMAPLink{identity: "existing", client: true}).controlFolder(out), nil).Wait(); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -89,7 +89,7 @@ func (s *recoveringSelection) Login(user, password string) error {
 	return s.Session.Login(user, password)
 }
 func (s *recoveringSelection) Select(name string, options *imap.SelectOptions) (*imap.SelectData, error) {
-	if s.user == "fixture1" && strings.Contains(name, "-control-") && time.Now().Before(s.until) {
+	if s.user == "fixture1" && (strings.Contains(name, "-control-") || strings.HasSuffix(name, "-c-u") || strings.HasSuffix(name, "-c-d")) && time.Now().Before(s.until) {
 		return nil, &imap.Error{Type: imap.StatusResponseTypeNo, Code: imap.ResponseCodeUnavailable, Text: "temporary fixture mailbox unavailable"}
 	}
 	return s.Session.Select(name, options)

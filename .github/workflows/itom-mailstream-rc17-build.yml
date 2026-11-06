@@ -1,0 +1,558 @@
+# RC17: preserve RC16 transport gates; qualify byte-bounded, resumable collection.
+# Independent service-cost and delayed-FETCH models retain all strict misses.
+concurrency: {group: itom-mailstream-rc17-build, cancel-in-progress: true}
+name: Build matched mailbox-stream RC17 with constrained-link acceptance
+on:
+  push:
+    branches: ["codex/v1.1.0-mailbox-stream-v3"]
+    paths: ["archives/1.1.0/source/**", "archives/1.1.0/qualification/**", ".github/workflows/itom-mailstream-rc17-build.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+  SOURCE: archives/1.1.0/source
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Complete normal and race application, native recovery, SDK and source checks
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-0-mailstream-rc17
+      - name: Four-stream 7 Mbps transfer cancellation and new HTTPS recovery
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out weak-link-evidence --only candidate --client-mbps 7 --duration 20s --cancel-download-after 12s --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('weak-link-evidence/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete',d.get('error')
+          assert len(d['Phases'])==2 and all(p['success'] for p in d['Phases'])
+          assert not d['diagnostics']['Session']['closed']
+          assert d['diagnostics']['Session']['delivery_flight_bytes']==0 and d['diagnostics']['Session']['bulk_outstanding_bytes']==0
+          assert d['diagnostics']['Mail']['failed_accounts']==0
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert all(v>0 for v in d['AfterMS'])
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          assert all(l['IMAPLatencyMillis']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert any(l['RTTMillis']>0 and l['DownloadBytes']>0 for l in d['diagnostics']['Client']['Lines'])
+          assert d['Provider']['connection_rejections']==0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-safety
+          path: |
+            ${{ env.SOURCE }}/dist/core-*.json
+            ${{ env.SOURCE }}/dist/core-*.jsonl
+            ${{ env.SOURCE }}/dist/core-*.log
+            weak-link-evidence/
+          if-no-files-found: error
+  throughput:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Sustained one/four streams and 32-stream HTTPS under variable delay
+        run: |
+          set -euo pipefail
+          for streams in 1 4 32; do
+            duration=30s
+            cycles=1
+            if [ "$streams" = 4 ]; then cycles=2; fi
+            if [ "$streams" = 32 ]; then duration=12s; fi
+            python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out "throughput-$streams" --only candidate --duration "$duration" --cycles "$cycles" --streams "$streams" --idle-probes 4 --post-probes 8
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for streams in (1,4,32):
+              d=json.loads(Path(f'throughput-{streams}/candidate.json').read_text())
+              assert d['success'] and d['stage']=='complete',d.get('error')
+              assert all(p['success'] for p in d['Phases'])
+              assert len(d['Phases'])==(4 if streams==4 else 2)
+              assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+              assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+              assert d['Provider']['connection_rejections']==0
+              assert max(d['IdleMS']+d['AfterMS'])<=300
+              assert max(d['LoadedMS'])<=2000
+              if streams in (1,4): assert d['targets']['full_phase_100mbps']
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-rc17-throughput, path: "throughput-*/", if-no-files-found: error}
+  field-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce frozen RC8 failures and verify decoder cleanup and manager fixes
+        run: |
+          set -euo pipefail
+          reference=66625b9c3dd40ff7ed60e338bfcae72ee4e9f8e6
+          git fetch origin "$reference" --no-tags
+          mkdir reference-source
+          git archive "$reference" archives/1.1.0/source | tar -x -C reference-source
+          python3 archives/1.1.0/qualification/rc9_regressions.py --reference "$GITHUB_WORKSPACE/reference-source/archives/1.1.0/source" --out regression-evidence
+      - name: Complete two speedtests with retained control history and early provider EXPUNGE
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out retained-history --only candidate --prefill-control 300 --early-store-expunge --duration 16s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('retained-history/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete' and len(d['Phases'])==4
+          assert all(p['success'] for p in d['Phases'])
+          assert not d['diagnostics']['Session']['closed'] and d['diagnostics']['Mail']['failed_accounts']==0
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert d['Provider']['commands']['EARLY_EXPUNGE']>0 and d['Provider']['connection_rejections']==0
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          PYCODE
+      - name: Reproduce RC9 idle feedback and verify asymmetric capacity recovery
+        run: |
+          set -euo pipefail
+          git fetch origin a4bb15b3a56b9f8098070eabc71029940682989d --no-tags
+          mkdir rc9-source
+          git archive a4bb15b3a56b9f8098070eabc71029940682989d archives/1.1.0/source | tar -x -C rc9-source
+          python3 archives/1.1.0/qualification/rc10_regressions.py --reference "$GITHUB_WORKSPACE/rc9-source/archives/1.1.0/source" --out feedback-evidence
+      - name: Three complete speedtests with historical folders and account metadata interference
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out account-interference --only candidate --history-folders 40 --prefill-control 300 --early-store-expunge --account-metadata-delay-ms 40 --idle-observe 20s --duration 20s --cycles 3 --streams 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('account-interference/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete' and len(d['Phases'])==6
+          assert all(p['success'] for p in d['Phases']) and d['targets']['full_phase_100mbps']
+          assert not d['diagnostics']['Session']['closed'] and d['diagnostics']['Mail']['failed_accounts']==0
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert d['Provider']['commands'].get('LIST',0)==0 and d['Provider']['connection_rejections']==0
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-field-replay
+          path: |
+            regression-evidence/
+            retained-history/
+            feedback-evidence/
+            account-interference/
+          if-no-files-found: error
+  linux:
+    # Build independently; publication still requires complete safety checks.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Build matched server binaries and source archive
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.0-MAILSTREAM-RC17-linux-$arch.bin" ./cmd/itom)
+          done
+          release-assets/ITOM-1.1.0-MAILSTREAM-RC17-linux-amd64.bin version
+          python3 "$SOURCE/tools/package_sources.py" --output release-assets/ITOM-1.1.0-MAILSTREAM-RC17-sources.zip
+          cp archives/1.1.0/MAILSTREAM-RC17_TESTING.md release-assets/
+          printf '%s\n' "$GITHUB_SHA" > release-assets/SOURCE_COMMIT
+          (cd release-assets && sha256sum *.bin *.zip > NATIVE_SOURCE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc17-linux-amd64
+          path: release-assets/*-linux-amd64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc17-linux-arm64
+          path: release-assets/*-linux-arm64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-rc17-linux-source
+          path: |
+            release-assets/*.zip
+            release-assets/*.md
+            release-assets/SOURCE_COMMIT
+            release-assets/NATIVE_SOURCE_SHA256SUMS
+          if-no-files-found: error
+  android:
+    # Build independently; publication still requires safety AND both builds.
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "17"}
+      - name: Build both JNI architectures, compile, unit tests and fatal lint
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-0-mailstream-rc17 --accept-android-licenses
+      - name: Export bounded APK parts and public signing verification tools
+        run: |
+          set -euo pipefail
+          mkdir -p apk-parts android-evidence signing-tools
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.0-MAILSTREAM-RC17-debug.apk'
+          raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
+          report=json.loads((source/'dist/build-report.json').read_text())
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-mailstream-rc17'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10142,'version_name':'1.1.0-mailstream-rc17-debug'}
+          parts=[]
+          for n,start in enumerate(range(0,len(raw),8*1024*1024)):
+              part=raw[start:start+8*1024*1024];name=f'rc17-apk.part{n:02d}'
+              Path('apk-parts',name).write_bytes(part)
+              parts.append({'name':name,'bytes':len(part),'sha256':hashlib.sha256(part).hexdigest()})
+          Path('android-evidence/manifest.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'apk_bytes':len(raw),'apk_sha256':hashlib.sha256(raw).hexdigest(),'parts':parts},indent=2)+'\n')
+          PY
+          cp "$SOURCE"/dist/{build-report.json,test-summary.json} android-evidence/
+          signer="$(find "$HOME/.cache/itom-build" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -name apksigner.jar -type f -print -quit)"
+          test -f "$signer"
+          cp "$signer" signing-tools/
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-android-evidence, path: android-evidence/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-signing-tools, path: signing-tools/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part00, path: apk-parts/rc17-apk.part00, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part01, path: apk-parts/rc17-apk.part01, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part02, path: apk-parts/rc17-apk.part02, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part03, path: apk-parts/rc17-apk.part03, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part04, path: apk-parts/rc17-apk.part04, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part05, path: apk-parts/rc17-apk.part05, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part06, path: apk-parts/rc17-apk.part06, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part07, path: apk-parts/rc17-apk.part07, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part08, path: apk-parts/rc17-apk.part08, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part09, path: apk-parts/rc17-apk.part09, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part10, path: apk-parts/rc17-apk.part10, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part11, path: apk-parts/rc17-apk.part11, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part12, path: apk-parts/rc17-apk.part12, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part13, path: apk-parts/rc17-apk.part13, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part14, path: apk-parts/rc17-apk.part14, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-rc17-apk-part15, path: apk-parts/rc17-apk.part15, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-android-build-logs
+          path: |
+            ${{ env.SOURCE }}/dist/*.log
+            ${{ env.SOURCE }}/dist/*.json
+            ${{ env.SOURCE }}/android/app/build/reports/lint-results.*
+          if-no-files-found: warn
+
+  upload-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce field-ready RC10 slow-receipt limitation and verify compression protection
+        run: |
+          set -euo pipefail
+          git fetch origin b6d53de7ec97bef2d90582186a8398e409eed283 --no-tags
+          mkdir rc10-source
+          git archive b6d53de7ec97bef2d90582186a8398e409eed283 archives/1.1.0/source | tar -x -C rc10-source
+          python3 archives/1.1.0/qualification/rc11_regressions.py --reference "$GITHUB_WORKSPACE/rc10-source/archives/1.1.0/source" --out upload-regressions
+      - name: Two full 30-second uploads with delayed server DATA reads
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out upload-delayed --only candidate --upload-fetch-delay-ms 350 --duration 30s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('upload-delayed/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete' and len(d['Phases'])==4
+          assert all(p['success'] for p in d['Phases']) and d['targets']['full_phase_100mbps']
+          assert d['Provider']['commands']['DELAYED_DATA_FETCH']>0 and d['Provider']['commands']['MAX_DATA_FETCH_ROWS']>8
+          assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert d['Provider']['connection_rejections']==0
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-upload-replay
+          path: |
+            upload-regressions/
+            upload-delayed/
+          if-no-files-found: error
+
+  corporate-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Freeze RC11 and reproduce permanent startup losses
+        run: |
+          set -euo pipefail
+          git fetch origin e3c61864048be2e9a7e4b328b5324a2d91f88d4b --no-tags
+          mkdir rc11-source
+          git archive e3c61864048be2e9a7e4b328b5324a2d91f88d4b archives/1.1.0/source | tar -x -C rc11-source
+          python3 archives/1.1.0/qualification/rc12_regressions.py --reference "$GITHUB_WORKSPACE/rc11-source/archives/1.1.0/source" --out corporate-regressions
+      - name: Observe RC11 stuck at 18 of 30 lines on asymmetric corporate link
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out corporate-reference --only candidate --candidate "$GITHUB_WORKSPACE/rc11-source/archives/1.1.0/source/core" --client-upload-mbps 35 --client-download-mbps 50 --existing-create-stall-ms 20000 --duration 1s --streams 4 --idle-probes 4 --post-probes 4
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('corporate-reference/candidate.json').read_text())
+          assert not d['success'] and 'readiness' in d['error']
+          assert d['diagnostics']['Client']['ActiveLines']==18
+          assert d['diagnostics']['Mail']['failed_accounts']==4
+          assert {l['account'] for l in d['diagnostics']['Mail']['lines'] if l.get('failure')}=={'a02','a03','a05','a10'}
+          PYCODE
+      - name: Recover all accounts and complete two constrained upload and download cycles
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out corporate-candidate --only candidate --client-upload-mbps 35 --client-download-mbps 50 --existing-create-stall-ms 20000 --startup-select-refusals 2 --duration 16s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('corporate-candidate/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete' and len(d['Phases'])==4
+          assert all(p['success'] for p in d['Phases'])
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+          assert d['Provider']['commands'].get('STALLED_EXISTING_CONTROL_CREATE',0)==0
+          assert sum(v for k,v in d['Provider']['commands'].items() if k.startswith('REFUSED_SELECT/'))==16
+          assert d['Provider']['connection_rejections']==0
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          for p in d['Phases']:
+              direction=p['name']
+              assert p[direction]['full_phase_mbps'] >= (15 if direction=='upload' else 25)
+          lines=d['diagnostics']['Mail']['lines']
+          assert all(l['startup_attempts']>=3 for l in lines if l['account'] in ('a02','a03','a05','a10'))
+          assert all(l['startup_attempts']==1 for l in lines if l['account'] not in ('a02','a03','a05','a10'))
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-corporate-replay
+          path: |
+            corporate-regressions/
+            corporate-reference/
+            corporate-candidate/
+          if-no-files-found: error
+
+  home-service-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce frozen RC12 failures and reuse physical storage
+        run: |
+          set -euo pipefail
+          git fetch origin 45052ad0054580c9fb89f5609d7a745e2e38f447 --no-tags
+          mkdir frozen-rc12
+          git archive 45052ad0054580c9fb89f5609d7a745e2e38f447 archives/1.1.0/source | tar -x -C frozen-rc12
+          python3 archives/1.1.0/qualification/rc13_regressions.py --reference "$GITHUB_WORKSPACE/frozen-rc12/archives/1.1.0/source" --out home-regressions
+      - name: Two speedtests with realistic APPEND service cost independent of network RTT
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out home-service --only candidate --append-service-ms 60 --reject-selected-status --duration 30s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('home-service/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete' and len(d['Phases'])==4
+          assert all(p['success'] for p in d['Phases'])
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
+          assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+          assert d['diagnostics']['Mail']['retired_segments']>0
+          assert d['Provider']['connection_rejections']==0 and d['Provider']['commands'].get('REJECTED_SELECTED_STATUS',0)==0
+          assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
+          assert all(l['data_appended_messages']>0 and l['append_completion_ms']>0 for l in d['diagnostics']['Mail']['lines'])
+          assert d['targets']['full_phase_100mbps']
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-home-service
+          path: |
+            home-regressions/
+            home-service/
+          if-no-files-found: error
+
+  repeated-cleanup-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce frozen RC13 short mutation deadline
+        run: |
+          set -euo pipefail
+          git fetch origin d59dbc47c10673d753daadf8e4c7bfb51f97899d --no-tags
+          mkdir rc13-source
+          git archive d59dbc47c10673d753daadf8e4c7bfb51f97899d archives/1.1.0/source | tar -x -C rc13-source
+          python3 archives/1.1.0/qualification/rc14_regressions.py --reference "$GITHUB_WORKSPACE/rc13-source/archives/1.1.0/source" --out repeated-regressions
+      - name: Three full speedtests with retained controls and per-row mutation cost
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out repeated-cleanup --only candidate --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 30s --cycles 3 --streams 4 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_repeated.py repeated-cleanup --require-goal
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-repeated-cleanup
+          path: |
+            repeated-regressions/
+            repeated-cleanup/
+          if-no-files-found: error
+
+  recovered-client-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Cold transfers with 535 MB persisted debt, then verify bandwidth after audited recovery
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out recovered-client --only candidate --recovered-client-mib 51 --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --history-folders 2 --duration 30s --cycles 3 --streams 4 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_recovered.py recovered-client
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-rc17-recovered-client, path: recovered-client/, if-no-files-found: error}
+
+  short-runs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce frozen RC14 burst and cleanup faults
+        run: |
+          set -euo pipefail
+          git fetch origin d66775cfbd59b7c0c9b225af628032723dbe9147 --no-tags
+          mkdir rc14-source
+          git archive d66775cfbd59b7c0c9b225af628032723dbe9147 archives/1.1.0/source | tar -x -C rc14-source
+          python3 archives/1.1.0/qualification/rc15_regressions.py --reference "$GITHUB_WORKSPACE/rc14-source/archives/1.1.0/source" --out short-regressions
+      - name: Record RC14 short MULTI startup and repeat behavior
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --candidate "$GITHUB_WORKSPACE/rc14-source/archives/1.1.0/source/core" --out short-rc14 --only candidate --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 10s --cycles 3 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/short_runs.py short-rc14
+      - name: Verify three short SINGLE and MULTI runs with real TLS and provider service cost
+        run: |
+          set -euo pipefail
+          for streams in 1 16; do
+            python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out "short-$streams" --only candidate --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 10s --cycles 3 --streams "$streams" --idle-probes 4 --post-probes 8
+            python3 archives/1.1.0/qualification/short_runs.py "short-$streams" --require-sustained
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-short-runs
+          path: |
+            short-regressions/
+            short-rc14/
+            short-1/
+            short-16/
+          if-no-files-found: error
+
+  mobile-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce RC15 mobile allowance equilibrium with real packet delivery marks
+        run: |
+          set -euo pipefail
+          git fetch origin 3791869c5e15250b8d4070c7bc8a03794c0c8c89 --no-tags
+          mkdir rc15-source
+          git archive 3791869c5e15250b8d4070c7bc8a03794c0c8c89 archives/1.1.0/source | tar -x -C rc15-source
+          python3 archives/1.1.0/qualification/rc16_regressions.py --reference "$GITHUB_WORKSPACE/rc15-source/archives/1.1.0/source" --out mobile-regressions
+      - name: Retain frozen RC15 full TLS mobile behavior
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-reference --candidate "$GITHUB_WORKSPACE/rc15-source/archives/1.1.0/source/core" --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+      - name: Complete repeat mobile transfers without suppressing slow bulk callbacks
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-candidate --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_mobile.py mobile-candidate --reference mobile-reference
+      - name: Preserve faster setup and independently delayed full DATA as in the field
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-fast-setup-reference --candidate "$GITHUB_WORKSPACE/rc15-source/archives/1.1.0/source/core" --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --large-data-fetch-delay-only --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-fast-setup-candidate --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --large-data-fetch-delay-only --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_mobile.py mobile-fast-setup-candidate --reference mobile-fast-setup-reference
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-mobile-replay
+          path: |
+            mobile-regressions/
+            mobile-reference/
+            mobile-candidate/
+            mobile-fast-setup-reference/
+            mobile-fast-setup-candidate/
+          if-no-files-found: error
+
+  paged-collection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Reproduce frozen RC16 oversized and partial collection failures
+        run: |
+          set -euo pipefail
+          git fetch origin eb3db9859901379f6f42de79c36bee67a98b385c --no-tags
+          mkdir frozen-rc16
+          git archive eb3db9859901379f6f42de79c36bee67a98b385c archives/1.1.0/source | tar -x -C frozen-rc16
+          python3 archives/1.1.0/qualification/rc17_regressions.py --reference "$GITHUB_WORKSPACE/frozen-rc16/archives/1.1.0/source" --out collection-regressions
+      - name: Two full speedtests with a four-MiB MIME mutation limit
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out paged-collection --only candidate --max-expunge-mib 4 --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 20s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_paged_collection.py paged-collection
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-rc17-paged-collection
+          path: |
+            collection-regressions/
+            paged-collection/
+          if-no-files-found: error

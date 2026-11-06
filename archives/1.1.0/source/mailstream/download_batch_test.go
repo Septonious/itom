@@ -26,7 +26,7 @@ func (s *downloadBatchObserver) Select(folder string, opts *imap.SelectOptions) 
 	return d, e
 }
 func (s *downloadBatchObserver) Fetch(w *imapserver.FetchWriter, set imap.NumSet, opts *imap.FetchOptions) error {
-	if strings.Contains(s.selected, "-s2c-") && opts != nil && len(opts.BodySection) > 0 {
+	if (strings.Contains(s.selected, "-s2c-") || len(s.selected) == 55 && s.selected[50:53] == "-d-") && opts != nil && len(opts.BodySection) > 0 {
 		s.calls.Add(1)
 		if seq, ok := set.(imap.SeqSet); ok {
 			var rows int32

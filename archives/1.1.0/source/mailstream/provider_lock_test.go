@@ -158,7 +158,7 @@ func TestLoadAndReconnectWithAccountWideDeletionLocks(t *testing.T) {
 	}
 	folderCount := 0
 	fixture.folders.Range(func(key, value any) bool {
-		if !strings.Contains(key.(string), "-control-") {
+		if !(strings.Contains(key.(string), "-control-") || strings.HasSuffix(key.(string), "-c-u") || strings.HasSuffix(key.(string), "-c-d")) {
 			folderCount++
 		}
 		return true

@@ -2,6 +2,7 @@ package mailstream
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 // Amortize audited metadata work over a larger bounded generation. This does
 // not batch interactive writes: each small packet is still published promptly.
 const segmentAppends = 128
+
+var errCollectionPartial = errors.New("MAILSTREAM_COLLECTION_PARTIAL")
 
 // Normally two slots alternate. Unavailable housekeeping may retain additional
 // slots, within both this hard bound and the unchanged physical byte budget.
@@ -54,7 +57,7 @@ type cleanupJob struct {
 }
 
 func (l *IMAPLink) segmentFolder(id SessionID, out bool, slot uint32) string {
-	return fmt.Sprintf("%s-%08x", l.dataFolder(id, out), slot)
+	return fmt.Sprintf("%s-%02x", l.dataFolder(id, out), slot)
 }
 func (l *IMAPLink) Retirements() <-chan Retirement { return l.retirements }
 func (l *IMAPLink) Acknowledge(id SessionID, sequence uint64) error {
@@ -256,7 +259,7 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, remote: true, retired: true}
 		// SELECT implicitly leaves the drained mailbox without expunging it. No
 		// storage mutation or reclamation command runs on the delivery reader.
-		parking := a.link.dataFolder(id, false) + "-park"
+		parking := a.link.dataFolder(id, false) + "-p"
 		if _, err := p.selectLog(parking, false); err != nil {
 			return err
 		}
@@ -380,20 +383,55 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages == 0 {
 		return nil
 	}
-	if box.NumMessages != segmentAppends {
+	if box.NumMessages > segmentAppends {
 		return ErrProtocol
+	}
+	c.stage("collection_inventory")
+	rows, err := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: box.NumMessages}}, &imap.FetchOptions{UID: true, Flags: true, RFC822Size: true}).Collect()
+	if err != nil {
+		return err
+	}
+	if len(rows) != int(box.NumMessages) {
+		return ErrProtocol
+	}
+	proof := make(map[imap.UID]bool, len(uids))
+	for _, uid := range uids {
+		proof[uid] = true
+	}
+	for _, row := range rows {
+		if !proof[row.UID] {
+			return ErrProtocol
+		}
+	}
+	page, deferred, _, _, err := mutationPage(rows, ^uint32(0))
+	if err != nil {
+		return err
 	}
 	// Drain each tagged mutation before the next operation. The final SELECT
 	// remains mandatory before any physical capacity is refunded.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
 	c.stage("store_expunge")
-	status, err := p.deleteUIDs(rec.uids, rec.folder, c.stage)
+	if err := p.clearDeferredDeletion(deferred, c.stage); err != nil {
+		return err
+	}
+	status, err := p.deleteUIDs(page, rec.folder, c.stage)
 	if err != nil {
 		return err
 	}
-	if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages != 0 {
+	if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages >= box.NumMessages {
 		return ErrProtocol
+	}
+	if *status.NumMessages != 0 {
+		c.stage("collection_page_audit")
+		left, err := p.client.Fetch(page, &imap.FetchOptions{UID: true}).Collect()
+		if err != nil {
+			return err
+		}
+		if len(left) != 0 {
+			return ErrProtocol
+		}
+		return errCollectionPartial
 	}
 	// APPEND is valid in selected state. Staying on this proved-empty DATA
 	// slot avoids another round trip; no CLOSE/UNSELECT is needed.

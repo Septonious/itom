@@ -26,7 +26,7 @@ func (s *unevenControl) Login(user, password string) error {
 	return s.Session.Login(user, password)
 }
 func (s *unevenControl) Select(name string, options *imap.SelectOptions) (*imap.SelectData, error) {
-	if s.user == "fixture1" && strings.Contains(name, "-control-") {
+	if s.user == "fixture1" && (strings.Contains(name, "-control-") || strings.HasSuffix(name, "-c-u") || strings.HasSuffix(name, "-c-d")) {
 		time.Sleep(3 * time.Second)
 	}
 	return s.Session.Select(name, options)

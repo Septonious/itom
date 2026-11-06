@@ -38,6 +38,7 @@ def main():
     parser.add_argument('--upload-fetch-delay-ms',type=int,default=0)
     parser.add_argument('--download-fetch-delay-ms',type=int,default=0)
     parser.add_argument('--large-data-fetch-delay-only',action='store_true')
+    parser.add_argument('--max-expunge-mib',type=int,default=0)
     parser.add_argument('--history-folders',type=int,default=0)
     parser.add_argument('--account-metadata-delay-ms',type=int,default=0)
     parser.add_argument('--idle-observe',default='0s')
@@ -66,6 +67,7 @@ def main():
     parser.add_argument('--idle-probes', type=int, default=20)
     parser.add_argument('--post-probes', type=int, default=12)
     args = parser.parse_args()
+    if not 0<=args.max_expunge_mib<=64: parser.error('expunge budget must be 0..64 MiB')
     if not 0<=args.recovered_client_mib<=64: parser.error('recovered debt must be 0..64 MiB per account')
     if not 0<=args.mutation_row_cost_ms<=20: parser.error('mutation row cost must be 0..20 ms')
     if not 0<=args.append_service_ms<=1000: parser.error("append service must be 0..1000 ms")
@@ -99,7 +101,7 @@ def main():
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     sources = {'rc2': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
-    manifest = {'recovered_client_mib':args.recovered_client_mib,'mutation_row_cost_ms':args.mutation_row_cost_ms,'append_service_ms':args.append_service_ms,'reject_selected_status':args.reject_selected_status,'client_upload_mbps':args.client_upload_mbps,'client_download_mbps':args.client_download_mbps,'existing_create_stall_ms':args.existing_create_stall_ms,'startup_select_refusals':args.startup_select_refusals,'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'download_fetch_delay_ms':args.download_fetch_delay_ms,'large_data_fetch_delay_only':args.large_data_fetch_delay_only,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
+    manifest = {'max_expunge_mib':args.max_expunge_mib,'recovered_client_mib':args.recovered_client_mib,'mutation_row_cost_ms':args.mutation_row_cost_ms,'append_service_ms':args.append_service_ms,'reject_selected_status':args.reject_selected_status,'client_upload_mbps':args.client_upload_mbps,'client_download_mbps':args.client_download_mbps,'existing_create_stall_ms':args.existing_create_stall_ms,'startup_select_refusals':args.startup_select_refusals,'upload_fetch_delay_ms':args.upload_fetch_delay_ms,'download_fetch_delay_ms':args.download_fetch_delay_ms,'large_data_fetch_delay_only':args.large_data_fetch_delay_only,'history_folders':args.history_folders,'account_metadata_delay_ms':args.account_metadata_delay_ms,'idle_observe':args.idle_observe,'prefill_control': args.prefill_control, 'early_store_expunge': args.early_store_expunge, 'bulk_publish_delay_ms': args.bulk_publish_delay_ms, 'go': version, 'accounts': args.accounts, 'duration': args.duration, 'cycles': args.cycles,
                 'streams': args.streams, 'duplex': args.duplex, 'order': args.order,
                 'cancel_download_after': args.cancel_download_after,
                 'idle_probes': args.idle_probes, 'post_probes': args.post_probes, 'variable_latency': not args.zero_latency and not args.worst_latency,
@@ -161,7 +163,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                 private.mkdir()
                 provider_log = (output/(label+'-provider.log')).open('w')
                 provider = subprocess.Popen([str(work/'provider'), '-dir', str(private), '-accounts', str(args.accounts),
-                                             '-mutation-row-cost',f'{args.mutation_row_cost_ms}ms','-append-service',f'{args.append_service_ms}ms','-reject-selected-status='+str(args.reject_selected_status).lower(),'-client-upload-mbps',str(args.client_upload_mbps),'-client-download-mbps',str(args.client_download_mbps),'-existing-create-stall',f'{args.existing_create_stall_ms}ms','-startup-select-refusals',str(args.startup_select_refusals),'-upload-fetch-delay',f'{args.upload_fetch_delay_ms}ms','-download-fetch-delay',f'{args.download_fetch_delay_ms}ms','-large-data-fetch-delay-only='+str(args.large_data_fetch_delay_only).lower(),'-history-folders',str(args.history_folders),'-account-metadata-delay',f'{args.account_metadata_delay_ms}ms','-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
+                                             '-max-expunge-mib',str(args.max_expunge_mib),'-mutation-row-cost',f'{args.mutation_row_cost_ms}ms','-append-service',f'{args.append_service_ms}ms','-reject-selected-status='+str(args.reject_selected_status).lower(),'-client-upload-mbps',str(args.client_upload_mbps),'-client-download-mbps',str(args.client_download_mbps),'-existing-create-stall',f'{args.existing_create_stall_ms}ms','-startup-select-refusals',str(args.startup_select_refusals),'-upload-fetch-delay',f'{args.upload_fetch_delay_ms}ms','-download-fetch-delay',f'{args.download_fetch_delay_ms}ms','-large-data-fetch-delay-only='+str(args.large_data_fetch_delay_only).lower(),'-history-folders',str(args.history_folders),'-account-metadata-delay',f'{args.account_metadata_delay_ms}ms','-client-mbps', str(args.client_mbps), '-bulk-publish-delay', f'{args.bulk_publish_delay_ms}ms', '-prefill-control', str(args.prefill_control), '-early-store-expunge='+str(args.early_store_expunge).lower(), '-variable='+str(not args.zero_latency).lower(), '-worst='+str(args.worst_latency).lower()], env=env,
                                             stdout=provider_log, stderr=subprocess.STDOUT)
                 try:
                     for _ in range(200):

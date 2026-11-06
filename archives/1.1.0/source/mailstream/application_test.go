@@ -295,7 +295,7 @@ func (s noCleanupSession) Delete(folder string) error {
 }
 func (s noCleanupSession) Append(folder string, r imap.LiteralReader, opts *imap.AppendOptions) (*imap.AppendData, error) {
 	data, err := s.Session.Append(folder, r, opts)
-	if err == nil && s.maintenance && !strings.Contains(folder, "-control-") {
+	if err == nil && s.maintenance && !(strings.Contains(folder, "-control-") || strings.HasSuffix(folder, "-c-u") || strings.HasSuffix(folder, "-c-d")) {
 		s.appendCounts[folder]++
 		if s.appendCounts[folder] == segmentAppends {
 			// The stored BODY is visible to the other TLS connection before

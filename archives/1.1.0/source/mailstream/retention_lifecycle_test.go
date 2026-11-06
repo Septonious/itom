@@ -65,9 +65,10 @@ func testRetentionLifecycle(t *testing.T, clientDebt, serverDebt int, deferHisto
 		t.Fatal(e)
 	}
 	defer probe.close()
-	oldName := "itom3-retention-life-" + "01000000000000000000000000000000" + "-c2s-00000000"
+	namespace := &IMAPLink{identity: "retention-life", client: true}
+	oldName := namespace.segmentFolder(SessionID{1}, true, 0)
 	foreign := "personal-mail-keep"
-	for _, name := range []string{oldName, "itom3-retention-life-control-v6-c2s", foreign} {
+	for _, name := range []string{oldName, namespace.controlFolder(true), foreign} {
 		if e = probe.client.Create(name, nil).Wait(); e != nil {
 			t.Fatal(e)
 		}
@@ -285,7 +286,7 @@ func TestCleanupRetriesUnknownOutcomeWithoutManualPurge(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer probe.close()
-	folder := "itom3-retry-life-control-v6-c2s"
+	folder := (&IMAPLink{identity: "retry-life", client: true}).segmentFolder(SessionID{1}, true, 0)
 	if err = probe.client.Create(folder, nil).Wait(); err != nil {
 		t.Fatal(err)
 	}

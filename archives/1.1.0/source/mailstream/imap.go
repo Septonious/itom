@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"io"
 	"net"
@@ -222,21 +221,6 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 }
 
 func (l *IMAPLink) Receive() <-chan []byte { return l.incoming }
-func (l *IMAPLink) controlFolder(out bool) string {
-	uplink := l.client == out
-	direction := "s2c"
-	if uplink {
-		direction = "c2s"
-	}
-	return "itom3-" + l.identity + "-control-v7-" + direction
-}
-func (l *IMAPLink) dataFolder(id SessionID, out bool) string {
-	direction := "s2c"
-	if l.client == out {
-		direction = "c2s"
-	}
-	return "itom3-" + l.identity + "-" + hex.EncodeToString(id[:]) + "-" + direction
-}
 func (l *IMAPLink) notify() {
 	l.mu.Lock()
 	close(l.changed)
