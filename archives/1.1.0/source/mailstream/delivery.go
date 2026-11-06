@@ -33,9 +33,9 @@ type deliveryWindow struct {
 
 const initialDeliveryWindow = 512 << 10
 
-// Leave 750 ms of the two-second loaded-RTT budget for protocol/control.
+// Leave 250 ms of the two-second loaded-RTT budget for protocol/control.
 // This is a ceiling on measured-rate headroom, never an initial flight grant.
-const maxBulkDeliveryHorizon = 1250 * time.Millisecond
+const maxBulkDeliveryHorizon = 1750 * time.Millisecond
 
 func (w *deliveryWindow) allowance() int {
 	if w.limit == 0 {
@@ -98,8 +98,14 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	// Waiting for a 250 ms estimator interval wastes several fast receipt
 	// rounds at the start of a short transfer. Quiet/light traffic cannot grow it.
 	lowQueue := w.bulkRTT <= w.base+250*time.Millisecond
-	if w.limited && lowQueue {
-		w.limit = min(maxPendingBytes, w.limit+n)
+	if w.limited {
+		if lowQueue {
+			w.limit = min(maxPendingBytes, w.limit+n)
+		} else if ceiling := int(w.rate * maxBulkDeliveryHorizon.Seconds()); ceiling > w.allowance() {
+			// Spend already measured headroom on the ACK clock rather than
+			// pausing another estimator interval on every slow receipt round.
+			w.limit = min(maxPendingBytes, min(ceiling, w.limit+n))
+		}
 	}
 	// Grow from measured delivered rate, not a delay threshold or an entire
 	// extra flight per clustered ACK batch. The initial flight is enough to

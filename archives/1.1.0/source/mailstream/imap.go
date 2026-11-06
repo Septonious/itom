@@ -654,9 +654,11 @@ func (a *mailAccountState) attach(id SessionID) error {
 		return err
 	}
 	stopSelect()
-	if !a.link.client {
-		p.fetchBatch = 32
-	} // Server upload reader amortizes slow body FETCH.
+	// Both DATA readers amortize provider FETCH service cost over available
+	// backlog. The client previously retained the eight-container fallback,
+	// imposing a download ceiling when mobile body callbacks were slow.
+	// A short read still fetches immediately; this never waits to fill a batch.
+	p.fetchBatch = 32
 	a.configureSegments(p, id)
 	p.onPacket = func(packet []byte) {
 		if len(packet) > 4096 {

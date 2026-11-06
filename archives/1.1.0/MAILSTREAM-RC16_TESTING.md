@@ -10,7 +10,7 @@ Small setup responses establish a faster baseline than full DATA/FETCH traffic.
 
 The candidate permits bounded measured-rate probing when the flight allowance
 blocks queued bulk work. Slow-RTT growth is limited to acknowledged bytes and a
-1.25-second measured-rate horizon; independent send/delivery intervals still
+1.75-second measured-rate horizon; independent send/delivery intervals still
 protect against compressed receipts. The chosen horizon is exported in runtime
 snapshots. Initial flight remains 512 KiB. No extra IMAP connections are opened.
 
