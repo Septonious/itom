@@ -795,6 +795,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	BulkSaturatedMinRTTMS int64  `json:"bulk_saturated_min_rtt_ms"`
 	BulkDeliveryHorizonMS int64  `json:"bulk_delivery_horizon_ms"`
 	BulkSmoothedRTTMS     int64  `json:"bulk_receipt_rtt_ms"`
 	BulkReceiptRTTMS      int64  `json:"bulk_receipt_min_rtt_ms"`
@@ -819,7 +820,7 @@ type Snapshot struct {
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}

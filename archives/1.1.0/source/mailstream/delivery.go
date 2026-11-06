@@ -27,6 +27,7 @@ type deliveryWindow struct {
 	ratePeakAt             time.Time
 	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
 	bulkRTT                time.Duration
+	saturatedBase          time.Duration
 	horizon                time.Duration
 	adaptive               bool
 }
@@ -42,6 +43,16 @@ func (w *deliveryWindow) allowance() int {
 		return initialDeliveryWindow
 	}
 	return w.limit
+}
+
+func (w *deliveryWindow) deliveryHorizon() time.Duration {
+	horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
+	if w.limited && w.saturatedBase > 0 {
+		// Learn the full DATA path from a flight-limited publication, rather
+		// than tiny setup traffic. Queue growth must not raise this minimum.
+		horizon = max(horizon, min(maxBulkDeliveryHorizon, 2*w.saturatedBase+500*time.Millisecond))
+	}
+	return horizon
 }
 
 func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool, marks ...deliveryMark) {
@@ -62,6 +73,9 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	}
 	if len(marks) > 0 && !marks[0].sent.IsZero() {
 		m := marks[0]
+		if w.limited && w.bulkFlight >= initialDeliveryWindow/2 && sample > 0 && (w.saturatedBase == 0 || sample < w.saturatedBase) {
+			w.saturatedBase = sample
+		}
 		w.bulkFlight = max(0, w.bulkFlight-n)
 		w.totalDelivered += uint64(n)
 		// Use both the sending interval and the delivery interval recorded
@@ -101,7 +115,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.limited {
 		if lowQueue {
 			w.limit = min(maxPendingBytes, w.limit+n)
-		} else if ceiling := int(w.rate * maxBulkDeliveryHorizon.Seconds()); ceiling > w.allowance() {
+		} else if ceiling := int(w.rate * w.deliveryHorizon().Seconds()); ceiling > w.allowance() {
 			// Spend already measured headroom on the ACK clock rather than
 			// pausing another estimator interval on every slow receipt round.
 			w.limit = min(maxPendingBytes, min(ceiling, w.limit+n))
@@ -128,10 +142,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		// full DATA. When we blocked queued bytes, probe beyond that baseline
 		// using measured delivery rate. Otherwise rate * baseline reinforces
 		// a 512 KiB / bulk-RTT ceiling forever, even on a capable mobile link.
-		horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
-		if w.limited {
-			horizon = max(horizon, min(maxBulkDeliveryHorizon, 2*w.bulkRTT))
-		}
+		horizon := w.deliveryHorizon()
 		w.horizon = horizon
 		target := int(w.rate * horizon.Seconds())
 		if !lowQueue {
@@ -199,6 +210,9 @@ func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
 	}
 	if w.bulkFlight == 0 {
 		w.firstSent = now
+		if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
+			w.saturatedBase = 0
+		}
 	}
 	w.bulkFlight += n
 	at := w.deliveredAt

@@ -28,8 +28,9 @@ the low rate. A short setup response can establish this baseline even though
 interactive packets themselves are excluded from the estimator.
 
 The candidate allows a rate-based probe when real queued bulk work was blocked
-by the flight allowance. The first prototype caps probe horizon at 1.25 seconds, and a slow-RTT
-probe can grow by at most the bytes just acknowledged. Independent send and
+by the flight allowance. The first prototype caps probe horizon at 1.25 seconds.
+Individual growth steps are byte-clocked or capped by bytes just acknowledged;
+a common measured-rate ceiling bounds slow-RTT probes. Independent send and
 delivery intervals still guard against compressed receipts. Initial flight,
 physical capacity, memory caps, connection count, controls, cleanup and DNS
 policy remain unchanged. The chosen horizon is included in runtime diagnostics.
@@ -83,3 +84,31 @@ download times out before the second pair can start. Aborted reference phases
 are preserved and labeled; missing second-run reference measurements are never
 invented or copied from another phase. Candidate repeats must still complete
 and retain at least eighty percent of their first-run rates.
+
+The final local faster-setup candidate completes both pairs at 42.2/46.5 Mbps
+upload and 34.1/39.4 Mbps download. Maximum idle/post RTT is 239.8 ms and loaded
+RTT 1,071.7 ms; all thirty carriers remain active. First-pair improvement is
+10.3x upload and 9.8x download against the aborted RC15 reference. This remains
+a generated TLS/IMAP fixture, not a real-provider or VLESS parity result.
+
+The independent application acceptance run passed on source 9717272. Final
+matched build source aeb3ca6 has byte-identical active source files. Eight
+focused race cases pass locally, including both mobile capacity cases and the
+real TLS backlog/isolated-tail reader regression. The downloaded server passes
+three startup/reconnect rounds each with ten and fifteen accounts (30/45 roles),
+and manual stop leaves all local account capacity entries at zero.
+
+The first matched build on aeb3ca6 is rejected: its corporate replay completes
+all transfers at 24–25 Mbps upload and 35–36 Mbps download, but loaded RTT peaks
+at 2,674 ms. Idle/post RTT stays below 106 ms. This is a real regression against
+the unchanged two-second gate; the failed artifact is preserved, not rerun away.
+The wider probe used smoothed *queued* RTT, allowing queue delay itself to enlarge
+flight on a short-baseline constrained path.
+
+The revised controller separately records minimum receipt RTT from a genuinely
+flight-limited bulk publication. Tiny setup responses cannot establish that
+baseline. Both the estimator and ACK-clock probe ceilings use this minimum, not
+the increasing queued RTT. A true idle-to-bulk transition relearns the baseline;
+a delayed receipt train with bytes already in flight cannot reset it upward.
+The minimum is exported as bulk_saturated_min_rtt_ms. The corporate two-second
+gate and all other existing safety gates remain unchanged.
