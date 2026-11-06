@@ -1,4 +1,4 @@
-# RC15: qualify journal isolation, bulk credit and persisted-debt recovery together.
+# RC15: qualify short TLS repeats, bounded cleanup and carried-control priority.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 concurrency: {group: itom-mailstream-rc15-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC15 with constrained-link acceptance
