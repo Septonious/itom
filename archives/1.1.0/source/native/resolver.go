@@ -124,7 +124,9 @@ func (r *dnsResolver) exchange(ctx context.Context, raw []byte) ([]byte, error) 
 		return nil, errors.New("DNS_RESOLVER_FAILED")
 	}
 	copy(reply[:2], raw[:2])
-	r.remember(reply)
+	if !query.CheckingDisabled {
+		r.remember(reply)
+	}
 	return reply, nil
 }
 
