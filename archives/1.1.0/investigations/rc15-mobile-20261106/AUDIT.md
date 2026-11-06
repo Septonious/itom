@@ -62,3 +62,17 @@ A 1.75-second measured-rate probe ceiling is under qualification. It retains
 250 ms of the two-second bulk latency budget. The 7 Mbps FIFO/batched-ACK models
 reach 6.9 Mbps with peak allowance about 1.6 MB and maximum RTT 1.8 seconds.
 Full-path weak-link loaded RTT and cancellation recovery still must pass.
+
+The 1.75-second local replay completes at 42.2/46.6 Mbps upload and
+35.8/41.3 Mbps download. Spending already measured probe headroom on individual
+receipts yields 43.4/47.5 Mbps upload and 37.1/36.9 Mbps download. The initially
+declared 45/40 Mbps upload/download goal is not met in every phase. It remains
+an explicit reported goal flag, rather than a claim of qualification. The
+release safety/progress gate requires all transfers, thirty carriers, unchanged
+idle/loaded limits, no repeated-run collapse and at least 1.5x each matched
+RC15 phase. Home 100 Mbps and weak-link gates remain mandatory and unchanged.
+
+A separate full-path fixture delays DATA only after a large MIME container is
+published in that account's selected folder. This preserves faster small setup
+responses, unlike the always-delayed stress model. Both frozen and candidate
+use identical fixture settings, and both models are retained.

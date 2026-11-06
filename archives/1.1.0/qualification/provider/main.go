@@ -40,6 +40,7 @@ type counts struct {
 	failures           uint64
 	metadata           map[string]*sync.RWMutex
 	seeded             map[string]bool
+	largeData          map[string]bool
 }
 type session struct {
 	imapserver.Session
@@ -51,6 +52,7 @@ type session struct {
 	metadataDelay        time.Duration
 	historyFolders       int
 	dataFetchDelay       time.Duration
+	largeDataDelayOnly   bool
 	selectedFolder       string
 	appendService        time.Duration
 	mutationRowCost      time.Duration
@@ -150,6 +152,9 @@ func (s *session) Append(folder string, r imap.LiteralReader, o *imap.AppendOpti
 		s.counts.Lock()
 		s.counts.appendBytes += uint64(size)
 		s.counts.appendSizes[bucket]++
+		if !strings.Contains(folder, "-control-") && size > 65536 {
+			s.counts.largeData[s.user+"/"+folder] = true
+		}
 		s.counts.Unlock()
 	}
 	return data, err
@@ -250,8 +255,13 @@ func (s *session) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.Fetc
 		}
 	}
 	if s.dataFetchDelay > 0 && o != nil && len(o.BodySection) > 0 && !strings.Contains(s.selectedFolder, "-control-") {
-		s.count("DELAYED_DATA_FETCH")
-		time.Sleep(s.dataFetchDelay)
+		s.counts.Lock()
+		delay := !s.largeDataDelayOnly || s.counts.largeData[s.user+"/"+s.selectedFolder]
+		s.counts.Unlock()
+		if delay {
+			s.count("DELAYED_DATA_FETCH")
+			time.Sleep(s.dataFetchDelay)
+		}
 	}
 	return s.Session.Fetch(w, set, o)
 }
@@ -327,6 +337,7 @@ func run() error {
 	clientMbps := flag.Int64("client-mbps", 500, "shared client rate across sockets and both directions")
 	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	downloadFetchDelay := flag.Duration("download-fetch-delay", 0, "client DATA-body FETCH service delay; independent of NOOP/control and server upload reads")
+	largeDataDelayOnly := flag.Bool("large-data-fetch-delay-only", false, "apply DATA FETCH delay only after a >64 KiB MIME container in that account folder; small setup remains fast")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
 	metadataDelay := flag.Duration("account-metadata-delay", 0, "account-wide metadata service cost; blocks concurrent data on that account")
@@ -368,14 +379,14 @@ func run() error {
 	for n := 0; n < *accounts; n++ {
 		backend.AddUser(imapmemserver.NewUser(fmt.Sprintf("a%02d", n+1), "fixture-only"))
 	}
-	stats := &counts{metadata: map[string]*sync.RWMutex{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
+	stats := &counts{metadata: map[string]*sync.RWMutex{}, largeData: map[string]bool{}, seeded: map[string]bool{}, live: map[string]int{}, peak: map[string]int{}, logins: map[string]int{}, commands: map[string]uint64{}, appendSizes: map[string]uint64{}}
 	var uploadReaderPort atomic.Int32
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}, imap.CapUIDPlus: {}, imap.CapLiteralPlus: {}, imap.CapUnselect: {}}, Logger: log.New(io.Discard, "", 0), NewSession: func(conn *imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		delay := *downloadFetchDelay
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{largeDataDelayOnly: *largeDataDelayOnly, mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

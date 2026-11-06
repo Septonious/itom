@@ -511,6 +511,12 @@ jobs:
           set -euo pipefail
           python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-candidate --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
           python3 archives/1.1.0/qualification/check_mobile.py mobile-candidate --reference mobile-reference
+      - name: Preserve faster setup and independently delayed full DATA as in the field
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-fast-setup-reference --candidate "$GITHUB_WORKSPACE/rc15-source/archives/1.1.0/source/core" --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --large-data-fetch-delay-only --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out mobile-fast-setup-candidate --only candidate --client-upload-mbps 95 --client-download-mbps 80 --upload-fetch-delay-ms 500 --download-fetch-delay-ms 600 --large-data-fetch-delay-only --append-service-ms 60 --duration 12s --cycles 2 --streams 16 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/check_mobile.py mobile-fast-setup-candidate --reference mobile-fast-setup-reference
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -519,4 +525,6 @@ jobs:
             mobile-regressions/
             mobile-reference/
             mobile-candidate/
+            mobile-fast-setup-reference/
+            mobile-fast-setup-candidate/
           if-no-files-found: error
