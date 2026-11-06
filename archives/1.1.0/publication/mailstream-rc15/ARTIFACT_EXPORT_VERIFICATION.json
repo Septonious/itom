@@ -1,0 +1,185 @@
+{
+  "source_commit": "3791869c5e15250b8d4070c7bc8a03794c0c8c89",
+  "source_tag": "v1.1.0-mailstream-rc15",
+  "export_commit": "8cdacf4d38e73100e9d359ba9418fa14ce42d682",
+  "export_run_id": 42198509618,
+  "build_run_id": 42196080693,
+  "source_acceptance_run_id": 42196080659,
+  "all_fourteen_files_redownloaded_and_sha256_matched": true,
+  "github_release_created": false,
+  "release_permission_failure_in_previous_rc": "HTTP403 Resource not accessible by integration; verified Actions artifacts used",
+  "retention_days": 90,
+  "downloads": [
+    {
+      "artifact_id": 13493447001,
+      "name": "ITOM-MAILSTREAM-RC15-signed-Android",
+      "url": "https://github.com/Septonious/itom/actions/runs/42198509618/artifacts/13493447001"
+    },
+    {
+      "artifact_id": 13493312288,
+      "name": "ITOM-MAILSTREAM-RC15-server-arm64",
+      "url": "https://github.com/Septonious/itom/actions/runs/42198509618/artifacts/13493312288"
+    },
+    {
+      "artifact_id": 13492773408,
+      "name": "ITOM-MAILSTREAM-RC15-server-amd64",
+      "url": "https://github.com/Septonious/itom/actions/runs/42198509618/artifacts/13492773408"
+    },
+    {
+      "artifact_id": 13492623894,
+      "name": "ITOM-MAILSTREAM-RC15-sources-and-evidence",
+      "url": "https://github.com/Septonious/itom/actions/runs/42198509618/artifacts/13492623894"
+    }
+  ],
+  "files": {
+    "ITOM-1.1.0-MAILSTREAM-RC15.apk": {
+      "sha256": "4a470521f4ce1479e6f8a8083f381e199cec731f6a2b25fc45edeb19e244edf6",
+      "bytes": 53956948
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC15-linux-arm64.bin": {
+      "sha256": "940740bf35add9991d62bdba37a14edc57b33c73afb6f86493e2add47b0b3cb1",
+      "bytes": 12293501
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC15-linux-amd64.bin": {
+      "sha256": "be9690a67dc360eb552b37d5f77826a5aae71364842679ee4a378b07490c2fe0",
+      "bytes": 13257144
+    },
+    "ANDROID_BUILD.json": {
+      "sha256": "4537cfe4bc024669eda197bfa26f0f0300cc018ff9f267ae8ef29343bb436363",
+      "bytes": 2519
+    },
+    "ARTIFACT_VALIDATION.json": {
+      "sha256": "e1679647b9a26dfdee61e4073dde184c59d83b1c6e72cfaf55ba4b48d0315ddb",
+      "bytes": 1546
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC15-sources.zip": {
+      "sha256": "5fa24bd1943b6ad7044a4f77b4ec7ceaceb6570674bc9ea6def704434bfd6bde",
+      "bytes": 1724943
+    },
+    "MAILSTREAM-RC15-evidence.zip": {
+      "sha256": "e68ec28e22b377b1a2625cb2f5e320e20b80da29f0c8f5e375ed3e8792f5e4a3",
+      "bytes": 2257402
+    },
+    "MAILSTREAM-RC15_TESTING.md": {
+      "sha256": "a2933e849843544cd97f60c90e354369193ac058d651f94ed224d3859561a2de",
+      "bytes": 2340
+    },
+    "MAILSTREAM_RC15_BUILD.json": {
+      "sha256": "653fc66b673e221538fe8c05483699f6d39096b3ff46357020bcf9571e3065b9",
+      "bytes": 44530
+    },
+    "MAILSTREAM_RC15_SOURCE_MANIFEST.json": {
+      "sha256": "ca84d39322143ada52d5a3f3a48e87553b2db197919da82a5a538cd819e185ea",
+      "bytes": 80943
+    },
+    "NATIVE_SOURCE_SHA256SUMS": {
+      "sha256": "d3a9fb677db456040b128bae8210e0caa3fb74384eaf30f0935ed0f1fc34c448",
+      "bytes": 323
+    },
+    "SHA256SUMS": {
+      "sha256": "cd3e2ec60ac6a19a16428d4405d01dfb34e362453d5730eabdb6045842e583ac",
+      "bytes": 1228
+    },
+    "SIGNER.txt": {
+      "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d",
+      "bytes": 951
+    },
+    "SOURCE_COMMIT": {
+      "sha256": "08b02c9e2ab49a3d04bc7a1c23fa3ff2a98ce26f515dca57e50033b45497b802",
+      "bytes": 41
+    }
+  },
+  "rc10_original_title_and_fourteen_assets_unchanged": true,
+  "rc10_asset_snapshot": {
+    "id": 435113078,
+    "name": "ITOM 1.1.0 MAILSTREAM-RC10 \u2014 first field-ready candidate",
+    "tag_name": "v1.1.0-mailstream-rc10",
+    "target_commitish": "b6d53de7ec97bef2d90582186a8398e409eed283",
+    "assets": [
+      {
+        "id": 713164225,
+        "name": "ANDROID_BUILD.json",
+        "size": 2519,
+        "digest": "sha256:381ff657ae274960270184e3f8f483aa724559e6498ec0353257284a00f52186"
+      },
+      {
+        "id": 713164231,
+        "name": "ARTIFACT_VALIDATION.json",
+        "size": 1028,
+        "digest": "sha256:1c6cfe3cf4750bd594a2dace81b4aac6f788bf62422e936b9c4af96836a538d5"
+      },
+      {
+        "id": 713164233,
+        "name": "ITOM-1.1.0-MAILSTREAM-RC10-linux-amd64.bin",
+        "size": 13210349,
+        "digest": "sha256:237e1d5804827ec7e0d8bc48c2dff67d6d883af226d0f19e201a7466a79ae911"
+      },
+      {
+        "id": 713164230,
+        "name": "ITOM-1.1.0-MAILSTREAM-RC10-linux-arm64.bin",
+        "size": 12213674,
+        "digest": "sha256:8ee0911e4bcb64d99cf9a6b6764589eea0aa324f4cc7ea6e01c7663302e3295e"
+      },
+      {
+        "id": 713164228,
+        "name": "ITOM-1.1.0-MAILSTREAM-RC10-sources.zip",
+        "size": 1695364,
+        "digest": "sha256:2fec350396914d65140dbf510295007c01572373c0382371af9db03fe46d0454"
+      },
+      {
+        "id": 713164286,
+        "name": "ITOM-1.1.0-MAILSTREAM-RC10.apk",
+        "size": 53875028,
+        "digest": "sha256:3cf9c4620712e22f739587f562d850b0a434fe86caf9134b8f71f621272079a3"
+      },
+      {
+        "id": 713164290,
+        "name": "MAILSTREAM-RC10-evidence.zip",
+        "size": 454555,
+        "digest": "sha256:a23db25b976575e22c172c340d1666b9299823669e669d256eab50f77be23067"
+      },
+      {
+        "id": 713164303,
+        "name": "MAILSTREAM-RC10_TESTING.md",
+        "size": 6125,
+        "digest": "sha256:4f5c325a7737cf97c72ae83795e8d4c5db0af41a08535b03699220f6d0a0d7d3"
+      },
+      {
+        "id": 713164306,
+        "name": "MAILSTREAM_RC10_BUILD.json",
+        "size": 15291,
+        "digest": "sha256:84c5efe49386ab1299236ac025e30c0722a9da826a9b0e70f7c2974af671b109"
+      },
+      {
+        "id": 713164310,
+        "name": "MAILSTREAM_RC10_SOURCE_MANIFEST.json",
+        "size": 78697,
+        "digest": "sha256:1e69378f371c1d79fc0edef5ef2c2ba1274adf9025d5a705961f408ba6267f49"
+      },
+      {
+        "id": 713164335,
+        "name": "NATIVE_SOURCE_SHA256SUMS",
+        "size": 323,
+        "digest": "sha256:c93645d2c4fa4f9b74435464b7cbea5f713dcf2f8b92a85fc638fd516aa067e7"
+      },
+      {
+        "id": 713164337,
+        "name": "SHA256SUMS",
+        "size": 1228,
+        "digest": "sha256:18c84111862b723fd2b254f030b9601f0e5309ed59a05920c48df9d2a04bbd62"
+      },
+      {
+        "id": 713164340,
+        "name": "SIGNER.txt",
+        "size": 951,
+        "digest": "sha256:4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d"
+      },
+      {
+        "id": 713164344,
+        "name": "SOURCE_COMMIT",
+        "size": 41,
+        "digest": "sha256:e6b7e2a62301499b1ac74a8cbb1a19cecb8530003df6cc12096e1f0f87182100"
+      }
+    ]
+  }
+}

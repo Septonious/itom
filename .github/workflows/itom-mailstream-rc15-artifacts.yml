@@ -1,8 +1,5 @@
 name: Export verified RC15 signed testing artifacts
 on:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-mailstream-rc15-artifacts.yml"]
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 concurrency: {group: itom-mailstream-rc15-artifacts, cancel-in-progress: false}
