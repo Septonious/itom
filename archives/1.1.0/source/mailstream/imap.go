@@ -84,6 +84,7 @@ type mailAccountState struct {
 	spent                               int
 	queuedBytes                         int
 	bulkBlocked                         bool
+	collectionPaged                     bool // provider refused a complete-generation collection
 	reserved, recovered                 int
 	storageKey                          []byte
 	appended, received                  atomic.Uint64

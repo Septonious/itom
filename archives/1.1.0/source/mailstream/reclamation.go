@@ -14,6 +14,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// Historical folder sweeps must not starve the exact current-session
 	// collection that is already able to release physical capacity.
 	a.mu.Lock()
+	job.record.refused = job.record.refused || a.collectionPaged
 	maintenance := a.maintenance.requested && max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2
 	if maintenance {
 		job.record.queued = false
@@ -27,6 +28,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		a.mu.Lock()
 		job.record.queued = false
 		job.record.refused = job.record.refused || refused
+		a.collectionPaged = a.collectionPaged || refused
 		a.mu.Unlock()
 	}
 	if !c.permitted(a, job.record.folder) {
@@ -88,21 +90,19 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		// A bounded, audited page is useful progress, not a refusal. Keep the
 		// entire physical charge and ownership proof until the folder is empty.
 		// Finish this direction before alternating, so partial work yields usable
-		// capacity. The existing bounded preference gives peers a turn after two
-		// pages. Return this writer and the shared lease between pages.
+		// capacity. Return this writer and the shared FIFO lease between pages.
 		a.mu.Lock()
 		a.collectRemote = job.record.remote
 		job.record.queued, job.record.refused = false, true
+		a.collectionPaged = true
 		a.mu.Unlock()
 		c.completed(a, job.record.folder)
-		c.preferRecovery(a, true)
 		return
 	}
 	if err == nil && stopped {
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
-		c.preferRecovery(a, false)
 		c.completed(a, job.record.folder)
 		return
 	}

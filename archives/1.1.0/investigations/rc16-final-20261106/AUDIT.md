@@ -29,12 +29,13 @@ message. The original UID and UIDVALIDITY proof remains mandatory. Deferred
 owned Deleted flags are cleared before EXPUNGE; unknown/foreign UIDs refuse
 mutation. Historical/consumed-prefix work uses the byte bound as well.
 
-The refused record remains in bounded retry mode until collection completes.
+A physical account remembers bounded retry mode until it closes, avoiding a
+new full-generation refusal on every later folder.
 Each successful page returns its writer and shared lease. The complete charge
 remains until a fresh empty SELECT; partial work never sends COLLECTED or
-refunds capacity. It finishes that direction before alternating and reuses the
-existing two-turn preference to make capacity reusable sooner while yielding to
-peers. Startup, delivery controller, quotas, profile/crypto identity, DNS and UI
+refunds capacity. It finishes that direction before alternating and returns the shared FIFO
+lease between pages. DATA collection does not change the separate historical
+recovery preference. Startup, delivery controller, quotas, profile/crypto identity, DNS and UI
 remain RC16's.
 
 Three frozen-RC16 regressions reproduce oversized DATA deletion, partial-retry
@@ -73,3 +74,11 @@ to 68.0 Mbps. It is rejected. These experiments establish that adding extra
 metadata turns to every healthy generation regresses repeated transfers. The
 final approach preserves RC16's fast initial collection and enters bounded mode
 only after an actual refusal/partial outcome. This also keeps the fix small.
+
+An initial record-only fallback still repeated full-size refusals on later
+generations and failed the complete transfer check. Remembering bounded mode
+on the account fixed that sequence: ten initial refusals, then accepted retry
+pages no larger than 4,189,714 bytes, 15 client/10 server audited retirements,
+30/30 roles, no final quarantine, idle/post <=224 ms and loaded <=532 ms. The
+final candidate leaves historical-recovery preference untouched and uses FIFO
+lease fairness between DATA pages. Fault-model throughput misses remain visible.
