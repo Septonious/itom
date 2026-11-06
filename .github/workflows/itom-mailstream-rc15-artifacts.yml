@@ -1,4 +1,4 @@
-name: Export verified RC14 signed testing artifacts
+name: Export verified RC15 signed testing artifacts
 on:
   push:
     branches: ["codex/v1.1.0-mailbox-stream-v3"]
