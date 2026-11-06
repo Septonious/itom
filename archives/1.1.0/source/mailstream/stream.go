@@ -319,7 +319,7 @@ func (s *Stream) Write(p []byte) (int, error) {
 		// to its DATA batch. Treating every trailer as interactive filled
 		// the control writer with bulk framing. An isolated small write
 		// still dispatches immediately; this test never waits or buffers.
-		priority := n <= 4096 && time.Since(s.bulkWriteCompleted) > 2*time.Millisecond
+		priority := n <= 4096 && time.Since(s.bulkWriteCompleted) > 250*time.Millisecond
 		err := s.session.send(ctx, frame{kind: frameData, stream: s.id, offset: offset, data: p[:n]}, priority)
 		cancel()
 		if err != nil {

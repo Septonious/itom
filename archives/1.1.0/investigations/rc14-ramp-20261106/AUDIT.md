@@ -40,3 +40,20 @@ Admin category cards use the row's intrinsic height and fill that shared height.
 Descriptions wrap naturally while paired cards retain matching geometry and the
 existing gradient, typography and colors. Android build/lint validation remains
 required; no physical-device layout measurement is claimed.
+
+The first 16-stream, 10-second full TLS replay with 120 ms per-command service
+exposed a remaining failure: uploads averaged 23–26 Mbps and downloads 45–61 Mbps.
+Byte-clocked growth alone did not fix it. A bounded feedback-batching prototype
+improved download but not upload; all results are retained. This 120 ms *idle*
+APPEND hypothesis also exceeded the 300 ms idle RTT target and is not presented
+as a measured provider latency. The main 60 ms service model independently
+produces larger loaded completion times through ordinary queued commands.
+
+Tiny chunk/TLS trailers arriving more than two milliseconds after a bulk write
+were being promoted to mirrored interactive control traffic. The candidate keeps
+these adjacent writes on the bulk path for 250 ms; unrelated new streams and
+isolated requests still use the immediate path. Receipts and WINDOW packets can
+share two-millisecond bounded priority MIME bursts. The first 512 KiB flight is
+spread over small publication quanta across ready accounts instead of filling
+only two writers. The initial flight remains unchanged. These changes require
+short full-path qualification, rather than relying on the controller simulator.

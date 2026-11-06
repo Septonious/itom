@@ -280,7 +280,14 @@ func (s *Session) receiptLoop() {
 		// Local queue pressure is not packet loss. Keep this bounded,
 		// immutable receipt until a writer accepts it instead of forcing
 		// the peer to retransmit already delivered application data.
-		err := s.link.Send(s.ctx, wire, true)
+		var err error
+		if feedback, ok := s.link.(interface {
+			SendFeedback(context.Context, []byte) error
+		}); ok {
+			err = feedback.SendFeedback(s.ctx, wire)
+		} else {
+			err = s.link.Send(s.ctx, wire, true)
+		}
 		if errors.Is(err, ErrCapacity) {
 			s.receiptRetries.Add(1)
 			timer.Reset(2 * time.Millisecond)
@@ -416,6 +423,10 @@ func (s *Session) dispatchLoop() {
 			})
 			if storage && (selected.kind == frameControlRead || selected.kind == frameControlCollected || selected.kind == frameStorageRecovered || selected.kind == frameStoragePressure) {
 				err = maintenance.SendHousekeeping(s.ctx, wire)
+			} else if feedback, ok := s.link.(interface {
+				SendFeedback(context.Context, []byte) error
+			}); ok && selected.kind == frameWindow {
+				err = feedback.SendFeedback(s.ctx, wire)
 			} else if fast, ok := s.link.(interface {
 				SendInteractive(context.Context, []byte) error
 			}); interactive && ok {

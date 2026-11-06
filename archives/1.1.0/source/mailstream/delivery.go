@@ -93,6 +93,13 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	if w.limit == 0 {
 		w.limit = initialDeliveryWindow
 	}
+	// Grow on delivered bytes while real queued work was flight-limited.
+	// Waiting for a 250 ms estimator interval wastes several fast receipt
+	// rounds at the start of a short transfer. Quiet/light traffic cannot grow it.
+	lowQueue := w.bulkRTT <= w.base+250*time.Millisecond
+	if w.limited && lowQueue {
+		w.limit = min(maxPendingBytes, w.limit+n)
+	}
 	// Grow from measured delivered rate, not a delay threshold or an entire
 	// extra flight per clustered ACK batch. The initial flight is enough to
 	// measure a fast path, while doubling it before a sample floods a 7 Mbps link.
@@ -113,9 +120,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		// larger queued RTT must never itself increase the flight allowance.
 		horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
 		target := int(w.rate * horizon.Seconds())
-		if w.limited && w.bulkRTT <= w.base+250*time.Millisecond {
-			// ACK-clocked growth discovers capacity within a short transfer.
-			target = max(target, w.allowance()+w.acked)
+		if lowQueue {
+			// A partially filled publication or sparse receipt sample is not
+			// congestion. Preserve the byte-clocked allowance until queue delay
+			// provides evidence that it should contract.
+			target = max(target, w.allowance())
 		}
 		w.limited = false
 		w.limit = min(maxPendingBytes, max(initialDeliveryWindow, target))

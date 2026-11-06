@@ -50,6 +50,7 @@ const maxMailPlain = 256 << 10
 type mailWork struct {
 	body     []byte
 	control  bool
+	feedback bool
 	recovery bool
 	charge   int
 }
@@ -122,6 +123,10 @@ type IMAPLink struct {
 	bulkAccount         uint64
 	bulkBytes           int
 	bulkPackets         int
+	bulkStartupBytes    int
+	feedbackAccount     uint64
+	feedbackPackets     int
+	feedbackAt          time.Time
 	changed             chan struct{}
 	incoming            chan []byte
 	wg                  sync.WaitGroup
@@ -291,7 +296,18 @@ func (l *IMAPLink) SendHousekeeping(ctx context.Context, body []byte) error {
 	_, err := l.sendClass(ctx, body, true, nil, true)
 	return err
 }
+
+// Feedback remains on the priority/control carrier. Route a short burst to the
+// same writer so receipt and WINDOW packets share bounded MIME publications.
+// Interactive application/control requests retain their immediate path.
+func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
+	_, err := l.sendClassMode(ctx, body, true, nil, false, true)
+	return err
+}
 func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery bool) (*mailAccountState, error) {
+	return l.sendClassMode(ctx, body, priority, exclude, recovery, false)
+}
+func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery, feedback bool) (*mailAccountState, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -309,16 +325,28 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 		peerAllowed[i] = (!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
-	if priority {
+	if feedback {
+		if l.feedbackAt.IsZero() || time.Since(l.feedbackAt) >= 2*time.Millisecond || l.feedbackPackets >= 16 {
+			l.feedbackAccount = l.roundRobin % uint64(len(l.accounts))
+			l.roundRobin++
+			l.feedbackAt, l.feedbackPackets = time.Now(), 0
+		}
+		start = int(l.feedbackAccount)
+	} else if priority {
 		l.roundRobin++
 	} else {
 		start = int(l.bulkAccount % uint64(len(l.accounts)))
 	}
-	l.mu.Unlock()
 	if !priority {
-		l.lastBulk.Store(time.Now().UnixNano())
+		now := time.Now()
+		last := l.lastBulk.Swap(now.UnixNano())
+		if last == 0 || now.Sub(time.Unix(0, last)) > time.Second {
+			l.bulkStartupBytes = initialDeliveryWindow
+			l.bulkBytes, l.bulkPackets = 0, 0
+		}
 	}
-	work := mailWork{body: bytes.Clone(body), control: priority, recovery: recovery, charge: len(body)*3/2 + 512}
+	l.mu.Unlock()
+	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
 		a := l.accounts[(start+n)%len(l.accounts)]
@@ -355,6 +383,12 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 			a.queuedBytes += work.charge
 			a.mu.Unlock()
 			a.sentPacket(body)
+			if feedback {
+				l.mu.Lock()
+				l.feedbackAccount = uint64((start + n) % len(l.accounts))
+				l.feedbackPackets++
+				l.mu.Unlock()
+			}
 			if !priority {
 				// Fill one bounded publication quantum before striping to
 				// the next account. Per-packet striping left every writer
@@ -371,7 +405,15 @@ func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, ex
 				// Fill by actual packet size, including bundle framing. TLS
 				// records are often much smaller than maxPayload; a fixed
 				// worst-case quantum left most client containers half empty.
-				if l.bulkPackets >= 16 || l.bulkBytes+len(body)+4+6 > maxMailPlain {
+				quantum := maxMailPlain
+				if l.bulkStartupBytes > 0 {
+					// Spread the unchanged first flight across ready accounts.
+					// Two large publication quanta left most writers idle
+					// throughout the first provider round trip.
+					quantum = 64 << 10
+					l.bulkStartupBytes -= len(body)
+				}
+				if l.bulkPackets >= 16 || l.bulkBytes+len(body)+4+6 > quantum {
 					l.bulkAccount = (index + 1) % uint64(len(l.accounts))
 					l.bulkBytes, l.bulkPackets = 0, 0
 				}
@@ -881,9 +923,8 @@ func (a *mailAccountState) run() {
 			}
 
 		}
-		// Control and the first isolated DATA publication never wait. Only
-		// an established bulk burst may spend a few bounded milliseconds filling an
-		// already-bounded MIME container, amortizing provider APPEND cost.
+		// Interactive requests never wait. Bulk and feedback may briefly fill
+		// their already-bounded MIME container to amortize provider command cost.
 		packets := [][]byte{work.body}
 		queuedCharge := work.charge
 		batchBytes := 6 + 4 + len(work.body)
@@ -893,11 +934,18 @@ func (a *mailAccountState) run() {
 		}
 		var coalesce *time.Timer
 		var coalesced <-chan time.Time
-		if !work.control && inFlight > 0 && time.Since(lastBulkWrite) < 250*time.Millisecond {
+		if work.feedback {
+			coalesce = time.NewTimer(2 * time.Millisecond)
+			coalesced = coalesce.C
+		}
+		if !work.control {
 			// Spend at most eight milliseconds on an established bulk
 			// container when tagged APPEND service is expensive. Small
-			// control and the first publication bypass this timer.
-			delay := min(8*time.Millisecond, max(time.Millisecond, time.Duration(a.appendLatency.Load())/16))
+			// interactive control bypasses this timer.
+			delay := 2 * time.Millisecond
+			if inFlight > 0 && time.Since(lastBulkWrite) < 250*time.Millisecond {
+				delay = min(8*time.Millisecond, max(time.Millisecond, time.Duration(a.appendLatency.Load())/16))
+			}
 			coalesce = time.NewTimer(delay)
 			coalesced = coalesce.C
 		}
@@ -907,7 +955,7 @@ func (a *mailAccountState) run() {
 			select {
 			case next = <-q:
 			default:
-				if coalesced == nil || len(a.fast) > 0 {
+				if coalesced == nil || !work.control && len(a.fast) > 0 {
 					break collect
 				}
 				select {
@@ -927,7 +975,7 @@ func (a *mailAccountState) run() {
 				}
 				return
 			}
-			if next.recovery != work.recovery || batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
+			if next.feedback != work.feedback || next.recovery != work.recovery || batchBytes+4+len(next.body) > maxMailPlain || !work.control && firstID != nextID {
 				carry = &next
 				break collect
 			}
