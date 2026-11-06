@@ -114,3 +114,17 @@ recursion flags. Address and reply caches each have 1,024 entries; only one cold
 or expiring record is evicted on pressure. Shared callers retain cancellation
 independence. The VPN-scoped cache adds cumulative, content-free diagnostics.
 Resolver selection, timeouts, optional fallback latch and worker budgets remain.
+
+The full hosted aa5a1d5 candidate passes the constrained pacing comparison and
+all other completed throughput/recovery jobs, but fails the unchanged slow-DATA
+mobile comparison: 33.5/22.4/33.2/23.9 Mbps upload/download across two cycles.
+It is rejected. Follow-up full-path and MIME-quantum prototypes remain below the
+existing upload criterion. Their results are retained; they are not releases.
+
+The production candidate therefore narrows pacing to the existing interactive
+congestion guard plus two seconds of recovery, with bounded MIME bursts.
+Quiet paths retain RC17's original controller and repeat behavior. The proposed
+fresh-burst credit reset and continuous pacing are removed. This avoids
+mistaking long provider DATA work for a shared-link queue, and keeps the code
+small. The same matched comparison and every previous gate must qualify this
+revised source before publication. DNS caching remains independently verified.

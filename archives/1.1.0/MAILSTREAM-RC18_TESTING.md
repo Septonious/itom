@@ -5,12 +5,13 @@ RC17 field results were 52.5/17.2 Mbps download/upload with 265 ms idle RTT and
 show shared-link queueing and repeated interactive guard activation. Android
 also recorded 27 DNS worker refusals while idle DNS associations filled its pool.
 
-RC18 spaces learned bulk traffic in MIME-sized bursts instead of immediately
-publishing its whole measured flight allowance. Interactive/control packets
-bypass pacing. The original flight controller, shared-link drain guard, first
-512 KiB allowance, memory limits, account limits and wire format remain. A fresh
-bulk burst returns to the initial allowance after idle, rather than dumping the
-previous speedtest's large flight onto an unmeasured path.
+RC18 smooths measured bulk traffic in MIME-sized bursts only while the existing
+interactive congestion guard is active and for two seconds afterward. Quiet
+paths retain RC17's startup, ramp and repeated-transfer controller. Interactive
+and control packets bypass pacing. Flight, memory and account limits, physical
+capacity, wire format and the original 512 KiB initial connection allowance are
+unchanged. Continuous pacing and fresh-burst credit resets were rejected because
+they slowed the slow-provider replay; they are not in this release.
 
 DNS caching follows the useful dnsmasq/OpenWrt pattern: successful answers expire
 by their shortest record/CNAME TTL, negative NXDOMAIN/NODATA answers require a

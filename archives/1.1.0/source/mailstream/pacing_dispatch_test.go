@@ -51,6 +51,7 @@ func TestMeasuredBulkBurstLeavesInteractivePublicationImmediate(t *testing.T) {
 	s.delivery.base = 200 * time.Millisecond
 	s.delivery.saturatedBase = 300 * time.Millisecond
 	s.delivery.last = time.Now()
+	s.delivery.controlSlowUntil = time.Now().Add(time.Second)
 	s.mu.Unlock()
 	for range 20 {
 		if err = s.trySend(frame{kind: frameData, stream: 1, data: make([]byte, 32<<10)}, false); err != nil {
@@ -89,14 +90,5 @@ func TestMeasuredBulkBurstLeavesInteractivePublicationImmediate(t *testing.T) {
 			}
 			return
 		}
-	}
-}
-
-func TestNewBulkBurstDoesNotReusePriorSpeedtestAllowance(t *testing.T) {
-	now := time.Now()
-	w := deliveryWindow{adaptive: true, limit: 8 << 20, rate: 20 << 20, base: 200 * time.Millisecond, last: now.Add(-5 * time.Second)}
-	w.sent(32<<10, now, true)
-	if w.allowance() != initialDeliveryWindow {
-		t.Fatalf("idle burst retained unaudited prior allowance: %d", w.allowance())
 	}
 }
