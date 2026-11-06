@@ -208,7 +208,7 @@ jobs:
           raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
           report=json.loads((source/'dist/build-report.json').read_text())
           assert report['status']=='passed' and report['source_revision']=='itom-1-1-0-mailstream-rc18'
-          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10142,'version_name':'1.1.0-mailstream-rc18-debug'}
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10143,'version_name':'1.1.0-mailstream-rc18-debug'}
           parts=[]
           for n,start in enumerate(range(0,len(raw),8*1024*1024)):
               part=raw[start:start+8*1024*1024];name=f'rc18-apk.part{n:02d}'
