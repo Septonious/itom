@@ -4,12 +4,14 @@ from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('--reference',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
 source=Path(__file__).resolve().parents[1]/'source';a.out.mkdir(parents=True,exist_ok=False)
 # Common-interface test only; frozen reference implementation remains untouched.
-name='slow_mutation_field_test.go'
-(a.reference/'mailstream'/name).write_text((source/'mailstream'/name).read_text())
+for name in ('slow_mutation_field_test.go','journal_latency_test.go'):
+ (a.reference/'mailstream'/name).write_text((source/'mailstream'/name).read_text())
 results={}
 for label,root,pattern,expected in [
  ('rc13_slow_mutation',a.reference,'^TestSlowMutationKeepsWriterAndReleasesOnlyAuditedDebt$','provider mutation budget discarded useful progress'),
  ('rc13_queued_control',a.reference,'^TestOptionalCollectionYieldsToAcceptedControl$','optional collection blocked accepted control'),
+ ('rc13_journal_blocking',a.reference,'^Test(CollectedBulkReusesDurableHighWaterWithoutDiskWrites|SlowJournalGrowthDoesNotBlockReceiptsOrLoseConcurrentRefund)$','slow durable reservation blocked account receipts'),
+ ('candidate_journal_isolation',source,'^Test(CollectedBulkReusesDurableHighWaterWithoutDiskWrites|SlowJournalGrowthDoesNotBlockReceiptsOrLoseConcurrentRefund|CleanLinkClosePersistsExactDebtAfterHighWaterReuse)$',None),
  ('candidate_bounded_collection',source,'^Test(OptionalCollectionYieldsToAcceptedControl|CollectionPagesPreserveUnconsumedControlTail|AbandonedFolderNeedsAllPagesBeforeEmptyProof|SlowMutationKeepsWriterAndReleasesOnlyAuditedDebt|RetainedControlCleanupWithEarlyExpungeBurst)$',None)]:
  r=subprocess.run(['go','test','-json','-count=1','-timeout=45s','-run',pattern,'.'],cwd=root/'mailstream',stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=180)
  (a.out/(label+'.jsonl')).write_text(r.stdout)
