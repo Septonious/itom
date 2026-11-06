@@ -100,7 +100,7 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 	stage = "control_inventory"
 	a.phase(stage)
 	folder := a.link.controlFolder(true)
-	options := &imap.StatusOptions{UIDNext: true, UIDValidity: true}
+	options := &imap.StatusOptions{UIDNext: true, UIDValidity: true, NumMessages: true}
 	stop = control.limit(15 * time.Second)
 	initial, statusErr := control.client.Status(folder, options).Wait()
 	stop()
@@ -125,13 +125,15 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 		err = ErrClosed
 		return
 	}
-	if initial == nil || initial.UIDNext == 0 || initial.UIDValidity == 0 {
+	if initial == nil || initial.UIDNext == 0 || initial.UIDValidity == 0 || initial.NumMessages == nil {
 		err = ErrProtocol
 		return
 	}
 	a.mu.Lock()
 	a.maintenance.initialOut = uidWatermark{initial.UIDValidity, uint32(initial.UIDNext) - 1}
 	a.maintenance.writes = make(map[imap.UID]controlWrite)
+	a.maintenance.initialMessages = *initial.NumMessages
+	a.maintenance.pendingMessages = 0
 	a.mu.Unlock()
 	if a.link.client {
 		stage = "writer_login"

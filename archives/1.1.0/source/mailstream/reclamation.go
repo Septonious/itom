@@ -15,7 +15,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// collection that is already able to release physical capacity.
 	a.mu.Lock()
 	job.record.refused = job.record.refused || a.collectionPaged
-	maintenance := a.maintenance.requested && max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2
+	maintenance := a.maintenance.requested && (max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 || a.controlMessagePressureLocked())
 	if maintenance {
 		job.record.queued = false
 	}
@@ -81,7 +81,23 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	}
 	stop = p.limit(budget)
 	if err == nil && !a.parking.Load() {
+		mutationStarted := time.Now()
+		pageStarted := mutationStarted
 		err = p.reclaim(job, c)
+		// Finish a normal large generation in up to three bounded mutations
+		// under the same existing deadline. Requeueing every successful page
+		// lets control maintenance and fresh bulk repeatedly overtake the last
+		// audit, retaining an entire slot into the next MULTI run. Real refusal
+		// retries keep their established one-page turns and fair backoff.
+		for pages := 1; err == errCollectionPartial && !job.record.refused && pages < 3 && a.ctx.Err() == nil && !a.parking.Load(); pages++ {
+			// Leave room for a slower next page instead of deliberately
+			// running an already slow provider into the hard IO deadline.
+			if time.Since(mutationStarted)+2*time.Since(pageStarted) >= budget {
+				break
+			}
+			pageStarted = time.Now()
+			err = p.reclaim(job, c)
+		}
 	} else if err == nil {
 		err = context.Canceled
 	}
@@ -95,8 +111,9 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		// mutation lease between pages.
 		a.mu.Lock()
 		a.collectRemote = job.record.remote
-		job.record.queued, job.record.refused = false, true
-		a.collectionPaged = true
+		// Partial progress is not a provider refusal. Keep the larger bounded
+		// first-page budget unless a real error selected conservative retries.
+		job.record.queued = false
 		a.mu.Unlock()
 		c.completed(a, job.record.folder)
 		c.preferRecovery(a, true)
@@ -106,9 +123,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
-		if job.record.refused {
-			c.preferRecovery(a, false)
-		}
+		c.preferRecovery(a, false)
 		c.completed(a, job.record.folder)
 		return
 	}

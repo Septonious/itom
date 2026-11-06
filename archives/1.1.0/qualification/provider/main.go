@@ -48,24 +48,25 @@ type counts struct {
 }
 type session struct {
 	imapserver.Session
-	counts               *counts
-	user                 string
-	bulkDelay            time.Duration
-	prefill              int
-	earlyExpunge         bool
-	metadataDelay        time.Duration
-	historyFolders       int
-	dataFetchDelay       time.Duration
-	largeDataDelayOnly   bool
-	maxExpungeBytes      int64
-	selectedFolder       string
-	appendService        time.Duration
-	mutationRowCost      time.Duration
-	appendOrdinal        uint64
-	rejectSelectedStatus bool
-	mutated              bool
-	existingCreateStall  time.Duration
-	selectRefusals       int
+	counts                *counts
+	user                  string
+	bulkDelay             time.Duration
+	prefill               int
+	earlyExpunge          bool
+	metadataDelay         time.Duration
+	historyFolders        int
+	dataFetchDelay        time.Duration
+	largeDataDelayOnly    bool
+	maxExpungeBytes       int64
+	oversizedExpungeDelay time.Duration
+	selectedFolder        string
+	appendService         time.Duration
+	mutationRowCost       time.Duration
+	appendOrdinal         uint64
+	rejectSelectedStatus  bool
+	mutated               bool
+	existingCreateStall   time.Duration
+	selectRefusals        int
 }
 
 func (s *session) Login(user, password string) error {
@@ -383,6 +384,10 @@ func (s *session) Expunge(w *imapserver.ExpungeWriter, set *imap.UIDSet) error {
 		if size > s.maxExpungeBytes {
 			s.counts.commands["REJECTED_OVERSIZED_EXPUNGE"]++
 			s.counts.Unlock()
+			if s.oversizedExpungeDelay > 0 {
+				s.count("DELAYED_OVERSIZED_EXPUNGE")
+				time.Sleep(s.oversizedExpungeDelay)
+			}
 			return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
 		}
 		s.counts.commands["MAX_ACCEPTED_EXPUNGE_BYTES"] = max(s.counts.commands["MAX_ACCEPTED_EXPUNGE_BYTES"], uint64(size))
@@ -422,6 +427,7 @@ func run() error {
 	uploadFetchDelay := flag.Duration("upload-fetch-delay", 0, "server DATA-body FETCH service delay; NOOP/control and client download reads remain independent")
 	downloadFetchDelay := flag.Duration("download-fetch-delay", 0, "client DATA-body FETCH service delay; independent of NOOP/control and server upload reads")
 	largeDataDelayOnly := flag.Bool("large-data-fetch-delay-only", false, "apply DATA FETCH delay only after a >64 KiB MIME container in that account folder; small setup remains fast")
+	oversizedDelay := flag.Duration("oversized-expunge-delay", 0, "service delay before refusing an oversized mutation; models the field timeout")
 	maxExpungeMiB := flag.Int64("max-expunge-mib", 0, "reject mutation batches above this MIME-byte budget; zero disables this independent stress hypothesis")
 	bulkDelay := flag.Duration("bulk-publish-delay", 0, "per DATA APPEND provider service time; control remains independent")
 	prefill := flag.Int("prefill-control", 0, "historical messages in each new control folder")
@@ -429,7 +435,7 @@ func run() error {
 	historyFolders := flag.Int("history-folders", 0, "old retained DATA folders per account")
 	early := flag.Bool("early-store-expunge", false, "provider emits EXPUNGE during UID STORE")
 	flag.Parse()
-	if *maxExpungeMiB < 0 || *maxExpungeMiB > 64 || *downloadFetchDelay < 0 || *downloadFetchDelay > time.Second || *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
+	if *oversizedDelay < 0 || *oversizedDelay > 30*time.Second || (*oversizedDelay > 0 && *maxExpungeMiB == 0) || *maxExpungeMiB < 0 || *maxExpungeMiB > 64 || *downloadFetchDelay < 0 || *downloadFetchDelay > time.Second || *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
 	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
@@ -471,7 +477,7 @@ func run() error {
 		if addr, ok := conn.NetConn().LocalAddr().(*net.TCPAddr); ok && int32(addr.Port) == uploadReaderPort.Load() {
 			delay = *uploadFetchDelay
 		}
-		return &session{maxExpungeBytes: *maxExpungeMiB * (1 << 20), largeDataDelayOnly: *largeDataDelayOnly, mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
+		return &session{oversizedExpungeDelay: *oversizedDelay, maxExpungeBytes: *maxExpungeMiB * (1 << 20), largeDataDelayOnly: *largeDataDelayOnly, mutationRowCost: *mutationRowCost, appendService: *appendService, rejectSelectedStatus: *rejectSelected, existingCreateStall: *existingStall, selectRefusals: *selectRefusals, dataFetchDelay: delay, Session: backend.NewSession(), counts: stats, bulkDelay: *bulkDelay, prefill: *prefill, earlyExpunge: *early, metadataDelay: *metadataDelay, historyFolders: *historyFolders}, nil, nil
 	}})
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}

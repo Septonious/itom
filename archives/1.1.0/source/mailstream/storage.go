@@ -386,10 +386,12 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages > segmentAppends {
 		return ErrProtocol
 	}
-	// Preserve RC16's amortized path on a healthy complete generation. A
-	// refusal or partial outcome switches this record to bounded retry pages.
+	// Keep the amortized path only for a known byte-bounded generation.
+	// Incoming proofs have unknown totals, so inventory them before mutation.
+	// A large first EXPUNGE can time out and occupy writers on later MULTI
+	// runs; never flag an entire unbounded generation to learn that limit.
 	// Only a fresh empty SELECT can release its original charge.
-	if box.NumMessages == segmentAppends && !rec.refused {
+	if box.NumMessages == segmentAppends && !rec.refused && rec.bytes > 0 && rec.bytes <= collectionFirstPageBytes {
 		p.allowExpunge.Store(true)
 		status, err := p.deleteUIDs(rec.uids, rec.folder, c.stage)
 		p.allowExpunge.Store(false)
@@ -418,7 +420,11 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 			return ErrProtocol
 		}
 	}
-	page, deferred, _, _, err := mutationPage(rows, ^uint32(0))
+	pageBytes := int64(collectionFirstPageBytes)
+	if rec.refused {
+		pageBytes = collectionPageBytes
+	}
+	page, deferred, _, _, err := mutationPageBounded(rows, ^uint32(0), pageBytes)
 	if err != nil {
 		return err
 	}

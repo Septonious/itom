@@ -27,6 +27,9 @@ import org.itom.domain.*
             Text(name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             GlowDot(color)
         }
+        if (line.field("ControlBackpressure") == "true") {
+            SmallNote("Mailbox cleanup is catching up; ordinary writes are paused.")
+        }
         Row(Modifier.fillMaxWidth()) {
             AccountMetric("Upload", rate("UpBps"), Green, Modifier.weight(1f))
             AccountMetric("Download", rate("DownBps"), Blue, Modifier.weight(1f))

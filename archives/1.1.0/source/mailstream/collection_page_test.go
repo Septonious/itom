@@ -16,6 +16,8 @@ type byteCollectionFixture struct {
 	sizes     map[string]map[imap.UID]int64
 	deleted   map[string]map[imap.UID]bool
 	oversized int
+	limit     int64
+	delay     time.Duration
 }
 type byteCollectionSession struct {
 	imapserver.Session
@@ -85,12 +87,19 @@ func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UID
 	for uid := range s.fixture.deleted[key] {
 		size += s.fixture.sizes[key][uid]
 	}
-	if size > 4<<20 {
+	limit := s.fixture.limit
+	if limit == 0 {
+		limit = 4 << 20
+	}
+	if size > limit {
 		s.fixture.oversized++
 		s.fixture.mu.Unlock()
 		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
 	}
 	s.fixture.mu.Unlock()
+	if s.fixture.delay > 0 {
+		time.Sleep(s.fixture.delay)
+	}
 	e := s.Session.Expunge(w, u)
 	if e == nil {
 		s.fixture.mu.Lock()
@@ -293,5 +302,77 @@ func TestHistoricalCollectionPagesRespectConsumedUIDFence(t *testing.T) {
 	rows, e := p.client.Fetch(imap.UIDSet{{Start: nums[64], Stop: nums[127]}}, &imap.FetchOptions{UID: true}).Collect()
 	if e != nil || len(rows) != 64 {
 		t.Fatal("unconsumed tail changed", e)
+	}
+}
+
+// Complete incoming proofs intentionally have no byte total. Neither zero nor
+// 128 messages proves that an initial EXPUNGE is small. Both directions must
+// page the first large generation, retain debt, then obtain an empty audit.
+func TestLargeFirstCollectionBoundedForBothDirections(t *testing.T) {
+	for _, unknown := range []bool{false, true} {
+		t.Run(map[bool]string{false: "owned", true: "incoming"}[unknown], func(t *testing.T) {
+			f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}, limit: 16 << 20}
+			accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			p, e := openMailPipe(ctx, accounts[0])
+			if e != nil {
+				t.Fatal(e)
+			}
+			defer p.close()
+			rec := seedSizedCollection(t, p, "itom-first-large-page", 256<<10)
+			if unknown {
+				rec.remote = true
+				rec.bytes = 0
+			}
+			if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator()); e == nil || e.Error() != "MAILSTREAM_COLLECTION_PARTIAL" {
+				t.Fatalf("first large generation not bounded: %v", e)
+			}
+			if f.oversized != 0 || p.client.Mailbox().NumMessages == 0 || p.client.Mailbox().NumMessages >= 128 {
+				t.Fatal("unsafe first mutation", f.oversized, p.client.Mailbox())
+			}
+			if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator()); e != nil {
+				t.Fatal("bounded continuation", e)
+			}
+			if p.client.Mailbox().NumMessages != 0 || f.oversized != 0 {
+				t.Fatal("final empty audit missing")
+			}
+		})
+	}
+}
+
+// Slow successful pages yield before the hard deadline, keeping the writer and
+// all debt. A subsequent bounded turn must complete the audit and refund once.
+func TestSlowFirstCollectionYieldsBeforeDeadlineWithoutQuarantine(t *testing.T) {
+	f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}, limit: 16 << 20, delay: 2 * time.Second}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer func() {
+		if p != nil {
+			p.close()
+		}
+	}()
+	rec := seedSizedCollection(t, p, "itom-slow-first-pages", 384<<10)
+	c := NewReclamationCoordinator()
+	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	key := segmentKey{session: SessionID{1}}
+	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
+	originalDebt := a.spent
+	original := p
+	var joined sync.WaitGroup
+	inFlight := 0
+	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+	if c.snapshot().Paused || p != original || a.spent != originalDebt || rec.refused || p.client.Mailbox().NumMessages == 0 {
+		t.Fatal("slow partial work did not yield conservatively", c.snapshot(), a.spent)
+	}
+	rec.queued = true
+	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+	if c.snapshot().Paused || p != original || a.spent != 0 || a.retired.Load() != 1 {
+		t.Fatal("safe continuation did not audit/refund", c.snapshot(), a.spent)
 	}
 }

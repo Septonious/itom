@@ -5,8 +5,12 @@ repo=Path(__file__).resolve().parents[3];out=repo/'final-audit';out.mkdir(exist_
 base='59f062d5120946185700607af32ce89dd1aafb73';prefix='archives/1.1.0/source/'
 def old(name):return subprocess.check_output(['git','show',base+':'+prefix+name],cwd=repo)
 def tracked(path,ref='HEAD'):return subprocess.check_output(['git','ls-tree','-r','--name-only',ref,'--',prefix+path],cwd=repo,text=True).splitlines()
-files=tracked('mailstream/');assert files==tracked('mailstream/',base)
-for name in files:assert (repo/name).read_bytes()==subprocess.check_output(['git','show',base+':'+name],cwd=repo),name
+files=tracked('mailstream/');basefiles=tracked('mailstream/',base)
+assert set(files)-set(basefiles)=={prefix+'mailstream/control_bounds.go',prefix+'mailstream/control_bounds_test.go'}
+assert not set(basefiles)-set(files)
+exceptions={'storage.go','maintenance.go','reclamation.go','collection_page_test.go','imap.go','startup.go','control_storage.go','control_bounds.go','control_bounds_test.go'}
+for name in files:
+ if Path(name).name not in exceptions:assert (repo/name).read_bytes()==subprocess.check_output(['git','show',base+':'+name],cwd=repo),name
 native=[]
 for name in tracked('native/'):
  if name.endswith('.go')and not name.endswith('_test.go')and not name.endswith('/mobile.go'):
@@ -22,7 +26,16 @@ allowed={'*Client.Snapshot','*Client.Diagnostics','*Client.decorateSnapshot'}
 assert set(a)-set(b)==set() and set(b)-set(a)<=allowed
 for k,v in a.items():
  if k not in allowed:assert b[k]==v,k
+# Within the bounded-collection files, every other function remains unchanged.
+collection_allowed={'*mailPipe.reclaim','*mailAccountState.processCleanup','mutationPage','mutationPageBounded','*mailAccountState.needsMaintenanceLocked','*mailAccountState.deferMaintenanceLocked','*IMAPLink.sendClassMode','*mailAccountState.run','*IMAPLink.Snapshot','*mailAccountState.openControls','*mailAccountState.controlAppended','*mailAccountState.refundControlLocked'}
+for name in ('storage.go','maintenance.go','reclamation.go','imap.go','startup.go','control_storage.go'):
+ reference=out/('reference-'+name);reference.write_bytes(old('mailstream/'+name))
+ prior,current=ast(reference),ast(repo/(prefix+'mailstream/'+name))
+ assert set(prior)-set(current)==set() and set(current)-set(prior)<=collection_allowed
+ for key,value in prior.items():
+  if key not in collection_allowed:assert current[key]==value,key
+assert 'rec.bytes > 0 && rec.bytes <= collectionFirstPageBytes' in (repo/(prefix+'mailstream/storage.go')).read_text()
 info=json.loads((repo/(prefix+'source-info.json')).read_text())
 assert (info['release'],info['android_version_name'],info['android_version_code'])==('Final','1.1.0',10145)
-result={'verified':True,'baseline_commit':base,'mailstream_files_byte_identical':len(files),'native_operation_files_byte_identical':len(native),'native_forwarding_functions_identical':len(set(a)-allowed),'only_native_function_exceptions':sorted(allowed),'android_version_name':'1.1.0','android_version_code':10145,'debuggable':False,'production_identity_checked_by_compiled_android_gate':True}
+result={'verified':True,'baseline_commit':base,'mailstream_files_byte_identical':len(files)-len(exceptions),'collection_runtime_exceptions':sorted(collection_allowed),'native_operation_files_byte_identical':len(native),'native_forwarding_functions_identical':len(set(a)-allowed),'only_native_function_exceptions':sorted(allowed),'android_version_name':'1.1.0','android_version_code':10145,'debuggable':False,'production_identity_checked_by_compiled_android_gate':True}
 (out/'TRANSPORT_RESTORE.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

@@ -1,52 +1,41 @@
-# ITOM 1.1.0 MAILSTREAM-RC11 — experimental upload testing candidate
+# ITOM 1.1.0
 
-RC10 remains the first user-confirmed field-ready baseline. RC11 changes client
-upload flight headroom and delivery-rate sampling, and increases the server
-upload FETCH batch from eight to 32 already-available containers. Initial credit,
-server download control, mailbox ownership/cleanup, DNS, app identity and signer
-are preserved. New body receipt RTT diagnostics support field comparison. Update
-both endpoints for the upload changes; preserve app data and profiles.
+Final Android VPN and Linux server using encrypted IMAP TCP transport. The
+accepted RC18 controller and control polling are retained. Large DATA collection
+uses bounded pages from its first mutation to avoid cleanup timeouts disrupting
+repeated transfers. Diagnostic rates, account names and connection counts are
+corrected. Control folders have a separate message-count guard (2,048 ordinary
+reservations plus 128 recovery), including queued and uncertain writes. Startup
+loads the remote count; restarting cannot bypass this guard. Ordinary traffic
+pauses if collection cannot keep up. Quiet control tails are collected at 32
+messages; DATA folders retain their 128-message bound. Keep the server running
+for background cleanup. Historical design notes retain their original RC headings; the
+release identity is defined by source-info.json.
 
-Update both matched endpoints. Install the signed APK in place, preserving app
-data and profile. Upload the architecture-matched ITOM `.bin` to `/tmp`, then
-use manager option 18 or `sudo itom update-from-tmp`. RC7 uses a new control
-namespace and must not be mixed with RC6.
+Install the signed ITOM-1.1.0.apk in place (org.itom.client, version code 10145).
+For an existing server, upload the matching ITOM-1.1.0-linux-amd64.bin or arm64
+binary into /tmp and choose server-manager option 18. Both endpoints should be
+updated; no manual mailbox cleanup or profile re-export is required. For a new
+server, make the matching binary executable and run it with the install command.
 
-RC10 retains RC7's measured-rate controller. It removes idle control-report
-feedback, defers historical sweeps while the VPN has ample capacity, and
-amortizes DATA collection over 128 containers. Capacity pressure and clear
-notifications work in both directions without authorizing refunds. Current DATA
-collection cannot be diverted by unrelated historical debt. Install both RC10
-endpoints; their pressure notifications require matching transport code.
+The manager provides service lifecycle and updates, account/client management,
+Android profile export, IMAP checks and purge, logging, packet/traffic traces,
+full diagnostics, notices and uninstall. The app provides VPN and SOCKS access,
+profiles, routing/per-app/network policies, DNS caching, authorized server
+administration, notices and diagnostics. Non-DNS UDP transport is deferred.
 
-RC7 collects consumed control prefixes by
-UID, so ordinary EXPUNGE cannot shift the reader's cursor. Successful tagged
-APPENDUID ownership and a verified empty UID prefix are required for refunds.
-A fenced namespace inventory collects abandoned partial DATA and old control
-folders. Idle control tails are collected only while all server sessions
-are idle; fresh admission interrupts that maintenance. Empty folders are kept
-because provider DELETE can lock the whole account. Unrelated mail and live
-session DATA are excluded. The server must remain running for idle maintenance;
-if stopped immediately, leftovers are revisited after the next start.
+Build sources with Python 3.10+: python3 ITOM-1.1.0-sources.zip android, server,
+or all. The launcher obtains pinned toolchains into its cache, runs normal/race
+and Android release tests and fatal lint, then verifies native/application
+identity. The Android final target uses the release variant with debugging and
+shrinking disabled. To sign locally, supply ITOM_ANDROID_SIGNING_STORE_FILE,
+ITOM_ANDROID_STORE_PASSWORD, ITOM_ANDROID_KEY_ALIAS and ITOM_ANDROID_KEY_PASSWORD.
+Without these, a local release APK is unsigned and must be signed before install.
+Published downloads are signed with the established ITOM certificate; custom
+keys cannot replace an existing installation signed with that certificate.
 
-Failed collection quarantines that account/folder, preserves its charge and
-retries with bounded exponential backoff. Collection cannot close delivery readers. Optional control-tail cleanup yields
-during bulk DATA when storage has headroom, then resumes at a quiet interval. The normal 64 MiB storage
-budget and 64 DATA slots remain; an additional finite 64 KiB durable reserve
-carries only bootstrap/recovery messages when an old ledger is full. Application
-traffic cannot use that reserve. Provider storage is never freed by resetting
-local counters alone. Manual stop/restart/update/purge retains its requested
-server-local reset behavior.
-
-RC6 cancellation, half-close, native DNS/TCP admission, per-account diagnostics,
-stream windows and congestion controller are retained. DNS races 31.131.251.83
-and 185.22.234.229 over UDP/TCP 53 for 250 ms. Optional IMAP fallback starts only
-after both fail and lasts until VPN restart. No DoH/DoT or theme changes.
-
-See [the transport contract](mailstream/REWRITE.md). Source/normal/race/native/
-SDK/vet gates use `python3 tools/build.py core --race`. Independent TLS IMAP/HTTPS
-qualification measures actual verified bytes, not controller estimates. Targets
-remain 300 ms idle/light RTT, 2000 ms loaded RTT and sustained 100 Mbps each
-direction where path capacity permits. Real Rambler and Android/mobile behavior
-still requires field confirmation. Permanent provider mutation failures can
-exhaust finite storage; empty folders are retained deliberately; automatic cleanup never uses DELETE.
+Profiles, credential storage, finite capacity and ownership-audited cleanup are
+preserved. No speculative RTT tuning or new transport feature is included.
+Speed and latency depend on network and provider behavior; sub-100 ms RTT and
+UDP gaming compatibility are not claimed. Phone-specific permissions and vendor
+battery management require verification on the actual phone.

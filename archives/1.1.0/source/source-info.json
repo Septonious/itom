@@ -4,7 +4,7 @@
   "revision": "itom-1-1-0-final",
   "archive_name": "ITOM-1.1.0-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Final release based on the user-accepted RC18 transport; RC19 polling change reverted exactly. Canonical diagnostics and stable account IDs retained.",
+  "qualification": "Final release based on RC18 controller/control polling, bounded first-generation collection for repeated MULTI, and fail-closed message-count limits with quiet control-tail collection. RC19 diagnostics retained.",
   "android_version_name": "1.1.0",
   "android_version_code": 10145,
   "android_application_id": "org.itom.client",

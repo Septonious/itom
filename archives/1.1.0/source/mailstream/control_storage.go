@@ -19,6 +19,8 @@ type controlWrite struct {
 	bytes    int
 }
 type retentionMaintenance struct {
+	initialMessages                                uint32
+	pendingMessages                                int
 	controlBytes, incomingBytes                    int
 	reads                                          map[imap.UID]controlWrite
 	requested                                      bool
@@ -232,6 +234,9 @@ func (a *mailAccountState) controlAppended(result *imap.AppendData, n int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	m := &a.maintenance
+	if m.pendingMessages > 0 {
+		m.pendingMessages--
+	}
 	if covers(m.deleted, uidWatermark{result.UIDValidity, uint32(result.UID)}) {
 		if err := a.refundLocked(n); err != nil {
 			a.recoveryFailure = "CONTROL_REFUND_FAILED"
@@ -262,6 +267,9 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 			a.maintenance.controlBytes -= w.bytes
 			delete(a.maintenance.writes, uid)
 		}
+	}
+	if covers(mark, a.maintenance.initialOut) {
+		a.maintenance.initialMessages = 0
 	}
 	a.maintenance.deleted = mark
 	return nil

@@ -70,6 +70,9 @@ type LineDiagnostic struct {
 	TCPStreams                      int
 	UpBps, DownBps                  uint64
 	RateReady                       bool
+	ControlMessageReservations      uint64
+	ControlMessageLimit             int
+	ControlBackpressure             bool
 }
 type ProbeSnapshot struct {
 	Samples, Failures      uint64
@@ -399,7 +402,7 @@ func (c *Client) Snapshot() ClientSnapshot {
 		s.ActiveLines += active
 		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == 3, ActiveLines: active, TotalLines: 3,
 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
-			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams)})
+			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})
 	}
 	c.mu.Lock()
 	c.sampleAccountRates(s.Lines, time.Now())

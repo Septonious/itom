@@ -83,6 +83,7 @@ type mailAccountState struct {
 	bulk                                chan mailWork
 	spent                               int
 	queuedBytes                         int
+	controlQueued                       int
 	bulkBlocked                         bool
 	collectionPaged                     bool // provider refused a complete-generation collection
 	reserved, recovered                 int
@@ -358,6 +359,11 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
 		available := a.ready && !a.failed && !a.reclaiming.Load() && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
+		messageBudget := uint64(controlMessageLimit)
+		if recovery {
+			messageBudget += controlRecoveryMessages
+		}
+		available = available && a.controlMessageReservationsLocked() < messageBudget
 		if matched {
 			available = available && a.id == packetID
 		}
@@ -372,6 +378,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		select {
 		case q <- work:
 			a.queuedBytes += work.charge
+			if priority {
+				a.controlQueued++
+			}
 			a.mu.Unlock()
 			a.sentPacket(body)
 			if feedback {
@@ -1004,6 +1013,7 @@ func (a *mailAccountState) run() {
 			} // queued DATA from a replaced session
 			a.mu.Lock()
 			a.queuedBytes -= queuedCharge
+			a.reserveControlPublicationLocked(len(packets))
 			chargeErr := a.chargeLocked(len(encoded))
 			a.mu.Unlock()
 			if chargeErr != nil {
@@ -1055,6 +1065,9 @@ func (a *mailAccountState) run() {
 		}
 		a.mu.Lock()
 		a.queuedBytes -= queuedCharge
+		if work.control {
+			a.reserveControlPublicationLocked(len(packets))
+		}
 		if err := a.chargeLocked(len(encoded)); err != nil {
 			a.mu.Unlock()
 			a.failedStage("storage_charge", err)
@@ -1139,6 +1152,10 @@ type MailSnapshot struct {
 	Lines          []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
+	ControlMessageReservations uint64 `json:"control_message_reservations"`
+	ControlMessageLimit        int    `json:"control_message_limit"`
+	ControlRecoveryReserve     int    `json:"control_recovery_reserve"`
+	ControlBackpressure        bool   `json:"control_backpressure"`
 	ControlOutgoingBytes       int    `json:"control_outgoing_retained_bytes"`
 	ControlIncomingBytes       int    `json:"control_incoming_retained_bytes"`
 	ControlOutstanding         int    `json:"control_outstanding"`
@@ -1226,6 +1243,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()
 		}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
+		line.ControlMessageReservations = a.controlMessageReservationsLocked()
+		line.ControlMessageLimit = controlMessageLimit
+		line.ControlRecoveryReserve = controlRecoveryMessages
+		line.ControlBackpressure = line.ControlMessageReservations >= controlMessageLimit
 		line.ControlOutstanding = len(a.maintenance.writes)
 		line.ControlOutgoingBytes = a.maintenance.controlBytes
 		line.ControlIncomingBytes = a.maintenance.incomingBytes

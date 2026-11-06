@@ -50,7 +50,16 @@ const collectionTimeout = 8 * time.Second
 // of the UID page cap. Healthy complete DATA keeps its amortized fast path.
 const collectionPageBytes = 4 << 20
 
+// A first complete DATA generation may exceed 40 MiB. Bound its first
+// mutation as well, while amortizing metadata on providers that accept it.
+// An actual refusal/unknown outcome keeps the established four-MiB retry cap.
+const collectionFirstPageBytes = 16 << 20
+
 func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
+	return mutationPageBounded(rows, fence, collectionPageBytes)
+}
+
+func mutationPageBounded(rows []*imapclient.FetchMessageBuffer, fence uint32, byteLimit int64) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
 	sort.Slice(rows, func(i, j int) bool { return rows[i].UID < rows[j].UID })
 	var last imap.UID
 	var bytes int64
@@ -64,7 +73,7 @@ func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32) (owned, d
 		if uint32(row.UID) > fence {
 			continue
 		}
-		if count > 0 && row.RFC822Size > collectionPageBytes-bytes {
+		if count > 0 && row.RFC822Size > byteLimit-bytes {
 			full = true
 		}
 		if !full {
@@ -614,14 +623,14 @@ func (a *mailAccountState) needsMaintenanceLocked() bool {
 	}
 	// Small control tails are cheap to retain. Do not interrupt an APPEND
 	// actor merely because housekeeping advanced a UID or old folders exist.
-	return max(m.controlBytes, m.incomingBytes) >= reservationQuantum/2
+	return max(m.controlBytes, m.incomingBytes) >= reservationQuantum/2 || uint64(m.initialMessages)+uint64(len(m.writes)) >= controlBatch || len(m.reads) >= controlBatch
 }
 
 // Control tails can wait during a bulk burst when storage has ample headroom.
 // DATA collection remains eligible. Capacity-critical historical recovery and real
 // retention pressure always override this optimization. Account.mu is held.
 func (a *mailAccountState) deferMaintenanceLocked() bool {
-	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 {
+	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 || a.controlMessagePressureLocked() {
 		return false
 	}
 	last := a.link.lastBulk.Load()

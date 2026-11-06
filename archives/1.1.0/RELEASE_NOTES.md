@@ -1,9 +1,28 @@
 # ITOM 1.1.0
 
 ITOM 1.1.0 final uses the field-accepted RC18 transport. The RC19 control-polling
-change has been reverted; the entire mailstream module matches RC18 byte for
-byte. The account-speed, account-name and connection-count diagnostics fixes
-are retained. No new transport feature or speculative performance tuning is
+change has been reverted; the control polling and bulk controller match RC18. The account-speed, account-name and connection-count diagnostics fixes
+are retained. Large DATA generations now use at most 16 MiB for their first
+collection page, before an oversized whole-folder EXPUNGE can time out. Refusals
+retain the existing 4 MiB retry pages. Incoming proofs with unknown byte totals
+are inventoried first; partial progress keeps the entire charge until the final
+empty-folder audit. The two-writer bound, mutation deadline and wire format are
+unchanged. A successful large generation can finish in at most three bounded
+mutations under that deadline, with a timing margin before another slow page.
+
+Control-message growth is bounded independently of bytes: 2,048 ordinary-message
+reservations plus 128 recovery reservations per outgoing control folder, counting
+queued, in-flight and uncertain APPENDs. Existing remote counts are loaded by the
+startup STATUS command, so a restart cannot erase the guard. Ordinary writes
+pause when cleanup cannot keep up; audit-proven collection releases reservations.
+During quiet periods, control tails of 32 messages are eligible for collection;
+DATA folders retain their 128-message bound. Backpressure is visible in diagnostics.
+The server must stay running for background cleanup. Empty owned folders may
+remain because provider DELETE can lock an account. Unrecognized legacy
+folders are not automatically deleted; automatic collection stays in the
+proved-owned namespace and preserves other mail.
+
+No new transport feature or speculative performance tuning is
 included. UDP-over-TCP remains deferred.
 
 The Android app identifies as 1.1.0 (version code 10145), uses the existing
