@@ -795,7 +795,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
-	BulkSaturatedMinRTTMS int64  `json:"bulk_saturated_min_rtt_ms"`
+	BulkSaturatedMinRTTMS int64  `json:"bulk_saturated_round_rtt_ms"`
 	BulkDeliveryHorizonMS int64  `json:"bulk_delivery_horizon_ms"`
 	BulkSmoothedRTTMS     int64  `json:"bulk_receipt_rtt_ms"`
 	BulkReceiptRTTMS      int64  `json:"bulk_receipt_min_rtt_ms"`

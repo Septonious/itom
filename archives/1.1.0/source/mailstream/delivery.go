@@ -28,6 +28,8 @@ type deliveryWindow struct {
 	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
 	bulkRTT                time.Duration
 	saturatedBase          time.Duration
+	saturatedSamples       [128]int
+	saturatedBytes         int
 	horizon                time.Duration
 	adaptive               bool
 }
@@ -48,8 +50,9 @@ func (w *deliveryWindow) allowance() int {
 func (w *deliveryWindow) deliveryHorizon() time.Duration {
 	horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
 	if w.limited && w.saturatedBase > 0 {
-		// Learn the full DATA path from a flight-limited publication, rather
-		// than tiny setup traffic. Queue growth must not raise this minimum.
+		// Learn the full DATA path from a complete flight-limited round,
+		// rather than its fastest small fragment. Queue growth must not
+		// raise the minimum observed round baseline.
 		horizon = max(horizon, min(maxBulkDeliveryHorizon, 2*w.saturatedBase+500*time.Millisecond))
 	}
 	return horizon
@@ -73,8 +76,27 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	}
 	if len(marks) > 0 && !marks[0].sent.IsZero() {
 		m := marks[0]
-		if w.limited && w.bulkFlight >= initialDeliveryWindow/2 && sample > 0 && (w.saturatedBase == 0 || sample < w.saturatedBase) {
-			w.saturatedBase = sample
+		if w.limited && w.bulkFlight >= initialDeliveryWindow/2 && sample > 0 {
+			// Weight a full flight by bytes: one fast setup/tail fragment or
+			// an unusually fast account cannot label the whole DATA path.
+			bucket := min(len(w.saturatedSamples)-1, int(sample/(25*time.Millisecond)))
+			w.saturatedSamples[bucket] += n
+			w.saturatedBytes += n
+			if w.saturatedBytes >= initialDeliveryWindow {
+				left := (w.saturatedBytes + 1) / 2
+				for i, bytes := range w.saturatedSamples {
+					left -= bytes
+					if left <= 0 {
+						baseline := time.Duration(i+1) * 25 * time.Millisecond
+						if w.saturatedBase == 0 || baseline < w.saturatedBase {
+							w.saturatedBase = baseline
+						}
+						break
+					}
+				}
+				clear(w.saturatedSamples[:])
+				w.saturatedBytes = 0
+			}
 		}
 		w.bulkFlight = max(0, w.bulkFlight-n)
 		w.totalDelivered += uint64(n)
@@ -212,6 +234,8 @@ func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
 		w.firstSent = now
 		if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
 			w.saturatedBase = 0
+			clear(w.saturatedSamples[:])
+			w.saturatedBytes = 0
 		}
 	}
 	w.bulkFlight += n

@@ -1,6 +1,7 @@
 package mailstream
 
 import (
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -11,8 +12,16 @@ import (
 // delay are independent: a larger RTT alone does not imply a slow access link.
 // Respect real flight limits and use production packet delivery marks.
 func TestMobileBulkEscapesSmallTrafficBaseline(t *testing.T) {
-	for _, capacity := range []int{7, 80} {
-		t.Run(strconv.Itoa(capacity)+"Mbps", func(t *testing.T) {
+	for _, variant := range []struct {
+		capacity int
+		mixed    bool
+	}{{7, false}, {80, false}, {80, true}} {
+		capacity, mixed := variant.capacity, variant.mixed
+		name := strconv.Itoa(capacity) + "Mbps"
+		if mixed {
+			name += "_mixed_callbacks"
+		}
+		t.Run(name, func(t *testing.T) {
 			type packet struct {
 				sent, ack time.Time
 				mark      deliveryMark
@@ -28,15 +37,24 @@ func TestMobileBulkEscapesSmallTrafficBaseline(t *testing.T) {
 				w.delivered(1024, 350*time.Millisecond, now, true, mark)
 				start, finish := now, now
 				var pending []packet
-				tailBytes, peak := 0, 0
+				tailBytes, peak, ordinal := 0, 0, 0
 				maxDelay := time.Duration(0)
 				for now.Sub(start) < 20*time.Second {
 					for w.flight+quantum <= w.allowance() {
 						finish = maxTime(finish, now).Add(time.Duration(quantum) * 8 * time.Second / time.Duration(capacity*1_000_000))
-						arrival := finish.Add(700 * time.Millisecond)
+						delay := 700 * time.Millisecond
+						if mixed {
+							delay = 1100 * time.Millisecond
+							if ordinal%8 == 0 {
+								delay = 250 * time.Millisecond
+							}
+						}
+						ordinal++
+						arrival := finish.Add(delay)
 						ack := start.Add((arrival.Sub(start) + 100*time.Millisecond - 1) / (100 * time.Millisecond) * (100 * time.Millisecond))
 						pending = append(pending, packet{now, ack, w.sent(quantum, now, true)})
 					}
+					sort.SliceStable(pending, func(i, j int) bool { return pending[i].ack.Before(pending[j].ack) })
 					w.limited = true
 					if len(pending) == 0 {
 						t.Fatal("no in-flight data despite queued body")

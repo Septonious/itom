@@ -85,13 +85,13 @@ are preserved and labeled; missing second-run reference measurements are never
 invented or copied from another phase. Candidate repeats must still complete
 and retain at least eighty percent of their first-run rates.
 
-The final local faster-setup candidate completes both pairs at 42.2/46.5 Mbps
+The pre-saturation faster-setup prototype completes both pairs at 42.2/46.5 Mbps
 upload and 34.1/39.4 Mbps download. Maximum idle/post RTT is 239.8 ms and loaded
 RTT 1,071.7 ms; all thirty carriers remain active. First-pair improvement is
 10.3x upload and 9.8x download against the aborted RC15 reference. This remains
 a generated TLS/IMAP fixture, not a real-provider or VLESS parity result.
 
-The independent application acceptance run passed on source 9717272. Final
+The independent application acceptance run passed on source 9717272. Initial
 matched build source aeb3ca6 has byte-identical active source files. Eight
 focused race cases pass locally, including both mobile capacity cases and the
 real TLS backlog/isolated-tail reader regression. The downloaded server passes
@@ -112,3 +112,21 @@ the increasing queued RTT. A true idle-to-bulk transition relearns the baseline;
 a delayed receipt train with bytes already in flight cannot reset it upward.
 The minimum is exported as bulk_saturated_min_rtt_ms. The corporate two-second
 gate and all other existing safety gates remain unchanged.
+
+The minimum-saturated-RTT controller (69fb56f) completes the local corporate
+replay at 24.8/24.7 Mbps upload and 35.5/35.7 Mbps download, while peak loaded
+RTT drops to 1,267 ms and idle/post stays below 101 ms. Nine focused race cases
+pass, including a 35 Mbps FIFO model with independent MIME expansion and variable
+callbacks. The mobile reproduction and all matched builds are being repeated
+for this new source; prior prototype successes cannot qualify its artifacts.
+
+The packet-minimum prototype (69fb56f) fixes corporate queueing but is also
+rejected: a minority of fast DATA fragments still poisons its mobile baseline,
+and the faster-setup download falls to 4.0 Mbps and times out. The final revision
+uses the byte-weighted median of a complete 512 KiB saturated receipt round,
+then keeps the minimum of those round baselines. A fast small fragment cannot
+stand in for the bulk path; queue growth cannot raise an established baseline.
+The exported metric is bulk_saturated_round_rtt_ms. A new mixed-callback FIFO
+case independently returns 78.4 Mbps on an 80 Mbps path, with maximum 1.6-second
+delivery RTT. The MIME-expanded 35 Mbps case returns 24.9 Mbps with maximum
+1.2-second delivery RTT. All previous focused normal cases pass.
