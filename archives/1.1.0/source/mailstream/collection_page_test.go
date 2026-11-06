@@ -85,7 +85,7 @@ func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UID
 	for uid := range s.fixture.deleted[key] {
 		size += s.fixture.sizes[key][uid]
 	}
-	if size > 16<<20 {
+	if size > 4<<20 {
 		s.fixture.oversized++
 		s.fixture.mu.Unlock()
 		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
@@ -140,14 +140,13 @@ func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
 			p.close()
 		}
 	}()
-	rec := seedSizedCollection(t, p, "itom3-byte-page", 256<<10)
+	rec := seedSizedCollection(t, p, "itom3-byte-page", 128<<10)
 	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
 		t.Fatal(e)
 	}
 	if e = p.client.Store(rec.uids, &imap.StoreFlags{Op: imap.StoreFlagsAdd, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close(); e != nil {
 		t.Fatal(e)
 	}
-	original := p
 	c := NewReclamationCoordinator()
 	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
 	key := segmentKey{session: SessionID{1}}
@@ -156,6 +155,20 @@ func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
 	turns := 0
 	var joined sync.WaitGroup
 	inFlight := 0
+	// The normal complete-generation attempt is refused once. Its exact
+	// ownership/debt survives, and retries must use bounded pages thereafter.
+	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+	if !rec.refused || !c.snapshot().Paused || a.spent != originalDebt || p == nil {
+		t.Fatalf("initial refusal did not preserve owned debt and retry state: %+v", c.snapshot())
+	}
+	for !c.permitted(a, rec.folder) {
+		select {
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+	original := p
 	for a.spent > 0 && turns < 10 {
 		turns++
 		rec.queued = true
@@ -167,7 +180,7 @@ func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
 			t.Fatalf("partial collection refunded unaudited debt: remaining=%d retired=%d", a.spent, a.retired.Load())
 		}
 	}
-	if turns < 2 || a.spent != 0 || a.retired.Load() != 1 || f.oversized != 0 {
+	if turns < 2 || a.spent != 0 || a.retired.Load() != 1 || f.oversized != 1 {
 		t.Fatalf("bounded DATA collection did not finish safely: turns=%d debt=%d retired=%d oversize=%d", turns, a.spent, a.retired.Load(), f.oversized)
 	}
 	t.Logf("%d bounded collection turns; debt retained until empty-folder audit", turns)
@@ -250,7 +263,7 @@ func TestHistoricalCollectionPagesRespectConsumedUIDFence(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer p.close()
-	rec := seedSizedCollection(t, p, "itom3-history-byte-page", 512<<10)
+	rec := seedSizedCollection(t, p, "itom3-history-byte-page", 128<<10)
 	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
 		t.Fatal(e)
 	}

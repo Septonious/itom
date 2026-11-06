@@ -543,10 +543,10 @@ jobs:
           mkdir frozen-rc16
           git archive eb3db9859901379f6f42de79c36bee67a98b385c archives/1.1.0/source | tar -x -C frozen-rc16
           python3 archives/1.1.0/qualification/rc17_regressions.py --reference "$GITHUB_WORKSPACE/frozen-rc16/archives/1.1.0/source" --out collection-regressions
-      - name: Two full speedtests with a sixteen-MiB MIME mutation limit
+      - name: Two full speedtests with four-MiB provider refusals and automatic bounded retries
         run: |
           set -euo pipefail
-          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out paged-collection --only candidate --max-expunge-mib 16 --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 20s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
+          python3 archives/1.1.0/qualification/compare.py --go "$(command -v go)" --out paged-collection --only candidate --max-expunge-mib 4 --append-service-ms 60 --mutation-row-cost-ms 3 --prefill-control 1000 --reject-selected-status --duration 20s --cycles 2 --streams 4 --idle-probes 4 --post-probes 8
           python3 archives/1.1.0/qualification/check_paged_collection.py paged-collection
       - uses: actions/upload-artifact@v4
         if: always()

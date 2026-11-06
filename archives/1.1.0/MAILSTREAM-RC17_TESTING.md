@@ -4,17 +4,19 @@ RC16's real 5G comparison reached about 102/28.9 Mbps download/upload against
 VLESS at 156/42.4 Mbps. RC17 preserves its transport and startup behavior while
 addressing oversized and non-resumable background collection found in the logs.
 
-Collection uses actual MIME bytes to limit each turn. Previously flagged owned
-messages beyond the page are deferred safely. Surviving UIDs are reconciled
-after a partial unknown outcome. Writers and the mutation lease return between
-pages; the entire storage charge remains until an empty-folder audit completes.
-Foreign UIDs, changed validity and unknown outcomes never authorize a refund.
-Historical and consumed-prefix collection keep the same ownership fences.
+Healthy complete DATA generations keep RC16's amortized collection path. After
+a refusal or partial deletion, retries inventory surviving owned UIDs and limit
+each turn to four MiB. Previously flagged owned messages beyond the page are
+deferred safely. Writers and the mutation lease return between pages; the entire
+storage charge remains until an empty-folder audit completes. Foreign UIDs,
+changed validity and unknown outcomes never authorize a refund. Historical and
+consumed-prefix collection use the same byte limit and ownership fences.
 
 Matched normal/race, SDK, pinned-fork, Android, restart, weak-link, mobile,
 corporate, short-transfer and repeated-cleanup checks remain mandatory. An
-additional full TLS model rejects deletion batches over sixteen MiB and requires
-capacity reuse without quarantines. No physical-provider speedup is claimed
+additional fault model refuses deletions over four MiB and requires automatic
+bounded retries, capacity reuse and recovery from the expected quarantines.
+The existing capable-path throughput and RTT gates are unchanged. No physical-provider speedup is claimed
 before another field measurement. RC10 remains the first field-ready baseline;
 RC16 remains an immutable real-5G reference.
 

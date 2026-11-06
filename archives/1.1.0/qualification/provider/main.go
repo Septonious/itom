@@ -385,6 +385,7 @@ func (s *session) Expunge(w *imapserver.ExpungeWriter, set *imap.UIDSet) error {
 			s.counts.Unlock()
 			return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
 		}
+		s.counts.commands["MAX_ACCEPTED_EXPUNGE_BYTES"] = max(s.counts.commands["MAX_ACCEPTED_EXPUNGE_BYTES"], uint64(size))
 		s.counts.Unlock()
 	}
 	err := s.Session.Expunge(w, set)

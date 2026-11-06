@@ -386,6 +386,21 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 	if box.NumMessages > segmentAppends {
 		return ErrProtocol
 	}
+	// Preserve RC16's amortized path on a healthy complete generation. A
+	// refusal or partial outcome switches this record to bounded retry pages.
+	// Only a fresh empty SELECT can release its original charge.
+	if box.NumMessages == segmentAppends && !rec.refused {
+		p.allowExpunge.Store(true)
+		status, err := p.deleteUIDs(rec.uids, rec.folder, c.stage)
+		p.allowExpunge.Store(false)
+		if err != nil {
+			return err
+		}
+		if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages != 0 {
+			return ErrProtocol
+		}
+		return nil
+	}
 	c.stage("collection_inventory")
 	rows, err := p.client.Fetch(imap.SeqSet{{Start: 1, Stop: box.NumMessages}}, &imap.FetchOptions{UID: true, Flags: true, RFC822Size: true}).Collect()
 	if err != nil {

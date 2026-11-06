@@ -22,28 +22,30 @@ collection marks the entire generation. Its retry also accepts only the original
 an unknown outcome cannot resume safely through that branch. The logs establish
 EXPUNGE timeouts; exact provider service cost remains an interpretation.
 
-RC17 bounds each collection turn to approximately sixteen MiB of inventoried MIME
-bytes, with at least one owned message permitted for oversized bodies.
-The UID and UIDVALIDITY ownership fences remain mandatory. Previously flagged
-owned messages deferred to a later page have their Deleted flag removed before
-ordinary EXPUNGE, preventing an old timed-out full deletion from expanding the
-new turn. Fresh inventory reconciles surviving UIDs after a partial unknown
-outcome. Unknown/foreign UIDs are refused before any mutation.
+RC17 preserves the RC16 complete-generation fast path. After a refusal or a
+partial result, surviving UIDs are inventoried and each retry is bounded to
+approximately four MiB of actual MIME bytes, permitting one oversized owned
+message. The original UID and UIDVALIDITY proof remains mandatory. Deferred
+owned Deleted flags are cleared before EXPUNGE; unknown/foreign UIDs refuse
+mutation. Historical/consumed-prefix work uses the byte bound as well.
 
-Each successful DATA page returns the writer and shared lease. The complete
-physical charge and original ownership proof remain until the final empty
-SELECT audit; partial pages never send COLLECTED or return capacity. Historical
-and consumed-prefix collection use the same byte bound and retain their exact
-UID audit. The startup path, delivery controller, interactive guard, profile,
-connection limits, physical quotas, DNS policy and UI theme remain RC16's.
+The refused record remains in bounded retry mode until collection completes.
+Each successful page returns its writer and shared lease. The complete charge
+remains until a fresh empty SELECT; partial work never sends COLLECTED or
+refunds capacity. It finishes that direction before alternating and reuses the
+existing two-turn preference to make capacity reusable sooner while yielding to
+peers. Startup, delivery controller, quotas, profile/crypto identity, DNS and UI
+remain RC16's.
 
 Three frozen-RC16 regressions reproduce oversized DATA deletion, partial-retry
 rejection and oversized historical mutation. They pass on the candidate. A
 separate new test preserves unproved messages, and the existing slow-mutation
 case still completes on its original writer without an early refund. Full TLS
-qualification additionally enforces an independent sixteen-MiB provider mutation
-budget, complete repeated transfers, audited retirement in both directions,
-no quarantines and the unchanged latency/throughput gates.
+qualification adds a refusal model: an independent four-MiB provider budget
+rejects large initial attempts, then verifies bounded accepted retries, completed
+transfers and audited retirement in both directions. Expected quarantines must
+recover. This fault case retains latency/functional gates; its throughput goal
+misses are reported. The existing healthy-provider throughput gates are unchanged.
 
 At the user's request, folder names switch directly to the compact `itom-`
 layout (31-character control, 55-character slotted DATA). Both full 128-bit
@@ -65,3 +67,9 @@ The eight-MiB continuation prototype completed but second-cycle throughput
 remained 85.4/83.4 Mbps, also below the unchanged full-phase gate. It is not
 eligible for publication. The next candidate uses sixteen-MiB pages, retaining
 byte bounds, resumable proofs, final audits and the existing fairness limits.
+
+The sixteen-MiB always-paged prototype also completed but second download fell
+to 68.0 Mbps. It is rejected. These experiments establish that adding extra
+metadata turns to every healthy generation regresses repeated transfers. The
+final approach preserves RC16's fast initial collection and enters bounded mode
+only after an actual refusal/partial outcome. This also keeps the fix small.

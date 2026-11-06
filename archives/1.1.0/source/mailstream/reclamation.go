@@ -26,7 +26,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	unqueue := func(refused bool) {
 		a.mu.Lock()
 		job.record.queued = false
-		job.record.refused = refused
+		job.record.refused = job.record.refused || refused
 		a.mu.Unlock()
 	}
 	if !c.permitted(a, job.record.folder) {
@@ -92,7 +92,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		// pages. Return this writer and the shared lease between pages.
 		a.mu.Lock()
 		a.collectRemote = job.record.remote
-		job.record.queued, job.record.refused = false, false
+		job.record.queued, job.record.refused = false, true
 		a.mu.Unlock()
 		c.completed(a, job.record.folder)
 		c.preferRecovery(a, true)
