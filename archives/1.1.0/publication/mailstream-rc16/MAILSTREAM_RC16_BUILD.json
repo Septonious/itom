@@ -1,0 +1,2129 @@
+{
+  "source_commit": "eb3db9859901379f6f42de79c36bee67a98b385c",
+  "source_acceptance_commit": "eb3db9859901379f6f42de79c36bee67a98b385c",
+  "source_acceptance_source_files_identical": true,
+  "build_run_id": 42229270952,
+  "source_acceptance_run_id": 42229271206,
+  "source_tag": "v1.1.0-mailstream-rc16",
+  "baseline_rc15_commit": "3791869c5e15250b8d4070c7bc8a03794c0c8c89",
+  "development_runs": [
+    {
+      "source_commit": "d3d55e5e23aa6d0ed2efef5bf2150ef9b622f8f6",
+      "run_id": 42223655701,
+      "result": "mobile throughput gate failed; retained as a prototype, not eligible for release"
+    },
+    {
+      "source_commit": "9717272e55db1f1cc9f7da087b13398b70bc5e98",
+      "run_id": 42224845535,
+      "result": "runtime identical to final; superseded to retain aspirational goal misses and add faster-small-setup full TLS replay"
+    },
+    {
+      "source_commit": "137bdb93adb376c03b812be999a5c3cf9565e47f",
+      "run_id": 42225379385,
+      "result": "runtime identical; superseded to handle aborted frozen-reference phases explicitly"
+    },
+    {
+      "source_commit": "aeb3ca6abca37c6ab349f3650aaa1af7ef44af01",
+      "run_id": 42225506114,
+      "result": "rejected: corporate loaded RTT 2674 ms exceeded unchanged 2000 ms gate; no publication"
+    },
+    {
+      "source_commit": "69fb56fc4d72d39340003b0e13f1669d0d29eb6b",
+      "run_id": 42226807684,
+      "result": "rejected: single fast fragment still poisoned mobile minimum; first download timed out around 4 Mbps"
+    },
+    {
+      "source_commit": "17e2c67b0610f440d61c3e08bab05b857ec81ffa",
+      "run_id": 42227521928,
+      "result": "held: local shared 7 Mbps loaded RTT 2493 ms exceeded unchanged gate despite other matched model passes"
+    }
+  ],
+  "release": "ITOM 1.1.0 MAILSTREAM-RC16",
+  "artifact_validation_pending": false,
+  "field_ready_baseline": "MAILSTREAM-RC10",
+  "field_qualified": false,
+  "real_provider_tested": false,
+  "android_device_qualified": false,
+  "performance_qualified": false,
+  "controlled_full_phase_goal_met": true,
+  "all_performance_targets_met": false,
+  "strict_target_misses": {
+    "ordinary_1": [],
+    "ordinary_4": [],
+    "ordinary_32": [],
+    "weak_7mbps": [
+      "full_phase_100mbps",
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "recovered_client": [
+      "full_phase_100mbps",
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "repeated_cleanup": [
+      "no_half_second_stalls",
+      "rolling_5s_100mbps"
+    ],
+    "retained_control": [],
+    "account_metadata_interference": [
+      "no_half_second_stalls",
+      "rolling_5s_100mbps"
+    ],
+    "delayed_upload_fetch": [
+      "ramp_100mbps_within_2s"
+    ],
+    "corporate_50_35": [
+      "full_phase_100mbps",
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "home_append_service": [],
+    "short_1": [
+      "no_half_second_stalls",
+      "ramp_100mbps_within_2s"
+    ],
+    "short_16": [
+      "ramp_100mbps_within_2s"
+    ],
+    "mobile_95_80": [
+      "full_phase_100mbps",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ],
+    "mobile_fast_small_setup": [
+      "full_phase_100mbps",
+      "ramp_100mbps_within_2s",
+      "rolling_5s_100mbps"
+    ]
+  },
+  "mobile_validation": {
+    "verified": true,
+    "large_data_fetch_delay_only": false,
+    "model": "95 Mbps up / 80 Mbps down; separate 500/600 ms DATA FETCH callbacks; 60 ms APPEND service; variable 10\u201350/20\u201340 ms network delay",
+    "max_idle_post_ms": 230.159,
+    "max_loaded_ms": 968.239,
+    "phases": [
+      {
+        "direction": "upload",
+        "full_phase_mbps": 40.87800942335004,
+        "reference_full_phase_mbps": 15.682665344741785,
+        "reference_phase_completed": true,
+        "reference_aborted_before_phase": false,
+        "improvement": 2.60657283215292,
+        "half_second_mbps": [
+          0,
+          0,
+          4.194304,
+          3.670016,
+          12.582912,
+          4.718592,
+          26.738688,
+          7.340032,
+          21.495808,
+          33.554432,
+          39.845888,
+          41.94304,
+          54.525952,
+          44.040192,
+          82.313216,
+          78.6432,
+          41.418752,
+          65.536,
+          67.108864,
+          92.798976,
+          63.438848,
+          59.768832,
+          38.797312,
+          66.584576,
+          57.147392,
+          30.932992,
+          32.505856,
+          74.973184,
+          25.690112
+        ]
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 32.70226231630849,
+        "reference_full_phase_mbps": 19.68885546026751,
+        "reference_phase_completed": true,
+        "reference_aborted_before_phase": false,
+        "improvement": 1.660952937681029,
+        "half_second_mbps": [
+          0,
+          6.291456,
+          2.097152,
+          1.048576,
+          11.534336,
+          4.194304,
+          7.340032,
+          17.825792,
+          17.825792,
+          19.922944,
+          28.311552,
+          22.020096,
+          33.554432,
+          19.922944,
+          40.894464,
+          44.040192,
+          11.534336,
+          53.477376,
+          19.922944,
+          71.303168,
+          8.388608,
+          72.351744,
+          14.680064,
+          84.934656,
+          17.825792,
+          62.91456,
+          16.777216,
+          40.894464,
+          82.837504,
+          13.631488,
+          62.91456,
+          20.97152,
+          70.254592,
+          30.408704,
+          59.768832,
+          10.48576,
+          65.011712,
+          50.331648,
+          51.380224,
+          6.291456,
+          48.234496,
+          84.934656,
+          11.534336,
+          42.991616,
+          27.262976,
+          60.817408,
+          0,
+          11.534336,
+          40.894464,
+          27.262976,
+          40.894464,
+          14.680064,
+          40.894464,
+          53.477376,
+          13.631488,
+          5.24288
+        ]
+      },
+      {
+        "direction": "upload",
+        "full_phase_mbps": 45.212403542252055,
+        "reference_full_phase_mbps": 22.966564045160943,
+        "reference_phase_completed": true,
+        "reference_aborted_before_phase": false,
+        "improvement": 1.9686185296741552,
+        "half_second_mbps": [
+          0,
+          0,
+          8.388608,
+          53.477376,
+          5.24288,
+          16.252928,
+          32.505856,
+          48.234496,
+          33.554432,
+          28.83584,
+          85.458944,
+          48.758784,
+          42.467328,
+          40.370176,
+          73.40032,
+          66.060288,
+          60.29312,
+          85.983232,
+          35.651584,
+          59.244544,
+          59.244544,
+          36.175872,
+          33.030144,
+          50.331648,
+          70.77888,
+          114.819072,
+          30.408704,
+          71.303168,
+          31.981568
+        ]
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 36.38189256302737,
+        "reference_full_phase_mbps": 20.746491989308794,
+        "reference_phase_completed": true,
+        "reference_aborted_before_phase": false,
+        "improvement": 1.7536406917263847,
+        "half_second_mbps": [
+          0,
+          3.145728,
+          16.777216,
+          26.2144,
+          2.097152,
+          19.922944,
+          33.554432,
+          23.068672,
+          36.70016,
+          32.505856,
+          18.874368,
+          52.4288,
+          10.48576,
+          59.768832,
+          11.534336,
+          67.108864,
+          8.388608,
+          51.380224,
+          11.534336,
+          80.740352,
+          14.680064,
+          50.331648,
+          9.437184,
+          35.651584,
+          41.94304,
+          25.165824,
+          60.817408,
+          48.234496,
+          23.068672,
+          65.011712,
+          24.117248,
+          46.137344,
+          44.040192,
+          75.497472,
+          27.262976,
+          65.011712,
+          16.777216,
+          59.768832,
+          55.574528,
+          27.262976,
+          70.254592,
+          25.165824,
+          74.448896,
+          1.048576,
+          30.408704,
+          80.740352,
+          7.340032,
+          67.108864,
+          11.534336,
+          94.37184,
+          5.24288,
+          19.922944
+        ]
+      }
+    ],
+    "declared_45up_40down_goal_met": false,
+    "field_qualified": false
+  },
+  "mobile_fast_setup_validation": {
+    "verified": true,
+    "large_data_fetch_delay_only": true,
+    "model": "95 Mbps up / 80 Mbps down; separate 500/600 ms DATA FETCH callbacks; 60 ms APPEND service; variable 10\u201350/20\u201340 ms network delay",
+    "max_idle_post_ms": 237.168,
+    "max_loaded_ms": 930.898,
+    "phases": [
+      {
+        "direction": "upload",
+        "full_phase_mbps": 39.34844945339859,
+        "reference_full_phase_mbps": 4.154251748302837,
+        "reference_phase_completed": true,
+        "reference_aborted_before_phase": false,
+        "improvement": 9.47185000751913,
+        "half_second_mbps": [
+          0,
+          0.524288,
+          7.340032,
+          2.62144,
+          9.961472,
+          3.670016,
+          15.72864,
+          14.155776,
+          16.252928,
+          18.874368,
+          28.83584,
+          27.262976,
+          52.4288,
+          29.360128,
+          67.108864,
+          57.67168,
+          73.924608,
+          52.953088,
+          74.448896,
+          48.758784,
+          93.847552,
+          48.758784,
+          48.758784,
+          46.661632,
+          48.758784,
+          59.768832,
+          69.730304,
+          73.40032,
+          48.234496
+        ]
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 35.8358221213875,
+        "reference_full_phase_mbps": 3.635537395612952,
+        "reference_phase_completed": false,
+        "reference_aborted_before_phase": false,
+        "improvement": 9.857090774153782,
+        "half_second_mbps": [
+          0,
+          6.291456,
+          1.048576,
+          5.24288,
+          6.291456,
+          5.24288,
+          10.48576,
+          9.437184,
+          18.874368,
+          25.165824,
+          8.388608,
+          29.360128,
+          33.554432,
+          40.894464,
+          16.777216,
+          45.088768,
+          34.603008,
+          28.311552,
+          56.623104,
+          15.72864,
+          73.40032,
+          39.845888,
+          48.234496,
+          42.991616,
+          66.060288,
+          29.360128,
+          53.477376,
+          37.748736,
+          63.963136,
+          40.894464,
+          35.651584,
+          62.91456,
+          25.165824,
+          78.6432,
+          30.408704,
+          71.303168,
+          14.680064,
+          59.768832,
+          23.068672,
+          33.554432,
+          81.788928,
+          6.291456,
+          56.623104,
+          7.340032,
+          74.448896,
+          35.651584,
+          48.234496,
+          19.922944,
+          75.497472,
+          30.408704,
+          44.040192,
+          27.262976,
+          52.4288
+        ]
+      },
+      {
+        "direction": "upload",
+        "full_phase_mbps": 41.05572607107846,
+        "reference_full_phase_mbps": null,
+        "reference_phase_completed": false,
+        "reference_aborted_before_phase": true,
+        "improvement": null,
+        "half_second_mbps": [
+          0,
+          0,
+          3.670016,
+          57.147392,
+          6.291456,
+          8.388608,
+          11.010048,
+          25.165824,
+          43.515904,
+          19.398656,
+          52.953088,
+          75.497472,
+          35.651584,
+          56.623104,
+          74.448896,
+          62.91456,
+          63.438848,
+          44.56448,
+          41.94304,
+          29.884416,
+          25.690112,
+          59.244544,
+          62.390272,
+          42.467328,
+          32.505856,
+          59.768832,
+          66.060288,
+          70.77888,
+          55.574528
+        ]
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 36.2545287365004,
+        "reference_full_phase_mbps": null,
+        "reference_phase_completed": false,
+        "reference_aborted_before_phase": true,
+        "improvement": null,
+        "half_second_mbps": [
+          0,
+          3.145728,
+          7.340032,
+          23.068672,
+          3.145728,
+          11.534336,
+          28.311552,
+          9.437184,
+          23.068672,
+          13.631488,
+          17.825792,
+          36.70016,
+          16.777216,
+          32.505856,
+          44.040192,
+          30.408704,
+          41.94304,
+          34.603008,
+          28.311552,
+          63.963136,
+          37.748736,
+          25.165824,
+          29.360128,
+          28.311552,
+          39.845888,
+          75.497472,
+          36.70016,
+          71.303168,
+          28.311552,
+          53.477376,
+          48.234496,
+          48.234496,
+          31.45728,
+          69.206016,
+          30.408704,
+          50.331648,
+          18.874368,
+          81.788928,
+          39.845888,
+          46.137344,
+          17.825792,
+          60.817408,
+          58.720256,
+          11.534336,
+          59.768832,
+          18.874368,
+          92.274688,
+          9.437184,
+          37.748736,
+          22.020096,
+          82.837504,
+          32.505856,
+          49.283072
+        ]
+      }
+    ],
+    "declared_45up_40down_goal_met": false,
+    "field_qualified": false
+  },
+  "mobile_regressions": {
+    "rc15": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "checks": {
+    "mobile_small_baseline_plateau_reproduced_and_fixed": true,
+    "saturated_minimum_prevents_queue_feedback": true,
+    "interactive_receipts_protect_shared_weak_link": true,
+    "mobile_repeated_full_tls_throughput_and_rtt": true,
+    "ordered_download_backlog_and_isolated_tail": true,
+    "exact_source_and_native_artifacts": true,
+    "normal_race_sdk_fork_vet": true,
+    "android_tests_lint_jni": true,
+    "persistent_signer": true,
+    "six_actual_server_startup_reconnects": true,
+    "manual_stop_capacity_reset": true,
+    "all_model_transfers_complete_no_account_failures": true,
+    "all_model_idle_loaded_rtt_limits": true,
+    "weak_link_cancel_and_fresh_https": true,
+    "frozen_rc12_failures_reproduced_and_fixed": true,
+    "frozen_rc13_slow_mutation_reproduced_and_fixed": true,
+    "bounded_prefix_preserves_future_controls": true,
+    "repeated_cleanup_without_server_quarantines": true,
+    "old_persisted_debt_audited_and_bandwidth_restored": true,
+    "accepted_control_precedes_optional_collection": true,
+    "sixty_four_tls_streams_shared_credit": true,
+    "finite_physical_budget_audited_reuse": true,
+    "no_incompatible_selected_status": true,
+    "pre_service_startup_recovery_preserved": true,
+    "journal_growth_does_not_block_receipts": true,
+    "audited_bulk_refunds_reuse_durable_high_water": true,
+    "clean_stop_persists_exact_remaining_debt": true,
+    "short_single_multi_full_phase_and_rolling_delivery": true,
+    "bounded_preparation_leaves_other_writers_available": true,
+    "tls_byte_bursts_and_isolated_hedges_preserved": true,
+    "paired_admin_cards_intrinsic_row_layout_compiled": true
+  },
+  "recovered_collection_validation": {
+    "verified": true,
+    "initial_recovered_client_bytes": 534773760,
+    "final_recovered_client_bytes": 0,
+    "all_cold_transfers_completed": true,
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 25.984400081317325,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "download",
+        "mbps": 187.50354107289155,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "upload",
+        "mbps": 18.624846951205534,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "download",
+        "mbps": 172.67362459494476,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "upload",
+        "mbps": 34.91881354613456,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "download",
+        "mbps": 157.4265185558712,
+        "after_audited_recovery": false
+      },
+      {
+        "direction": "upload",
+        "mbps": 132.34963828902525,
+        "after_audited_recovery": true
+      },
+      {
+        "direction": "download",
+        "mbps": 175.72272134581178,
+        "after_audited_recovery": true
+      }
+    ],
+    "cold_phases_do_not_claim_100mbps": true,
+    "max_idle_post_ms": 282.045,
+    "max_loaded_ms": 570.571
+  },
+  "repeated_collection_validation": {
+    "verified": true,
+    "full_phase_100mbps": true,
+    "phases": [
+      {
+        "direction": "upload",
+        "mbps": 130.84422187081918
+      },
+      {
+        "direction": "download",
+        "mbps": 187.6847115129694
+      },
+      {
+        "direction": "upload",
+        "mbps": 126.82638002729797
+      },
+      {
+        "direction": "download",
+        "mbps": 151.01281474598812
+      },
+      {
+        "direction": "upload",
+        "mbps": 127.0281501183435
+      },
+      {
+        "direction": "download",
+        "mbps": 149.86162444539139
+      }
+    ],
+    "client_retired_segments": 86,
+    "server_retired_segments": 57,
+    "server_control_messages_collected": 3840,
+    "server_collection_timeouts": 0,
+    "max_idle_post_ms": 221.755,
+    "max_loaded_ms": 491.032
+  },
+  "models": {
+    "ordinary_1": {
+      "streams": 1,
+      "cycles": 1,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 347.74457880570054
+        },
+        {
+          "direction": "download",
+          "mbps": 349.3573428395058
+        }
+      ],
+      "max_idle_post_ms": 89.066,
+      "max_loaded_ms": 299.586,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 71
+    },
+    "ordinary_4": {
+      "streams": 4,
+      "cycles": 2,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 350.04698073816087
+        },
+        {
+          "direction": "download",
+          "mbps": 348.3061483925742
+        },
+        {
+          "direction": "upload",
+          "mbps": 324.3585550199603
+        },
+        {
+          "direction": "download",
+          "mbps": 330.1952815369751
+        }
+      ],
+      "max_idle_post_ms": 96.574,
+      "max_loaded_ms": 404.678,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 153
+    },
+    "ordinary_32": {
+      "streams": 32,
+      "cycles": 1,
+      "duration": "12s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 338.82186806299325
+        },
+        {
+          "direction": "download",
+          "mbps": 339.10237659353135
+        }
+      ],
+      "max_idle_post_ms": 95.608,
+      "max_loaded_ms": 291.039,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 30
+    },
+    "weak_7mbps": {
+      "streams": 4,
+      "cycles": 1,
+      "duration": "20s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 4.743807569934816
+        },
+        {
+          "direction": "download",
+          "mbps": 4.543596079909038
+        }
+      ],
+      "max_idle_post_ms": 97.724,
+      "max_loaded_ms": 1431.345,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 0
+    },
+    "recovered_client": {
+      "streams": 4,
+      "cycles": 3,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 25.984400081317325
+        },
+        {
+          "direction": "download",
+          "mbps": 187.50354107289155
+        },
+        {
+          "direction": "upload",
+          "mbps": 18.624846951205534
+        },
+        {
+          "direction": "download",
+          "mbps": 172.67362459494476
+        },
+        {
+          "direction": "upload",
+          "mbps": 34.91881354613456
+        },
+        {
+          "direction": "download",
+          "mbps": 157.4265185558712
+        },
+        {
+          "direction": "upload",
+          "mbps": 132.34963828902525
+        },
+        {
+          "direction": "download",
+          "mbps": 175.72272134581178
+        }
+      ],
+      "max_idle_post_ms": 282.045,
+      "max_loaded_ms": 570.571,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 46
+    },
+    "repeated_cleanup": {
+      "streams": 4,
+      "cycles": 3,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 130.84422187081918
+        },
+        {
+          "direction": "download",
+          "mbps": 187.6847115129694
+        },
+        {
+          "direction": "upload",
+          "mbps": 126.82638002729797
+        },
+        {
+          "direction": "download",
+          "mbps": 151.01281474598812
+        },
+        {
+          "direction": "upload",
+          "mbps": 127.0281501183435
+        },
+        {
+          "direction": "download",
+          "mbps": 149.86162444539139
+        }
+      ],
+      "max_idle_post_ms": 221.755,
+      "max_loaded_ms": 491.032,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 86
+    },
+    "retained_control": {
+      "streams": 4,
+      "cycles": 2,
+      "duration": "16s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 344.19239397416527
+        },
+        {
+          "direction": "download",
+          "mbps": 348.99366572269673
+        },
+        {
+          "direction": "upload",
+          "mbps": 342.96478413341845
+        },
+        {
+          "direction": "download",
+          "mbps": 328.89355625005425
+        }
+      ],
+      "max_idle_post_ms": 89.454,
+      "max_loaded_ms": 347.191,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 80
+    },
+    "account_metadata_interference": {
+      "streams": 4,
+      "cycles": 3,
+      "duration": "20s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 307.7696226458177
+        },
+        {
+          "direction": "download",
+          "mbps": 285.2092554214733
+        },
+        {
+          "direction": "upload",
+          "mbps": 249.11676844555606
+        },
+        {
+          "direction": "download",
+          "mbps": 289.15537990487377
+        },
+        {
+          "direction": "upload",
+          "mbps": 210.44659776648015
+        },
+        {
+          "direction": "download",
+          "mbps": 261.5262845699976
+        }
+      ],
+      "max_idle_post_ms": 191.829,
+      "max_loaded_ms": 778.49,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 109
+    },
+    "delayed_upload_fetch": {
+      "streams": 4,
+      "cycles": 2,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 132.99915749116306
+        },
+        {
+          "direction": "download",
+          "mbps": 352.521245867955
+        },
+        {
+          "direction": "upload",
+          "mbps": 132.40863082810952
+        },
+        {
+          "direction": "download",
+          "mbps": 354.74457503061933
+        }
+      ],
+      "max_idle_post_ms": 104.657,
+      "max_loaded_ms": 465.243,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 70
+    },
+    "corporate_50_35": {
+      "streams": 4,
+      "cycles": 2,
+      "duration": "16s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 24.277170362711495
+        },
+        {
+          "direction": "download",
+          "mbps": 35.664576428996874
+        },
+        {
+          "direction": "upload",
+          "mbps": 24.360868961136923
+        },
+        {
+          "direction": "download",
+          "mbps": 35.53921945316115
+        }
+      ],
+      "max_idle_post_ms": 124.403,
+      "max_loaded_ms": 1317.159,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 0
+    },
+    "home_append_service": {
+      "streams": 4,
+      "cycles": 2,
+      "duration": "30s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 130.7668493237269
+        },
+        {
+          "direction": "download",
+          "mbps": 205.24734123332016
+        },
+        {
+          "direction": "upload",
+          "mbps": 130.38227260362711
+        },
+        {
+          "direction": "download",
+          "mbps": 181.26657083717188
+        }
+      ],
+      "max_idle_post_ms": 243.681,
+      "max_loaded_ms": 504.911,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": true,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 60
+    },
+    "short_1": {
+      "streams": 1,
+      "cycles": 3,
+      "duration": "10s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 120.92210682433254
+        },
+        {
+          "direction": "download",
+          "mbps": 188.01800585345947
+        },
+        {
+          "direction": "upload",
+          "mbps": 118.05400994961076
+        },
+        {
+          "direction": "download",
+          "mbps": 169.01575941884687
+        },
+        {
+          "direction": "upload",
+          "mbps": 120.73404424924547
+        },
+        {
+          "direction": "download",
+          "mbps": 177.27632967192733
+        }
+      ],
+      "max_idle_post_ms": 259.578,
+      "max_loaded_ms": 520.266,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": false,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 25
+    },
+    "short_16": {
+      "streams": 16,
+      "cycles": 3,
+      "duration": "10s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 115.4298797036702
+        },
+        {
+          "direction": "download",
+          "mbps": 191.02267663061943
+        },
+        {
+          "direction": "upload",
+          "mbps": 114.74703223774695
+        },
+        {
+          "direction": "download",
+          "mbps": 196.80263536742868
+        },
+        {
+          "direction": "upload",
+          "mbps": 111.46945500349045
+        },
+        {
+          "direction": "download",
+          "mbps": 186.7790765579996
+        }
+      ],
+      "max_idle_post_ms": 248.263,
+      "max_loaded_ms": 519.779,
+      "targets": {
+        "full_phase_100mbps": true,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": true
+      },
+      "retired_client_segments": 20
+    },
+    "mobile_95_80": {
+      "streams": 16,
+      "cycles": 2,
+      "duration": "12s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 40.87800942335004
+        },
+        {
+          "direction": "download",
+          "mbps": 32.70226231630849
+        },
+        {
+          "direction": "upload",
+          "mbps": 45.212403542252055
+        },
+        {
+          "direction": "download",
+          "mbps": 36.38189256302737
+        }
+      ],
+      "max_idle_post_ms": 230.159,
+      "max_loaded_ms": 968.239,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 10
+    },
+    "mobile_fast_small_setup": {
+      "streams": 16,
+      "cycles": 2,
+      "duration": "12s",
+      "phases": [
+        {
+          "direction": "upload",
+          "mbps": 39.34844945339859
+        },
+        {
+          "direction": "download",
+          "mbps": 35.8358221213875
+        },
+        {
+          "direction": "upload",
+          "mbps": 41.05572607107846
+        },
+        {
+          "direction": "download",
+          "mbps": 36.2545287365004
+        }
+      ],
+      "max_idle_post_ms": 237.168,
+      "max_loaded_ms": 930.898,
+      "targets": {
+        "full_phase_100mbps": false,
+        "idle_and_light_rtt": true,
+        "loaded_rtt": true,
+        "no_half_second_stalls": true,
+        "ramp_100mbps_within_2s": false,
+        "rolling_5s_100mbps": false
+      },
+      "retired_client_segments": 10
+    }
+  },
+  "regressions": {
+    "rc8": {
+      "rc8_cleanup": {
+        "verified": true,
+        "exit_status": 1,
+        "test": "TestRetainedControlCleanupWithEarlyExpungeBurst",
+        "expected_reference_failure": true
+      },
+      "rc8_close": {
+        "verified": true,
+        "exit_status": 1,
+        "test": "TestCloseInterruptsUndrainedExpungeBurst",
+        "expected_reference_failure": true
+      },
+      "candidate_cleanup": {
+        "verified": true,
+        "exit_status": 0,
+        "test": "TestRetainedControlCleanupWithEarlyExpungeBurst",
+        "expected_reference_failure": false
+      },
+      "candidate_close": {
+        "verified": true,
+        "exit_status": 0,
+        "test": "TestCloseInterruptsUndrainedExpungeBurst",
+        "expected_reference_failure": false
+      },
+      "candidate_manager": {
+        "verified": true,
+        "exit_status": 0,
+        "test": "TestSystemctlHonorsDeadlineInsteadOfHangingMenu",
+        "expected_reference_failure": false
+      }
+    },
+    "rc9": {
+      "rc9_feedback": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "rc9_append_drain_lease": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "candidate_append_drain_lease": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      },
+      "candidate_feedback_and_pressure": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      },
+      "candidate_lifecycle": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      }
+    },
+    "rc10": {
+      "rc10_slow_receipts": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "candidate_slow_receipts_and_compression": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      }
+    },
+    "rc11": {
+      "rc11_existing_folders": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "rc11_temporary_account": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "candidate_account_recovery": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      }
+    },
+    "rc12": {
+      "rc12_selected_audit": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "rc12_global_quarantine": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "candidate_storage_reuse": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      }
+    },
+    "rc13": {
+      "rc13_slow_mutation": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "rc13_queued_control": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "rc13_journal_blocking": {
+        "verified": true,
+        "exit_status": 1,
+        "expected_reference_failure": true
+      },
+      "candidate_journal_isolation": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      },
+      "candidate_bounded_collection": {
+        "verified": true,
+        "exit_status": 0,
+        "expected_reference_failure": false
+      }
+    }
+  },
+  "journal_regressions": {
+    "rc13_slow_mutation": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "rc13_queued_control": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "rc13_journal_blocking": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_journal_isolation": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "candidate_bounded_collection": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "short_regressions": {
+    "rc14_short_ramp": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_short_ramp": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "rc14_concurrent_drains": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_concurrent_drains": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "rc14_tls_record_burst": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_tls_record_burst": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    },
+    "rc14_interactive_duplication": {
+      "verified": true,
+      "exit_status": 1,
+      "expected_reference_failure": true
+    },
+    "candidate_interactive_duplication": {
+      "verified": true,
+      "exit_status": 0,
+      "expected_reference_failure": false
+    }
+  },
+  "short_run_validations": {
+    "1": {
+      "all_transfers_completed": true,
+      "max_idle_post_ms": 259.578,
+      "max_loaded_ms": 520.266,
+      "peak_borrowed_writers": 2,
+      "phases": [
+        {
+          "direction": "upload",
+          "full_phase_mbps": 120.92210682433254,
+          "active_interval_mbps": 123.02417919999999,
+          "first_two_seconds_mbps": 54.788096,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.0,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 131.596288,
+          "active_half_second_mbps": [
+            0.524288,
+            14.680064,
+            73.924608,
+            130.023424,
+            148.897792,
+            129.499136,
+            165.675008,
+            117.440512,
+            150.994944,
+            144.703488,
+            125.82912,
+            134.217728,
+            165.675008,
+            125.82912,
+            148.897792,
+            157.2864,
+            113.246208,
+            153.092096,
+            109.051904,
+            150.994944
+          ],
+          "maximum_receiver_gap_ms": 146.457,
+          "tail_drain_seconds": 1.1602199750000004
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 188.01800585345947,
+          "active_interval_mbps": 184.23480320000002,
+          "first_two_seconds_mbps": 39.3216,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 169.607168,
+          "active_half_second_mbps": [
+            3.145728,
+            10.48576,
+            40.894464,
+            102.760448,
+            210.763776,
+            143.654912,
+            14.680064,
+            309.32992,
+            307.232768,
+            318.767104,
+            4.194304,
+            368.050176,
+            100.663296,
+            206.569472,
+            357.564416,
+            250.609664,
+            250.609664,
+            244.318208,
+            178.25792,
+            262.144
+          ],
+          "maximum_receiver_gap_ms": 649.525,
+          "tail_drain_seconds": 1.2711124999999992
+        },
+        {
+          "direction": "upload",
+          "full_phase_mbps": 118.05400994961076,
+          "active_interval_mbps": 119.3279488,
+          "first_two_seconds_mbps": 25.034752,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 133.300224,
+          "active_half_second_mbps": [
+            0,
+            8.388608,
+            23.068672,
+            68.681728,
+            173.539328,
+            112.197632,
+            163.577856,
+            138.412032,
+            121.634816,
+            127.926272,
+            163.577856,
+            140.509184,
+            148.897792,
+            146.80064,
+            121.634816,
+            161.480704,
+            103.284736,
+            152.567808,
+            182.452224,
+            127.926272
+          ],
+          "maximum_receiver_gap_ms": 147.363,
+          "tail_drain_seconds": 1.0849504270000008
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 169.01575941884687,
+          "active_interval_mbps": 173.9587584,
+          "first_two_seconds_mbps": 63.176704,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.0,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 154.66496,
+          "active_half_second_mbps": [
+            9.437184,
+            35.651584,
+            78.6432,
+            128.974848,
+            256.90112,
+            0,
+            382.73024,
+            32.505856,
+            447.741952,
+            191.889408,
+            84.934656,
+            340.7872,
+            275.775488,
+            165.675008,
+            192.937984,
+            211.812352,
+            188.74368,
+            25.165824,
+            380.633088,
+            48.234496
+          ],
+          "maximum_receiver_gap_ms": 608.411,
+          "tail_drain_seconds": 2.0202755470000007
+        },
+        {
+          "direction": "upload",
+          "full_phase_mbps": 120.73404424924547,
+          "active_interval_mbps": 122.7882496,
+          "first_two_seconds_mbps": 48.627711999999995,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 131.72736,
+          "active_half_second_mbps": [
+            0,
+            14.680064,
+            56.098816,
+            123.731968,
+            159.90784,
+            125.82912,
+            136.31488,
+            165.15072,
+            107.47904,
+            157.2864,
+            153.092096,
+            109.051904,
+            178.25792,
+            125.82912,
+            138.412032,
+            155.189248,
+            115.34336,
+            157.2864,
+            146.80064,
+            130.023424
+          ],
+          "maximum_receiver_gap_ms": 140.898,
+          "tail_drain_seconds": 1.1906313120000007
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 177.27632967192733,
+          "active_interval_mbps": 180.9842176,
+          "first_two_seconds_mbps": 63.963136,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.0,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 170.3936,
+          "active_half_second_mbps": [
+            4.194304,
+            23.068672,
+            48.234496,
+            180.355072,
+            173.01504,
+            264.241152,
+            124.780544,
+            127.926272,
+            305.135616,
+            267.38688,
+            185.597952,
+            185.597952,
+            289.406976,
+            206.569472,
+            0,
+            402.653184,
+            113.246208,
+            290.455552,
+            226.492416,
+            201.326592
+          ],
+          "maximum_receiver_gap_ms": 685.817,
+          "tail_drain_seconds": 1.5902933899999994
+        }
+      ],
+      "full_phase_goal_met": true,
+      "two_second_ramp_goal_met": false,
+      "rolling_two_second_goal_met": true
+    },
+    "16": {
+      "all_transfers_completed": true,
+      "max_idle_post_ms": 248.263,
+      "max_loaded_ms": 519.779,
+      "peak_borrowed_writers": 2,
+      "phases": [
+        {
+          "direction": "upload",
+          "full_phase_mbps": 115.4298797036702,
+          "active_interval_mbps": 115.8414336,
+          "first_two_seconds_mbps": 33.554432,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 127.79520000000001,
+          "active_half_second_mbps": [
+            0,
+            7.86432,
+            41.418752,
+            84.934656,
+            155.713536,
+            129.499136,
+            125.82912,
+            147.849216,
+            124.780544,
+            143.130624,
+            133.169152,
+            121.634816,
+            163.053568,
+            142.606336,
+            121.634816,
+            137.363456,
+            114.819072,
+            137.363456,
+            155.189248,
+            128.974848
+          ],
+          "maximum_receiver_gap_ms": 72.742,
+          "tail_drain_seconds": 1.1916051139999997
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 191.02267663061943,
+          "active_interval_mbps": 195.559424,
+          "first_two_seconds_mbps": 105.644032,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.0,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 212.598784,
+          "active_half_second_mbps": [
+            6.291456,
+            44.040192,
+            135.266304,
+            236.978176,
+            223.346688,
+            226.492416,
+            191.889408,
+            234.881024,
+            234.881024,
+            206.569472,
+            180.355072,
+            243.269632,
+            246.41536,
+            208.666624,
+            200.278016,
+            238.026752,
+            214.95808,
+            212.860928,
+            184.549376,
+            241.17248
+          ],
+          "maximum_receiver_gap_ms": 76.64,
+          "tail_drain_seconds": 4.145861631000001
+        },
+        {
+          "direction": "upload",
+          "full_phase_mbps": 114.74703223774695,
+          "active_interval_mbps": 115.50064640000001,
+          "first_two_seconds_mbps": 30.670848,
+          "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 130.678784,
+          "active_half_second_mbps": [
+            0,
+            15.204352,
+            30.408704,
+            77.070336,
+            134.742016,
+            124.256256,
+            161.480704,
+            139.984896,
+            129.499136,
+            141.033472,
+            152.04352,
+            100.139008,
+            174.587904,
+            124.780544,
+            132.120576,
+            144.1792,
+            132.644864,
+            127.401984,
+            133.69344,
+            134.742016
+          ],
+          "maximum_receiver_gap_ms": 98.963,
+          "tail_drain_seconds": 1.2307907129999993
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 196.80263536742868,
+          "active_interval_mbps": 193.8817024,
+          "first_two_seconds_mbps": 139.72275199999999,
+          "ramp_rolling_one_second_100mbps_at_seconds": 1.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 182.452224,
+          "active_half_second_mbps": [
+            52.4288,
+            83.88608,
+            187.695104,
+            234.881024,
+            241.17248,
+            186.646528,
+            174.063616,
+            258.998272,
+            217.055232,
+            197.132288,
+            209.7152,
+            228.589568,
+            241.17248,
+            203.423744,
+            174.063616,
+            256.90112,
+            207.618048,
+            193.98656,
+            165.675008,
+            162.52928
+          ],
+          "maximum_receiver_gap_ms": 68.412,
+          "tail_drain_seconds": 3.6771267670000007
+        },
+        {
+          "direction": "upload",
+          "full_phase_mbps": 111.46945500349045,
+          "active_interval_mbps": 112.3549184,
+          "first_two_seconds_mbps": 21.102591999999998,
+          "ramp_rolling_one_second_100mbps_at_seconds": 3.0,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 130.154496,
+          "active_half_second_mbps": [
+            0,
+            18.35008,
+            27.262976,
+            38.797312,
+            124.780544,
+            122.683392,
+            169.869312,
+            142.606336,
+            130.023424,
+            133.69344,
+            132.644864,
+            124.256256,
+            141.55776,
+            147.324928,
+            115.867648,
+            147.324928,
+            122.683392,
+            145.752064,
+            144.703488,
+            116.916224
+          ],
+          "maximum_receiver_gap_ms": 86.87,
+          "tail_drain_seconds": 1.2411810029999994
+        },
+        {
+          "direction": "download",
+          "full_phase_mbps": 186.7790765579996,
+          "active_interval_mbps": 183.0813696,
+          "first_two_seconds_mbps": 117.702656,
+          "ramp_rolling_one_second_100mbps_at_seconds": 1.5,
+          "minimum_rolling_two_second_mbps_after_two_seconds": 167.247872,
+          "active_half_second_mbps": [
+            45.088768,
+            69.206016,
+            154.140672,
+            202.375168,
+            190.840832,
+            251.65824,
+            169.869312,
+            222.298112,
+            136.31488,
+            199.22944,
+            256.90112,
+            161.480704,
+            165.675008,
+            84.934656,
+            374.341632,
+            155.189248,
+            254.803968,
+            183.5008,
+            140.509184,
+            243.269632
+          ],
+          "maximum_receiver_gap_ms": 134.41,
+          "tail_drain_seconds": 3.5605945519999995
+        }
+      ],
+      "full_phase_goal_met": true,
+      "two_second_ramp_goal_met": false,
+      "rolling_two_second_goal_met": true
+    }
+  },
+  "frozen_rc14_short_runs": {
+    "all_transfers_completed": true,
+    "max_idle_post_ms": 234.071,
+    "max_loaded_ms": 589.24,
+    "peak_borrowed_writers": 5,
+    "phases": [
+      {
+        "direction": "upload",
+        "full_phase_mbps": 92.90628747163527,
+        "active_interval_mbps": 91.8290432,
+        "first_two_seconds_mbps": 8.650752,
+        "ramp_rolling_one_second_100mbps_at_seconds": 4.5,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 66.715648,
+        "active_half_second_mbps": [
+          0,
+          4.718592,
+          8.912896,
+          20.97152,
+          32.505856,
+          58.720256,
+          65.011712,
+          110.624768,
+          153.092096,
+          109.051904,
+          137.363456,
+          126.353408,
+          117.9648,
+          135.790592,
+          110.624768,
+          154.140672,
+          97.517568,
+          133.69344,
+          126.353408,
+          133.169152
+        ],
+        "maximum_receiver_gap_ms": 98.664,
+        "tail_drain_seconds": 1.2863836079999995
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 133.91806737185428,
+        "active_interval_mbps": 127.13984,
+        "first_two_seconds_mbps": 18.874368,
+        "ramp_rolling_one_second_100mbps_at_seconds": 4.0,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 87.293952,
+        "active_half_second_mbps": [
+          9.437184,
+          14.680064,
+          16.777216,
+          34.603008,
+          59.768832,
+          74.448896,
+          87.031808,
+          127.926272,
+          165.675008,
+          161.480704,
+          155.189248,
+          161.480704,
+          197.132288,
+          199.22944,
+          158.334976,
+          169.869312,
+          222.298112,
+          186.646528,
+          160.432128,
+          180.355072
+        ],
+        "maximum_receiver_gap_ms": 81.663,
+        "tail_drain_seconds": 3.3931834829999996
+      },
+      {
+        "direction": "upload",
+        "full_phase_mbps": 81.38607384129871,
+        "active_interval_mbps": 78.512128,
+        "first_two_seconds_mbps": 6.684672,
+        "ramp_rolling_one_second_100mbps_at_seconds": 5.5,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 27.000832,
+        "active_half_second_mbps": [
+          0,
+          0.524288,
+          2.097152,
+          24.117248,
+          15.204352,
+          14.680064,
+          28.83584,
+          49.283072,
+          52.953088,
+          99.61472,
+          106.430464,
+          138.412032,
+          164.626432,
+          128.974848,
+          119.013376,
+          141.55776,
+          88.604672,
+          125.82912,
+          160.956416,
+          108.527616
+        ],
+        "maximum_receiver_gap_ms": 157.851,
+        "tail_drain_seconds": 1.2928025719999994
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 155.45308371167675,
+        "active_interval_mbps": 155.5562496,
+        "first_two_seconds_mbps": 72.876032,
+        "ramp_rolling_one_second_100mbps_at_seconds": 2.0,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 152.305664,
+        "active_half_second_mbps": [
+          34.603008,
+          47.18592,
+          93.323264,
+          116.391936,
+          157.2864,
+          126.877696,
+          155.189248,
+          169.869312,
+          196.083712,
+          198.180864,
+          152.04352,
+          168.820736,
+          225.44384,
+          207.618048,
+          154.140672,
+          184.549376,
+          218.103808,
+          183.5008,
+          117.440512,
+          204.47232
+        ],
+        "maximum_receiver_gap_ms": 108.588,
+        "tail_drain_seconds": 4.060555248
+      },
+      {
+        "direction": "upload",
+        "full_phase_mbps": 90.19659216414881,
+        "active_interval_mbps": 89.8891776,
+        "first_two_seconds_mbps": 8.388608,
+        "ramp_rolling_one_second_100mbps_at_seconds": 4.5,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 66.060288,
+        "active_half_second_mbps": [
+          0,
+          1.572864,
+          11.534336,
+          20.447232,
+          32.505856,
+          42.991616,
+          86.50752,
+          102.23616,
+          139.984896,
+          122.683392,
+          125.82912,
+          101.711872,
+          113.246208,
+          155.189248,
+          97.517568,
+          149.42208,
+          89.12896,
+          141.55776,
+          123.20768,
+          140.509184
+        ],
+        "maximum_receiver_gap_ms": 73.363,
+        "tail_drain_seconds": 1.3871285750000002
+      },
+      {
+        "direction": "download",
+        "full_phase_mbps": 136.39397575359712,
+        "active_interval_mbps": 140.5616128,
+        "first_two_seconds_mbps": 64.749568,
+        "ramp_rolling_one_second_100mbps_at_seconds": 2.5,
+        "minimum_rolling_two_second_mbps_after_two_seconds": 145.75206400000002,
+        "active_half_second_mbps": [
+          18.874368,
+          75.497472,
+          75.497472,
+          89.12896,
+          147.849216,
+          88.080384,
+          75.497472,
+          271.581184,
+          166.723584,
+          157.2864,
+          150.994944,
+          168.820736,
+          162.52928,
+          170.917888,
+          153.092096,
+          186.646528,
+          202.375168,
+          121.634816,
+          163.577856,
+          164.626432
+        ],
+        "maximum_receiver_gap_ms": 106.378,
+        "tail_drain_seconds": 4.77604169
+      }
+    ],
+    "full_phase_goal_met": false,
+    "two_second_ramp_goal_met": false,
+    "rolling_two_second_goal_met": false
+  },
+  "frozen_rc14_runtime_fingerprint": "0af64357498ed50f5babdf422c6b3014aa724dd3dacd7462b31ef57ea320496a",
+  "startup_cycles": 6,
+  "startup_results": [
+    {
+      "accounts": 10,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2045,
+      "NativeRPCMS": 129,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 50,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 2090,
+      "NativeRPCMS": 152,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 82,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 10,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 1838,
+      "NativeRPCMS": 96,
+      "ActiveLines": 30,
+      "TotalLines": 30,
+      "RTTMillis": 42,
+      "protected_sockets": 30
+    },
+    {
+      "accounts": 15,
+      "index": 0,
+      "server_restart": false,
+      "startup_ms": 2033,
+      "NativeRPCMS": 108,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 47,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 1,
+      "server_restart": false,
+      "startup_ms": 1956,
+      "NativeRPCMS": 149,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 102,
+      "protected_sockets": 45
+    },
+    {
+      "accounts": 15,
+      "index": 2,
+      "server_restart": true,
+      "startup_ms": 2047,
+      "NativeRPCMS": 184,
+      "ActiveLines": 45,
+      "TotalLines": 45,
+      "RTTMillis": 44,
+      "protected_sockets": 45
+    }
+  ],
+  "manual_stop_capacity": {
+    "10": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 20
+    },
+    "15": {
+      "policy_marker": true,
+      "server_ledgers": 2,
+      "zero_account_entries": 30
+    }
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client",
+    "version_code": 10141,
+    "version_name": "1.1.0-mailstream-rc16-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "0934ca4298b28b101cd85ba54b770f494d9c593adb0e95abf01c7e38b7b62f22",
+    "lib/armeabi-v7a/libgojni.so": "9dad6d03800bfd1415f94a1a01327425e6929c10512f1a02933301f3e0379b77"
+  },
+  "android_domain_tests": 93,
+  "android_app_tests": 8,
+  "android_lint_errors": 0,
+  "signed_apk_sha256": "67cf0fcc249ad139f73835f5395ac6260eea6f27263f95ac1e8f7e807636755e",
+  "signed_apk_bytes": 53956948,
+  "source_ci_apk_sha256": "8bb52dfa1a98855499114cc83f7bc4573b4bc92520e1f8c4893b3b5fb42af359",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "signer_unchanged": true,
+  "server_sha256": {
+    "amd64": "93f2c3e273c7e6d326b70286ed5bd3cf19839006e1faa157d8a5a8ad5240a2dd",
+    "arm64": "ea6f310268e23ddf2f17888e5a4cb7ae0cee82e2b009b6f9f25419e3b39b3e8c"
+  },
+  "limits": [
+    "Synthetic service costs and selected-STATUS refusal are compatibility/stress hypotheses; field captures do not identify the exact blocked command.",
+    "Full-phase averages do not establish every-window sustained performance. All strict misses remain recorded.",
+    "Provider failure on a physical account remains quarantined and charged until audited; other accounts can progress.",
+    "No live Rambler or Android-device qualification was performed. RC10 retains field-ready designation.",
+    "No new connections, folder deletion, larger initial flight or unaudited physical refund.",
+    "A crash may recover the connected account high-water reservation up to the unchanged physical cap; clean close persists exact debt.",
+    "The optional mutation deadline is eight seconds; dispatch excludes the borrowed writer. Complete modeled RTT checks remain mandatory."
+  ]
+}

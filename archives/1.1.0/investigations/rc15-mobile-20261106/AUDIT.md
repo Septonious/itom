@@ -154,3 +154,27 @@ faster-setup mobile replay completes at 36.8/44.3 Mbps upload and 35.1/39.3 Mbps
 download, with maximum loaded RTT 877 ms and idle/post below 221 ms. All thirty
 carriers remain active. These local results require matched qualification of
 the new source before signing; older prototype artifacts cannot qualify it.
+
+Final qualification on eb3db9859901379f6f42de79c36bee67a98b385c passes all twelve
+matched jobs (42229270952) and independent acceptance (42229271206). The final
+shared 7 Mbps cancellation/fresh-HTTPS run peaks at 1,431 ms loaded RTT with
+idle/post below 98 ms; all thirty carriers remain healthy and bulk outstanding
+returns to zero. Home phases reach 130.8/130.4 Mbps upload and 205.2/181.3 Mbps
+download. Corporate phases retain 24.3/24.4 Mbps upload and 35.7/35.5 Mbps
+download, with loaded RTT below 1,318 ms.
+
+The matched faster-setup mobile replay reaches 39.3/41.1 Mbps upload and
+35.8/36.3 Mbps download, with peak loaded RTT 931 ms and idle/post below 238 ms.
+Frozen RC15 reaches only 4.15 Mbps upload and 3.64 Mbps download before its
+first download times out. The always-delayed stress replay reaches 40.9/45.2
+Mbps upload and 32.7/36.4 Mbps download, with loaded RTT below 969 ms. Neither
+model meets the declared 45/40 goal in every phase; this miss is retained.
+Short MULTI uploads reach 115.4/114.7/111.5 Mbps and downloads 191.0/196.8/186.8
+Mbps; all rolling two-second intervals beginning after second two exceed
+100 Mbps, while the two-second ramp goal remains unmet.
+
+Artifact qualification also verifies both JNI ABIs, application ID org.itom.client,
+version code 10141, the unchanged persistent signer, six actual downloaded-server
+startup/reconnect rounds and manual-stop capacity reset. Earlier successful
+prototypes are isolated and cannot qualify these artifacts. No real Rambler,
+physical Android speedtest, VLESS parity or real-provider 100 Mbps claim is made.
