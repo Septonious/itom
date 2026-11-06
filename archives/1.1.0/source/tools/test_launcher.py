@@ -52,9 +52,9 @@ class LauncherTests(unittest.TestCase):
 
     def test_public_release_consistent_across_gradle_server_and_archive(self):
         info = check_sources.validate_release_identity(check_sources.ROOT)
-        self.assertEqual("MAILSTREAM-RC19", info["release"])
-        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC19-debug.apk", build.public_apk_name(info))
-        self.assertEqual("ITOM-1.1.0-MAILSTREAM-RC19-sources.zip", info["archive_name"])
+        self.assertEqual("Final", info["release"])
+        self.assertEqual("ITOM-1.1.0.apk", build.public_apk_name(info))
+        self.assertEqual("ITOM-1.1.0-sources.zip", info["archive_name"])
 
     def test_public_release_mismatch_is_fatal(self):
         info = build.read_source_info()
@@ -62,7 +62,7 @@ class LauncherTests(unittest.TestCase):
             root = Path(tmp)
             altered = dict(info, release="FIELD59")
             (root / "source-info.json").write_text(json.dumps(altered))
-            with self.assertRaisesRegex(RuntimeError, "development identity"):
+            with self.assertRaisesRegex(RuntimeError, "release identity"):
                 build.read_source_info(root)
 
     def test_mismatched_android_and_server_sources_cannot_ship(self):
@@ -96,7 +96,7 @@ class LauncherTests(unittest.TestCase):
             apk = root / "app-debug.apk"
             apk.write_bytes(b"fake fixture")
             version, code = build.android_identity(info)
-            version += "-debug"
+            version = build.compiled_android_name(info)
             metadata = {"applicationId":"org.itom.client", "elements":[{"versionCode":code,
                          "versionName":version, "outputFile":"app-debug.apk"}]}
             (root / "output-metadata.json").write_text(json.dumps(metadata))
@@ -116,6 +116,19 @@ class LauncherTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "Compiled APK identity differs"):
                         build.verify_apk_identity(apk, root, info)
 
+    def test_final_apk_rejects_android_debuggable_flag(self):
+        info = build.read_source_info()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); apk = root / "app-release-unsigned.apk"; apk.touch()
+            (root / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client", "elements":[{
+                "versionCode":10145,"versionName":"1.1.0","outputFile":apk.name}]}))
+            aapt = root / "build-tools" / build.BUILD_TOOLS / ("aapt2.exe" if build.os.name == "nt" else "aapt2")
+            aapt.parent.mkdir(parents=True);aapt.touch()
+            badging = "package: name='org.itom.client' versionCode='10145' versionName='1.1.0'\napplication-debuggable\n"
+            with patch("build.subprocess.run",return_value=subprocess.CompletedProcess([],0,badging,"")):
+                with self.assertRaisesRegex(RuntimeError,"must not be debuggable"):
+                    build.verify_apk_identity(apk,root,info)
+
     def test_apk_identity_aapt2_compile_sdk_codename_does_not_override_package(self):
         # Real aapt2 badging has compileSdkVersionCodename='17' after package name.
         # An unanchored 'name' regex silently replaces the true package ID with '17'.
@@ -125,7 +138,7 @@ class LauncherTests(unittest.TestCase):
             apk = root / "app-debug.apk"
             apk.write_bytes(b"compiled APK fixture")
             version, code = build.android_identity(info)
-            version += "-debug"
+            version = build.compiled_android_name(info)
             (root / "output-metadata.json").write_text(json.dumps({
                 "applicationId": "org.itom.client",
                 "elements": [{"versionCode": code, "versionName": version,
@@ -168,7 +181,7 @@ class LauncherTests(unittest.TestCase):
             apk = root / "app-debug.apk"
             apk.write_bytes(b"compiled fixture")
             version, code = build.android_identity(info)
-            version += "-debug"
+            version = build.compiled_android_name(info)
             (root / "output-metadata.json").write_text(json.dumps({
                 "applicationId": "org.itom.client", "elements": [{
                     "versionCode": code, "versionName": version,
@@ -229,7 +242,7 @@ class LauncherTests(unittest.TestCase):
         (source / "build-report.json").write_text(json.dumps({"status":"passed", "source_revision":info["revision"], "sha256":sha}))
         sums = []
         for arch in ("amd64", "arm64"):
-            name = f"ITOM-1.1.0-{info['release']}-linux-{arch}"
+            name = f"ITOM-1.1.0-linux-{arch}"
             data = b"fixture-" + arch.encode()
             (source / name).write_bytes(data)
             sums.append(hashlib.sha256(data).hexdigest() + "  " + name)
@@ -238,7 +251,7 @@ class LauncherTests(unittest.TestCase):
         result = archive_main.export_verified_artifacts(self.root / "ITOM_FIELD77_tmp", archive, info, "all")
         self.assertEqual(7, len(result))
         self.assertEqual(b"verified-test-apk", (self.root / "dist" / apk_name).read_bytes())
-        self.assertTrue((self.root / "dist" / f"ITOM-1.1.0-{info['release']}-linux-arm64").is_file())
+        self.assertTrue((self.root / "dist" / "ITOM-1.1.0-linux-arm64").is_file())
         # Failed gate and tampered APK must NEVER overwrite the public dist.
         apk.write_bytes(b"tampered")
         with self.assertRaisesRegex(RuntimeError, "APK checksum mismatch"):
@@ -479,13 +492,13 @@ class LauncherTests(unittest.TestCase):
                 junit = root / "android/domain/build/test-results/test/TEST-domain.xml"
                 junit.parent.mkdir(parents=True, exist_ok=True); junit.unlink(missing_ok=True)
                 if junit_xml is not None: junit.write_text(junit_xml, encoding="utf-8")
-                app = root / "android/app/build/test-results/testDebugUnitTest/TEST-adapter.xml"
+                app = root / "android/app/build/test-results/testReleaseUnitTest/TEST-adapter.xml"
                 app.parent.mkdir(parents=True, exist_ok=True); app.unlink(missing_ok=True)
                 if app_xml is not None: app.write_text(app_xml, encoding="utf-8")
                 lint = root / "android/app/build/reports/lint-results.xml"
                 lint.parent.mkdir(parents=True, exist_ok=True)
                 if lint_xml is not None: lint.write_text(lint_xml, encoding="utf-8")
-                apk = root / "android/app/build/outputs/apk/debug/app-debug.apk"
+                apk = root / "android/app/build/outputs/apk/release/app-release-unsigned.apk"
                 apk.parent.mkdir(parents=True, exist_ok=True)
                 with zipfile.ZipFile(apk, "w") as native_fixture:
                     for abi in ("arm64-v8a", "armeabi-v7a"):
@@ -493,7 +506,7 @@ class LauncherTests(unittest.TestCase):
                 version, code = build.android_identity(info)
                 (apk.parent / "output-metadata.json").write_text(json.dumps({"applicationId":"org.itom.client",
                     "elements":[{"versionCode": code,
-                    "versionName": version + "-debug", "outputFile": "app-debug.apk"}]}))
+                    "versionName": build.compiled_android_name(info), "outputFile": "app-release-unsigned.apk"}]}))
                 return self
             def __exit__(self, *args): self.stdout.close()
             def wait(self): return exit_code
@@ -510,14 +523,14 @@ class LauncherTests(unittest.TestCase):
              patch("build.ensure_sdk", return_value=root / "sdk"), \
              patch("build_android_core.run"), \
              patch("build.subprocess.run", return_value=subprocess.CompletedProcess([], 0,
-                   stdout=f"package: name='org.itom.client' versionCode='{build.android_identity(info)[1]}' versionName='{build.android_identity(info)[0]}-debug'\n",
+                   stdout=f"package: name='org.itom.client' versionCode='{build.android_identity(info)[1]}' versionName='{build.compiled_android_name(info)}'\n",
                    stderr="test JDK fixture")), \
              patch("build.subprocess.Popen", return_value=Process()) as process, redirect_stdout(output):
             try: result = build.main(["android", "--cache", str(root / "cache")])
             except RuntimeError as error: failure = str(error)
             command = process.call_args.args[0]
             self.assertIn("--continue", command)
-            for task in (":domain:test", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"):
+            for task in (":domain:test", ":app:testReleaseUnitTest", ":app:lintRelease", ":app:compileReleaseKotlin", ":app:assembleRelease"):
                 self.assertIn(task, command)
         self.assertFalse((root / "cache/build.lock").exists())
         return result, failure, output.getvalue()

@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC19",
-  "revision": "itom-1-1-0-mailstream-rc19",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC19-sources.zip",
+  "release": "Final",
+  "revision": "itom-1-1-0-final",
+  "archive_name": "ITOM-1.1.0-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Testing candidate: canonical per-account rates and explicit TCP/tunnel counts; continuous control polling without redundant NOOP pauses. RC18 throughput, DNS cache, namespace and cleanup retained.",
-  "android_version_name": "1.1.0-mailstream-rc19",
-  "android_version_code": 10144,
+  "qualification": "Final release based on the user-accepted RC18 transport; RC19 polling change reverted exactly. Canonical diagnostics and stable account IDs retained.",
+  "android_version_name": "1.1.0",
+  "android_version_code": 10145,
   "android_application_id": "org.itom.client",
   "build_allowed": true,
   "field_ready_baseline": "MAILSTREAM-RC18 source 59f062d5120946185700607af32ce89dd1aafb73"

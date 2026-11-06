@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10144; versionName = "1.1.0-mailstream-rc19"
+        versionCode = 10145; versionName = "1.1.0"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
@@ -26,7 +26,9 @@ android {
             versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM")
             if (itomSigningStore != null) signingConfig = signingConfigs.getByName("itomField")
         }
-        release { isMinifyEnabled = true; resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
+        release { isDebuggable = false; isMinifyEnabled = false;
+            if (itomSigningStore != null) signingConfig = signingConfigs.getByName("itomField")
+            resValue("string", "app_name", "ITOM"); proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     buildFeatures { compose = true; buildConfig = true; resValues = true }

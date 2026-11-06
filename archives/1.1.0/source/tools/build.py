@@ -48,10 +48,10 @@ def read_source_info(root: Path = ROOT) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
     if info["version"] == "1.1.0":
-        expected = dict(release="MAILSTREAM-RC19", revision="itom-1-1-0-mailstream-rc19", archive_name="ITOM-1.1.0-MAILSTREAM-RC19-sources.zip",
-                        android_version_name="1.1.0-mailstream-rc19", android_version_code=10144, android_application_id="org.itom.client")
+        expected = dict(release="Final", revision="itom-1-1-0-final", archive_name="ITOM-1.1.0-sources.zip",
+                        android_version_name="1.1.0", android_version_code=10145, android_application_id="org.itom.client")
         if any(info.get(k) != v for k, v in expected.items()):
-            fail("Inconsistent ITOM 1.1.0 development identity")
+            fail("Inconsistent ITOM 1.1.0 release identity")
         return info
     if info.get("release") in ("RC2","RC5","RC7","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
         if (info["version"] != "1.0.0" or info["revision"] != "itom-1-0-0-" + info["release"].lower().replace(".", "-")
@@ -97,7 +97,18 @@ def android_identity(info):
     return f"{info['version']}-field{info['release'][5:]}", 9000 + int(info["release"][5:])
 
 
+def android_variant(info):
+    return "release" if info["version"] == "1.1.0" and info.get("release") == "Final" else "debug"
+
+
+def compiled_android_name(info):
+    name, _ = android_identity(info)
+    return name + ("-debug" if android_variant(info) == "debug" else "")
+
+
 def public_apk_name(info):
+    if info["version"] == "1.1.0" and info.get("release") == "Final":
+        return "ITOM-1.1.0.apk"
     if info["version"] == "1.1.0":
         return f"ITOM-{info['version']}-{info['release']}-debug.apk"
     if info.get("release") == "Final":
@@ -115,7 +126,7 @@ def verify_apk_identity(apk: Path, sdk: Path, info: dict):
              " and " + str(metadata_file) + "; refusing to export")
     metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
     expected_name, expected_code = android_identity(info)
-    expected_name += "-debug"
+    expected_name = compiled_android_name(info)
     if (metadata.get("applicationId") != info["android_application_id"] or
         not any(isinstance(e, dict) and e.get("versionName") == expected_name and e.get("versionCode") == expected_code and
                 e.get("outputFile") == apk.name for e in metadata.get("elements", []))):
@@ -136,6 +147,8 @@ def verify_apk_identity(apk: Path, sdk: Path, info: dict):
     found = dict(re.findall(r"(?<!\S)(name|versionCode|versionName)='([^']*)'", line))
     if found != {"name":info["android_application_id"], "versionCode":str(expected_code), "versionName":expected_name}:
         fail("Compiled APK identity differs from " + info['release'] + ": " + str(found))
+    if android_variant(info) == "release" and ("application-debuggable" in result.stdout or "testOnly='true'" in result.stdout):
+        fail("Final APK must not be debuggable or test-only")
     return {"application_id": found["name"], "version_code": expected_code, "version_name": expected_name}
 
 
@@ -569,7 +582,10 @@ def main(argv=None) -> int:
         command = [str(gradle), "--no-daemon", "--console=plain", "--continue"]
         if args.stacktrace:
             command.append("--stacktrace")
-        command += [":domain:test", ":app:testDebugUnitTest", ":app:lintDebug", ":app:compileReleaseKotlin", ":app:assembleDebug"]
+        variant = android_variant(info)
+        task_variant = variant.capitalize()
+        command += [":domain:test", f":app:test{task_variant}UnitTest", f":app:lint{task_variant}", ":app:compileReleaseKotlin", f":app:assemble{task_variant}"]
+        metadata["android_variant"] = variant
         metadata["stage"] = "gradle_compile_and_test"
         reset_lint_reports(ROOT, dist)
         domain_failed_this_run = False
@@ -585,7 +601,7 @@ def main(argv=None) -> int:
                     print(line, end="", flush=True); stream.write(line); stream.flush()
                 result = process.wait()
         summary = test_report_summary(ROOT)
-        app_summary = test_report_summary(ROOT, "android/app/build/test-results/testDebugUnitTest")
+        app_summary = test_report_summary(ROOT, f"android/app/build/test-results/test{task_variant}UnitTest")
         summary["task_failed_this_run"] = domain_failed_this_run
         metadata["domain_tests"] = summary
         metadata["app_unit_tests"] = app_summary
@@ -600,7 +616,8 @@ def main(argv=None) -> int:
         metadata["stage"] = "post_gradle_domain_and_lint_gate"
         verify_gate_reports(summary, metadata["lint"])
         verify_gate_reports(app_summary, metadata["lint"], "Android adapter")
-        source = ROOT / "android/app/build/outputs/apk/debug/app-debug.apk"
+        apk_name = "app-debug.apk" if variant == "debug" else "app-release.apk" if env.get("ITOM_ANDROID_SIGNING_STORE_FILE") else "app-release-unsigned.apk"
+        source = ROOT / "android/app/build/outputs/apk" / variant / apk_name
         metadata["stage"] = "post_gradle_apk_identity"
         metadata["apk_identity"] = verify_apk_identity(source, sdk, info)
         metadata["stage"] = "post_gradle_native_revision"
@@ -608,7 +625,7 @@ def main(argv=None) -> int:
         metadata["stage"] = "verified_apk_export"
         shutil.copy2(source, target)
         sha = digest(target); checksum_file.write_text(sha + "  " + target.name + "\n", encoding="utf-8")
-        metadata.update({"status": "passed", "stage": "completed", "apk": target.name, "sha256": sha, "checks": ["domain:test", "app:lintDebug", "app:compileReleaseKotlin", "app:assembleDebug"]})
+        metadata.update({"status": "passed", "stage": "completed", "apk": target.name, "sha256": sha, "checks": ["domain:test", f"app:test{task_variant}UnitTest", f"app:lint{task_variant}", "app:compileReleaseKotlin", f"app:assemble{task_variant}"]})
         print("\nAPK:", target, "\nSHA-256:", sha, flush=True)
     except BaseException as error:
         metadata["status"] = "failed"

@@ -17,7 +17,7 @@ type deliverySample struct {
 }
 
 // The route belongs to the actual account chosen by Send, not an estimate
-// copied from the global session ping. Receipts authenticate delivery; empty-FETCH
+// copied from the global session ping. Receipts authenticate delivery; NOOP
 // timings independently measure the direct client-to-provider command path.
 func (a *mailAccountState) sentPacket(packet []byte) {
 	kind, id, seq, err := parseHeader(packet)
