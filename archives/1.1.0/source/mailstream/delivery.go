@@ -12,26 +12,28 @@ type deliveryMark struct {
 }
 
 type deliveryWindow struct {
-	bulkFlight             int
-	totalDelivered         uint64
-	deliveredAt, firstSent time.Time
-	rateSampleMax          float64
-	flight                 int
-	limit                  int
-	base                   time.Duration
-	start                  time.Time
-	last                   time.Time
-	acked                  int
-	rate                   float64
-	ratePeak               float64
-	ratePeakAt             time.Time
-	limited                bool // flight allowance blocked a queued bulk packet since the last rate sample
-	bulkRTT                time.Duration
-	saturatedBase          time.Duration
-	saturatedSamples       [128]int
-	saturatedBytes         int
-	horizon                time.Duration
-	adaptive               bool
+	bulkFlight              int
+	totalDelivered          uint64
+	deliveredAt, firstSent  time.Time
+	rateSampleMax           float64
+	flight                  int
+	limit                   int
+	base                    time.Duration
+	start                   time.Time
+	last                    time.Time
+	acked                   int
+	rate                    float64
+	ratePeak                float64
+	ratePeakAt              time.Time
+	limited                 bool // flight allowance blocked a queued bulk packet since the last rate sample
+	bulkRTT                 time.Duration
+	saturatedBase           time.Duration
+	saturatedSamples        [128]int
+	saturatedBytes          int
+	controlRTT, controlBase time.Duration
+	controlSlowUntil        time.Time
+	horizon                 time.Duration
+	adaptive                bool
 }
 
 const initialDeliveryWindow = 512 << 10
@@ -47,7 +49,7 @@ func (w *deliveryWindow) allowance() int {
 	return w.limit
 }
 
-func (w *deliveryWindow) deliveryHorizon() time.Duration {
+func (w *deliveryWindow) deliveryHorizon(now time.Time) time.Duration {
 	horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
 	if w.limited && w.saturatedBase > 0 {
 		// Learn the full DATA path from a complete flight-limited round,
@@ -55,7 +57,26 @@ func (w *deliveryWindow) deliveryHorizon() time.Duration {
 		// raise the minimum observed round baseline.
 		horizon = max(horizon, min(maxBulkDeliveryHorizon, 2*w.saturatedBase+500*time.Millisecond))
 	}
+	if now.Before(w.controlSlowUntil) {
+		horizon = min(horizon, 750*time.Millisecond)
+	}
 	return horizon
+}
+
+func (w *deliveryWindow) observeInteractive(sample time.Duration, now time.Time) {
+	if sample > 0 {
+		w.controlRTT = sample
+		if w.controlBase == 0 || sample < w.controlBase {
+			w.controlBase = sample
+		}
+		// Small DATA and pings use the independent control carrier. Their
+		// queued receipts expose a shared access-link backlog, unlike a
+		// slow full-body FETCH. Drain bulk before browsing stalls.
+		if sample > max(750*time.Millisecond, 2*w.controlBase+250*time.Millisecond) {
+			w.controlSlowUntil = now.Add(2 * time.Second)
+			w.limit = min(w.allowance(), max(initialDeliveryWindow, int(w.rate*.75)))
+		}
+	}
 }
 
 func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, bulk bool, marks ...deliveryMark) {
@@ -63,6 +84,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	// Interactive DATA bypasses the bulk allowance; its smaller, faster receipts
 	// cannot train the capacity estimate or minimum RTT of the bulk carrier.
 	if !bulk {
+		w.observeInteractive(sample, now)
 		return
 	}
 	// Light probes and an idle opposite direction are not capacity samples.
@@ -133,11 +155,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	// Grow on delivered bytes while real queued work was flight-limited.
 	// Waiting for a 250 ms estimator interval wastes several fast receipt
 	// rounds at the start of a short transfer. Quiet/light traffic cannot grow it.
-	lowQueue := w.bulkRTT <= w.base+250*time.Millisecond
+	lowQueue := w.bulkRTT <= w.base+250*time.Millisecond && !now.Before(w.controlSlowUntil)
 	if w.limited {
 		if lowQueue {
 			w.limit = min(maxPendingBytes, w.limit+n)
-		} else if ceiling := int(w.rate * w.deliveryHorizon().Seconds()); ceiling > w.allowance() {
+		} else if ceiling := int(w.rate * w.deliveryHorizon(now).Seconds()); ceiling > w.allowance() {
 			// Spend already measured headroom on the ACK clock rather than
 			// pausing another estimator interval on every slow receipt round.
 			w.limit = min(maxPendingBytes, min(ceiling, w.limit+n))
@@ -164,7 +186,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 		// full DATA. When we blocked queued bytes, probe beyond that baseline
 		// using measured delivery rate. Otherwise rate * baseline reinforces
 		// a 512 KiB / bulk-RTT ceiling forever, even on a capable mobile link.
-		horizon := w.deliveryHorizon()
+		horizon := w.deliveryHorizon(now)
 		w.horizon = horizon
 		target := int(w.rate * horizon.Seconds())
 		if !lowQueue {

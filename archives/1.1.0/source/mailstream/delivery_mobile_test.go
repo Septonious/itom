@@ -63,6 +63,8 @@ func TestMobileBulkEscapesSmallTrafficBaseline(t *testing.T) {
 					pending = pending[1:]
 					now = p.ack
 					w.delivered(quantum, now.Sub(p.sent), now, true, p.mark)
+					w.flight += 128
+					w.delivered(128, 100*time.Millisecond, now, false)
 					peak = max(peak, w.allowance())
 					maxDelay = max(maxDelay, now.Sub(p.sent))
 					if now.Sub(start) > 15*time.Second {
@@ -80,6 +82,8 @@ func TestMobileBulkEscapesSmallTrafficBaseline(t *testing.T) {
 				for _, p := range pending {
 					now = maxTime(now, p.ack)
 					w.delivered(quantum, now.Sub(p.sent), now, true, p.mark)
+					w.flight += 128
+					w.delivered(128, 100*time.Millisecond, now, false)
 				}
 				now = now.Add(5 * time.Second)
 			}

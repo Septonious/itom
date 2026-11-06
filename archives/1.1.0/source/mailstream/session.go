@@ -511,6 +511,9 @@ func (s *Session) receiveLoop() {
 					}
 					if p.attempts == 1 && !p.sent.IsZero() {
 						sample := time.Since(p.sent)
+						if p.kind == framePing || p.kind == framePong {
+							s.delivery.observeInteractive(sample, time.Now())
+						}
 						if s.rtt == 0 {
 							s.rtt, s.variation = sample, sample/2
 						} else {
@@ -795,32 +798,35 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
-	BulkSaturatedMinRTTMS int64  `json:"bulk_saturated_round_rtt_ms"`
-	BulkDeliveryHorizonMS int64  `json:"bulk_delivery_horizon_ms"`
-	BulkSmoothedRTTMS     int64  `json:"bulk_receipt_rtt_ms"`
-	BulkReceiptRTTMS      int64  `json:"bulk_receipt_min_rtt_ms"`
-	BulkDeliveryRateBPS   int64  `json:"bulk_delivery_bytes_per_second"`
-	BulkWindowLimited     bool   `json:"bulk_window_limited"`
-	OpenRefusals          uint64 `json:"open_refusals"`
-	OpenWaits             uint64 `json:"open_capacity_waits"`
-	Streams               int    `json:"streams"`
-	PendingPackets        int    `json:"pending_packets"`
-	PendingBytes          int    `json:"pending_bytes"`
-	DeliveryRTTMS         int64  `json:"delivery_rtt_ms"`
-	Closed                bool   `json:"closed"`
-	Failure               string `json:"failure,omitempty"`
-	ReceiptBackpressure   uint64 `json:"receipt_backpressure"`
-	Retransmissions       uint64 `json:"retransmissions"`
-	BulkOutstanding       uint64 `json:"bulk_outstanding_bytes"`
-	ReceiveBuffered       int64  `json:"receive_buffered_bytes"`
-	DeliveryFlight        int    `json:"delivery_flight_bytes"`
-	DeliveryWindow        int    `json:"delivery_window_bytes"`
+	InteractiveReceiptRTTMS    int64  `json:"interactive_receipt_rtt_ms"`
+	InteractiveReceiptMinRTTMS int64  `json:"interactive_receipt_min_rtt_ms"`
+	InteractiveQueueLimited    bool   `json:"interactive_queue_limited"`
+	BulkSaturatedMinRTTMS      int64  `json:"bulk_saturated_round_rtt_ms"`
+	BulkDeliveryHorizonMS      int64  `json:"bulk_delivery_horizon_ms"`
+	BulkSmoothedRTTMS          int64  `json:"bulk_receipt_rtt_ms"`
+	BulkReceiptRTTMS           int64  `json:"bulk_receipt_min_rtt_ms"`
+	BulkDeliveryRateBPS        int64  `json:"bulk_delivery_bytes_per_second"`
+	BulkWindowLimited          bool   `json:"bulk_window_limited"`
+	OpenRefusals               uint64 `json:"open_refusals"`
+	OpenWaits                  uint64 `json:"open_capacity_waits"`
+	Streams                    int    `json:"streams"`
+	PendingPackets             int    `json:"pending_packets"`
+	PendingBytes               int    `json:"pending_bytes"`
+	DeliveryRTTMS              int64  `json:"delivery_rtt_ms"`
+	Closed                     bool   `json:"closed"`
+	Failure                    string `json:"failure,omitempty"`
+	ReceiptBackpressure        uint64 `json:"receipt_backpressure"`
+	Retransmissions            uint64 `json:"retransmissions"`
+	BulkOutstanding            uint64 `json:"bulk_outstanding_bytes"`
+	ReceiveBuffered            int64  `json:"receive_buffered_bytes"`
+	DeliveryFlight             int    `json:"delivery_flight_bytes"`
+	DeliveryWindow             int    `json:"delivery_window_bytes"`
 }
 
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}

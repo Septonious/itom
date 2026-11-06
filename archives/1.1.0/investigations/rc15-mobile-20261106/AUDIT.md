@@ -130,3 +130,27 @@ The exported metric is bulk_saturated_round_rtt_ms. A new mixed-callback FIFO
 case independently returns 78.4 Mbps on an 80 Mbps path, with maximum 1.6-second
 delivery RTT. The MIME-expanded 35 Mbps case returns 24.9 Mbps with maximum
 1.2-second delivery RTT. All previous focused normal cases pass.
+
+The weighted-round revision (17e2c67) passes the matched corporate, mobile,
+home, repeated-cleanup and short-run jobs, but is held: the local shared 7 Mbps
+cancellation model reaches 2,493 ms loaded RTT. Transfer integrity, all carriers,
+cancellation and new HTTPS recovery still succeed. The fixed-rate FIFO probe
+model passes on this revision too; it does not reproduce the full TLS breach
+and is not presented as a negative regression proof.
+
+The candidate now also observes authenticated receipts for small interactive
+DATA and native PING/PONG. A slow bulk callback alone cannot train this signal.
+If interactive receipt latency exceeds its own baseline by the bounded control
+threshold, bulk uses a 750 ms rate horizon for two seconds and immediately
+contracts toward that budget. Priority traffic retains its independent reserve.
+Queued access-link traffic therefore triggers backoff without treating every
+slow DATA FETCH as congestion. Diagnostics export latest/minimum interactive
+receipt RTT and whether this drain guard is active.
+
+The revised full shared-7-Mbps run completes cancellation and fresh HTTPS with
+maximum loaded RTT 1,588 ms and idle/post below 97 ms. Upload/download remain
+4.76/4.47 Mbps, consistent with the shaped MIME-expanded shared path. The
+faster-setup mobile replay completes at 36.8/44.3 Mbps upload and 35.1/39.3 Mbps
+download, with maximum loaded RTT 877 ms and idle/post below 221 ms. All thirty
+carriers remain active. These local results require matched qualification of
+the new source before signing; older prototype artifacts cannot qualify it.
