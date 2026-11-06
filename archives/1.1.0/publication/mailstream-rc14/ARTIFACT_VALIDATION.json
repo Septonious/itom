@@ -1,0 +1,30 @@
+{
+  "source_commit": "d66775cfbd59b7c0c9b225af628032723dbe9147",
+  "scope": "artifact identity and functional/safety checks",
+  "exit_code": 0,
+  "checks": {
+    "exact_source_and_native_artifacts": true,
+    "normal_race_sdk_fork_vet": true,
+    "android_tests_lint_jni": true,
+    "persistent_signer": true,
+    "six_actual_server_startup_reconnects": true,
+    "manual_stop_capacity_reset": true,
+    "all_model_transfers_complete_no_account_failures": true,
+    "all_model_idle_loaded_rtt_limits": true,
+    "weak_link_cancel_and_fresh_https": true,
+    "frozen_rc12_failures_reproduced_and_fixed": true,
+    "frozen_rc13_slow_mutation_reproduced_and_fixed": true,
+    "bounded_prefix_preserves_future_controls": true,
+    "repeated_cleanup_without_server_quarantines": true,
+    "old_persisted_debt_audited_and_bandwidth_restored": true,
+    "accepted_control_precedes_optional_collection": true,
+    "sixty_four_tls_streams_shared_credit": true,
+    "finite_physical_budget_audited_reuse": true,
+    "no_incompatible_selected_status": true,
+    "pre_service_startup_recovery_preserved": true,
+    "journal_growth_does_not_block_receipts": true,
+    "audited_bulk_refunds_reuse_durable_high_water": true,
+    "clean_stop_persists_exact_remaining_debt": true
+  },
+  "field_qualified": false
+}
