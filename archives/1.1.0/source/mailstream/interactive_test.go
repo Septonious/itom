@@ -75,7 +75,9 @@ func TestFreshHTTPSWhileBulkWindowShrinks(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer client.Close()
-	gate := &delayedBulkLink{IMAPLink: client, data: make(chan []byte, 64), release: make(chan struct{})}
+	// TLS can fragment its initial records below 4 KiB. Hold enough packets
+	// to reach the unchanged byte-flight assertion with that real record mix.
+	gate := &delayedBulkLink{IMAPLink: client, data: make(chan []byte, 128), release: make(chan struct{})}
 	key := make([]byte, 32)
 	if _, err = rand.Read(key); err != nil {
 		t.Fatal(err)

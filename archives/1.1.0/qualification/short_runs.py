@@ -2,7 +2,7 @@
 import argparse,json,statistics
 from pathlib import Path
 
-p=argparse.ArgumentParser();p.add_argument('directory',type=Path);p.add_argument('--require-goal',action='store_true');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('directory',type=Path);p.add_argument('--require-goal',action='store_true');p.add_argument('--require-sustained',action='store_true');a=p.parse_args()
 d=json.loads((a.directory/'candidate.json').read_text())
 assert d['success'] and d['stage']=='complete' and all(x['success']for x in d['Phases'])
 assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
@@ -28,7 +28,8 @@ result['two_second_ramp_goal_met']=all(x['ramp_rolling_one_second_100mbps_at_sec
 result['rolling_two_second_goal_met']=all(x['minimum_rolling_two_second_mbps_after_two_seconds']is not None and x['minimum_rolling_two_second_mbps_after_two_seconds']>=100 for x in phases)
 (a.directory/'SHORT_RUN_VALIDATION.json').write_text(json.dumps(result,indent=2)+'\n')
 print(json.dumps(result,indent=2))
-if a.require_goal:
+if a.require_goal or a.require_sustained:
  assert result['max_idle_post_ms']<=300 and result['max_loaded_ms']<=2000
  assert peak<=2
- assert result['full_phase_goal_met'] and result['two_second_ramp_goal_met'] and result['rolling_two_second_goal_met']
+ assert result['full_phase_goal_met'] and result['rolling_two_second_goal_met']
+if a.require_goal:assert result['two_second_ramp_goal_met']

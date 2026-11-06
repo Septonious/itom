@@ -31,7 +31,8 @@ type Stream struct {
 	hasFinal, writeClosed                            bool
 	err                                              error
 	readDeadline, writeDeadline                      time.Time
-	bulkWriteCompleted                               time.Time // owned by writeMu
+	bulkWriteCompleted, writeBurstAt                 time.Time // owned by writeMu
+	writeBurstBytes                                  int       // owned by writeMu
 	receiveLimit, peerWindow                         int
 	closeOnce                                        sync.Once
 }
@@ -319,7 +320,15 @@ func (s *Stream) Write(p []byte) (int, error) {
 		// to its DATA batch. Treating every trailer as interactive filled
 		// the control writer with bulk framing. An isolated small write
 		// still dispatches immediately; this test never waits or buffers.
-		priority := n <= 4096 && time.Since(s.bulkWriteCompleted) > 250*time.Millisecond
+		now := time.Now()
+		if now.Sub(s.writeBurstAt) > 32*time.Millisecond {
+			s.writeBurstBytes = 0
+		}
+		// TLS dynamic record sizing starts with several small records. They
+		// are one byte burst, not independent interactive requests to mirror.
+		// A quiet stream's first 4 KiB remains immediate; paced small messages
+		// reset the short burst counter and retain their interactive treatment.
+		priority := n <= 4096 && s.writeBurstBytes+n <= 4096 && now.Sub(s.bulkWriteCompleted) > 250*time.Millisecond
 		err := s.session.send(ctx, frame{kind: frameData, stream: s.id, offset: offset, data: p[:n]}, priority)
 		cancel()
 		if err != nil {
@@ -339,6 +348,8 @@ func (s *Stream) Write(p []byte) (int, error) {
 			return written, err
 		}
 		written += n
+		s.writeBurstAt = time.Now()
+		s.writeBurstBytes = min(4097, s.writeBurstBytes+n)
 		if !priority {
 			s.bulkWriteCompleted = time.Now()
 		}

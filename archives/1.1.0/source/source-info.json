@@ -4,7 +4,7 @@
   "revision": "itom-1-1-0-mailstream-rc15",
   "archive_name": "ITOM-1.1.0-MAILSTREAM-RC15-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Testing candidate: portable selected-mailbox audits, physical-account cleanup isolation, bounded bulk coalescing and receipt amortization; field sustained 100 Mbps remains unverified",
+  "qualification": "Testing candidate: short-transfer byte-clocked growth, TLS burst classification, bounded interactive hedging and cleanup preparation; field performance and two-second ramp remain unverified",
   "android_version_name": "1.1.0-mailstream-rc15",
   "android_version_code": 10140,
   "android_application_id": "org.itom.client",

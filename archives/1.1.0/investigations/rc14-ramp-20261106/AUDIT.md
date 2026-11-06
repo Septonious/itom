@@ -57,3 +57,25 @@ share two-millisecond bounded priority MIME bursts. The first 512 KiB flight is
 spread over small publication quanta across ready accounts instead of filling
 only two writers. The initial flight remains unchanged. These changes require
 short full-path qualification, rather than relying on the controller simulator.
+
+The TLS classifier now also counts consecutive small writes: the first 4 KiB of
+an isolated burst stays immediate, while a train of initially small TLS records
+becomes bulk. A short counter reset preserves paced small messages. Hedging is
+retained for isolated requests but suppressed within a simultaneous interactive
+burst. Dedicated regressions preserve isolated/paced treatment and demonstrate
+both old faults on frozen RC14. A 1 MiB initial-flight experiment added no useful
+short-run gain and was reverted; the final initial flight remains 512 KiB.
+
+The resulting local 16-stream, 10-second replay completed three pairs at
+113.0/104.0/104.3 Mbps upload and 173.7/179.5/179.8 Mbps download. Maximum
+idle/post RTT was 261.6 ms and loaded RTT 512.1 ms; at most two writers were
+borrowed, with no failures or quarantine. Every rolling two-second interval
+starting after second two exceeded 100 Mbps. Rolling one-second upload reached
+100 Mbps at 3.0/3.5/3.5 seconds, so the two-second ramp target remains unmet.
+These local averages are not field qualification. Matched hosted short and long
+replays, complete race suites and Android compilation/lint remain required.
+
+The bounded held-bulk test needed 128 packet slots instead of 64 to reach its
+unchanged byte-flight assertion after TLS-sized records became bulk. Its payload,
+shrunken-flight condition, fresh TLS request and byte-integrity assertions remain
+unchanged. The targeted race cohort passed that condition and verified recovery.

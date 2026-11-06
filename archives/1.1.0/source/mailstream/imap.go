@@ -111,6 +111,7 @@ type mailAccountState struct {
 
 type IMAPLink struct {
 	lastBulk            atomic.Int64
+	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
 	cancel              context.CancelFunc
@@ -281,7 +282,12 @@ func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
 	if err != nil {
 		return err
 	}
-	if len(l.accounts) > 1 {
+	now := time.Now().UnixNano()
+	last := l.lastInteractive.Swap(now)
+	// Preserve hedging for an isolated request. A simultaneous TLS/OPEN
+	// burst already uses the whole pool; duplicating every tiny packet
+	// doubles provider command pressure during MULTI startup.
+	if len(l.accounts) > 1 && (last == 0 || now-last >= int64(20*time.Millisecond)) {
 		_, _ = l.send(ctx, body, true, first)
 	}
 	return nil
