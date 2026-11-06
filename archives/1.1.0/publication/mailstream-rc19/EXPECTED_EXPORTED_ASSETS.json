@@ -1,0 +1,58 @@
+{
+  "ANDROID_BUILD.json": {
+    "bytes": 2519,
+    "sha256": "8409e4d14ab69f1894943636468e32dfa7d9a0d4a9389f2957e937b9b8e055e6"
+  },
+  "ARTIFACT_VALIDATION.json": {
+    "bytes": 716,
+    "sha256": "ed190de7100727f65250e7495f1e032a22b72e0b668c1fe4cb353955c98f6bde"
+  },
+  "ITOM-1.1.0-MAILSTREAM-RC19-linux-amd64.bin": {
+    "bytes": 13279311,
+    "sha256": "2da4853c243fc9a8e5c82db5bef4d32c69b4356c64e15d7812a196348f993b82"
+  },
+  "ITOM-1.1.0-MAILSTREAM-RC19-linux-arm64.bin": {
+    "bytes": 12297190,
+    "sha256": "b73692aea641ad2b0e9179d6857478ccff23826f0b056ea168e800320cd0afad"
+  },
+  "ITOM-1.1.0-MAILSTREAM-RC19-sources.zip": {
+    "bytes": 1757224,
+    "sha256": "9e8f6383958f87ee7a0d80ec60f804081f3747ac10bb07e8052ea6057a8511f1"
+  },
+  "ITOM-1.1.0-MAILSTREAM-RC19.apk": {
+    "bytes": 54022484,
+    "sha256": "6ffcad84cdde6f9a6b20ab46a5da99f6076a5cae53ede608203377f7a7b82fe9"
+  },
+  "MAILSTREAM-RC19-evidence.zip": {
+    "bytes": 2622292,
+    "sha256": "df264c820de76f502f6bc98ad9511c2c63d4b03c6b0bf1f45232a4538af90331"
+  },
+  "MAILSTREAM-RC19_TESTING.md": {
+    "bytes": 2396,
+    "sha256": "45a27ae17708ec5d324a7555a99437f8c2391faa9ccf813c245a805be2e43a58"
+  },
+  "MAILSTREAM_RC19_BUILD.json": {
+    "bytes": 28729,
+    "sha256": "a07b3e07c47fee34f8e473789ba06d03355ce2560863ba02660da7e78a40edc0"
+  },
+  "MAILSTREAM_RC19_SOURCE_MANIFEST.json": {
+    "bytes": 83248,
+    "sha256": "eaabfcd6ca2c544ed3e5bac68060eb984cdae15059bdcd0155397395b895cd42"
+  },
+  "NATIVE_SOURCE_SHA256SUMS": {
+    "bytes": 323,
+    "sha256": "4252cd0c7d722544ff9a58f973ca56a5b68162efc7c1ea890bcdf2f2436898a6"
+  },
+  "SHA256SUMS": {
+    "bytes": 1228,
+    "sha256": "7bc9b85ca4114f3995dd691ef007556e59ef585b08e619bca369b03f9d407fdf"
+  },
+  "SIGNER.txt": {
+    "bytes": 951,
+    "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d"
+  },
+  "SOURCE_COMMIT": {
+    "bytes": 41,
+    "sha256": "b03fa37baeebbc872ec3c660ebdfe0c6046f67e16d6e0946d06092d6ff445e85"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "source_commit": "c5c8d5eeb908448c72df91bc03ef455c7af41ac2",
+  "exit_code": 0,
+  "checks": {
+    "canonical_account_rates_and_stable_account_ids": true,
+    "live_ui_and_export_with_tracing_disabled": true,
+    "native_tcp_and_tunnel_counts_distinguished": true,
+    "control_poll_protocol_and_cancellation_regression": true,
+    "normal_race_sdk_fork_vet": true,
+    "android_tests_lint_both_jni": true,
+    "persistent_apk_signer": true,
+    "matched_original_thirteen_gates": true,
+    "three_predeclared_rc18_transfer_pairs": true,
+    "six_actual_native_server_startups": true,
+    "manual_stop_capacity_reset": true,
+    "all_model_accounts_healthy_and_bounded_rtt": true
+  },
+  "field_qualified": false
+}
