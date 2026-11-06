@@ -1,0 +1,101 @@
+{
+  "verified": true,
+  "source_commit": "59f062d5120946185700607af32ce89dd1aafb73",
+  "publication_commit": "8cfe2da29b66ae5a9f8893aa03a781c1ecbeebe4",
+  "build_run_id": 42295626432,
+  "source_acceptance_run_id": 42295626062,
+  "export_run_id": 42299498063,
+  "export_status": "success",
+  "all_fourteen_matched_jobs_passed": true,
+  "downloaded_archives": [
+    {
+      "id": 13544260577,
+      "name": "ITOM-MAILSTREAM-RC18-sources-and-evidence",
+      "size_bytes": 5699821,
+      "zip_sha256": "f50dbbc213ebb6b195a12d954b110518b5e85dce2f7f43d1c51c4d1abe0a00ef"
+    },
+    {
+      "id": 13543860967,
+      "name": "ITOM-MAILSTREAM-RC18-signed-Android",
+      "size_bytes": 19913895,
+      "zip_sha256": "f41bcbb611bbe30f56cd5e2700ea27c8a019e6f2b6e5ba1b95569d89f6844745"
+    },
+    {
+      "id": 13542978843,
+      "name": "ITOM-MAILSTREAM-RC18-server-arm64",
+      "size_bytes": 6854841,
+      "zip_sha256": "2eb62866ea933561449054823d0baa7f38961ca4936abf9abaeb662d7d081b80"
+    },
+    {
+      "id": 13542734413,
+      "name": "ITOM-MAILSTREAM-RC18-server-amd64",
+      "size_bytes": 7489483,
+      "zip_sha256": "784da4f84179c44733827fd8870a02c16a62c1f010edc2046c76271325b46e35"
+    }
+  ],
+  "verified_files": {
+    "ANDROID_BUILD.json": {
+      "sha256": "97d5c7d5a80ddb7cd78470d20d694f55dd9dc71b71f87e58978394602e3145fd",
+      "bytes": 2519
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC18-linux-arm64.bin": {
+      "sha256": "e13fd4dfdf2feb71a50ae971e729141949c83826754e6acc8f1af0488d6ccbbb",
+      "bytes": 12297884
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC18.apk": {
+      "sha256": "c16bced2e40bf8de1844235cebafc7be7272cef79b3dcff60fa47bdc2f7b9e11",
+      "bytes": 54022484
+    },
+    "SIGNER.txt": {
+      "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d",
+      "bytes": 951
+    },
+    "NATIVE_SOURCE_SHA256SUMS": {
+      "sha256": "29a1f97ab54e755965afb3ae40cd613bad438cfe83e370f15b6c5313843de4a0",
+      "bytes": 323
+    },
+    "ARTIFACT_VALIDATION.json": {
+      "sha256": "fe984d80fb342bcc8970a64e64b70ea57668c44b816b25636a2848e85569afe6",
+      "bytes": 2671
+    },
+    "SOURCE_COMMIT": {
+      "sha256": "f9693e99349ebe2bdccaf27240694f56ba4dc7b0491a4a7ce27466f039ccb769",
+      "bytes": 41
+    },
+    "MAILSTREAM-RC18_TESTING.md": {
+      "sha256": "d69680128dfcee236047db9d886fd3da81b75292df6dab660031bb80ce179f81",
+      "bytes": 2933
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC18-sources.zip": {
+      "sha256": "63dae76873bb354e65dc1aef59c95a3d2bec92b2364ef40dc2413ccd94f48e4f",
+      "bytes": 1752421
+    },
+    "SHA256SUMS": {
+      "sha256": "80fd4819d437263d3ec98625fb7003dd504954b8a37e770aa478ae6db210a614",
+      "bytes": 1228
+    },
+    "ITOM-1.1.0-MAILSTREAM-RC18-linux-amd64.bin": {
+      "sha256": "bf85cefee058de327ffc269b30d52f0d17a6795415f58dcb11a0822348e52516",
+      "bytes": 13278213
+    },
+    "MAILSTREAM_RC18_BUILD.json": {
+      "sha256": "0e87bb9c5ee51bbe8d554cdde61b42fa5b2d03cc5862601a1fb6d2e84f0812fb",
+      "bytes": 77452
+    },
+    "MAILSTREAM_RC18_SOURCE_MANIFEST.json": {
+      "sha256": "427f79dee2fe460b894f598fafee1c522d8d77b76198e23b7268e54bbaeadaf6",
+      "bytes": 82738
+    },
+    "MAILSTREAM-RC18-evidence.zip": {
+      "sha256": "94f0e2b3fdec5630a3200fbddd720bf1c8fc489ab83e26448258ec0f768e3676",
+      "bytes": 4036892
+    }
+  },
+  "downloaded_apk_v3_verified": true,
+  "persistent_signer_unchanged": true,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "rc10_all_fourteen_assets_unchanged": true,
+  "rc16_reference_tag_unchanged": true,
+  "rc17_reference_tag_unchanged": true,
+  "field_qualified": false
+}
