@@ -43,11 +43,48 @@ still leaves a meaningful unexplained gap; encoding alone is insufficient.
 The direct and IMAP routes also have different base latency. Extra idle RTT
 and loaded queueing should be investigated separately.
 
-Next evidence required: the full Android app diagnostics from this same run,
-with app logging enabled before connection. Correlate client delivery allowance,
-rate, flight, interactive guard, WINDOW credit and per-account publication counts
-against these server receive samples. Candidate fixes should target the measured
-limiter and publication bursts while preserving RC17 startup, finite storage,
-short folder names, cleanup and the existing weak-link safeguards. Do not claim
-a 54 ms target or a 100 Mbps uplink from these captures. No runtime parameters
-or protocol behavior are changed on the basis of the incomplete sender evidence.
+The subsequently supplied Android full export matches the same run (SHA-256
+`8abf519525abe07e570494aadc337f1e8ef986a950327f6e8a7629203e966ee8`).
+Its 48 RC17 client runtime samples cover the full transfer. Older RC13–RC16
+rotations and startup records are excluded from the comparison.
+
+During upload the client keeps approximately 2.3–4.6 MB pending, with the
+interactive drain guard active throughout the main phase. Its allowance
+contracts from about 2 MB to 512 KiB while as much as 2.2 MB remains in flight.
+The measured delivery estimate briefly falls to 4.1 Mbps before recovering.
+Client APPEND completion rises from roughly 85 ms idle to 246–430 ms under
+upload; its direct provider NOOP also rises. This supports shared-link queueing
+and drain/credit oscillation, rather than missing data lanes or full storage.
+
+The native counters additionally record 27 DNS worker refusals and 44 failed
+DNS resolutions, with no TCP worker refusal or open timeout. DNS workers reach
+63/64, while idle UDP associations retain their worker for one second. The
+successful A-record cache is used by application dials but not repeated fake-DNS
+answers; repeated mappings also use a write transaction. These amplify DNS
+bursts and Android storage/network work. The existing stream cap is reached
+with 26 capacity waits; it remains bounded. Counters alone do not identify the
+cause of five failed external opens.
+
+The candidate spaces learned bulk traffic in MIME-sized bursts, preserving
+control priority, original flight/guard bounds, protocol, storage and account
+limits. A fresh burst returns to the original 512 KiB credit rather than the
+prior speedtest's large allowance. Fresh A records answer from the existing TTL
+cache and established fake names use read transactions. Local idle DNS workers
+release promptly; actual TUN tests verify queued queries and reuse of the same
+UDP socket after local association expiry. Resolver destinations, 250 ms direct
+deadline, fallback policy and worker limits are unchanged.
+
+A prototype matched TLS model (36/80 Mbps directional wire limits, 60 ms APPEND
+service, variable delay, sixteen streams, two twenty-second upload/download
+cycles) compares frozen RC17 with pacing. Median loaded probe RTT falls from
+496 to 342 ms, p95 from 892 to 631 ms and median adjacent probe RTT delta from
+128 to 63 ms. Upload phases remain near 24 Mbps in both versions; download
+phases change from 55.7/57.4 to 53.9/53.2 Mbps. All transfers complete with
+30/30 roles. This probe variation is not Ookla's jitter metric and does not
+claim a physical-provider speedup. The final matched build must independently
+repeat the comparison and all existing safety/throughput gates.
+
+There is also a substantial idle IMAP-path component: client/server direct
+command timing and mailbox publication/polling differ from a direct VLESS route.
+Pacing targets added queue delay and variation; it does not claim to eliminate
+the mailbox relay's entire base RTT or achieve 100 Mbps on a 36 Mbps raw uplink.

@@ -12,6 +12,7 @@ type deliveryMark struct {
 }
 
 type deliveryWindow struct {
+	pacer                   bulkPacer
 	bulkFlight              int
 	totalDelivered          uint64
 	deliveredAt, firstSent  time.Time
@@ -255,6 +256,8 @@ func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
 	if w.bulkFlight == 0 {
 		w.firstSent = now
 		if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
+			// A new burst must not dump the prior speedtest's large allowance.
+			w.limit, w.rate, w.ratePeak = initialDeliveryWindow, 0, 0
 			w.saturatedBase = 0
 			clear(w.saturatedSamples[:])
 			w.saturatedBytes = 0

@@ -258,12 +258,20 @@ func (r *dnsResolver) remember(raw []byte) {
 	}
 	r.cache[name] = dnsCacheEntry{ips: ips, until: time.Now().Add(ttl)}
 }
+
+// Successful A records are immutable while cached. Both application dials and
+// fake-DNS answers share the same bounded TTL; expired answers are never reused.
+func (r *dnsResolver) cached(name string) (dnsCacheEntry, bool) {
+	r.mu.Lock()
+	entry, ok := r.cache[name]
+	r.mu.Unlock()
+	return entry, ok && time.Now().Before(entry.until)
+}
+
 func (r *dnsResolver) lookup(ctx context.Context, host string) ([]netip.Addr, error) {
 	name := strings.ToLower(strings.TrimSuffix(host, "."))
-	r.mu.Lock()
-	cached, ok := r.cache[name]
-	r.mu.Unlock()
-	if ok && time.Now().Before(cached.until) {
+	cached, ok := r.cached(name)
+	if ok {
 		return append([]netip.Addr(nil), cached.ips...), nil
 	}
 	query, err := dnsQuestion(name)

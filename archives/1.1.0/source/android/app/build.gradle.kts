@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10142; versionName = "1.1.0-mailstream-rc17"
+        versionCode = 10143; versionName = "1.1.0-mailstream-rc18"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }

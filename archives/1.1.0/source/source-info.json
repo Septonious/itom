@@ -1,12 +1,12 @@
 {
   "version": "1.1.0",
-  "release": "MAILSTREAM-RC17",
-  "revision": "itom-1-1-0-mailstream-rc17",
-  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC17-sources.zip",
+  "release": "MAILSTREAM-RC18",
+  "revision": "itom-1-1-0-mailstream-rc18",
+  "archive_name": "ITOM-1.1.0-MAILSTREAM-RC18-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Testing candidate: byte-bounded resumable DATA and historical collection with exact UID ownership and final empty-folder credit fence; RC16 transport preserved",
-  "android_version_name": "1.1.0-mailstream-rc17",
-  "android_version_code": 10142,
+  "qualification": "Testing candidate: measured MIME-sized bulk pacing and fresh-burst flight bounds; TTL-backed fake-DNS replies and prompt idle DNS worker release; RC17 namespace and cleanup preserved",
+  "android_version_name": "1.1.0-mailstream-rc18",
+  "android_version_code": 10143,
   "android_application_id": "org.itom.client",
   "build_allowed": true,
   "field_ready_baseline": "MAILSTREAM-RC10 source b6d53de7ec97bef2d90582186a8398e409eed283"

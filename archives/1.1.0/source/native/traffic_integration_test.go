@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/dns/dnsmessage"
 	"golang.org/x/net/proxy"
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -26,6 +27,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 )
 
 type trafficHost struct{}
@@ -76,7 +78,7 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	app := stack.New(stack.Options{NetworkProtocols: []stack.NetworkProtocolFactory{ipv4.NewProtocol}, TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol}})
+	app := stack.New(stack.Options{NetworkProtocols: []stack.NetworkProtocolFactory{ipv4.NewProtocol}, TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol, udp.NewProtocol}})
 	defer app.Close()
 	if e := app.CreateNIC(1, link); e != nil {
 		t.Fatal(e)
@@ -85,6 +87,7 @@ func TestRealNativeClientProcessHelper(t *testing.T) {
 		t.Fatal(e)
 	}
 	app.SetRouteTable([]tcpip.Route{{Destination: headerIPv4EmptySubnet(), NIC: 1}})
+	verifyReusedTUNDNSAssociation(t, app)
 	socks, err := proxy.SOCKS5("tcp", c.listener.Addr().String(), nil, proxy.Direct)
 	if err != nil {
 		t.Fatal(err)
@@ -215,4 +218,32 @@ func verifyNativeDNSAndSocketBurst(t *testing.T, c *Client, base *http.Transport
 		t.Fatalf("DNS starved TCP admission: %+v", s)
 	}
 	t.Log("32 fresh native HTTPS connections passed alongside 16 background sockets and 128 idle DNS association attempts")
+}
+
+// The local UDP association can expire without invalidating the application's
+// reusable DNS socket. Exercise queued questions and the same five-tuple after
+// expiry through the actual IPv4 TUN and gVisor forwarding implementation.
+func verifyReusedTUNDNSAssociation(t *testing.T, app *stack.Stack) {
+	t.Helper()
+	conn, err := gonet.DialUDP(app, &tcpip.FullAddress{NIC: 1, Addr: tcpip.AddrFrom4([4]byte{172, 19, 0, 10}), Port: 41053}, &tcpip.FullAddress{NIC: 1, Addr: tcpip.AddrFrom4([4]byte{203, 0, 113, 53}), Port: 53}, ipv4.ProtocolNumber)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	for i := 0; i < 3; i++ {
+		if i == 2 {
+			time.Sleep(150 * time.Millisecond)
+		}
+		query := dnsmessage.Message{Header: dnsmessage.Header{ID: uint16(i + 1)}, Questions: []dnsmessage.Question{{Name: dnsmessage.MustNewName("reused.test."), Type: dnsmessage.TypeAAAA, Class: dnsmessage.ClassINET}}}
+		raw, _ := query.Pack()
+		conn.SetDeadline(time.Now().Add(time.Second))
+		if _, err = conn.Write(raw); err != nil {
+			t.Fatal("reused TUN DNS write", err)
+		}
+		buffer := make([]byte, maxDNSBytes)
+		n, err := conn.Read(buffer)
+		if err != nil || !validDNSReply(raw, buffer[:n]) {
+			t.Fatal("reused TUN DNS socket lost response after local association expiry", err)
+		}
+	}
 }

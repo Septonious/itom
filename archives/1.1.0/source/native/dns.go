@@ -39,6 +39,21 @@ func openDNS(path string) (*fakeDNS, error) {
 func (d *fakeDNS) Close() { d.db.Close() }
 func (d *fakeDNS) address(name string) (netip.Addr, error) {
 	var raw [4]byte
+	// Existing names need only a read transaction. A repeated cached DNS
+	// question must not force another Android storage commit.
+	found := false
+	if e := d.db.View(func(t *bolt.Tx) error {
+		if b := t.Bucket([]byte("names")).Get([]byte(name)); len(b) == 4 {
+			copy(raw[:], b)
+			found = true
+		}
+		return nil
+	}); e != nil {
+		return netip.Addr{}, e
+	}
+	if found {
+		return netip.AddrFrom4(raw), nil
+	}
 	e := d.db.Update(func(t *bolt.Tx) error {
 		names := t.Bucket([]byte("names"))
 		ips := t.Bucket([]byte("ips"))
@@ -95,6 +110,13 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 	if c.resolver == nil {
 		return nil, errors.New("DNS_CONFIG")
 	}
+	if q.Type == dnsmessage.TypeA && q.Class == dnsmessage.ClassINET {
+		if entry, ok := c.resolver.cached(name); ok {
+			if ttl := time.Until(entry.until); ttl > 0 {
+				return c.fakeAAnswer(response, q, name, ttl)
+			}
+		}
+	}
 	reply, err := c.resolver.exchange(c.ctx, raw)
 	if err != nil {
 		c.traffic.dnsFailures.Add(1)
@@ -106,19 +128,25 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 		if len(addresses) == 0 {
 			return reply, nil
 		}
-		ip, e := c.dns.address(name)
-		if e != nil {
-			return nil, e
-		}
-		response.Answers = []dnsmessage.Resource{{Header: dnsmessage.ResourceHeader{Name: q.Name, Type: q.Type, Class: q.Class, TTL: uint32(min(ttl.Seconds(), 60))}, Body: &dnsmessage.AResource{A: ip.As4()}}}
-		return response.Pack()
+		return c.fakeAAnswer(response, q, name, ttl)
 	}
 	return reply, nil
 }
+func (c *Client) fakeAAnswer(response dnsmessage.Message, q dnsmessage.Question, name string, ttl time.Duration) ([]byte, error) {
+	ip, err := c.dns.address(name)
+	if err != nil {
+		return nil, err
+	}
+	response.Answers = []dnsmessage.Resource{{Header: dnsmessage.ResourceHeader{Name: q.Name, Type: q.Type, Class: q.Class, TTL: uint32(min(ttl.Seconds(), 60))}, Body: &dnsmessage.AResource{A: ip.As4()}}}
+	return response.Pack()
+}
+
 func (c *Client) udpDNS(conn net.Conn) {
 	buf := make([]byte, 4096)
 	for {
-		conn.SetReadDeadline(time.Now().Add(time.Second))
+		// Release answered local UDP associations promptly; the 64 DNS workers
+		// must not remain occupied by idle sockets throughout a connection burst.
+		conn.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
 		n, e := conn.Read(buf)
 		if e != nil {
 			return
