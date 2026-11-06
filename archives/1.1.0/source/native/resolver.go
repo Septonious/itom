@@ -58,12 +58,15 @@ type dnsCacheEntry struct {
 	until time.Time
 }
 type dnsResolver struct {
-	settings dnsSettings
-	direct   dnsDial // must protect and bind every UDP/TCP socket before connect
-	tunnel   dnsDial // used ONLY when explicitly configured
-	mu       sync.Mutex
-	cache    map[string]dnsCacheEntry
-	imap     atomic.Bool // scoped to one native/VPN session; never reset on line reconnect
+	settings                              dnsSettings
+	direct                                dnsDial // must protect and bind every UDP/TCP socket before connect
+	tunnel                                dnsDial // used ONLY when explicitly configured
+	mu                                    sync.Mutex
+	cache                                 map[string]dnsCacheEntry
+	answers                               dnsReplyCache
+	queries                               map[dnsQueryKey]*dnsQueryPending
+	cacheHits, cacheMisses, sharedQueries atomic.Uint64
+	imap                                  atomic.Bool // scoped to one native/VPN session; never reset on line reconnect
 }
 
 func newDNSResolver(s dnsSettings, direct, tunnel dnsDial) (*dnsResolver, error) {
@@ -250,11 +253,26 @@ func (r *dnsResolver) remember(raw []byte) {
 	}
 	var m dnsmessage.Message
 	m.Unpack(raw)
+	// CD can intentionally obtain records rejected by a validating resolver.
+	// Those replies must not seed ordinary application address lookups.
+	if m.CheckingDisabled {
+		return
+	}
 	name := strings.ToLower(strings.TrimSuffix(m.Questions[0].Name.String(), "."))
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if len(r.cache) >= 1024 {
-		clear(r.cache)
+	if len(r.cache) >= dnsCacheSize {
+		if _, exists := r.cache[name]; !exists {
+			// Evict one expiring record, never the whole working set.
+			var oldest string
+			var expiry time.Time
+			for key, entry := range r.cache {
+				if expiry.IsZero() || entry.until.Before(expiry) {
+					oldest, expiry = key, entry.until
+				}
+			}
+			delete(r.cache, oldest)
+		}
 	}
 	r.cache[name] = dnsCacheEntry{ips: ips, until: time.Now().Add(ttl)}
 }
@@ -265,7 +283,11 @@ func (r *dnsResolver) cached(name string) (dnsCacheEntry, bool) {
 	r.mu.Lock()
 	entry, ok := r.cache[name]
 	r.mu.Unlock()
-	return entry, ok && time.Now().Before(entry.until)
+	valid := ok && time.Now().Before(entry.until)
+	if valid {
+		r.cacheHits.Add(1)
+	}
+	return entry, valid
 }
 
 func (r *dnsResolver) lookup(ctx context.Context, host string) ([]netip.Addr, error) {
@@ -278,7 +300,7 @@ func (r *dnsResolver) lookup(ctx context.Context, host string) ([]netip.Addr, er
 	if err != nil {
 		return nil, err
 	}
-	reply, err := r.exchange(ctx, query)
+	reply, err := r.resolve(ctx, query)
 	if err != nil {
 		return nil, err
 	}

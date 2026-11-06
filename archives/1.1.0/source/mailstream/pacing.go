@@ -21,7 +21,7 @@ func (w *deliveryWindow) pacingRate(now time.Time) float64 {
 	if w.bulkRTT <= w.base+250*time.Millisecond {
 		// Preserve the existing byte-clocked startup on an uncongested path.
 		// A fixed small gain made every short transfer relearn capacity slowly.
-		gain = 2
+		gain = 3
 	}
 	if now.Before(w.controlSlowUntil) {
 		gain = 1 // Stop probing while the existing shared-link guard drains.

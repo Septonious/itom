@@ -34,6 +34,14 @@ for side in ('client','server'):
  for file in a.directory.glob('candidate-'+side+'-trace.jsonl*'):
   rows.extend(json.loads(line)for line in file.read_text().splitlines())
  rows=[r for r in rows if isinstance(r.get('Session'),dict)]
+ # The process may emit one last snapshot after the benchmark cancels its
+ # context. A closed snapshot is allowed only in the terminal teardown suffix;
+ # the benchmark's completed, post-probe diagnostics above must remain open.
+ closing=False
+ for r in rows:
+  if r['Session']['closed']:closing=True
+  else:assert not closing,'session resumed after an unexpected close'
+ rows=[r for r in rows if not r['Session']['closed']]
  assert rows and all(r['Mail']['failed_accounts']==0 and not r['Mail']['reclamation']['paused']for r in rows)
  assert max(sum(bool(l['housekeeping'])for l in r['Mail']['lines'])for r in rows)<=2
  paced[side]=max(r['Session'].get('bulk_pacing_deferrals',0)for r in rows)

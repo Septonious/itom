@@ -96,3 +96,21 @@ There is also a substantial idle IMAP-path component: client/server direct
 command timing and mailbox publication/polling differ from a direct VLESS route.
 Pacing targets added queue delay and variation; it does not claim to eliminate
 the mailbox relay's entire base RTT or achieve 100 Mbps on a 36 Mbps raw uplink.
+
+The revised local prototype retains the short MULTI full-phase and rolling
+throughput gates (three uploads 108.8/104.9/101.8 Mbps; downloads
+183.3/170.9/170.5 Mbps). The strict two-second ramp target is still missed and
+remains recorded. In the matched constrained model, median loaded RTT is 367 ms,
+p95 721 ms and median adjacent RTT delta 85 ms; uploads 24.1/23.9 Mbps,
+downloads 55.0/55.9 Mbps. These are model measurements, not field results.
+
+At the user's request, RC18 also adds dnsmasq-style bounded reply caching and
+query sharing. NXDOMAIN/NODATA require SOA authority; negative TTL is the smaller
+of SOA record TTL and MINIMUM. Positive records expire at the shortest reply TTL,
+including CNAMEs. Cached answers are aged and bound to each caller's question/ID.
+Timeouts, SERVFAIL/REFUSED, zero-TTL and unqualified empty answers are not cached.
+Ordinary reply caching excludes EDNS options and distinguishes validation and
+recursion flags. Address and reply caches each have 1,024 entries; only one cold
+or expiring record is evicted on pressure. Shared callers retain cancellation
+independence. The VPN-scoped cache adds cumulative, content-free diagnostics.
+Resolver selection, timeouts, optional fallback latch and worker budgets remain.

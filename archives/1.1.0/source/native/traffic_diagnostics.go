@@ -17,6 +17,8 @@ type trafficSnapshot struct {
 	Opening, ActiveTCP                                        int64
 	Upload, Download                                          uint64
 	DNSIMAPFallback                                           bool
+	DNSCacheHits, DNSCacheMisses, DNSSharedQueries            uint64
+	DNSAddressCacheEntries, DNSReplyCacheEntries              int
 }
 
 // Only cumulative counts and the session's resolver latch. No host names,
@@ -26,6 +28,10 @@ func (c *Client) trafficSnapshot() trafficSnapshot {
 	s := trafficSnapshot{DNSWorkerRefusals: d.dnsWorkerRefusals.Load(), TCPWorkerRefusals: d.tcpWorkerRefusals.Load(), DNSWorkers: len(c.dnsSlots), TCPWorkers: len(c.slots), OpenAttempts: d.openAttempts.Load(), OpenEstablished: d.openEstablished.Load(), OpenFailures: d.openFailures.Load(), OpenTimeouts: d.openTimeouts.Load(), WorkerRefusals: d.workerRefusals.Load(), IPv6Blocked: d.ipv6Blocked.Load(), UDPBlocked: d.udpBlocked.Load(), DNSFailures: d.dnsFailures.Load(), Opening: d.opening.Load(), ActiveTCP: c.tcp.Load(), Upload: c.up.Load(), Download: c.down.Load()}
 	if c.resolver != nil {
 		s.DNSIMAPFallback = c.resolver.imap.Load()
+		s.DNSCacheHits, s.DNSCacheMisses, s.DNSSharedQueries = c.resolver.cacheHits.Load(), c.resolver.cacheMisses.Load(), c.resolver.sharedQueries.Load()
+		c.resolver.mu.Lock()
+		s.DNSAddressCacheEntries, s.DNSReplyCacheEntries = len(c.resolver.cache), len(c.resolver.answers.entries)
+		c.resolver.mu.Unlock()
 	}
 	return s
 }

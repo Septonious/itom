@@ -12,8 +12,17 @@ bypass pacing. The original flight controller, shared-link drain guard, first
 bulk burst returns to the initial allowance after idle, rather than dumping the
 previous speedtest's large flight onto an unmeasured path.
 
-Fresh, successful A records answer fake-DNS questions from the existing bounded
-TTL cache. Repeated names use read-only mapping lookups. Idle local UDP DNS
+DNS caching follows the useful dnsmasq/OpenWrt pattern: successful answers expire
+by their shortest record/CNAME TTL, negative NXDOMAIN/NODATA answers require a
+valid SOA and use its negative TTL, and simultaneous equivalent questions share
+one upstream race. The reply cache has 1,024 LRU entries and at most 4 MiB of
+wire data; the separate existing 1,024-name address cache evicts one expiring
+record instead of flushing the working set. No stale answer or transient failure
+is cached, and TTLs never extend on a hit. EDNS requests bypass ordinary reply
+caching; validation and recursion flags are kept separate. A canceled waiter
+cannot cancel another caller. Cache hit/miss/shared-query counts appear in native
+diagnostics. Caches reset with the VPN session; persistent fake-IP mappings do
+not preserve DNS authority. Repeated names use read-only mapping lookups. Idle local UDP DNS
 associations release their workers promptly, preserving queued requests and
 socket reuse through the TUN. Resolver addresses, primary/backup racing, direct
 250 ms deadline, TCP truncation handling and opt-in session-latched IMAP fallback

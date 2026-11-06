@@ -4,7 +4,7 @@
   "revision": "itom-1-1-0-mailstream-rc18",
   "archive_name": "ITOM-1.1.0-MAILSTREAM-RC18-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Testing candidate: measured MIME-sized bulk pacing and fresh-burst flight bounds; TTL-backed fake-DNS replies and prompt idle DNS worker release; RC17 namespace and cleanup preserved",
+  "qualification": "Testing candidate: measured MIME-sized bulk pacing and fresh-burst flight bounds; bounded positive/SOA-negative DNS caching, duplicate-query sharing and prompt idle DNS worker release; RC17 namespace and cleanup preserved",
   "android_version_name": "1.1.0-mailstream-rc18",
   "android_version_code": 10143,
   "android_application_id": "org.itom.client",

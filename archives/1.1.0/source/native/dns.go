@@ -110,14 +110,15 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 	if c.resolver == nil {
 		return nil, errors.New("DNS_CONFIG")
 	}
-	if q.Type == dnsmessage.TypeA && q.Class == dnsmessage.ClassINET {
+	if q.Type == dnsmessage.TypeA && q.Class == dnsmessage.ClassINET && request.OpCode == 0 &&
+		request.RecursionDesired && !request.CheckingDisabled && !request.AuthenticData && len(request.Additionals) == 0 {
 		if entry, ok := c.resolver.cached(name); ok {
 			if ttl := time.Until(entry.until); ttl > 0 {
 				return c.fakeAAnswer(response, q, name, ttl)
 			}
 		}
 	}
-	reply, err := c.resolver.exchange(c.ctx, raw)
+	reply, err := c.resolver.resolve(c.ctx, raw)
 	if err != nil {
 		c.traffic.dnsFailures.Add(1)
 		response.RCode = dnsmessage.RCodeServerFailure
