@@ -26,6 +26,19 @@ data class TransportDiagnostics(val root: JsonObject, val lines: List<JsonObject
     fun consistent(metrics: Metrics): Boolean = reportedActive == metrics.activeLines &&
         root.field("TotalLines")?.toIntOrNull() == metrics.totalLines && lineActive == metrics.activeLines
     companion object {
+        /** Live counters do not depend on event tracing. Preserve the recorded
+         * provider evidence while replacing its Client with this session's sample. */
+        fun withLiveSample(recorded: String, session: SessionSnapshot): String {
+            if (session.phase !in setOf(Phase.CONNECTING, Phase.CONNECTED) || session.sampledAt == null) return recorded
+            val sample = runCatching { Codec.json.parseToJsonElement(session.transport) as? JsonObject }.getOrNull()
+                ?.takeIf { it["Lines"] is JsonArray } ?: return recorded
+            val envelope = runCatching { Codec.json.parseToJsonElement(recorded) as? JsonObject }.getOrNull() ?: JsonObject(emptyMap())
+            val current = envelope.toMutableMap()
+            sample.objectField("Native")?.let { current["Native"] = it }
+            current["Client"] = JsonObject(sample - "Native")
+            return JsonObject(current).toString()
+        }
+
         fun parse(text: String): TransportDiagnostics {
             val envelope = runCatching { Codec.json.parseToJsonElement(text) as? JsonObject }.getOrNull() ?: JsonObject(emptyMap())
             val root = envelope.objectField("Client")?.let { JsonObject(envelope + it) } ?: envelope

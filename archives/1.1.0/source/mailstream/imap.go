@@ -1745,7 +1745,7 @@ func packMail(packets [][]byte) []byte {
 	return body
 }
 
-// Tagged publication service time is different from the control reader's NOOP
+// Tagged publication service time is different from the control reader's empty FETCH
 // RTT. Physical message counts/bytes expose coalescing and provider-command
 // cost without exporting credentials, packet contents or a synthetic speed.
 func (a *mailAccountState) appendCompleted(control bool, n int, started time.Time) {

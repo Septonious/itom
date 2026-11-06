@@ -87,6 +87,7 @@ import org.itom.domain.*
 
 @Composable fun DiagnosticsScreen(config: PublicConfig, session: SessionSnapshot, diagnostics: String, onDiagnosticsChanged: (Boolean) -> Unit, onMessage: (String) -> Unit) {
     val context = LocalContext.current; val scope = rememberCoroutineScope()
+    val observation = remember(diagnostics, session) { TransportDiagnostics.withLiveSample(diagnostics, session) }
     fun currentReport(): String {
         return Codec.json.encodeToString(JsonObject.serializer(), buildJsonObject {
                 put("schema_version", 5); put("build", BuildConfig.VERSION_NAME); put("ui_baseline", BuildConfig.UI_BASELINE)
@@ -96,7 +97,7 @@ import org.itom.domain.*
                 put("rtt_ms", session.metrics.rttMs?.let(::JsonPrimitive) ?: JsonNull)
                 put("tcp", session.metrics.tcp); put("active_lines", session.metrics.activeLines); put("total_lines", session.metrics.totalLines)
                 put("error_code", session.error?.let(::JsonPrimitive) ?: JsonNull)
-                put("transport", runCatching { Codec.json.parseToJsonElement(diagnostics) }.getOrDefault(JsonObject(emptyMap())))
+                put("transport", runCatching { Codec.json.parseToJsonElement(observation) }.getOrDefault(JsonObject(emptyMap())))
             })
     }
     var zipReport by rememberSaveable { mutableStateOf<String?>(null) }
@@ -125,7 +126,11 @@ import org.itom.domain.*
             }
         }
         StatusLabel(phaseName(session.phase), phaseColor(session.phase))
-        val view = remember(diagnostics) { TransportDiagnostics.parse(diagnostics) }
+        val view = remember(observation) { TransportDiagnostics.parse(observation) }
+        if (view.lines.isNotEmpty()) {
+            SmallNote("TCP connections: ${view.root.field("TCP") ?: "—"} · Tunnel streams: ${view.root.field("TransportStreams") ?: "—"}")
+            SmallNote("Streams using an account can overlap and include opening or closing streams. Account speeds include transport overhead and duplicate deliveries.")
+        }
         if (view.lines.isEmpty()) SmallNote("Account metrics appear when you connect.")
         view.lines.forEach { line -> TransportLine(config, session, line) }
         SmallNote("The full archive includes a state snapshot and available trace files. Turn on tracing to record transport events.")

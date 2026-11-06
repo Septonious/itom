@@ -295,7 +295,25 @@ func (c *Client) Snapshot() string {
 	if c.pool != nil {
 		snapshot = c.pool.Snapshot()
 	}
-	snapshot.TCP = int(c.tcp.Load())
+	native := c.trafficSnapshot()
+	raw, _ := json.Marshal(struct {
+		clientObservation
+		Native trafficSnapshot
+	}{c.decorateSnapshot(snapshot, native), native})
+	return string(raw)
+}
+
+type clientObservation struct {
+	tunnel.ClientSnapshot
+	Upload, Download uint64
+	OpeningTCP       int64
+	Error            string
+}
+
+// Both public snapshots use established application connections for TCP. The
+// core's distinct TransportStreams includes opening and closing tunnel streams.
+func (c *Client) decorateSnapshot(snapshot tunnel.ClientSnapshot, native trafficSnapshot) clientObservation {
+	snapshot.TCP = int(native.ActiveTCP)
 	err := ""
 	if c.pool != nil {
 		err = c.pool.Failure()
@@ -303,12 +321,7 @@ func (c *Client) Snapshot() string {
 	if failure := c.failure.Load(); failure != nil {
 		err = *failure
 	}
-	raw, _ := json.Marshal(struct {
-		tunnel.ClientSnapshot
-		Upload, Download uint64
-		Error            string
-	}{snapshot, c.up.Load(), c.down.Load(), err})
-	return string(raw)
+	return clientObservation{snapshot, native.Upload, native.Download, native.Opening, err}
 }
 
 func (c *Client) worker(conn net.Conn, fn func())    { c.workerOn(conn, fn, c.slots, false) }
@@ -514,7 +527,13 @@ func (c *Client) Diagnostics() string {
 	if err := json.Unmarshal([]byte(c.pool.Diagnostics()), &evidence); err != nil {
 		return "{}"
 	}
-	evidence["Native"], _ = json.Marshal(c.trafficSnapshot())
+	var snapshot tunnel.ClientSnapshot
+	if err := json.Unmarshal(evidence["Client"], &snapshot); err != nil {
+		return "{}"
+	}
+	native := c.trafficSnapshot()
+	evidence["Client"], _ = json.Marshal(c.decorateSnapshot(snapshot, native))
+	evidence["Native"], _ = json.Marshal(native)
 	raw, _ := json.Marshal(evidence)
 	return string(raw)
 }

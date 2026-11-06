@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-1-0-mailstream-rc18"
+const TransportRevision = "itom-1-1-0-mailstream-rc19"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -57,15 +57,19 @@ type ClientSnapshot struct {
 	SampledAtMS           int64
 	Lines                 []LineDiagnostic
 	Events                []string
+	TransportStreams      int
 }
 type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
+	AccountID                       string
 	Ready                           bool
 	ActiveLines, TotalLines         int
 	RTTMillis, IMAPLatencyMillis    int64
 	RTTFresh                        bool
 	UploadBytes, DownloadBytes      uint64
 	TCPStreams                      int
+	UpBps, DownBps                  uint64
+	RateReady                       bool
 }
 type ProbeSnapshot struct {
 	Samples, Failures      uint64
@@ -73,16 +77,18 @@ type ProbeSnapshot struct {
 	Failure                string
 }
 type Client struct {
-	session   *mailstream.Session
-	link      *mailstream.IMAPLink
-	profile   servercfg.Profile
-	cancel    context.CancelFunc
-	workers   sync.WaitGroup
-	mu        sync.Mutex
-	probe     ProbeSnapshot
-	events    []string
-	trace     *traceWriter
-	closeOnce sync.Once
+	session    *mailstream.Session
+	link       *mailstream.IMAPLink
+	profile    servercfg.Profile
+	cancel     context.CancelFunc
+	workers    sync.WaitGroup
+	mu         sync.Mutex
+	probe      ProbeSnapshot
+	events     []string
+	trace      *traceWriter
+	rates      map[string]accountRate
+	snapshotMu sync.Mutex
+	closeOnce  sync.Once
 }
 
 func profileIdentity(p servercfg.Profile) string {
@@ -367,10 +373,11 @@ func (c *Client) Failure() string {
 	return ""
 }
 func (c *Client) Snapshot() ClientSnapshot {
+	c.snapshotMu.Lock()
+	defer c.snapshotMu.Unlock()
 	mail := c.link.Snapshot()
-	session := c.session.Snapshot()
 	streams := c.session.ActiveStreams()
-	s := ClientSnapshot{Stats: Stats{TotalLines: 3 * len(c.profile.Accounts), TCP: session.Streams}, SampledAtMS: time.Now().UnixMilli()}
+	s := ClientSnapshot{Stats: Stats{TotalLines: 3 * len(c.profile.Accounts), TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli()}
 	for _, line := range mail.Lines {
 		account := line.Account
 		for _, a := range c.profile.Accounts {
@@ -390,11 +397,12 @@ func (c *Client) Snapshot() ClientSnapshot {
 			active++
 		}
 		s.ActiveLines += active
-		s.Lines = append(s.Lines, LineDiagnostic{Account: account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == 3, ActiveLines: active, TotalLines: 3,
+		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == 3, ActiveLines: active, TotalLines: 3,
 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams)})
 	}
 	c.mu.Lock()
+	c.sampleAccountRates(s.Lines, time.Now())
 	s.RTTMillis = c.probe.RTTMillis
 	s.Events = append([]string(nil), c.events...)
 	c.mu.Unlock()

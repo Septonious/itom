@@ -244,7 +244,6 @@ class ItomVpnService : VpnService() {
             val started = SystemClock.elapsedRealtime()
             var previous = started
             var previousDown = 0L; var previousUp = 0L
-            val accountTotals = mutableMapOf<String, Pair<Long, Long>>()
             var lastHealthy = started
             while (currentCoroutineContext().isActive && backend.snapshot.value.generation == g) {
                 val now = SystemClock.elapsedRealtime()
@@ -260,18 +259,6 @@ class ItomVpnService : VpnService() {
                 } else if (now - lastHealthy > 90_000) throw DomainError("TRANSPORT_TIMEOUT")
                 val down = stats.getLong("Download"); val up = stats.getLong("Upload")
                 val elapsed = (now - previous).coerceAtLeast(1)
-                stats.optJSONArray("Lines")?.let { lines ->
-                    for (index in 0 until lines.length()) {
-                        val line = lines.getJSONObject(index)
-                        val id = line.getString("Account")
-                        val upload = line.optLong("UploadBytes")
-                        val download = line.optLong("DownloadBytes")
-                        val old = accountTotals[id]
-                        line.put("UpBps", if (old == null) 0 else (upload - old.first).coerceAtLeast(0) * 8000 / elapsed)
-                        line.put("DownBps", if (old == null) 0 else (download - old.second).coerceAtLeast(0) * 8000 / elapsed)
-                        accountTotals[id] = upload to download
-                    }
-                }
                 backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
                     (up - previousUp).coerceAtLeast(0) * 8000 / elapsed, stats.optInt("RTTMillis").takeIf { it > 0 },
                     stats.getInt("TCP"), active, stats.getInt("TotalLines")), stats.toString(), now)

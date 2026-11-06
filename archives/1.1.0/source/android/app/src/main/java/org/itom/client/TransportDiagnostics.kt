@@ -11,16 +11,16 @@ import kotlinx.serialization.json.JsonObject
 import org.itom.domain.*
 
 @Composable fun TransportLine(config: PublicConfig, session: SessionSnapshot, line: JsonObject) {
-    val id = line.field("Account") ?: "—"
+    val id = line.field("AccountID") ?: line.field("Account") ?: "—"
     val profile = config.profiles.find { it.profileId == session.profileId }
-    val name = profile?.accounts?.find { it.id == id }?.name ?: id
+    val name = profile?.accounts?.find { it.id == id }?.name ?: line.field("Account") ?: id
     val color = when {
         session.phase == Phase.OFF -> Muted
         line.field("Ready") == "true" -> Green
         diagnosticLevel(line.field("LastError").orEmpty()) == DiagnosticLevel.ERROR -> Red
         else -> Yellow
     }
-    fun rate(key: String): String = line.field(key)?.toLongOrNull()?.let(Presentation::rate) ?: "—"
+    fun rate(key: String): String = if (line.field("RateReady") == "false") "Measuring…" else line.field(key)?.toLongOrNull()?.let(Presentation::rate) ?: "—"
     fun latency(key: String): String = line.field(key)?.toLongOrNull()?.takeIf { it > 0 }?.let { "$it ms" } ?: "—"
     InfoCard(Modifier.fillMaxWidth(), accent = color, contentPadding = 14.dp) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -36,7 +36,7 @@ import org.itom.domain.*
             AccountMetric("IMAP latency", latency("IMAPLatencyMillis"), Ink, Modifier.weight(1f))
         }
         Row(Modifier.fillMaxWidth()) {
-            AccountMetric("TCP streams", line.field("TCPStreams") ?: "—", Ink, Modifier.weight(1f))
+            AccountMetric("Streams using account", line.field("TCPStreams") ?: "—", Ink, Modifier.weight(1f))
             AccountMetric("Active lanes", "${line.field("ActiveLines") ?: "—"}/${line.field("TotalLines") ?: "—"}", color, Modifier.weight(1f))
         }
     }

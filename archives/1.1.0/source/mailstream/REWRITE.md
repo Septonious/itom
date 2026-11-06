@@ -30,7 +30,7 @@ RC8 demand probing is reverted after the field queue/retransmission regression. 
 DATA does not train the bulk estimator, and an idle/application-limited gap
 restarts its observation interval. A faster light probe cannot pin a later
 bulk burst to the initial flight window. Mailbox receipts do not release application-consumption credit. Control
-uses absolute forward UID FETCH ranges and measured NOOP probes; DATA uses IDLE and bounded tail repair. Stream reset
+uses absolute forward UID FETCH ranges and empty-FETCH service measurements; DATA uses IDLE and bounded tail repair. Stream reset
 and session cancellation close established exit sockets as well as mailbox
 streams. Request half-close preserves ordinary response delivery.
 
