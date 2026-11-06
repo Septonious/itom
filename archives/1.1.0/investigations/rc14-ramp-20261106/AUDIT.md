@@ -95,3 +95,10 @@ Mbps and downloads at 186.8/145.7/135.1 Mbps. A cold replay audited all
 534,773,760 bytes of old debt, then reached 128.2/155.9 Mbps upload/download.
 These are independent synthetic results with retained strict misses, rather
 than claims about the next real-provider run.
+
+Final review also identified a carried control packet outside the fast queue at
+a MIME boundary. It now precedes newly queued feedback, and optional cleanup
+yields to it even if the operation was already scheduled. This closes both ways
+that already accepted control could be deferred; publication and shutdown
+operations retain their existing priority. Focused race checks passed before
+rebuilding the matched candidate. Earlier successful results remain separate.

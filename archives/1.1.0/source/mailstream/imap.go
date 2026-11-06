@@ -779,7 +779,9 @@ func (a *mailAccountState) run() {
 			default:
 			}
 		}
-		if operation != nil {
+		// Optional collection must also yield to a control packet held
+		// outside the queue at a MIME boundary, not just entries in fast.
+		if operation != nil && !(carry != nil && carry.control && (operation.maintenance || operation.cleanup != nil)) {
 			if operation.maintenance {
 				a.processMaintenance(&writer, completed, &inFlight, &appendWait)
 				operation = nil
