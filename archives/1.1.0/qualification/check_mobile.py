@@ -16,9 +16,16 @@ assert d['Provider']['connection_rejections']==0 and d['Provider']['commands']['
 assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
 phases=[]
 for i,x in enumerate(d['Phases']):
- name=x['name'];speed=x[name]['full_phase_mbps'];old=ref['Phases'][i][name]['full_phase_mbps']
- assert speed >= old*1.5,(name,speed,old)
- phases.append({'direction':name,'full_phase_mbps':speed,'reference_full_phase_mbps':old,'improvement':speed/old,'half_second_mbps':x[name]['half_second_mbps']})
+ name=x['name'];speed=x[name]['full_phase_mbps']
+ prior=ref['Phases'][i]if i<len(ref['Phases'])else None
+ if prior is None:
+  assert i>=2 and m['large_data_fetch_delay_only'] and not ref['success'] and 'context deadline exceeded' in ref['error']
+  old=None
+ else:
+  assert prior['name']==name
+  old=prior[name]['full_phase_mbps']
+  assert speed>=old*1.5,(name,speed,old)
+ phases.append({'direction':name,'full_phase_mbps':speed,'reference_full_phase_mbps':old,'reference_phase_completed':bool(prior and prior['success']),'reference_aborted_before_phase':prior is None,'improvement':speed/old if old else None,'half_second_mbps':x[name]['half_second_mbps']})
 for i in (2,3):assert phases[i]['full_phase_mbps']>=phases[i-2]['full_phase_mbps']*.8,phases
 result={'verified':True,'large_data_fetch_delay_only':m['large_data_fetch_delay_only'],'model':'95 Mbps up / 80 Mbps down; separate 500/600 ms DATA FETCH callbacks; 60 ms APPEND service; variable 10–50/20–40 ms network delay','max_idle_post_ms':max(d['IdleMS']+d['AfterMS']),'max_loaded_ms':max(d['LoadedMS']),'phases':phases,'declared_45up_40down_goal_met':all(x['full_phase_mbps']>=(45 if x['direction']=='upload' else 40)for x in phases),'field_qualified':False}
 (a.directory/'MOBILE_VALIDATION.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

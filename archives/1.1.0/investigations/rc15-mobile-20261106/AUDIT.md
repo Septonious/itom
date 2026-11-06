@@ -76,3 +76,10 @@ A separate full-path fixture delays DATA only after a large MIME container is
 published in that account's selected folder. This preserves faster small setup
 responses, unlike the always-delayed stress model. Both frozen and candidate
 use identical fixture settings, and both models are retained.
+
+The faster-small-setup full TLS replay reproduces the field-scale collapse on
+frozen RC15: upload reaches only 4.08 Mbps, download 3.47 Mbps and the first
+download times out before the second pair can start. Aborted reference phases
+are preserved and labeled; missing second-run reference measurements are never
+invented or copied from another phase. Candidate repeats must still complete
+and retain at least eighty percent of their first-run rates.
