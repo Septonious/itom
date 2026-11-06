@@ -6,7 +6,8 @@ show shared-link queueing and repeated interactive guard activation. Android
 also recorded 27 DNS worker refusals while idle DNS associations filled its pool.
 
 RC18 smooths measured bulk traffic in MIME-sized bursts only while the existing
-interactive congestion guard is active and for two seconds afterward. Quiet
+interactive congestion guard detects queueing, through the rest of that bulk
+burst. It clears after bulk idle. Quiet
 paths retain RC17's startup, ramp and repeated-transfer controller. Interactive
 and control packets bypass pacing. Flight, memory and account limits, physical
 capacity, wire format and the original 512 KiB initial connection allowance are

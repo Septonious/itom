@@ -74,6 +74,7 @@ func (w *deliveryWindow) observeInteractive(sample time.Duration, now time.Time)
 		// queued receipts expose a shared access-link backlog, unlike a
 		// slow full-body FETCH. Drain bulk before browsing stalls.
 		if sample > max(750*time.Millisecond, 2*w.controlBase+250*time.Millisecond) {
+			w.pacer.guarded = true
 			w.controlSlowUntil = now.Add(2 * time.Second)
 			w.limit = min(w.allowance(), max(initialDeliveryWindow, int(w.rate*.75)))
 		}
@@ -256,6 +257,7 @@ func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
 	if w.bulkFlight == 0 {
 		w.firstSent = now
 		if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
+			w.pacer.guarded = false
 			w.saturatedBase = 0
 			clear(w.saturatedSamples[:])
 			w.saturatedBytes = 0

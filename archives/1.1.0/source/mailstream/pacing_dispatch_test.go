@@ -51,7 +51,8 @@ func TestMeasuredBulkBurstLeavesInteractivePublicationImmediate(t *testing.T) {
 	s.delivery.base = 200 * time.Millisecond
 	s.delivery.saturatedBase = 300 * time.Millisecond
 	s.delivery.last = time.Now()
-	s.delivery.controlSlowUntil = time.Now().Add(time.Second)
+	s.delivery.controlBase = 200 * time.Millisecond
+	s.delivery.observeInteractive(900*time.Millisecond, time.Now())
 	s.mu.Unlock()
 	for range 20 {
 		if err = s.trySend(frame{kind: frameData, stream: 1, data: make([]byte, 32<<10)}, false); err != nil {

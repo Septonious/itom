@@ -128,3 +128,18 @@ fresh-burst credit reset and continuous pacing are removed. This avoids
 mistaking long provider DATA work for a shared-link queue, and keeps the code
 small. The same matched comparison and every previous gate must qualify this
 revised source before publication. DNS caching remains independently verified.
+
+A short four-second reactive pacing interval preserves throughput, but the local
+replay still reaches 884 ms p95 and a 115 ms median adjacent RTT delta. It misses
+the new improvement gate and is rejected. The next candidate keeps smoothing
+for the remainder of an actually congested bulk burst, clearing it at the
+controller's existing idle boundary. Quiet slow-DATA paths never enable pacing.
+The Android export check was also corrected to expect RC18 version code 10143;
+the preceding APK compilation/tests/lint had passed before that packaging check.
+
+The burst-scoped version passes the unchanged local improvement gate: loaded
+median 406 ms versus RC17's 496 ms; p95 691 versus 892 ms; median adjacent RTT
+delta 92 versus 128 ms. Upload is 24.2/24.1 Mbps and download 55.5/57.5 Mbps,
+versus 24.5/24.6 and 55.7/57.4. All transfers complete with thirty roles.
+The actual speedtest jitter metric and physical-device performance remain
+unqualified. The full matched build must repeat this result and all old gates.
