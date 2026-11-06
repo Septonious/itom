@@ -79,3 +79,19 @@ The bounded held-bulk test needed 128 packet slots instead of 64 to reach its
 unchanged byte-flight assertion after TLS-sized records became bulk. Its payload,
 shrunken-flight condition, fresh TLS request and byte-integrity assertions remain
 unchanged. The targeted race cohort passed that condition and verified recovery.
+
+The matched hosted short gate passed on source 410ac36. Frozen RC14 uploads
+were 92.8/86.3/86.1 Mbps, with rolling one-second 100 Mbps reached at 4.5/5.0/4.5
+seconds and up to six borrowed writers. Candidate SINGLE uploads were
+119.6/115.3/116.2 Mbps. MULTI uploads were 115.2/104.2/106.4 Mbps and downloads
+175.7/182.2/176.0 Mbps. Its upload ramp was 3.0/3.5/4.0 seconds; the two-second
+target remains unmet. Every candidate rolling two-second interval starting after
+second two exceeded 100 Mbps. The MULTI minimums were 129.9/110.4/105.9 Mbps for
+upload and 192.9/195.3/165.2 Mbps for download. Peak borrowed writers stayed at
+two, maximum idle/post RTT was 233.1 ms and loaded RTT 465.0 ms.
+
+The separate long repeated-cleanup gate completed uploads at 129.4/128.3/117.2
+Mbps and downloads at 186.8/145.7/135.1 Mbps. A cold replay audited all
+534,773,760 bytes of old debt, then reached 128.2/155.9 Mbps upload/download.
+These are independent synthetic results with retained strict misses, rather
+than claims about the next real-provider run.
