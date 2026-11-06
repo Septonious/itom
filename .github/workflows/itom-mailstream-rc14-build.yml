@@ -1,4 +1,4 @@
-# Frozen RC14 qualification remains available by manual dispatch.
+# RC14: qualify 512 KiB bulk credit and persisted-debt recovery on the matched source.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 concurrency: {group: itom-mailstream-rc14-build, cancel-in-progress: true}
 name: Build matched mailbox-stream RC14 with constrained-link acceptance
