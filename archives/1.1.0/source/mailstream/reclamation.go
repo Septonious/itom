@@ -87,18 +87,22 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	if err == errCollectionPartial && stopped {
 		// A bounded, audited page is useful progress, not a refusal. Keep the
 		// entire physical charge and ownership proof until the folder is empty.
-		// Return this writer and the shared lease between pages.
+		// Finish this direction before alternating, so partial work yields usable
+		// capacity. The existing bounded preference gives peers a turn after two
+		// pages. Return this writer and the shared lease between pages.
 		a.mu.Lock()
-		a.collectRemote = !job.record.remote
+		a.collectRemote = job.record.remote
 		job.record.queued, job.record.refused = false, false
 		a.mu.Unlock()
 		c.completed(a, job.record.folder)
+		c.preferRecovery(a, true)
 		return
 	}
 	if err == nil && stopped {
 		err = a.finishCollection(job)
 	}
 	if err == nil && stopped {
+		c.preferRecovery(a, false)
 		c.completed(a, job.record.folder)
 		return
 	}

@@ -22,7 +22,7 @@ collection marks the entire generation. Its retry also accepts only the original
 an unknown outcome cannot resume safely through that branch. The logs establish
 EXPUNGE timeouts; exact provider service cost remains an interpretation.
 
-RC17 bounds each collection turn to approximately four MiB of inventoried MIME
+RC17 bounds each collection turn to approximately sixteen MiB of inventoried MIME
 bytes, with at least one owned message permitted for oversized bodies.
 The UID and UIDVALIDITY ownership fences remain mandatory. Previously flagged
 owned messages deferred to a later page have their Deleted flag removed before
@@ -41,7 +41,7 @@ Three frozen-RC16 regressions reproduce oversized DATA deletion, partial-retry
 rejection and oversized historical mutation. They pass on the candidate. A
 separate new test preserves unproved messages, and the existing slow-mutation
 case still completes on its original writer without an early refund. Full TLS
-qualification additionally enforces an independent four-MiB provider mutation
+qualification additionally enforces an independent sixteen-MiB provider mutation
 budget, complete repeated transfers, audited retirement in both directions,
 no quarantines and the unchanged latency/throughput gates.
 
@@ -52,3 +52,16 @@ The accounts have already been cleaned manually. No legacy discovery or
 migration is implemented. The disjoint layout has its own durable capacity
 store and retains normal automatic cleanup and conservative restart accounting.
 Both endpoints must be updated together. Profile/crypto identities are unchanged.
+
+The first four-MiB prototype reproduced a capacity stall in complete TLS
+transfers: too many metadata round trips kept every generation charged. Merely
+adding continuation preference restored completion but second-cycle throughput
+remained 84.5/51.0 Mbps. It is rejected. Eight-MiB pages reduce metadata cost;
+partial DATA work finishes its direction before alternating, and the existing
+two-turn recovery preference yields regularly to peers. Every page still returns
+the writer and shared lease, and only the final empty audit refunds capacity.
+
+The eight-MiB continuation prototype completed but second-cycle throughput
+remained 85.4/83.4 Mbps, also below the unchanged full-phase gate. It is not
+eligible for publication. The next candidate uses sixteen-MiB pages, retaining
+byte bounds, resumable proofs, final audits and the existing fairness limits.

@@ -13,7 +13,7 @@ Historical and consumed-prefix collection keep the same ownership fences.
 
 Matched normal/race, SDK, pinned-fork, Android, restart, weak-link, mobile,
 corporate, short-transfer and repeated-cleanup checks remain mandatory. An
-additional full TLS model rejects deletion batches over four MiB and requires
+additional full TLS model rejects deletion batches over sixteen MiB and requires
 capacity reuse without quarantines. No physical-provider speedup is claimed
 before another field measurement. RC10 remains the first field-ready baseline;
 RC16 remains an immutable real-5G reference.

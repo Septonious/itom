@@ -47,7 +47,7 @@ const collectionTimeout = 8 * time.Second
 
 // A DATA generation can contain tens of MiB even with only 128 messages.
 // Bound mutation work by actual MIME bytes, independently of the UID page cap.
-const collectionPageBytes = 4 << 20
+const collectionPageBytes = 16 << 20
 
 func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
 	sort.Slice(rows, func(i, j int) bool { return rows[i].UID < rows[j].UID })

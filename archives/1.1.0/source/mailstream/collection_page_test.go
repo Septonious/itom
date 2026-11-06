@@ -85,7 +85,7 @@ func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UID
 	for uid := range s.fixture.deleted[key] {
 		size += s.fixture.sizes[key][uid]
 	}
-	if size > 4<<20 {
+	if size > 16<<20 {
 		s.fixture.oversized++
 		s.fixture.mu.Unlock()
 		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: "fixture deletion byte budget exceeded"}
@@ -140,7 +140,7 @@ func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
 			p.close()
 		}
 	}()
-	rec := seedSizedCollection(t, p, "itom3-byte-page", 128<<10)
+	rec := seedSizedCollection(t, p, "itom3-byte-page", 256<<10)
 	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
 		t.Fatal(e)
 	}
@@ -250,7 +250,7 @@ func TestHistoricalCollectionPagesRespectConsumedUIDFence(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer p.close()
-	rec := seedSizedCollection(t, p, "itom3-history-byte-page", 128<<10)
+	rec := seedSizedCollection(t, p, "itom3-history-byte-page", 512<<10)
 	if _, e = p.client.Select(rec.folder, nil).Wait(); e != nil {
 		t.Fatal(e)
 	}
