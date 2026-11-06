@@ -17,14 +17,26 @@ assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
 server_retired=0
 last_server=None
 for name in ('client','server'):
+ rows=[]
  for f in a.directory.glob('candidate-'+name+'-trace.jsonl*'):
   for line in f.read_text().splitlines():
    row=json.loads(line)
-   if not row.get('Mail'):continue
-   assert row['Mail']['failed_accounts']==0
-   assert sum(bool(x['housekeeping'])for x in row['Mail']['lines'])<=2
-   if name=='server':
-    server_retired=max(server_retired,row['Mail']['retired_segments']);last_server=row['Mail']
+   if row.get('Mail'):rows.append(row)
+ closing=False
+ for row in sorted(rows,key=lambda r:r.get('SampledAtMS',0)):
+  session=row.get('Session')
+  if isinstance(session,dict) and session['closed']:
+   # After successful post-probes and the open final diagnostics above, the
+   # benchmark cancels its process context. Do not call that shutdown a live
+   # carrier failure. Only a terminal suffix with normal close reasons qualifies.
+   closing=True
+   assert all(x.get('failure','')in ('','MAIL_CARRIER_CLOSED')for x in row['Mail']['lines'])
+   continue
+  assert not closing,'open runtime snapshot after terminal close'
+  assert row['Mail']['failed_accounts']==0
+  assert sum(bool(x['housekeeping'])for x in row['Mail']['lines'])<=2
+  if name=='server':
+   server_retired=max(server_retired,row['Mail']['retired_segments']);last_server=row['Mail']
 assert server_retired>0 and last_server is not None
 assert not last_server['reclamation']['paused']
 assert not d['diagnostics']['Mail']['reclamation']['paused']

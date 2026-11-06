@@ -143,3 +143,14 @@ delta 92 versus 128 ms. Upload is 24.2/24.1 Mbps and download 55.5/57.5 Mbps,
 versus 24.5/24.6 and 55.7/57.4. All transfers complete with thirty roles.
 The actual speedtest jitter metric and physical-device performance remain
 unqualified. The full matched build must repeat this result and all old gates.
+
+The final compatibility review reproduces corruption of compressed pointers in
+opaque RP RDATA when a cached DNS message is repacked. Such unknown question
+or record layouts now bypass rewriting and retain the original exchange. Known
+question replies containing opaque records are not cached, and coalesced callers
+fall back to their own unchanged exchange if rebinding cannot be done safely.
+The reproducer fails before the fix and passes afterward, alongside a mixed
+known/opaque-record case. Resolver addresses, deadlines and fallback remain.
+The cleanup checker now distinguishes only normal terminal shutdown rows; three
+counterexamples still reject live failures, nonterminal closes and unexpected
+close reasons. This is a checker correction, not a runtime cleanup relaxation.

@@ -12,6 +12,8 @@ import (
 
 const dnsCacheSize = 1024
 
+var errDNSUncachedLayout = errors.New("DNS_UNCACHED_RECORD_LAYOUT")
+
 type dnsQueryKey struct {
 	name       string
 	typ        dnsmessage.Type
@@ -45,6 +47,11 @@ func cacheQuestion(raw []byte) (dnsmessage.Message, dnsQueryKey, bool) {
 		return q, dnsQueryKey{}, false
 	}
 	a := q.Questions[0]
+	switch a.Type {
+	case dnsmessage.TypeA, dnsmessage.TypeAAAA, dnsmessage.TypeNS, dnsmessage.TypeCNAME, dnsmessage.TypeSOA, dnsmessage.TypePTR, dnsmessage.TypeMX, dnsmessage.TypeTXT, dnsmessage.TypeSRV:
+	default:
+		return q, dnsQueryKey{}, false
+	}
 	// EDNS/DNSSEC and non-IN questions retain the original complete exchange;
 	// their flags, options and advertised datagram size are not conflated.
 	return q, dnsQueryKey{strings.ToLower(a.Name.String()), a.Type, q.RecursionDesired, q.CheckingDisabled, q.AuthenticData}, a.Class == dnsmessage.ClassINET
@@ -54,6 +61,15 @@ func replyForQuestion(raw []byte, q dnsmessage.Message, age time.Duration) ([]by
 	var answer dnsmessage.Message
 	if err := answer.Unpack(raw); err != nil {
 		return nil, err
+	}
+	for _, section := range [][]dnsmessage.Resource{answer.Answers, answer.Authorities, answer.Additionals} {
+		for _, resource := range section {
+			if _, opaque := resource.Body.(*dnsmessage.UnknownResource); opaque {
+				// Opaque RDATA may contain offsets into the original message.
+				// Repacking its known neighbours can invalidate those offsets.
+				return nil, errDNSUncachedLayout
+			}
+		}
 	}
 	answer.ID = q.ID
 	answer.Questions = q.Questions
@@ -128,6 +144,9 @@ func (c *dnsReplyCache) put(key dnsQueryKey, raw []byte, now time.Time) {
 			if a.Header.Type == dnsmessage.TypeOPT {
 				return
 			}
+			if _, opaque := a.Body.(*dnsmessage.UnknownResource); opaque {
+				return
+			}
 			ttl = min(ttl, a.Header.TTL)
 		}
 	}
@@ -192,7 +211,13 @@ func (r *dnsResolver) resolve(ctx context.Context, raw []byte) ([]byte, error) {
 				if !pending.until.IsZero() && !time.Now().Before(pending.until) {
 					continue
 				}
-				return replyForQuestion(pending.reply, q, time.Since(pending.stored))
+				reply, err := replyForQuestion(pending.reply, q, time.Since(pending.stored))
+				if err != nil {
+					// Preserve the original exchange if any record layout or
+					// packet-size limit prevents safe rebinding to this caller.
+					return r.exchange(ctx, raw)
+				}
+				return reply, err
 			}
 		}
 		pending := &dnsQueryPending{done: make(chan struct{})}

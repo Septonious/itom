@@ -20,8 +20,8 @@ valid SOA and use its negative TTL, and simultaneous equivalent questions share
 one upstream race. The reply cache has 1,024 LRU entries and at most 4 MiB of
 wire data; the separate existing 1,024-name address cache evicts one expiring
 record instead of flushing the working set. No stale answer or transient failure
-is cached, and TTLs never extend on a hit. EDNS requests bypass ordinary reply
-caching; validation and recursion flags are kept separate. A canceled waiter
+is cached, and TTLs never extend on a hit. EDNS requests and unknown record layouts bypass reply rewriting and
+keep the original upstream wire response; validation and recursion flags are kept separate. A canceled waiter
 cannot cancel another caller. Cache hit/miss/shared-query counts appear in native
 diagnostics. Caches reset with the VPN session; persistent fake-IP mappings do
 not preserve DNS authority. Repeated names use read-only mapping lookups. Idle local UDP DNS

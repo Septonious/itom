@@ -2,6 +2,7 @@ package mobile
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -281,5 +282,79 @@ func TestDNSCacheSeparatesValidationFlags(t *testing.T) {
 	_, rdKey, _ := cacheQuestion(rdRaw)
 	if key == rdKey {
 		t.Fatal("non-recursive question shares recursive cached reply")
+	}
+}
+
+func TestDNSCachePassesUnknownRecordFormatsUnchanged(t *testing.T) {
+	const rp = dnsmessage.Type(17)
+	var calls atomic.Int32
+	address := udpResolver(t, func(query []byte) []byte {
+		packet := append([]byte(nil), query...)
+		binary.BigEndian.PutUint16(packet[2:4], 0x8180)
+		binary.BigEndian.PutUint16(packet[6:8], 2)
+		owner := len(packet)
+		packet = append(packet, query[12:len(query)-4]...)
+		appendHeader := func() {
+			packet = binary.BigEndian.AppendUint16(packet, uint16(rp))
+			packet = binary.BigEndian.AppendUint16(packet, 1)
+			packet = binary.BigEndian.AppendUint32(packet, 60)
+			packet = binary.BigEndian.AppendUint16(packet, 4)
+		}
+		appendHeader()
+		packet = append(packet, 0xc0, 12, 0xc0, 12)
+		packet = append(packet, 0xc0, 12)
+		appendHeader()
+		// The second RP points into the first uncompressed owner's suffix.
+		// Repacking the message compresses that owner and invalidates this
+		// opaque RDATA pointer, even though both original records are valid.
+		pointer := uint16(0xc000 | owner + 8)
+		packet = binary.BigEndian.AppendUint16(packet, pointer)
+		packet = binary.BigEndian.AppendUint16(packet, pointer)
+		return packet
+	})
+	r, err := newDNSResolver(defaultDNSSettings(), func(ctx context.Context, network, _ string) (net.Conn, error) {
+		calls.Add(1)
+		return (&net.Dialer{}).DialContext(ctx, network, address)
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := dnsQuestion("unknown.test")
+	var q dnsmessage.Message
+	q.Unpack(raw)
+	q.Questions[0].Type = rp
+	for i := range 2 {
+		q.ID = uint16(i + 1)
+		raw, _ = q.Pack()
+		reply, err := r.resolve(context.Background(), raw)
+		var response dnsmessage.Message
+		if err != nil || !validDNSReply(raw, reply) || response.Unpack(reply) != nil || len(response.Answers) != 2 {
+			t.Fatal("unknown RR exchange failed", err)
+		}
+		body := response.Answers[1].Body.(*dnsmessage.UnknownResource)
+		offset := int(binary.BigEndian.Uint16(body.Data[:2]) & 0x3fff)
+		if offset+5 > len(reply) || reply[offset] != 4 || string(reply[offset+1:offset+5]) != "test" {
+			t.Fatal("cached unknown RDATA compression pointer was corrupted")
+		}
+	}
+	if calls.Load() != 4 || r.cacheHits.Load() != 0 {
+		t.Fatal("unsupported record layout was cached or rewritten")
+	}
+}
+
+func TestDNSCacheDoesNotRewriteOpaqueAdditionalData(t *testing.T) {
+	raw, _ := dnsQuestion("mixed.test")
+	q, key, _ := cacheQuestion(raw)
+	var response dnsmessage.Message
+	response.Unpack(dnsReply(t, raw))
+	response.Additionals = []dnsmessage.Resource{{Header: dnsmessage.ResourceHeader{Name: q.Questions[0].Name, Type: 17, Class: dnsmessage.ClassINET, TTL: 60}, Body: &dnsmessage.UnknownResource{Type: 17, Data: []byte{0xc0, 12, 0xc0, 12}}}}
+	reply, _ := response.Pack()
+	var cache dnsReplyCache
+	cache.put(key, reply, time.Now())
+	if _, ok := cache.get(key, q, time.Now()); ok {
+		t.Fatal("opaque additional record entered the rewriting cache")
+	}
+	if _, err := replyForQuestion(reply, q, 0); !errors.Is(err, errDNSUncachedLayout) {
+		t.Fatal("coalesced reply rewrote an opaque record layout", err)
 	}
 }
