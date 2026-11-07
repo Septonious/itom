@@ -49,3 +49,7 @@ preserved. No speculative RTT tuning or new transport feature is included.
 Speed and latency depend on network and provider behavior; sub-100 ms RTT and
 UDP gaming compatibility are not claimed. Phone-specific permissions and vendor
 battery management require verification on the actual phone.
+
+Service stops, restarts, updates, failed purges and first startup preserve
+retention debt. Local counters are never cleared as a substitute for deleting
+and auditing owned mail. Recovery remains the running server's responsibility.

@@ -56,7 +56,7 @@ func capacityValue(t *testing.T, path string) uint64 {
 	}
 	return value
 }
-func TestManualCapacityResetPreservesProfilesAndBindings(t *testing.T) {
+func TestManualServiceLifecyclePreservesDebtProfilesAndBindings(t *testing.T) {
 	dir := t.TempDir()
 	config := filepath.Join(dir, "server.db")
 	if err := os.WriteFile(config, []byte("private profile and credentials"), 0600); err != nil {
@@ -65,11 +65,11 @@ func TestManualCapacityResetPreservesProfilesAndBindings(t *testing.T) {
 	first := seedCapacity(t, dir, "alpha", "s2c", 67_000_000)
 	second := seedCapacity(t, filepath.Join(dir, "tunnel-server"), "beta", "s2c", 12_000_000)
 	client := seedCapacity(t, dir, "alpha", "c2s", 1234)
-	if err := ResetCapacityState(dir); err != nil {
+	if err := VerifyCapacityState(dir); err != nil {
 		t.Fatal(err)
 	}
-	if capacityValue(t, first) != 0 || capacityValue(t, second) != 0 {
-		t.Fatal("server capacity did not reset completely")
+	if capacityValue(t, first) != 67_000_000 || capacityValue(t, second) != 12_000_000 {
+		t.Fatal("service lifecycle forgave uncollected server mail")
 	}
 	if capacityValue(t, client) != 1234 {
 		t.Fatal("server action changed client private history")
@@ -78,50 +78,50 @@ func TestManualCapacityResetPreservesProfilesAndBindings(t *testing.T) {
 	if string(body) != "private profile and credentials" {
 		t.Fatal("profile changed")
 	}
-	if err := ResetCapacityState(dir); err != nil {
+	if err := VerifyCapacityState(dir); err != nil {
 		t.Fatal("binding was not preserved", err)
 	}
 }
-func TestCapacityMigrationPreservesSubsequentCrashDebt(t *testing.T) {
+func TestFirstStartAndRestartPreserveUncollectedMail(t *testing.T) {
 	dir := t.TempDir()
 	path := seedCapacity(t, filepath.Join(dir, "tunnel-server"), "alpha", "s2c", 67_000_000)
-	if err := PrepareCapacityPolicy(dir); err != nil {
+	if err := VerifyCapacityState(dir); err != nil {
 		t.Fatal(err)
 	}
-	if capacityValue(t, path) != 0 {
-		t.Fatal("first update did not clear old counters")
+	if capacityValue(t, path) != 67_000_000 {
+		t.Fatal("first update cleared uncollected counters")
 	}
 	seedCapacity(t, filepath.Join(dir, "tunnel-server"), "alpha", "s2c", 123456)
-	if err := PrepareCapacityPolicy(dir); err != nil {
+	if err := VerifyCapacityState(dir); err != nil {
 		t.Fatal(err)
 	}
 	if capacityValue(t, path) != 123456 {
 		t.Fatal("crash restart reset capacity")
 	}
-	if err := ResetCapacityState(dir); err != nil {
+	if err := VerifyCapacityState(dir); err != nil {
 		t.Fatal(err)
 	}
-	if capacityValue(t, path) != 0 {
-		t.Fatal("manual stop did not reset capacity")
+	if capacityValue(t, path) != 123456 {
+		t.Fatal("manual stop cleared uncollected capacity")
 	}
 }
-func TestCapacityResetRefusesLiveStore(t *testing.T) {
+func TestCapacityVerificationRefusesLiveStore(t *testing.T) {
 	dir := t.TempDir()
 	path := seedCapacity(t, dir, "alpha", "s2c", 123456)
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = ResetCapacityState(dir); err == nil {
+	if err = VerifyCapacityState(dir); err == nil {
 		db.Close()
-		t.Fatal("reset raced a live transport")
+		t.Fatal("verification raced a live transport")
 	}
 	db.Close()
 	if capacityValue(t, path) != 123456 {
-		t.Fatal("failed reset changed charged capacity")
+		t.Fatal("failed verification changed charged capacity")
 	}
 }
-func TestUpdateResetsCapacityAfterServiceStops(t *testing.T) {
+func TestUpdateVerifiesCapacityAfterServiceStops(t *testing.T) {
 	dir := t.TempDir()
 	active := true
 	var sequence []string
@@ -139,14 +139,14 @@ func TestUpdateResetsCapacityAfterServiceStops(t *testing.T) {
 		}
 		return nil
 	}
-	reset := func() error {
+	verify := func() error {
 		if active {
-			t.Fatal("capacity reset ran while service was active")
+			t.Fatal("capacity verification ran while service was active")
 		}
-		sequence = append(sequence, "reset")
+		sequence = append(sequence, "verify")
 		return nil
 	}
-	if err := installFiles([]byte("updated executable"), filepath.Join(dir, "itom"), filepath.Join(dir, "itom.service"), run, io.Discard, reset); err != nil {
+	if err := installFiles([]byte("updated executable"), filepath.Join(dir, "itom"), filepath.Join(dir, "itom.service"), run, io.Discard, verify); err != nil {
 		t.Fatal(err)
 	}
 	if !active {
@@ -154,7 +154,7 @@ func TestUpdateResetsCapacityAfterServiceStops(t *testing.T) {
 	}
 	found := false
 	for i := 1; i+1 < len(sequence); i++ {
-		if sequence[i] == "reset" {
+		if sequence[i] == "verify" {
 			found = sequence[i-1] == "stop" && sequence[i+1] == "restart"
 		}
 	}
@@ -163,7 +163,7 @@ func TestUpdateResetsCapacityAfterServiceStops(t *testing.T) {
 	}
 }
 
-func TestFailedPurgeStillResetsLocalCapacity(t *testing.T) {
+func TestFailedPurgePreservesLocalCapacity(t *testing.T) {
 	dir := t.TempDir()
 	path := seedCapacity(t, filepath.Join(dir, "tunnel-server"), "alpha", "s2c", 67_000_000)
 	ui := New(dir)
@@ -176,7 +176,7 @@ func TestFailedPurgeStillResetsLocalCapacity(t *testing.T) {
 	if err := ui.purgeAllAccounts(cfg); err == nil {
 		t.Fatal("provider purge failure was hidden")
 	}
-	if capacityValue(t, path) != 0 {
-		t.Fatal("failed provider purge kept local capacity charged")
+	if capacityValue(t, path) != 67_000_000 {
+		t.Fatal("failed provider purge forgave uncollected capacity")
 	}
 }

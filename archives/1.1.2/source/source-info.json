@@ -4,7 +4,7 @@
   "revision": "itom-1-1-2-final",
   "archive_name": "ITOM-1.1.2-sources.zip",
   "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
-  "qualification": "Resolve pending control cleanup retries before historical recovery; start inherited DATA recovery early; keep the global mutation lease available to ready accounts; use the existing 16 MiB healthy first-page ceiling for closed historical DATA slots. Conservative 4 MiB and 32-message retries, authenticated credit proofs, the accepted controller, polling and hard caps are preserved.",
+  "qualification": "Resolve pending control cleanup retries before historical recovery; start inherited DATA recovery early; keep the global mutation lease available to ready accounts; use the existing 16 MiB healthy first-page ceiling for closed historical DATA slots. Conservative 4 MiB and 32-message retries, authenticated credit proofs, the accepted controller, polling and hard caps are preserved. Service lifecycle validates retained debt read-only and never clears counters without audited collection.",
   "android_version_name": "1.1.2",
   "android_version_code": 10147,
   "android_application_id": "org.itom.client",

@@ -118,7 +118,7 @@ func run(args []string) error {
 		if e != nil {
 			return e
 		}
-		if e = manager.PrepareCapacityPolicy(*state); e != nil {
+		if e = manager.VerifyCapacityState(*state); e != nil {
 			return e
 		}
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, terminationSignal())
@@ -135,8 +135,8 @@ func run(args []string) error {
 		defer admin.Close()
 		e = tunnel.ServeManaged(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial)
 		if ctx.Err() != nil {
-			if resetErr := manager.ResetCapacityState(*state); resetErr != nil {
-				return errors.Join(e, resetErr)
+			if verifyErr := manager.VerifyCapacityState(*state); verifyErr != nil {
+				return errors.Join(e, verifyErr)
 			}
 		}
 		if errors.Is(e, context.Canceled) {

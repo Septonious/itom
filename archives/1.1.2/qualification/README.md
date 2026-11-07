@@ -122,3 +122,9 @@ owned partial DATA and control mail, preserve unrelated mail, and perform every
 STORE/EXPUNGE itself. The phone's mutation count must stay zero. Its two-second
 test expiry accelerates the production server's unchanged 30-second idle expiry;
 no transport timer or congestion setting is altered for qualification.
+
+`lifecycle_regressions.py` reproduces the old service hook clearing a 67 MB
+retention charge without any provider deletion, including a failed purge.
+The candidate preserves the charge across first start, stop, restart, update
+and failed purge; the lifecycle hook performs read-only verification. A service
+restart is not a physical cleanup proof.

@@ -70,7 +70,7 @@ func (u *UI) system(action string) error {
 		return err
 	}
 	if action == "stop" {
-		return ResetCapacityState(u.State)
+		return VerifyCapacityState(u.State)
 	}
 	return nil
 }
@@ -506,10 +506,10 @@ func installData(data []byte, out io.Writer) error {
 	}
 	return installFiles(data, "/usr/local/bin/itom", "/etc/systemd/system/itom.service", func(args ...string) error {
 		return boundedSystemctl(out, args...)
-	}, out, func() error { return ResetCapacityState("/var/lib/itom") })
+	}, out, func() error { return VerifyCapacityState("/var/lib/itom") })
 }
 
-func installFiles(data []byte, dst, unitPath string, run func(...string) error, out io.Writer, reset ...func() error) error {
+func installFiles(data []byte, dst, unitPath string, run func(...string) error, out io.Writer, verifyStopped ...func() error) error {
 	if len(data) == 0 || len(data) > 100<<20 {
 		return errors.New("binary is empty or exceeds limit")
 	}
@@ -554,14 +554,14 @@ func installFiles(data []byte, dst, unitPath string, run func(...string) error, 
 		rollback()
 		return e
 	}
-	if len(reset) > 0 {
+	if len(verifyStopped) > 0 {
 		if wasActive {
 			if e = run("stop", "itom.service"); e != nil {
 				rollback()
 				return e
 			}
 		}
-		if e = reset[0](); e != nil {
+		if e = verifyStopped[0](); e != nil {
 			rollback()
 			return e
 		}

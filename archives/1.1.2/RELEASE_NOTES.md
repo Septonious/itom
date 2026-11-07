@@ -49,3 +49,7 @@ The source ZIP launcher also handles --help without trying to export a build.
 The physical old-mail replay permits one slower initial upload during cold
 recovery, as accepted in field review; subsequent phases must sustain 120 Mbps.
 This exception is recorded explicitly in the qualification metadata.
+
+Service stops, restarts, updates, failed purges and first startup preserve
+retention debt. Local counters are never cleared as a substitute for deleting
+and auditing owned mail. Recovery remains the running server's responsibility.

@@ -807,6 +807,7 @@ jobs:
           mkdir frozen-v111
           git archive 6ccdb6d2a408dcddadd0ea26d1cc840c6acb350a archives/1.1.1/source | tar -x -C frozen-v111
           python3 archives/1.1.2/qualification/recovery_regressions.py --reference "$GITHUB_WORKSPACE/frozen-v111/archives/1.1.1/source" --out recovery-regressions
+          python3 archives/1.1.2/qualification/lifecycle_regressions.py --reference "$GITHUB_WORKSPACE/frozen-v111/archives/1.1.1/source" --out lifecycle-regressions
       - name: Race-check recovery handoff, old ownership proofs and capacity request priority
         working-directory: archives/1.1.2/source/mailstream
         run: |
@@ -833,6 +834,7 @@ jobs:
           name: mailstream-112-final-recovery-pressure
           path: |
             recovery-regressions/
+            lifecycle-regressions/
             recovery-races/
             mobile-rate-dip/
             physical-debt-repeat/
