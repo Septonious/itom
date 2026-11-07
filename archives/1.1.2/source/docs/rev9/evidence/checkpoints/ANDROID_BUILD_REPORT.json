@@ -1,0 +1,72 @@
+{
+  "itom": "0.9.2",
+  "source_revision": "transport-rework3-rev9",
+  "gradle": "9.3.1",
+  "agp": "9.1.1",
+  "sdk": "37",
+  "build_tools": "36.0.0",
+  "host": "Linux",
+  "started_utc": "2026-10-16T16:46:13Z",
+  "jdk_source": "local JDK 17",
+  "android_sdk": "existing SDK 37",
+  "stage": "completed",
+  "native": {
+    "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+    "ndk": "28.2.13676358",
+    "aar_sha256": "d69e49ef14591ceb842654c11711c2bdebfd913ce082c7bdc1982d773ca85eef",
+    "targets": [
+      "android/arm64",
+      "android/arm"
+    ],
+    "api": 29
+  },
+  "java_version": "openjdk version \"17.0.16\" 2025-07-15\nOpenJDK Runtime Environment Temurin-17.0.16+8 (build 17.0.16+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.16+8 (build 17.0.16+8, mixed mode, sharing)",
+  "domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true,
+    "task_failed_this_run": false
+  },
+  "app_unit_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failed_cases": [],
+    "report_errors": [],
+    "available": true
+  },
+  "lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "apk_identity": {
+    "application_id": "org.itom.client.dev.rev7",
+    "version_code": 9209,
+    "version_name": "0.9.2-Rev9-debug"
+  },
+  "apk_native_libraries": {
+    "lib/arm64-v8a/libgojni.so": "cccc112a80d6935fa67da10cf69e1ab546221edf21fa0bd831ef9b7fb60e0121",
+    "lib/armeabi-v7a/libgojni.so": "6dd56e8bb21f3eb035efd8abaab18fa23413ce4c96397f2c607d306bc4edfefd"
+  },
+  "status": "passed",
+  "apk": "ITOM-0.9.2-Rev9-debug.apk",
+  "sha256": "2fff6adc8c286578b3870a602ad3b57a4434b143569a41532c05b2777fb7a696",
+  "checks": [
+    "domain:test",
+    "app:lintDebug",
+    "app:compileReleaseKotlin",
+    "app:assembleDebug"
+  ]
+}

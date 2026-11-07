@@ -1,0 +1,67 @@
+{
+  "revision": "transport-s1-perf5-field18",
+  "archive": "ITOM_TRANSPORT_FIELD39_FIX1_SOURCE.zip",
+  "change_scope": "Kotlin test equality correction plus archive name/documentation; production code is byte-identical to FIELD39",
+  "production_comparison": {
+    "unchanged_files": 382,
+    "changed": false
+  },
+  "local_domain": {
+    "compiler": "Kotlin2.2.10 + serialization compiler plugin2.2.10",
+    "jvm_target": 17,
+    "java": "OpenJDK17.0.20",
+    "serialization": "1.11.0",
+    "coroutines": "1.11.0",
+    "stdlib": "2.3.20 (resolved serialization dependency)",
+    "runner": "JUnit4.13.2 directly, both domain test classes; no Gradle/Android SDK",
+    "tests": 57,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "compile_exit": 0,
+    "test_exit": 0
+  },
+  "offline": {
+    "launcher_python_passed": 34,
+    "core_tools_python_passed": 30,
+    "python_sources": 8,
+    "xml_sources": 11
+  },
+  "field39_user_windows_evidence": {
+    "core_pass_events": 444,
+    "core_failed": 0,
+    "core_optional_skips": 4,
+    "go": "1.27.1/windows-amd64",
+    "fork_tests": "passed",
+    "vet": "passed",
+    "linux_built": [
+      "amd64",
+      "arm64"
+    ],
+    "native_bind": "passed, Android arm64/arm",
+    "android_compile": [
+      "debug",
+      "release"
+    ],
+    "debug_apk_assembly": "passed",
+    "lint_errors": 0,
+    "lint_warnings": 3,
+    "domain_before_fix": {
+      "tests": 57,
+      "failed": 1,
+      "test": "invitationLinkAndMultilineLint"
+    },
+    "all_before_fix": "failed on domain test"
+  },
+  "not_claimed": [
+    "new Gradle all or device execution in this environment",
+    "new transport measurements",
+    "real provider stability acceptance"
+  ],
+  "input_sha256": {
+    "build-report(3).json": "60ab5b17fe9ca5b1f2fbcec3bcfbb7fe46546272ea62e1349869f2e6e30b59f1",
+    "native-build.log": "ccd2b7feb44cd26ab854a6c1b042f0b710a2a2891021b4cd2ec0eefcbbc62671",
+    "core-report(20261006-190759).json": "5e892579edb5c190be02a9d377b489b969d04fa78130abc1757c510cfa616150",
+    "build(1).log": "b39eacab65091be579c7c60be645369302daa978dad08a6b5d11cfa7ab24c9b8"
+  }
+}

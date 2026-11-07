@@ -1,0 +1,166 @@
+{
+  "source_runtime_sha256": "8baecb5a1fa38ef49600375aca76ea5db457b2a364f27a190dad9b6352cb0f24",
+  "qualification_source_sha256": "8fe3a939d24a11348d5da483f8d90c62b52046fdaa5079179ee325ba13e4aabd",
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "all_lab_cases_passed": false,
+  "scenario": {
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10
+  },
+  "cases": [
+    {
+      "case": "single-1",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "104.526",
+        "download_mbps": "87.355",
+        "rtt_samples": "60",
+        "p50_ms": "325",
+        "p95_ms": "422",
+        "max_ms": "527",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "104.246",
+        "download_mbps": "87.189"
+      }
+    },
+    {
+      "case": "single-2",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "98.571",
+        "download_mbps": "91.003",
+        "rtt_samples": "60",
+        "p50_ms": "330",
+        "p95_ms": "473",
+        "max_ms": "563",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "95.316",
+        "download_mbps": "95.674"
+      }
+    },
+    {
+      "case": "single-3",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "122.517",
+        "download_mbps": "80.172",
+        "rtt_samples": "60",
+        "p50_ms": "318",
+        "p95_ms": "447",
+        "max_ms": "486",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "125.864",
+        "download_mbps": "77.673"
+      }
+    },
+    {
+      "case": "multi-1",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "98.107",
+        "download_mbps": "92.554",
+        "rtt_samples": "60",
+        "p50_ms": "324",
+        "p95_ms": "452",
+        "max_ms": "558",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "99.388",
+        "download_mbps": "93.411"
+      }
+    },
+    {
+      "case": "multi-2",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "90.929",
+        "download_mbps": "92.222",
+        "rtt_samples": "60",
+        "p50_ms": "314",
+        "p95_ms": "479",
+        "max_ms": "543",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "87.373",
+        "download_mbps": "92.982"
+      }
+    },
+    {
+      "case": "multi-3",
+      "strict_pass": false,
+      "supervised_result": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "95.036",
+        "download_mbps": "91.663",
+        "rtt_samples": "60",
+        "p50_ms": "353",
+        "p95_ms": "442",
+        "max_ms": "464",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "supervised_tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "96.600",
+        "download_mbps": "92.414"
+      }
+    }
+  ]
+}
