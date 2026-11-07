@@ -100,6 +100,7 @@ type mailAccountState struct {
 	routeSession                        SessionID
 	routeConsumed                       uint32
 	parking, reclaiming                 atomic.Bool
+	collectionBorrowedAt                atomic.Int64
 	collectRemote                       bool // Account.mu: alternate eligible ownership directions
 	writerOps                           chan writerOperation
 	delivery                            [replaySlots]deliverySample
@@ -297,15 +298,15 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 	return err
 }
 
-// During bulk transfer, use the same existing eight-millisecond bound as
-// bulk receipt batching. Keep a burst on one account long enough to share its
+// During bulk transfer, group a bounded thirty-two-millisecond feedback burst.
+// Keep a burst on one account long enough to share its
 // already-bounded MIME container instead of paying APPEND/cleanup per receipt.
 // Idle feedback remains at two milliseconds; interactive work interrupts a
 // feedback batch as before and never waits for this timer to fill a container.
 func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 	last := l.lastBulk.Load()
 	if last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond {
-		return 8 * time.Millisecond
+		return 32 * time.Millisecond
 	}
 	return 2 * time.Millisecond
 }

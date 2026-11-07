@@ -464,9 +464,20 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 	// bounded by 128 entries. Reuse that inventory only within this writer's
 	// mutation lease. Re-fetching it between successful pages needlessly held
 	// physical credit across later MULTI runs. A new turn always inventories
-	// afresh; every mutation still has a tagged count/validity and UID audit.
+	// afresh; every page proves deletion and each turn audits count/validity.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
+	auditCount := func(remaining uint32) error {
+		c.stage("audit_select")
+		status, err := p.inventoryMailbox(rec.folder, &imap.StatusOptions{NumMessages: true, UIDValidity: true})
+		if err != nil {
+			return err
+		}
+		if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages != remaining {
+			return ErrProtocol
+		}
+		return nil
+	}
 	for turn := 0; ; turn++ {
 		pageStarted := time.Now()
 		page, deferred, _, count, err := mutationPageBounded(rows, ^uint32(0), pageBytes)
@@ -477,15 +488,16 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 		if err := p.clearDeferredDeletion(deferred, c.stage); err != nil {
 			return err
 		}
-		status, err := p.deleteUIDs(page, rec.folder, c.stage)
-		if err != nil {
+		// Between pages, prove the exact deleted UIDs absent before flagging
+		// another bounded page. Re-SELECT once at the end of this leased turn;
+		// a second count audit between every page adds no storage proof. No
+		// charge or peer credit is released before the final empty SELECT.
+		if _, err := p.deleteUIDs(page, "", c.stage); err != nil {
 			return err
 		}
-		if status.UIDValidity != rec.validity || status.NumMessages == nil || uint64(*status.NumMessages)+count != uint64(len(rows)) {
-			return ErrProtocol
-		}
-		if *status.NumMessages == 0 {
-			return nil
+		remainingCount := uint32(uint64(len(rows)) - count)
+		if remainingCount == 0 {
+			return auditCount(0)
 		}
 		c.stage("collection_page_audit")
 		left, err := p.client.Fetch(page, &imap.FetchOptions{UID: true}).Collect()
@@ -496,6 +508,9 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 			return ErrProtocol
 		}
 		if turn+1 >= pages || time.Since(turnStarted)+2*time.Since(pageStarted) >= budgets[0] {
+			if err := auditCount(remainingCount); err != nil {
+				return err
+			}
 			return errCollectionPartial
 		}
 		remaining := rows[:0]

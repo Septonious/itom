@@ -17,6 +17,9 @@ type byteCollectionFixture struct {
 	deleted     map[string]map[imap.UID]bool
 	oversized   int
 	inventories int
+	selections  int
+	uidProofs   int
+	omitExpunge bool
 	limit       int64
 	delay       time.Duration
 }
@@ -31,6 +34,9 @@ func (s *byteCollectionSession) Select(n string, o *imap.SelectOptions) (*imap.S
 	d, e := s.Session.Select(n, o)
 	if e == nil {
 		s.selected = n
+		s.fixture.mu.Lock()
+		s.fixture.selections++
+		s.fixture.mu.Unlock()
 	}
 	return d, e
 }
@@ -82,11 +88,13 @@ func (s *byteCollectionSession) Store(w *imapserver.FetchWriter, set imap.NumSet
 	return nil
 }
 func (s *byteCollectionSession) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
+	s.fixture.mu.Lock()
 	if o.RFC822Size {
-		s.fixture.mu.Lock()
 		s.fixture.inventories++
-		s.fixture.mu.Unlock()
+	} else if o.UID {
+		s.fixture.uidProofs++
 	}
+	s.fixture.mu.Unlock()
 	return s.Session.Fetch(w, set, o)
 }
 
@@ -109,6 +117,9 @@ func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UID
 	s.fixture.mu.Unlock()
 	if s.fixture.delay > 0 {
 		time.Sleep(s.fixture.delay)
+	}
+	if s.fixture.omitExpunge {
+		return nil
 	}
 	e := s.Session.Expunge(w, u)
 	if e == nil {
@@ -419,7 +430,28 @@ func TestLargeGenerationUsesOneInventoryPerTurn(t *testing.T) {
 	if c.snapshot().Paused || a.spent != 512<<10 || len(a.segments) != 0 || p.client.Mailbox().NumMessages != 0 {
 		t.Fatal("complete audited turn did not release charge", a.spent, c.snapshot())
 	}
-	if f.inventories != 1 || f.oversized != 0 {
-		t.Fatal("generation inventory was repeated or mutation oversized", f.inventories, f.oversized)
+	if f.inventories != 1 || f.oversized != 0 || f.selections != 2 || f.uidProofs != 1 {
+		t.Fatal("generation inventory or final count audit repeated, or mutation oversized", f.inventories, f.selections, f.uidProofs, f.oversized)
+	}
+}
+
+// A tagged OK without actual deletion must not permit the next byte page.
+// Otherwise flags left by one attempt could enlarge a later EXPUNGE.
+func TestCollectionProvesPageAbsentBeforeFlaggingAnother(t *testing.T) {
+	f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}, limit: 16 << 20, omitExpunge: true}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	rec := seedSizedCollection(t, p, "itom-unproven-page", 256<<10)
+	if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator(), collectionTimeout); e != ErrProtocol {
+		t.Fatal("accepted unproved page", e)
+	}
+	if f.oversized != 0 || f.uidProofs != 1 || p.client.Mailbox().NumMessages != segmentAppends {
+		t.Fatal("continued or credited an unproved page", f.oversized, f.uidProofs, p.client.Mailbox())
 	}
 }

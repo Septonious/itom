@@ -165,10 +165,25 @@ func (a *mailAccountState) borrowWriterForCollection() bool {
 	if len(c.borrowed) >= 2 {
 		return false
 	}
+	// Normally borrow one actor. Keep the second loan for a slow pre-lease
+	// APPEND drain, so ready peers can still collect without taking two
+	// publishers out of circulation during ordinary metadata work.
+	if len(c.borrowed) != 0 {
+		if c.active {
+			return false
+		}
+		for owner := range c.borrowed {
+			started := owner.collectionBorrowedAt.Load()
+			if started == 0 || time.Since(time.Unix(0, started)) < 500*time.Millisecond {
+				return false
+			}
+		}
+	}
 	if c.borrowed == nil {
 		c.borrowed = map[*mailAccountState]bool{}
 	}
 	c.borrowed[a] = true
+	a.collectionBorrowedAt.Store(time.Now().UnixNano())
 	a.reclaiming.Store(true)
 	return true
 }
@@ -177,6 +192,7 @@ func (a *mailAccountState) returnCollectionWriter() {
 	c := a.link.reclaimer
 	c.mu.Lock()
 	delete(c.borrowed, a)
+	a.collectionBorrowedAt.Store(0)
 	// Returning the actor also ends its current lease request. Keeping a FIFO
 	// claim while its writer resumes publishing can block every ready collector.
 	for i, owner := range c.waiting {
