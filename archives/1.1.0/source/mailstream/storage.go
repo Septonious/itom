@@ -365,7 +365,8 @@ func (l *IMAPLink) collectSegments() {
 
 // Only the existing server APPEND owner calls this, with all its tagged
 // commands drained. The exact consumed UID ownership proof is mandatory.
-func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
+func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ...time.Duration) error {
+	turnStarted := time.Now()
 	rec := job.record
 	c.folder(rec.folder)
 	uids, ok := rec.uids.Nums()
@@ -421,29 +422,39 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 		}
 	}
 	pageBytes := int64(collectionFirstPageBytes)
+	pages := 1
 	if rec.refused {
 		pageBytes = collectionPageBytes
+	} else if len(budgets) > 0 {
+		pages = 3
 	}
-	page, deferred, _, _, err := mutationPageBounded(rows, ^uint32(0), pageBytes)
-	if err != nil {
-		return err
-	}
-	// Drain each tagged mutation before the next operation. The final SELECT
-	// remains mandatory before any physical capacity is refunded.
+	// This retired generation is immutable and its exact UID inventory is
+	// bounded by 128 entries. Reuse that inventory only within this writer's
+	// mutation lease. Re-fetching it between successful pages needlessly held
+	// physical credit across later MULTI runs. A new turn always inventories
+	// afresh; every mutation still has a tagged count/validity and UID audit.
 	p.allowExpunge.Store(true)
 	defer p.allowExpunge.Store(false)
-	c.stage("store_expunge")
-	if err := p.clearDeferredDeletion(deferred, c.stage); err != nil {
-		return err
-	}
-	status, err := p.deleteUIDs(page, rec.folder, c.stage)
-	if err != nil {
-		return err
-	}
-	if status.UIDValidity != rec.validity || status.NumMessages == nil || *status.NumMessages >= box.NumMessages {
-		return ErrProtocol
-	}
-	if *status.NumMessages != 0 {
+	for turn := 0; ; turn++ {
+		pageStarted := time.Now()
+		page, deferred, _, count, err := mutationPageBounded(rows, ^uint32(0), pageBytes)
+		if err != nil {
+			return err
+		}
+		c.stage("store_expunge")
+		if err := p.clearDeferredDeletion(deferred, c.stage); err != nil {
+			return err
+		}
+		status, err := p.deleteUIDs(page, rec.folder, c.stage)
+		if err != nil {
+			return err
+		}
+		if status.UIDValidity != rec.validity || status.NumMessages == nil || uint64(*status.NumMessages)+count != uint64(len(rows)) {
+			return ErrProtocol
+		}
+		if *status.NumMessages == 0 {
+			return nil
+		}
 		c.stage("collection_page_audit")
 		left, err := p.client.Fetch(page, &imap.FetchOptions{UID: true}).Collect()
 		if err != nil {
@@ -452,12 +463,28 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator) error {
 		if len(left) != 0 {
 			return ErrProtocol
 		}
-		return errCollectionPartial
+		if turn+1 >= pages || time.Since(turnStarted)+2*time.Since(pageStarted) >= budgets[0] {
+			return errCollectionPartial
+		}
+		remaining := rows[:0]
+		for _, row := range rows {
+			if !page.Contains(row.UID) {
+				// Deferred deletion flags were cleared before the completed
+				// EXPUNGE; do not repeat that STORE on this same inventory.
+				flags := row.Flags[:0]
+				for _, flag := range row.Flags {
+					if flag != imap.FlagDeleted {
+						flags = append(flags, flag)
+					}
+				}
+				row.Flags = flags
+				remaining = append(remaining, row)
+			}
+		}
+		rows = remaining
 	}
-	// APPEND is valid in selected state. Staying on this proved-empty DATA
-	// slot avoids another round trip; no CLOSE/UNSELECT is needed.
-	return nil
 }
+
 func (a *mailAccountState) finishCollection(job cleanupJob) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()

@@ -9,6 +9,8 @@ are inventoried first; partial progress keeps the entire charge until the final
 empty-folder audit. The two-writer bound, mutation deadline and wire format are
 unchanged. A successful large generation can finish in at most three bounded
 mutations under that deadline, with a timing margin before another slow page.
+A successful turn reuses its bounded inventory; every deletion page retains
+its tagged UID/count/validity audits and the final empty-folder proof.
 
 Control-message growth is bounded independently of bytes: 2,048 ordinary-message
 reservations plus 128 recovery reservations per outgoing control folder, counting

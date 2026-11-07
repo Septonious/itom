@@ -12,12 +12,13 @@ import (
 )
 
 type byteCollectionFixture struct {
-	mu        sync.Mutex
-	sizes     map[string]map[imap.UID]int64
-	deleted   map[string]map[imap.UID]bool
-	oversized int
-	limit     int64
-	delay     time.Duration
+	mu          sync.Mutex
+	sizes       map[string]map[imap.UID]int64
+	deleted     map[string]map[imap.UID]bool
+	oversized   int
+	inventories int
+	limit       int64
+	delay       time.Duration
 }
 type byteCollectionSession struct {
 	imapserver.Session
@@ -80,6 +81,15 @@ func (s *byteCollectionSession) Store(w *imapserver.FetchWriter, set imap.NumSet
 	}
 	return nil
 }
+func (s *byteCollectionSession) Fetch(w *imapserver.FetchWriter, set imap.NumSet, o *imap.FetchOptions) error {
+	if o.RFC822Size {
+		s.fixture.mu.Lock()
+		s.fixture.inventories++
+		s.fixture.mu.Unlock()
+	}
+	return s.Session.Fetch(w, set, o)
+}
+
 func (s *byteCollectionSession) Expunge(w *imapserver.ExpungeWriter, u *imap.UIDSet) error {
 	s.fixture.mu.Lock()
 	key := s.user + "/" + s.selected
@@ -374,5 +384,37 @@ func TestSlowFirstCollectionYieldsBeforeDeadlineWithoutQuarantine(t *testing.T) 
 	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
 	if c.snapshot().Paused || p != original || a.spent != 0 || a.retired.Load() != 1 {
 		t.Fatal("safe continuation did not audit/refund", c.snapshot(), a.spent)
+	}
+}
+
+// A multi-page successful turn reuses only its bounded, immutable generation
+// inventory; a later turn must fetch a new one. No storage is credited early.
+func TestLargeGenerationUsesOneInventoryPerTurn(t *testing.T) {
+	f := &byteCollectionFixture{sizes: map[string]map[imap.UID]int64{}, deleted: map[string]map[imap.UID]bool{}, limit: 16 << 20}
+	accounts, _ := applicationMailServerWrapped(t, true, false, func(s imapserver.Session) imapserver.Session { return &byteCollectionSession{Session: s, fixture: f} })
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer func() {
+		if p != nil {
+			p.close()
+		}
+	}()
+	rec := seedSizedCollection(t, p, "itom-inventory-turn", 256<<10)
+	c := NewReclamationCoordinator()
+	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	key := segmentKey{session: SessionID{1}}
+	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
+	var joined sync.WaitGroup
+	inFlight := 0
+	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
+	if c.snapshot().Paused || a.spent != 0 || len(a.segments) != 0 || p.client.Mailbox().NumMessages != 0 {
+		t.Fatal("complete audited turn did not release charge", a.spent, c.snapshot())
+	}
+	if f.inventories != 1 || f.oversized != 0 {
+		t.Fatal("generation inventory was repeated or mutation oversized", f.inventories, f.oversized)
 	}
 }

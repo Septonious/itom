@@ -81,23 +81,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	}
 	stop = p.limit(budget)
 	if err == nil && !a.parking.Load() {
-		mutationStarted := time.Now()
-		pageStarted := mutationStarted
-		err = p.reclaim(job, c)
-		// Finish a normal large generation in up to three bounded mutations
-		// under the same existing deadline. Requeueing every successful page
-		// lets control maintenance and fresh bulk repeatedly overtake the last
-		// audit, retaining an entire slot into the next MULTI run. Real refusal
-		// retries keep their established one-page turns and fair backoff.
-		for pages := 1; err == errCollectionPartial && !job.record.refused && pages < 3 && a.ctx.Err() == nil && !a.parking.Load(); pages++ {
-			// Leave room for a slower next page instead of deliberately
-			// running an already slow provider into the hard IO deadline.
-			if time.Since(mutationStarted)+2*time.Since(pageStarted) >= budget {
-				break
-			}
-			pageStarted = time.Now()
-			err = p.reclaim(job, c)
-		}
+		err = p.reclaim(job, c, budget)
 	} else if err == nil {
 		err = context.Canceled
 	}
