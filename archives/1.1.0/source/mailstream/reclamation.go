@@ -160,9 +160,11 @@ func (a *mailAccountState) borrowWriterForCollection() bool {
 	c := a.link.reclaimer
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	// One writer may drain while another mutates. Other accounts continue
-	// publishing; a shared mutation lease alone did not bound pre-lease drains.
-	if len(c.borrowed) >= 2 {
+	// Allow two pre-lease drains, so one slow APPEND cannot prevent healthy
+	// collection. Once another actor is mutating, borrowing a fresh writer
+	// cannot make progress: leave it publishing instead of repeatedly draining
+	// and returning that second slot for a lease which is still unavailable.
+	if c.active || len(c.borrowed) >= 2 {
 		return false
 	}
 	if c.borrowed == nil {

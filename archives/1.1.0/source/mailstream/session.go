@@ -345,6 +345,17 @@ func (s *Session) receiptLoop() {
 	}
 }
 
+// These existing authenticated frames are required to release physical
+// storage. They share the finite recovery reserve and precede ordinary packets
+// when a mailbox has hit its independent message-count cap.
+func storageControl(kind byte) bool {
+	switch kind {
+	case frameControlRead, frameControlCollected, frameStorageRecovered, frameStoragePressure, frameRetired, frameCollect, frameCollected, frameSegment:
+		return true
+	}
+	return false
+}
+
 func (s *Session) dispatchLoop() {
 	type candidate struct {
 		sequence uint64
@@ -375,8 +386,8 @@ func (s *Session) dispatchLoop() {
 		// the entire map for every packet made a larger packet allowance
 		// consume CPU and delay incoming credit/control under bulk load.
 		slices.SortFunc(batch, func(a, b candidate) int {
-			ah := a.packet.kind == frameControlRead || a.packet.kind == frameControlCollected || a.packet.kind == frameStorageRecovered || a.packet.kind == frameStoragePressure
-			bh := b.packet.kind == frameControlRead || b.packet.kind == frameControlCollected || b.packet.kind == frameStorageRecovered || b.packet.kind == frameStoragePressure
+			ah := storageControl(a.packet.kind)
+			bh := storageControl(b.packet.kind)
 			if ah != bh {
 				if ah {
 					return -1
@@ -429,7 +440,7 @@ func (s *Session) dispatchLoop() {
 			maintenance, storage := s.link.(interface {
 				SendHousekeeping(context.Context, []byte) error
 			})
-			if storage && (selected.kind == frameControlRead || selected.kind == frameControlCollected || selected.kind == frameStorageRecovered || selected.kind == frameStoragePressure) {
+			if storage && (storageControl(selected.kind)) {
 				err = maintenance.SendHousekeeping(s.ctx, wire)
 			} else if feedback, ok := s.link.(interface {
 				SendFeedback(context.Context, []byte) error

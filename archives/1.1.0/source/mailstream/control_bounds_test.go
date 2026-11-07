@@ -366,3 +366,72 @@ func TestAuditedInitialMessagePageRestoresDataCollectionHeadroom(t *testing.T) {
 		t.Fatal("an audited message page monopolized collection or invented byte credit", a.controlMessageReservationsLocked(), a.spent)
 	}
 }
+
+func TestBusyMutationLeavesOtherWritersPublishingButAllowsParallelDrains(t *testing.T) {
+	c := NewReclamationCoordinator()
+	l := &IMAPLink{reclaimer: c, changed: make(chan struct{})}
+	first := &mailAccountState{link: l}
+	second := &mailAccountState{link: l}
+	third := &mailAccountState{link: l}
+	c.borrowed = map[*mailAccountState]bool{first: true}
+	c.active = true
+	if second.borrowWriterForCollection() || second.reclaiming.Load() || len(c.borrowed) != 1 {
+		t.Fatal("busy mutation borrowed another idle writer")
+	}
+	c.active = false // The first actor is draining; it does not own the mutation lease.
+	if !second.borrowWriterForCollection() || len(c.borrowed) != 2 {
+		t.Fatal("a slow pre-lease drain prevented independent collection")
+	}
+	if third.borrowWriterForCollection() {
+		t.Fatal("pre-lease drains escaped the two-writer bound")
+	}
+	second.returnCollectionWriter()
+	if second.reclaiming.Load() || len(c.borrowed) != 1 {
+		t.Fatal("writer was not returned")
+	}
+}
+
+type fullOrdinaryRecoveryLink struct{ recovery chan byte }
+
+func (l *fullOrdinaryRecoveryLink) Send(context.Context, []byte, bool) error { return ErrCapacity }
+func (l *fullOrdinaryRecoveryLink) SendHousekeeping(_ context.Context, p []byte) error {
+	l.recovery <- p[0]
+	return nil
+}
+func (l *fullOrdinaryRecoveryLink) Receive() <-chan []byte                  { return nil }
+func (l *fullOrdinaryRecoveryLink) Attach(context.Context, SessionID) error { return nil }
+func (l *fullOrdinaryRecoveryLink) Close() error                            { return nil }
+
+// An older ordinary packet at a full account must not stop dispatch before
+// the authenticated UID/retirement proofs which are needed to free its space.
+func TestAllStorageProofsUseBoundedRecoveryBeforeOrdinaryTraffic(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	link := &fullOrdinaryRecoveryLink{recovery: make(chan byte, 32)}
+	s := &Session{ctx: ctx, cancel: cancel, link: link, wake: make(chan struct{}, 1), pending: map[uint64]*pendingPacket{1: {wire: []byte{framePing}, kind: framePing, priority: true}}}
+	kinds := []byte{frameControlRead, frameControlCollected, frameStorageRecovered, frameStoragePressure, frameRetired, frameCollect, frameCollected, frameSegment}
+	for i, kind := range kinds {
+		s.pending[uint64(i+2)] = &pendingPacket{wire: []byte{kind}, kind: kind, priority: true}
+	}
+	done := make(chan struct{})
+	go func() { defer close(done); s.dispatchLoop() }()
+	defer func() { cancel(); <-done }()
+	seen := map[byte]bool{}
+	for range kinds {
+		select {
+		case kind := <-link.recovery:
+			if seen[kind] {
+				t.Fatal("storage proof repeated before all were dispatched")
+			}
+			seen[kind] = true
+		case <-ctx.Done():
+			t.Fatal("full ordinary queue stranded storage proof", seen)
+		}
+	}
+	s.mu.Lock()
+	attempts := s.pending[1].attempts
+	s.mu.Unlock()
+	if attempts != 0 || len(seen) != len(kinds) {
+		t.Fatal("ordinary publication escaped the full account", attempts, seen)
+	}
+}
