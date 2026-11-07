@@ -1,7 +1,7 @@
 # 1.1.1: retain the thirteen existing gates and compare with accepted RC18.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 # Qualify bounded control urgency and explicit normal shutdown diagnostics.
-concurrency: {group: itom-mailstream-111-final-build, cancel-in-progress: true}
+concurrency: {group: itom-mailstream-111-final-build, cancel-in-progress: false}
 name: Build ITOM 1.1.1 final with complete acceptance
 on:
   workflow_dispatch:
@@ -160,7 +160,9 @@ jobs:
           assert all(p['success'] for p in d['Phases']) and d['targets']['full_phase_100mbps']
           assert not d['diagnostics']['Session']['closed'] and d['diagnostics']['Mail']['failed_accounts']==0
           assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==30
-          assert d['Provider']['commands'].get('LIST',0)==d['Provider']['commands'].get('CONTROL_BOOTSTRAP_LIST',0)==20 and d['Provider']['connection_rejections']==0
+          # Each endpoint inventories once; raced CREATE may add exact-name verification.
+          assert 20<=d['Provider']['commands'].get('LIST',0)<=40
+          assert d['Provider']['commands']['LIST']==d['Provider']['commands'].get('CONTROL_BOOTSTRAP_LIST',0) and d['Provider']['connection_rejections']==0
           assert max(d['IdleMS']+d['AfterMS'])<=300 and max(d['LoadedMS'])<=2000
           PYCODE
       - name: Enforce mailbox message and physical-capacity bounds in final-source candidate traces
