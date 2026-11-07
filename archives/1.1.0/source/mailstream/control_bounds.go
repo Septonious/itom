@@ -4,17 +4,19 @@ package mailstream
 // not accumulate indefinitely. All fields below are owned by Account.mu.
 const controlMessageLimit = 2048
 const controlRecoveryMessages = 128
+const controlCollectionMessages = controlMessageLimit * 3 / 4
+const controlCollectionBytes = 1 << 20
 
 func (a *mailAccountState) controlMessageReservationsLocked() uint64 {
 	m := &a.maintenance
 	return uint64(m.initialMessages) + uint64(len(m.writes)) + uint64(m.pendingMessages) + uint64(a.controlQueued)
 }
 
-// Start collection with half the ordinary budget still available. Audited
-// initial-UID spans release this urgency page by page, so neither stale startup
-// counts nor a last-minute backlog can starve reusable DATA capacity.
+// Leave a quarter of the hard message budget for collection to catch up.
+// Smaller tails remain eligible during quiet periods without taking bulk DATA
+// cleanup turns merely because a few hundred tiny messages use 256 KiB.
 func (a *mailAccountState) controlMessagePressureLocked() bool {
-	return a.controlMessageReservationsLocked() >= controlMessageLimit/2 || len(a.maintenance.reads) >= controlMessageLimit/2
+	return a.controlMessageReservationsLocked() >= controlCollectionMessages || len(a.maintenance.reads) >= controlCollectionMessages
 }
 
 func (a *mailAccountState) reserveControlPublicationLocked(packets int) {

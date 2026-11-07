@@ -25,7 +25,9 @@ interrupts batching.
 Control-message reservations are capped at 2,048 ordinary messages plus 128
 recovery messages per outgoing folder. Queued, in-flight and uncertain APPENDs
 count. Startup loads the remote message count, so restarting cannot bypass the
-guard. Ordinary writes pause if cleanup cannot keep up. Quiet control tails of
+guard. Bulk control cleanup becomes urgent at 1,536 reservations or 1 MiB, leaving
+headroom before the hard cap while DATA can reclaim larger reservations.
+Ordinary writes pause if cleanup cannot keep up. Quiet control tails of
 32 messages are eligible for collection while connected. Backpressure appears
 in diagnostics. The server must remain running for background cleanup. Empty
 owned folders may remain because provider DELETE can lock an account. Automatic

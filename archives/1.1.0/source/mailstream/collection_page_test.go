@@ -448,7 +448,7 @@ func TestCollectionProvesPageAbsentBeforeFlaggingAnother(t *testing.T) {
 	}
 	defer p.close()
 	rec := seedSizedCollection(t, p, "itom-unproven-page", 256<<10)
-	if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator(), collectionTimeout); e != ErrProtocol {
+	if e = p.reclaim(cleanupJob{record: rec}, NewReclamationCoordinator()); e != ErrProtocol {
 		t.Fatal("accepted unproved page", e)
 	}
 	if f.oversized != 0 || f.uidProofs != 1 || p.client.Mailbox().NumMessages != segmentAppends {

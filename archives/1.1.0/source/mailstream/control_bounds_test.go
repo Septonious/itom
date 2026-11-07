@@ -387,16 +387,16 @@ func TestIncomingGenerationCarriesAuditedMIMEBytes(t *testing.T) {
 	}
 }
 
-// Cleanup starts with half of the hard count budget left. Once one initial
+// Cleanup starts with a quarter of the hard count budget left. Once one initial
 // prefix is audited, its conservative UID-span refund must yield to DATA again;
 // otherwise startup garbage can either monopolize collection or hit the cap.
 func TestAuditedInitialMessagePageRestoresDataCollectionHeadroom(t *testing.T) {
 	a := &mailAccountState{link: &IMAPLink{}, spent: 1 << 20, reserved: 1 << 20}
 	m := &a.maintenance
-	m.initialMessages = 1000
-	m.initialOut = uidWatermark{77, 1000}
+	m.initialMessages = controlCollectionMessages - 32
+	m.initialOut = uidWatermark{77, controlCollectionMessages - 32}
 	m.writes = map[imap.UID]controlWrite{}
-	for uid := imap.UID(1001); uid <= 1032; uid++ {
+	for uid := imap.UID(controlCollectionMessages - 31); uid <= controlCollectionMessages; uid++ {
 		m.writes[uid] = controlWrite{validity: 77, bytes: 100}
 	}
 	if !a.controlMessagePressureLocked() {
@@ -500,5 +500,36 @@ func TestCollectionHeadroomIncludesTheCurrentIncomingGeneration(t *testing.T) {
 		if a.preferRemoteCollectionLocked() {
 			t.Fatal("already collected bytes claimed scheduling priority")
 		}
+	}
+}
+
+// Count and byte urgency must leave room for DATA collection, without changing
+// either ledger or the hard cap. Quiet tails remain eligible after bulk stops.
+func TestBulkControlUrgencyLeavesDataCollectionTime(t *testing.T) {
+	l := &IMAPLink{}
+	l.lastBulk.Store(time.Now().UnixNano())
+	a := &mailAccountState{link: l, spent: 2 << 20, reserved: 2 << 20}
+	a.maintenance.controlBytes = reservationQuantum / 2
+	a.maintenance.initialMessages = 1000
+	if !a.needsMaintenanceLocked() || !a.deferMaintenanceLocked() {
+		t.Fatal("small eligible tail preempted bulk DATA")
+	}
+	a.maintenance.initialMessages = controlCollectionMessages
+	if a.deferMaintenanceLocked() {
+		t.Fatal("message-count urgency was deferred")
+	}
+	a.maintenance.initialMessages = 1000
+	a.maintenance.controlBytes = controlCollectionBytes
+	if a.deferMaintenanceLocked() {
+		t.Fatal("byte urgency was deferred")
+	}
+	a.maintenance.controlBytes = 0
+	a.maintenance.initialMessages = controlBatch
+	l.lastBulk.Store(0)
+	if !a.needsMaintenanceLocked() || a.deferMaintenanceLocked() {
+		t.Fatal("quiet tail was left uncollected")
+	}
+	if a.spent != 2<<20 || a.reserved != 2<<20 {
+		t.Fatal("scheduling changed storage credit")
 	}
 }

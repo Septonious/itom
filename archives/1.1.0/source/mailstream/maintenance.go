@@ -630,7 +630,7 @@ func (a *mailAccountState) needsMaintenanceLocked() bool {
 // DATA collection remains eligible. Capacity-critical historical recovery and real
 // retention pressure always override this optimization. Account.mu is held.
 func (a *mailAccountState) deferMaintenanceLocked() bool {
-	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 || a.controlMessagePressureLocked() {
+	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= controlCollectionBytes || a.controlMessagePressureLocked() {
 		return false
 	}
 	last := a.link.lastBulk.Load()
