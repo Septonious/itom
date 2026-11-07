@@ -1013,7 +1013,9 @@ func (a *mailAccountState) run() {
 							go func() {
 								defer appendWait.Done()
 								err := cmd.Wait()
-								stopNoop()
+								if !stopNoop() && err == nil {
+									err = context.DeadlineExceeded
+								}
 								select {
 								case completed <- err:
 								case <-a.ctx.Done():
