@@ -18,7 +18,8 @@ over noncritical control tails; imminent message-count backpressure still wins.
 Control-message growth is bounded independently of bytes: 2,048 ordinary-message
 reservations plus 128 recovery reservations per outgoing control folder, counting
 queued, in-flight and uncertain APPENDs. Existing remote counts are loaded by the
-startup STATUS command, so a restart cannot erase the guard. Ordinary writes
+startup STATUS command, so a restart cannot erase the guard. Count-pressure cleanup starts with half of the ordinary budget still free.
+Audited UID spans release that urgency page by page. Ordinary writes
 pause when cleanup cannot keep up; audit-proven collection releases reservations.
 During quiet periods, control tails of 32 messages are eligible for collection;
 DATA folders retain their 128-message bound. Backpressure is visible in diagnostics.

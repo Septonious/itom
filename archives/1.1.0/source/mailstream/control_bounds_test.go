@@ -343,3 +343,26 @@ func TestIncomingGenerationCarriesAuditedMIMEBytes(t *testing.T) {
 		t.Fatal("new generation reused a previous MIME total")
 	}
 }
+
+// Cleanup starts with half of the hard count budget left. Once one initial
+// prefix is audited, its conservative UID-span refund must yield to DATA again;
+// otherwise startup garbage can either monopolize collection or hit the cap.
+func TestAuditedInitialMessagePageRestoresDataCollectionHeadroom(t *testing.T) {
+	a := &mailAccountState{link: &IMAPLink{}, spent: 1 << 20, reserved: 1 << 20}
+	m := &a.maintenance
+	m.initialMessages = 1000
+	m.initialOut = uidWatermark{77, 1000}
+	m.writes = map[imap.UID]controlWrite{}
+	for uid := imap.UID(1001); uid <= 1032; uid++ {
+		m.writes[uid] = controlWrite{validity: 77, bytes: 100}
+	}
+	if !a.controlMessagePressureLocked() {
+		t.Fatal("initial backlog was left until the hard cap")
+	}
+	if e := a.refundControlLocked(uidWatermark{77, 256}); e != nil {
+		t.Fatal(e)
+	}
+	if a.controlMessagePressureLocked() || a.spent != 1<<20 {
+		t.Fatal("an audited message page monopolized collection or invented byte credit", a.controlMessageReservationsLocked(), a.spent)
+	}
+}

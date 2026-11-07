@@ -10,8 +10,11 @@ func (a *mailAccountState) controlMessageReservationsLocked() uint64 {
 	return uint64(m.initialMessages) + uint64(len(m.writes)) + uint64(m.pendingMessages) + uint64(a.controlQueued)
 }
 
+// Start collection with half the ordinary budget still available. Audited
+// initial-UID spans release this urgency page by page, so neither stale startup
+// counts nor a last-minute backlog can starve reusable DATA capacity.
 func (a *mailAccountState) controlMessagePressureLocked() bool {
-	return a.controlMessageReservationsLocked() >= controlMessageLimit-controlRecoveryMessages || len(a.maintenance.reads) >= controlMessageLimit-controlRecoveryMessages
+	return a.controlMessageReservationsLocked() >= controlMessageLimit/2 || len(a.maintenance.reads) >= controlMessageLimit/2
 }
 
 func (a *mailAccountState) reserveControlPublicationLocked(packets int) {
