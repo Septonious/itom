@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "release": {
+    "version": "0.9.2",
+    "release": "Rev9",
+    "revision": "transport-rework3-rev9",
+    "archive_name": "ITOM-0.9.2-Rev9-sources.zip",
+    "baseline": "0.9.2-Rev8",
+    "qualification": "Rev9 development: optional verified-TLS IP pinning; targeted transport verification pending",
+    "android_version_name": "0.9.2-Rev9",
+    "android_version_code": 9209,
+    "android_application_id": "org.itom.client.dev.rev7"
+  },
+  "source_sha256": "1495d0a570ed06b2af4e17e676fed89cfa36d206546d9a21459b1e7e1f1ecc9f",
+  "go": "go version go1.27.1 linux/amd64",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "cpu_count": 3,
+  "gomaxprocs": "2",
+  "classification": "LABORATORY",
+  "field_qualified": false,
+  "android_device": "NOT_RUN",
+  "real_provider": "NOT_RUN",
+  "criteria": {
+    "nominal_upload_mbps": 100,
+    "nominal_download_mbps": 100,
+    "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+    "tolerance_percent": 0,
+    "useful_upload_mbps_min": 100.0,
+    "useful_download_mbps_min": 100.0,
+    "all_loaded_rtt_ns_strictly_below": 1100000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30,
+    "qualification_mode": "performance",
+    "throughput_floor_enforced": true,
+    "positive_duplex_every_second_required": false,
+    "speed_tolerance_percent": 0,
+    "rtt_tolerance_percent": 10
+  },
+  "scenario": {
+    "go": "/workspace/toolchains/go/bin/go",
+    "results": "/workspace/work/rev9/low-rtt-baseline",
+    "streams": "multi",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 1,
+    "warmup": 10,
+    "command_delay_ms": 20,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10,
+    "uid_history": 64,
+    "retained_state": true,
+    "stability_only": false,
+    "minimum_mbps": 100.0
+  },
+  "cases": [
+    {
+      "name": "multi-1",
+      "streams_per_direction": 24,
+      "fresh_endpoint_state": false,
+      "retained_bytes_per_account": 6291456,
+      "retained_messages_per_account": 130,
+      "physical_uid_history": 64,
+      "seconds": 60,
+      "exit_code": 1,
+      "elapsed_seconds": 97.7,
+      "source_before": "1495d0a570ed06b2af4e17e676fed89cfa36d206546d9a21459b1e7e1f1ecc9f",
+      "source_after": "1495d0a570ed06b2af4e17e676fed89cfa36d206546d9a21459b1e7e1f1ecc9f",
+      "log": "multi-1.jsonl",
+      "log_sha256": "0d95645838fae24fa886f564045bb516b4f1525c7711164a881a07827ab0220d",
+      "summary": {
+        "passed": [],
+        "failed": [
+          "TestTransportReworkQualification"
+        ],
+        "skipped": [],
+        "missing_required": []
+      },
+      "ok": false
+    }
+  ],
+  "all_lab_cases_passed": false
+}

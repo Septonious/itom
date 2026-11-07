@@ -1,0 +1,206 @@
+name: Build and verify ITOM 1.1.5 testing
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/itom-1.1.5-writer-recovery]
+    paths: ["archives/1.1.5/**", ".github/workflows/itom-115-build.yml"]
+permissions: {contents: read}
+concurrency: {group: itom-115-build, cancel-in-progress: true}
+env:
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+  SOURCE: archives/1.1.5/source
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Full normal and race core, mailstream and native tests plus source checks
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-5-final
+      - name: Audit unchanged controller, mailbox caps and allowed runtime changes
+        run: |
+          git fetch origin bfefec8a75d6eca0f57cccf0696c31fa2dfea1f5 --no-tags
+          python3 archives/1.1.5/qualification/final_release_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-115-test-safety
+          path: |
+            ${{ env.SOURCE }}/dist/core-*.json*
+            ${{ env.SOURCE }}/dist/core-*.log
+            final-audit/
+          if-no-files-found: warn
+  repeated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Two full 15-account MULTI runs through actual native frontend
+        run: |
+          python3 archives/1.1.5/qualification/compare.py --go "$(command -v go)" --out repeat-15 --only candidate --accounts 15 --frontend native-tun --duration 12s --cycles 2 --streams 8 --idle-probes 4 --post-probes 8
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('repeat-15/candidate.json').read_text())
+          assert d['success'] and d['stage']=='complete',d.get('error')
+          assert len(d['Phases'])==4 and all(p['success']for p in d['Phases'])
+          assert d['diagnostics']['Client']['ActiveLines']==d['diagnostics']['Client']['TotalLines']==60
+          assert d['diagnostics']['Mail']['failed_accounts']==0 and not d['diagnostics']['Session']['closed']
+          assert d['Provider']['connection_rejections']==0
+          assert max(d['LoadedMS'])<=2000
+          print([(p['name'],p[p['name']]['full_phase_mbps'])for p in d['Phases']])
+          PYCODE
+          python3 archives/1.1.5/qualification/check_mailbox_bounds.py repeat-15
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-115-test-repeat-15, path: repeat-15/, if-no-files-found: warn}
+
+  linux:
+    # Build independently; publication still requires complete safety checks.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Build matched server binaries and source archive
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.5-linux-$arch.bin" ./cmd/itom)
+          done
+          release-assets/ITOM-1.1.5-linux-amd64.bin version
+          python3 "$SOURCE/tools/package_sources.py" --output release-assets/ITOM-1.1.5-sources.zip
+          cp archives/1.1.5/RELEASE_NOTES.md release-assets/
+          printf '%s\n' "$GITHUB_SHA" > release-assets/SOURCE_COMMIT
+          (cd release-assets && sha256sum *.bin *.zip > NATIVE_SOURCE_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-115-test-linux-amd64
+          path: release-assets/*-linux-amd64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-115-test-linux-arm64
+          path: release-assets/*-linux-arm64.bin
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mailstream-115-test-linux-source
+          path: |
+            release-assets/*.zip
+            release-assets/*.md
+            release-assets/SOURCE_COMMIT
+            release-assets/NATIVE_SOURCE_SHA256SUMS
+          if-no-files-found: error
+  android:
+    # Build independently; publication still requires safety AND both builds.
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "17"}
+      - name: Build both JNI architectures, compile, unit tests and fatal lint
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-5-final --accept-android-licenses
+      - name: Export bounded APK parts and public signing verification tools
+        run: |
+          set -euo pipefail
+          mkdir -p apk-parts android-evidence signing-tools
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          source=Path(os.environ['SOURCE']);apk=source/'dist/ITOM-1.1.5.apk'
+          raw=apk.read_bytes();print("Verified APK bytes:",len(raw));assert 1_000_000<len(raw)<=128*1024*1024
+          report=json.loads((source/'dist/build-report.json').read_text())
+          assert report['android_variant']=='release'
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-5-final'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10150,'version_name':'1.1.5'}
+          parts=[]
+          for n,start in enumerate(range(0,len(raw),8*1024*1024)):
+              part=raw[start:start+8*1024*1024];name=f'115-test-apk.part{n:02d}'
+              Path('apk-parts',name).write_bytes(part)
+              parts.append({'name':name,'bytes':len(part),'sha256':hashlib.sha256(part).hexdigest()})
+          Path('android-evidence/manifest.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'apk_bytes':len(raw),'apk_sha256':hashlib.sha256(raw).hexdigest(),'parts':parts},indent=2)+'\n')
+          PY
+          cp "$SOURCE"/dist/{build-report.json,test-summary.json} android-evidence/
+          signer="$(find "$HOME/.cache/itom-build" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -name apksigner.jar -type f -print -quit)"
+          test -f "$signer"
+          cp "$signer" signing-tools/
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-android-evidence, path: android-evidence/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-signing-tools, path: signing-tools/, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part00, path: apk-parts/115-test-apk.part00, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part01, path: apk-parts/115-test-apk.part01, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part02, path: apk-parts/115-test-apk.part02, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part03, path: apk-parts/115-test-apk.part03, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part04, path: apk-parts/115-test-apk.part04, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part05, path: apk-parts/115-test-apk.part05, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part06, path: apk-parts/115-test-apk.part06, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part07, path: apk-parts/115-test-apk.part07, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part08, path: apk-parts/115-test-apk.part08, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part09, path: apk-parts/115-test-apk.part09, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part10, path: apk-parts/115-test-apk.part10, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part11, path: apk-parts/115-test-apk.part11, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part12, path: apk-parts/115-test-apk.part12, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part13, path: apk-parts/115-test-apk.part13, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part14, path: apk-parts/115-test-apk.part14, if-no-files-found: warn}
+      - uses: actions/upload-artifact@v4
+        with: {name: mailstream-115-test-apk-part15, path: apk-parts/115-test-apk.part15, if-no-files-found: warn}
+      - name: Enforce mailbox message and physical-capacity bounds in final-source candidate traces
+        run: |
+          python3 - <<'BOUNDS'
+          import json,subprocess
+          from pathlib import Path
+          for result in Path('.').rglob('candidate.json'):
+              d=json.loads(result.read_text())
+              lines=d.get('diagnostics',{}).get('Mail',{}).get('lines',[])
+              if lines and all(l.get('control_message_limit')==2048 for l in lines):
+                  subprocess.run(['python3','archives/1.1.5/qualification/check_mailbox_bounds.py',str(result.parent)],check=True)
+          BOUNDS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mailstream-115-test-android-build-logs
+          path: |
+            ${{ env.SOURCE }}/dist/*.log
+            ${{ env.SOURCE }}/dist/*.json
+            ${{ env.SOURCE }}/android/app/build/reports/lint-results.*
+          if-no-files-found: warn
+
+  video-soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Three minutes of real HTTPS video segments after a bulk burst and provider keepalive failure
+        working-directory: archives/1.1.5/source/mailstream
+        run: |
+          set -euo pipefail
+          ITOM_VIDEO_SOAK=1 go test -v -count=1 -timeout=240s -run TestWriterKeepaliveTimeoutDuringVideoRecovers . | tee "$GITHUB_WORKSPACE/video-soak.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailstream-115-test-video-soak, path: video-soak.log, if-no-files-found: warn}

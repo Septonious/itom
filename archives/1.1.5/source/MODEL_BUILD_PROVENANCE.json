@@ -1,0 +1,7 @@
+{
+  "version": "1.1.5",
+  "testing_only": true,
+  "baseline_commit": "bfefec8a75d6eca0f57cccf0696c31fa2dfea1f5",
+  "fix": "Recover only idle writer sockets at an application APPEND fence; bound NOOP to five seconds; preserve selected readers, session, durable debt, protocol, controller and mailbox caps.",
+  "folders_unchanged": true
+}

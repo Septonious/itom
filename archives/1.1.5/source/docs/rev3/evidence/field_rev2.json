@@ -1,0 +1,1037 @@
+{
+  "schema": 1,
+  "classification": "REV2_FIELD_TRACE_DIAGNOSTIC",
+  "field_qualified": false,
+  "sides": {
+    "client": {
+      "events": 141871,
+      "start": "2026-10-14T11:35:32.743988457Z",
+      "end": "2026-10-14T11:37:39.754699971Z",
+      "packet_attempt_to_peer_ingress_ms": {
+        "control_or_small": {
+          "count": 6977,
+          "minimum": 0.3330707550048828,
+          "p50": 88.18888664245605,
+          "p95": 457.25417137145996,
+          "maximum": 1478.3668518066406
+        },
+        "data": {
+          "count": 370,
+          "minimum": 42.47593879699707,
+          "p50": 206.59804344177246,
+          "p95": 447.8268623352051,
+          "maximum": 981.1861515045166
+        }
+      },
+      "bulk_window_bytes": {
+        "count": 62,
+        "minimum": 65536,
+        "p50": 253440,
+        "p95": 1048576,
+        "maximum": 2359296
+      },
+      "bulk_outstanding_age_ms": {
+        "count": 62,
+        "minimum": 0,
+        "p50": 609,
+        "p95": 957,
+        "maximum": 1780
+      },
+      "bulk_health": [
+        {
+          "time": "2026-10-14T11:35:40.986520121Z",
+          "window": 1048576,
+          "flight": 8532,
+          "fast_flight": 0,
+          "age_ms": 0,
+          "fast_ack_ms": 363,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "IDLE"
+        },
+        {
+          "time": "2026-10-14T11:35:41.082160225Z",
+          "window": 1048576,
+          "flight": 8532,
+          "fast_flight": 0,
+          "age_ms": 181,
+          "fast_ack_ms": 363,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "NORMAL"
+        },
+        {
+          "time": "2026-10-14T11:35:45.926866369Z",
+          "window": 2359296,
+          "flight": 2359296,
+          "fast_flight": 269,
+          "age_ms": 541,
+          "fast_ack_ms": 279,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:52.711166106Z",
+          "window": 1013760,
+          "flight": 983040,
+          "fast_flight": 416,
+          "age_ms": 1207,
+          "fast_ack_ms": 425,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:35:54.817817668Z",
+          "window": 253440,
+          "flight": 327680,
+          "fast_flight": 1620,
+          "age_ms": 1780,
+          "fast_ack_ms": 1740,
+          "fast_pressure_remaining_ms": 1957,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:35:55.737566522Z",
+          "window": 190080,
+          "flight": 163840,
+          "fast_flight": 222,
+          "age_ms": 574,
+          "fast_ack_ms": 432,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:55.796637355Z",
+          "window": 190080,
+          "flight": 163840,
+          "fast_flight": 223,
+          "age_ms": 574,
+          "fast_ack_ms": 244,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:55.986813813Z",
+          "window": 190080,
+          "flight": 163840,
+          "fast_flight": 237,
+          "age_ms": 451,
+          "fast_ack_ms": 264,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:56.457050167Z",
+          "window": 190080,
+          "flight": 163840,
+          "fast_flight": 223,
+          "age_ms": 560,
+          "fast_ack_ms": 235,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:56.818744177Z",
+          "window": 285120,
+          "flight": 262144,
+          "fast_flight": 266,
+          "age_ms": 345,
+          "fast_ack_ms": 292,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:57.082353917Z",
+          "window": 427680,
+          "flight": 425984,
+          "fast_flight": 277,
+          "age_ms": 397,
+          "fast_ack_ms": 260,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:57.133731677Z",
+          "window": 427680,
+          "flight": 425984,
+          "fast_flight": 329,
+          "age_ms": 397,
+          "fast_ack_ms": 260,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:57.339499125Z",
+          "window": 427680,
+          "flight": 425984,
+          "fast_flight": 372,
+          "age_ms": 370,
+          "fast_ack_ms": 316,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:58.248377719Z",
+          "window": 641520,
+          "flight": 425984,
+          "fast_flight": 493,
+          "age_ms": 440,
+          "fast_ack_ms": 401,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:58.726139854Z",
+          "window": 641520,
+          "flight": 622592,
+          "fast_flight": 402,
+          "age_ms": 559,
+          "fast_ack_ms": 459,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:58.93436475Z",
+          "window": 962280,
+          "flight": 950272,
+          "fast_flight": 325,
+          "age_ms": 609,
+          "fast_ack_ms": 237,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:35:59.30126501Z",
+          "window": 962280,
+          "flight": 950272,
+          "fast_flight": 331,
+          "age_ms": 775,
+          "fast_ack_ms": 367,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:57.737231498Z",
+          "window": 1048576,
+          "flight": 1048576,
+          "fast_flight": 415,
+          "age_ms": 502,
+          "fast_ack_ms": 455,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "NORMAL"
+        },
+        {
+          "time": "2026-10-14T11:36:57.817977852Z",
+          "window": 1048576,
+          "flight": 1048576,
+          "fast_flight": 514,
+          "age_ms": 502,
+          "fast_ack_ms": 455,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "NORMAL"
+        },
+        {
+          "time": "2026-10-14T11:36:57.986517435Z",
+          "window": 1048576,
+          "flight": 1048576,
+          "fast_flight": 587,
+          "age_ms": 772,
+          "fast_ack_ms": 647,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "NORMAL"
+        },
+        {
+          "time": "2026-10-14T11:36:58.134192852Z",
+          "window": 524288,
+          "flight": 1048576,
+          "fast_flight": 492,
+          "age_ms": 823,
+          "fast_ack_ms": 637,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:58.340166185Z",
+          "window": 524288,
+          "flight": 1048576,
+          "fast_flight": 496,
+          "age_ms": 823,
+          "fast_ack_ms": 564,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:58.456427383Z",
+          "window": 524288,
+          "flight": 1048576,
+          "fast_flight": 630,
+          "age_ms": 452,
+          "fast_ack_ms": 564,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:58.796275716Z",
+          "window": 524288,
+          "flight": 950272,
+          "fast_flight": 887,
+          "age_ms": 700,
+          "fast_ack_ms": 564,
+          "fast_pressure_remaining_ms": 1840,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:58.819021081Z",
+          "window": 524288,
+          "flight": 851968,
+          "fast_flight": 922,
+          "age_ms": 700,
+          "fast_ack_ms": 564,
+          "fast_pressure_remaining_ms": 1817,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:59.082357852Z",
+          "window": 524288,
+          "flight": 524288,
+          "fast_flight": 343,
+          "age_ms": 896,
+          "fast_ack_ms": 307,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:00.724122226Z",
+          "window": 393216,
+          "flight": 393216,
+          "fast_flight": 321,
+          "age_ms": 558,
+          "fast_ack_ms": 293,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:02.24771733Z",
+          "window": 884736,
+          "flight": 884736,
+          "fast_flight": 334,
+          "age_ms": 636,
+          "fast_ack_ms": 318,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:02.300934309Z",
+          "window": 884736,
+          "flight": 884736,
+          "fast_flight": 374,
+          "age_ms": 636,
+          "fast_ack_ms": 318,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:02.927146392Z",
+          "window": 1327104,
+          "flight": 1297476,
+          "fast_flight": 370,
+          "age_ms": 585,
+          "fast_ack_ms": 441,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:02.932857694Z",
+          "window": 1327104,
+          "flight": 1297476,
+          "fast_flight": 415,
+          "age_ms": 505,
+          "fast_ack_ms": 441,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:09.710935712Z",
+          "window": 609024,
+          "flight": 589824,
+          "fast_flight": 959,
+          "age_ms": 586,
+          "fast_ack_ms": 311,
+          "fast_pressure_remaining_ms": 1751,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:13.457238211Z",
+          "window": 342576,
+          "flight": 327680,
+          "fast_flight": 0,
+          "age_ms": 793,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1951,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:13.737335919Z",
+          "window": 171288,
+          "flight": 327680,
+          "fast_flight": 2726,
+          "age_ms": 393,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1671,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:13.817103263Z",
+          "window": 171288,
+          "flight": 327680,
+          "fast_flight": 2726,
+          "age_ms": 393,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1591,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:13.819358211Z",
+          "window": 171288,
+          "flight": 327680,
+          "fast_flight": 2726,
+          "age_ms": 393,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1589,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:13.98656394Z",
+          "window": 171288,
+          "flight": 294912,
+          "fast_flight": 2726,
+          "age_ms": 643,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1422,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:14.133887429Z",
+          "window": 171288,
+          "flight": 262144,
+          "fast_flight": 2726,
+          "age_ms": 643,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1275,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:14.340050919Z",
+          "window": 171288,
+          "flight": 262144,
+          "fast_flight": 2726,
+          "age_ms": 894,
+          "fast_ack_ms": 804,
+          "fast_pressure_remaining_ms": 1068,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:14.796693314Z",
+          "window": 85644,
+          "flight": 163840,
+          "fast_flight": 0,
+          "age_ms": 1211,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 1879,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:15.082514825Z",
+          "window": 85644,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 535,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 1594,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:15.724670345Z",
+          "window": 85644,
+          "flight": 74095,
+          "fast_flight": 0,
+          "age_ms": 727,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 951,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:17.247942168Z",
+          "window": 65536,
+          "flight": 65536,
+          "fast_flight": 0,
+          "age_ms": 947,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:17.301123261Z",
+          "window": 65536,
+          "flight": 65536,
+          "fast_flight": 0,
+          "age_ms": 839,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:17.933232167Z",
+          "window": 65536,
+          "flight": 65536,
+          "fast_flight": 0,
+          "age_ms": 647,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:18.926672011Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 0,
+          "age_ms": 682,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:24.711091852Z",
+          "window": 276480,
+          "flight": 262144,
+          "fast_flight": 4953,
+          "age_ms": 451,
+          "fast_ack_ms": 999,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:28.817652996Z",
+          "window": 131072,
+          "flight": 131072,
+          "fast_flight": 1513,
+          "age_ms": 658,
+          "fast_ack_ms": 503,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:29.457154402Z",
+          "window": 196608,
+          "flight": 131072,
+          "fast_flight": 0,
+          "age_ms": 541,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:29.736633361Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 0,
+          "age_ms": 602,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:29.796698621Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 70,
+          "age_ms": 602,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:29.820154298Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 70,
+          "age_ms": 602,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:29.98645534Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 70,
+          "age_ms": 645,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:30.082517631Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 70,
+          "age_ms": 645,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:30.133913881Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 70,
+          "age_ms": 645,
+          "fast_ack_ms": 420,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:30.339242735Z",
+          "window": 196608,
+          "flight": 180113,
+          "fast_flight": 39,
+          "age_ms": 685,
+          "fast_ack_ms": 442,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:31.724380287Z",
+          "window": 65536,
+          "flight": 65536,
+          "fast_flight": 24,
+          "age_ms": 663,
+          "fast_ack_ms": 372,
+          "fast_pressure_remaining_ms": 727,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:32.248211954Z",
+          "window": 65536,
+          "flight": 65536,
+          "fast_flight": 0,
+          "age_ms": 504,
+          "fast_ack_ms": 458,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:33.301639036Z",
+          "window": 131072,
+          "flight": 131072,
+          "fast_flight": 0,
+          "age_ms": 742,
+          "fast_ack_ms": 458,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:33.933289192Z",
+          "window": 196608,
+          "flight": 196608,
+          "fast_flight": 0,
+          "age_ms": 529,
+          "fast_ack_ms": 584,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:34.926464505Z",
+          "window": 98304,
+          "flight": 98304,
+          "fast_flight": 349,
+          "age_ms": 957,
+          "fast_ack_ms": 475,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:37:39.744168669Z",
+          "window": 282624,
+          "flight": 32768,
+          "fast_flight": 0,
+          "age_ms": 663,
+          "fast_ack_ms": 618,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        }
+      ],
+      "copy_failures": {
+        "IO_ERROR/write": 11,
+        "OK/eof": 71,
+        "OK/half_close": 68,
+        "RESET/read": 58,
+        "CLOSED/read": 53,
+        "IO_ERROR/half_close": 3,
+        "RESET/write": 2
+      }
+    },
+    "server": {
+      "events": 120250,
+      "start": "2026-10-14T11:35:52.294770118Z",
+      "end": "2026-10-14T11:38:05.502157589Z",
+      "packet_attempt_to_peer_ingress_ms": {
+        "control_or_small": {
+          "count": 6703,
+          "minimum": 116.51086807250977,
+          "p50": 210.07609367370605,
+          "p95": 450.2079486846924,
+          "maximum": 1837.1851444244385
+        },
+        "data": {
+          "count": 233,
+          "minimum": 154.73294258117676,
+          "p50": 358.1089973449707,
+          "p95": 551.3958930969238,
+          "maximum": 1035.398006439209
+        }
+      },
+      "bulk_window_bytes": {
+        "count": 32,
+        "minimum": 65536,
+        "p50": 130176,
+        "p95": 1048576,
+        "maximum": 5308416
+      },
+      "bulk_outstanding_age_ms": {
+        "count": 32,
+        "minimum": 14,
+        "p50": 534,
+        "p95": 874,
+        "maximum": 919
+      },
+      "bulk_health": [
+        {
+          "time": "2026-10-14T11:36:29.67988158Z",
+          "window": 1048576,
+          "flight": 1048576,
+          "fast_flight": 666,
+          "age_ms": 14,
+          "fast_ack_ms": 304,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "NORMAL"
+        },
+        {
+          "time": "2026-10-14T11:36:32.718913266Z",
+          "window": 5308416,
+          "flight": 4521984,
+          "fast_flight": 680,
+          "age_ms": 717,
+          "fast_ack_ms": 480,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:36.617863207Z",
+          "window": 331776,
+          "flight": 360448,
+          "fast_flight": 92,
+          "age_ms": 525,
+          "fast_ack_ms": 837,
+          "fast_pressure_remaining_ms": 1969,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:39.977467427Z",
+          "window": 115712,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 874,
+          "fast_ack_ms": 340,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:40.576936471Z",
+          "window": 115712,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 447,
+          "fast_ack_ms": 340,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:41.419954437Z",
+          "window": 173568,
+          "flight": 163840,
+          "fast_flight": 606,
+          "age_ms": 310,
+          "fast_ack_ms": 340,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:42.117896725Z",
+          "window": 130176,
+          "flight": 229376,
+          "fast_flight": 606,
+          "age_ms": 486,
+          "fast_ack_ms": 340,
+          "fast_pressure_remaining_ms": 1872,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:42.367725866Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 6252,
+          "age_ms": 737,
+          "fast_ack_ms": 985,
+          "fast_pressure_remaining_ms": 1765,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:42.935855036Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 525,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:43.151640987Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 782,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:43.202963216Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 782,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:43.584654025Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 479,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:43.818210951Z",
+          "window": 130176,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 729,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:44.036127155Z",
+          "window": 65536,
+          "flight": 98304,
+          "fast_flight": 0,
+          "age_ms": 857,
+          "fast_ack_ms": 490,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:45.587527701Z",
+          "window": 163840,
+          "flight": 163840,
+          "fast_flight": 0,
+          "age_ms": 534,
+          "fast_ack_ms": 427,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:45.678763759Z",
+          "window": 163840,
+          "flight": 163840,
+          "fast_flight": 0,
+          "age_ms": 534,
+          "fast_ack_ms": 427,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:47.719209409Z",
+          "window": 122880,
+          "flight": 131072,
+          "fast_flight": 550,
+          "age_ms": 919,
+          "fast_ack_ms": 547,
+          "fast_pressure_remaining_ms": 1860,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:52.61787744Z",
+          "window": 442368,
+          "flight": 425984,
+          "fast_flight": 1937,
+          "age_ms": 782,
+          "fast_ack_ms": 412,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:55.976349974Z",
+          "window": 78641,
+          "flight": 65536,
+          "fast_flight": 0,
+          "age_ms": 375,
+          "fast_ack_ms": 307,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:56.420929264Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 0,
+          "age_ms": 508,
+          "fast_ack_ms": 321,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:56.545602762Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 76,
+          "age_ms": 366,
+          "fast_ack_ms": 321,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:57.117940944Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 420,
+          "age_ms": 754,
+          "fast_ack_ms": 349,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:57.368605587Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 480,
+          "age_ms": 328,
+          "fast_ack_ms": 403,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:58.15459028Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 1540,
+          "age_ms": 264,
+          "fast_ack_ms": 778,
+          "fast_pressure_remaining_ms": 1974,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:58.206408732Z",
+          "window": 144177,
+          "flight": 131072,
+          "fast_flight": 1835,
+          "age_ms": 264,
+          "fast_ack_ms": 778,
+          "fast_pressure_remaining_ms": 1922,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:36:58.599152583Z",
+          "window": 72088,
+          "flight": 65536,
+          "fast_flight": 1928,
+          "age_ms": 720,
+          "fast_ack_ms": 454,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "CONGESTED"
+        },
+        {
+          "time": "2026-10-14T11:36:58.818753492Z",
+          "window": 72088,
+          "flight": 65536,
+          "fast_flight": 1931,
+          "age_ms": 294,
+          "fast_ack_ms": 402,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:36:58.935652138Z",
+          "window": 72088,
+          "flight": 65536,
+          "fast_flight": 2479,
+          "age_ms": 294,
+          "fast_ack_ms": 402,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:00.057138308Z",
+          "window": 72088,
+          "flight": 65536,
+          "fast_flight": 2246,
+          "age_ms": 598,
+          "fast_ack_ms": 322,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:00.679283082Z",
+          "window": 72088,
+          "flight": 65536,
+          "fast_flight": 1510,
+          "age_ms": 520,
+          "fast_ack_ms": 332,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "RECOVERY"
+        },
+        {
+          "time": "2026-10-14T11:37:01.555276947Z",
+          "window": 206436,
+          "flight": 131072,
+          "fast_flight": 1554,
+          "age_ms": 690,
+          "fast_ack_ms": 341,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        },
+        {
+          "time": "2026-10-14T11:37:02.77580054Z",
+          "window": 271972,
+          "flight": 196608,
+          "fast_flight": 1592,
+          "age_ms": 763,
+          "fast_ack_ms": 290,
+          "fast_pressure_remaining_ms": 0,
+          "mode": "PROBE_UP"
+        }
+      ],
+      "copy_failures": {}
+    }
+  },
+  "limits": [
+    "Retained rotation tails do not cover every test.",
+    "No per-screenshot mode/time markers; no causal account-count experiment.",
+    "Cross-host clocks were not calibrated; one-way matching is diagnostic only.",
+    "Physical message bytes are not useful application throughput."
+  ]
+}

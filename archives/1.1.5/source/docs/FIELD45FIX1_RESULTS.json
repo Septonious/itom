@@ -1,0 +1,54 @@
+{
+  "revision": "transport-s1-perf5-field24",
+  "archive_name": "ITOM_TRANSPORT_FIELD45FIX1_SOURCE.zip",
+  "android_version_code": 9004,
+  "date": "2026-10-07",
+  "change": "Use filesystem identity for SDK-path assertion; supports short and long Windows names.",
+  "source_scope": {
+    "base_archive": "ITOM_TRANSPORT_FIELD45_SOURCE.zip",
+    "base_sha256": "ec590911b7a26cbc33093992970037fe78ce29093ccc8b18f57dd17278d08ffb",
+    "changed_existing_entries": [
+      "itom/README.md",
+      "itom/source-info.json",
+      "itom/tools/test_core_tools.py"
+    ],
+    "runtime_and_launcher_unchanged": true
+  },
+  "python_tests": 70,
+  "alias_regression": "PASS on Linux filesystem alias",
+  "go_packages": {
+    "itom.local/core/cmd/itom": "pass",
+    "itom.local/core/datapath": "pass",
+    "itom.local/core/flow": "pass",
+    "itom.local/core/integration": "pass",
+    "itom.local/core/journal": "pass",
+    "itom.local/core/mailbox": "pass",
+    "itom.local/core/mailcontrol": "pass",
+    "itom.local/core/manager": "pass",
+    "itom.local/core/netroute": "pass",
+    "itom.local/core/pool": "pass",
+    "itom.local/core/probe": "pass",
+    "itom.local/core/recovery": "pass",
+    "itom.local/core/secure": "pass",
+    "itom.local/core/servercfg": "pass",
+    "itom.local/core/session": "pass",
+    "itom.local/core/socks": "pass",
+    "itom.local/core/tunnel": "pass",
+    "itom.local/core/wallet": "pass",
+    "itom.local/core/wire": "pass"
+  },
+  "go_test_events": {
+    "pass": 477,
+    "skip": 4
+  },
+  "native_race": "PASS",
+  "android_gate": "PASS, 6 tasks executed and 57 up-to-date; unchanged Kotlin JUnit results 60 PASS",
+  "build_smoke": {
+    "directional_mbps": 36.566,
+    "max_rtt_ms": 335,
+    "accepted": true
+  },
+  "mobile_model_qualified": false,
+  "mobile_model_result_inherited": "FIELD45_RESULTS.json: same runtime, useful rate goals passed, loaded application max RTT 2875ms exceeds 1500ms.",
+  "windows_execution": "Not available on this host; user-reported short/long path mismatch repaired in test."
+}

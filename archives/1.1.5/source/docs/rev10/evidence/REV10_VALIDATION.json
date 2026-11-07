@@ -1,0 +1,86 @@
+{
+  "schema": 3,
+  "classification": "REV10_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": true,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "qualification_source_sha256": "6fb7078a73cab977193571b09090c164c66d7c073687164ce98f447bc8d05e1d",
+  "first_party_core_runtime_sha256": "8c867c6636c5fa9204334dddde84f1ad9ae1c6454ba2033d470c199b48509e5b",
+  "generated_utc": "2026-10-16T18:13:43.352719+00:00",
+  "recovery_checks": {
+    "race": {
+      "passed": true,
+      "log_sha256": "de3c91877298bb03e5d08fc846c5946909483e0e4a223fe70c49fd51549bf4c8",
+      "passed_test_events": 7,
+      "minimum_service_recovery_ms": 1233,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    },
+    "normal": {
+      "passed": true,
+      "log_sha256": "b350f0755c85c7d67672acad2d4c0157a660728888de96e2f1d07b19f42f25fb",
+      "passed_test_events": 7,
+      "minimum_service_recovery_ms": 1088,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    }
+  },
+  "baseline_regression_reproduced": true,
+  "baseline_log_sha256": "be4a584225546885bd942f453235645abacf2bec6f9e3d8f9418c8ba64197a5e",
+  "baseline_scope": "Same discovery and client-role-loss scenario; final test additionally requires all 20 lines and the split DATA reader to recover.",
+  "performance_retested": false,
+  "strict_performance_passed": false,
+  "strict_performance_status": "not_retested",
+  "strict_speed_target_mbps": 100,
+  "speed_tolerance_percent": 0,
+  "jitter_target_passed": false,
+  "jitter_status": "not_retested",
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "launcher_tests_passed": 45,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "limitations": [
+    "Targeted regression checks only; complete final internal suite not run.",
+    "Correlated field EOF cause is unconfirmed; the recovery regression does not identify an ISP/provider fault.",
+    "No new throughput or jitter qualification; the strict 100 Mbps target remains unchanged.",
+    "Android UI compiled and checked by lint/unit tests; no physical-device visual or interaction qualification.",
+    "The old mobile whole-app crash has no new fatal-stack root cause."
+  ]
+}
