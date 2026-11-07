@@ -367,30 +367,6 @@ func TestAuditedInitialMessagePageRestoresDataCollectionHeadroom(t *testing.T) {
 	}
 }
 
-func TestBusyMutationLeavesOtherWritersPublishingButAllowsParallelDrains(t *testing.T) {
-	c := NewReclamationCoordinator()
-	l := &IMAPLink{reclaimer: c, changed: make(chan struct{})}
-	first := &mailAccountState{link: l}
-	second := &mailAccountState{link: l}
-	third := &mailAccountState{link: l}
-	c.borrowed = map[*mailAccountState]bool{first: true}
-	c.active = true
-	if second.borrowWriterForCollection() || second.reclaiming.Load() || len(c.borrowed) != 1 {
-		t.Fatal("busy mutation borrowed another idle writer")
-	}
-	c.active = false // The first actor is draining; it does not own the mutation lease.
-	if !second.borrowWriterForCollection() || len(c.borrowed) != 2 {
-		t.Fatal("a slow pre-lease drain prevented independent collection")
-	}
-	if third.borrowWriterForCollection() {
-		t.Fatal("pre-lease drains escaped the two-writer bound")
-	}
-	second.returnCollectionWriter()
-	if second.reclaiming.Load() || len(c.borrowed) != 1 {
-		t.Fatal("writer was not returned")
-	}
-}
-
 type fullOrdinaryRecoveryLink struct{ recovery chan byte }
 
 func (l *fullOrdinaryRecoveryLink) Send(context.Context, []byte, bool) error { return ErrCapacity }
@@ -434,4 +410,29 @@ func TestAllStorageProofsUseBoundedRecoveryBeforeOrdinaryTraffic(t *testing.T) {
 	if attempts != 0 || len(seen) != len(kinds) {
 		t.Fatal("ordinary publication escaped the full account", attempts, seen)
 	}
+}
+
+// Returning a busy actor cancels its lease claim, even if control traffic
+// then prevents it from borrowing again. Other ready accounts must progress.
+func TestReturnedActorCannotStrandTheMutationFIFO(t *testing.T) {
+	c := NewReclamationCoordinator()
+	ctx := context.Background()
+	l := &IMAPLink{reclaimer: c, changed: make(chan struct{})}
+	stopped := &mailAccountState{ctx: ctx, link: l}
+	ready := &mailAccountState{ctx: ctx, link: l}
+	c.borrowed = map[*mailAccountState]bool{stopped: true}
+	stopped.reclaiming.Store(true)
+	c.active = true
+	if c.acquire(stopped) || len(c.waiting) != 1 {
+		t.Fatal("waiting request not recorded")
+	}
+	stopped.returnCollectionWriter()
+	if len(c.waiting) != 0 || stopped.reclaiming.Load() {
+		t.Fatal("returned writer retained a lease claim")
+	}
+	c.release()
+	if !c.acquire(ready) {
+		t.Fatal("ready account waited for an actor which had returned its writer")
+	}
+	c.release()
 }

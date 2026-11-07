@@ -1,6 +1,6 @@
 # 1.1.0: retain the thirteen existing gates and compare with accepted RC18.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
-# Qualify writer availability and finite retirement-proof recovery under message backpressure.
+# Qualify returned-actor FIFO cancellation, rotating account scheduling and bounded storage proofs.
 concurrency: {group: itom-mailstream-110-final-build, cancel-in-progress: true}
 name: Build ITOM 1.1.0 final with complete acceptance
 on:

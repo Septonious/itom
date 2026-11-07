@@ -292,13 +292,23 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 func (l *IMAPLink) collectSegments() {
 	tick := time.NewTicker(50 * time.Millisecond)
 	defer tick.Stop()
+	next := 0
 	for {
 		select {
 		case <-l.ctx.Done():
 			return
 		case <-tick.C:
 		}
-		for _, a := range l.accounts {
+		count := len(l.accounts)
+		if count == 0 {
+			continue
+		}
+		// Fairness is among actual requests, not actors which have returned their
+		// writers. Rotate the first producer after each existing scheduler tick.
+		start := next
+		next = (next + 1) % count
+		for n := 0; n < count; n++ {
+			a := l.accounts[(start+n)%count]
 			a.mu.Lock()
 			var chosen *cleanupJob
 			queue := func(key segmentKey, rec *segmentRecord) {

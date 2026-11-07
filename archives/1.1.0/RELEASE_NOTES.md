@@ -13,9 +13,9 @@ A successful turn reuses its bounded inventory; every deletion page retains
 its tagged UID/count/validity audits and the final empty-folder proof. Incoming
 generations retain their actual length-verified MIME byte total, so known small
 generations use the bounded fast path. Ready DATA collection takes precedence
-over noncritical control tails; count-pressure cleanup still wins. Writers keep
-publishing while another actor owns the mutation lease; two pre-lease drains
-remain allowed so a slow APPEND cannot prevent independent collection. Existing
+over noncritical control tails; count-pressure cleanup still wins. Returned writers cancel their FIFO lease claim; the scheduler rotates account
+order so deferred work cannot block ready collectors. The original two-writer
+and single-mutation bounds remain. Existing
 retirement proofs share the bounded recovery reserve and precede ordinary writes
 at a full account, so cleanup can complete while traffic is paused.
 
