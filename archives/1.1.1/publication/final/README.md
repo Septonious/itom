@@ -25,3 +25,7 @@ automated qualification; real Rambler/mobile behavior still requires ordinary
 field observation. Empty owned folders may remain. Unrelated or unrecognized
 legacy mail is preserved. The published 1.1.0 tag and all fourteen assets remain
 unchanged for comparison or rollback.
+
+[Verified export](https://github.com/Septonious/itom/actions/runs/42364106147)
+was downloaded again as four archives. All fourteen files, the APK v3 signer
+and both JNI hashes matched. See ARTIFACT_EXPORT_VERIFICATION.json.
