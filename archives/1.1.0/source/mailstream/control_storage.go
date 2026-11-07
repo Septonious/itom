@@ -268,8 +268,16 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 			delete(a.maintenance.writes, uid)
 		}
 	}
-	if covers(mark, a.maintenance.initialOut) {
-		a.maintenance.initialMessages = 0
+	initial := a.maintenance.initialOut
+	if mark.Validity == initial.Validity {
+		// Remaining initial messages occupy distinct UIDs above the audited
+		// fence. The UID span is a safe upper bound even when there are holes;
+		// unlike subtracting an unproved count, it cannot invent deletion.
+		remaining := uint32(0)
+		if mark.UID < initial.UID {
+			remaining = initial.UID - mark.UID
+		}
+		a.maintenance.initialMessages = min(a.maintenance.initialMessages, remaining)
 	}
 	a.maintenance.deleted = mark
 	return nil

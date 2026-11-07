@@ -11,7 +11,7 @@ func (a *mailAccountState) controlMessageReservationsLocked() uint64 {
 }
 
 func (a *mailAccountState) controlMessagePressureLocked() bool {
-	return a.controlMessageReservationsLocked() >= controlMessageLimit/2 || len(a.maintenance.reads) >= controlMessageLimit/2
+	return a.controlMessageReservationsLocked() >= controlMessageLimit-controlRecoveryMessages || len(a.maintenance.reads) >= controlMessageLimit-controlRecoveryMessages
 }
 
 func (a *mailAccountState) reserveControlPublicationLocked(packets int) {

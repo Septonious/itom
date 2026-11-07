@@ -1,9 +1,13 @@
 package mailstream
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
 	"errors"
 	imap "github.com/emersion/go-imap/v2"
+	"io"
+	"net"
 	"testing"
 	"time"
 )
@@ -146,4 +150,150 @@ func TestControlCountRecoveredFromRemoteMailboxAfterRestart(t *testing.T) {
 		t.Fatal("cleaned account did not resume", e)
 	}
 	waitRetention(t, ctx, func() bool { return l.Snapshot().Appended > 0 }, "accepted packet was not published")
+}
+
+// A connected but quiet tunnel must collect a tiny control backlog; a byte
+// threshold alone allowed hundreds of small messages to remain indefinitely.
+func TestQuietLowByteControlBacklogIsCollectedWhileConnected(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	accounts, _ := applicationMailServer(t, true, false)
+	accounts = accounts[:1]
+	server, e := NewIMAPLink(ctx, "quiet-control-bound", accounts, false)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer server.Close()
+	client, e := NewIMAPLink(ctx, "quiet-control-bound", accounts, true)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer client.Close()
+	key := make([]byte, 32)
+	if _, e = rand.Read(key); e != nil {
+		t.Fatal(e)
+	}
+	go Serve(ctx, server, "quiet-control-bound", key, (&net.Dialer{}).DialContext, nil)
+	session, e := Connect(ctx, client, "quiet-control-bound", key)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer session.Close()
+	// Complete the same bidirectional DATA proof as the production frontend;
+	// a Noise handshake alone intentionally retains bootstrap-only writers.
+	echo, e := net.Listen("tcp", "127.0.0.1:0")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer echo.Close()
+	go func() {
+		c, e := echo.Accept()
+		if e == nil {
+			defer c.Close()
+			io.Copy(c, c)
+		}
+	}()
+	stream, e := session.OpenTCP(ctx, echo.Addr().String())
+	if e != nil {
+		t.Fatal(e)
+	}
+	payload := bytes.Repeat([]byte("e"), 16<<10)
+	if _, e = stream.Write(payload); e != nil {
+		t.Fatal(e)
+	}
+	got := make([]byte, len(payload))
+	if _, e = io.ReadFull(stream, got); e != nil || !bytes.Equal(got, payload) {
+		t.Fatal("DATA admission proof failed", e)
+	}
+	stream.Close()
+	waitRetention(t, ctx, func() bool { return server.Snapshot().Writers == 1 }, "server did not activate independent writer")
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	if e = p.client.Create("personal-keep", nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	cmd, e := p.startAppend("personal-keep", []byte("Subject: personal\r\n\r\nunrelated user mail"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = cmd.Wait(); e != nil {
+		t.Fatal(e)
+	}
+	folder := client.controlFolder(true)
+	for i := 0; i < 40; i++ {
+		cmd, e = p.startAppend(folder, encodeMail([]byte("tiny old transport control")))
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = cmd.Wait(); e != nil {
+			t.Fatal(e)
+		}
+	}
+	waitRetention(t, ctx, func() bool {
+		d, e := p.client.Status(folder, &imap.StatusOptions{NumMessages: true}).Wait()
+		return e == nil && d.NumMessages != nil && *d.NumMessages < 32
+	}, "quiet low-byte control tails did not collect while session remained active")
+	if _, e = session.Ping(ctx); e != nil {
+		t.Fatal("cleanup interrupted active session", e)
+	}
+	d, e := p.client.Status("personal-keep", &imap.StatusOptions{NumMessages: true}).Wait()
+	if e != nil || d.NumMessages == nil || *d.NumMessages != 1 {
+		t.Fatal("automatic collection touched unrelated mail", e, d)
+	}
+}
+
+func TestInitialMessageCountUsesConservativeAuditedUIDSpan(t *testing.T) {
+	a := &mailAccountState{link: &IMAPLink{}}
+	a.maintenance.initialOut = uidWatermark{77, 1_000_000}
+	a.maintenance.initialMessages = 1000
+	if e := a.refundControlLocked(uidWatermark{77, 256}); e != nil {
+		t.Fatal(e)
+	}
+	if a.maintenance.initialMessages != 1000 {
+		t.Fatal("UID holes were mistaken for deleted messages")
+	}
+	if e := a.refundControlLocked(uidWatermark{77, 999_500}); e != nil {
+		t.Fatal(e)
+	}
+	if a.maintenance.initialMessages != 500 {
+		t.Fatal("audited upper bound failed to advance")
+	}
+	if e := a.refundControlLocked(uidWatermark{77, 1_000_000}); e != nil {
+		t.Fatal(e)
+	}
+	if a.maintenance.initialMessages != 0 {
+		t.Fatal("full initial fence did not clear")
+	}
+}
+
+// Peer admission uses a per-account queue, so it must share the same bounded
+// reservations as normal traffic even before independent writers are attached.
+func TestRouteAnnouncementsReserveBeforePublication(t *testing.T) {
+	ctx := context.Background()
+	id := SessionID{1}
+	l := &IMAPLink{ctx: ctx, client: true}
+	a := &mailAccountState{link: l, ready: true, id: id, config: MailAccount{ID: "a01"}, fast: make(chan mailWork, 32), spent: 1 << 20, reserved: 1 << 20}
+	l.accounts = []*mailAccountState{a}
+	a.maintenance.initialMessages = controlMessageLimit + controlRecoveryMessages - 1
+	a.maintenance.initialOut = uidWatermark{77, 5000}
+	packet := header(sealed, id, 9)
+	if e := l.sendRoute(ctx, id, "a01", packet); e != nil {
+		t.Fatal(e)
+	}
+	if e := l.sendRoute(ctx, id, "a01", packet); !errors.Is(e, ErrCapacity) {
+		t.Fatal("route bypassed recovery message bound", e)
+	}
+	<-a.fast
+	a.mu.Lock()
+	a.reserveControlPublicationLocked(1)
+	a.mu.Unlock()
+	a.controlAppended(&imap.AppendData{UID: 6000, UIDValidity: 77}, 128)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.controlQueued != 0 || a.controlMessageReservationsLocked() != controlMessageLimit+controlRecoveryMessages {
+		t.Fatal("route publication lost its reservation", a.controlQueued, a.controlMessageReservationsLocked())
+	}
 }

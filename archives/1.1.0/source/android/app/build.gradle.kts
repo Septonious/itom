@@ -44,6 +44,10 @@ android {
         jniLibs.keepDebugSymbols += setOf("**/libgojni.so", "**/libandroidx.graphics.path.so")
     }
 }
+// AGP creates local tests for debug by default; qualify the shipped release too.
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = true }
+}
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 dependencies {
     testImplementation(kotlin("test-junit"))

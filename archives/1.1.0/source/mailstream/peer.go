@@ -96,13 +96,14 @@ func (l *IMAPLink) sendRoute(ctx context.Context, id SessionID, account string, 
 			a.mu.Unlock()
 			return ErrClosed
 		}
-		if a.spent+a.queuedBytes+work.charge > prototypePhysicalBudget {
+		if a.spent+a.queuedBytes+work.charge > prototypePhysicalBudget || a.controlMessageReservationsLocked() >= controlMessageLimit+controlRecoveryMessages {
 			a.mu.Unlock()
 			return ErrCapacity
 		}
 		select {
 		case a.fast <- work:
 			a.queuedBytes += work.charge
+			a.controlQueued++
 			a.mu.Unlock()
 			a.sentPacket(wire)
 			return nil
