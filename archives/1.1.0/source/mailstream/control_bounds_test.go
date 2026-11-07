@@ -533,3 +533,30 @@ func TestBulkControlUrgencyLeavesDataCollectionTime(t *testing.T) {
 		t.Fatal("scheduling changed storage credit")
 	}
 }
+
+func TestControlShutdownCancellationDiagnostic(t *testing.T) {
+	for _, tc := range []struct {
+		name, stage string
+		stopped     bool
+		err         error
+		want        string
+	}{
+		{"normal shutdown", "control_receive", true, context.Canceled, "MAIL_CARRIER_CLOSED"},
+		{"unexpected active cancellation", "control_receive", false, context.Canceled, "CANCELED"},
+		{"protocol failure during shutdown", "control_receive", true, ErrProtocol, "MAIL_PROTOCOL"},
+		{"other cancellation stage", "control_login", true, context.Canceled, "CANCELED"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if tc.stopped {
+				cancel()
+			}
+			a := &mailAccountState{ctx: ctx}
+			a.failedStage(tc.stage, tc.err)
+			if a.failure != tc.want {
+				t.Fatal(a.failure, tc.want)
+			}
+		})
+	}
+}

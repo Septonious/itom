@@ -573,6 +573,11 @@ func (a *mailAccountState) failedStage(stage string, err error) {
 				a.failure = "MAIL_STORAGE_IO"
 			case errors.Is(err, context.Canceled):
 				a.failure = "CANCELED"
+				// A reader canceled by its already-stopped owner is normal
+				// carrier closure, not a live transport cancellation failure.
+				if stage == "control_receive" && a.ctx != nil && a.ctx.Err() != nil {
+					a.failure = "MAIL_CARRIER_CLOSED"
+				}
 			default:
 				a.failure = "MAIL_ACCOUNT_UNAVAILABLE"
 			}

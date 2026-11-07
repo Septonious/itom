@@ -20,7 +20,9 @@ rotates, and the direction nearest its physical limit receives cleanup priority.
 Existing retirement proofs use a bounded recovery reserve ahead of ordinary
 writes. Bulk-only feedback batching uses up to 32 milliseconds to reduce message
 and cleanup work; idle feedback stays at two milliseconds and interactive work
-interrupts batching.
+interrupts batching. A control reader canceled by an already-stopped owner
+reports normal carrier closure; active cancellation and protocol errors retain
+their error status.
 
 Control-message reservations are capped at 2,048 ordinary messages plus 128
 recovery messages per outgoing folder. Queued, in-flight and uncertain APPENDs
