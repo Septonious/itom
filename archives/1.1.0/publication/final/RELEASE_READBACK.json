@@ -1,0 +1,150 @@
+{
+  "verified": true,
+  "release_id": 437455679,
+  "tag": "v1.1.0",
+  "source_commit": "474364b115fee38d174e75c0e025a108a5ebc0b9",
+  "assets": [
+    {
+      "id": 720169667,
+      "name": "ANDROID_BUILD.json",
+      "size": 2532,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ANDROID_BUILD.json"
+    },
+    {
+      "id": 720169665,
+      "name": "ARTIFACT_VALIDATION.json",
+      "size": 866,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ARTIFACT_VALIDATION.json"
+    },
+    {
+      "id": 720169664,
+      "name": "ITOM-1.1.0-evidence.zip",
+      "size": 8308650,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM-1.1.0-evidence.zip"
+    },
+    {
+      "id": 720169671,
+      "name": "ITOM-1.1.0-linux-amd64.bin",
+      "size": 13291485,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM-1.1.0-linux-amd64.bin"
+    },
+    {
+      "id": 720169673,
+      "name": "ITOM-1.1.0-linux-arm64.bin",
+      "size": 12302308,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM-1.1.0-linux-arm64.bin"
+    },
+    {
+      "id": 720169693,
+      "name": "ITOM-1.1.0-sources.zip",
+      "size": 1766739,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM-1.1.0-sources.zip"
+    },
+    {
+      "id": 720169694,
+      "name": "ITOM-1.1.0.apk",
+      "size": 46545331,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM-1.1.0.apk"
+    },
+    {
+      "id": 720169716,
+      "name": "ITOM_110_BUILD.json",
+      "size": 25870,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM_110_BUILD.json"
+    },
+    {
+      "id": 720169732,
+      "name": "ITOM_110_SOURCE_MANIFEST.json",
+      "size": 83376,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/ITOM_110_SOURCE_MANIFEST.json"
+    },
+    {
+      "id": 720169733,
+      "name": "NATIVE_SOURCE_SHA256SUMS",
+      "size": 275,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/NATIVE_SOURCE_SHA256SUMS"
+    },
+    {
+      "id": 720169736,
+      "name": "RELEASE_NOTES.md",
+      "size": 3416,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/RELEASE_NOTES.md"
+    },
+    {
+      "id": 720169745,
+      "name": "SHA256SUMS",
+      "size": 1135,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/SHA256SUMS"
+    },
+    {
+      "id": 720169755,
+      "name": "SIGNER.txt",
+      "size": 951,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/SIGNER.txt"
+    },
+    {
+      "id": 720169758,
+      "name": "SOURCE_COMMIT",
+      "size": 41,
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/untagged-de4b5bc286cb42937e9d/SOURCE_COMMIT"
+    }
+  ],
+  "files": {
+    "SIGNER.txt": {
+      "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d",
+      "bytes": 951
+    },
+    "ITOM_110_BUILD.json": {
+      "sha256": "20c5ecb5b040c481507539e366089f22431c200a79cc57d371492219f56d7634",
+      "bytes": 25870
+    },
+    "ANDROID_BUILD.json": {
+      "sha256": "a5a0fea09b809253943405b91ac840ea6dabcfc68e356b1adbe99f30bce810fb",
+      "bytes": 2532
+    },
+    "RELEASE_NOTES.md": {
+      "sha256": "15d082f566bc3759cd87a03fdc3212328de88fe463c3d643f70beb4cadd6526c",
+      "bytes": 3416
+    },
+    "SOURCE_COMMIT": {
+      "sha256": "5e0a0e8938aa7d96bfc2468764060d29c70af88a1fdade6fdbfb71c41622d798",
+      "bytes": 41
+    },
+    "NATIVE_SOURCE_SHA256SUMS": {
+      "sha256": "a79046e22c8d25ecc8a3ac1317e945cf6fb37246b4e5d5f773f47729e1355523",
+      "bytes": 275
+    },
+    "ITOM_110_SOURCE_MANIFEST.json": {
+      "sha256": "fdc3b7185e98459790a625688c991e4626101b835d66676a41f45665b6811f05",
+      "bytes": 83376
+    },
+    "ARTIFACT_VALIDATION.json": {
+      "sha256": "99a44f93b77e31f9293d2cdbac4e2d2aed2ad80f7aaaa1306461bb48658a6726",
+      "bytes": 866
+    },
+    "ITOM-1.1.0-sources.zip": {
+      "sha256": "224fd4132149102a449db8187bae527be11603596f8b48de295d46fc62790dd3",
+      "bytes": 1766739
+    },
+    "SHA256SUMS": {
+      "sha256": "47635a74ac5968ecd23708ea0f1ab4a78d1aea592bdddb3e1d9f7e9a80ac0afd",
+      "bytes": 1135
+    },
+    "ITOM-1.1.0-linux-arm64.bin": {
+      "sha256": "4eaae04bb967002591b3cfec57b5d0644f0b1d775b7cc51d74721c57cfee0283",
+      "bytes": 12302308
+    },
+    "ITOM-1.1.0-linux-amd64.bin": {
+      "sha256": "5616e148f75e70734e0dab9c5ec0193447c8a592f98da125225bb1876d6500e6",
+      "bytes": 13291485
+    },
+    "ITOM-1.1.0.apk": {
+      "sha256": "f33f97e1b7fd61decc60a3b72209e8a2d11cc39d6adb8efc951adb395c02f0c5",
+      "bytes": 46545331
+    },
+    "ITOM-1.1.0-evidence.zip": {
+      "sha256": "65f861790dbd3235ee6e66e450ef160f7fb6cd0165c32dafb0fe2f4ed12d2bc2",
+      "bytes": 8308650
+    }
+  }
+}

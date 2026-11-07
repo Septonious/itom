@@ -5,9 +5,7 @@ concurrency: {group: itom-mailstream-110-final-build, cancel-in-progress: true}
 name: Build ITOM 1.1.0 final with complete acceptance
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/v1.1.0-mailbox-stream-v3"]
-    paths: [".github/workflows/itom-110-final-build.yml"]
+
 permissions: {contents: read}
 env:
   GOTOOLCHAIN: local
