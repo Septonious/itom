@@ -1,7 +1,7 @@
 # 1.1.1: retain the thirteen existing gates and compare with accepted RC18.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 # Qualify bounded control urgency and explicit normal shutdown diagnostics.
-concurrency: {group: itom-mailstream-111-final-build, cancel-in-progress: false}
+concurrency: {group: itom-mailstream-111-final-build, cancel-in-progress: true}
 name: Build ITOM 1.1.1 final with complete acceptance
 on:
   workflow_dispatch:
@@ -700,7 +700,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v6
         with: {go-version: "1.27.1", cache: false}
-      - name: Prove the only runtime changes are control bootstrap and unavailable-account feedback rotation
+      - name: Prove isolated bootstrap, fallback feedback and failed-cleanup retry changes
         run: |
           git fetch origin 474364b115fee38d174e75c0e025a108a5ebc0b9 --no-tags
           python3 archives/1.1.1/qualification/final_release_audit.py
