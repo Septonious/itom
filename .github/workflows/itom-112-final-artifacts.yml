@@ -1,9 +1,7 @@
+# Frozen after verified ITOM 1.1.2 publication; manual qualification remains available.
 name: Export verified ITOM 1.1.2 final artifacts
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/itom-1.1.2-recovery"]
-    paths: [".github/workflows/itom-112-final-artifacts.yml"]
 
 permissions: {contents: read, actions: read}
 concurrency: {group: itom-112-final-artifacts, cancel-in-progress: false}

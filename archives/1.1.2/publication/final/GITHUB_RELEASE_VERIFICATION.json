@@ -1,0 +1,122 @@
+{
+  "verified": true,
+  "release_id": 437662660,
+  "release_url": "https://github.com/Septonious/itom/releases/tag/v1.1.2",
+  "tag": "v1.1.2",
+  "source_commit": "06decfae354ec95a344005751f5091cec55a5ff5",
+  "latest_release": true,
+  "draft": false,
+  "prerelease": false,
+  "build_run_id": 42385330543,
+  "source_acceptance_run_id": 42385330360,
+  "export_run_id": 42386753436,
+  "publication_run_id": 42386987951,
+  "all_eighteen_build_jobs_passed": true,
+  "all_twenty_one_matched_models_checked": true,
+  "all_fourteen_export_files_independently_downloaded_and_verified": true,
+  "all_public_asset_digests_matched": true,
+  "previous_1_1_0_and_1_1_1_assets_unchanged": true,
+  "signed_apk_sha256": "6c96705e16d8c665bc972cd83debd9360f4a9dd617ae815a02593814f56419f9",
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "field_qualified": false,
+  "assets": [
+    {
+      "id": 721096839,
+      "name": "ANDROID_BUILD.json",
+      "size": 2532,
+      "digest": "sha256:250100a2ee3569123ff329e9d3680c4a42310aee3b706e7cd79de74ec9c7b9d5",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ANDROID_BUILD.json"
+    },
+    {
+      "id": 721096841,
+      "name": "ARTIFACT_VALIDATION.json",
+      "size": 1541,
+      "digest": "sha256:4dd3f9aea131fe23f82adcb79f9d945114283075c81b136d8d749d5dd62bb518",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ARTIFACT_VALIDATION.json"
+    },
+    {
+      "id": 721096838,
+      "name": "ITOM-1.1.2-evidence.zip",
+      "size": 7538317,
+      "digest": "sha256:377ad66a23c317d31b237b3ead550f29696ef4878f9df755253fb8fd673b6cd0",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM-1.1.2-evidence.zip"
+    },
+    {
+      "id": 721096836,
+      "name": "ITOM-1.1.2-linux-amd64.bin",
+      "size": 13297055,
+      "digest": "sha256:7601494a6168a2a7380329bb2bfb0ef7d7d42396ca1e93a497f87ecf713bd0ad",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM-1.1.2-linux-amd64.bin"
+    },
+    {
+      "id": 721096843,
+      "name": "ITOM-1.1.2-linux-arm64.bin",
+      "size": 12302110,
+      "digest": "sha256:b93d0f5981385ab81f0539c3566d55b0c8a32a7dcefb00dd54234da647b20117",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM-1.1.2-linux-arm64.bin"
+    },
+    {
+      "id": 721096855,
+      "name": "ITOM-1.1.2-sources.zip",
+      "size": 1782896,
+      "digest": "sha256:6ac6d2d9d47519119d58a1dc82cb7ab3dac3768eecf47dd29301de93dc12dc21",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM-1.1.2-sources.zip"
+    },
+    {
+      "id": 721096857,
+      "name": "ITOM-1.1.2.apk",
+      "size": 46561715,
+      "digest": "sha256:6c96705e16d8c665bc972cd83debd9360f4a9dd617ae815a02593814f56419f9",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM-1.1.2.apk"
+    },
+    {
+      "id": 721096869,
+      "name": "ITOM_112_BUILD.json",
+      "size": 34140,
+      "digest": "sha256:a3132184c9b8150892ad12c8038fc903ad508757898bbdc5f4da6ffe43584675",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM_112_BUILD.json"
+    },
+    {
+      "id": 721096870,
+      "name": "ITOM_112_SOURCE_MANIFEST.json",
+      "size": 84735,
+      "digest": "sha256:d6120c1c561053bff49748a6255159e593348bfa50c73a5a1e946cdc651009bd",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/ITOM_112_SOURCE_MANIFEST.json"
+    },
+    {
+      "id": 721096871,
+      "name": "NATIVE_SOURCE_SHA256SUMS",
+      "size": 275,
+      "digest": "sha256:58f440da5fada9f54febddcd5de975ac84b52b29f165c6376d95cb28b3ac7887",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/NATIVE_SOURCE_SHA256SUMS"
+    },
+    {
+      "id": 721096872,
+      "name": "RELEASE_NOTES.md",
+      "size": 3538,
+      "digest": "sha256:cb5965ccda805caeb7171f7dc39898ca4b08513514c2571ba394c28e86955314",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/RELEASE_NOTES.md"
+    },
+    {
+      "id": 721096885,
+      "name": "SHA256SUMS",
+      "size": 1135,
+      "digest": "sha256:5156cc92c4f2dd315f6932bac459f36ccf564351734365475892092d1c273087",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/SHA256SUMS"
+    },
+    {
+      "id": 721096887,
+      "name": "SIGNER.txt",
+      "size": 951,
+      "digest": "sha256:4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/SIGNER.txt"
+    },
+    {
+      "id": 721096888,
+      "name": "SOURCE_COMMIT",
+      "size": 41,
+      "digest": "sha256:9209549391c03edcd91f73df36b4682d41eb174b177e8f52826b33a17e2e19ba",
+      "browser_download_url": "https://github.com/Septonious/itom/releases/download/v1.1.2/SOURCE_COMMIT"
+    }
+  ]
+}

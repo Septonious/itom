@@ -1,11 +1,9 @@
+# Frozen after verified ITOM 1.1.2 publication; manual qualification remains available.
 # RC12: existing control folders, temporary account recovery and late authenticated joins.
 # RC9: interrupt streaming decoder waits and verify retained-control reply drains, throughput and prompt shutdown.
 name: ITOM 1.1.2 independent application acceptance
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/itom-1.1.2-recovery"]
-    paths: ["archives/1.1.2/source/**", ".github/workflows/itom-112-source.yml"]
 permissions: {contents: read}
 jobs:
   application:

@@ -1,3 +1,4 @@
+# Frozen after verified ITOM 1.1.2 publication; manual qualification remains available.
 # 1.1.2: preserve the seventeen final gates and add physical recovery replay.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 # Qualify bounded control urgency and explicit normal shutdown diagnostics.
@@ -5,9 +6,6 @@ concurrency: {group: itom-mailstream-112-final-build, cancel-in-progress: true}
 name: Build ITOM 1.1.2 final with complete acceptance
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/itom-1.1.2-recovery"]
-    paths: ["archives/1.1.2/source/**", "archives/1.1.2/qualification/**", ".github/workflows/itom-112-final-build.yml"]
 permissions: {contents: read}
 env:
   GOTOOLCHAIN: local
