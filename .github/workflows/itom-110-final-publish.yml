@@ -15,6 +15,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       EXPORT_RUN: 42357660838
       SOURCE_SHA: 474364b115fee38d174e75c0e025a108a5ebc0b9
+      RELEASE_ID: 437455679
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
@@ -46,19 +47,26 @@ jobs:
           assert Path('release-assets/SOURCE_COMMIT').read_text().strip()==os.environ['SOURCE_SHA']
           PY
           (cd release-assets && sha256sum --check SHA256SUMS)
-      - name: Create final draft without replacing an existing release
+      - name: Resume only the existing exact matching final draft
         run: |
           set -euo pipefail
-          if gh release view v1.1.0 >/dev/null 2>&1; then
-            echo 'v1.1.0 already exists; refusing to replace it.' >&2
-            exit 1
-          fi
-          gh release create v1.1.0 --verify-tag --draft --title "ITOM 1.1.0" --notes-file release-assets/RELEASE_NOTES.md release-assets/*
+          gh api "repos/$GH_REPO/releases/$RELEASE_ID" > "$RUNNER_TEMP/draft.json"
+          python3 - <<'PYDRAFT'
+          import json,os
+          from pathlib import Path
+          r=json.loads((Path(os.environ['RUNNER_TEMP'])/'draft.json').read_text())
+          expected=json.loads(Path('archives/1.1.0/publication/final/EXPECTED_EXPORTED_ASSETS.json').read_text())
+          assert r['id']==int(os.environ['RELEASE_ID']) and r['draft'] and not r['prerelease'] and r['tag_name']=='v1.1.0'
+          assert {a['name']for a in r['assets']}==set(expected)
+          for a in r['assets']:
+              assert a['state']=='uploaded' and a['size']==expected[a['name']]['bytes']
+              assert a['digest']=='sha256:'+expected[a['name']]['sha256']
+          PYDRAFT
       - name: Redownload and verify every GitHub release asset
         run: |
           set -euo pipefail
           gh release download v1.1.0 --dir release-readback
-          gh api "repos/$GH_REPO/releases/tags/v1.1.0" > "$RUNNER_TEMP/release.json"
+          gh api "repos/$GH_REPO/releases/$RELEASE_ID" > "$RUNNER_TEMP/release.json"
           python3 - <<'PY'
           import hashlib,json,os
           from pathlib import Path
@@ -76,8 +84,7 @@ jobs:
       - name: Publish definitive release
         run: |
           set -euo pipefail
-          gh release edit v1.1.0 --draft=false --prerelease=false --latest
-          gh api "repos/$GH_REPO/releases/tags/v1.1.0" > FINAL_RELEASE.json
+          gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" -F draft=false -F prerelease=false -f make_latest=true > FINAL_RELEASE.json
           python3 - <<'PY'
           import json
           from pathlib import Path
