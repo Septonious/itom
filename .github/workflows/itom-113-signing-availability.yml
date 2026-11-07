@@ -1,0 +1,24 @@
+name: Check existing ITOM Android signing configuration
+on:
+  push:
+    branches: [codex/itom-1.1.3-mobile]
+    paths: [".github/workflows/itom-113-signing-availability.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  signing-availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ITOM_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 || secrets.ITOM_ANDROID_KEYSTORE_BASE64 }}
+      ITOM_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - name: Report configured project signing fields without exposing values
+        run: |
+          python3 - <<'PY'
+          import json, os
+          fields={name:bool(os.environ.get(name)) for name in ('ITOM_KEYSTORE_B64','ITOM_STORE_PASSWORD','ITOM_KEY_ALIAS','ITOM_KEY_PASSWORD')}
+          print(json.dumps({'configured':fields,'complete':all(fields.values())}))
+          PY
