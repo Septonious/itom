@@ -1,0 +1,58 @@
+{
+  "ANDROID_BUILD.json": {
+    "bytes": 2532,
+    "sha256": "788751be91f9a958b9669eaec11593b75310f303bf609585568f4cdc93e0d40f"
+  },
+  "ARTIFACT_VALIDATION.json": {
+    "bytes": 1097,
+    "sha256": "faf3f29cc43c2a2771b3197af5e5a504f83a74194d6a7ede39841fb3ff09b8eb"
+  },
+  "ITOM-1.1.1-evidence.zip": {
+    "bytes": 5039815,
+    "sha256": "e388131c30197f14884e9959f2d291d06798f1fb0404b41aaddba2cd67a81b2f"
+  },
+  "ITOM-1.1.1-linux-amd64.bin": {
+    "bytes": 13300789,
+    "sha256": "16faffd90b2c08f470d2b872ee055936b30ebc7a02e3941e866a1994d2efcbf7"
+  },
+  "ITOM-1.1.1-linux-arm64.bin": {
+    "bytes": 12301868,
+    "sha256": "59a2449e965ac6ba1f1c2ebf4846c0e1affa025488d5e758122623d93cdb5ca7"
+  },
+  "ITOM-1.1.1-sources.zip": {
+    "bytes": 1772353,
+    "sha256": "126a03ae3425115aa4aa6461011f728f1a104a5f0feacad5a09c9fcc57ef0194"
+  },
+  "ITOM-1.1.1.apk": {
+    "bytes": 46561715,
+    "sha256": "d4d6740b7e65a658b17807dd48ed327d497c066d37bf057b8b505eb8d6bf1c8e"
+  },
+  "ITOM_111_BUILD.json": {
+    "bytes": 29614,
+    "sha256": "9057dd1575ee2dbd1dc404885bfaf5d7da33249d29ceee964dda6cb6c97c36d6"
+  },
+  "ITOM_111_SOURCE_MANIFEST.json": {
+    "bytes": 83789,
+    "sha256": "4e56b10d548574539a92c1218a86dfcd2ab4ff56e061f2db796953b7b0d8b592"
+  },
+  "NATIVE_SOURCE_SHA256SUMS": {
+    "bytes": 275,
+    "sha256": "666ac2a165ec1022789c50355b71118433a07edb5d4f9294f164af65e3070794"
+  },
+  "RELEASE_NOTES.md": {
+    "bytes": 2646,
+    "sha256": "f6cef16751b1086cf320500d3f05b249db1d39df645192cf25a065cd2bc3885f"
+  },
+  "SHA256SUMS": {
+    "bytes": 1135,
+    "sha256": "192f12120623b6b7bfe2f5b7fcd33cb81d1340cce01e829ae6f9efd76ae6a335"
+  },
+  "SIGNER.txt": {
+    "bytes": 951,
+    "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d"
+  },
+  "SOURCE_COMMIT": {
+    "bytes": 41,
+    "sha256": "a9c66060a627b2392e2d4dfe4f6e0db341d6010b7a0f2e1b98058791147862ae"
+  }
+}

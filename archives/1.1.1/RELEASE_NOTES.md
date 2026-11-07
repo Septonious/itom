@@ -12,7 +12,7 @@ verification, selection and inventory stages.
 
 Feedback advances from the physical account that accepted the previous burst.
 Unavailable accounts no longer concentrate receipt traffic on the first healthy
-account. All-healthy scheduling, congestion windows and polling are unchanged.
+account. Congestion windows and polling are unchanged.
 
 Update both endpoints: install the APK over the existing app and upload the
 matching Linux .bin to /tmp, then use server-manager option 18. The APK uses

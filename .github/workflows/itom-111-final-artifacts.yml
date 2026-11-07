@@ -1,0 +1,101 @@
+name: Export verified ITOM 1.1.1 final artifacts
+on:
+  workflow_dispatch:
+  push:
+    branches: ["codex/itom-1.1.1-startup"]
+    paths: [".github/workflows/itom-111-final-artifacts.yml"]
+
+permissions: {contents: read, actions: read}
+concurrency: {group: itom-111-final-artifacts, cancel-in-progress: false}
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_CI_SHA: 6ccdb6d2a408dcddadd0ea26d1cc840c6acb350a
+      SOURCE_SHA: 6ccdb6d2a408dcddadd0ea26d1cc840c6acb350a
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require exact source and successful matched builds and acceptance
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_SHA" "$SOURCE_CI_SHA" --no-tags
+          git diff --exit-code "$SOURCE_SHA" "$SOURCE_CI_SHA" -- archives/1.1.1/source
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.1/source
+          gh api "repos/$GH_REPO/actions/runs/42362639047" > "$RUNNER_TEMP/build.json"
+          gh api "repos/$GH_REPO/actions/runs/42362639047/jobs?filter=all&per_page=100" > "$RUNNER_TEMP/jobs.json"
+          gh api "repos/$GH_REPO/actions/runs/42362639023" > "$RUNNER_TEMP/acceptance.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          for name in ('build','acceptance'):
+              run=json.loads((root/(name+'.json')).read_text())
+              assert run['head_sha']==os.environ['SOURCE_SHA' if name=='build' else 'SOURCE_CI_SHA'] and run['status']=='completed' and run['conclusion']=='success'
+          executions=json.loads((root/'jobs.json').read_text())['jobs']
+          latest={}
+          for job in executions:
+              key=(job.get('run_attempt',1),job['id'])
+              prior=latest.get(job['name'])
+              if prior is None or key>(prior.get('run_attempt',1),prior['id']):latest[job['name']]=job
+          jobs=list(latest.values())
+          assert {j['name']for j in jobs}=={'safety','throughput','field-replay','upload-replay','corporate-replay','home-service-replay','repeated-cleanup-replay','recovered-client-replay','short-runs','mobile-replay','linux','android','paged-collection','release-audit','repeat-field-replay','mixed-startup','degraded-accounts'}
+          assert all(j['conclusion']=='success'for j in jobs)
+          PY
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-111-final-linux-*", merge-multiple: true, run-id: 42362639047, github-token: "${{ github.token }}", path: release-assets}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-android-evidence, run-id: 42362639047, github-token: "${{ github.token }}", path: android-evidence}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-111-final-apk-part*", merge-multiple: true, run-id: 42362639047, github-token: "${{ github.token }}", path: apk-parts}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-signing-tools, run-id: 42362639047, github-token: "${{ github.token }}", path: signing-tools}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-safety, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-safety}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-throughput, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-throughput}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-field-replay, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-field}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-upload-replay, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-upload}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-corporate-replay, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-corporate}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-home-service, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-home}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-repeated-cleanup, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-repeated}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-recovered-client, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-recovered/recovered-client}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-short-runs, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-short}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-mobile-replay, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-mobile}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-paged-collection, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-paged}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-release-audit, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-audit}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-repeat-field, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-repeat}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-111-final-mixed-startup, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-mixed}
+      - uses: actions/download-artifact@v4
+        with: {artifact-ids: "13570666692", merge-multiple: true, run-id: 42362639047, github-token: "${{ github.token }}", path: evidence/hosted-degraded/degraded-accounts}
+      - name: Verify source fingerprints, all model gates, signature and exact export bytes
+        run: python3 archives/1.1.1/publication/final/verify_export.py
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-1.1.1-signed-Android, path: release-assets/ITOM-1.1.1.apk, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-1.1.1-server-amd64, path: release-assets/ITOM-1.1.1-linux-amd64.bin, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with: {name: ITOM-1.1.1-server-arm64, path: release-assets/ITOM-1.1.1-linux-arm64.bin, if-no-files-found: error, retention-days: 90}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.1.1-sources-and-evidence
+          path: |
+            release-assets/*
+            !release-assets/*.apk
+            !release-assets/*.bin
+          if-no-files-found: error
+          retention-days: 90
