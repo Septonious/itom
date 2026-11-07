@@ -1,0 +1,100 @@
+name: Publish verified ITOM 1.1.3 testing downloads
+on:
+  push:
+    branches: [codex/itom-1.1.3-mobile]
+    paths: [".github/workflows/itom-113-test-downloads.yml", "testing/1.1.3/downloads/**"]
+  workflow_dispatch:
+permissions: {contents: write, actions: read}
+concurrency: {group: itom-113-test-downloads, cancel-in-progress: false}
+jobs:
+  downloads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: d7a1b4c0d74aa77e9e5379c5c79b742b20ae20a3
+      TAG: v1.1.3-testing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "17"}
+      - name: Require exact tested source and all safety checks
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_SHA" --no-tags
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.3/source archives/1.1.3/qualification
+          gh api "repos/$GH_REPO/actions/runs/42411063426" > build-run.json
+          gh api "repos/$GH_REPO/actions/runs/42411063426/jobs?filter=latest&per_page=100" > build-jobs.json
+          gh api "repos/$GH_REPO/actions/runs/42411063427" > acceptance-run.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          for filename in ('build-run.json','acceptance-run.json'):
+              r=json.loads(Path(filename).read_text())
+              assert r['head_sha']==os.environ['SOURCE_SHA'] and r['status']=='completed'
+          assert json.loads(Path('acceptance-run.json').read_text())['conclusion']=='success'
+          jobs=json.loads(Path('build-jobs.json').read_text())['jobs']
+          assert len(jobs)==19 and all(j['status']=='completed' for j in jobs)
+          assert {j['name']for j in jobs if j['conclusion']!='success'}=={'recovery-pressure'}
+          recovery=next(j for j in jobs if j['name']=='recovery-pressure')
+          assert [s['name']for s in recovery['steps']if s['conclusion']=='failure']==['Three download/upload speedtests with physically retained captured debt']
+          assert all(next(j for j in jobs if j['name']==n)['conclusion']=='success'for n in ('safety','linux','android','release-audit','radio-native'))
+          print('18 safety/build gates and independent acceptance verified; known throughput miss retained.')
+          PY
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-113-final-linux-*", merge-multiple: true, run-id: 42411063426, github-token: "${{ github.token }}", path: linux-input}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-113-final-android-evidence, run-id: 42411063426, github-token: "${{ github.token }}", path: android-input}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "mailstream-113-final-apk-part*", merge-multiple: true, run-id: 42411063426, github-token: "${{ github.token }}", path: apk-parts}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-113-final-signing-tools, run-id: 42411063426, github-token: "${{ github.token }}", path: signing-tools}
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-113-final-recovery-pressure, run-id: 42411063426, github-token: "${{ github.token }}", path: recovery-input}
+      - name: Restore exact signed APK and prepare public testing assets
+        run: python3 testing/1.1.3/downloads/publish-test-files.py
+      - name: Create a testing draft without changing an existing release
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'Testing release already exists; refusing to overwrite it.' >&2
+            exit 1
+          fi
+          gh release create "$TAG" --target "$SOURCE_SHA" --draft --prerelease --title "ITOM 1.1.3 testing" --notes-file test-release-assets/README-TESTING.txt test-release-assets/*
+      - name: Download and verify every asset before exposing the testing release
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --dir release-readback
+          gh api "repos/$GH_REPO/releases?per_page=100" > releases.json
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          expected=json.loads(Path('EXPECTED_TEST_ASSETS.json').read_text())
+          actual={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}for p in Path('release-readback').iterdir()if p.is_file()}
+          assert actual==expected
+          rows=json.loads(Path('releases.json').read_text())
+          matches=[r for r in rows if r['tag_name']==os.environ['TAG']]
+          assert len(matches)==1 and matches[0]['draft'] and matches[0]['prerelease']
+          release=matches[0]
+          assert {a['name']for a in release['assets']}==set(expected)
+          for asset in release['assets']:
+              assert asset['state']=='uploaded' and asset['size']==expected[asset['name']]['bytes']
+              if asset.get('digest'):assert asset['digest']=='sha256:'+expected[asset['name']]['sha256']
+          with Path(os.environ['GITHUB_ENV']).open('a')as f:f.write('RELEASE_ID='+str(release['id'])+'\n')
+          Path('TEST_RELEASE_READBACK.json').write_text(json.dumps({'verified':True,'release_id':release['id'],'files':actual},indent=2)+'\n')
+          PY
+      - name: Expose prerelease downloads while retaining the current final release
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" -F draft=false -F prerelease=true -f make_latest=false > TEST_RELEASE.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('TEST_RELEASE.json').read_text())
+          assert not r['draft'] and r['prerelease'] and r['tag_name']=='v1.1.3-testing'
+          print(r['html_url'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: ITOM-1.1.3-testing-download-verification, path: "*TEST*.json", if-no-files-found: warn}
