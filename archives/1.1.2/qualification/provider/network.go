@@ -20,7 +20,8 @@ type network struct {
 	readBitsPerSecond, writeBitsPerSecond int64
 	readNext, writeNext                   time.Time
 	bitsPerSecond                         int64
-	dipAfter, dipDuration time.Duration
+	dipStart time.Time
+	dipDuration time.Duration
 	dipBitsPerSecond int64
 	rtts                                  []time.Duration
 	step                                  time.Duration
@@ -52,7 +53,7 @@ func (n *network) serializationEnd(begin time.Time, bits, baseRate int64) time.T
 		rate := baseRate
 		var boundary time.Time
 		if n.dipBitsPerSecond > 0 {
-			start := n.start.Add(n.dipAfter)
+			start := n.dipStart
 			end := start.Add(n.dipDuration)
 			if begin.Before(start) {
 				boundary = start

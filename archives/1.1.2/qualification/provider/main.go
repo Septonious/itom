@@ -571,7 +571,7 @@ func run() error {
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
 	if *rateDip {
 		if *clientMbps != 100 || *clientUpload != 0 || *clientDownload != 0 { return errors.New("rate dip requires shared 100 Mbps link") }
-		clientNet.dipAfter, clientNet.dipDuration, clientNet.dipBitsPerSecond = 10*time.Second, 15*time.Second, 1_000_000
+		clientNet.dipStart, clientNet.dipDuration, clientNet.dipBitsPerSecond = clientNet.start.Add(10*time.Second), 15*time.Second, 1_000_000
 	}
 	if *clientUpload > 0 {
 		clientNet.readBitsPerSecond = *clientUpload * 1_000_000

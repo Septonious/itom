@@ -6,7 +6,8 @@ mailbox-stream rewrite. Each keeps its own pinned IMAP client library. It does
 not change RC2's transport, grant controller, cryptography, cleanup or timings.
 The cores run in separate processes against a freshly restarted provider each
 time. Source fingerprints and failures are retained. No live accounts, server
-credentials or uploaded customer diagnostics are used.
+credentials or raw uploaded customer diagnostics are used. The physical recovery
+fixture uses only an anonymous aggregate per-account debt vector from field review.
 
 The only version-specific adapter permits the local origin. RC2's existing
 `itomtest` entry point enables its local-exit policy with the **default real TLS
@@ -92,3 +93,32 @@ existing fixture maps its public test destination to a local TLS origin. Binding
 the loopback fixtures to port 53 requires that local permission. Each repeat
 uses a separate test process because Go caches trusted system roots per process
 and each fixture generates a fresh private CA. TLS verification stays enabled.
+
+
+For 1.1.2, `recovery_regressions.py` first reproduces five faults against the
+published 1.1.1 source and then runs those exact tests against the candidate.
+`check_physical_recovery.py` verifies three 20-second, 16-stream download/upload
+cycles with 447,052,294 actual generated old DATA bytes. It permits one initial
+upload of at least 90 Mbps during cold recovery, as explicitly accepted by the
+user after a 96/146 Mbps replay; the other seven phases must exceed 120 Mbps.
+All ownership proofs and physical limits remain required. No 150 Mbps guarantee
+is inferred from a peak.
+
+The optional `--client-rate-dip --client-mbps 100 --mobile-latency` case imposes
+a shared 100/1/100 Mbps link, with a 15-second low-rate interval beginning ten
+seconds after provider startup. Its absolute bandwidth clock is independent of
+phase-relative RTT resets. Serialization integrates service across both dip
+boundaries, so traffic queued earlier cannot bypass the low rate. Client IMAP
+path RTT cycles through 30, 55, 100 and 70 ms. A 30-second application echo
+observation permits the transient serialization backlog to drain; normal models
+retain their three-second echo deadline. Record every loaded latency spike.
+Subsequent complete transfers must average at least 30 Mbps on the restored
+100 Mbps link. This stability model is distinct from the ordinary 120 Mbps
+throughput gate on the 500 Mbps link.
+
+`TestServerCleansOwnedMailAfterAbruptClientPowerLoss` cuts all phone sockets
+without graceful close or final acknowledgement. The surviving server must empty
+owned partial DATA and control mail, preserve unrelated mail, and perform every
+STORE/EXPUNGE itself. The phone's mutation count must stay zero. Its two-second
+test expiry accelerates the production server's unchanged 30-second idle expiry;
+no transport timer or congestion setting is altered for qualification.
