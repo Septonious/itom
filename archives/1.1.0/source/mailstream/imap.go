@@ -1308,6 +1308,7 @@ type mailPipe struct {
 	generationDebug   atomic.Uint32
 	confirmed         uint32
 	consumed          imap.UIDSet
+	consumedMIMEBytes int
 	allowExpunge      atomic.Bool
 	validity          uint32
 	service           time.Duration
@@ -1455,6 +1456,7 @@ func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error)
 	p.validity = selected.UIDValidity
 	p.service = time.Since(begin)
 	p.consumed = nil
+	p.consumedMIMEBytes = 0
 	p.latency.Store(int64(p.service))
 	if tail {
 		p.after = selected.NumMessages
@@ -1563,6 +1565,12 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 					p.conn.NetConn().Close()
 					cmd.Close()
 					return ErrProtocol
+				}
+				if p.rotate != nil {
+					// The receiver has the exact MIME size and consumed-UID proof.
+					// Carry this total into retirement so a small incoming generation
+					// can use the same byte-bounded fast collection as outgoing DATA.
+					p.consumedMIMEBytes += len(raw)
 				}
 				packets, err := decodeMail(raw)
 				if err == nil {

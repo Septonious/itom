@@ -256,7 +256,7 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 		if box == nil || box.Name != a.link.segmentFolder(id, false, slot) || box.NumMessages != segmentAppends || p.after != segmentAppends || !ok || len(uids) != segmentAppends {
 			return ErrProtocol
 		}
-		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, remote: true, retired: true}
+		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, bytes: p.consumedMIMEBytes, remote: true, retired: true}
 		// SELECT implicitly leaves the drained mailbox without expunging it. No
 		// storage mutation or reclamation command runs on the delivery reader.
 		parking := a.link.dataFolder(id, false) + "-p"

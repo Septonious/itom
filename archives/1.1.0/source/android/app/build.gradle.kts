@@ -46,7 +46,9 @@ android {
 }
 // AGP creates local tests for debug by default; qualify the shipped release too.
 androidComponents {
-    beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = true }
+    beforeVariants(selector().withBuildType("release")) { builder ->
+        (builder as com.android.build.api.variant.HasUnitTestBuilder).enableUnitTest = true
+    }
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 dependencies {

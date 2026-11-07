@@ -408,10 +408,15 @@ func TestLargeGenerationUsesOneInventoryPerTurn(t *testing.T) {
 	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
 	key := segmentKey{session: SessionID{1}}
 	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
+	// Noncritical control debt must not consume a turn that can refund 32 MiB.
+	a.maintenance.requested = true
+	a.maintenance.controlBytes = 512 << 10
+	a.spent += 512 << 10
+	a.reserved += 512 << 10
 	var joined sync.WaitGroup
 	inFlight := 0
 	a.processCleanup(cleanupJob{account: a, key: key, record: rec}, &p, make(chan error, 1), &inFlight, &joined)
-	if c.snapshot().Paused || a.spent != 0 || len(a.segments) != 0 || p.client.Mailbox().NumMessages != 0 {
+	if c.snapshot().Paused || a.spent != 512<<10 || len(a.segments) != 0 || p.client.Mailbox().NumMessages != 0 {
 		t.Fatal("complete audited turn did not release charge", a.spent, c.snapshot())
 	}
 	if f.inventories != 1 || f.oversized != 0 {

@@ -10,12 +10,13 @@ import (
 // owner never wait for this optional operation. Parking preempts its raw IO.
 func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, completed chan error, inFlight *int, wait *sync.WaitGroup) {
 	c := a.link.reclaimer
-	// Only real control-byte pressure can donate a ready DATA collection turn.
-	// Historical folder sweeps must not starve the exact current-session
-	// collection that is already able to release physical capacity.
+	// A ready DATA generation can release much more physical capacity than
+	// a small control tail. Only imminent message-count backpressure donates
+	// its turn; ordinary control maintenance remains independently scheduled.
+	// Historical sweeps must not starve exact current-session collection.
 	a.mu.Lock()
 	job.record.refused = job.record.refused || a.collectionPaged
-	maintenance := a.maintenance.requested && (max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= reservationQuantum/2 || a.controlMessagePressureLocked())
+	maintenance := a.maintenance.requested && a.controlMessagePressureLocked()
 	if maintenance {
 		job.record.queued = false
 	}

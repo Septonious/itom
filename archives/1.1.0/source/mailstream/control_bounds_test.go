@@ -297,3 +297,49 @@ func TestRouteAnnouncementsReserveBeforePublication(t *testing.T) {
 		t.Fatal("route publication lost its reservation", a.controlQueued, a.controlMessageReservationsLocked())
 	}
 }
+
+// Retirement uses actual, length-verified MIME bytes, including headers/base64,
+// rather than guessing that an incoming generation with no sender ledger is small.
+func TestIncomingGenerationCarriesAuditedMIMEBytes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	accounts, _ := applicationMailServer(t, true, false)
+	p, e := openMailPipe(ctx, accounts[0])
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer p.close()
+	const folder = "itom-incoming-mime-proof"
+	if e = p.client.Create(folder, nil).Wait(); e != nil {
+		t.Fatal(e)
+	}
+	total := 0
+	for i := 0; i < 128; i++ {
+		raw := encodeMail(append(header(sealed, SessionID{1}, uint64(i+1)), bytes.Repeat([]byte("x"), 1024+i)...))
+		total += len(raw)
+		cmd, e := p.startAppend(folder, raw)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = cmd.Wait(); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if _, e = p.selectLog(folder, false); e != nil {
+		t.Fatal(e)
+	}
+	p.rotate = func(context.Context) error { return ErrClosed }
+	if e = p.receive(ctx, make(chan []byte, 128)); !errors.Is(e, ErrClosed) {
+		t.Fatal(e)
+	}
+	uids, ok := p.consumed.Nums()
+	if !ok || len(uids) != 128 || p.consumedMIMEBytes != total {
+		t.Fatal("incoming MIME proof mismatch", len(uids), p.consumedMIMEBytes, total)
+	}
+	if _, e = p.selectLog(folder, false); e != nil {
+		t.Fatal(e)
+	}
+	if p.consumedMIMEBytes != 0 {
+		t.Fatal("new generation reused a previous MIME total")
+	}
+}
