@@ -1,0 +1,11 @@
+{
+  "core/cmd/itom/main.go": "b40f14adfcac1ac8ab6fd63963a1acd3af6a9c2a00b821eb0fdf6cd8b2c1c5d8",
+  "core/manager/trace.go": "fb5d41c812af726388ed3f1b027ac673c64e612bf3001ea65df852f778f80314",
+  "core/tunnel/api.go": "4530a63aeef0cae86cfc47689585c7c66f6e43150c001b15a02b98cc1cdaa8c3",
+  "core/tunnel/server.go": "51ca544f2ea419f48876e9862e1833e98156e9f8ce577e1ee2e073c28854b4d3",
+  "mailstream/append_writers.go": "388a6f8977ef58db91e71ddf9feb2a42c7b16812ddc78ade57856122904148fb",
+  "mailstream/imap.go": "05dad37b2d16617e58c4c4b44c12be1e99cea50b6d05dbd8f9000e6f39357b88",
+  "mailstream/maintenance.go": "8dd52cf715d3100ed9501f7229f97aef6fe95cf0ecdca7b8b73c9e292a0eb69f",
+  "mailstream/reclamation.go": "bc1fdc57a481b0457150d45428a8c4ee1d8e8a9c21577a0813c71e51396e50ed",
+  "mailstream/startup.go": "4120cda711d3a5b26112977e7f603f52a61e599c79b52f59dd5cf86ac95b0f2c"
+}

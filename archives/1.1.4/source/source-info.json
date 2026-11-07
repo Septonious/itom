@@ -1,0 +1,13 @@
+{
+  "version": "1.1.4",
+  "release": "Final",
+  "revision": "itom-1-1-4-final",
+  "archive_name": "ITOM-1.1.4-sources.zip",
+  "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
+  "qualification": "Pending verification of four real lines per account and concurrent-user isolation; existing controller, protocol and physical mailbox limits retained.",
+  "android_version_name": "1.1.4",
+  "android_version_code": 10149,
+  "android_application_id": "org.itom.client",
+  "build_allowed": true,
+  "field_ready_baseline": "MAILSTREAM-RC18 source 59f062d5120946185700607af32ce89dd1aafb73"
+}

@@ -1,0 +1,10 @@
+{
+  "revision": "itom-1-1-4-final",
+  "status": "testing; qualification pending",
+  "baseline_commit": "d7a1b4c0d74aa77e9e5379c5c79b742b20ae20a3",
+  "connections_per_account": 4,
+  "controller_unchanged": true,
+  "server_only_cleanup": true,
+  "physical_caps_unchanged": true,
+  "field_performance_qualified": false
+}
