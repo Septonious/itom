@@ -11,7 +11,6 @@ func TestPacingOnlyFollowsObservedCongestionUntilBulkIdle(t *testing.T) {
 	if w.pacingRate(now) != 0 {
 		t.Fatal("slow DATA alone enabled pacing on a quiet shared path")
 	}
-	w.observeInteractive(900*time.Millisecond, now.Add(-100*time.Millisecond))
 	w.observeInteractive(900*time.Millisecond, now)
 	if w.pacingRate(now) == 0 || w.pacingRate(now.Add(5*time.Second)) == 0 {
 		t.Fatal("observed congested burst stopped smoothing before bulk idle")

@@ -4,8 +4,11 @@ The new `native-tun` frontend runs the actual native client and gVisor TCP/TUN
 path. Its separate application stack exchanges IPv4 packets over a nonblocking
 Unix datagram pair. Both fixture descriptors request 4 MiB socket buffers to
 avoid injecting packet-send errors; physical provider wire shaping is unchanged.
+Actual send/receive socket buffer sizes are recorded in `QualificationTUNBuffers`.
 `QualificationAppTCP` belongs to the application fixture; the `Native` TCP
-counters belong to the production native stack. Do not conflate them.
+counters belong to the production native stack. Do not conflate them. The
+reference receives the same observation-only native diagnostic fields, with
+its published controller and all protocol/cleanup code unchanged.
 
 The optional mobile-tail profile models a changing client-to-IMAP path with
 30, 50, 180, 70, 35, 250, 80 and 45 ms delays. This is a generated hypothesis,
@@ -17,7 +20,9 @@ download/upload cycles. Base64 MIME overhead consumes part of that wire budget.
 cancelled while awaiting headers as well as partial responses. Every delivered
 byte is checked, aggregate progress is required, and upload bodies must finish
 with exact byte-count agreement. Aborted/completed request counts stay in the
-result. The pre-existing strict cancellation mode is unchanged. Independent
+result. Per-phase loaded-ping samples are retained, so a stalled reference phase does
+not make an overall latency percentile look deceptively favorable. The
+pre-existing strict cancellation mode is unchanged. Independent
 `--upload-streams 6` exercises fewer productive streams alongside the stress
 case with 43 streams; neither is claimed to reproduce the phone exactly.
 

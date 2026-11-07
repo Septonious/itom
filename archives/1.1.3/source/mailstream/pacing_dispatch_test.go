@@ -50,9 +50,9 @@ func TestMeasuredBulkBurstLeavesInteractivePublicationImmediate(t *testing.T) {
 	s.delivery.rate = 512 << 10
 	s.delivery.base = 200 * time.Millisecond
 	s.delivery.saturatedBase = 300 * time.Millisecond
+	s.delivery.bulkRTT = 2 * time.Second
 	s.delivery.last = time.Now()
 	s.delivery.controlBase = 200 * time.Millisecond
-	s.delivery.observeInteractive(900*time.Millisecond, time.Now().Add(-100*time.Millisecond))
 	s.delivery.observeInteractive(900*time.Millisecond, time.Now())
 	s.mu.Unlock()
 	for range 20 {

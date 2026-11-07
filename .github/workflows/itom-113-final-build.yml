@@ -1,5 +1,5 @@
 # Unpublished mobile-feedback candidate; publication requires full acceptance.
-# 1.1.3: preserve the seventeen final gates and add physical recovery replay.
+# Preserve the eighteen final gates and add native mobile transition coverage.
 # Independent service-cost and delayed-FETCH models retain all strict misses.
 # Qualify bounded control urgency and explicit normal shutdown diagnostics.
 concurrency: {group: itom-mailstream-113-final-build, cancel-in-progress: true}
@@ -854,6 +854,8 @@ jobs:
           git fetch origin 06decfae354ec95a344005751f5091cec55a5ff5 --no-tags
           mkdir published-112
           git archive 06decfae354ec95a344005751f5091cec55a5ff5 archives/1.1.2/source | tar -x -C published-112
+          # Same atomic observations on both stacks; reference transport stays published 1.1.2.
+          cp archives/1.1.3/source/native/traffic_diagnostics.go published-112/archives/1.1.2/source/native/traffic_diagnostics.go
           for upload_streams in 6 43; do
             for variant in reference candidate; do
               source="$GITHUB_WORKSPACE/archives/1.1.3/source/core"

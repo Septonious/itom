@@ -32,9 +32,10 @@ func (nativeHost) Route(string) string   { return "VPN" }
 func (h nativeHost) Startup(string) bool { return h.ctx.Err() == nil }
 
 type nativePerformanceClient struct {
-	client *mobile.Client
-	app    *stack.Stack
-	fd     int
+	client     *mobile.Client
+	app        *stack.Stack
+	fd         int
+	tunBuffers [2][2]int
 }
 
 func (c *nativePerformanceClient) Close() error {
@@ -48,6 +49,7 @@ func (c *nativePerformanceClient) Diagnostics() string {
 	if json.Unmarshal([]byte(c.client.Diagnostics()), &out) != nil {
 		return c.client.Diagnostics()
 	}
+	out["QualificationTUNBuffers"] = map[string]any{"requested_bytes": 4 << 20, "socket_send_receive_bytes": c.tunBuffers}
 	stats := c.app.Stats()
 	out["QualificationAppTCP"] = map[string]uint64{"segments_sent": stats.TCP.SegmentsSent.Value(), "segments_received": stats.TCP.ValidSegmentsReceived.Value(), "retransmits": stats.TCP.Retransmits.Value(), "timeouts": stats.TCP.Timeouts.Value(), "send_errors": stats.TCP.SegmentSendErrors.Value(), "dropped": stats.DroppedPackets.Value()}
 	raw, _ := json.Marshal(out)
@@ -102,6 +104,17 @@ func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, front
 			}
 		}
 	}
+	var buffers [2][2]int
+	for i, fd := range pair {
+		for j, option := range []int{unix.SO_SNDBUF, unix.SO_RCVBUF} {
+			buffers[i][j], e = unix.GetsockoptInt(fd, unix.SOL_SOCKET, option)
+			if e != nil {
+				unix.Close(pair[0])
+				unix.Close(pair[1])
+				return fail(e)
+			}
+		}
+	}
 	if e = client.Attach(pair[0]); e != nil {
 		unix.Close(pair[1])
 		return fail(e)
@@ -129,5 +142,5 @@ func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, front
 		return fail(e2)
 	}
 	app.SetRouteTable([]tcpip.Route{{Destination: subnet, NIC: 1}})
-	return &nativePerformanceClient{client, app, pair[1]}, nil
+	return &nativePerformanceClient{client, app, pair[1], buffers}, nil
 }

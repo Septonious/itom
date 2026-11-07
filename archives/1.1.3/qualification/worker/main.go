@@ -460,6 +460,7 @@ func run() (err error) {
 		if e := mark(); e != nil {
 			return e
 		}
+		loadedStart := len(r.LoadedMS)
 		begin := time.Now()
 		up.mu.Lock()
 		up.start = begin
@@ -608,7 +609,7 @@ func run() (err error) {
 				elapsed := completed.Sub(begin).Seconds()
 				ur["full_phase_mbps"] = float64(ur["verified_bytes"].(uint64)) * 8 / elapsed / 1e6
 				dr["full_phase_mbps"] = float64(dr["verified_bytes"].(uint64)) * 8 / elapsed / 1e6
-				r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "deadline_aborted_downloads": abortedDownloads.Load(), "completed_downloads": completedDownloads.Load(), "elapsed_seconds": elapsed, "send_seconds": duration.Seconds(), "upload": ur, "download": dr, "success": joined == nil})
+				r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "deadline_aborted_downloads": abortedDownloads.Load(), "completed_downloads": completedDownloads.Load(), "elapsed_seconds": elapsed, "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "send_seconds": duration.Seconds(), "upload": ur, "download": dr, "success": joined == nil})
 				return joined
 			case <-tick.C:
 				ms, e := ping()

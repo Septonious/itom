@@ -12,6 +12,8 @@ def load(root):
     assert m['frontend'] == 'native-tun' and m['timed_speedtest']
     assert m['native_unchanged'] and m['mailstream_unchanged'] and all(m['core_unchanged'].values())
     assert d['diagnostics']['QualificationAppTCP']['send_errors'] == 0, 'packet loss in the TUN test fixture'
+    assert d['diagnostics']['Native']['TCPSendErrors'] == 0, 'packet send failure in the native TUN stack'
+    assert d['diagnostics']['Native']['TUNDroppedPackets'] == 0
     assert d['diagnostics']['Client']['ActiveLines'] == d['diagnostics']['Client']['TotalLines'] == 30
     assert d['diagnostics']['Mail']['failed_accounts'] == 0
     assert not d['diagnostics']['Session']['closed']
@@ -24,6 +26,8 @@ def load(root):
     return dict(first_16_mbps=[sum(p[p['name']]['half_second_mbps'][:32])/32 for p in d['Phases']],
                 full_phase_mbps=[p[p['name']]['full_phase_mbps'] for p in d['Phases']],
                 loaded_p95_ms=samples[int((len(samples)-1)*.95)], loaded_max_ms=max(samples),
+                phase_loaded_p95_ms=[sorted(p['loaded_ms'])[int((len(p['loaded_ms'])-1)*.95)] for p in d['Phases']],
+                tun_socket_buffers=d['diagnostics']['QualificationTUNBuffers'],
                 application_fixture_tcp=d['diagnostics']['QualificationAppTCP'],
                 native_tcp={k: d['diagnostics']['Native'].get(k) for k in ('TCPRetransmits', 'TCPTimeouts', 'TCPSendErrors', 'TUNDroppedPackets')})
 

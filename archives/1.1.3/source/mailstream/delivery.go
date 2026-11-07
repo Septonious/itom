@@ -33,7 +33,6 @@ type deliveryWindow struct {
 	saturatedBytes          int
 	controlRTT, controlBase time.Duration
 	controlSlowUntil        time.Time
-	controlSlowSince        time.Time
 	horizon                 time.Duration
 	adaptive                bool
 }
@@ -74,18 +73,13 @@ func (w *deliveryWindow) observeInteractive(sample time.Duration, now time.Time)
 		// Small DATA and pings use the independent control carrier. Their
 		// queued receipts expose a shared access-link backlog, unlike a
 		// slow full-body FETCH. Drain bulk before browsing stalls.
-		if sample <= max(750*time.Millisecond, 2*w.controlBase+250*time.Millisecond) {
-			w.controlSlowSince = time.Time{}
-			return
-		}
-		if w.controlSlowSince.IsZero() {
-			w.controlSlowSince = now
-		}
-		// One delayed provider callback need not represent a shared-link queue.
-		// Confirm sustained delay across separate receipt intervals; severe
-		// delay still protects interactive traffic immediately.
-		if sample >= 2*time.Second || now.Sub(w.controlSlowSince) >= 100*time.Millisecond {
-			w.pacer.guarded = true
+		if sample > max(750*time.Millisecond, 2*w.controlBase+250*time.Millisecond) {
+			// A control-provider tail alone does not prove that bulk filled
+			// the shared access queue. Keep immediate flight protection below,
+			// but sustain pacing only with bulk-delay evidence or severe delay.
+			if sample >= 2*time.Second || w.bulkRTT > max(w.base, w.saturatedBase)+250*time.Millisecond {
+				w.pacer.guarded = true
+			}
 			w.controlSlowUntil = now.Add(2 * time.Second)
 			w.limit = min(w.allowance(), max(initialDeliveryWindow, int(w.rate*.75)))
 		}
@@ -269,7 +263,6 @@ func (w *deliveryWindow) sent(n int, now time.Time, bulk bool) deliveryMark {
 		w.firstSent = now
 		if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
 			w.pacer.guarded = false
-			w.controlSlowSince = time.Time{}
 			w.saturatedBase = 0
 			clear(w.saturatedSamples[:])
 			w.saturatedBytes = 0

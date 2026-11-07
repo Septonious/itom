@@ -4,9 +4,10 @@ Qualification is in progress. This source is not a published or field-verified
 release and does not establish a live-network throughput or RTT guarantee.
 
 The controller retains its learned full-body DATA path when pacing temporarily
-stops it from filling the flight allowance. Slow control callbacks must persist
-across separate receipt intervals before bulk protection activates; severe delay
-still activates protection immediately. Initial flight, memory and mailbox
+stops it from filling the flight allowance. Slow control callbacks still reduce the
+flight allowance immediately. Persistent pacing requires DATA-delay evidence as
+well, so control-provider stalls alone do not train a slow permanent pacer. Severe
+control delay still activates protection immediately. Initial flight, memory and mailbox
 limits remain unchanged.
 
 Native diagnostics include existing cumulative TCP retransmission, timeout,
