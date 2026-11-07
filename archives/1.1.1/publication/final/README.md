@@ -29,3 +29,8 @@ unchanged for comparison or rollback.
 [Verified export](https://github.com/Septonious/itom/actions/runs/42364106147)
 was downloaded again as four archives. All fourteen files, the APK v3 signer
 and both JNI hashes matched. See ARTIFACT_EXPORT_VERIFICATION.json.
+
+Published [ITOM 1.1.1](https://github.com/Septonious/itom/releases/tag/v1.1.1)
+as a final/latest release with fourteen verified assets. The publishing job
+redownloaded all release assets before publication; the public API digests
+matched again afterwards. See GITHUB_RELEASE_VERIFICATION.json.

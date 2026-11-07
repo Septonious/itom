@@ -2,9 +2,7 @@
 # RC9: interrupt streaming decoder waits and verify retained-control reply drains, throughput and prompt shutdown.
 name: ITOM 1.1.1 independent application acceptance
 on:
-  push:
-    branches: ["codex/itom-1.1.1-startup"]
-    paths: ["archives/1.1.1/source/**", ".github/workflows/itom-111-source.yml"]
+  workflow_dispatch:
 permissions: {contents: read}
 jobs:
   application:

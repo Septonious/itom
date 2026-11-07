@@ -1,10 +1,6 @@
 name: Export verified ITOM 1.1.1 final artifacts
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/itom-1.1.1-startup"]
-    paths: [".github/workflows/itom-111-final-artifacts.yml"]
-
 permissions: {contents: read, actions: read}
 concurrency: {group: itom-111-final-artifacts, cancel-in-progress: false}
 jobs:

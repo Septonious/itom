@@ -1,9 +1,6 @@
 name: Publish verified ITOM 1.1.1 final release
 on:
   workflow_dispatch:
-  push:
-    branches: ["codex/itom-1.1.1-startup"]
-    paths: [".github/workflows/itom-111-final-publish.yml"]
 permissions: {contents: write, actions: read}
 concurrency: {group: itom-111-final-publish, cancel-in-progress: false}
 jobs:
