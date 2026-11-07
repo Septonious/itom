@@ -1,0 +1,473 @@
+{
+  "schema": 1,
+  "classification": "REV5_LAB_QUALIFIED_PRERELEASE",
+  "all_internal_gates_passed": true,
+  "prerelease_eligible": true,
+  "stable_release_ready": false,
+  "field_limitations": [
+    "Whole-app mobile fatal stack unavailable; cause unconfirmed.",
+    "No physical phone or live Rambler qualification.",
+    "Router issue confirmed by user after reset; regular Speedtest-app error remains unconfirmed without matching server diagnostics."
+  ],
+  "generated_utc": "2026-10-15T21:09:30.896549+00:00",
+  "qualification_source_sha256": "e2c7e85f63007b301ab020ed6fa9b39676db49e0d23f75259384c1b149b28fc0",
+  "first_party_core_runtime_sha256": "697b556a675e01176fc7bcfe9e34553662cbe65788b19cdeabe52778b11dc236",
+  "go": "go version go1.27.1 linux/amd64",
+  "core": {
+    "packages": [
+      "itom.local/core/adminapi",
+      "itom.local/core/adminserver",
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 895,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_optional": []
+  },
+  "imap_fork_tests": "passed",
+  "vet": "passed",
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "field_repetitions": [
+    {
+      "repetitions": 3,
+      "cases_per_repetition": 32,
+      "server_commit_delay_ms": 0,
+      "all_passed": true,
+      "required_cases": [
+        "TestRev4FieldSparseUIDHistoryCannotStarveNewDATA",
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+        "TestRev5Historical180SlotsBootstrapWithoutForgivingDebt",
+        "TestRev5Historical180SlotsTLSFifteenAccounts",
+        "TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover",
+        "TestRev5PacedAccountDoesNotShrinkHealthyPoolOrRTT",
+        "TestRev5ProviderStateRetryDoesNotWeakenUIDProof",
+        "TestRev5PacedBodiesYieldWithoutRestartingHealthyReceiver",
+        "TestRev5PerSocketPacingCalibration",
+        "TestRev5PacedDownloadKeepsApplicationsAndNextPrefixUsable",
+        "TestRev5FastLargeBodyPagesKeepAmortizedFetches",
+        "TestRev5ProbePhasePreservesCountClockAndRejectsUnloadedDirection",
+        "TestRev5PeerReadSeparatesUnloadedPropagationFromBodyPacing",
+        "TestRev5SmallBodiesKeepBatchingOnMobilePropagation",
+        "TestRev5KnownPeerBodiesBoundColdAdmissionWithoutBlockingUnknown",
+        "TestRev5KnownPeerLeaseExpiryWakesWithoutExternalTraffic",
+        "TestRev5AccountDATARecoverySharesAuthenticatedBudget",
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable",
+        "TestServerNoticeBroadcastAcrossSessions",
+        "TestRev5SplitBulkDoesNotDisplacePrimedShortReader"
+      ],
+      "log_sha256": [
+        "3a8336eeae103aff41f9b695bd65d947a1e2ed995f82f1f407d2587c92d42a70",
+        "058e1044ea3028bae587d417a321e1fa1660b97d8500058039621cd19f14c09a",
+        "388a2a061d48427f67d048357a12990dab3b316afb52aef217bb4311be6371eb"
+      ]
+    },
+    {
+      "repetitions": 1,
+      "cases_per_repetition": 32,
+      "server_commit_delay_ms": 12,
+      "all_passed": true,
+      "required_cases": [
+        "TestRev4FieldSparseUIDHistoryCannotStarveNewDATA",
+        "TestRev4HTTPPhasesKeepMessagesUsable",
+        "TestRev4DelayedBodiesAndReaderRestartsKeepEveryTCPStream",
+        "TestRev4RetainedStateMixedTrafficAndNextTransfer",
+        "TestRev4InterruptedBulkCannotStrandApplicationAfterRejoin",
+        "TestRev4ParallelApplicationStartupOnMobilePath",
+        "TestRev4LongBlackoutPreservesInflightTCPAndMessages",
+        "TestRev4LogicalOwnerAnswersAfterPhysicalCarrierCancellation",
+        "TestRev4OpenUsesSelectedCarrierWithRetainedLogicalActor",
+        "TestRev4OldEnvelopeCannotInterruptActivationInControlMailbox",
+        "TestRev4AuthenticatedRecoveryCannotSleepPastProviderReturn",
+        "TestRev4RepairMeasuresRecoveredPathWithoutRefundingFlight",
+        "TestRev4DelayedStreamCannotBlockHealthyStreamPrefix",
+        "TestRev4HealthyProgressDoesNotTreatVisibilityTailAsGlobalQueue",
+        "TestRev5Historical180SlotsBootstrapWithoutForgivingDebt",
+        "TestRev5Historical180SlotsTLSFifteenAccounts",
+        "TestRev5PhysicalReceiptsBoundPacedBodiesAndRecover",
+        "TestRev5PacedAccountDoesNotShrinkHealthyPoolOrRTT",
+        "TestRev5ProviderStateRetryDoesNotWeakenUIDProof",
+        "TestRev5PacedBodiesYieldWithoutRestartingHealthyReceiver",
+        "TestRev5PerSocketPacingCalibration",
+        "TestRev5PacedDownloadKeepsApplicationsAndNextPrefixUsable",
+        "TestRev5FastLargeBodyPagesKeepAmortizedFetches",
+        "TestRev5ProbePhasePreservesCountClockAndRejectsUnloadedDirection",
+        "TestRev5PeerReadSeparatesUnloadedPropagationFromBodyPacing",
+        "TestRev5SmallBodiesKeepBatchingOnMobilePropagation",
+        "TestRev5KnownPeerBodiesBoundColdAdmissionWithoutBlockingUnknown",
+        "TestRev5KnownPeerLeaseExpiryWakesWithoutExternalTraffic",
+        "TestRev5AccountDATARecoverySharesAuthenticatedBudget",
+        "TestRev5RampAbortAndRestartKeepOriginalChatUsable",
+        "TestServerNoticeBroadcastAcrossSessions",
+        "TestRev5SplitBulkDoesNotDisplacePrimedShortReader"
+      ],
+      "log_sha256": [
+        "94a6735311c8d22a944575be50c3e79f5de0c9071abcc04b1d062abb799bc61b"
+      ]
+    }
+  ],
+  "race_checks": {
+    "candidate-race-accounting": {
+      "passed_test_events": 382,
+      "failed": 0,
+      "skipped": 0
+    },
+    "candidate-race-recovery": {
+      "passed_test_events": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "candidate-admin-native-race": {
+      "passed_test_events": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "android_domain_tests": {
+    "tests": 81,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_callback_adapter_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "android_native_abis": [
+    "android/arm64",
+    "android/arm"
+  ],
+  "speed_criteria": {
+    "nominal_upload_mbps": 100,
+    "nominal_download_mbps": 100,
+    "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+    "tolerance_percent": 10,
+    "useful_upload_mbps_min": 90,
+    "useful_download_mbps_min": 90,
+    "all_loaded_rtt_ns_strictly_below": 1100000000,
+    "probe_timeouts": 0,
+    "missed_probes": 0,
+    "tail_seconds": 30
+  },
+  "speed_scenario": {
+    "streams": "both",
+    "accounts": 15,
+    "seconds": 60,
+    "repeats": 3,
+    "warmup": 10,
+    "command_delay_ms": 80,
+    "provider_mbps": 600,
+    "layout": "auto",
+    "shards": 1,
+    "visibility_delay_ms": 0,
+    "provider_sessions": 10,
+    "uid_history": 64
+  },
+  "speed_cases": [
+    {
+      "name": "single-1",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "21a8c671ee8654344a5753d02fc92553e84a3732b55f87daa9b83e50497bcff4",
+      "supervised_result": {
+        "upload_mbps": "162.708",
+        "download_mbps": "99.763",
+        "rtt_samples": "30",
+        "max_ms": "493",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "164.644",
+        "download_mbps": "97.579"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "162.687",
+        "download_mbps": "96.312"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "96.311706",
+        "max_rtt_ns": "493497235",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "single-2",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "60a6388c4f6b9c863e01b1d6c892d7b23de332e04e09bfac2ad927d7a3967f12",
+      "supervised_result": {
+        "upload_mbps": "154.883",
+        "download_mbps": "99.732",
+        "rtt_samples": "30",
+        "max_ms": "622",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "153.468",
+        "download_mbps": "98.418"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "152.070",
+        "download_mbps": "96.993"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "96.993280",
+        "max_rtt_ns": "622269537",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "single-3",
+      "streams_per_direction": 1,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "dc40d9b915f4a4be56d98654a02abf7151dc1fad956d83391c0c39958af8ce08",
+      "supervised_result": {
+        "upload_mbps": "146.110",
+        "download_mbps": "105.692",
+        "rtt_samples": "30",
+        "max_ms": "573",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "128.311",
+        "download_mbps": "114.636"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "93.271",
+        "download_mbps": "132.016"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "93.270835",
+        "max_rtt_ns": "573549079",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-1",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "634832d7f785d166b9572b1e3a35c5caa0ec7ee6524be6647bb182466ca7fa79",
+      "supervised_result": {
+        "upload_mbps": "113.067",
+        "download_mbps": "104.547",
+        "rtt_samples": "30",
+        "max_ms": "440",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "112.302",
+        "download_mbps": "105.758"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "112.381",
+        "download_mbps": "107.689"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "104.547396",
+        "max_rtt_ns": "440584639",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-2",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "3b2fbc30e02234502233bab7874ffb97d57f88985854314e5479a3f87bbf27d0",
+      "supervised_result": {
+        "upload_mbps": "108.978",
+        "download_mbps": "100.366",
+        "rtt_samples": "30",
+        "max_ms": "432",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "108.921",
+        "download_mbps": "100.873"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "109.733",
+        "download_mbps": "101.712"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "100.366199",
+        "max_rtt_ns": "432164604",
+        "accepted": "true"
+      }
+    },
+    {
+      "name": "multi-3",
+      "streams_per_direction": 24,
+      "physical_uid_history": 64,
+      "passed": true,
+      "log_sha256": "2fc4a40fb3c26fe4097775025a8d44546d8db7ff4e80ad598c7350163182aecd",
+      "supervised_result": {
+        "upload_mbps": "118.113",
+        "download_mbps": "100.087",
+        "rtt_samples": "30",
+        "max_ms": "384",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "30"
+      },
+      "supervised_tail": {
+        "duration_ms": "30000",
+        "upload_mbps": "120.490",
+        "download_mbps": "102.053"
+      },
+      "supervised_tail10": {
+        "duration_ms": "10000",
+        "upload_mbps": "110.048",
+        "download_mbps": "108.134"
+      },
+      "supervised_acceptance": {
+        "minimum_verified_mbps": "100.086579",
+        "max_rtt_ns": "384287728",
+        "accepted": "true"
+      }
+    }
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "admin_features": {
+    "server_authoritative_role": true,
+    "additional_private_key_challenge": true,
+    "durable_independent_watchdog": true,
+    "loss_timeout_seconds": 60,
+    "healthy_trial_seconds": 60,
+    "irreversible_operations_cli_only": true,
+    "native_imap_reconnect_race_test": true,
+    "real_systemd_host_tested": false,
+    "actual_server_supervisor_restart_tested": true,
+    "server_restart_recovery_ms": 32594
+  },
+  "first_candidate_failures_preserved": true,
+  "qualification_isolation": "No concurrent log analysis, compression or other builds during final speed matrix; host CPU quota two cores.",
+  "new_release_published": false,
+  "replacement_assets_published": false,
+  "pipeline_steps": [
+    {
+      "name": "candidate-python",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 0.421
+    },
+    {
+      "name": "candidate-android",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 49.059
+    },
+    {
+      "name": "candidate-core-server",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 706.457
+    },
+    {
+      "name": "candidate-field-repeated",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 738.835
+    },
+    {
+      "name": "candidate-field-commit-delay",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 259.176
+    },
+    {
+      "name": "candidate-race-accounting",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 15.408
+    },
+    {
+      "name": "candidate-race-recovery",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 27.5
+    },
+    {
+      "name": "candidate-native-vet",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 2.082
+    },
+    {
+      "name": "candidate-admin-native-race",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 53.99
+    },
+    {
+      "name": "candidate-speed",
+      "exit_code": 0,
+      "passed": true,
+      "elapsed_seconds": 546.757
+    }
+  ]
+}

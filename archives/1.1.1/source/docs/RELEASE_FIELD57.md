@@ -1,0 +1,3 @@
+# FIELD57 — latency stabilization candidate
+
+Base: FIELD56 field35. Changes: PING response reader hot hint refreshed only on successful physical APPEND; a 700ms grace interval after a hot hint expires uses 250ms IDLE audits, otherwise old intervals unchanged; diagnostic instrumentation emits a sampled reader_wake_to_fetch event when >=200ms. No DATA window changes. The secondary DATA socket startup improvement from FIELD56 remains. Roll back both client/server to FIELD56 if any disconnect, rate-loss, RTT/jitter regression or stalled READY. Test actual 20/20, idle RTT and p95 over repeated 120s idle traces, then Speedtest and model 20/130. 40/40 is a future target, not verified. Full Go1.27.1/Android gate required before release deployment.

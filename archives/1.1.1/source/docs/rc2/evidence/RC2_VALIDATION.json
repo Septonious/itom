@@ -1,0 +1,100 @@
+{
+  "schema": 5,
+  "classification": "V1_0_0_RC2_TARGETED_TESTING_BUILD",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "qualification_source_sha256": "b5192cb70c37428d9a223b075700687c7649f385c64ded18a056265ed23dac1c",
+  "first_party_core_runtime_sha256": "3f6c3c81a4b424f9f6ecc8729809890c6f6912fba7c1586682623bb8ff9542b6",
+  "generated_utc": "2026-10-17T00:12:46.051213+00:00",
+  "recovery_checks": {
+    "isolated_discovery_race": {
+      "passed": true,
+      "log_sha256": "63227c6e89bfbc46eb2eeae62e1c31b0cfdb90588b2b41de61a0e100dbabfe93",
+      "passed_test_events": 1,
+      "minimum_service_recovery_ms": 1337,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    },
+    "normal": {
+      "passed": true,
+      "log_sha256": "cd791fa6050fe8d6d854ec43efdf5c4b8010fc45dc32db337158e29d216cbc1e",
+      "passed_test_events": 6,
+      "minimum_service_recovery_ms": 1069,
+      "restored_active_lines": 20,
+      "original_tcp_retained": true,
+      "fresh_256k_transfer_verified": true,
+      "carrier_restarts": 0
+    }
+  },
+  "startup_discovery_race_timeout_observed": true,
+  "startup_discovery_race_limit_resolved": false,
+  "isolated_traced_discovery_race_rerun_passed": true,
+  "historical_rc1_capped_race_case_retested": true,
+  "capped_mixed_socket_race_passed": true,
+  "native_identity_mismatch_corrected_before_publication": true,
+  "source_runtime_identity_gate_extended": true,
+  "account_stall_routing_regressions_passed": true,
+  "deferred_nack_regressions_passed": true,
+  "multi_ramp_streams": 12,
+  "verified_mib_each_direction": 12,
+  "temporary_response_stall_ms": 2400,
+  "original_receive_generations_preserved": 20,
+  "baseline_regression_reproduced": true,
+  "baseline_log_sha256": "b33511e1f6d871353aff36a7ae5f4f53f75dc761aa2d30b9f443cb4aedd6bc32",
+  "baseline_scope": "RC1 production routing plus inert elapsed-work observation fails the new feedback-affinity and OPEN-ranking regressions. No stall recovery or throughput certificate is inferred from this deterministic reproduction.",
+  "performance_retested": false,
+  "strict_performance_passed": false,
+  "strict_performance_status": "not_retested",
+  "strict_speed_target_mbps": 100,
+  "speed_tolerance_percent": 0,
+  "jitter_target_passed": false,
+  "jitter_status": "not_retested",
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "launcher_tests_passed": 45,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "known_qualification_limit": "A repeated broader race run timed out in a 4096-byte startup discovery exchange at its unchanged 3-second deadline, before fault injection. One isolated traced race rerun passed, but no cause was established and the intermittency remains unresolved. The full failed run and rerun are included.",
+  "limitations": [
+    "Targeted checks only; complete final internal suite not run.",
+    "The repeated broader race startup-discovery timeout remains an explicit qualification limit.",
+    "Supplied field evidence is RC1; earliest failed MULTI attempts were rotated out of both traces.",
+    "No new sustained throughput or jitter certificate; strict 100 Mbps target remains unchanged.",
+    "No physical Android/provider follow-up or visual interaction qualification in this pass."
+  ]
+}

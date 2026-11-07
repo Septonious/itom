@@ -1,0 +1,106 @@
+{
+  "source_revision": "transport-rework3-rev3",
+  "go": "1.27.1",
+  "status": "passed",
+  "race": false,
+  "stage": "complete",
+  "started_utc": "2026-10-14T17:08:38Z",
+  "apk_built": false,
+  "server_built": true,
+  "imap_tested": true,
+  "core_runtime_sha256": "8baecb5a1fa38ef49600375aca76ea5db457b2a364f27a190dad9b6352cb0f24",
+  "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+  "go_version_output": "go version go1.27.1 linux/amd64",
+  "imap_fork_manifest_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+  "unstable_survival_tests": "enabled (mandatory; SKIP fails the Go gate)",
+  "tests": {
+    "packages": [
+      "itom.local/core/cmd/itom",
+      "itom.local/core/datapath",
+      "itom.local/core/flow",
+      "itom.local/core/integration",
+      "itom.local/core/journal",
+      "itom.local/core/mailbox",
+      "itom.local/core/mailcontrol",
+      "itom.local/core/manager",
+      "itom.local/core/netroute",
+      "itom.local/core/pool",
+      "itom.local/core/probe",
+      "itom.local/core/recovery",
+      "itom.local/core/secure",
+      "itom.local/core/servercfg",
+      "itom.local/core/session",
+      "itom.local/core/socks",
+      "itom.local/core/tunnel",
+      "itom.local/core/wallet",
+      "itom.local/core/wire"
+    ],
+    "passed_test_events": 808,
+    "failed": 0,
+    "skipped": 13,
+    "skipped_optional": [
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestConsecutiveConstrainedLoadsAndIdleDATARecovery"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationProductionHarness"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestSpeedtest200MbpsApplicationPhases"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestSpeedtestFragmentedMultiflowAcceptance"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestSpeedtestHeterogeneousIdleAndParallelStartup"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestSpeedtestMultiflowAcceptance"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestSpeedtestParallelColdStartup"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestTransport130ApplicationMeasurement"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestTransport20ApplicationAcceptance"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestTransport50ApplicationAcceptance"
+      },
+      {
+        "package": "itom.local/core/tunnel",
+        "test": "TestTransportReworkQualification"
+      }
+    ]
+  },
+  "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+  "field_performance_qualified": false,
+  "imap_fork_tests": "passed",
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "live_provider_tested": false,
+  "vet": "passed",
+  "fuzz": "seed corpus only; no timed fuzz campaign"
+}

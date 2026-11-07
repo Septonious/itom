@@ -1,0 +1,252 @@
+{
+  "schema": 3,
+  "classification": "REV9_TARGETED_TESTING_BUILD",
+  "release_tag": "v0.9.2-Rev9",
+  "stable_release_ready": false,
+  "all_internal_gates_passed": false,
+  "all_required_targeted_checks_passed": false,
+  "targeted_correctness_passed": true,
+  "final_full_suite_completed": false,
+  "user_requested_targeted_finalization": true,
+  "throughput_floor_waived_by_user": false,
+  "strict_performance_passed": false,
+  "jitter_target_ms": 100,
+  "jitter_metric": "chronological adjacent application-echo RTT absolute difference; not Speedtest jitter",
+  "jitter_target_passed": false,
+  "qualification_source_sha256": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+  "first_party_core_runtime_sha256": "b0277ce5718f2304da2c670b29f8c779edc0ea0980e6e1bebe11a6c5b23fe6b1",
+  "generated_utc": "2026-10-16T17:03:16.748078+00:00",
+  "targeted_race": {
+    "passed": true,
+    "passed_test_events": 16,
+    "log_sha256": "20bf2f278b304161ba221f8e6417104d9e196c5846c91d46b4aa02aae9bb3167"
+  },
+  "final_recovery": {
+    "passed": true,
+    "log_sha256": "39461a14a94e07a61cac4f8da4508be30420adcf1ede893ec0745f2675fda6d5"
+  },
+  "final_load": {
+    "schema": 1,
+    "release": {
+      "version": "0.9.2",
+      "release": "Rev9",
+      "revision": "transport-rework3-rev9",
+      "archive_name": "ITOM-0.9.2-Rev9-sources.zip",
+      "baseline": "0.9.2-Rev8",
+      "qualification": "Rev9 targeted field candidate: verified-TLS IP pinning and bounded hot-path optimizations; consult Rev9 validation evidence; no stable/live-provider certification",
+      "android_version_name": "0.9.2-Rev9",
+      "android_version_code": 9209,
+      "android_application_id": "org.itom.client.dev.rev7"
+    },
+    "source_sha256": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+    "go": "go version go1.27.1 linux/amd64",
+    "host": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3,
+    "gomaxprocs": "2",
+    "classification": "LABORATORY",
+    "field_qualified": false,
+    "android_device": "NOT_RUN",
+    "real_provider": "NOT_RUN",
+    "criteria": {
+      "nominal_upload_mbps": 100,
+      "nominal_download_mbps": 100,
+      "nominal_loaded_rtt_ns_strictly_below": 1000000000,
+      "tolerance_percent": 0,
+      "useful_upload_mbps_min": 100.0,
+      "useful_download_mbps_min": 100.0,
+      "all_loaded_rtt_ns_strictly_below": 1100000000,
+      "probe_timeouts": 0,
+      "missed_probes": 0,
+      "tail_seconds": 30,
+      "qualification_mode": "performance",
+      "throughput_floor_enforced": true,
+      "positive_duplex_every_second_required": false,
+      "speed_tolerance_percent": 0,
+      "rtt_tolerance_percent": 10
+    },
+    "scenario": {
+      "go": "/workspace/toolchains/go/bin/go",
+      "results": "/workspace/work/rev9/final-performance",
+      "streams": "both",
+      "accounts": 15,
+      "seconds": 60,
+      "repeats": 1,
+      "warmup": 10,
+      "command_delay_ms": 20,
+      "provider_mbps": 600,
+      "layout": "auto",
+      "shards": 1,
+      "visibility_delay_ms": 0,
+      "provider_sessions": 10,
+      "uid_history": 64,
+      "retained_state": true,
+      "stability_only": false,
+      "minimum_mbps": 100.0
+    },
+    "cases": [
+      {
+        "name": "single-1",
+        "streams_per_direction": 1,
+        "fresh_endpoint_state": false,
+        "retained_bytes_per_account": 6291456,
+        "retained_messages_per_account": 130,
+        "physical_uid_history": 64,
+        "seconds": 60,
+        "exit_code": 1,
+        "elapsed_seconds": 82.005,
+        "source_before": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+        "source_after": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+        "log": "single-1.jsonl",
+        "log_sha256": "120407cfd28e384d46171d516748d97de9212a613af956f4fa6aa058b489775e",
+        "summary": {
+          "passed": [],
+          "failed": [
+            "TestTransportReworkQualification"
+          ],
+          "skipped": [],
+          "missing_required": []
+        },
+        "ok": false
+      },
+      {
+        "name": "multi-1",
+        "streams_per_direction": 24,
+        "fresh_endpoint_state": false,
+        "retained_bytes_per_account": 6291456,
+        "retained_messages_per_account": 130,
+        "physical_uid_history": 64,
+        "seconds": 60,
+        "exit_code": 1,
+        "elapsed_seconds": 86.706,
+        "source_before": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+        "source_after": "8f2cfc2020adecf7739d63b6dc66dd16a05110d7c1d3fbce468b177398b3438d",
+        "log": "multi-1.jsonl",
+        "log_sha256": "44c7e0d089348ce56a05eee85e7d6ae3c0692cbb609f3e4c93837e9a85066ffe",
+        "summary": {
+          "passed": [],
+          "failed": [
+            "TestTransportReworkQualification"
+          ],
+          "skipped": [],
+          "missing_required": []
+        },
+        "ok": false
+      }
+    ],
+    "all_lab_cases_passed": false
+  },
+  "final_load_metrics": [
+    "supervised_load_test.go:281: supervised_result round=1 measured_ms=60000 upload_mbps=100.987 download_mbps=82.623 rtt_samples=30 p50_ms=302 p95_ms=403 max_ms=468 timeouts=0 missed=0 overlap=30 failure=<nil>",
+    "supervised_load_test.go:290: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=88.266 p95_ms=224.254 max_ms=240.997 target_ms=100 field_qualified=false",
+    "supervised_load_test.go:333: supervised_tail round=1 duration_ms=30000 upload_mbps=100.506 download_mbps=83.187",
+    "supervised_load_test.go:343: supervised_tail10 round=1 duration_ms=10000 upload_mbps=96.915 download_mbps=80.740",
+    "supervised_load_test.go:399: supervised_acceptance round=1 tier=transport-rework3-rev9-strict-throughput-no-speed-tolerance minimum_verified_mbps=80.740352 max_rtt_ns=468125804 accepted=false field_qualified=false",
+    "supervised_load_test.go:442: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=113",
+    "supervised_load_test.go:442: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=141",
+    "supervised_load_test.go:442: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=101",
+    "supervised_load_test.go:442: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=102",
+    "supervised_load_test.go:442: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=100",
+    "supervised_load_test.go:442: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=104",
+    "supervised_load_test.go:471: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true",
+    "supervised_load_test.go:281: supervised_result round=1 measured_ms=60000 upload_mbps=79.814 download_mbps=62.399 rtt_samples=30 p50_ms=399 p95_ms=647 max_ms=680 timeouts=0 missed=0 overlap=30 failure=<nil>",
+    "supervised_load_test.go:290: supervised_jitter metric=chronological_adjacent_rtt_absolute_difference samples=29 mean_ms=121.492 p95_ms=379.585 max_ms=385.628 target_ms=100 field_qualified=false",
+    "supervised_load_test.go:333: supervised_tail round=1 duration_ms=30000 upload_mbps=85.005 download_mbps=67.589",
+    "supervised_load_test.go:343: supervised_tail10 round=1 duration_ms=10000 upload_mbps=84.987 download_mbps=67.633",
+    "supervised_load_test.go:399: supervised_acceptance round=1 tier=transport-rework3-rev9-strict-throughput-no-speed-tolerance minimum_verified_mbps=62.399010 max_rtt_ns=680365106 accepted=false field_qualified=false",
+    "supervised_load_test.go:442: supervised_post_stress index=1 same_socket=true idle_gap_ms=1100 rtt_ms=140",
+    "supervised_load_test.go:442: supervised_post_stress index=2 same_socket=true idle_gap_ms=1100 rtt_ms=83",
+    "supervised_load_test.go:442: supervised_post_stress index=3 same_socket=true idle_gap_ms=1100 rtt_ms=102",
+    "supervised_load_test.go:442: supervised_post_stress index=4 same_socket=true idle_gap_ms=1100 rtt_ms=99",
+    "supervised_load_test.go:442: supervised_post_stress index=5 same_socket=true idle_gap_ms=1100 rtt_ms=101",
+    "supervised_load_test.go:442: supervised_post_stress index=6 same_socket=true idle_gap_ms=1100 rtt_ms=102",
+    "supervised_load_test.go:471: supervised_post_stress_fresh bytes=262144 integrity_verified=true original_socket_rechecked=true"
+  ],
+  "measurements": {
+    "single-1": {
+      "upload_mbps": 100.987,
+      "download_mbps": 82.623,
+      "rtt_max_ms": 468.0,
+      "timeouts": 0.0,
+      "missed": 0.0,
+      "jitter": {
+        "mean_ms": 88.266,
+        "p95_ms": 224.254,
+        "max_ms": 240.997
+      },
+      "strict_case_passed": false
+    },
+    "multi-1": {
+      "upload_mbps": 79.814,
+      "download_mbps": 62.399,
+      "rtt_max_ms": 680.0,
+      "timeouts": 0.0,
+      "missed": 0.0,
+      "jitter": {
+        "mean_ms": 121.492,
+        "p95_ms": 379.585,
+        "max_ms": 385.628
+      },
+      "strict_case_passed": false
+    }
+  },
+  "case_survival": {
+    "single-1": {
+      "same_socket_exchanges": 6,
+      "fresh_verified_bytes": 262144,
+      "original_socket_rechecked": true,
+      "full_load_and_post_load_survived": true
+    },
+    "multi-1": {
+      "same_socket_exchanges": 6,
+      "fresh_verified_bytes": 262144,
+      "original_socket_rechecked": true,
+      "full_load_and_post_load_survived": true
+    }
+  },
+  "android_build_passed": true,
+  "android_domain_tests": {
+    "tests": 82,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_app_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android_lint": {
+    "available": true,
+    "errors": 0,
+    "warnings": 0,
+    "issues": [],
+    "report_errors": [],
+    "saved_reports": [
+      "lint-results.xml",
+      "lint-results.txt"
+    ]
+  },
+  "native_host_tests_passed": true,
+  "vet_passed": true,
+  "built_targets": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "ip_pinning_implemented": true,
+  "tls_identity_and_verification_preserved": true,
+  "pin_export_round_trip_tested": true,
+  "persistent_login_reuse_tested": true,
+  "admin_pin_independent_watchdog_tested": true,
+  "real_provider_tested": false,
+  "physical_android_device_tested": false,
+  "mobile_crash_resolved": false,
+  "earlier_candidate_failure": "A supplementary race-instrumented initial bulk transfer exceeded its 15-second deadline before the final Pump optimization. It is retained separately; normal final recovery passed.",
+  "limitations": [
+    "A complete final internal suite was not rerun.",
+    "The 20 ms command-delay input is a declared low-RTT laboratory scenario, not established authenticated IMAP latency from the supplied TCP setup report.",
+    "No live Finnish VPS/Rambler or physical phone qualification was performed.",
+    "A diagnostic profiled run is not a speed certification.",
+    "The older mobile whole-app crash has no confirmed fatal-stack root cause."
+  ]
+}

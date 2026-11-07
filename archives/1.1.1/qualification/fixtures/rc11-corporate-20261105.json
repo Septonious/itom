@@ -1,0 +1,18 @@
+{
+  "source_revision": "itom-1-1-0-mailstream-rc11",
+  "endpoint_revisions_match": true,
+  "direct_network_mbps": {"download": 50, "upload": 35},
+  "speedtest_mbps": {"download": 5.59, "upload": 0.77},
+  "speedtest_rtt_ms": {"idle": 384, "download": 268, "upload": 3890},
+  "speedtest_jitter_ms": 148,
+  "ready_lines": 18,
+  "configured_lines": 30,
+  "same_failure_on_both_endpoints": {
+    "accounts": ["a02", "a03", "a05", "a10"],
+    "stage": "control_select",
+    "reason": "MAIL_CARRIER_CLOSED"
+  },
+  "cleanup_and_service_restart_restored_accounts": false,
+  "interpretation": "An unconditional CREATE precedes SELECT in this stage; its non-tagged failure maps to this exact reason. Provider-side cause is not recorded in transaction-level traces. Models separately exercise blocked redundant CREATE and temporary SELECT refusal; they are hypotheses, not provider traces.",
+  "credentials_or_payloads_included": false
+}

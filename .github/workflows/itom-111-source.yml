@@ -1,0 +1,54 @@
+# RC12: existing control folders, temporary account recovery and late authenticated joins.
+# RC9: interrupt streaming decoder waits and verify retained-control reply drains, throughput and prompt shutdown.
+name: ITOM 1.1.1 independent application acceptance
+on:
+  push:
+    branches: ["codex/itom-1.1.1-startup"]
+    paths: ["archives/1.1.1/source/**", ".github/workflows/itom-111-source.yml"]
+permissions: {contents: read}
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {GOTOOLCHAIN: local}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with: {go-version: "1.27.1", cache: false}
+      - name: Real TCP and HTTPS over TLS IMAP, including user restarts
+        working-directory: archives/1.1.1/source/mailstream
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/mailstream-evidence"
+          go test -race -json -count=1 -timeout=600s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/application.jsonl"
+          go vet ./...
+          go build ./cmd/itom-mailstream
+          ./itom-mailstream --help
+          git rev-parse HEAD > "$GITHUB_WORKSPACE/mailstream-evidence/SOURCE_COMMIT"
+          cp REWRITE.md "$GITHUB_WORKSPACE/mailstream-evidence/"
+      - name: Actual server and native SOCKS and TUN application paths
+        working-directory: archives/1.1.1/source/core
+        run: |
+          set -euo pipefail
+          go test -race -json -count=1 -timeout=180s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/core.jsonl"
+          go vet ./...
+          go build -trimpath -o "$RUNNER_TEMP/itom-server" ./cmd/itom
+      - name: Native startup cancellation and direct DNS policy
+        working-directory: archives/1.1.1/source/native
+        run: |
+          set -euo pipefail
+          go test -race -json -count=1 -timeout=120s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/native.jsonl"
+          go vet ./...
+      - name: Build and source identity checks
+        working-directory: archives/1.1.1/source
+        run: python3 tools/check_sources.py
+      - name: Pinned IMAP client completion and parser regressions
+        working-directory: archives/1.1.1/source/core/third_party/go-imap
+        run: |
+          set -euo pipefail
+          go test -race -p=1 -count=1 -timeout=120s ./... | tee "$GITHUB_WORKSPACE/mailstream-evidence/imap-library.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mailbox-stream-application-evidence-not-rc, path: mailstream-evidence/}
+# No APK/release publication: Android, retention and real-provider qualification
+# are not established by this source acceptance scenario.

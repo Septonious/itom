@@ -1,0 +1,13 @@
+{
+  "version": "1.1.1",
+  "release": "Final",
+  "revision": "itom-1-1-1-final",
+  "archive_name": "ITOM-1.1.1-sources.zip",
+  "baseline": "Clean mailbox stream rewrite; session-v2 retired outside the active source modules",
+  "qualification": "Control folder bootstrap inventories owned names before SELECT/STATUS and creates only absent folders. The accepted1.1.0controller, cleanup and hard mailbox limits are unchanged.",
+  "android_version_name": "1.1.1",
+  "android_version_code": 10146,
+  "android_application_id": "org.itom.client",
+  "build_allowed": true,
+  "field_ready_baseline": "MAILSTREAM-RC18 source 59f062d5120946185700607af32ce89dd1aafb73"
+}
