@@ -43,6 +43,11 @@ func nonexistent(e error) bool {
 // time need not resemble NOOP latency; a busy folder must not turn every retry
 // into the same unbounded STORE. Only audited UIDs advance the credit fence.
 const collectionPageSize = 256
+
+// Slow or uncertain mutations also need a message bound: many tiny control
+// records can exceed provider service time while staying far below a byte cap.
+// Only accounts that have encountered a collection failure take this path.
+const collectionRetryMessages = 32
 const collectionTimeout = 8 * time.Second
 
 // A DATA generation can contain tens of MiB even with only 128 messages.
@@ -55,11 +60,11 @@ const collectionPageBytes = 4 << 20
 // An actual refusal/unknown outcome keeps the established four-MiB retry cap.
 const collectionFirstPageBytes = 16 << 20
 
-func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
-	return mutationPageBounded(rows, fence, collectionPageBytes)
+func mutationPage(rows []*imapclient.FetchMessageBuffer, fence uint32, messageLimits ...uint64) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
+	return mutationPageBounded(rows, fence, collectionPageBytes, messageLimits...)
 }
 
-func mutationPageBounded(rows []*imapclient.FetchMessageBuffer, fence uint32, byteLimit int64) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
+func mutationPageBounded(rows []*imapclient.FetchMessageBuffer, fence uint32, byteLimit int64, messageLimits ...uint64) (owned, deferred imap.UIDSet, end uint32, count uint64, err error) {
 	sort.Slice(rows, func(i, j int) bool { return rows[i].UID < rows[j].UID })
 	var last imap.UID
 	var bytes int64
@@ -73,7 +78,7 @@ func mutationPageBounded(rows []*imapclient.FetchMessageBuffer, fence uint32, by
 		if uint32(row.UID) > fence {
 			continue
 		}
-		if count > 0 && row.RFC822Size > byteLimit-bytes {
+		if count > 0 && (row.RFC822Size > byteLimit-bytes || len(messageLimits) > 0 && count >= messageLimits[0]) {
 			full = true
 		}
 		if !full {
@@ -108,7 +113,7 @@ func (p *mailPipe) clearDeferredDeletion(uids imap.UIDSet, stage func(string)) e
 	return p.client.Store(uids, &imap.StoreFlags{Op: imap.StoreFlagsDel, Silent: true, Flags: []imap.Flag{imap.FlagDeleted}}, nil).Close()
 }
 
-func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool) (uidWatermark, uint64, bool, error) {
+func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, target uidWatermark, whole bool, messageLimits ...uint64) (uidWatermark, uint64, bool, error) {
 	c.folder(folder)
 	c.stage("maintenance_select")
 	selected, e := p.client.Select(folder, nil).Wait()
@@ -156,7 +161,7 @@ func (p *mailPipe) collectPrefix(c *ReclamationCoordinator, folder string, targe
 	if selected.NumMessages > count && last != 0 && uint32(last) < target.UID {
 		target.UID = uint32(last)
 	}
-	owned, deferred, fence, removed, e := mutationPage(rows, target.UID)
+	owned, deferred, fence, removed, e := mutationPage(rows, target.UID, messageLimits...)
 	if e != nil {
 		return uidWatermark{}, 0, false, e
 	}
@@ -225,6 +230,10 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	remote, start, cin, cout, boundary := m.remoteRead, m.remoteStartOut, m.clearedIn, m.clearedOut, m.boundaryOut
 	historical := idle || a.historyRequiredLocked()
 	recovering := historical && !m.recoveryReady
+	pageMessages := uint64(collectionPageSize)
+	if a.collectionPaged {
+		pageMessages = collectionRetryMessages
+	}
 	a.mu.Unlock()
 	if idle {
 		l.mu.Lock()
@@ -247,6 +256,10 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	}
 	retry := c.retryFolder(a)
 	a.mu.Lock()
+	if retry != "" {
+		a.collectionPaged = true
+		pageMessages = collectionRetryMessages
+	}
 	inventoried := m.inventoried
 	a.mu.Unlock()
 	if historical && !inventoried && retry == "" {
@@ -331,7 +344,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	}
 
 	if eligibleIn && (!eligibleOut || !preferOut || retry == l.controlFolder(false)) {
-		proof, n, _, e := p.collectPrefix(c, l.controlFolder(false), inputTarget, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(false), inputTarget, false, pageMessages)
 		if e != nil {
 			return l.controlFolder(false), e
 		}
@@ -344,7 +357,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return l.controlFolder(false), nil
 	}
 	if eligibleOut {
-		proof, n, _, e := p.collectPrefix(c, l.controlFolder(true), outputTarget, false)
+		proof, n, _, e := p.collectPrefix(c, l.controlFolder(true), outputTarget, false, pageMessages)
 		if e != nil {
 			return l.controlFolder(true), e
 		}
@@ -359,7 +372,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 		return l.controlFolder(true), e
 	}
 	if historical && retry != "" && retry != l.controlFolder(false) && retry != l.controlFolder(true) && l.obsoleteFolder(retry, id) {
-		_, _, _, e := p.collectPrefix(c, retry, uidWatermark{}, true)
+		_, _, _, e := p.collectPrefix(c, retry, uidWatermark{}, true, pageMessages)
 		return retry, e
 	}
 	if retry != "" {
@@ -373,7 +386,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	}
 	a.mu.Unlock()
 	if folder != "" {
-		_, _, complete, e := p.collectPrefix(c, folder, uidWatermark{}, true)
+		_, _, complete, e := p.collectPrefix(c, folder, uidWatermark{}, true, pageMessages)
 		if e != nil {
 			return folder, e
 		}
@@ -499,6 +512,9 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 	if a.ctx.Err() != nil || errors.Is(ctx.Err(), context.Canceled) {
 		return
 	}
+	a.mu.Lock()
+	a.collectionPaged = true
+	a.mu.Unlock()
 	c.pause("MAINTENANCE_FAILED", a)
 }
 
@@ -571,6 +587,9 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 		if !timely {
 			reason = "MAINTENANCE_TIMEOUT"
 		}
+		a.mu.Lock()
+		a.collectionPaged = true
+		a.mu.Unlock()
 		c.pause(reason, a)
 	}
 	p.close()

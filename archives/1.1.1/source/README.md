@@ -1,11 +1,12 @@
 # ITOM 1.1.1
 
 Final Android VPN and Linux server using encrypted IMAP TCP transport. The
-accepted1.1.0controller and control polling are retained. Startup uses scoped
+accepted 1.1.0 controller and control polling are retained. Startup uses scoped
 LIST before opening the two control folders, avoiding missing-folder SELECT or
 STATUS stalls and redundant CREATE on existing folders. Large DATA collection
 uses bounded pages from its first mutation to avoid cleanup timeouts disrupting
-repeated transfers. Diagnostic rates, account names and connection counts are
+repeated transfers. After a collection failure, retries also cap each page at
+32 messages without changing healthy batching or physical credit proofs. Diagnostic rates, account names and connection counts are
 corrected. Control folders have a separate message-count guard (2,048 ordinary
 reservations plus 128 recovery), including queued and uncertain writes. Startup
 loads the remote count; restarting cannot bypass this guard. Ordinary traffic

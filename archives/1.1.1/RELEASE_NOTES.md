@@ -1,7 +1,7 @@
 # ITOM 1.1.1
 
 This final patch fixes control-folder bootstrap and feedback distribution when
-some mail accounts have not entered service. It retains the accepted RC18
+some mail accounts have not entered service. It also makes failed cleanup retries message-bounded. It retains the accepted RC18
 transport controller and every 1.1.0 DATA/control cleanup bound.
 
 Startup inventories only the two owned control-folder names before creating
@@ -19,8 +19,14 @@ matching Linux .bin to /tmp, then use server-manager option 18. The APK uses
 org.itom.client, version 1.1.1/code 10146 and the existing signing certificate.
 Profiles and credentials survive an in-place update; no profile re-export or
 manual mailbox cleanup is required. Check the app and running server both show
-1.1.1. The field capture that triggered this patch contained a 1.1.0 app and a
-server still reporting RC19, so it did not establish matched-final behavior.
+1.1.1. The initial capture contained a final app and an RC19 server. A later matched
+1.1.0 capture reached 27/30 lines and 119/168 Mbps down/up, but account a02
+remained at control bootstrap and several accounts reported EXPUNGE timeouts.
+
+After a collection refusal or timeout, that account retries with at most 32
+messages per page as well as the existing byte cap. Deferred deletion flags are
+cleared and exact UID/count proofs still precede credit release. Healthy-account
+batching is unchanged.
 
 Physical mailbox reservations remain bounded at 64 MiB per account plus a
 64 KiB recovery reserve, 128 DATA messages per generation, and 2,048 ordinary

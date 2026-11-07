@@ -454,9 +454,11 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 		}
 	}
 	pageBytes := int64(collectionFirstPageBytes)
+	pageMessages := uint64(collectionPageSize)
 	pages := 1
 	if rec.refused {
 		pageBytes = collectionPageBytes
+		pageMessages = collectionRetryMessages
 	} else if len(budgets) > 0 {
 		pages = 3
 	}
@@ -480,7 +482,7 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 	}
 	for turn := 0; ; turn++ {
 		pageStarted := time.Now()
-		page, deferred, _, count, err := mutationPageBounded(rows, ^uint32(0), pageBytes)
+		page, deferred, _, count, err := mutationPageBounded(rows, ^uint32(0), pageBytes, pageMessages)
 		if err != nil {
 			return err
 		}

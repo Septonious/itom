@@ -4,10 +4,10 @@ from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('--reference',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
 source=Path(__file__).resolve().parents[1]/'source';a.out.mkdir(parents=True,exist_ok=False)
 # Share generated TLS fixtures, never change the frozen transport implementation.
-for n in ('application_test.go','missing_bootstrap_test.go','feedback_availability_test.go'):
+for n in ('application_test.go','missing_bootstrap_test.go','feedback_availability_test.go','collection_message_retry_test.go'):
  (a.reference/'mailstream'/n).write_bytes((source/'mailstream'/n).read_bytes())
 results={}
-for label,pattern,cause in [('missing_folders','TestFirstFiveEmptyAccountsBootstrapWithoutMissingFolderSelection','control folders did not bootstrap'),('feedback_rotation','TestFeedbackBurstsRotateAcrossAvailableAccounts','receipt publications; expected')]:
+for label,pattern,cause in [('missing_folders','TestFirstFiveEmptyAccountsBootstrapWithoutMissingFolderSelection','control folders did not bootstrap'),('feedback_rotation','TestFeedbackBurstsRotateAcrossAvailableAccounts','receipt publications; expected'),('control_message_retry','TestCollectionRetriesBoundTinyMessagesAfterFailure/control','control mutation failure did not select'),('data_message_retry','TestCollectionRetriesBoundTinyMessagesAfterFailure/data','tiny-message retry did not make')]:
  for version,root in [('v110',a.reference),('candidate',source)]:
   r=subprocess.run(['go','test','-json','-count=1','-timeout=45s','-run','^'+pattern+'$','.'],cwd=root/'mailstream',capture_output=True,text=True,timeout=120)
   raw=r.stdout+r.stderr;key=version+'_'+label;(a.out/(key+'.jsonl')).write_text(raw)
