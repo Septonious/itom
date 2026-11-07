@@ -1,0 +1,101 @@
+{
+  "verified": true,
+  "source_commit": "06decfae354ec95a344005751f5091cec55a5ff5",
+  "publication_commit": "32c610a6b0608e2052a4f2e2ca63c4f27bb139fa",
+  "build_run_id": 42385330543,
+  "source_acceptance_run_id": 42385330360,
+  "export_run_id": 42386753436,
+  "export_status": "success",
+  "all_eighteen_matched_jobs_passed": true,
+  "downloaded_archives": [
+    {
+      "id": 13579681926,
+      "name": "ITOM-1.1.2-signed-Android",
+      "size_bytes": 17412744,
+      "zip_sha256": "b6f7a5c39a8372c2052e8897f7cc1b56ba79461a9f65df0a5821c0d3a9ca48ce"
+    },
+    {
+      "id": 13579367648,
+      "name": "ITOM-1.1.2-server-arm64",
+      "size_bytes": 6865616,
+      "zip_sha256": "868b85f1eca4253a289657b7649843e28edd09e5fd29a04ed63e5416fecb9681"
+    },
+    {
+      "id": 13579109537,
+      "name": "ITOM-1.1.2-sources-and-evidence",
+      "size_bytes": 9135956,
+      "zip_sha256": "6a0d7bff511656c5650e238b8b6acd9fec9096f9527346fe276cfa69184b3841"
+    },
+    {
+      "id": 13579034601,
+      "name": "ITOM-1.1.2-server-amd64",
+      "size_bytes": 7501364,
+      "zip_sha256": "999215049504d85b5bad45c4a0d29da4c527d8718299077fdadeedde2e92acb0"
+    }
+  ],
+  "verified_files": {
+    "RELEASE_NOTES.md": {
+      "sha256": "cb5965ccda805caeb7171f7dc39898ca4b08513514c2571ba394c28e86955314",
+      "bytes": 3538
+    },
+    "SIGNER.txt": {
+      "sha256": "4ff42ea275f39d1b08d8f144e7b7db061bd877e2905c5d15f87740c51ca9885d",
+      "bytes": 951
+    },
+    "NATIVE_SOURCE_SHA256SUMS": {
+      "sha256": "58f440da5fada9f54febddcd5de975ac84b52b29f165c6376d95cb28b3ac7887",
+      "bytes": 275
+    },
+    "ANDROID_BUILD.json": {
+      "sha256": "250100a2ee3569123ff329e9d3680c4a42310aee3b706e7cd79de74ec9c7b9d5",
+      "bytes": 2532
+    },
+    "ITOM-1.1.2-linux-arm64.bin": {
+      "sha256": "b93d0f5981385ab81f0539c3566d55b0c8a32a7dcefb00dd54234da647b20117",
+      "bytes": 12302110
+    },
+    "ITOM_112_BUILD.json": {
+      "sha256": "a3132184c9b8150892ad12c8038fc903ad508757898bbdc5f4da6ffe43584675",
+      "bytes": 34140
+    },
+    "ARTIFACT_VALIDATION.json": {
+      "sha256": "4dd3f9aea131fe23f82adcb79f9d945114283075c81b136d8d749d5dd62bb518",
+      "bytes": 1541
+    },
+    "ITOM-1.1.2-evidence.zip": {
+      "sha256": "377ad66a23c317d31b237b3ead550f29696ef4878f9df755253fb8fd673b6cd0",
+      "bytes": 7538317
+    },
+    "SOURCE_COMMIT": {
+      "sha256": "9209549391c03edcd91f73df36b4682d41eb174b177e8f52826b33a17e2e19ba",
+      "bytes": 41
+    },
+    "SHA256SUMS": {
+      "sha256": "5156cc92c4f2dd315f6932bac459f36ccf564351734365475892092d1c273087",
+      "bytes": 1135
+    },
+    "ITOM-1.1.2-sources.zip": {
+      "sha256": "6ac6d2d9d47519119d58a1dc82cb7ab3dac3768eecf47dd29301de93dc12dc21",
+      "bytes": 1782896
+    },
+    "ITOM-1.1.2.apk": {
+      "sha256": "6c96705e16d8c665bc972cd83debd9360f4a9dd617ae815a02593814f56419f9",
+      "bytes": 46561715
+    },
+    "ITOM_112_SOURCE_MANIFEST.json": {
+      "sha256": "d6120c1c561053bff49748a6255159e593348bfa50c73a5a1e946cdc651009bd",
+      "bytes": 84735
+    },
+    "ITOM-1.1.2-linux-amd64.bin": {
+      "sha256": "7601494a6168a2a7380329bb2bfb0ef7d7d42396ca1e93a497f87ecf713bd0ad",
+      "bytes": 13297055
+    }
+  },
+  "downloaded_apk_v3_verified": true,
+  "persistent_signer_unchanged": true,
+  "signer_certificate_sha256": "47d0d87a99b31e32d7f8b9e5f199d3155c5626c324aa7a29f93c42db1d18e0a6",
+  "rc18_baseline_artifacts_unchanged": true,
+  "rc16_reference_tag_unchanged": true,
+  "rc17_reference_tag_unchanged": true,
+  "field_qualified": false
+}

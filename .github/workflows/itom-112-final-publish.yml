@@ -1,0 +1,102 @@
+name: Publish verified ITOM 1.1.2 final release
+on:
+  workflow_dispatch:
+  push:
+    branches: ["codex/itom-1.1.2-recovery"]
+    paths: [".github/workflows/itom-112-final-publish.yml"]
+permissions: {contents: write, actions: read}
+concurrency: {group: itom-112-final-publish, cancel-in-progress: false}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      EXPORT_RUN: 42386753436
+      SOURCE_SHA: 06decfae354ec95a344005751f5091cec55a5ff5
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Require qualified source tag and completed verified export
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse v1.1.2)" = "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.2/source
+          gh api "repos/$GH_REPO/actions/runs/$EXPORT_RUN" > "$RUNNER_TEMP/export.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads((Path(os.environ['RUNNER_TEMP'])/'export.json').read_text())
+          assert r['status']=='completed' and r['conclusion']=='success'
+          PY
+      - uses: actions/download-artifact@v4
+        with: {pattern: "ITOM-1.1.2-*", merge-multiple: true, run-id: 42386753436, github-token: "${{ github.token }}", path: release-assets}
+      - name: Verify all fourteen exact exported files before release creation
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          expected=json.loads(Path('archives/1.1.2/publication/final/EXPECTED_EXPORTED_ASSETS.json').read_text())
+          actual={p.name:{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size} for p in Path('release-assets').iterdir() if p.is_file()}
+          assert len(actual)==14 and actual==expected
+          m=json.loads(Path('release-assets/ITOM_112_BUILD.json').read_text())
+          assert m['source_commit']==os.environ['SOURCE_SHA'] and m['source_tag']=='v1.1.2'
+          assert m['release']=='ITOM 1.1.2' and all(m['checks'].values()) and not m['artifact_validation_pending']
+          assert Path('release-assets/SOURCE_COMMIT').read_text().strip()==os.environ['SOURCE_SHA']
+          PY
+          (cd release-assets && sha256sum --check SHA256SUMS)
+      - name: Create final draft without replacing an existing release
+        run: |
+          set -euo pipefail
+          if gh release view v1.1.2 >/dev/null 2>&1; then
+            echo 'v1.1.2 already exists; refusing to replace it.' >&2
+            exit 1
+          fi
+          gh release create v1.1.2 --verify-tag --draft --title "ITOM 1.1.2" --notes-file release-assets/RELEASE_NOTES.md release-assets/*
+      - name: Locate the new draft by numeric release ID
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
+          python3 - <<'PYID'
+          import json,os
+          from pathlib import Path
+          rows=json.loads((Path(os.environ['RUNNER_TEMP'])/'releases.json').read_text())
+          matches=[r for r in rows if r['tag_name']=='v1.1.2']
+          assert len(matches)==1 and matches[0]['draft'] and not matches[0]['prerelease']
+          with Path(os.environ['GITHUB_ENV']).open('a') as f:f.write('RELEASE_ID='+str(matches[0]['id'])+'\n')
+          PYID
+      - name: Redownload and verify every GitHub release asset
+        run: |
+          set -euo pipefail
+          gh release download v1.1.2 --dir release-readback
+          gh api "repos/$GH_REPO/releases/$RELEASE_ID" > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          expected=json.loads(Path('archives/1.1.2/publication/final/EXPECTED_EXPORTED_ASSETS.json').read_text())
+          actual={p.name:{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size} for p in Path('release-readback').iterdir() if p.is_file()}
+          assert actual==expected
+          r=json.loads((Path(os.environ['RUNNER_TEMP'])/'release.json').read_text())
+          assert r['draft'] and not r['prerelease'] and r['tag_name']=='v1.1.2'
+          assert {a['name']for a in r['assets']}==set(expected)
+          for a in r['assets']:
+              assert a['size']==expected[a['name']]['bytes'] and a['state']=='uploaded'
+              if a.get('digest'):assert a['digest']=='sha256:'+expected[a['name']]['sha256']
+          Path('RELEASE_READBACK.json').write_text(json.dumps({'verified':True,'release_id':r['id'],'tag':r['tag_name'],'source_commit':os.environ['SOURCE_SHA'],'assets':[{k:a[k]for k in ('id','name','size','browser_download_url')}for a in r['assets']],'files':actual},indent=2)+'\n')
+          PY
+      - name: Publish definitive release
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" -F draft=false -F prerelease=false -f make_latest=true > FINAL_RELEASE.json
+          gh api "repos/$GH_REPO/releases/tags/v1.1.2" > FINAL_RELEASE.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('FINAL_RELEASE.json').read_text())
+          assert not r['draft'] and not r['prerelease'] and r['tag_name']=='v1.1.2'
+          print(r['html_url'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: ITOM-1.1.2-release-verification, path: "*RELEASE*.json", if-no-files-found: warn}
