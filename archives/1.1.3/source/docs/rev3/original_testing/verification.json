@@ -1,0 +1,363 @@
+{
+  "schema": 1,
+  "release": "0.9.2-Rev3",
+  "revision": "transport-rework3-rev3",
+  "correctness_and_builds_passed": true,
+  "strict_laboratory_qualification_passed": false,
+  "field_qualified": false,
+  "real_provider_tested": false,
+  "android_device_tested": false,
+  "core_runtime_sha256": "49016a6a2912acdc3a2418ff0649a85b9271243502157f16f999d900314bd726",
+  "qualification_source_fingerprint": "30b9ca7e0b257a557430b2f4aa9dde1198e2725d5e1546bcd9a8e22b9d5915ea",
+  "source_unchanged": true,
+  "core": {
+    "source_revision": "transport-rework3-rev3",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": false,
+    "stage": "complete",
+    "started_utc": "2026-10-14T13:16:02Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "core_runtime_sha256": "49016a6a2912acdc3a2418ff0649a85b9271243502157f16f999d900314bd726",
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "c3c558044db86a3053f41940fb97fe24dede0a39d34f5ac0016775738602c24d",
+    "unstable_survival_tests": "enabled (mandatory; SKIP fails the Go gate)",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 803,
+      "failed": 0,
+      "skipped": 13,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestConsecutiveConstrainedLoadsAndIdleDATARecovery"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtest200MbpsApplicationPhases"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestFragmentedMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestHeterogeneousIdleAndParallelStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestMultiflowAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestSpeedtestParallelColdStartup"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport130ApplicationMeasurement"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport20ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransport50ApplicationAcceptance"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestTransportReworkQualification"
+        }
+      ]
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "android": {
+    "itom": "0.9.2",
+    "source_revision": "transport-rework3-rev3",
+    "gradle": "9.3.1",
+    "agp": "9.1.1",
+    "sdk": "37",
+    "build_tools": "36.0.0",
+    "host": "Linux",
+    "started_utc": "2026-10-14T13:22:10Z",
+    "jdk_source": "local JDK 17",
+    "android_sdk": "existing SDK 37",
+    "stage": "completed",
+    "native": {
+      "gomobile": "v0.0.0-20260908204917-8b95e45f8d3e",
+      "ndk": "28.2.13676358",
+      "aar_sha256": "66f4900d52ab74f4571a942309f0ef288e8f4ed1de7f9d524720d32638023c7b",
+      "targets": [
+        "android/arm64",
+        "android/arm"
+      ],
+      "api": 29
+    },
+    "java_version": "Picked up JAVA_TOOL_OPTIONS: -Duser.home=/workspace/toolchains/android-rework/android-user -Dhttp.proxyHost=proxy -Dhttp.proxyPort=8080 -Dhttps.proxyHost=proxy -Dhttps.proxyPort=8080 -Djavax.net.ssl.trustStore=/workspace/toolchains/android-rework/session-proxy-cacerts\nopenjdk version \"17.0.16\" 2025-07-15\nOpenJDK Runtime Environment Temurin-17.0.16+8 (build 17.0.16+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.16+8 (build 17.0.16+8, mixed mode, sharing)",
+    "domain_tests": {
+      "tests": 71,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failed_cases": [],
+      "report_errors": [],
+      "available": true,
+      "task_failed_this_run": false
+    },
+    "lint": {
+      "available": true,
+      "errors": 0,
+      "warnings": 1,
+      "issues": [
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter",
+          "locations": [
+            {
+              "file": "/workspace/work/itom-rev3/itom/android/app/src/main/java/org/itom/client/Theme.kt",
+              "line": "111",
+              "column": "63"
+            }
+          ]
+        }
+      ],
+      "report_errors": [],
+      "saved_reports": [
+        "lint-results.xml",
+        "lint-results.txt"
+      ]
+    },
+    "apk_identity": {
+      "application_id": "org.itom.client.dev.rev7",
+      "version_code": 9203,
+      "version_name": "0.9.2-Rev3-debug"
+    },
+    "apk_native_libraries": {
+      "lib/arm64-v8a/libgojni.so": "1612b5e1bd72888923014359e0a53ee56ab48294a5cb56cb57e85175599d14da",
+      "lib/armeabi-v7a/libgojni.so": "9f3ff9e01d6cfbe094f2a7e04c221385c60960fa9ca18da1b773f1f8be7e4388"
+    },
+    "status": "passed",
+    "apk": "ITOM-0.9.2-Rev3-debug.apk",
+    "sha256": "220546b902d35691c05cbbb2b944d53d10e1515581e69588246f46ce75ed854e",
+    "checks": [
+      "domain:test",
+      "app:lintDebug",
+      "app:compileReleaseKotlin",
+      "app:assembleDebug"
+    ]
+  },
+  "focused_race": {
+    "pass": 59
+  },
+  "strict_cases": [
+    {
+      "case": "single-1",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "159.340",
+        "download_mbps": "97.059",
+        "rtt_samples": "60",
+        "p50_ms": "295",
+        "p95_ms": "413",
+        "max_ms": "448",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "144.494",
+        "download_mbps": "101.502"
+      },
+      "source_unchanged": true,
+      "log_sha256": "ea26664528f16fc5d5ccd06e81b6f39864fdb8b6ec09df392384cbf25d5b6eda"
+    },
+    {
+      "case": "single-2",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "140.784",
+        "download_mbps": "99.724",
+        "rtt_samples": "60",
+        "p50_ms": "313",
+        "p95_ms": "414",
+        "max_ms": "492",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "123.487",
+        "download_mbps": "109.567"
+      },
+      "source_unchanged": true,
+      "log_sha256": "acf23e58de90165d8069cfa528454e89c6757b635806078ac7882c6f6f5426a0"
+    },
+    {
+      "case": "single-3",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "143.135",
+        "download_mbps": "93.616",
+        "rtt_samples": "60",
+        "p50_ms": "291",
+        "p95_ms": "402",
+        "max_ms": "510",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "150.051",
+        "download_mbps": "97.518"
+      },
+      "source_unchanged": true,
+      "log_sha256": "a3f604b4fef28825496242301a6f8ec6611c1219d9d38160cacd7b8fff1618ed"
+    },
+    {
+      "case": "multi-1",
+      "passed": true,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "109.332",
+        "download_mbps": "103.612",
+        "rtt_samples": "60",
+        "p50_ms": "277",
+        "p95_ms": "353",
+        "max_ms": "479",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "107.680",
+        "download_mbps": "105.312"
+      },
+      "source_unchanged": true,
+      "log_sha256": "8a0cbfb89fcc42c4ed428d0befb423b255686afc3254401bbd310a3cfbba775a"
+    },
+    {
+      "case": "multi-2",
+      "passed": true,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "110.756",
+        "download_mbps": "109.214",
+        "rtt_samples": "60",
+        "p50_ms": "286",
+        "p95_ms": "395",
+        "max_ms": "441",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "107.794",
+        "download_mbps": "111.560"
+      },
+      "source_unchanged": true,
+      "log_sha256": "9b58abf030288c4569925021010d024864d5cfe3727764a95ec6421c0c0d0282"
+    },
+    {
+      "case": "multi-3",
+      "passed": false,
+      "whole": {
+        "round": "1",
+        "measured_ms": "60000",
+        "upload_mbps": "97.347",
+        "download_mbps": "106.863",
+        "rtt_samples": "60",
+        "p50_ms": "294",
+        "p95_ms": "416",
+        "max_ms": "448",
+        "timeouts": "0",
+        "missed": "0",
+        "overlap": "60",
+        "failure": "<nil>"
+      },
+      "tail": {
+        "round": "1",
+        "duration_ms": "30000",
+        "upload_mbps": "98.182",
+        "download_mbps": "107.907"
+      },
+      "source_unchanged": true,
+      "log_sha256": "7ab8a547ba1ec6cea0a94a216482b65510cf97f413225ee5bd5f909589951b6b"
+    }
+  ],
+  "limitations": [
+    "All six sixty-second intervals completed with 60/60 useful overlapping probes, no missed probes/timeouts and no useful-transfer gap failure.",
+    "Two MULTI cases pass 100/100 both sustained and tail; third upload97.347Mbps fails.",
+    "All SINGLE runs fail sustained download93.616\u201399.724Mbps, despite low RTT.",
+    "No Android/real-provider field qualification or causal account-count comparison.",
+    "Regular wrapper stress uses Rev1 operation-duration samples and excludes samples above500ms; not a calibrated provider model."
+  ]
+}

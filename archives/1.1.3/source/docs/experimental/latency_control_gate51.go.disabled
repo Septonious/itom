@@ -1,0 +1,565 @@
+package tunnel
+
+import (
+	"context"
+	"time"
+)
+
+const (
+	// The loaded application latency budget is derived from the authenticated
+	// provider path instead of a fixed global number. A 200 ms initial IMAP RTT
+	// therefore yields a 600 ms loaded target.
+	latencyTargetMargin = 400 * time.Millisecond
+
+	latencyRateSamplePeriod = time.Second
+	latencyRTTGuard         = 75 * time.Millisecond
+	latencyRTTHeadroom      = 150 * time.Millisecond
+
+	// Carrier Echo replies arrive independently. Without a control epoch a
+	// 10-account session can apply the same congestion signal roughly ten times
+	// in one second. Telemetry remains per-sample, but throttle/recovery decisions
+	// are rate-limited to one normal epoch. A very large overshoot may take one
+	// earlier emergency decision so latency still wins over throughput.
+	latencyControlPeriod          = 900 * time.Millisecond
+	latencyEmergencyControlPeriod = 300 * time.Millisecond
+
+	// The latency governor is forbidden from sacrificing the minimum useful bulk
+	// rate. The physical link may itself be slower than 10 Mbps; in that case the
+	// governor must get out of the way instead of making a 9..11 Mbps path chatter
+	// between throttled and unthrottled states.
+	latencyFloorEnterMbps = 9.5
+	latencyFloorExitMbps  = 12.0
+	latencyFloorExitRuns  = 3
+
+	// Pace no lower than this ceiling. A little headroom over the product's hard
+	// 10 Mbps floor pays for scheduling granularity and batch boundaries; if the
+	// observed delivered rate still falls below latencyFloorEnterMbps, floor
+	// bypass removes the limiter completely.
+	latencyMinBulkRateMbps = 11.0
+
+	// Pacing is intentionally allowed to burst by roughly one normal DATA mail so
+	// a low-rate ceiling does not fragment the existing 256..352 KiB collector.
+	latencyRateBurstMinBytes = 512 << 10
+	latencyRateBurstMaxBytes = 2 << 20
+)
+
+type latencyGovernor struct {
+	baselineMS int64
+	targetMS   int64
+
+	// bulkLimit caps concurrent physical bulk APPENDs. rateLimitMbps is the
+	// primary steady-state control: concurrency limits bursts, the token bucket
+	// prevents one very fast writer from outrunning cleanup even at limit=1.
+	bulkLimit     int
+	bulkInFlight  int
+	rateLimitMbps float64
+	floorBypass   bool
+
+	totalBytes uint64
+	lastBytes  uint64
+	lastRateAt time.Time
+	rateMbps   float64
+	rateEWMA   float64
+	highRuns   int
+
+	tokens      float64
+	lastTokenAt time.Time
+
+	observedRTTMS          int64
+	lastRTTAt              int64
+	lastDecisionAt         time.Time
+	decisionCount          uint64
+	emergencyDecisionCount uint64
+	goodRTTRuns            int
+}
+
+type latencyGovernorSnapshot struct {
+	BaselineMS, TargetMS, ObservedRTTMS   int64
+	BulkLimit, BulkInFlight               int
+	FloorBypass                           bool
+	RateMbps, RateEWMA, RateLimitMbps     float64
+	DecisionCount, EmergencyDecisionCount uint64
+}
+
+func newLatencyGovernor() latencyGovernor {
+	return latencyGovernor{floorBypass: true}
+}
+
+func (g *latencyGovernor) observeBaseline(rtt time.Duration) {
+	if g == nil || g.baselineMS > 0 || rtt <= 0 {
+		return
+	}
+	ms := rtt.Milliseconds()
+	if ms < 1 {
+		ms = 1
+	}
+	g.baselineMS = ms
+	g.targetMS = ms + latencyTargetMargin.Milliseconds()
+}
+
+func (g *latencyGovernor) recordBytes(n uint64) {
+	if g != nil {
+		g.totalBytes += n
+	}
+}
+
+func (g *latencyGovernor) setFloorBypass(maxBulk int) bool {
+	if g == nil || maxBulk < 1 {
+		return false
+	}
+	changed := !g.floorBypass || g.bulkLimit != maxBulk || g.rateLimitMbps != 0
+	g.floorBypass = true
+	g.bulkLimit = maxBulk
+	g.rateLimitMbps = 0
+	g.tokens = 0
+	g.lastTokenAt = time.Time{}
+	g.highRuns = 0
+	g.goodRTTRuns = 0
+	return changed
+}
+
+func (g *latencyGovernor) sampleRate(now time.Time, maxBulk int) (changed bool) {
+	if g == nil || maxBulk < 1 {
+		return false
+	}
+	if g.bulkLimit < 1 || g.bulkLimit > maxBulk || g.floorBypass {
+		if g.bulkLimit != maxBulk {
+			changed = true
+		}
+		g.bulkLimit = maxBulk
+	}
+	if g.lastRateAt.IsZero() {
+		g.lastRateAt = now
+		g.lastBytes = g.totalBytes
+		return changed
+	}
+	elapsed := now.Sub(g.lastRateAt)
+	if elapsed < latencyRateSamplePeriod {
+		return changed
+	}
+	delta := g.totalBytes - g.lastBytes
+	g.rateMbps = float64(delta*8) / elapsed.Seconds() / 1e6
+	if g.rateEWMA == 0 {
+		g.rateEWMA = g.rateMbps
+	} else {
+		g.rateEWMA = 0.65*g.rateEWMA + 0.35*g.rateMbps
+	}
+	g.lastRateAt = now
+	g.lastBytes = g.totalBytes
+
+	if !g.floorBypass && g.rateMbps < latencyFloorEnterMbps {
+		// The latency limiter is no longer allowed to be the reason useful
+		// throughput is below the product floor. Remove both rate and concurrency
+		// restrictions immediately. Re-arming requires sustained >12 Mbps, so a
+		// physical 9..11 Mbps link remains stably bypassed.
+		return g.setFloorBypass(maxBulk) || changed
+	}
+	if g.floorBypass {
+		if g.rateMbps > latencyFloorExitMbps && g.rateEWMA > latencyFloorExitMbps {
+			g.highRuns++
+		} else {
+			g.highRuns = 0
+		}
+		if g.highRuns >= latencyFloorExitRuns && g.targetMS > 0 {
+			g.floorBypass = false
+			g.highRuns = 0
+			g.goodRTTRuns = 0
+			g.bulkLimit = maxBulk
+			return true
+		}
+	}
+	return changed
+}
+
+func maxFloat(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minFloat(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func (g *latencyGovernor) rateBasis() float64 {
+	if g == nil {
+		return 0
+	}
+	basis := maxFloat(g.rateMbps, g.rateEWMA)
+	if g.rateLimitMbps > 0 && (basis <= 0 || g.rateLimitMbps < basis) {
+		basis = g.rateLimitMbps
+	}
+	return basis
+}
+
+func (g *latencyGovernor) setRateLimit(now time.Time, mbps float64) bool {
+	if g == nil || g.floorBypass {
+		return false
+	}
+	if mbps < latencyMinBulkRateMbps {
+		mbps = latencyMinBulkRateMbps
+	}
+	if mbps > 1000 {
+		mbps = 1000
+	}
+	old := g.rateLimitMbps
+	if old > 0 && mbps > old && mbps-old < 0.05 {
+		return false
+	}
+	if old == 0 && mbps <= 0 {
+		return false
+	}
+	g.refillTokens(now, 0)
+	g.rateLimitMbps = mbps
+	burst := g.rateBurstBytes(0)
+	if g.lastTokenAt.IsZero() {
+		g.lastTokenAt = now
+		g.tokens = burst
+	} else if g.tokens > burst {
+		g.tokens = burst
+	}
+	return old != g.rateLimitMbps
+}
+
+func (g *latencyGovernor) sampleRTT(rttMS, sampleAtMS int64, maxBulk int, now time.Time) bool {
+	if g == nil || rttMS <= 0 || sampleAtMS <= g.lastRTTAt || maxBulk < 1 {
+		return false
+	}
+	g.lastRTTAt = sampleAtMS
+	g.observedRTTMS = rttMS
+	if g.floorBypass || g.targetMS <= 0 {
+		return false
+	}
+	if g.bulkLimit < 1 || g.bulkLimit > maxBulk {
+		g.bulkLimit = maxBulk
+	}
+
+	// Several carrier replies from one probe cohort must be one control signal,
+	// not N multiplicative throttles. Keep the newest RTT for observability, but
+	// only alter pressure once per control epoch. A severe overshoot (> target
+	// +300 ms) may react after the shorter emergency epoch.
+	emergency := rttMS >= g.targetMS+300
+	if !g.lastDecisionAt.IsZero() {
+		minPeriod := latencyControlPeriod
+		if emergency {
+			minPeriod = latencyEmergencyControlPeriod
+		}
+		if now.Sub(g.lastDecisionAt) < minPeriod {
+			return false
+		}
+	}
+	g.lastDecisionAt = now
+	g.decisionCount++
+	if emergency {
+		g.emergencyDecisionCount++
+	}
+
+	basis := g.rateBasis()
+	changed := false
+	guard := g.targetMS - latencyRTTGuard.Milliseconds()
+	if rttMS > guard {
+		oldLimit := g.bulkLimit
+		excess := rttMS - g.targetMS
+		switch {
+		case excess >= 300:
+			g.bulkLimit = (g.bulkLimit + 1) / 2
+			if basis > 0 {
+				changed = g.setRateLimit(now, basis*0.50) || changed
+			}
+		case excess >= 100:
+			g.bulkLimit = (g.bulkLimit*2 + 2) / 3
+			if basis > 0 {
+				changed = g.setRateLimit(now, basis*0.65) || changed
+			}
+		case excess > 0:
+			g.bulkLimit = (g.bulkLimit*3 + 3) / 4
+			if basis > 0 {
+				changed = g.setRateLimit(now, basis*0.78) || changed
+			}
+		default:
+			// Guard band before the actual target. Shed one concurrent batch and
+			// roughly 10% of the current bulk rate to pay for feedback delay.
+			g.bulkLimit--
+			if basis > 0 {
+				changed = g.setRateLimit(now, basis*0.90) || changed
+			}
+		}
+		if g.bulkLimit < 1 {
+			g.bulkLimit = 1
+		}
+		g.goodRTTRuns = 0
+		return changed || g.bulkLimit != oldLimit
+	}
+
+	if rttMS < g.targetMS-latencyRTTHeadroom.Milliseconds() {
+		g.goodRTTRuns++
+		if g.goodRTTRuns >= 3 {
+			if g.bulkLimit < maxBulk {
+				g.bulkLimit++
+				changed = true
+			}
+			if g.rateLimitMbps > 0 {
+				step := maxFloat(2.0, g.rateLimitMbps*0.10)
+				changed = g.setRateLimit(now, g.rateLimitMbps+step) || changed
+			}
+			g.goodRTTRuns = 0
+		}
+	} else {
+		g.goodRTTRuns = 0
+	}
+	return changed
+}
+
+func (g *latencyGovernor) rateBurstBytes(batchBytes uint64) float64 {
+	burst := float64(latencyRateBurstMinBytes)
+	if g != nil && g.rateLimitMbps > 0 {
+		// About 200 ms worth of the current ceiling, clamped to keep queue bursts
+		// bounded even after a high-rate recovery.
+		burst = g.rateLimitMbps * 1e6 / 8 * 0.20
+		if burst < latencyRateBurstMinBytes {
+			burst = latencyRateBurstMinBytes
+		}
+		if burst > latencyRateBurstMaxBytes {
+			burst = latencyRateBurstMaxBytes
+		}
+	}
+	if float64(batchBytes) > burst {
+		burst = float64(batchBytes)
+	}
+	return burst
+}
+
+func (g *latencyGovernor) refillTokens(now time.Time, batchBytes uint64) {
+	if g == nil || g.rateLimitMbps <= 0 || g.floorBypass {
+		return
+	}
+	burst := g.rateBurstBytes(batchBytes)
+	if g.lastTokenAt.IsZero() {
+		g.lastTokenAt = now
+		g.tokens = burst
+		return
+	}
+	elapsed := now.Sub(g.lastTokenAt).Seconds()
+	if elapsed > 0 {
+		g.tokens += elapsed * g.rateLimitMbps * 1e6 / 8
+		if g.tokens > burst {
+			g.tokens = burst
+		}
+		g.lastTokenAt = now
+	}
+}
+
+func (g *latencyGovernor) snapshot() latencyGovernorSnapshot {
+	if g == nil {
+		return latencyGovernorSnapshot{}
+	}
+	return latencyGovernorSnapshot{
+		BaselineMS: g.baselineMS, TargetMS: g.targetMS, ObservedRTTMS: g.observedRTTMS,
+		BulkLimit: g.bulkLimit, BulkInFlight: g.bulkInFlight, FloorBypass: g.floorBypass,
+		RateMbps: g.rateMbps, RateEWMA: g.rateEWMA, RateLimitMbps: g.rateLimitMbps,
+		DecisionCount: g.decisionCount, EmergencyDecisionCount: g.emergencyDecisionCount,
+	}
+}
+
+func (g *stripeGroup) updateLatencyLocked(now time.Time) bool {
+	maxBulk := g.bulkCapacityLocked()
+	changed := g.latency.sampleRate(now, maxBulk)
+	rtt, at := g.loadedRTTLocked(now)
+	if g.latency.sampleRTT(rtt, at, maxBulk, now) {
+		changed = true
+	}
+	return changed
+}
+
+// maintainLatency keeps feedback alive even when every bulk producer is blocked
+// before acquireBulkRate/acquireBulkPermit (for example on remote grants or
+// journal headroom). Recovery and floor-bypass must not depend on bulk already
+// making progress. Lane heartbeats call this independently of DATA workers.
+func (g *stripeGroup) maintainLatency(now time.Time) {
+	if g == nil {
+		return
+	}
+	g.mu.Lock()
+	if g.updateLatencyLocked(now) {
+		g.signalLocked()
+	}
+	g.mu.Unlock()
+}
+
+// acquireBulkRate applies the steady-state latency ceiling before bulk DATA
+// consumes a remote grant, journal headroom or physical APPEND slot. Fast DATA,
+// control, WINDOW/RECEIPT and proof cleanup never enter this token bucket.
+func (g *stripeGroup) acquireBulkRate(ctx context.Context, payloadBytes uint64) error {
+	if g == nil {
+		return errStripeUnavailable
+	}
+	if payloadBytes == 0 {
+		return nil
+	}
+	for {
+		now := time.Now()
+		g.mu.Lock()
+		changed := g.updateLatencyLocked(now)
+		if changed {
+			g.signalLocked()
+		}
+		if g.latency.floorBypass || g.latency.rateLimitMbps <= 0 {
+			g.mu.Unlock()
+			return nil
+		}
+		g.latency.refillTokens(now, payloadBytes)
+		need := float64(payloadBytes)
+		if g.latency.tokens >= need {
+			g.latency.tokens -= need
+			g.mu.Unlock()
+			return nil
+		}
+		missing := need - g.latency.tokens
+		bytesPerSecond := g.latency.rateLimitMbps * 1e6 / 8
+		wait := time.Duration(missing / bytesPerSecond * float64(time.Second))
+		if wait < time.Millisecond {
+			wait = time.Millisecond
+		}
+		g.mu.Unlock()
+
+		timer := time.NewTimer(wait)
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return ctx.Err()
+		case <-g.wake:
+			if !timer.Stop() {
+				<-timer.C
+			}
+		case <-timer.C:
+		}
+	}
+}
+
+// acquireBulkPermit is a burst/concurrency guard. The token bucket above is the
+// primary steady-state controller because a single fast IMAP writer can outrun
+// cleanup even when concurrency has already fallen to one.
+func (g *stripeGroup) acquireBulkPermit(ctx context.Context) error {
+	if g == nil {
+		return errStripeUnavailable
+	}
+	for {
+		now := time.Now()
+		g.mu.Lock()
+		if g.updateLatencyLocked(now) {
+			g.signalLocked()
+		}
+		maxBulk := g.bulkCapacityLocked()
+		limit := g.latency.bulkLimit
+		if g.latency.floorBypass {
+			limit = maxBulk
+		}
+		if limit < 1 {
+			limit = 1
+		}
+		if g.latency.bulkInFlight < limit {
+			g.latency.bulkInFlight++
+			g.mu.Unlock()
+			return nil
+		}
+		g.mu.Unlock()
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-g.wake:
+		}
+	}
+}
+
+func (g *stripeGroup) releaseBulkPermit() {
+	if g == nil {
+		return
+	}
+	g.mu.Lock()
+	if g.latency.bulkInFlight > 0 {
+		g.latency.bulkInFlight--
+	}
+	g.signalLocked()
+	g.mu.Unlock()
+}
+
+func (g *stripeGroup) recordBulkBytes(n uint64) {
+	if g == nil || n == 0 {
+		return
+	}
+	g.mu.Lock()
+	g.latency.recordBytes(n)
+	g.mu.Unlock()
+}
+
+func (g *stripeGroup) observeProviderBaseline(rtt time.Duration) {
+	if g == nil || rtt <= 0 {
+		return
+	}
+	g.mu.Lock()
+	g.latency.observeBaseline(rtt)
+	g.mu.Unlock()
+}
+
+func (g *stripeGroup) latencySnapshot() latencyGovernorSnapshot {
+	if g == nil {
+		return latencyGovernorSnapshot{}
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.latency.snapshot()
+}
+
+// bulkCapacityLocked is the unthrottled physical capacity of this logical
+// session. Floor bypass must restore this exact capacity instead of imposing a
+// hidden fixed cap that could itself hold a slow link below 10 Mbps.
+func (g *stripeGroup) bulkCapacityLocked() int {
+	n := 0
+	for _, l := range g.lanes {
+		n += physicalSlotLimit(l)
+	}
+	if n < 1 {
+		n = 1
+	}
+	return n
+}
+
+// loadedRTTLocked returns the worst recent carrier RTT from the newest probe
+// cohort. Old samples are not allowed to repeatedly ratchet the governor down.
+func (g *stripeGroup) loadedRTTLocked(now time.Time) (rttMS, sampleAtMS int64) {
+	latest := int64(0)
+	for _, l := range g.lanes {
+		if l == nil || !l.ready.Load() {
+			continue
+		}
+		at := l.rttAt.Load()
+		if at > latest {
+			latest = at
+		}
+	}
+	if latest == 0 || now.UnixMilli()-latest > 4_000 {
+		return 0, 0
+	}
+	// Echoes are phase-staggered. Treat samples within 750 ms of the newest
+	// response as one cohort and use its maximum to protect latency tails.
+	for _, l := range g.lanes {
+		if l == nil || !l.ready.Load() {
+			continue
+		}
+		at := l.rttAt.Load()
+		if at < latest-750 {
+			continue
+		}
+		rtt := l.rtt.Load()
+		if rtt > rttMS {
+			rttMS = rtt
+		}
+	}
+	return rttMS, latest
+}

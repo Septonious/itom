@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "source": "user-provided RC10 diagnostic snapshots; field data, not a synthetic success claim",
+  "revision": "itom-1-1-0-mailstream-rc10",
+  "phases": [
+    {
+      "label": "faster_upload",
+      "speedtest_upload_mbps": 46.4,
+      "samples": [
+        {
+          "relative_seconds": 0.049,
+          "upload_transport_mbps": 7.215,
+          "delivery_rtt_ms": 334,
+          "bulk_min_receipt_rtt_ms": 230,
+          "flight_bytes": 656824,
+          "window_bytes": 657343,
+          "pending_bytes": 1296362,
+          "retained_bytes": 125449546,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 2.065,
+          "upload_transport_mbps": 21.392,
+          "delivery_rtt_ms": 355,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 1477474,
+          "window_bytes": 1503982,
+          "pending_bytes": 2987605,
+          "retained_bytes": 133483610,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 4.142,
+          "upload_transport_mbps": 33.859,
+          "delivery_rtt_ms": 401,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 2002906,
+          "window_bytes": 2023126,
+          "pending_bytes": 4038503,
+          "retained_bytes": 146037914,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 6.081,
+          "upload_transport_mbps": 46.96,
+          "delivery_rtt_ms": 406,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 2725090,
+          "window_bytes": 2748676,
+          "pending_bytes": 5482532,
+          "retained_bytes": 161235278,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 8.068,
+          "upload_transport_mbps": 50.719,
+          "delivery_rtt_ms": 389,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 2889315,
+          "window_bytes": 2908973,
+          "pending_bytes": 5811041,
+          "retained_bytes": 179086344,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 10.086,
+          "upload_transport_mbps": 52.67,
+          "delivery_rtt_ms": 495,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 3644282,
+          "window_bytes": 3656183,
+          "pending_bytes": 7288103,
+          "retained_bytes": 198194432,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 12.019,
+          "upload_transport_mbps": 57.02,
+          "delivery_rtt_ms": 497,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 3775446,
+          "window_bytes": 3785350,
+          "pending_bytes": 7550725,
+          "retained_bytes": 217249024,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 14.127,
+          "upload_transport_mbps": 59.272,
+          "delivery_rtt_ms": 456,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 4004772,
+          "window_bytes": 4004795,
+          "pending_bytes": 7977104,
+          "retained_bytes": 239460678,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 16.008,
+          "upload_transport_mbps": 29.019,
+          "delivery_rtt_ms": 230,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 82,
+          "window_bytes": 3908897,
+          "pending_bytes": 272,
+          "retained_bytes": 245401368,
+          "failed_accounts": 0
+        }
+      ]
+    },
+    {
+      "label": "slower_upload",
+      "speedtest_upload_mbps": 12.5,
+      "samples": [
+        {
+          "relative_seconds": 1.046,
+          "upload_transport_mbps": 10.233,
+          "delivery_rtt_ms": 331,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 624074,
+          "window_bytes": 624138,
+          "pending_bytes": 1247968,
+          "retained_bytes": 250840466,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 3.074,
+          "upload_transport_mbps": 8.254,
+          "delivery_rtt_ms": 319,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 558346,
+          "window_bytes": 576284,
+          "pending_bytes": 1149500,
+          "retained_bytes": 253768142,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 5.038,
+          "upload_transport_mbps": 7.584,
+          "delivery_rtt_ms": 470,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 492758,
+          "window_bytes": 524288,
+          "pending_bytes": 1018263,
+          "retained_bytes": 256062122,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 7.064,
+          "upload_transport_mbps": 8.523,
+          "delivery_rtt_ms": 335,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 755378,
+          "window_bytes": 768748,
+          "pending_bytes": 1510453,
+          "retained_bytes": 259708078,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 9.02,
+          "upload_transport_mbps": 12.313,
+          "delivery_rtt_ms": 389,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 755454,
+          "window_bytes": 777797,
+          "pending_bytes": 1543490,
+          "retained_bytes": 263801610,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 11.089,
+          "upload_transport_mbps": 15.45,
+          "delivery_rtt_ms": 362,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 1116528,
+          "window_bytes": 1122855,
+          "pending_bytes": 2232747,
+          "retained_bytes": 269605104,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 13.081,
+          "upload_transport_mbps": 17.233,
+          "delivery_rtt_ms": 568,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 1247768,
+          "window_bytes": 1270715,
+          "pending_bytes": 2522773,
+          "retained_bytes": 275942936,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 14.993,
+          "upload_transport_mbps": 13.492,
+          "delivery_rtt_ms": 340,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 754086,
+          "window_bytes": 775841,
+          "pending_bytes": 1541968,
+          "retained_bytes": 279404368,
+          "failed_accounts": 0
+        },
+        {
+          "relative_seconds": 17.025,
+          "upload_transport_mbps": 6.767,
+          "delivery_rtt_ms": 653,
+          "bulk_min_receipt_rtt_ms": 214,
+          "flight_bytes": 2670,
+          "window_bytes": 524288,
+          "pending_bytes": 2859,
+          "retained_bytes": 281546622,
+          "failed_accounts": 0
+        }
+      ]
+    }
+  ]
+}

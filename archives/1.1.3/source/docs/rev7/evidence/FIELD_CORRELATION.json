@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "classification": "SANITIZED_PAIRED_FIELD_ANALYSIS",
+  "capture_revision": "Rev6",
+  "timezone": "UTC",
+  "accounts": 15,
+  "client_window": {
+    "first": "2026-10-16T04:52:04.845Z",
+    "last": "2026-10-16T04:54:20.453Z",
+    "events": 137077
+  },
+  "server_window": {
+    "first": "2026-10-16T04:53:00.547Z",
+    "last": "2026-10-16T04:55:02.254Z",
+    "events": 124218
+  },
+  "correlated_control_failure": {
+    "first": "2026-10-16T04:52:31.460Z",
+    "last": "2026-10-16T04:52:33.280Z",
+    "client_account_carriers_exited": 15,
+    "evidence": [
+      "Physical socket read EOF",
+      "Unknown control APPEND outcome",
+      "Subsequent operations see closed sockets"
+    ],
+    "external_trigger": "UNCONFIRMED_SERVER_WINDOW_ROTATED_OUT",
+    "no_fixed_256k_threshold_established": true
+  },
+  "delayed_pair": {
+    "fourteen_ready": "2026-10-16T04:52:49.627Z",
+    "last_ready": "2026-10-16T04:52:58.134Z",
+    "earlier_hello": "2026-10-16T04:52:37.236Z",
+    "later_challenge": "2026-10-16T04:52:52.199Z",
+    "initial_startup_retained": false,
+    "display_semantics": "two directions per ready account service; not independent physical TCP socket count"
+  },
+  "overlap_target_dials": {
+    "ready": 88,
+    "denied_reserved_management_probes": 2,
+    "first_failed_speedtest_retained": false
+  },
+  "paired_pings": {
+    "count": 239,
+    "rtt_ms": {
+      "median": 351.91,
+      "p95": 672.12,
+      "max": 826.35
+    },
+    "client_queue_ms": {
+      "median": 1.44,
+      "p95": 43.51
+    },
+    "server_reply_queue_ms": {
+      "median": 2.2,
+      "p95": 79.21
+    },
+    "one_way_clock_offset_calibrated": false
+  },
+  "later_server_timeouts": {
+    "window": "2026-10-16T04:54:44Z/2026-10-16T04:54:45Z",
+    "separate_from_correlated_control_failure": true,
+    "after_client_trace_stop": true
+  },
+  "limitations": [
+    "Initial startup, earliest failed Speedtest and server side of first EOF cluster rotated out.",
+    "Physical phone and live provider not available for laboratory qualification.",
+    "Earlier whole-app mobile crash has no captured fatal stack."
+  ],
+  "private_capture_content_published": false
+}

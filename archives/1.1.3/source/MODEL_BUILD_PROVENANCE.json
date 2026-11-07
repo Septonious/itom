@@ -1,0 +1,9 @@
+{
+  "revision": "itom-1-1-3-final",
+  "status": "unpublished; qualification pending",
+  "baseline_commit": "06decfae354ec95a344005751f5091cec55a5ff5",
+  "runtime_changes": ["mailstream/delivery.go", "native/traffic_diagnostics.go"],
+  "field_performance_qualified": false,
+  "publication_approved": false,
+  "qualification": "See the exact-commit workflow artifacts; historical model results do not qualify this source."
+}
