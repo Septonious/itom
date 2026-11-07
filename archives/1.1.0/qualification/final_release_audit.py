@@ -27,7 +27,7 @@ assert set(a)-set(b)==set() and set(b)-set(a)<=allowed
 for k,v in a.items():
  if k not in allowed:assert b[k]==v,k
 # Within the bounded-collection files, every other function remains unchanged.
-collection_allowed={'*mailPipe.selectLog','*mailPipe.receive','*mailAccountState.configureSegments','*Session.dispatchLoop','storageControl','*IMAPLink.collectSegments','*mailAccountState.returnCollectionWriter','*mailPipe.reclaim','*mailAccountState.processCleanup','mutationPage','mutationPageBounded','*mailAccountState.needsMaintenanceLocked','*mailAccountState.deferMaintenanceLocked','*IMAPLink.sendRoute','*IMAPLink.sendClassMode','*mailAccountState.run','*IMAPLink.Snapshot','*mailAccountState.openControls','*mailAccountState.controlAppended','*mailAccountState.refundControlLocked'}
+collection_allowed={'*mailPipe.selectLog','*mailPipe.receive','*mailAccountState.configureSegments','*Session.dispatchLoop','storageControl','*IMAPLink.collectSegments','*mailAccountState.returnCollectionWriter','*IMAPLink.feedbackCoalesceDelay','*mailAccountState.preferRemoteCollectionLocked','*mailPipe.reclaim','*mailAccountState.processCleanup','mutationPage','mutationPageBounded','*mailAccountState.needsMaintenanceLocked','*mailAccountState.deferMaintenanceLocked','*IMAPLink.sendRoute','*IMAPLink.sendClassMode','*mailAccountState.run','*IMAPLink.Snapshot','*mailAccountState.openControls','*mailAccountState.controlAppended','*mailAccountState.refundControlLocked'}
 for name in ('storage.go','maintenance.go','reclamation.go','imap.go','startup.go','control_storage.go','peer.go','session.go'):
  reference=out/('reference-'+name);reference.write_bytes(old('mailstream/'+name))
  prior,current=ast(reference),ast(repo/(prefix+'mailstream/'+name))

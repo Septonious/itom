@@ -256,7 +256,7 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 		if box == nil || box.Name != a.link.segmentFolder(id, false, slot) || box.NumMessages != segmentAppends || p.after != segmentAppends || !ok || len(uids) != segmentAppends {
 			return ErrProtocol
 		}
-		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, bytes: p.consumedMIMEBytes, remote: true, retired: true}
+		proof := &segmentRecord{folder: box.Name, slot: slot, uids: append(imap.UIDSet(nil), p.consumed...), validity: p.validity, bytes: int(p.consumedMIMEBytes.Load()), remote: true, retired: true}
 		// SELECT implicitly leaves the drained mailbox without expunging it. No
 		// storage mutation or reclamation command runs on the delivery reader.
 		parking := a.link.dataFolder(id, false) + "-p"
@@ -289,6 +289,27 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 	}
 }
 
+// Prefer the direction near its unchanged physical cap, using consumed MIME
+// bytes for the current incoming generation as well as pending retired ones.
+// Both pressured directions (or neither) retain the established alternation.
+func (a *mailAccountState) preferRemoteCollectionLocked() bool {
+	var remoteBytes int64
+	if a.data != nil {
+		remoteBytes = a.data.consumedMIMEBytes.Load()
+	}
+	for _, rec := range a.remoteSegments {
+		if rec.retired && rec.requested && !rec.collected {
+			remoteBytes += int64(rec.bytes)
+		}
+	}
+	ownPressure := a.spent+a.queuedBytes >= prototypePhysicalBudget*3/4
+	remotePressure := remoteBytes >= prototypePhysicalBudget*3/4
+	if ownPressure != remotePressure {
+		return remotePressure
+	}
+	return a.collectRemote
+}
+
 func (l *IMAPLink) collectSegments() {
 	tick := time.NewTicker(50 * time.Millisecond)
 	defer tick.Stop()
@@ -311,6 +332,7 @@ func (l *IMAPLink) collectSegments() {
 			a := l.accounts[(start+n)%count]
 			a.mu.Lock()
 			var chosen *cleanupJob
+			preferRemote := a.preferRemoteCollectionLocked()
 			queue := func(key segmentKey, rec *segmentRecord) {
 				if rec.remote && rec.collected {
 					select {
@@ -344,7 +366,7 @@ func (l *IMAPLink) collectSegments() {
 				// lets an earlier upload monopolize collection during a download.
 				if chosen != nil {
 					if rec.remote != chosen.record.remote {
-						if rec.remote != a.collectRemote {
+						if rec.remote != preferRemote {
 							return
 						}
 					} else if !rec.readyAt.Before(chosen.record.readyAt) {

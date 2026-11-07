@@ -333,13 +333,13 @@ func TestIncomingGenerationCarriesAuditedMIMEBytes(t *testing.T) {
 		t.Fatal(e)
 	}
 	uids, ok := p.consumed.Nums()
-	if !ok || len(uids) != 128 || p.consumedMIMEBytes != total {
-		t.Fatal("incoming MIME proof mismatch", len(uids), p.consumedMIMEBytes, total)
+	if !ok || len(uids) != 128 || p.consumedMIMEBytes.Load() != int64(total) {
+		t.Fatal("incoming MIME proof mismatch", len(uids), p.consumedMIMEBytes.Load(), total)
 	}
 	if _, e = p.selectLog(folder, false); e != nil {
 		t.Fatal(e)
 	}
-	if p.consumedMIMEBytes != 0 {
+	if p.consumedMIMEBytes.Load() != 0 {
 		t.Fatal("new generation reused a previous MIME total")
 	}
 }
@@ -435,4 +435,27 @@ func TestReturnedActorCannotStrandTheMutationFIFO(t *testing.T) {
 		t.Fatal("ready account waited for an actor which had returned its writer")
 	}
 	c.release()
+}
+
+func TestCollectionHeadroomIncludesTheCurrentIncomingGeneration(t *testing.T) {
+	for _, tc := range []struct {
+		own, retired, current int
+		alternate, want       bool
+	}{
+		{63, 16, 0, true, false}, {16, 24, 30, false, true}, {60, 16, 40, true, true}, {60, 16, 40, false, false}, {16, 16, 0, true, true}, {16, 16, 0, false, false},
+	} {
+		p := &mailPipe{}
+		p.consumedMIMEBytes.Store(int64(tc.current << 20))
+		a := &mailAccountState{spent: tc.own << 20, collectRemote: tc.alternate, data: p, remoteSegments: map[segmentKey]*segmentRecord{{}: {bytes: tc.retired << 20, retired: true, requested: true}}}
+		if got := a.preferRemoteCollectionLocked(); got != tc.want {
+			t.Fatal("wrong direction or broken fair tie", tc, got)
+		}
+		a.remoteSegments[segmentKey{}].collected = true
+		a.spent = 0
+		a.collectRemote = false
+		p.consumedMIMEBytes.Store(0)
+		if a.preferRemoteCollectionLocked() {
+			t.Fatal("already collected bytes claimed scheduling priority")
+		}
+	}
 }

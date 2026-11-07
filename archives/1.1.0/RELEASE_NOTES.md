@@ -17,7 +17,12 @@ over noncritical control tails; count-pressure cleanup still wins. Returned writ
 order so deferred work cannot block ready collectors. The original two-writer
 and single-mutation bounds remain. Existing
 retirement proofs share the bounded recovery reserve and precede ordinary writes
-at a full account, so cleanup can complete while traffic is paused.
+at a full account, so cleanup can complete while traffic is paused. Cleanup
+prioritizes the direction near its physical cap, including the current incoming
+generation in that estimate; equal pressure retains fair alternation. During
+bulk traffic, feedback uses the existing eight-millisecond batching bound to
+reduce APPEND and cleanup work. Idle feedback stays at two milliseconds and
+interactive traffic retains its immediate path.
 
 Control-message growth is bounded independently of bytes: 2,048 ordinary-message
 reservations plus 128 recovery reservations per outgoing control folder, counting

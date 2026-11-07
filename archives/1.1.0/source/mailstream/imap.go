@@ -296,6 +296,20 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 	_, err := l.sendClassMode(ctx, body, true, nil, false, true)
 	return err
 }
+
+// During bulk transfer, use the same existing eight-millisecond bound as
+// bulk receipt batching. Keep a burst on one account long enough to share its
+// already-bounded MIME container instead of paying APPEND/cleanup per receipt.
+// Idle feedback remains at two milliseconds; interactive work interrupts a
+// feedback batch as before and never waits for this timer to fill a container.
+func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
+	last := l.lastBulk.Load()
+	if last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond {
+		return 8 * time.Millisecond
+	}
+	return 2 * time.Millisecond
+}
+
 func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery bool) (*mailAccountState, error) {
 	return l.sendClassMode(ctx, body, priority, exclude, recovery, false)
 }
@@ -318,7 +332,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
 	if feedback {
-		if l.feedbackAt.IsZero() || time.Since(l.feedbackAt) >= 2*time.Millisecond || l.feedbackPackets >= 16 {
+		if l.feedbackAt.IsZero() || time.Since(l.feedbackAt) >= l.feedbackCoalesceDelay() || l.feedbackPackets >= 16 {
 			l.feedbackAccount = l.roundRobin % uint64(len(l.accounts))
 			l.roundRobin++
 			l.feedbackAt, l.feedbackPackets = time.Now(), 0
@@ -945,7 +959,7 @@ func (a *mailAccountState) run() {
 		var coalesce *time.Timer
 		var coalesced <-chan time.Time
 		if work.feedback {
-			coalesce = time.NewTimer(2 * time.Millisecond)
+			coalesce = time.NewTimer(a.link.feedbackCoalesceDelay())
 			coalesced = coalesce.C
 		}
 		if !work.control {
@@ -1308,7 +1322,7 @@ type mailPipe struct {
 	generationDebug   atomic.Uint32
 	confirmed         uint32
 	consumed          imap.UIDSet
-	consumedMIMEBytes int
+	consumedMIMEBytes atomic.Int64
 	allowExpunge      atomic.Bool
 	validity          uint32
 	service           time.Duration
@@ -1456,7 +1470,7 @@ func (p *mailPipe) selectLog(folder string, tail bool) (*imap.SelectData, error)
 	p.validity = selected.UIDValidity
 	p.service = time.Since(begin)
 	p.consumed = nil
-	p.consumedMIMEBytes = 0
+	p.consumedMIMEBytes.Store(0)
 	p.latency.Store(int64(p.service))
 	if tail {
 		p.after = selected.NumMessages
@@ -1570,7 +1584,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 					// The receiver has the exact MIME size and consumed-UID proof.
 					// Carry this total into retirement so a small incoming generation
 					// can use the same byte-bounded fast collection as outgoing DATA.
-					p.consumedMIMEBytes += len(raw)
+					p.consumedMIMEBytes.Add(int64(len(raw)))
 				}
 				packets, err := decodeMail(raw)
 				if err == nil {
