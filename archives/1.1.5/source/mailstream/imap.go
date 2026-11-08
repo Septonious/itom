@@ -808,7 +808,13 @@ func (a *mailAccountState) run() {
 	var carry *mailWork
 	var operation *writerOperation
 	keepalives := false
+	keepaliveDue := false
 	for {
+		select {
+		case <-keepalive.C:
+			keepaliveDue = true
+		default:
+		}
 		// NOOP is sent only at an APPEND fence. Do not put application literals
 		// behind its uncertain result, or close a writer with unpublished DATA.
 		if keepalives {
@@ -863,6 +869,41 @@ func (a *mailAccountState) run() {
 				continue
 			}
 		}
+		if keepaliveDue && inFlight == 0 && !a.parking.Load() {
+			keepaliveDue = false
+			a.mu.Lock()
+			controlWriter := a.controlWriter
+			a.mu.Unlock()
+			for _, target := range []struct {
+				p    *mailPipe
+				last *time.Time
+			}{{writer, &lastWrite}, {controlWriter, &lastControlWrite}} {
+				if target.p == nil || inFlight == 4 || time.Since(*target.last) < 30*time.Second {
+					continue
+				}
+				stopNoop := target.p.limit(5 * time.Second)
+				cmd := target.p.client.Noop()
+				*target.last = time.Now()
+				inFlight++
+				keepalives = true
+				appendWait.Add(1)
+				go func() {
+					defer appendWait.Done()
+					err := cmd.Wait()
+					if !stopNoop() && err == nil {
+						err = context.DeadlineExceeded
+					}
+					select {
+					case completed <- err:
+					case <-a.ctx.Done():
+					}
+				}()
+			}
+			if keepalives {
+				continue
+			}
+		}
+
 		if operation == nil {
 			select {
 			case op := <-a.writerOps:
@@ -991,37 +1032,7 @@ func (a *mailAccountState) run() {
 					case <-controlWriterClosed:
 						continue
 					case <-keepalive.C:
-						if inFlight != 0 {
-							continue
-						}
-						a.mu.Lock()
-						controlWriter := a.controlWriter
-						a.mu.Unlock()
-						for _, target := range []struct {
-							p    *mailPipe
-							last *time.Time
-						}{{writer, &lastWrite}, {controlWriter, &lastControlWrite}} {
-							if target.p == nil || inFlight == 4 || time.Since(*target.last) < 30*time.Second {
-								continue
-							}
-							stopNoop := target.p.limit(5 * time.Second)
-							cmd := target.p.client.Noop()
-							*target.last = time.Now()
-							inFlight++
-							keepalives = true
-							appendWait.Add(1)
-							go func() {
-								defer appendWait.Done()
-								err := cmd.Wait()
-								if !stopNoop() && err == nil {
-									err = context.DeadlineExceeded
-								}
-								select {
-								case completed <- err:
-								case <-a.ctx.Done():
-								}
-							}()
-						}
+						keepaliveDue = true
 						continue
 					case err := <-completed:
 						inFlight--

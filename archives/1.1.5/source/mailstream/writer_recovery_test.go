@@ -188,7 +188,7 @@ func TestWriterKeepaliveTimeoutDuringVideoRecovers(t *testing.T) {
 	a.mu.Lock()
 	control, data := a.control, a.data
 	a.mu.Unlock()
-	duration := 75 * time.Second
+	duration := 95 * time.Second
 	if os.Getenv("ITOM_VIDEO_SOAK") == "1" {
 		duration = 185 * time.Second
 	}

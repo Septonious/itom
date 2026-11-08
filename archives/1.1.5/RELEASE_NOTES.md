@@ -2,7 +2,7 @@
 
 The supplied 1.1.4 traces show seven client accounts and one server account permanently retired at writer_keepalive after the speedtest-to-video transition. The external reason for the provider keepalive failures is not recorded by those traces; the permanent retirement behavior is a confirmed transport defect.
 
-Idle-writer EOFs and bounded NOOP failures now replace the APPEND writer pair with shared login throttling and exponential retry. Selected control/DATA readers, authenticated sessions, generation counts, delivery state and all unaudited mailbox debt survive. A NOOP runs only at an APPEND fence, and new application APPENDs wait for its outcome. Uncertain application APPEND errors keep their existing fail-closed behavior; this patch does not guess whether an unknown literal was stored.
+Idle-writer EOFs and bounded NOOP failures now replace the APPEND writer pair with shared login throttling and exponential retry. Selected control/DATA readers, authenticated sessions, generation counts, delivery state and all unaudited mailbox debt survive. A due NOOP remains scheduled across busy ticks and runs at the next APPEND fence, and new application APPENDs wait for its outcome. Uncertain application APPEND errors keep their existing fail-closed behavior; this patch does not guess whether an unknown literal was stored.
 
 Four connections/account and the existing folder layout remain unchanged. Merging folders would not repair these writer failures and would require a separate cleanup/protocol change. No migration, purge, quota reset, cleanup permission or controller change is included. Cleanup remains server-only.
 

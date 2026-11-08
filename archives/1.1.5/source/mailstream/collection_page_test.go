@@ -178,7 +178,7 @@ func TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit(t *testing.T) {
 		t.Fatal(e)
 	}
 	c := NewReclamationCoordinator()
-	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	l := &IMAPLink{ctx: ctx, login: make(chan struct{}, 4), reclaimer: c, changed: make(chan struct{})}
 	key := segmentKey{session: SessionID{1}}
 	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
 	originalDebt := a.spent
@@ -380,7 +380,7 @@ func TestSlowFirstCollectionYieldsBeforeDeadlineWithoutQuarantine(t *testing.T) 
 	}()
 	rec := seedSizedCollection(t, p, "itom-slow-first-pages", 384<<10)
 	c := NewReclamationCoordinator()
-	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	l := &IMAPLink{ctx: ctx, login: make(chan struct{}, 4), reclaimer: c, changed: make(chan struct{})}
 	key := segmentKey{session: SessionID{1}}
 	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
 	originalDebt := a.spent
@@ -416,7 +416,7 @@ func TestLargeGenerationUsesOneInventoryPerTurn(t *testing.T) {
 	}()
 	rec := seedSizedCollection(t, p, "itom-inventory-turn", 256<<10)
 	c := NewReclamationCoordinator()
-	l := &IMAPLink{ctx: ctx, reclaimer: c, changed: make(chan struct{})}
+	l := &IMAPLink{ctx: ctx, login: make(chan struct{}, 4), reclaimer: c, changed: make(chan struct{})}
 	key := segmentKey{session: SessionID{1}}
 	a := &mailAccountState{ctx: ctx, link: l, config: accounts[0], writer: p, segments: map[segmentKey]*segmentRecord{key: rec}, spent: rec.bytes, reserved: rec.bytes}
 	// Noncritical control debt must not consume a turn that can refund 32 MiB.

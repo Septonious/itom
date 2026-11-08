@@ -2,6 +2,6 @@
   "core/tunnel/api.go": "31f246052a1e670c9f042b9a273851a7fbac5a3982dc2e1b487581e20ce9d5db",
   "core/manager/trace.go": "e9b55af191571c0c7477856acc2a63ec91558109c6ceb64cbd274cf4781844ca",
   "core/cmd/itom/main.go": "0ba819462ff033aebb06dffb13d261d6e2ff81887d1e99039b6d644aeaf1c224",
-  "mailstream/imap.go": "1a735e88160bab59d7cc7b293212f36874eb428e31f68e32a356265de276672f",
+  "mailstream/imap.go": "1b83b77b78283999639e4926e8d843d02b4dbbe5bf0d444580ce7a0acf284b48",
   "mailstream/append_writers.go": "ea34b98230484577bcc88670256ff73a17705b9061d99c67ac823b7e057a2d90"
 }

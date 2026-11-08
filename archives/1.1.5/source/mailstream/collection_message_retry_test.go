@@ -43,7 +43,7 @@ func TestCollectionRetriesBoundTinyMessagesAfterFailure(t *testing.T) {
 				}
 			}()
 			c := NewReclamationCoordinator()
-			l := &IMAPLink{ctx: ctx, identity: "message-retry", reclaimer: c, attached: SessionID{1}, changed: make(chan struct{})}
+			l := &IMAPLink{ctx: ctx, login: make(chan struct{}, 4), identity: "message-retry", reclaimer: c, attached: SessionID{1}, changed: make(chan struct{})}
 			folder := l.controlFolder(false)
 			if direction == "data" {
 				folder = l.segmentFolder(SessionID{1}, true, 0)
