@@ -1,0 +1,100 @@
+name: Promote field-accepted ITOM 1.1.5 to stable
+on:
+  push:
+    branches: [codex/itom-1.1.5-writer-recovery]
+    paths: [".github/workflows/itom-115-stable.yml", "releases/1.1.5/**"]
+  workflow_dispatch:
+permissions: {contents: write, actions: read}
+concurrency: {group: itom-115-stable, cancel-in-progress: false}
+jobs:
+  stable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 0393b34b281699861b77da247066118dae807fc5
+      TAG: v1.1.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify field acceptance and completed qualification
+        run: |
+          set -euo pipefail
+          git fetch origin "$SOURCE_SHA" --no-tags
+          git diff --exit-code "$SOURCE_SHA" HEAD -- archives/1.1.5/source archives/1.1.5/qualification
+          gh api "repos/$GH_REPO/actions/runs/42458089376" > build-run.json
+          gh api "repos/$GH_REPO/actions/runs/42458089376/jobs?filter=latest&per_page=100" > build-jobs.json
+          gh api "repos/$GH_REPO/actions/runs/42458762207" > tested-publication.json
+          gh api "repos/$GH_REPO/releases/tags/v1.1.5-testing" > tested-release.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          def read(n):return json.loads(Path(n).read_text())
+          acceptance=read('releases/1.1.5/RELEASE_STATUS.json')
+          assert acceptance['accepted_by']=='user' and acceptance['transport_status']=='complete'
+          assert acceptance['source_commit']==os.environ['SOURCE_SHA']
+          r=read('build-run.json')
+          assert r['head_sha']==os.environ['SOURCE_SHA'] and r['status']=='completed' and r['conclusion']=='success'
+          jobs=read('build-jobs.json')['jobs']
+          assert len(jobs)==5 and {j['name']for j in jobs}=={'safety','linux','android','repeated','video-soak'}
+          assert all(j['conclusion']=='success'for j in jobs)
+          assert read('tested-publication.json')['conclusion']=='success'
+          tested=read('tested-release.json')
+          assert not tested['draft'] and tested['target_commitish']==os.environ['SOURCE_SHA']
+          for name,expected in acceptance['files'].items():
+              if name.endswith('-sources.zip'):continue
+              a=next(a for a in tested['assets']if a['name']==name)
+              assert a['size']==expected['bytes'] and a['digest']=='sha256:'+expected['sha256']
+          PY
+      - name: Fetch exact accepted software and public build evidence
+        run: |
+          set -euo pipefail
+          gh release download v1.1.5-testing --dir tested -p '*.apk' -p '*.bin' -p SOURCE_COMMIT -p SIGNER.txt -p ANDROID_BUILD.json
+      - uses: actions/download-artifact@v4
+        with: {name: mailstream-115-test-linux-source, run-id: 42458089376, github-token: "${{ github.token }}", path: source-input}
+      - name: Prepare stable manifests and package without rebuilding
+        run: python3 releases/1.1.5/prepare-release.py
+      - name: Create stable draft at qualified source
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'Stable release exists; refusing to replace it.' >&2
+            exit 1
+          fi
+          gh release create "$TAG" --target "$SOURCE_SHA" --draft --title 'ITOM 1.1.5 — Stable · Transport Complete' --notes-file releases/1.1.5/RELEASE_NOTES.md stable-assets/*
+      - name: Read back and verify every stable asset
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --dir readback
+          gh api "repos/$GH_REPO/releases?per_page=100" > release-list.json
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          expected=json.loads(Path('EXPECTED_STABLE_ASSETS.json').read_text())
+          actual={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}for p in Path('readback').iterdir()if p.is_file()}
+          assert actual==expected
+          r=next(r for r in json.loads(Path('release-list.json').read_text())if r['tag_name']==os.environ['TAG'])
+          assert r['draft'] and not r['prerelease'] and r['target_commitish']==os.environ['SOURCE_SHA']
+          assert {a['name']for a in r['assets']}==set(expected)
+          for a in r['assets']:
+              assert a['state']=='uploaded' and a['size']==expected[a['name']]['bytes']
+              if a.get('digest'):assert a['digest']=='sha256:'+expected[a['name']]['sha256']
+          with Path(os.environ['GITHUB_ENV']).open('a')as f:f.write('STABLE_RELEASE_ID='+str(r['id'])+'\n')
+          Path('STABLE_READBACK.json').write_text(json.dumps({'verified':True,'release_id':r['id'],'files':actual},indent=2)+'\n')
+          PY
+      - name: Publish stable release and mark it latest
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GH_REPO/releases/$STABLE_RELEASE_ID" -F draft=false -F prerelease=false -f make_latest=true > STABLE_RELEASE.json
+          gh api "repos/$GH_REPO/releases/latest" > STABLE_LATEST.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('STABLE_RELEASE.json').read_text())
+          assert r['tag_name']=='v1.1.5' and not r['draft'] and not r['prerelease']
+          assert json.loads(Path('STABLE_LATEST.json').read_text())['id']==r['id']
+          print(r['html_url'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: ITOM-1.1.5-stable-promotion-verification, path: "*STABLE*.json", if-no-files-found: warn}
