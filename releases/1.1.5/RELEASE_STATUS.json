@@ -1,0 +1,62 @@
+{
+  "version": "1.1.5",
+  "release_channel": "stable",
+  "project_status": "complete",
+  "transport_status": "complete",
+  "main_goals": "met_and_surpassed",
+  "acceptance_date": "2026-11-08",
+  "acceptance_timezone": "Europe/Moscow",
+  "accepted_by": "user",
+  "source_commit": "0393b34b281699861b77da247066118dae807fc5",
+  "release_tag": "v1.1.5",
+  "release_url": "https://github.com/Septonious/itom/releases/tag/v1.1.5",
+  "qualified_testing_tag": "v1.1.5-testing",
+  "tested_artifacts_preserved_exactly": true,
+  "application_id": "org.itom.client",
+  "version_code": 10150,
+  "signer_certificate_sha256": "0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0",
+  "field_acceptance": {
+    "source": "user_report",
+    "peak_download_mbps": 290,
+    "peak_upload_mbps": 340,
+    "loaded_rtt_approximately_ms": 200,
+    "line_disconnections_observed": false,
+    "connection_remained_usable_over_time": true,
+    "workloads": [
+      "Speedtest",
+      "Telegram",
+      "YouTube"
+    ]
+  },
+  "verification": {
+    "build_run": 42458089376,
+    "all_five_jobs_passed": true,
+    "testing_publication_run": 42458762207,
+    "testing_download_readback_passed": true,
+    "android_tests": 102,
+    "lint_errors": 0,
+    "normal_and_race_suites_passed": true,
+    "video_fault_soak_seconds": 181,
+    "verified_video_segments": 348,
+    "repeat_native_accounts": 15,
+    "repeat_native_lines": 60
+  },
+  "files": {
+    "ITOM-1.1.5-linux-amd64.bin": {
+      "bytes": 13314851,
+      "sha256": "037820ebed6032c0fc4a0970ddb5a4eaf622b5efd86df383638451de7bf039ad"
+    },
+    "ITOM-1.1.5-linux-arm64.bin": {
+      "bytes": 12305754,
+      "sha256": "147026a54736deca81ac3204ca6ea2210e3290983403f01361d25c14729d0194"
+    },
+    "ITOM-1.1.5.apk": {
+      "bytes": 46565620,
+      "sha256": "6a2106c79e78a060908f25f3b30e2a7bf69195b8168eb774c8df045fafa309c2"
+    },
+    "ITOM-1.1.5-sources.zip": {
+      "bytes": 1782830,
+      "sha256": "f308a8d621da5ae580629d1bb9fbfa5282aa948603f2a1e34bf6237d2501f72f"
+    }
+  }
+}
