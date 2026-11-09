@@ -303,15 +303,15 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 	return err
 }
 
-// During bulk transfer, group a bounded thirty-two-millisecond feedback burst.
-// Keep a burst on one account long enough to share its
-// already-bounded MIME container instead of paying APPEND/cleanup per receipt.
-// Idle feedback remains at two milliseconds; interactive work interrupts a
-// feedback batch as before and never waits for this timer to fill a container.
+// Low-latency RC: shorten the bulk feedback coalescing window from 32 to
+// 12 milliseconds. Window/receipt feedback is a causal predecessor for
+// additional DATA and the long window inflates loaded-RTT tails. Keep a
+// bounded batch with the existing 16-packet ceiling; idle remains 2 ms and
+// interactive application traffic never waits for this timer.
 func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 	last := l.lastBulk.Load()
 	if last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond {
-		return 32 * time.Millisecond
+		return 12 * time.Millisecond
 	}
 	return 2 * time.Millisecond
 }
