@@ -55,6 +55,14 @@ func (l *IMAPLink) interactiveHedgeAccountOrder(start int, allowed [20]bool, exc
 		return order
 	}
 	slices.Sort(known)
+	// On high-latency paths the old hedge placement is more robust:
+	// a better-looking stale or queued account can have a much worse
+	// DATA/feedback path. The real home capture measured ~180 ms account
+	// receipts; mobile simulation exposed 250+ ms idle tails. This gate
+	// uses observed authenticated RTT only, never a hardcoded network type.
+	if known[len(known)/2] > 210*time.Millisecond {
+		return order
+	}
 	cutoff := known[(len(known)*2)/3]
 	fast := make([]int, 0, n)
 	remaining := make([]int, 0, n)

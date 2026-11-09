@@ -79,3 +79,23 @@ func TestRC117RTTPerAccountEWMAOnlyUsesAuthenticatedFirstReceipt(t *testing.T) {
 	if err:=l.Acknowledge(id,3);err!=nil {t.Fatal(err)}
 	if a.rtt!=before {t.Fatal("retransmitted packet must not train hedging RTT")}
 }
+
+func TestRC117HedgeSlowPathsRemainUnmodifiedRoundRobin(t *testing.T) {
+	link:=&IMAPLink{}
+	var allowed [20]bool
+	now:=time.Duration(time.Now().UnixNano())
+	for i,ms:=range []int{260,310,285,410,320,270}{
+		link.accounts=append(link.accounts,&mailAccountState{
+			ready:true,rtt:time.Duration(ms)*time.Millisecond,rttAt:now,
+			fast:make(chan mailWork,8),
+		})
+		allowed[i]=true
+	}
+	order:=link.interactiveHedgeAccountOrder(2,allowed,link.accounts[2])
+	want:=[]int{2,3,4,5,0,1}
+	for i:=range want{
+		if order[i]!=want[i]{
+			t.Fatalf("slower carrier should preserve released RR hedge: %v",order)
+		}
+	}
+}
