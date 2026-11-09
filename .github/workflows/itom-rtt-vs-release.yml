@@ -1,0 +1,107 @@
+name: ITOM RTT A/B versus released 1.1.6 RC1
+on:
+  push:
+    branches: [codex/itom-1.1.6-low-latency]
+    paths:
+      - "archives/1.1.6/source/mailstream/**"
+      - ".github/workflows/itom-rtt-vs-release.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itom-117-rtt-ab
+  cancel-in-progress: true
+jobs:
+  ab:
+    name: "Released RC1 vs new RTT path — ${{ matrix.profile }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: home
+            rate: '500'
+            extra: ''
+          - profile: home-icmp
+            rate: '500'
+            extra: ''
+          - profile: mobile
+            rate: '160'
+            extra: '--client-upload-mbps 90 --client-download-mbps 160'
+          - profile: mobile-20
+            rate: '20'
+            extra: '--client-upload-mbps 5 --client-download-mbps 20'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Check full source and focused responsive feedback tests
+        working-directory: archives/1.1.6/source/mailstream
+        run: go test -count=1 -timeout=120s -run '^TestRC11[67]' -v .
+      - name: Materialize immutable RELEASED baseline without changing current sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          baseline=a134e4a05f8aa7cb83cf455129bd633c5c90c96e
+          git cat-file -e "$baseline^{commit}"
+          git worktree add --detach "$RUNNER_TEMP/itom-rc116-release" "$baseline"
+          git diff --quiet "$baseline" HEAD -- archives/1.1.6/source/core archives/1.1.6/source/native
+          test -f "$RUNNER_TEMP/itom-rc116-release/archives/1.1.6/source/mailstream/session.go"
+          echo "Immutable release baseline: $baseline"
+      - name: Compare three paired TLS/IMAP RTT distributions, both directions
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+          RATE: ${{ matrix.rate }}
+          EXTRA: ${{ matrix.extra }}
+        run: |
+          set -euo pipefail
+          fixture="$PROFILE"
+          if [[ "$fixture" == mobile-20 ]]; then fixture=mobile; fi
+          for attempt in 1 2 3; do
+            order=baseline-first
+            if [[ $attempt == 2 ]]; then order=candidate-first; fi
+            python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" \
+              --out "rc117-$PROFILE-$attempt" \
+              --baseline "$RUNNER_TEMP/itom-rc116-release/archives/1.1.6/source/core" \
+              --baseline-is-mailstream --latency-profile "$fixture" \
+              --client-mbps "$RATE" $EXTRA --accounts 15 --duration 8s \
+              --streams 8 --idle-probes 40 --post-probes 40 --order "$order"
+          done
+      - name: Print all measured RTT samples, medians, tails and verified throughput
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.6/qualification/aggregate_rtt.py \
+            "rc117-$PROFILE-1" "rc117-$PROFILE-2" "rc117-$PROFILE-3" \
+            --out "rc117-$PROFILE-aggregate.json"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os,statistics
+          profile=os.environ['PROFILE']
+          all_pairs=[]
+          for run in range(1,4):
+              r=json.loads(Path(f'rc117-{profile}-{run}/SYNTHETIC_RTT_REPORT.json').read_text())
+              old,new=r['results']
+              assert old['completed'] and new['completed']
+              all_pairs.append((old,new))
+          print('ACTUAL MEASURED SYNTHETIC TLS APPLICATION RTT:',profile)
+          for phase in ('idle','loaded','after'):
+              for key in ('median_ms','p95_ms'):
+                  old=[x[0]['rtt'][phase][key] for x in all_pairs]
+                  new=[x[1]['rtt'][phase][key] for x in all_pairs]
+                  print(phase,key,old,'->',new,'median',statistics.median(old),'->',statistics.median(new))
+          for d in ('upload','download'):
+              old=[x[0]['throughput_mbps'][d] for x in all_pairs]
+              new=[x[1]['throughput_mbps'][d] for x in all_pairs]
+              print(d,'Mbps',old,'->',new)
+              if profile.startswith('home'):
+                  assert min(new)>200,(d,new)
+          PY
