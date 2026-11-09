@@ -99,6 +99,9 @@ jobs:
         run: python3 archives/1.1.6/qualification/gate_rc116.py home-icmp-profile home-profile mobile-profile
 
   release:
+    # Experimental pushes must not publish a candidate on a lucky single-run
+    # RTT sample; only an explicit, reviewed release commit may ship an RC.
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release-rc1]') }}
     needs: [safety, network-profiles]
     runs-on: ubuntu-latest
     timeout-minutes: 120
