@@ -1,30 +1,33 @@
 package mailstream
 
-import (
-	"bytes"
-	"encoding/ascii85"
+import "encoding/ascii85"
+
+// Mandatory format for every ITOM 1.1.6 IMAP APPEND: 7-bit MIME and
+// ASCII85 ciphertext. No Base64 encoder, dual format, or negotiation.
+// Line lengths are bounded below the mail-format 998-octet limit.
+const ascii85MIMEHeader = "From: transport@itom.invalid\r\nTo: transport@itom.invalid\r\nSubject: ITOM4\r\nMIME-Version: 1.0\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: 7bit\r\n\r\n"
+
+const (
+	ascii85LineWidth  = 480
+	ascii85PlainBlock = ascii85LineWidth / 5 * 4
 )
 
-// Mandatory wire format for every ITOM 1.1.6 mailbox publication.
-// A 7-bit MIME envelope with 480-byte ASCII85 lines is safe for an IMAP
-// APPEND literal without requiring the optional BINARY IMAP extension.
-// Old ITOM3/Base64 messages are deliberately incompatible.
-const ascii85MIMEHeader = "From: transport@itom.invalid\r\nTo: transport@itom.invalid\r\nSubject: ITOM4\r\nMIME-Version: 1.0\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: 7bit\r\n\r\n"
-const ascii85LineWidth = 480
-
+// Encode straight into one allocated MIME buffer. Raw blocks are divisible
+// by four, so independently encoding each block is equivalent to encoding
+// the entire stream. The final block may be shorter.
 func encodeMail(body []byte) []byte {
-	var out bytes.Buffer
 	maxEncoded := ascii85.MaxEncodedLen(len(body))
-	out.Grow(len(ascii85MIMEHeader) + maxEncoded + (maxEncoded+ascii85LineWidth-1)/ascii85LineWidth*2)
-	out.WriteString(ascii85MIMEHeader)
-	encoded := make([]byte, maxEncoded)
-	n := ascii85.Encode(encoded, body)
-	encoded = encoded[:n]
-	for len(encoded) > 0 {
-		count := min(ascii85LineWidth, len(encoded))
-		out.Write(encoded[:count])
-		out.WriteString("\r\n")
-		encoded = encoded[count:]
+	capacity := len(ascii85MIMEHeader) + maxEncoded + 2*((maxEncoded+ascii85LineWidth-1)/ascii85LineWidth)
+	out := make([]byte, 0, capacity)
+	out = append(out, ascii85MIMEHeader...)
+	for len(body) > 0 {
+		n := min(ascii85PlainBlock, len(body))
+		begin := len(out)
+		out = out[:begin+ascii85.MaxEncodedLen(n)]
+		written := ascii85.Encode(out[begin:], body[:n])
+		out = out[:begin+written]
+		out = append(out, '\r', '\n')
+		body = body[n:]
 	}
-	return out.Bytes()
+	return out
 }
