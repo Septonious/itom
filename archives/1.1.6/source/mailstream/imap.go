@@ -1627,8 +1627,11 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 		return nil, classifyIMAPLoginError(err)
 	}
 	if !stopDialIO() {
+		// The bounded dial/login deadline expired. A radio handover or a
+		// stalled provider is not proof of bad credentials; retry using the
+		// existing staggered startup backoff, without relaxing TLS checks.
 		p.close()
-		return nil, ErrAuth
+		return nil, ErrClosed
 	}
 	// Capture only capability booleans. Never log LOGIN, credentials, or
 	// the provider's raw response. A binary APPEND is NOT enabled merely
