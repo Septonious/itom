@@ -1442,6 +1442,10 @@ type MailAccountSnapshot struct {
 	RTTMillis                  int64  `json:"rtt_ms"`
 	RTTFresh                   bool   `json:"rtt_fresh"`
 	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
+	ControlPollDelayMillis     int64  `json:"control_poll_delay_ms"`
+	BinaryAppendAdvertised     bool   `json:"binary_append_advertised"`
+	LiteralPlusAdvertised      bool   `json:"literal_plus_advertised"`
+	IMAP4rev2Advertised        bool   `json:"imap4rev2_advertised"`
 	UploadBytes, DownloadBytes uint64
 }
 
@@ -1522,6 +1526,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.UploadBytes, line.DownloadBytes = a.upBytes.Load(), a.downBytes.Load()
 		if a.control != nil {
 			line.IMAPLatencyMillis = measuredMillis(time.Duration(a.control.latency.Load()))
+			line.ControlPollDelayMillis = a.control.controlPollDelay(time.Now()).Milliseconds()
+			line.BinaryAppendAdvertised = a.control.capBinary
+			line.LiteralPlusAdvertised = a.control.capLiteralPlus
+			line.IMAP4rev2Advertised = a.control.capIMAP4rev2
 		}
 		if p := a.data; p != nil {
 			line.DataPhase = p.phase.Load()
@@ -1565,6 +1573,9 @@ type mailPipe struct {
 	service           time.Duration
 	knownFolders      map[string]bool // SELECT owner only; never shared with a writer
 	uidControl        atomic.Bool
+	capBinary         bool // immutable after LOGIN; diagnostic only, never changes APPEND encoding
+	capLiteralPlus    bool
+	capIMAP4rev2      bool
 	pollTraffic       *atomic.Int64 // user activity, nil for legacy isolated test readers
 	latency           atomic.Int64
 	latencyAt         atomic.Int64
@@ -1619,6 +1630,13 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 		p.close()
 		return nil, ErrAuth
 	}
+	// Capture only capability booleans. Never log LOGIN, credentials, or
+	// the provider's raw response. A binary APPEND is NOT enabled merely
+	// because it is advertised; interoperability must be field-qualified.
+	caps := p.client.Caps()
+	p.capBinary = caps.Has(imap.CapBinary)
+	p.capLiteralPlus = caps.Has(imap.CapLiteralPlus)
+	p.capIMAP4rev2 = caps.Has(imap.CapIMAP4rev2)
 	return p, nil
 }
 
