@@ -1,9 +1,10 @@
 name: ITOM RTT A/B versus released 1.1.6 RC1
 on:
   push:
-    branches: [codex/itom-1.1.6-low-latency]
+    branches: [codex/itom-1.1.6-low-latency, codex/itom-1.1.7-rc2-zero-rtt]
     paths:
       - "archives/1.1.6/source/mailstream/**"
+      - "archives/1.1.6/qualification/**"
       - ".github/workflows/itom-rtt-vs-release.yml"
   workflow_dispatch:
 permissions:
@@ -105,3 +106,12 @@ jobs:
               if profile.startswith('home'):
                   assert min(new)>200,(d,new)
           PY
+      - name: Enforce strict measured zero RTT regression and 75% throughput floors
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.6/qualification/gate_rc117_zero_rtt.py \
+            --profile "$PROFILE" \
+            "rc117-$PROFILE-1" "rc117-$PROFILE-2" "rc117-$PROFILE-3"
