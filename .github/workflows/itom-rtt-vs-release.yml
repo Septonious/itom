@@ -16,26 +16,35 @@ jobs:
   ab:
     name: "Released RC1 vs new RTT path — ${{ matrix.profile }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
         include:
           - profile: home
             rate: '500'
+            streams: '8'
             extra: ''
           - profile: home-icmp
             rate: '500'
+            streams: '8'
             extra: ''
           - profile: mobile
             rate: '160'
+            streams: '8'
             extra: '--client-upload-mbps 90 --client-download-mbps 160'
           - profile: mobile-20
             rate: '20'
+            streams: '4'
             extra: '--client-upload-mbps 5 --client-download-mbps 20'
           - profile: mobile-8
             rate: '8'
+            streams: '2'
             extra: '--client-upload-mbps 2 --client-download-mbps 8'
+          - profile: mobile-2
+            rate: '2'
+            streams: '1'
+            extra: '--client-upload-kbps 500 --client-download-kbps 2000'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,26 +68,28 @@ jobs:
           git diff --quiet "$baseline" HEAD -- archives/1.1.6/source/core archives/1.1.6/source/native
           test -f "$RUNNER_TEMP/itom-rc116-release/archives/1.1.6/source/mailstream/session.go"
           echo "Immutable release baseline: $baseline"
-      - name: Compare three paired TLS/IMAP RTT distributions, both directions
+      - name: Compare five paired TLS/IMAP RTT distributions, both directions
         shell: bash
         env:
           PROFILE: ${{ matrix.profile }}
           RATE: ${{ matrix.rate }}
           EXTRA: ${{ matrix.extra }}
+          STREAMS: ${{ matrix.streams }}
         run: |
           set -euo pipefail
           fixture="$PROFILE"
           if [[ "$fixture" == mobile-20 || "$fixture" == mobile-8 ]]; then fixture=mobile; fi
-          for attempt in 1 2 3; do
+          if [[ "$fixture" == mobile-2 ]]; then fixture=mobile-poor; fi
+          for attempt in 1 2 3 4 5; do
             order=baseline-first
-            if [[ $attempt == 2 ]]; then order=candidate-first; fi
+            if [[ $attempt == 2 || $attempt == 4 ]]; then order=candidate-first; fi
             python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" \
               --out "rc117-$PROFILE-$attempt" \
               --baseline "$RUNNER_TEMP/itom-rc116-release/archives/1.1.6/source/core" \
               --baseline-is-mailstream --baseline-version 1.1.6-rc1 \
               --candidate-version 1.1.7-rc2 --latency-profile "$fixture" \
-              --client-mbps "$RATE" $EXTRA --accounts 15 --duration 8s \
-              --streams 8 --idle-probes 40 --post-probes 40 --order "$order"
+              --client-mbps "$RATE" $EXTRA --accounts 15 --duration 12s \
+              --streams "$STREAMS" --idle-probes 40 --post-probes 40 --order "$order"
           done
       - name: Print all measured RTT samples, medians, tails and verified throughput
         shell: bash
@@ -88,13 +99,14 @@ jobs:
           set -euo pipefail
           python3 archives/1.1.6/qualification/aggregate_rtt.py \
             "rc117-$PROFILE-1" "rc117-$PROFILE-2" "rc117-$PROFILE-3" \
+            "rc117-$PROFILE-4" "rc117-$PROFILE-5" \
             --out "rc117-$PROFILE-aggregate.json"
           python3 - <<'PY'
           from pathlib import Path
           import json,os,statistics
           profile=os.environ['PROFILE']
           all_pairs=[]
-          for run in range(1,4):
+          for run in range(1,6):
               r=json.loads(Path(f'rc117-{profile}-{run}/SYNTHETIC_RTT_REPORT.json').read_text())
               old,new=r['results']
               assert old['completed'] and new['completed']
@@ -120,4 +132,5 @@ jobs:
           set -euo pipefail
           python3 archives/1.1.6/qualification/gate_rc117_zero_rtt.py \
             --profile "$PROFILE" \
-            "rc117-$PROFILE-1" "rc117-$PROFILE-2" "rc117-$PROFILE-3"
+            "rc117-$PROFILE-1" "rc117-$PROFILE-2" "rc117-$PROFILE-3" \
+            "rc117-$PROFILE-4" "rc117-$PROFILE-5"
