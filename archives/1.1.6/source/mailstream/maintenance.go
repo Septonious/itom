@@ -486,7 +486,10 @@ func (l *IMAPLink) maintainRetention() {
 	}
 }
 func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
-	ctx, cancel := context.WithTimeout(l.ctx, collectionTimeout)
+	a.mu.Lock()
+	budget := collectionAttemptTimeout(a.collectionPaged)
+	a.mu.Unlock()
+	ctx, cancel := context.WithTimeout(l.ctx, budget)
 	defer cancel()
 	c := l.reclaimer
 	if !c.idleLease(a, cancel) {
@@ -510,7 +513,7 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 		return
 	}
 	defer p.close()
-	stop := p.limit(collectionTimeout)
+	stop := p.limit(budget)
 	folder, e := a.maintenanceStep(ctx, p, true)
 	timely := stop()
 	if e == nil && timely {
@@ -580,7 +583,10 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 		leased = true
 		defer c.release()
 	}
-	stop = p.limit(collectionTimeout)
+	a.mu.Lock()
+	budget := collectionAttemptTimeout(a.collectionPaged)
+	a.mu.Unlock()
+	stop = p.limit(budget)
 	folder := ""
 	if e == nil && drained {
 		folder, e = a.maintenanceStep(ctx, p, false)

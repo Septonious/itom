@@ -16,6 +16,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// Historical sweeps must not starve exact current-session collection.
 	a.mu.Lock()
 	job.record.refused = job.record.refused || a.collectionPaged
+	attemptBudget := collectionAttemptTimeout(job.record.refused)
 	maintenance := a.maintenance.requested && a.controlMessagePressureLocked()
 	if maintenance {
 		job.record.queued = false
@@ -47,7 +48,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	defer a.returnCollectionWriter()
 	a.link.notify()
 	p := *writer
-	budget := collectionTimeout
+	budget := attemptBudget
 	// In-flight bulk completion is not cleanup service time. On a weak
 	// shared link it may legitimately take longer than the metadata bound.
 	stop := p.limit(10 * time.Second)
