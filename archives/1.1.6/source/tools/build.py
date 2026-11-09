@@ -118,6 +118,10 @@ def android_variant(info):
 
 def compiled_android_name(info):
     name, _ = android_identity(info)
+    # RC2 debug is intentionally an independently installable .testing
+    # package; Gradle uses versionNameSuffix -testing, not -debug.
+    if info["version"] == "1.1.7" and info.get("release") == "RC2":
+        return name + "-testing"
     return name + ("-debug" if android_variant(info) == "debug" else "")
 
 
