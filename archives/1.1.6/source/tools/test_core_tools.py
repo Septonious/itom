@@ -471,19 +471,19 @@ class ServerBuildTests(unittest.TestCase):
             self.assertEqual({"CGO_ENABLED": "1", "KEEP": "yes"}, env)
             self.assertEqual(2, len((root / "SHA256SUMS").read_text(encoding="utf-8").splitlines()))
 
-    def test_public_release_server_binaries_keep_legacy_paths(self):
+    def test_rc1_server_binaries_keep_public_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             def command(args, cwd):
                 Path(args[args.index("-o") + 1]).write_bytes(b"server-fixture")
-            build_core.build_binaries(command, root, root, {}, release="FIELD77")
+            build_core.build_binaries(command, root, root, {}, release="RC1")
             for arch in ("amd64", "arm64"):
                 old = root / f"itom-linux-{arch}"
-                named = root / f"ITOM-1.1.5-FIELD77-linux-{arch}"
+                named = root / f"ITOM-1.1.6-RC1-linux-{arch}"
                 self.assertEqual(old.read_bytes(), named.read_bytes())
             sums = (root / "SHA256SUMS").read_text()
             self.assertEqual(4, len(sums.splitlines()))
-            self.assertIn("ITOM-1.1.5-FIELD77-linux-amd64", sums)
+            self.assertIn("ITOM-1.1.6-RC1-linux-amd64", sums)
 
     def test_failed_compiler_never_marks_complete(self):
         with tempfile.TemporaryDirectory() as tmp:
