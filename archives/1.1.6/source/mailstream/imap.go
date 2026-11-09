@@ -358,11 +358,22 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		}
 	}
 	l.mu.Unlock()
-	order := l.interactiveAccountOrder(start, peerAllowed, exclude, priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16)
+	// Ranked routing is held behind a compile-time experiment switch.
+	// Paired RC1 tests showed a higher loaded application RTT tail even though
+	// control FETCH/APPEND timing looked faster. Preserve proven RR admission
+	// until a queue-aware, end-to-end-attributed signal is demonstrated.
+	ranked := experimentalInteractiveRankingEnabled && priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16
+	var order []int
+	if ranked {
+		order = l.interactiveAccountOrder(start, peerAllowed, exclude, true)
+	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
-		index := order[n]
+		index := (start + n) % len(l.accounts)
+		if ranked {
+			index = order[n]
+		}
 		a := l.accounts[index]
 		if !peerAllowed[index] {
 			continue

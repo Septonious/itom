@@ -25,6 +25,11 @@ func (p *mailPipe) observeEmptyControlFetch(started time.Time) {
 	p.latencyAt.Store(now.UnixNano())
 }
 
+// Keep the experimental scheduler in source for deterministic unit tests,
+// but do not ship it active until repeated paired application-RTT evidence
+// establishes that it improves p95 as well as median on home and mobile.
+const experimentalInteractiveRankingEnabled = false
+
 type interactiveRoute struct {
 	index int
 	cost time.Duration
