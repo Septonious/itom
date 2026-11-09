@@ -58,7 +58,14 @@ func classifyIMAPLoginError(err error) error {
 	}
 	var status *imap.Error
 	if errors.As(err, &status) {
-		if status.Code == imap.ResponseCodeUnavailable {
+		// RFC 9051 response codes distinguish temporary provider/service
+		// faults from actual invalid credentials. A saturated/busy mobile
+		// provider is not evidence of an authentication failure; let the
+		// existing capped, staggered startup schedule retry it instead
+		// of disabling a legitimate account permanently.
+		switch status.Code {
+		case imap.ResponseCodeUnavailable, imap.ResponseCodeInUse,
+			imap.ResponseCodeLimit, imap.ResponseCodeServerBug:
 			return ErrClosed
 		}
 		if status.Type == imap.StatusResponseTypeNo ||
