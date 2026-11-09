@@ -1,4 +1,4 @@
-name: ITOM 1.1.6 RC1 build and field-test prerelease
+name: ITOM 1.1.6 RC1 direct-release build (artifact quota safe)
 on:
   push:
     branches: [codex/itom-1.1.6-low-latency]
@@ -33,13 +33,8 @@ jobs:
         run: |
           go test -p 2 -count=1 -timeout=120s -run '^TestRC116' -v .
           go vet ./...
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-116-rc1-safety
-          path: archives/1.1.6/source/dist/core-*
-          if-no-files-found: warn
-          retention-days: 30
+
+
   network-profiles:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -70,58 +65,29 @@ jobs:
                   assert result.get('success') and result.get('stage')=='complete',(profile,name,result.get('error'),result.get('stage'))
               print(profile,'reference and candidate completed; numerical RTT and throughput require paired evaluation')
           PY
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-116-rc1-network-profiles
-          path: |
-            home-profile/
-            mobile-profile/
-          if-no-files-found: warn
-          retention-days: 30
-  linux:
+
+  release:
+    needs: [safety, network-profiles]
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.27.1"
-          cache: false
-      - name: Produce exact Linux server binaries and source ZIP
-        run: |
-          set -euo pipefail
-          mkdir -p linux-assets
-          python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-6-rc1
-          for arch in amd64 arm64; do
-            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-linux-$arch.bin" ./cmd/itom)
-          done
-          linux-assets/ITOM-1.1.6-RC1-linux-amd64.bin version | grep -Eq '^ITOM itom-1-1-6-rc1 linux amd64 manager '
-          python3 "$SOURCE/tools/package_sources.py" --output "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-sources.zip"
-          cp archives/1.1.6/RELEASE_NOTES.md linux-assets/RELEASE_NOTES.md
-          printf '%s\n' "$GITHUB_SHA" > linux-assets/SOURCE_COMMIT
-          (cd linux-assets && sha256sum *.bin *.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
-      - uses: actions/upload-artifact@v4
-        with:
-          name: itom-116-rc1-linux-source
-          path: linux-assets/
-          if-no-files-found: error
-          retention-days: 30
-  android:
-    runs-on: ubuntu-latest
-    timeout-minutes: 85
+    timeout-minutes: 120
     env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
       ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
       ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
       ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
       ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-      - name: Load matching signer only if all private credentials are configured
+      - name: Load optional original signing certificate; do not create incompatible update
         shell: bash
         run: |
           python3 - <<'PY'
@@ -130,110 +96,79 @@ jobs:
           keys=('ITOM_ANDROID_KEYSTORE_B64','ITOM_ANDROID_STORE_PASSWORD','ITOM_ANDROID_KEY_ALIAS','ITOM_ANDROID_KEY_PASSWORD')
           present=[bool(os.environ.get(k)) for k in keys]
           if any(present) and not all(present):
-              raise SystemExit('Incomplete Android signing configuration')
+              raise SystemExit('Incomplete private signing configuration')
           if all(present):
               target=Path(os.environ['RUNNER_TEMP'])/'itom-rc116-signing.jks'
               target.write_bytes(base64.b64decode(os.environ[keys[0]],validate=True))
               target.chmod(0o600)
-              with open(os.environ['GITHUB_ENV'],'a') as out:
-                  out.write('ITOM_ANDROID_SIGNING_STORE_FILE='+str(target)+'\n')
-              print('Private keystore loaded; certificate verification follows build')
+              with open(os.environ['GITHUB_ENV'],'a') as env:
+                  env.write('ITOM_ANDROID_SIGNING_STORE_FILE='+str(target)+'\n')
+              print('Existing signer loaded; verify certificate before release')
           else:
-              print('No signing secrets available: APK will be unsigned and cannot be installed')
+              print('No compatible signing key; Android output will remain UNSIGNED')
           PY
-      - name: Compile Android release, native JNI, tests and fatal lint
-        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-6-rc1 --accept-android-licenses
-      - name: Check ABI, identity and signer before packaging
+      - name: Build verified Linux amd64/arm64 binaries and executable source ZIP
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p android-assets
+          python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-6-rc1
+          mkdir -p release-assets
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.6-RC1-linux-$arch.bin" ./cmd/itom)
+          done
+          release-assets/ITOM-1.1.6-RC1-linux-amd64.bin version | grep -Eq '^ITOM itom-1-1-6-rc1 linux amd64 manager '
+          python3 "$SOURCE/tools/package_sources.py" --output "$GITHUB_WORKSPACE/release-assets/ITOM-1.1.6-RC1-sources.zip"
+          (cd release-assets && sha256sum *.bin *.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Compile both JNI architectures, Android release, unit tests and fatal lint
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-6-rc1 --accept-android-licenses
+      - name: Verify APK identity, certificate, binaries and complete SHA-256 manifest
+        shell: bash
+        run: |
+          set -euo pipefail
           python3 - <<'PY'
-          import json,os,zipfile,shutil
+          import json,os,zipfile,shutil,hashlib
           from pathlib import Path
           base=Path(os.environ['SOURCE'])
-          meta=json.loads((base/'dist/build-report.json').read_text())
-          assert meta['status']=='passed' and meta['source_revision']=='itom-1-1-6-rc1'
-          assert meta['apk_identity']=={'application_id':'org.itom.client','version_code':10160,'version_name':'1.1.6-rc1'}
-          assert meta['android_variant']=='release'
+          report=json.loads((base/'dist/build-report.json').read_text())
+          assert report['status']=='passed' and report['source_revision']=='itom-1-1-6-rc1'
+          assert report['apk_identity']=={'application_id':'org.itom.client','version_code':10160,'version_name':'1.1.6-rc1'}
+          assert report['android_variant']=='release'
           apk=base/'dist/ITOM-1.1.6-RC1.apk'
           with zipfile.ZipFile(apk) as z:
               for abi in ('arm64-v8a','armeabi-v7a'):
                   assert b'itom-1-1-6-rc1' in z.read('lib/'+abi+'/libgojni.so')
           signed=bool(os.environ.get('ITOM_ANDROID_SIGNING_STORE_FILE'))
           name='ITOM-1.1.6-RC1.apk' if signed else 'ITOM-1.1.6-RC1-UNSIGNED.apk'
-          shutil.copy2(apk,Path('android-assets')/name)
-          (Path('android-assets')/'SIGNING_STATUS.txt').write_text('Persistent signer verification required\n'if signed else 'UNSIGNED: cannot install or upgrade the phone; use retained private signing key\n')
-          shutil.copy2(base/'dist/build-report.json','android-assets/ANDROID_BUILD.json')
+          shutil.copy2(apk,Path('release-assets')/name)
+          (Path('release-assets')/'SIGNING_STATUS.txt').write_text('Matching certificate verification pending\n' if signed else 'UNSIGNED: this APK cannot be installed or used to upgrade 1.1.5\n')
+          shutil.copy2(base/'dist/build-report.json','release-assets/ANDROID_BUILD.json')
+          (Path('release-assets')/'SOURCE_COMMIT').write_text(os.environ['GITHUB_SHA']+'\n')
           PY
-          signer="$(find "$HOME/.cache/itom-build" -name apksigner -type f -print -quit)"
           if [ -n "${ITOM_ANDROID_SIGNING_STORE_FILE:-}" ]; then
+            signer="$(find "$HOME/.cache/itom-build" -name apksigner -type f -print -quit)"
             test -x "$signer"
-            "$signer" verify --print-certs android-assets/ITOM-1.1.6-RC1.apk > android-assets/SIGNER.txt
-            grep -Fq '0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0' android-assets/SIGNER.txt
-            printf '%s\n' 'Verified as identical to ITOM 1.1.5 certificate' > android-assets/SIGNING_STATUS.txt
+            "$signer" verify --print-certs release-assets/ITOM-1.1.6-RC1.apk > release-assets/SIGNER.txt
+            grep -Fq '0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0' release-assets/SIGNER.txt
+            echo 'Signed with the exact 1.1.5 certificate' > release-assets/SIGNING_STATUS.txt
           fi
-          (cd android-assets && sha256sum *.apk > ANDROID_SHA256SUMS)
-      - uses: actions/upload-artifact@v4
-        with:
-          name: itom-116-rc1-android
-          path: android-assets/
-          if-no-files-found: error
-          retention-days: 30
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-116-rc1-android-logs
-          path: |
-            ${{ env.SOURCE }}/dist/*.log
-            ${{ env.SOURCE }}/dist/*.json
-          if-no-files-found: warn
-          retention-days: 30
-  prerelease:
-    needs: [safety, network-profiles, linux, android]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: itom-116-rc1-linux-source
-          path: release-assets
-      - uses: actions/download-artifact@v4
-        with:
-          name: itom-116-rc1-android
-          path: release-assets
-      - name: Verify matched source and hashes; generate manifest
-        run: |
-          set -euo pipefail
-          test "$(cat release-assets/SOURCE_COMMIT)" = "$GITHUB_SHA"
-          (cd release-assets && sha256sum -c SHA256SUMS && sha256sum -c ANDROID_SHA256SUMS)
           python3 - <<'PY'
-          import json,hashlib,os
+          import os,json,hashlib
           from pathlib import Path
           root=Path('release-assets')
           signed=(root/'ITOM-1.1.6-RC1.apk').exists()
-          evidence={'source_commit':os.environ['GITHUB_SHA'],'release_type':'experimental_prerelease','field_qualified':False,'signing_compatible_with_115':signed,'files':{}}
+          info={'revision':'itom-1-1-6-rc1','source_commit':os.environ['GITHUB_SHA'],'release_type':'experimental_prerelease','field_qualified':False,'signing_compatible_with_115':signed,'files':{}}
           for p in root.iterdir():
-              if p.is_file():
-                  evidence['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
-          (root/'RC_STATUS.json').write_text(json.dumps(evidence,indent=2)+'\n')
+              if p.is_file() and p.name!='RC_STATUS.json':
+                  info['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+          (root/'RC_STATUS.json').write_text(json.dumps(info,indent=2)+'\n')
           PY
-      - name: Publish distinct RC1 prerelease, never modify stable 1.1.5
+      - name: Publish verified RC1 prerelease assets directly (no Actions artifact quota)
+        shell: bash
         run: |
           set -euo pipefail
           if gh release view v1.1.6-rc1 >/dev/null 2>&1; then
-            echo 'RC1 already exists, refusing to overwrite it' >&2
+            echo 'Existing RC1 release: refusing overwrite or replacement' >&2
             exit 1
           fi
-          gh release create v1.1.6-rc1 release-assets/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'ITOM 1.1.6 RC1 — latency field testing' --notes-file archives/1.1.6/RELEASE_NOTES.md
+          gh release create v1.1.6-rc1 release-assets/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'ITOM 1.1.6 RC1 — low-latency field testing' --notes-file archives/1.1.6/RELEASE_NOTES.md
           gh release view v1.1.6-rc1 --json url,isPrerelease --jq '.'
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-116-rc1-release-assets
-          path: release-assets/
-          if-no-files-found: warn
-          retention-days: 30
