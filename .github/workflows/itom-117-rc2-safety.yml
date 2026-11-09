@@ -43,7 +43,7 @@ jobs:
           go test -mod=readonly -count=1 -timeout=15m ./...
           go vet ./...
       - name: Full core tests, race checks and binaries
-        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-6-rc1
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-7-rc2
       - name: Compile Linux AMD64 and ARM64 without publishing
         shell: bash
         run: |
@@ -74,7 +74,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Compile Android, run unit tests and fatal lint; do not release
-        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-6-rc1 --accept-android-licenses
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-7-rc2 --accept-android-licenses
       - name: Verify Android build report without publishing APK
         run: |
           python3 - <<'PY'
