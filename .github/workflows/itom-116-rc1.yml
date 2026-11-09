@@ -115,6 +115,8 @@ jobs:
       ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Require successful five-pair measured RTT evidence on IDENTICAL source
         shell: bash
         run: |
