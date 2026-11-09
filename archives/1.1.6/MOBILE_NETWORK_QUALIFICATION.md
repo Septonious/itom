@@ -23,8 +23,8 @@ The fixture currently supports rate/latency restrictions and temporary rate dips
 
 ## Current candidate techniques
 
-1. Idle control receivers currently issue empty UID FETCH with a 1 ms gap. The candidate uses a **shared user-activity clock** and bounded 3/8/16 ms gaps only after sustained quiet. It must return to 1 ms while any user control or data traffic is accepted or received.
-2. Keep mandatory 7bit ASCII85. The new valid MIME sender address reduces each APPEND by 16 bytes with no wire-version change. Evaluate future BINARY only if **actual authenticated IMAP capabilities** show support; BINARY requires provider interoperability, integrity, storage and rollback qualification.
+1. **RC2 decision: no quiet-state polling backoff.** The initial candidate's 3/8/16 ms intervals were rejected because the first incoming packet after inactivity could incur up to **15 ms additional scheduling latency**. Keep the exact released RC1 **1 ms** delay even when idle. Empty FETCH overhead remains a known limitation; an event-driven replacement is not permitted until it proves non-increasing first-packet latency across all required profiles.
+2. Keep mandatory 7bit ASCII85. The new valid MIME sender address reduces each APPEND by 16 bytes with no wire-version change. RC2 also grows wrap lines from 480 to 960 octets (below the RFC 998-octet limit), shaving about 0.2% of bulk ciphertext wire bytes without adding batching delays. Evaluate future BINARY only if **actual authenticated IMAP capabilities** show support; BINARY requires provider interoperability, integrity, storage and rollback qualification.
 3. Distinguish TLS/LOGIN **transport** EOF/timeouts from permanent TLS verification or credential rejection. Existing exponential startup backoff must handle temporary failures without weakening certificate checks.
 4. Account-specific cleanup retries can use a finite **18-second** mutation deadline *only after* prior failure, when their page remains restricted to 32 messages / 4 MB. Never refund mailbox debt without authoritative physical deletion proof.
 5. Keep the released primary round-robin placement and ordinary feedback batching: both immediate-prompt-feedback and RTT-aware hedging produced worse loaded tails in paired synthetic trials.
@@ -35,3 +35,12 @@ The fixture currently supports rate/latency restrictions and temporary rate dips
 - The user's server diagnostics showed nearly **787 MB** of retained mailbox data, 11/15 accounts in storage pressure and multiple quarantined cleanup operations; verify finite clearance on live providers before any stable promotion.
 - Instrument radio uplink and downlink *including repeated IMAP polling and TLS framing*, not just encoded payload bytes. Android current diagnostic snapshots can report capability booleans and poll interval but do not yet count physical TLS bytes.
 - GitHub Actions runner allocation was failing before executing any steps at this development head. Do not label the candidate validated or publish an APK from it until runner jobs, full race tests, native+Android checks and paired mobile tests complete successfully.
+
+## RC2 strict no-regression release rule (not yet qualified)
+
+- Compare the proposed branch with immutable **released** `v1.1.6-rc1` source, not with an untested previous commit.
+- Each completed paired run must have no *positive* measured RTT delta in **idle, loaded and after-load minimum/median/p95/p99/maximum**. A single higher metric **blocks the release**; do not average away a regression.
+- Both upload and download goodput must remain at least 75% of RC1 in each trial; also compare the best throughput across trials to protect maximum throughput. No fallback to a 200 Mbps absolute floor as a substitute for the 25% relative rule.
+- Three alternating-order synthetic A/B trials per network profile are the minimum screen (500 Mbps home, 3 ms home-icmp floor, 160/90 mobile, 20/5 mobile, 8/2 poor mobile). Runner jitter can make strict gates fail; that is a reason to gather more evidence, not to silently relax the constraint.
+- The fixture cannot prove a literal zero-RTT-change guarantee on every real network, or model physical cellular loss/handover. Separate packet-loss/handover and actual phone/provider trials remain mandatory before a general release.
+- The Go toolchain and Android integration must pass, and matched server/APK artifacts must be built, signed and verified. **No RC2 artifacts should be released while GitHub Actions jobs fail before provisioning a runner.**
