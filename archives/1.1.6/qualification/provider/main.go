@@ -488,6 +488,8 @@ func run() error {
 	worst := flag.Bool("worst", false, "constant 50 ms client / 40 ms server RTT")
 	clientUpload := flag.Int64("client-upload-mbps", 0, "independent shared uplink rate; requires downlink rate")
 	clientDownload := flag.Int64("client-download-mbps", 0, "independent shared downlink rate; requires uplink rate")
+	clientUploadKbps := flag.Int64("client-upload-kbps", 0, "sub-1 Mbps independent uplink; both kbps rates required")
+	clientDownloadKbps := flag.Int64("client-download-kbps", 0, "sub-1 Mbps independent downlink; both kbps rates required")
 	existingStall := flag.Duration("existing-create-stall", 0, "existing control CREATE stall on accounts a02/a03/a05/a10; SELECT/STATUS remain responsive")
 	selectRefusals := flag.Int("startup-select-refusals", 0, "temporary control SELECT refusals per affected folder, shared across connections")
 	freshControlAccounts := flag.Int("fresh-control-accounts", 0, "first N accounts start with no control folders; remaining accounts start with both")
@@ -524,6 +526,14 @@ func run() error {
 	}
 	if *oversizedDelay < 0 || *oversizedDelay > 30*time.Second || (*oversizedDelay > 0 && *maxExpungeMiB == 0) || *maxExpungeMiB < 0 || *maxExpungeMiB > 64 || *downloadFetchDelay < 0 || *downloadFetchDelay > time.Second || *mutationRowCost < 0 || *mutationRowCost > 20*time.Millisecond || *appendService < 0 || *appendService > time.Second || *selectRefusals < 0 || *selectRefusals > 8 || *existingStall < 0 || *existingStall > 30*time.Second || *clientUpload < 0 || *clientDownload < 0 || (*clientUpload == 0) != (*clientDownload == 0) || *uploadFetchDelay < 0 || *uploadFetchDelay > time.Second || *metadataDelay < 0 || *metadataDelay > time.Second || *historyFolders < 0 || *historyFolders > 1000 || *prefill < 0 || *prefill > 1000 || *bulkDelay < 0 || *bulkDelay > time.Second || *clientMbps <= 0 || *dir == "" || *accounts < 1 || *accounts > 20 {
 		return fmt.Errorf("invalid fixture arguments")
+	}
+	// Keep the original Mbps interface unchanged; an independent kbps pair
+	// models 2/0.5 Mbps mobile links without rounding the 500 kbps uplink
+	// to 1 Mbps. Supplying both unit families would silently mis-shape tests.
+	if *clientUploadKbps < 0 || *clientDownloadKbps < 0 ||
+		(*clientUploadKbps == 0) != (*clientDownloadKbps == 0) ||
+		(*clientUploadKbps > 0 && (*clientUpload > 0 || *clientDownload > 0)) {
+		return fmt.Errorf("invalid or ambiguous kbps fixture arguments")
 	}
 	if *freshControlAccounts < 0 || *freshControlAccounts > *accounts || *unavailableControlAccounts < 0 || *unavailableControlAccounts >= *accounts || *missingControlDelay < 0 || *missingControlDelay > 30*time.Second {
 		return fmt.Errorf("invalid startup fixture arguments")
@@ -572,12 +582,15 @@ func run() error {
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
 	if *rateDip {
-		if *clientMbps != 100 || *clientUpload != 0 || *clientDownload != 0 { return errors.New("rate dip requires shared 100 Mbps link") }
+		if *clientMbps != 100 || *clientUpload != 0 || *clientDownload != 0 || *clientUploadKbps != 0 || *clientDownloadKbps != 0 { return errors.New("rate dip requires shared 100 Mbps link") }
 		clientNet.dipStart, clientNet.dipDuration, clientNet.dipBitsPerSecond = clientNet.start.Add(10*time.Second), 15*time.Second, 1_000_000
 	}
 	if *clientUpload > 0 {
 		clientNet.readBitsPerSecond = *clientUpload * 1_000_000
 		clientNet.writeBitsPerSecond = *clientDownload * 1_000_000
+	} else if *clientUploadKbps > 0 {
+		clientNet.readBitsPerSecond = *clientUploadKbps * 1000
+		clientNet.writeBitsPerSecond = *clientDownloadKbps * 1000
 	}
 	serverNet := &network{start: clientNet.start, bitsPerSecond: 1_000_000_000, step: 700 * time.Millisecond, rtts: []time.Duration{0}}
 	if *variable {
@@ -643,7 +656,7 @@ func run() error {
 	web := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	defer web.Close()
 	go web.Serve(control)
-	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_upload_mbps": *clientUpload, "client_download_mbps": *clientDownload, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
+	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_upload_mbps": *clientUpload, "client_download_mbps": *clientDownload, "client_upload_kbps": *clientUploadKbps, "client_download_kbps": *clientDownloadKbps, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
 	body, _ := json.MarshalIndent(ready, "", "  ")
 	if err = os.WriteFile(filepath.Join(*dir, "provider.json"), body, 0600); err != nil {
 		return err
