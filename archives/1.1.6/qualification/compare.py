@@ -142,7 +142,7 @@ def main():
                 'provider_sha256': fingerprint(ROOT/'provider'),
                 'harness_sha256': fingerprint(ROOT),
                 'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),
+                'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),'baseline_mailstream_sha256':fingerprint(sources['rc2'].parent/'mailstream') if args.baseline_is_mailstream else None,
                 'native_sha256':fingerprint(sources['candidate'].parent/'native'),
                 'provider_shared_mbps': {'client_both_directions': args.client_mbps, 'server_both_directions': 1000},
                 'field_performance_qualified': False, 'attempts': []}
@@ -181,7 +181,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                           f'replace itom.local/mobile => {json.dumps(str(core.parent/"native"))}\n'
                           f'replace itom.local/core => {json.dumps(str(core))}\n'
                           f'replace github.com/emersion/go-imap/v2 => {json.dumps(str(core/"third_party/go-imap"))}\n'
-                          f'replace itom.local/mailstream => {json.dumps(str(sources["candidate"].parent/"mailstream"))}\n')
+                          f'replace itom.local/mailstream => {json.dumps(str(core.parent/"mailstream"))}\n')
                 if label=='candidate' or args.baseline_is_mailstream:module+='require itom.local/mobile v0.0.0\nrequire gvisor.dev/gvisor v0.0.0-20260701204157-69c2d17aea96\n'
                 (build_dir/'go.mod').write_text(module)
                 subprocess.run([args.go, 'mod', 'tidy'], cwd=build_dir, env=env,
@@ -238,6 +238,8 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                                           for label, core in sources.items()}
             manifest['native_unchanged']=fingerprint(sources['candidate'].parent/'native')==manifest['native_sha256']
             manifest['mailstream_unchanged']=fingerprint(sources['candidate'].parent/'mailstream')==manifest['mailstream_sha256']
+            if args.baseline_is_mailstream:
+                manifest['baseline_mailstream_unchanged']=fingerprint(sources['rc2'].parent/'mailstream')==manifest['baseline_mailstream_sha256']
             (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
     for label in sources:
         p = output/(label+'.json')
