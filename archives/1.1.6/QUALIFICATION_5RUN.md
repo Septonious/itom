@@ -1,65 +1,88 @@
-# ITOM 1.1.6 RC1 — five-pair synthetic performance results
+# ITOM 1.1.6 RC1 — mandatory ASCII85, five paired trials
 
-**Verified benchmark run:** [GitHub Actions #42636826612](https://github.com/Septonious/itom/actions/runs/42636826612)  
-**Exact tested commit:** `c3c6fdbfb9a91433846f35f6975fbf3bbc62527e`  
-**Release status:** experimental; not live-device or energy-qualified.
+**Verified completed run:** [GitHub Actions #42650945537](https://github.com/Septonious/itom/actions/runs/42650945537)  
+**Exact transport source:** `52ce71e52846b3f188a0751f4b5c95a394cf3e78`  
+**Status:** experimental / not field-qualified. The 1.1.5 stable tag remains unchanged.
 
-Five independent paired runs per scenario used the unchanged exact 1.1.5 baseline and the same 1.1.6 candidate source. Every run recorded actual application TLS echo RTT, not just the configured IMAP RTT. Per-run details and printed distributions remain in the linked Actions job logs.
+This source retains a single **7-bit ASCII85 MIME codec** for every IMAP publication including Noise handshake, data, control, and recovery. It removes Base64/dual-codec logic and negotiation. The short-lived 20 Mbps pacing-guard experiment introduced after this commit failed full safety tests and was **reverted**; the release source has the original tested controller.
 
-## home
+Five independent paired runs per profile exercised actual TLS application echo through simulated IMAP mailboxes. Pooled RTT p95 is calculated over every recorded application RTT, not input RTT. A successful synthetic result does not demonstrate live Rambler or device energy behavior.
+
+| Profile | Idle median baseline→candidate | Idle pooled p95 | Loaded pooled p95 | Upload Mbps baseline→candidate | Download Mbps baseline→candidate |
+|---|---|---|---|---|---|
+| home | 75.561→75.623 ms | 102.75→98.59 ms | 307.14→276.024 ms | 312.53→339.54 | 327.4→361.6 |
+| home-icmp | 46.142→47.038 ms | 78.543→76.624 ms | 326.86→425.052 ms | 290.46→302.75 | 339.3→366.89 |
+| mobile | 120.941→128.732 ms | 245.288→232.333 ms | 774.142→671.902 ms | 58.28→64.3 | 101.63→115.75 |
+| mobile-20 | 123.791→120.934 ms | 243.041→237.272 ms | 1038.149→959.698 ms | 3.27→3.6 | 13.07→14.36 |
+| home-contention | 94.793→94.498 ms | 128.024→119.237 ms | 292.398→256.209 ms | 313.39→345.83 | 327.69→358.74 |
+
+**Mobile-20:** The model limits the mobile shared physical link to 20 Mbps down/5 Mbps up. Its throughput improves from **13.07 to 14.36 Mbps down** and **3.27 to 3.60 Mbps up**. Median loaded RTT is higher (463.656→530.074 ms) even though pooled loaded p95 improves from 1038.149→959.698 ms. Both facts should be considered in field testing.
+
+**Home:** The full-capacity home model sustains **339.54 Mbps up / 361.60 Mbps down** while its pooled loaded p95 drops 307.140→276.024 ms. Five-run minimum candidate upload remains 264.63 Mbps, above the 200 Mbps floor.
+
+**Known regression:** The 3 ms network-floor profile has **higher loaded p95**, 326.860→425.052 ms (+98.192 ms), despite better throughput. The 3 ms floor is the user’s ICMP observation to `imap.rambler.ru`, not a real IMAP round trip. The change is deliberately **for field testing only**, not promoted to stable.
+
+**Real-device checklist:** Match 1.1.6 server and Android app; record RTT idle, loaded and post-load with measured upload/download; capture radio throughput and battery/CPU usage; verify resume, DNS, mailbox reclamation and sessions over hours; compare against unchanged 1.1.5 using the same provider accounts and environment. Never delete the 1.1.5 release or production state.
+
+## Raw benchmark log excerpts
+
+### home
 
 ```text
 === AGGREGATED MEASURED RTT: home (5 paired runs) ===
-idle: median-of-medians 76.894 -> 72.894 ms; p95 (median of runs) 104.137 -> 97.708 ms (-6.429); pooled p95 105.104 -> 97.804 ms (-7.300), 150 candidate observations
-loaded: median-of-medians 210.992 -> 212.834 ms; p95 (median of runs) 364.576 -> 368.780 ms (+4.204); pooled p95 362.157 -> 354.698 ms (-7.459), 170 candidate observations
-after: median-of-medians 71.061 -> 72.505 ms; p95 (median of runs) 98.053 -> 101.641 ms (+3.588); pooled p95 97.265 -> 99.711 ms (+2.446), 150 candidate observations
-upload: median throughput 300.82 -> 307.33 Mbps; candidate minimum 299.34 Mbps
-download: median throughput 326.20 -> 330.13 Mbps; candidate minimum 327.63 Mbps
+idle: median-of-medians 75.561 -> 75.623 ms; p95 (median of runs) 102.750 -> 99.777 ms (-2.973); pooled p95 102.750 -> 98.590 ms (-4.160), 150 candidate observations
+loaded: median-of-medians 193.409 -> 186.575 ms; p95 (median of runs) 313.843 -> 276.024 ms (-37.819); pooled p95 307.140 -> 276.024 ms (-31.116), 170 candidate observations
+after: median-of-medians 71.685 -> 70.855 ms; p95 (median of runs) 101.279 -> 98.857 ms (-2.422); pooled p95 98.583 -> 98.857 ms (+0.274), 150 candidate observations
+upload: median throughput 312.53 -> 339.54 Mbps; candidate minimum 264.63 Mbps
+download: median throughput 327.40 -> 361.60 Mbps; candidate minimum 357.60 Mbps
 Wrote verified measured RTT aggregation: bench-home-aggregate.json
 ```
 
-## home-icmp
+### home-icmp
 
 ```text
 === AGGREGATED MEASURED RTT: home-icmp (5 paired runs) ===
-idle: median-of-medians 45.758 -> 44.264 ms; p95 (median of runs) 75.043 -> 77.309 ms (+2.266); pooled p95 74.804 -> 74.937 ms (+0.133), 150 candidate observations
-loaded: median-of-medians 210.023 -> 201.740 ms; p95 (median of runs) 398.494 -> 333.953 ms (-64.541); pooled p95 398.494 -> 339.178 ms (-59.316), 170 candidate observations
-after: median-of-medians 43.733 -> 41.147 ms; p95 (median of runs) 75.795 -> 73.554 ms (-2.241); pooled p95 76.772 -> 80.596 ms (+3.824), 150 candidate observations
-upload: median throughput 308.75 -> 297.20 Mbps; candidate minimum 268.50 Mbps
-download: median throughput 330.15 -> 340.28 Mbps; candidate minimum 336.66 Mbps
+idle: median-of-medians 46.142 -> 47.038 ms; p95 (median of runs) 78.322 -> 75.202 ms (-3.120); pooled p95 78.543 -> 76.624 ms (-1.919), 150 candidate observations
+loaded: median-of-medians 199.444 -> 220.163 ms; p95 (median of runs) 326.860 -> 431.865 ms (+105.005); pooled p95 326.860 -> 425.052 ms (+98.192), 170 candidate observations
+after: median-of-medians 44.032 -> 40.627 ms; p95 (median of runs) 82.624 -> 81.994 ms (-0.630); pooled p95 83.754 -> 81.465 ms (-2.289), 150 candidate observations
+upload: median throughput 290.46 -> 302.75 Mbps; candidate minimum 295.07 Mbps
+download: median throughput 339.30 -> 366.89 Mbps; candidate minimum 351.00 Mbps
 Wrote verified measured RTT aggregation: bench-home-icmp-aggregate.json
 ```
 
-## mobile
+### mobile
 
 ```text
 === AGGREGATED MEASURED RTT: mobile (5 paired runs) ===
-idle: median-of-medians 130.686 -> 122.783 ms; p95 (median of runs) 237.347 -> 247.327 ms (+9.980); pooled p95 235.552 -> 247.327 ms (+11.775), 150 candidate observations
-loaded: median-of-medians 312.424 -> 300.006 ms; p95 (median of runs) 683.330 -> 790.694 ms (+107.364); pooled p95 767.857 -> 797.175 ms (+29.318), 200 candidate observations
-after: median-of-medians 131.517 -> 125.272 ms; p95 (median of runs) 228.436 -> 243.598 ms (+15.162); pooled p95 229.450 -> 243.598 ms (+14.148), 150 candidate observations
-upload: median throughput 58.57 -> 59.47 Mbps; candidate minimum 58.70 Mbps
-download: median throughput 102.79 -> 103.39 Mbps; candidate minimum 102.86 Mbps
+idle: median-of-medians 120.941 -> 128.732 ms; p95 (median of runs) 230.173 -> 232.333 ms (+2.160); pooled p95 245.288 -> 232.333 ms (-12.955), 150 candidate observations
+loaded: median-of-medians 281.974 -> 299.586 ms; p95 (median of runs) 748.915 -> 628.319 ms (-120.596); pooled p95 774.142 -> 671.902 ms (-102.240), 202 candidate observations
+after: median-of-medians 126.442 -> 130.820 ms; p95 (median of runs) 236.452 -> 226.778 ms (-9.674); pooled p95 237.619 -> 230.976 ms (-6.643), 150 candidate observations
+upload: median throughput 58.28 -> 64.30 Mbps; candidate minimum 63.63 Mbps
+download: median throughput 101.63 -> 115.75 Mbps; candidate minimum 114.31 Mbps
 Wrote verified measured RTT aggregation: bench-mobile-aggregate.json
 ```
 
-## home-contention
+### mobile-20
+
+```text
+=== AGGREGATED MEASURED RTT: mobile (5 paired runs) ===
+idle: median-of-medians 123.791 -> 120.934 ms; p95 (median of runs) 235.962 -> 237.272 ms (+1.310); pooled p95 243.041 -> 237.272 ms (-5.769), 150 candidate observations
+loaded: median-of-medians 463.656 -> 530.074 ms; p95 (median of runs) 1053.191 -> 963.625 ms (-89.566); pooled p95 1038.149 -> 959.698 ms (-78.451), 285 candidate observations
+after: median-of-medians 130.630 -> 119.724 ms; p95 (median of runs) 236.400 -> 225.695 ms (-10.705); pooled p95 240.386 -> 226.885 ms (-13.501), 150 candidate observations
+upload: median throughput 3.27 -> 3.60 Mbps; candidate minimum 3.42 Mbps
+download: median throughput 13.07 -> 14.36 Mbps; candidate minimum 14.35 Mbps
+Wrote verified measured RTT aggregation: bench-mobile-20-aggregate.json
+```
+
+### home-contention
 
 ```text
 === AGGREGATED MEASURED RTT: home (5 paired runs) ===
-idle: median-of-medians 102.881 -> 95.082 ms; p95 (median of runs) 125.312 -> 122.128 ms (-3.184); pooled p95 128.441 -> 125.743 ms (-2.698), 150 candidate observations
-loaded: median-of-medians 216.590 -> 223.717 ms; p95 (median of runs) 349.128 -> 418.384 ms (+69.256); pooled p95 348.399 -> 352.992 ms (+4.593), 170 candidate observations
-after: median-of-medians 97.344 -> 98.144 ms; p95 (median of runs) 118.396 -> 123.722 ms (+5.326); pooled p95 120.946 -> 124.010 ms (+3.064), 150 candidate observations
-upload: median throughput 282.50 -> 295.64 Mbps; candidate minimum 292.13 Mbps
-download: median throughput 320.86 -> 318.98 Mbps; candidate minimum 315.14 Mbps
+idle: median-of-medians 94.793 -> 94.498 ms; p95 (median of runs) 128.519 -> 119.237 ms (-9.282); pooled p95 128.024 -> 119.237 ms (-8.787), 150 candidate observations
+loaded: median-of-medians 208.721 -> 195.066 ms; p95 (median of runs) 283.528 -> 256.209 ms (-27.319); pooled p95 292.398 -> 256.209 ms (-36.189), 170 candidate observations
+after: median-of-medians 93.279 -> 96.667 ms; p95 (median of runs) 113.136 -> 124.824 ms (+11.688); pooled p95 115.749 -> 124.824 ms (+9.075), 150 candidate observations
+upload: median throughput 313.39 -> 345.83 Mbps; candidate minimum 342.30 Mbps
+download: median throughput 327.69 -> 358.74 Mbps; candidate minimum 354.62 Mbps
 Wrote verified measured RTT aggregation: bench-home-contention-aggregate.json
 ```
 
-## Interpretation
-
-The 15–30 ms home model improves pooled idle p95 from **105.104 ms to 97.804 ms**, idle median from **76.894 ms to 72.894 ms**, and loaded pooled p95 from **362.157 ms to 354.698 ms**. Median throughput is **307.33 Mbps upload / 330.13 Mbps download**, with all candidate home runs above **200 Mbps** in both directions.
-
-The 3 ms home-floor profile models the user's ICMP observation to `imap.rambler.ru` as a physical-network floor; it must **not** be interpreted as an actual 3 ms IMAP round trip. Its pooled loaded p95 improves by approximately 59 ms.
-
-Mobile (30–150 ms IMAP-path model) has a better idle median but pooled idle p95 is about 11.8 ms worse and loaded p95 about 29.3 ms worse. These are recorded limitations. They remain within modest proportional differences but require live mobile field tests before stability claims.
-
-The snapshot is **not** proof of a sub-100 ms RTT on all networks or a replacement for phone CPU, wakeup, quota, fault, or multi-hour soak checks. Stable 1.1.5 must not be overwritten.

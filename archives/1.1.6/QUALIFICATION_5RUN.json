@@ -1,205 +1,252 @@
 {
-  "schema": 1,
-  "run_id": 42636826612,
-  "run_url": "https://github.com/Septonious/itom/actions/runs/42636826612",
-  "commit": "c3c6fdbfb9a91433846f35f6975fbf3bbc62527e",
-  "release_revision": "itom-1-1-6-rc1",
+  "schema": 2,
+  "run_id": 42650945537,
+  "run_url": "https://github.com/Septonious/itom/actions/runs/42650945537",
+  "commit": "52ce71e52846b3f188a0751f4b5c95a394cf3e78",
+  "pairs_per_profile": 5,
+  "field_qualified": false,
+  "source": "Paired actual TLS application echoes over synthetic IMAP fixture, not live provider/mobile network",
+  "codec": "Mandatory ASCII85/7bit MIME without negotiation or Base64 fallback",
   "profiles": {
     "home": {
-      "job_id": 129227075212,
+      "job_id": 129276833484,
       "summary": [
         "=== AGGREGATED MEASURED RTT: home (5 paired runs) ===",
-        "idle: median-of-medians 76.894 -> 72.894 ms; p95 (median of runs) 104.137 -> 97.708 ms (-6.429); pooled p95 105.104 -> 97.804 ms (-7.300), 150 candidate observations",
-        "loaded: median-of-medians 210.992 -> 212.834 ms; p95 (median of runs) 364.576 -> 368.780 ms (+4.204); pooled p95 362.157 -> 354.698 ms (-7.459), 170 candidate observations",
-        "after: median-of-medians 71.061 -> 72.505 ms; p95 (median of runs) 98.053 -> 101.641 ms (+3.588); pooled p95 97.265 -> 99.711 ms (+2.446), 150 candidate observations",
-        "upload: median throughput 300.82 -> 307.33 Mbps; candidate minimum 299.34 Mbps",
-        "download: median throughput 326.20 -> 330.13 Mbps; candidate minimum 327.63 Mbps",
+        "idle: median-of-medians 75.561 -> 75.623 ms; p95 (median of runs) 102.750 -> 99.777 ms (-2.973); pooled p95 102.750 -> 98.590 ms (-4.160), 150 candidate observations",
+        "loaded: median-of-medians 193.409 -> 186.575 ms; p95 (median of runs) 313.843 -> 276.024 ms (-37.819); pooled p95 307.140 -> 276.024 ms (-31.116), 170 candidate observations",
+        "after: median-of-medians 71.685 -> 70.855 ms; p95 (median of runs) 101.279 -> 98.857 ms (-2.422); pooled p95 98.583 -> 98.857 ms (+0.274), 150 candidate observations",
+        "upload: median throughput 312.53 -> 339.54 Mbps; candidate minimum 264.63 Mbps",
+        "download: median throughput 327.40 -> 361.60 Mbps; candidate minimum 357.60 Mbps",
         "Wrote verified measured RTT aggregation: bench-home-aggregate.json"
       ],
       "metrics": {
         "idle": {
-          "median_baseline_ms": 76.894,
-          "median_candidate_ms": 72.894,
-          "p95_run_baseline_ms": 104.137,
-          "p95_run_candidate_ms": 97.708,
-          "p95_pooled_baseline_ms": 105.104,
-          "p95_pooled_candidate_ms": 97.804
+          "median_baseline_ms": 75.561,
+          "median_candidate_ms": 75.623,
+          "p95_run_baseline_ms": 102.75,
+          "p95_run_candidate_ms": 99.777,
+          "p95_pooled_baseline_ms": 102.75,
+          "p95_pooled_candidate_ms": 98.59
         },
         "loaded": {
-          "median_baseline_ms": 210.992,
-          "median_candidate_ms": 212.834,
-          "p95_run_baseline_ms": 364.576,
-          "p95_run_candidate_ms": 368.78,
-          "p95_pooled_baseline_ms": 362.157,
-          "p95_pooled_candidate_ms": 354.698
+          "median_baseline_ms": 193.409,
+          "median_candidate_ms": 186.575,
+          "p95_run_baseline_ms": 313.843,
+          "p95_run_candidate_ms": 276.024,
+          "p95_pooled_baseline_ms": 307.14,
+          "p95_pooled_candidate_ms": 276.024
         },
         "after": {
-          "median_baseline_ms": 71.061,
-          "median_candidate_ms": 72.505,
-          "p95_run_baseline_ms": 98.053,
-          "p95_run_candidate_ms": 101.641,
-          "p95_pooled_baseline_ms": 97.265,
-          "p95_pooled_candidate_ms": 99.711
+          "median_baseline_ms": 71.685,
+          "median_candidate_ms": 70.855,
+          "p95_run_baseline_ms": 101.279,
+          "p95_run_candidate_ms": 98.857,
+          "p95_pooled_baseline_ms": 98.583,
+          "p95_pooled_candidate_ms": 98.857
         },
         "upload": {
-          "median_baseline_mbps": 300.82,
-          "median_candidate_mbps": 307.33,
-          "min_candidate_mbps": 299.34
+          "median_baseline_mbps": 312.53,
+          "median_candidate_mbps": 339.54,
+          "min_candidate_mbps": 264.63
         },
         "download": {
-          "median_baseline_mbps": 326.2,
-          "median_candidate_mbps": 330.13,
-          "min_candidate_mbps": 327.63
+          "median_baseline_mbps": 327.4,
+          "median_candidate_mbps": 361.6,
+          "min_candidate_mbps": 357.6
         }
       }
     },
     "home-icmp": {
-      "job_id": 129227075700,
+      "job_id": 129276833634,
       "summary": [
         "=== AGGREGATED MEASURED RTT: home-icmp (5 paired runs) ===",
-        "idle: median-of-medians 45.758 -> 44.264 ms; p95 (median of runs) 75.043 -> 77.309 ms (+2.266); pooled p95 74.804 -> 74.937 ms (+0.133), 150 candidate observations",
-        "loaded: median-of-medians 210.023 -> 201.740 ms; p95 (median of runs) 398.494 -> 333.953 ms (-64.541); pooled p95 398.494 -> 339.178 ms (-59.316), 170 candidate observations",
-        "after: median-of-medians 43.733 -> 41.147 ms; p95 (median of runs) 75.795 -> 73.554 ms (-2.241); pooled p95 76.772 -> 80.596 ms (+3.824), 150 candidate observations",
-        "upload: median throughput 308.75 -> 297.20 Mbps; candidate minimum 268.50 Mbps",
-        "download: median throughput 330.15 -> 340.28 Mbps; candidate minimum 336.66 Mbps",
+        "idle: median-of-medians 46.142 -> 47.038 ms; p95 (median of runs) 78.322 -> 75.202 ms (-3.120); pooled p95 78.543 -> 76.624 ms (-1.919), 150 candidate observations",
+        "loaded: median-of-medians 199.444 -> 220.163 ms; p95 (median of runs) 326.860 -> 431.865 ms (+105.005); pooled p95 326.860 -> 425.052 ms (+98.192), 170 candidate observations",
+        "after: median-of-medians 44.032 -> 40.627 ms; p95 (median of runs) 82.624 -> 81.994 ms (-0.630); pooled p95 83.754 -> 81.465 ms (-2.289), 150 candidate observations",
+        "upload: median throughput 290.46 -> 302.75 Mbps; candidate minimum 295.07 Mbps",
+        "download: median throughput 339.30 -> 366.89 Mbps; candidate minimum 351.00 Mbps",
         "Wrote verified measured RTT aggregation: bench-home-icmp-aggregate.json"
       ],
       "metrics": {
         "idle": {
-          "median_baseline_ms": 45.758,
-          "median_candidate_ms": 44.264,
-          "p95_run_baseline_ms": 75.043,
-          "p95_run_candidate_ms": 77.309,
-          "p95_pooled_baseline_ms": 74.804,
-          "p95_pooled_candidate_ms": 74.937
+          "median_baseline_ms": 46.142,
+          "median_candidate_ms": 47.038,
+          "p95_run_baseline_ms": 78.322,
+          "p95_run_candidate_ms": 75.202,
+          "p95_pooled_baseline_ms": 78.543,
+          "p95_pooled_candidate_ms": 76.624
         },
         "loaded": {
-          "median_baseline_ms": 210.023,
-          "median_candidate_ms": 201.74,
-          "p95_run_baseline_ms": 398.494,
-          "p95_run_candidate_ms": 333.953,
-          "p95_pooled_baseline_ms": 398.494,
-          "p95_pooled_candidate_ms": 339.178
+          "median_baseline_ms": 199.444,
+          "median_candidate_ms": 220.163,
+          "p95_run_baseline_ms": 326.86,
+          "p95_run_candidate_ms": 431.865,
+          "p95_pooled_baseline_ms": 326.86,
+          "p95_pooled_candidate_ms": 425.052
         },
         "after": {
-          "median_baseline_ms": 43.733,
-          "median_candidate_ms": 41.147,
-          "p95_run_baseline_ms": 75.795,
-          "p95_run_candidate_ms": 73.554,
-          "p95_pooled_baseline_ms": 76.772,
-          "p95_pooled_candidate_ms": 80.596
+          "median_baseline_ms": 44.032,
+          "median_candidate_ms": 40.627,
+          "p95_run_baseline_ms": 82.624,
+          "p95_run_candidate_ms": 81.994,
+          "p95_pooled_baseline_ms": 83.754,
+          "p95_pooled_candidate_ms": 81.465
         },
         "upload": {
-          "median_baseline_mbps": 308.75,
-          "median_candidate_mbps": 297.2,
-          "min_candidate_mbps": 268.5
+          "median_baseline_mbps": 290.46,
+          "median_candidate_mbps": 302.75,
+          "min_candidate_mbps": 295.07
         },
         "download": {
-          "median_baseline_mbps": 330.15,
-          "median_candidate_mbps": 340.28,
-          "min_candidate_mbps": 336.66
+          "median_baseline_mbps": 339.3,
+          "median_candidate_mbps": 366.89,
+          "min_candidate_mbps": 351
         }
       }
     },
     "mobile": {
-      "job_id": 129227075782,
+      "job_id": 129276833095,
       "summary": [
         "=== AGGREGATED MEASURED RTT: mobile (5 paired runs) ===",
-        "idle: median-of-medians 130.686 -> 122.783 ms; p95 (median of runs) 237.347 -> 247.327 ms (+9.980); pooled p95 235.552 -> 247.327 ms (+11.775), 150 candidate observations",
-        "loaded: median-of-medians 312.424 -> 300.006 ms; p95 (median of runs) 683.330 -> 790.694 ms (+107.364); pooled p95 767.857 -> 797.175 ms (+29.318), 200 candidate observations",
-        "after: median-of-medians 131.517 -> 125.272 ms; p95 (median of runs) 228.436 -> 243.598 ms (+15.162); pooled p95 229.450 -> 243.598 ms (+14.148), 150 candidate observations",
-        "upload: median throughput 58.57 -> 59.47 Mbps; candidate minimum 58.70 Mbps",
-        "download: median throughput 102.79 -> 103.39 Mbps; candidate minimum 102.86 Mbps",
+        "idle: median-of-medians 120.941 -> 128.732 ms; p95 (median of runs) 230.173 -> 232.333 ms (+2.160); pooled p95 245.288 -> 232.333 ms (-12.955), 150 candidate observations",
+        "loaded: median-of-medians 281.974 -> 299.586 ms; p95 (median of runs) 748.915 -> 628.319 ms (-120.596); pooled p95 774.142 -> 671.902 ms (-102.240), 202 candidate observations",
+        "after: median-of-medians 126.442 -> 130.820 ms; p95 (median of runs) 236.452 -> 226.778 ms (-9.674); pooled p95 237.619 -> 230.976 ms (-6.643), 150 candidate observations",
+        "upload: median throughput 58.28 -> 64.30 Mbps; candidate minimum 63.63 Mbps",
+        "download: median throughput 101.63 -> 115.75 Mbps; candidate minimum 114.31 Mbps",
         "Wrote verified measured RTT aggregation: bench-mobile-aggregate.json"
       ],
       "metrics": {
         "idle": {
-          "median_baseline_ms": 130.686,
-          "median_candidate_ms": 122.783,
-          "p95_run_baseline_ms": 237.347,
-          "p95_run_candidate_ms": 247.327,
-          "p95_pooled_baseline_ms": 235.552,
-          "p95_pooled_candidate_ms": 247.327
+          "median_baseline_ms": 120.941,
+          "median_candidate_ms": 128.732,
+          "p95_run_baseline_ms": 230.173,
+          "p95_run_candidate_ms": 232.333,
+          "p95_pooled_baseline_ms": 245.288,
+          "p95_pooled_candidate_ms": 232.333
         },
         "loaded": {
-          "median_baseline_ms": 312.424,
-          "median_candidate_ms": 300.006,
-          "p95_run_baseline_ms": 683.33,
-          "p95_run_candidate_ms": 790.694,
-          "p95_pooled_baseline_ms": 767.857,
-          "p95_pooled_candidate_ms": 797.175
+          "median_baseline_ms": 281.974,
+          "median_candidate_ms": 299.586,
+          "p95_run_baseline_ms": 748.915,
+          "p95_run_candidate_ms": 628.319,
+          "p95_pooled_baseline_ms": 774.142,
+          "p95_pooled_candidate_ms": 671.902
         },
         "after": {
-          "median_baseline_ms": 131.517,
-          "median_candidate_ms": 125.272,
-          "p95_run_baseline_ms": 228.436,
-          "p95_run_candidate_ms": 243.598,
-          "p95_pooled_baseline_ms": 229.45,
-          "p95_pooled_candidate_ms": 243.598
+          "median_baseline_ms": 126.442,
+          "median_candidate_ms": 130.82,
+          "p95_run_baseline_ms": 236.452,
+          "p95_run_candidate_ms": 226.778,
+          "p95_pooled_baseline_ms": 237.619,
+          "p95_pooled_candidate_ms": 230.976
         },
         "upload": {
-          "median_baseline_mbps": 58.57,
-          "median_candidate_mbps": 59.47,
-          "min_candidate_mbps": 58.7
+          "median_baseline_mbps": 58.28,
+          "median_candidate_mbps": 64.3,
+          "min_candidate_mbps": 63.63
         },
         "download": {
-          "median_baseline_mbps": 102.79,
-          "median_candidate_mbps": 103.39,
-          "min_candidate_mbps": 102.86
+          "median_baseline_mbps": 101.63,
+          "median_candidate_mbps": 115.75,
+          "min_candidate_mbps": 114.31
+        }
+      }
+    },
+    "mobile-20": {
+      "job_id": 129276833910,
+      "summary": [
+        "=== AGGREGATED MEASURED RTT: mobile (5 paired runs) ===",
+        "idle: median-of-medians 123.791 -> 120.934 ms; p95 (median of runs) 235.962 -> 237.272 ms (+1.310); pooled p95 243.041 -> 237.272 ms (-5.769), 150 candidate observations",
+        "loaded: median-of-medians 463.656 -> 530.074 ms; p95 (median of runs) 1053.191 -> 963.625 ms (-89.566); pooled p95 1038.149 -> 959.698 ms (-78.451), 285 candidate observations",
+        "after: median-of-medians 130.630 -> 119.724 ms; p95 (median of runs) 236.400 -> 225.695 ms (-10.705); pooled p95 240.386 -> 226.885 ms (-13.501), 150 candidate observations",
+        "upload: median throughput 3.27 -> 3.60 Mbps; candidate minimum 3.42 Mbps",
+        "download: median throughput 13.07 -> 14.36 Mbps; candidate minimum 14.35 Mbps",
+        "Wrote verified measured RTT aggregation: bench-mobile-20-aggregate.json"
+      ],
+      "metrics": {
+        "idle": {
+          "median_baseline_ms": 123.791,
+          "median_candidate_ms": 120.934,
+          "p95_run_baseline_ms": 235.962,
+          "p95_run_candidate_ms": 237.272,
+          "p95_pooled_baseline_ms": 243.041,
+          "p95_pooled_candidate_ms": 237.272
+        },
+        "loaded": {
+          "median_baseline_ms": 463.656,
+          "median_candidate_ms": 530.074,
+          "p95_run_baseline_ms": 1053.191,
+          "p95_run_candidate_ms": 963.625,
+          "p95_pooled_baseline_ms": 1038.149,
+          "p95_pooled_candidate_ms": 959.698
+        },
+        "after": {
+          "median_baseline_ms": 130.63,
+          "median_candidate_ms": 119.724,
+          "p95_run_baseline_ms": 236.4,
+          "p95_run_candidate_ms": 225.695,
+          "p95_pooled_baseline_ms": 240.386,
+          "p95_pooled_candidate_ms": 226.885
+        },
+        "upload": {
+          "median_baseline_mbps": 3.27,
+          "median_candidate_mbps": 3.6,
+          "min_candidate_mbps": 3.42
+        },
+        "download": {
+          "median_baseline_mbps": 13.07,
+          "median_candidate_mbps": 14.36,
+          "min_candidate_mbps": 14.35
         }
       }
     },
     "home-contention": {
-      "job_id": 129227075853,
+      "job_id": 129276833453,
       "summary": [
         "=== AGGREGATED MEASURED RTT: home (5 paired runs) ===",
-        "idle: median-of-medians 102.881 -> 95.082 ms; p95 (median of runs) 125.312 -> 122.128 ms (-3.184); pooled p95 128.441 -> 125.743 ms (-2.698), 150 candidate observations",
-        "loaded: median-of-medians 216.590 -> 223.717 ms; p95 (median of runs) 349.128 -> 418.384 ms (+69.256); pooled p95 348.399 -> 352.992 ms (+4.593), 170 candidate observations",
-        "after: median-of-medians 97.344 -> 98.144 ms; p95 (median of runs) 118.396 -> 123.722 ms (+5.326); pooled p95 120.946 -> 124.010 ms (+3.064), 150 candidate observations",
-        "upload: median throughput 282.50 -> 295.64 Mbps; candidate minimum 292.13 Mbps",
-        "download: median throughput 320.86 -> 318.98 Mbps; candidate minimum 315.14 Mbps",
+        "idle: median-of-medians 94.793 -> 94.498 ms; p95 (median of runs) 128.519 -> 119.237 ms (-9.282); pooled p95 128.024 -> 119.237 ms (-8.787), 150 candidate observations",
+        "loaded: median-of-medians 208.721 -> 195.066 ms; p95 (median of runs) 283.528 -> 256.209 ms (-27.319); pooled p95 292.398 -> 256.209 ms (-36.189), 170 candidate observations",
+        "after: median-of-medians 93.279 -> 96.667 ms; p95 (median of runs) 113.136 -> 124.824 ms (+11.688); pooled p95 115.749 -> 124.824 ms (+9.075), 150 candidate observations",
+        "upload: median throughput 313.39 -> 345.83 Mbps; candidate minimum 342.30 Mbps",
+        "download: median throughput 327.69 -> 358.74 Mbps; candidate minimum 354.62 Mbps",
         "Wrote verified measured RTT aggregation: bench-home-contention-aggregate.json"
       ],
       "metrics": {
         "idle": {
-          "median_baseline_ms": 102.881,
-          "median_candidate_ms": 95.082,
-          "p95_run_baseline_ms": 125.312,
-          "p95_run_candidate_ms": 122.128,
-          "p95_pooled_baseline_ms": 128.441,
-          "p95_pooled_candidate_ms": 125.743
+          "median_baseline_ms": 94.793,
+          "median_candidate_ms": 94.498,
+          "p95_run_baseline_ms": 128.519,
+          "p95_run_candidate_ms": 119.237,
+          "p95_pooled_baseline_ms": 128.024,
+          "p95_pooled_candidate_ms": 119.237
         },
         "loaded": {
-          "median_baseline_ms": 216.59,
-          "median_candidate_ms": 223.717,
-          "p95_run_baseline_ms": 349.128,
-          "p95_run_candidate_ms": 418.384,
-          "p95_pooled_baseline_ms": 348.399,
-          "p95_pooled_candidate_ms": 352.992
+          "median_baseline_ms": 208.721,
+          "median_candidate_ms": 195.066,
+          "p95_run_baseline_ms": 283.528,
+          "p95_run_candidate_ms": 256.209,
+          "p95_pooled_baseline_ms": 292.398,
+          "p95_pooled_candidate_ms": 256.209
         },
         "after": {
-          "median_baseline_ms": 97.344,
-          "median_candidate_ms": 98.144,
-          "p95_run_baseline_ms": 118.396,
-          "p95_run_candidate_ms": 123.722,
-          "p95_pooled_baseline_ms": 120.946,
-          "p95_pooled_candidate_ms": 124.01
+          "median_baseline_ms": 93.279,
+          "median_candidate_ms": 96.667,
+          "p95_run_baseline_ms": 113.136,
+          "p95_run_candidate_ms": 124.824,
+          "p95_pooled_baseline_ms": 115.749,
+          "p95_pooled_candidate_ms": 124.824
         },
         "upload": {
-          "median_baseline_mbps": 282.5,
-          "median_candidate_mbps": 295.64,
-          "min_candidate_mbps": 292.13
+          "median_baseline_mbps": 313.39,
+          "median_candidate_mbps": 345.83,
+          "min_candidate_mbps": 342.3
         },
         "download": {
-          "median_baseline_mbps": 320.86,
-          "median_candidate_mbps": 318.98,
-          "min_candidate_mbps": 315.14
+          "median_baseline_mbps": 327.69,
+          "median_candidate_mbps": 358.74,
+          "min_candidate_mbps": 354.62
         }
       }
     }
-  },
-  "pairs_per_profile": 5,
-  "field_qualified": false,
-  "method": "paired synthetic TLS application RTT; five runs per profile; raw observations collected inside GitHub runners; aggregated log summaries preserved",
-  "acceptance_note": "Home 15-30ms baseline pooled idle p95 105.104ms and candidate 97.804ms; median 76.894->72.894ms; home throughput 307.33up/330.13down; mobile pooled idle p95 +11.775ms; mobile variability remains."
+  }
 }
