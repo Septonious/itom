@@ -96,7 +96,7 @@ jobs:
           for arch in amd64 arm64; do
             (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-linux-$arch.bin" ./cmd/itom)
           done
-          test "$(linux-assets/ITOM-1.1.6-RC1-linux-amd64.bin version)" = "ITOM itom-1-1-6-rc1 linux amd64"
+          linux-assets/ITOM-1.1.6-RC1-linux-amd64.bin version | grep -Eq '^ITOM itom-1-1-6-rc1 linux amd64 manager '
           python3 "$SOURCE/tools/package_sources.py" --output "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-sources.zip"
           cp archives/1.1.6/RELEASE_NOTES.md linux-assets/RELEASE_NOTES.md
           printf '%s\n' "$GITHUB_SHA" > linux-assets/SOURCE_COMMIT
