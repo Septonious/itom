@@ -2,6 +2,7 @@ package mailstream
 
 import (
 	"bytes"
+	"encoding/ascii85"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -118,6 +119,7 @@ type mailAccountState struct {
 
 type IMAPLink struct {
 	lastBulk            atomic.Int64
+	optimizedMIME       atomic.Bool
 	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
@@ -1224,7 +1226,11 @@ func (a *mailAccountState) run() {
 		if coalesce != nil {
 			coalesce.Stop()
 		}
-		encoded := encodeMail(packMail(packets))
+		plainMail := packMail(packets)
+		encoded := encodeMail(plainMail)
+		if a.link.optimizedMIME.Load() && !work.recovery {
+			encoded = encodeMailASCII85(plainMail)
+		}
 		a.mu.Lock()
 		overBudget := a.spent+len(encoded) > maximumRetentionBudget
 		a.mu.Unlock()
@@ -1966,10 +1972,19 @@ func decodeMail(raw []byte) ([][]byte, error) {
 	if err != nil {
 		return nil, ErrProtocol
 	}
-	if message.Header.Get("Content-Type") != "application/octet-stream" || !strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "base64") {
+	if message.Header.Get("Content-Type") != "application/octet-stream" {
 		return nil, ErrProtocol
 	}
-	body, err := io.ReadAll(io.LimitReader(base64.NewDecoder(base64.StdEncoding, message.Body), maxMailPlain+1))
+	var decoded io.Reader
+	switch {
+	case strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "base64"):
+		decoded = base64.NewDecoder(base64.StdEncoding, message.Body)
+	case strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "x-itom-ascii85"):
+		decoded = ascii85.NewDecoder(message.Body)
+	default:
+		return nil, ErrProtocol
+	}
+	body, err := io.ReadAll(io.LimitReader(decoded, maxMailPlain+1))
 	if err != nil || len(body) > maxMailPlain {
 		return nil, ErrProtocol
 	}

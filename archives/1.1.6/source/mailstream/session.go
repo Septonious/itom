@@ -68,6 +68,7 @@ type Session struct {
 	wake            chan struct{}
 	input           chan []byte
 	receipts        chan receiptRequest
+	mailCodecActivated atomic.Bool
 	receiptRetries  atomic.Uint64
 	openRefusals    atomic.Uint64
 	openWaits       atomic.Uint64
@@ -636,6 +637,9 @@ func (s *Session) apply(f frame) error {
 	if f.kind == framePing || f.kind == framePong {
 		if f.stream != 0 || len(f.data) != 0 {
 			return ErrProtocol
+		}
+		if handled, err := s.applyMailCodecNegotiation(f); handled {
+			return err
 		}
 		if f.kind == framePing {
 			return s.trySend(frame{kind: framePong, offset: f.offset}, true)
