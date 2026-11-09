@@ -31,6 +31,27 @@ func TestPoorMobileTLSDisconnectRetriesButVerificationRemainsStrict(t *testing.T
 	}
 }
 
+// RFC 8446 close/cancel/internal alerts are not credential rejections.
+// This test extends startup recovery without changing normal RTT or TLS
+// certificate verification behavior.
+func TestRC117TemporaryTLSAlertsRetryWithoutRelaxingSecurity(t *testing.T) {
+	for _, code := range []tls.AlertError{0, 80, 90} {
+		if got := classifyTLSHandshakeError(code); !errors.Is(got, ErrClosed) {
+			t.Fatalf("temporary TLS alert %v disabled the mailbox: %v", code, got)
+		}
+	}
+	for _, code := range []tls.AlertError{40, 42, 46, 48, 49, 70, 71, 120} {
+		if got := classifyTLSHandshakeError(code); !errors.Is(got, ErrAuth) {
+			t.Fatalf("identity/protocol TLS alert %v must not bypass rejection: %v", code, got)
+		}
+	}
+	if got := classifyTLSHandshakeError(&tls.CertificateVerificationError{
+		Err: x509.UnknownAuthorityError{},
+	}); !errors.Is(got, ErrAuth) {
+		t.Fatalf("invalid provider certificate unexpectedly recoverable: %v", got)
+	}
+}
+
 func TestPoorMobileIMAPLoginDisconnectsRetryWithoutWeakeningAuth(t *testing.T) {
 	for _, err := range []error{io.EOF,context.DeadlineExceeded,net.ErrClosed,
 		&imap.Error{Type:imap.StatusResponseTypeNo,Code:imap.ResponseCodeUnavailable}} {
