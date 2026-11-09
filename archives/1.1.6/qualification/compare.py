@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--go', default=shutil.which('go'))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--baseline', type=Path, default=ROOT.parent.parent/'1.0.0-rc2/source/core')
+    parser.add_argument('--baseline-is-mailstream',action='store_true',help='Compare against exact 1.1.5 source with matching native/mailstream adapter')
     parser.add_argument('--candidate', type=Path, default=ROOT.parent/'source/core')
     parser.add_argument('--upload-fetch-delay-ms',type=int,default=0)
     parser.add_argument('--download-fetch-delay-ms',type=int,default=0)
@@ -156,7 +157,7 @@ def main():
                 build_dir = work/label
                 build_dir.mkdir()
                 shutil.copy2(ROOT/'worker/main.go', build_dir/'main.go')
-                if label == 'candidate':
+                if label == 'candidate' or args.baseline_is_mailstream:
                     shutil.copy2(ROOT/'worker/adapter.go', build_dir/'adapter.go')
                     shutil.copy2(ROOT/'worker/native.go',build_dir/'native.go')
                 else:
@@ -181,7 +182,7 @@ func serveFixture(ctx context.Context,cfg servercfg.Config,dir,origin,echo strin
                           f'replace itom.local/core => {json.dumps(str(core))}\n'
                           f'replace github.com/emersion/go-imap/v2 => {json.dumps(str(core/"third_party/go-imap"))}\n'
                           f'replace itom.local/mailstream => {json.dumps(str(sources["candidate"].parent/"mailstream"))}\n')
-                if label=='candidate':module+='require itom.local/mobile v0.0.0\nrequire gvisor.dev/gvisor v0.0.0-20260701204157-69c2d17aea96\n'
+                if label=='candidate' or args.baseline_is_mailstream:module+='require itom.local/mobile v0.0.0\nrequire gvisor.dev/gvisor v0.0.0-20260701204157-69c2d17aea96\n'
                 (build_dir/'go.mod').write_text(module)
                 subprocess.run([args.go, 'mod', 'tidy'], cwd=build_dir, env=env,
                                stdout=build_log, stderr=subprocess.STDOUT, check=True)
