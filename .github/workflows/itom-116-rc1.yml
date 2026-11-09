@@ -270,7 +270,7 @@ jobs:
           for p in root.iterdir():
               if p.is_file() and p.name!='RC_STATUS.json':
                   info['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
-          (root/'RC_STATUS.json').write_text(json.dumps(info,indent=2)+'\\n')
+          (root/'RC_STATUS.json').write_text(json.dumps(info,indent=2)+'\n')
           PY
       - name: Publish verified RC1 prerelease assets directly (no Actions artifact quota)
         shell: bash
