@@ -40,6 +40,12 @@ client/server artifacts until all gates below pass.
 5. **Expanded the A/B matrix** with a low-rate 8/2 Mbps case, in addition
    to 20/5, 160/90 and 500 Mbps profiles. New PR code remains quarantined
    from the released stable branch.
+6. **Provider TLS alert recovery:** retry RFC 8446 `close_notify` (0),
+   `internal_error` (80) and `user_canceled` (90) through the existing
+   bounded startup reconnect schedule. Certificate validation and explicit
+   identity/protocol rejection remain strict and permanent; focused tests
+   cover both decisions. This changes failure recovery, not the healthy
+   connection's per-packet scheduler.
 
 ## Inherited from earlier unverified 1.1.7 development
 
