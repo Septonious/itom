@@ -32,7 +32,7 @@ class ZeroRTTGateTest(unittest.TestCase):
     def run_gate(self, *, increase=0.0, ratio=1.0):
         with tempfile.TemporaryDirectory() as directory:
             folders = []
-            for number in range(3):
+            for number in range(5):
                 folder = Path(directory) / str(number)
                 folder.mkdir()
                 (folder / "SYNTHETIC_RTT_REPORT.json").write_text(
@@ -55,7 +55,7 @@ class ZeroRTTGateTest(unittest.TestCase):
     def test_wrong_release_baseline_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             folders = []
-            for number in range(3):
+            for number in range(5):
                 folder = Path(directory) / str(number)
                 folder.mkdir()
                 report = example_report()
@@ -65,8 +65,8 @@ class ZeroRTTGateTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "expected immutable released RC1"):
                 check(folders, "unit-test")
 
-    def test_requires_three_trials(self):
-        with self.assertRaisesRegex(ValueError, "three independent"):
+    def test_requires_five_trials(self):
+        with self.assertRaisesRegex(ValueError, "five independent"):
             check([], "unit-test")
 
 
