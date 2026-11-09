@@ -10,8 +10,9 @@
 - Preserves bulk striping, bounded MIME batches, session/window controller, recovery fences, mailbox charge rules, four live connections/account, server-only cleanup and profile schema.
 - Adds focused selection and empty-FETCH timing regression tests.
 - Adds separate **3 ms home ICMP floor**, **15–30 ms home IMAP-path**, and **30–150 ms mobile IMAP-path** fixtures with measured TLS-echo RTT distributions, rate-constrained transfer checks, and five independent paired repetitions per scenario. These are synthetic models, not measured Rambler command RTTs.
-- [Five-run RC1 qualification](https://github.com/Septonious/itom/actions/runs/42636826612) verified the exact test source at `c3c6fdbfb9a91433846f35f6975fbf3bbc62527e`. On the 15–30 ms home path, idle median **76.9 → 72.9 ms**, pooled idle p95 **105.1 → 97.8 ms**, pooled loaded p95 **362.2 → 354.7 ms**, with **307.3 Mbps upload / 330.1 Mbps download**. All five candidate home runs sustained more than 200 Mbps in each direction.
-- On the mobile fixture, idle median improved **130.7 → 122.8 ms**, but pooled idle p95 regressed **235.6 → 247.3 ms**; this tradeoff remains explicitly unqualified for field promotion.
+- **Mandatory ASCII85 MIME** replaces Base64 throughout every IMAP message (handshake, control, data and recovery), with no compatibility fallback. Format is ITOM4/7bit with 480-character lines. One output-buffer allocation avoids double-encoding costs. ITOM 1.1.5 peers cannot connect to this wire format.
+- [Five-pair full qualification](https://github.com/Septonious/itom/actions/runs/42650945537) verifies the exact mandatory-ASCII85 transport at `52ce71e52846b3f188a0751f4b5c95a394cf3e78`, including a 20 Mbps down / 5 Mbps up mobile model. The candidate improved mobile-20 app throughput **3.27→3.60 Mbps up** and **13.07→14.36 Mbps down**, and pooled loaded p95 **1038→960 ms**. Home profile achieved **339.54 Mbps upload / 361.60 Mbps download**, with pooled loaded p95 **307→276 ms**.
+- Known tradeoffs: the 3 ms home-floor model's pooled loaded p95 regressed 326.9→425.1 ms; mobile-20 loaded median increased 463.7→530.1 ms even as p95 improved. The experimental low-rate delivery-window contraction was reverted after it broke existing controller safety tests.
 
 ## Performance acceptance
 - Primary objective: lowest stable idle/light-load application RTT, ideally median <=80ms and p95 <100ms on a suitable home link. Do not apply home RTT criteria to the mobile 30–150ms IMAP distribution.
@@ -20,6 +21,8 @@
 - GitHub Actions synthetic comparisons do **not** establish a real-device 200 Mbps or sub-100ms guarantee. A qualified candidate must still undergo live user-device IMAP, phone energy/wakeup, multi-user, mailbox pressure, recovery, and multi-hour soak tests. Read `QUALIFICATION_5RUN.md` for the precise distributions and any regressions.
 
 ## Installation and signing
+- A separately signed **ITOM-1.1.6-RC1-TESTING.apk** uses application ID `org.itom.client.testing` and a test/debug certificate. It can be installed **alongside** 1.1.5, but is debuggable and is **only for field testing**. It has its own isolated app data and cannot import the existing app's private settings automatically. Never use this build as a production/stable release.
+- The normal `org.itom.client` release APK is unsigned unless the matching 1.1.5 signing secrets are supplied. An unsigned APK is *not installable*. See `REAL_TESTING.md` for installation and server-backup instructions.
 - Source baseline: exact tag v1.1.5; new branch codex/itom-1.1.6-low-latency. Android application ID remains org.itom.client, versionCode 10160.
 - APK is suitable for **in-place update only if it is signed with the existing 1.1.5 certificate** SHA256 0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0.
 - If Actions has no retained private signer, the artifact is named UNSIGNED and cannot be installed. Never uninstall or clear app/profile/state merely to bypass signature checks.

@@ -23,7 +23,11 @@ android {
     }
     buildTypes {
         debug {
-            versionNameSuffix = "-debug"; resValue("string", "app_name", "ITOM")
+            // Independently installable field-test build. An ephemeral Android
+            // debug signer must never overwrite or masquerade as stable 1.1.5.
+            applicationIdSuffix = ".testing"
+            versionNameSuffix = "-testing"
+            resValue("string", "app_name", "ITOM RC1 Test")
             if (itomSigningStore != null) signingConfig = signingConfigs.getByName("itomField")
         }
         release { isDebuggable = false; isMinifyEnabled = false;
