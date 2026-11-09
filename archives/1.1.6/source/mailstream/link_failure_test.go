@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"time"
 	"testing"
 
 	imap "github.com/emersion/go-imap/v2"
@@ -42,5 +43,45 @@ func TestPoorMobileIMAPLoginDisconnectsRetryWithoutWeakeningAuth(t *testing.T) {
 		if got:=classifyIMAPLoginError(err);!errors.Is(got,ErrAuth) {
 			t.Fatalf("explicit server rejection must not retry credentials: %v",got)
 		}
+	}
+}
+
+type radioDropDialer struct{}
+
+func (radioDropDialer) DialContext(context.Context, string, string) (net.Conn, error) {
+	client, peer := net.Pipe()
+	// A real cellular handover can invalidate TCP immediately after connect.
+	// This exercises openMailPipeAttempt, not just the error classifier.
+	_ = peer.Close()
+	return client, nil
+}
+
+func TestRealTLSHandshakeRadioDropCanRetry(t *testing.T) {
+	ctx,cancel:=context.WithTimeout(context.Background(),2*time.Second)
+	defer cancel()
+	_,err:=openMailPipeAttempt(ctx,ctx,MailAccount{
+		Host:"imap.example.invalid",Port:993,Username:"test",Password:"test",
+		Dialer:radioDropDialer{},
+	})
+	if !errors.Is(err,ErrClosed) {
+		t.Fatalf("dropped mobile TLS transport permanently disabled a valid account: %v",err)
+	}
+}
+
+func TestTLSCertificateFailureStillRejectsAccount(t *testing.T) {
+	accounts,_:=applicationMailServer(t,true,false)
+	a:=accounts[0]
+	// Do not use the fixture's trusted CA; the test server's self-signed
+	// certificate must be rejected by real TLS verification.
+	a.Roots=nil
+	ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second)
+	defer cancel()
+	p,err:=openMailPipeAttempt(ctx,ctx,a)
+	if p!=nil {
+		p.close()
+		t.Fatal("untrusted provider certificate unexpectedly accepted")
+	}
+	if !errors.Is(err,ErrAuth) {
+		t.Fatalf("certificate rejection must remain permanent: %v",err)
 	}
 }
