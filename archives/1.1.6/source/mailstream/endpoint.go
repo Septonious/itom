@@ -12,9 +12,6 @@ import (
 // DATA namespace, and requires an authenticated bidirectional readiness exchange.
 // Selected IMAP sockets alone never become a connected VPN state.
 func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Session, error) {
-	if codec, ok := link.(negotiatedMailCodec); ok {
-		codec.setOptimizedMailCodec(false)
-	}
 	h, request, err := initiate(psk, identity)
 	if err != nil {
 		return nil, err
@@ -86,7 +83,6 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 				s := newSession(context.WithoutCancel(ctx), link, cipher, false, nil)
 				s.wg.Add(1)
 				go func() { defer s.wg.Done(); routeSession(s, link.Receive()) }()
-				s.offerOptimizedMailCodec()
 				return s, nil
 			}
 		}
@@ -149,15 +145,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 	var activeDone <-chan struct{}
 	closeActive := func() {
 		if active == nil {
-			if codec, ok := link.(negotiatedMailCodec); ok {
-				codec.setOptimizedMailCodec(false)
-			}
 			return
 		}
 		active.Close()
-		if codec, ok := link.(negotiatedMailCodec); ok {
-			codec.setOptimizedMailCodec(false)
-		}
 		if carrier, ok := link.(interface{ Detach(SessionID) }); ok {
 			carrier.Detach(active.cipher.id)
 		}

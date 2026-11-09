@@ -6,7 +6,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -119,7 +118,6 @@ type mailAccountState struct {
 
 type IMAPLink struct {
 	lastBulk            atomic.Int64
-	optimizedMIME       atomic.Bool
 	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
@@ -1226,11 +1224,9 @@ func (a *mailAccountState) run() {
 		if coalesce != nil {
 			coalesce.Stop()
 		}
-		plainMail := packMail(packets)
-		encoded := encodeMail(plainMail)
-		if a.link.optimizedMIME.Load() && !work.recovery && preferASCII85(len(plainMail)) {
-			encoded = encodeMailASCII85(plainMail)
-		}
+		// One mandatory 7-bit ASCII85 encoding for control, DATA, recovery
+		// and handshake. Never allocate and encode a Base64 alternative.
+		encoded := encodeMail(packMail(packets))
 		a.mu.Lock()
 		overBudget := a.spent+len(encoded) > maximumRetentionBudget
 		a.mu.Unlock()
@@ -1952,18 +1948,6 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 	}
 }
 
-func encodeMail(body []byte) []byte {
-	var out bytes.Buffer
-	out.WriteString(base64MIMEHeader)
-	b := base64.StdEncoding.EncodeToString(body)
-	for len(b) > 0 {
-		n := min(76, len(b))
-		out.WriteString(b[:n])
-		out.WriteString("\r\n")
-		b = b[n:]
-	}
-	return out.Bytes()
-}
 func decodeMail(raw []byte) ([][]byte, error) {
 	if len(raw) > 2*maxMailPlain {
 		return nil, ErrCapacity
@@ -1972,19 +1956,13 @@ func decodeMail(raw []byte) ([][]byte, error) {
 	if err != nil {
 		return nil, ErrProtocol
 	}
-	if message.Header.Get("Content-Type") != "application/octet-stream" {
+	if message.Header.Get("Content-Type") != "application/octet-stream" ||
+		!strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "7bit") ||
+		message.Header.Get("Subject") != "ITOM4" {
 		return nil, ErrProtocol
 	}
-	var decoded io.Reader
-	switch {
-	case strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "base64"):
-		decoded = base64.NewDecoder(base64.StdEncoding, message.Body)
-	case strings.EqualFold(message.Header.Get("Content-Transfer-Encoding"), "x-itom-ascii85"):
-		decoded = ascii85.NewDecoder(message.Body)
-	default:
-		return nil, ErrProtocol
-	}
-	body, err := io.ReadAll(io.LimitReader(decoded, maxMailPlain+1))
+	// A mandatory-version format cannot silently accept older Base64 mail.
+	body, err := io.ReadAll(io.LimitReader(ascii85.NewDecoder(message.Body), maxMailPlain+1))
 	if err != nil || len(body) > maxMailPlain {
 		return nil, ErrProtocol
 	}
