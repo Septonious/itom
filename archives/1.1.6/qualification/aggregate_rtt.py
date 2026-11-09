@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Aggregate independent paired 1.1.5 vs 1.1.6 synthetic application RTT runs.
+"""Aggregate measured paired baseline/candidate synthetic application RTT runs.
 
 Every sample comes from the actual TLS echo path inside a shaped fixture.
 No simulated IMAP RTT input is reported as a measured application RTT.
@@ -19,10 +19,15 @@ def aggregate(paths):
         raise ValueError("at least three independent paired runs required")
     roots=[Path(p) for p in paths]
     profiles=set()
+    version_pairs=set()
     results=[]
     for root in roots:
         manifest=json.loads((root/"manifest.json").read_text())
         profiles.add(manifest.get("rc116_latency_profile"))
+        version_pairs.add((
+            manifest.get("baseline_version") or ("1.1.5" if manifest.get("baseline_is_mailstream") else "1.0.0-rc2"),
+            manifest.get("candidate_version") or "1.1.6-rc1",
+        ))
         pair=[]
         for label in ("rc2","candidate"):
             result=json.loads((root/(label+".json")).read_text())
@@ -35,12 +40,18 @@ def aggregate(paths):
         results.append(pair)
     if len(profiles)!=1:
         raise ValueError("cannot combine different network profiles")
+    if len(version_pairs)!=1:
+        raise ValueError("cannot combine distinct baseline/candidate versions")
+    baseline_name,candidate_name=next(iter(version_pairs))
+    if baseline_name==candidate_name:
+        raise ValueError("baseline and candidate labels must be distinct")
     profile=next(iter(profiles))
     output={"profile":profile,"pairs":len(results),"source":"measured TLS echo RTT through ITOM",
+            "baseline_version":baseline_name,"candidate_version":candidate_name,
             "per_phase":{},"throughput_mbps":{},"warnings":[]}
     for phase,key in PHASES:
         item={}
-        for i,version in enumerate(("1.1.5","1.1.6-rc1")):
+        for i,version in enumerate((baseline_name,candidate_name)):
             runs=[latency_stats(pair[i][key]) for pair in results]
             merged=latency_stats([sample for pair in results for sample in pair[i][key]])
             item[version]={"per_run":runs,"median_of_run_medians_ms":
@@ -48,8 +59,8 @@ def aggregate(paths):
                            "median_of_run_p95_ms":
                            round(statistics.median(x["p95_ms"] for x in runs),3),
                            "pooled":merged}
-        base=item["1.1.5"]
-        cand=item["1.1.6-rc1"]
+        base=item[baseline_name]
+        cand=item[candidate_name]
         item["paired_median_diff_ms"]=round(statistics.median(
             latency_stats(pair[1][key])["median_ms"]-latency_stats(pair[0][key])["median_ms"]
             for pair in results),3)
@@ -58,7 +69,7 @@ def aggregate(paths):
         output["per_phase"][phase]=item
     for direction in ("upload","download"):
         item={}
-        for i,name in enumerate(("1.1.5","1.1.6-rc1")):
+        for i,name in enumerate((baseline_name,candidate_name)):
             speeds=[]
             for pair in results:
                 for phase in pair[i].get("Phases") or []:
@@ -69,12 +80,12 @@ def aggregate(paths):
             item[name]={"median":round(statistics.median(speeds),3),
                         "minimum":round(min(speeds),3),"all":speeds}
         output["throughput_mbps"][direction]=item
-        if profile!="mobile" and item["1.1.6-rc1"]["minimum"]<200:
+        if profile!="mobile" and item[candidate_name]["minimum"]<200:
             output["warnings"].append(f"{direction} high-capacity run fell below hard 200Mbps floor")
     print(f"\n=== AGGREGATED MEASURED RTT: {profile} ({len(results)} paired runs) ===",flush=True)
     for phase in ("idle","loaded","after"):
         item=output["per_phase"][phase]
-        a,b=item["1.1.5"],item["1.1.6-rc1"]
+        a,b=item[baseline_name],item[candidate_name]
         print(f"{phase:>6}: median-of-medians {a['median_of_run_medians_ms']:.3f} -> "
               f"{b['median_of_run_medians_ms']:.3f} ms; "
               f"p95 (median of runs) {a['median_of_run_p95_ms']:.3f} -> "
@@ -83,9 +94,9 @@ def aggregate(paths):
               f"{b['pooled']['p95_ms']:.3f} ms ({item['p95_pooled_diff_ms']:+.3f}), "
               f"{b['pooled']['count']} candidate observations",flush=True)
     for direction,item in output["throughput_mbps"].items():
-        print(f"{direction:>8}: median throughput {item['1.1.5']['median']:.2f} -> "
-              f"{item['1.1.6-rc1']['median']:.2f} Mbps; "
-              f"candidate minimum {item['1.1.6-rc1']['minimum']:.2f} Mbps",flush=True)
+        print(f"{direction:>8}: median throughput {item[baseline_name]['median']:.2f} -> "
+              f"{item[candidate_name]['median']:.2f} Mbps; "
+              f"candidate minimum {item[candidate_name]['minimum']:.2f} Mbps",flush=True)
     for warning in output["warnings"]:
         print("HARD FLOOR WARNING: "+warning,flush=True)
     if output["warnings"]:
