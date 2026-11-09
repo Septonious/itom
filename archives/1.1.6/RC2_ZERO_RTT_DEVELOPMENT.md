@@ -31,7 +31,7 @@ client/server artifacts until all gates below pass.
 3. **Cross-version MIME tests:** immutable RC1-format encoding, random
    authenticated-envelope round trips, per-line length bounds, and
    measured bytes for a 256,000-byte bulk sample.
-4. **Strict three-trial A/B acceptance:** new
+4. **Strict five-trial A/B acceptance:** new
    `qualification/gate_rc117_zero_rtt.py` checks *every trial* and every
    available RTT minimum/median/p95/p99/maximum for idle/loaded/after-load
    against published RC1, rejecting any positive delta. Upload and download
@@ -138,3 +138,23 @@ matrix continues to fail the same way. A rerun of an earlier failed job
 also failed without execution or downloadable logs. No passing full-source
 test, measured RC2 RTT distribution, signed APK or new server executable
 is asserted from these failures.
+
+## Evidence provenance and extreme-mobile extension
+
+- Every benchmark manifest now records exact `baseline_version` and
+  `candidate_version`, and reports/aggregations print the correct names.
+  The strict acceptance gate rejects mislabeled RC1/RC2 or mismatched
+  network-profile reports before considering any speed or latency metric.
+- Five alternating-order A/B pairs are required in the new CI matrix.
+  Low-rate profiles include 20/5, 8/2 and **2/0.5 Mbps**. The last uses
+  exact 500 kbps uplink shaping and an independently defined **150–500 ms**
+  varying IMAP RTT schedule; it is a synthetic stress hypothesis, not a
+  packet trace or observed Rambler latency.
+- The historical absolute 200 Mbps floor is no longer applied to
+  `mobile-poor`; the strict released-RC1 **75% relative minimum for both
+  directions** applies to all profiles.
+- No physical packet-loss percentage or network handover is simulated by
+  this profile; those remain separate pre-release qualification blockers.
+- The full Go/native/Android source validation workflow has also been
+  added, but GitHub Actions runner allocation continues to fail before
+  execution, so these new controls have not produced approved results.
