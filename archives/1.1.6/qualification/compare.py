@@ -143,7 +143,7 @@ def main():
                 'provider_sha256': fingerprint(ROOT/'provider'),
                 'harness_sha256': fingerprint(ROOT),
                 'runner_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),'baseline_mailstream_sha256':fingerprint(sources['rc2'].parent/'mailstream') if args.baseline_is_mailstream else None,
+                'mailstream_sha256': fingerprint(sources['candidate'].parent/'mailstream'),'baseline_mailstream_sha256':fingerprint(sources['rc2'].parent/'mailstream') if args.baseline_is_mailstream else None,'baseline_is_mailstream':args.baseline_is_mailstream,
                 'native_sha256':fingerprint(sources['candidate'].parent/'native'),
                 'provider_shared_mbps': {'client_both_directions': args.client_mbps, 'server_both_directions': 1000},
                 'field_performance_qualified': False, 'attempts': []}

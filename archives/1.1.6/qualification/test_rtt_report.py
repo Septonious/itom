@@ -29,7 +29,7 @@ class SyntheticRTTReporting(unittest.TestCase):
                     "Phases": [
                         {"name": "upload", "upload": {"full_phase_mbps": 250}},
                         {"name": "download", "download": {"full_phase_mbps": 270}}]}))
-            records = build_report(root)
+            records = build_report(root, print_report=False)
             self.assertEqual(records[1]["rtt"]["idle"]["p95_ms"], 20)
             self.assertEqual(records[1]["rtt"]["loaded"]["median_ms"], 100)
             self.assertEqual(records[1]["throughput_mbps"]["upload"], 250)

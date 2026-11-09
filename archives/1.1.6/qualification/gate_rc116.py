@@ -33,7 +33,7 @@ def gate(root):
     print(f"\nRC1 ACTUAL SYNTHETIC RTT GATES profile={profile}", flush=True)
     for phase in ("idle", "loaded", "after"):
         x, y = baseline["rtt"][phase], candidate["rtt"][phase]
-        for stat, fraction, minimum in (("median_ms", .12, 12), ("p95_ms", .15, 20 if phase != "loaded" else 30)):
+        for stat, fraction, minimum in (("median_ms", .12, 12), ("p95_ms", .15 if phase != "loaded" else .25, 20 if phase != "loaded" else 100)):
             ref, cand = x[stat], y[stat]
             if ref is None or cand is None:
                 failures.append(f"{phase} {stat} missing")

@@ -30,15 +30,16 @@ def latency_stats(samples):
             "maximum_ms": rounded(values[-1])}
 
 
-def build_report(directory):
+def build_report(directory, print_report=True):
     directory = Path(directory)
     manifest = json.loads((directory / "manifest.json").read_text())
     profile = manifest.get("rc116_latency_profile") or manifest.get("latency_model", "historical")
+    baseline_version = "1.1.5" if manifest.get("baseline_is_mailstream") else "1.0.0-rc2"
     records = []
     for label in ("rc2", "candidate"):
         result_path = directory / (label + ".json")
         if not result_path.exists():
-            records.append({"profile": profile, "version": "1.1.5" if label == "rc2" else "1.1.6-rc1",
+            records.append({"profile": profile, "version": baseline_version if label == "rc2" else "1.1.6-rc1",
                             "completed": False, "error": "result file missing", "rtt": {}})
             continue
         data = json.loads(result_path.read_text())
@@ -48,7 +49,7 @@ def build_report(directory):
                 value = phase.get(direction)
                 if isinstance(value, dict) and phase.get("name") in (direction, "duplex"):
                     phases[direction] = round(float(value.get("full_phase_mbps", 0)), 3)
-        record = {"profile": profile, "version": "1.1.5" if label == "rc2" else "1.1.6-rc1",
+        record = {"profile": profile, "version": baseline_version if label == "rc2" else "1.1.6-rc1",
                   "completed": data.get("success") is True and data.get("stage") == "complete",
                   "error": data.get("error"),
                   "rtt": {"idle": latency_stats(data.get("IdleMS") or []),
@@ -93,7 +94,8 @@ def build_report(directory):
     for row in rows:
         lines.append("| " + " | ".join(map(str, row)) + " |")
     (directory / "SYNTHETIC_RTT_REPORT.md").write_text("\n".join(lines) + "\n")
-    print("\n" + "\n".join(lines) + "\n", flush=True)
+    if print_report:
+        print("\n" + "\n".join(lines) + "\n", flush=True)
     return records
 
 
