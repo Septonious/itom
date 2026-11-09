@@ -261,6 +261,9 @@ func (s *Session) receiptLoop() {
 	batch := make([]uint64, 0, 32)
 	var deadline time.Time
 	var wire []byte
+	// An interactive receipt is a latency-sensitive acknowledgement even if
+	// other bulk sequences share the same finite receipt packet.
+	var interactiveReceipt bool
 	flush := func() error {
 		if len(batch) == 0 {
 			return nil
@@ -281,7 +284,14 @@ func (s *Session) receiptLoop() {
 		// immutable receipt until a writer accepts it instead of forcing
 		// the peer to retransmit already delivered application data.
 		var err error
-		if feedback, ok := s.link.(interface {
+		if prompt, ok := s.link.(interface {
+			SendPromptFeedback(context.Context, []byte) error
+		}); interactiveReceipt && ok {
+			// Do not postpone an ACK for OPEN/PING/small TLS behind the
+			// 12–24 ms bulk-feedback coalescing timer on the IMAP writer.
+			// This is one copy, never an extra hedged publication.
+			err = prompt.SendPromptFeedback(s.ctx, wire)
+		} else if feedback, ok := s.link.(interface {
 			SendFeedback(context.Context, []byte) error
 		}); ok {
 			err = feedback.SendFeedback(s.ctx, wire)
@@ -298,6 +308,7 @@ func (s *Session) receiptLoop() {
 		}
 		wire = nil
 		batch = batch[:0]
+		interactiveReceipt = false
 		return nil
 	}
 	for {
@@ -310,6 +321,9 @@ func (s *Session) receiptLoop() {
 			return
 		case request := <-input:
 			now := time.Now()
+			if !request.bulk {
+				interactiveReceipt = true
+			}
 			if len(batch) == 0 {
 				delay := 2 * time.Millisecond
 				if request.bulk {

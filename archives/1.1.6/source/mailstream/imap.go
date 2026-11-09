@@ -303,6 +303,15 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 	return err
 }
 
+// An ACK for interactive control or small application DATA must not
+// acquire the extra 12–24 ms timer intended to amortize bulk feedback.
+// Reuse the existing bounded fast/control queue without duplication,
+// added IMAP connections, or changing bulk receipt batching.
+func (l *IMAPLink) SendPromptFeedback(ctx context.Context, body []byte) error {
+	_, err := l.sendClassMode(ctx, body, true, nil, false, false)
+	return err
+}
+
 // Adapt the bounded bulk-feedback coalescing interval to directly measured
 // empty UID FETCH service time. A fast provider can flush WINDOW/receipts
 // sooner; a slow provider needs more coalescing to avoid spending its limited
