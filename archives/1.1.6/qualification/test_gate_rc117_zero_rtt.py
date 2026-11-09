@@ -24,7 +24,8 @@ def example_report(rtt_increase=0.0, throughput_ratio=1.0):
             "rtt": {phase: row(delta) for phase in ("idle", "loaded", "after")},
             "throughput_mbps": {"download": 400.0 * ratio, "upload": 300.0 * ratio},
         }
-    return {"results": [entry(0, 1, "1.1.6-rc1"),
+    return {"network_profile": "unit-test",
+            "results": [entry(0, 1, "1.1.6-rc1"),
                         entry(rtt_increase, throughput_ratio, "1.1.7-rc2")]}
 
 
@@ -63,6 +64,19 @@ class ZeroRTTGateTest(unittest.TestCase):
                 (folder / "SYNTHETIC_RTT_REPORT.json").write_text(json.dumps(report))
                 folders.append(folder)
             with self.assertRaisesRegex(ValueError, "expected immutable released RC1"):
+                check(folders, "unit-test")
+
+    def test_wrong_network_model_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folders = []
+            for number in range(5):
+                folder = Path(directory) / str(number)
+                folder.mkdir()
+                report = example_report()
+                report["network_profile"] = "home"
+                (folder / "SYNTHETIC_RTT_REPORT.json").write_text(json.dumps(report))
+                folders.append(folder)
+            with self.assertRaisesRegex(ValueError, "expected unit-test network model"):
                 check(folders, "unit-test")
 
     def test_requires_five_trials(self):
