@@ -19,6 +19,8 @@ class SyntheticRTTReporting(unittest.TestCase):
             root = Path(temp)
             (root / "manifest.json").write_text(json.dumps({
                 "rc116_latency_profile": "home-icmp",
+                "baseline_version": "1.1.6-rc1",
+                "candidate_version": "1.1.7-rc2",
                 "rc116_client_imap_latency_ms": [3],
                 "observed_home_icmp_reference_ms": 3}))
             for label in ("rc2", "candidate"):
@@ -30,6 +32,9 @@ class SyntheticRTTReporting(unittest.TestCase):
                         {"name": "upload", "upload": {"full_phase_mbps": 250}},
                         {"name": "download", "download": {"full_phase_mbps": 270}}]}))
             records = build_report(root, print_report=False)
+            self.assertEqual((records[0]["version"], records[1]["version"]),
+                             ("1.1.6-rc1", "1.1.7-rc2"))
+            self.assertIn("1.1.7-rc2", (root / "SYNTHETIC_RTT_REPORT.csv").read_text())
             self.assertEqual(records[1]["rtt"]["idle"]["p95_ms"], 20)
             self.assertEqual(records[1]["rtt"]["loaded"]["median_ms"], 100)
             self.assertEqual(records[1]["throughput_mbps"]["upload"], 250)

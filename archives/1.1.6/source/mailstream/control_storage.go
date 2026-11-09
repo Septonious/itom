@@ -286,6 +286,14 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 // UID FETCH does not depend on sequence positions, which change after EXPUNGE.
 // Polls use an absolute forward UID range; no reversed n:* range re-reads the tail.
 func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error {
+	// One reusable timer per control reader. The released 1ms polling gap
+	// is unchanged; time.After created a fresh timer for every empty UID
+	// FETCH (often thousands per second across 15 accounts on fast IMAP).
+	// Reusing a stopped/drained timer removes steady-state timer allocations
+	// without introducing another wait or any network command.
+	pollTimer := time.NewTimer(time.Hour)
+	pollTimer.Stop()
+	defer pollTimer.Stop()
 	for {
 		p.phase.Store(11)
 		select {
@@ -310,7 +318,12 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 		end := uint32(math.MaxUint32)
 		before := p.after
 		fetchStarted := time.Now()
-		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{UID: true, RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
+		// RFC 3501 / RFC 9051: UID FETCH MUST include UID in every
+		// returned message even if it is not in the requested data items.
+		// Omit that redundant request token on every empty poll, while
+		// preserving RFC822.SIZE, UID validation and the exact poll schedule.
+		// No extra IMAP command or provider round-trip is introduced.
+		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
 		for row := command.Next(); row != nil; row = command.Next() {
 			var uid imap.UID
 			size := int64(-1)
@@ -378,16 +391,20 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 			// The empty FETCH is itself a direct IMAP command sample.
 			// A separate periodic NOOP delays the receive critical path.
 			p.observeEmptyControlFetch(fetchStarted)
+			pollTimer.Reset(p.controlPollDelay(time.Now()))
 			select {
 			case <-ctx.Done():
+				pollTimer.Stop()
 				return ctx.Err()
 			case <-p.done:
+				pollTimer.Stop()
 				return ErrClosed
 			case cmd := <-p.commands:
+				pollTimer.Stop()
 				if err := p.runCommand(cmd); err != nil {
 					return err
 				}
-			case <-time.After(p.controlPollDelay(time.Now())):
+			case <-pollTimer.C:
 			}
 		}
 	}

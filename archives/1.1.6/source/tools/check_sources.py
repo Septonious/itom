@@ -57,17 +57,17 @@ def validate_release_identity(root: Path):
     info = read_source_info(root)
     name, code = android_identity(info)
     app = (root / "android/app/build.gradle.kts").read_text(encoding="utf-8")
-    if info["version"] in ("1.1.5", "1.1.6") or info.get("release") in ("RC7", "RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
+    if info["version"] in ("1.1.5", "1.1.6", "1.1.7") or info.get("release") in ("RC7", "RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
         check(info.get("android_application_id") == "org.itom.client", "RC7/RC8 APK ID must equal org.itom.client")
         check('applicationId = "org.itom.client"' in app, "RC7 Gradle applicationId changed")
-        if info["version"] == "1.1.6" and info.get("release") == "RC1":
+        if (info["version"], info.get("release")) in (("1.1.6", "RC1"), ("1.1.7", "RC2")):
             # RC1 allows exactly one separate-install debug/test package.
             # The real release applicationId MUST retain its stable identity.
             # Never make this exception for any old/stable build or for
             # arbitrary additional APK suffixes.
             suffix = 'applicationIdSuffix = ".testing"'
             check(app.count("applicationIdSuffix") == 1 and app.count(suffix) == 1,
-                  "1.1.6 RC1 may only use the exact .testing debug application ID suffix")
+                  "ITOM experimental RC may only use exact .testing debug application ID suffix")
             debug_at, release_at, suffix_at = app.find("debug {"), app.find("release {"), app.find(suffix)
             check(0 <= debug_at < suffix_at < release_at,
                   "Separate .testing identity must apply only to the debug build type")

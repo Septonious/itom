@@ -2,33 +2,15 @@ package mailstream
 
 import "time"
 
-// The standing UID FETCH loop is necessary to avoid the extra IDLE/DONE RTT
-// for latency-sensitive control. Polling at 1ms forever, however, wastes
-// metered radio traffic across all configured mail accounts while VPN is quiet.
-// The activity clock is shared by accepted outgoing packets and received
-// control packets. Active users retain the original 1ms gap; quiet readers
-// gradually back off to a hard 16ms maximum, without adding connections or
-// changing the mailbox protocol.
-func controlPollInterval(quiet time.Duration) time.Duration {
-	switch {
-	case quiet < 2*time.Second:
-		return time.Millisecond
-	case quiet < 10*time.Second:
-		return 3 * time.Millisecond
-	case quiet < 30*time.Second:
-		return 8 * time.Millisecond
-	default:
-		return 16 * time.Millisecond
-	}
-}
+// Preserve the exact 1 ms poll gap of the field-tested RC1 in both active
+// and quiet states. An idle 3/8/16 ms backoff was rejected for RC2: the
+// first incoming packet after quiet could otherwise incur up to 15 ms of
+// added latency. Reduce command overhead only through an independently
+// qualified event-driven path with no added first-packet RTT.
+func controlPollInterval(_ time.Duration) time.Duration { return time.Millisecond }
 
-func (p *mailPipe) controlPollDelay(now time.Time) time.Duration {
-	if p.pollTraffic == nil {
-		return time.Millisecond
-	}
-	last := p.pollTraffic.Load()
-	if last <= 0 || now.UnixNano() < last {
-		return time.Millisecond
-	}
-	return controlPollInterval(time.Duration(now.UnixNano() - last))
+// Keep the diagnostic and call sites intact without introducing new
+// scheduling, timers, or activity-dependent decisions on the receive path.
+func (p *mailPipe) controlPollDelay(_ time.Time) time.Duration {
+	return time.Millisecond
 }

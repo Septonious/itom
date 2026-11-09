@@ -47,6 +47,13 @@ def read_source_info(root: Path = ROOT) -> dict:
         fail("Invalid source version or revision")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.zip", info["archive_name"]):
         fail("Invalid source archive name")
+    if info["version"] == "1.1.7":
+        expected = dict(release="RC2", revision="itom-1-1-7-rc2", archive_name="ITOM-1.1.7-RC2-sources.zip",
+                        android_version_name="1.1.7-rc2", android_version_code=10172,
+                        android_application_id="org.itom.client")
+        if any(info.get(k) != v for k, v in expected.items()):
+            fail("Inconsistent ITOM 1.1.7 RC2 testing identity")
+        return info
     if info["version"] == "1.1.6":
         expected = dict(release="RC1", revision="itom-1-1-6-rc1", archive_name="ITOM-1.1.6-RC1-sources.zip",
                         android_version_name="1.1.6-rc1", android_version_code=10160, android_application_id="org.itom.client")
@@ -96,7 +103,7 @@ def read_source_info(root: Path = ROOT) -> dict:
 
 
 def android_identity(info):
-    if info["version"] in ("1.1.5", "1.1.6"):
+    if info["version"] in ("1.1.5", "1.1.6", "1.1.7"):
         return info["android_version_name"], info["android_version_code"]
     if info.get("release") in ("Rev10","Rev1","Rev2","Rev3","Rev4","Rev5","Rev6","Rev7","Rev8","Rev9","Rev11","RC2","RC5","RC7","RC7","RC8","RC9","RC10","RC10.1","RC11","RC12","Final"):
         return info["android_version_name"], info["android_version_code"]
@@ -104,15 +111,23 @@ def android_identity(info):
 
 
 def android_variant(info):
+    # RC2 intentionally ships only a separate-package debug/testing APK;
+    # do not permit this unqualified source to impersonate an upgrade.
     return "release" if (info["version"] == "1.1.5" and info.get("release") == "Final") or (info["version"] == "1.1.6" and info.get("release") == "RC1") else "debug"
 
 
 def compiled_android_name(info):
     name, _ = android_identity(info)
+    # RC2 debug is intentionally an independently installable .testing
+    # package; Gradle uses versionNameSuffix -testing, not -debug.
+    if info["version"] == "1.1.7" and info.get("release") == "RC2":
+        return name + "-testing"
     return name + ("-debug" if android_variant(info) == "debug" else "")
 
 
 def public_apk_name(info):
+    if info["version"] == "1.1.7" and info.get("release") == "RC2":
+        return "ITOM-1.1.7-RC2-TESTING.apk"
     if info["version"] == "1.1.6" and info.get("release") == "RC1":
         return "ITOM-1.1.6-RC1.apk"
     if info["version"] == "1.1.5" and info.get("release") == "Final":

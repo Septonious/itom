@@ -28,3 +28,22 @@ func TestPhaseRTTResetDoesNotRestartBandwidthDip(t *testing.T) {
 		t.Fatal("an RTT phase reset restarted the bandwidth collapse", got.Sub(begin))
 	}
 }
+
+func TestRC117ExactSubOneMbpsSerializationBudget(t *testing.T) {
+	start := time.Unix(1, 0)
+	net := network{start: start}
+	// The poor-mobile uplink must be shaped to 500,000 bit/s exactly,
+	// not rounded to the old integer-only 1 Mbps fixture minimum.
+	for _, tc := range []struct {
+		rate int64
+		want time.Duration
+	}{
+		{rate: 500_000, want: 256 * time.Millisecond},
+		{rate: 2_000_000, want: 64 * time.Millisecond},
+	} {
+		got := net.serializationEnd(start, 128_000, tc.rate)
+		if elapsed := got.Sub(start); elapsed != tc.want {
+			t.Fatalf("rate=%d bps: got %s, want %s", tc.rate, elapsed, tc.want)
+		}
+	}
+}

@@ -1,0 +1,86 @@
+name: ITOM 1.1.7 RC2 safety (source only; NEVER publish)
+on:
+  push:
+    branches: [codex/itom-1.1.7-rc2-zero-rtt]
+    paths:
+      - "archives/1.1.6/source/**"
+      - "archives/1.1.6/qualification/**"
+      - ".github/workflows/itom-117-rc2-safety.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itom-117-rc2-safety
+  cancel-in-progress: true
+env:
+  SOURCE: archives/1.1.6/source
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+jobs:
+  go-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Strict no-regression gate unit tests
+        run: python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_*.py' -v
+      - name: Full mailstream unit and real verified-TLS IMAP tests
+        working-directory: archives/1.1.6/source/mailstream
+        run: |
+          go test -mod=readonly -count=1 -timeout=15m ./...
+          go vet ./...
+      - name: Focused RC2 race and wire regression tests
+        working-directory: archives/1.1.6/source/mailstream
+        run: |
+          go test -mod=readonly -race -count=1 -timeout=15m -run '^(TestRC117|TestPoorMobile)' ./...
+      - name: Native backend tests
+        working-directory: archives/1.1.6/source/native
+        run: |
+          go test -mod=readonly -count=1 -timeout=15m ./...
+          go vet ./...
+      - name: Full core tests, race checks and binaries
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-7-rc2
+      - name: Compile Linux AMD64 and ARM64 without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" \
+              go build -trimpath -buildvcs=false -o "$RUNNER_TEMP/itom-test-$arch" ./cmd/itom)
+            test -s "$RUNNER_TEMP/itom-test-$arch"
+          done
+      - name: Expose source test diagnostics on failure
+        if: failure()
+        run: |
+          tail -n 160 "$SOURCE/dist/core-build.log" 2>/dev/null || true
+          tail -n 160 "$SOURCE/dist/core-test-stderr.log" 2>/dev/null || true
+          tail -n 160 "$SOURCE/dist/core-race-stderr.log" 2>/dev/null || true
+
+  android-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Compile Android, run unit tests and fatal lint; do not release
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-7-rc2 --accept-android-licenses
+      - name: Verify Android build report without publishing APK
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('archives/1.1.6/source/dist/build-report.json').read_text())
+          assert report['status']=='passed',report
+          print('Android source validation succeeded; no signed RC2 release was produced')
+          PY

@@ -29,9 +29,21 @@ func classifyTLSHandshakeError(err error) error {
 		errors.As(err, &hostname) ||
 		errors.As(err, &certificate) ||
 		errors.As(err, &roots) ||
-		errors.As(err, &header) ||
-		errors.As(err, &alert) {
+		errors.As(err, &header) {
 		return ErrAuth
+	}
+	if errors.As(err, &alert) {
+		// RFC 8446: close_notify (0) and user_canceled (90) are
+		// intentional connection endings, not proof of bad credentials.
+		// A peer internal_error (80) is also not an identity rejection.
+		// Retry only these three through the existing bounded schedule;
+		// certificate, policy and protocol alerts remain permanent.
+		switch alert {
+		case tls.AlertError(0), tls.AlertError(80), tls.AlertError(90):
+			return ErrClosed
+		default:
+			return ErrAuth
+		}
 	}
 	return ErrClosed
 }
@@ -46,7 +58,14 @@ func classifyIMAPLoginError(err error) error {
 	}
 	var status *imap.Error
 	if errors.As(err, &status) {
-		if status.Code == imap.ResponseCodeUnavailable {
+		// RFC 9051 response codes distinguish temporary provider/service
+		// faults from actual invalid credentials. A saturated/busy mobile
+		// provider is not evidence of an authentication failure; let the
+		// existing capped, staggered startup schedule retry it instead
+		// of disabling a legitimate account permanently.
+		switch status.Code {
+		case imap.ResponseCodeUnavailable, imap.ResponseCodeInUse,
+			imap.ResponseCodeLimit, imap.ResponseCodeServerBug:
 			return ErrClosed
 		}
 		if status.Type == imap.StatusResponseTypeNo ||
