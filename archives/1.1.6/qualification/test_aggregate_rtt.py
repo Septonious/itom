@@ -6,11 +6,11 @@ from pathlib import Path
 from aggregate_rtt import aggregate
 
 class AggregateRTTTests(unittest.TestCase):
-    def make(self,root,i,profile="home",candidate_speed=260):
+    def make(self,root,i,profile="home",candidate_speed=260,baseline_speed=310):
         root=Path(root)/str(i)
         root.mkdir()
         (root/"manifest.json").write_text(json.dumps({"rc116_latency_profile":profile}))
-        for name,rtt,speed in (("rc2",80,310),("candidate",70,candidate_speed)):
+        for name,rtt,speed in (("rc2",80,baseline_speed),("candidate",70,candidate_speed)):
             doc={"success":True,"stage":"complete",
                  "IdleMS":[rtt+j%3 for j in range(30)],
                  "LoadedMS":[250+j%10 for j in range(20)],
@@ -47,6 +47,15 @@ class AggregateRTTTests(unittest.TestCase):
             (roots[0]/"manifest.json").write_text(json.dumps(broken))
             with self.assertRaisesRegex(ValueError,"distinct baseline/candidate"):
                 aggregate(roots)
+
+    def test_very_poor_mobile_bypasses_home_floor_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            roots=[self.make(temp,i,profile="mobile-poor",baseline_speed=0.4,
+                             candidate_speed=0.3) for i in range(5)]
+            result=aggregate(roots)
+            self.assertEqual(result["throughput_mbps"]["upload"]["1.1.6-rc1"]["minimum"],0.3)
+            self.assertEqual(result["warnings"],[])
+            self.assertEqual(result["profile"],"mobile-poor")
 
     def test_any_home_run_below_200_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
