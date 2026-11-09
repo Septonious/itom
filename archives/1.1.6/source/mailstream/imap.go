@@ -358,11 +358,13 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		}
 	}
 	l.mu.Unlock()
+	order := l.interactiveAccountOrder(start, peerAllowed, exclude, priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16)
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
 	for n := 0; n < len(l.accounts); n++ {
-		a := l.accounts[(start+n)%len(l.accounts)]
-		if !peerAllowed[(start+n)%len(l.accounts)] {
+		index := order[n]
+		a := l.accounts[index]
+		if !peerAllowed[index] {
 			continue
 		}
 		if a == exclude || !a.mu.TryLock() {
@@ -405,7 +407,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			a.sentPacket(body)
 			if feedback {
 				l.mu.Lock()
-				l.feedbackAccount = uint64((start + n) % len(l.accounts))
+				l.feedbackAccount = uint64(index)
 				l.feedbackPackets++
 				// Advance from the physical account that accepted this burst.
 				// Failed candidates must not donate their turns to the first
@@ -422,7 +424,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 				// No timer or minimum batch delays an isolated write; a
 				// full queue immediately spills to another ready account.
 				l.mu.Lock()
-				index := uint64((start + n) % len(l.accounts))
+				index := uint64(index)
 				if l.bulkAccount != index {
 					l.bulkAccount, l.bulkBytes, l.bulkPackets = index, 0, 0
 				}
@@ -1482,6 +1484,7 @@ type mailPipe struct {
 	knownFolders      map[string]bool // SELECT owner only; never shared with a writer
 	uidControl        atomic.Bool
 	latency           atomic.Int64
+	latencyAt         atomic.Int64
 }
 
 func openMailPipe(ctx context.Context, a MailAccount) (*mailPipe, error) {

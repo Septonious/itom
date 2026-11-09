@@ -286,7 +286,6 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 // UID FETCH does not depend on sequence positions, which change after EXPUNGE.
 // Polls use an absolute forward UID range; no reversed n:* range re-reads the tail.
 func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error {
-	lastProbe := time.Now()
 	for {
 		p.phase.Store(11)
 		select {
@@ -310,6 +309,7 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 		// and actor byte limits still bound buffering.
 		end := uint32(math.MaxUint32)
 		before := p.after
+		fetchStarted := time.Now()
 		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{UID: true, RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
 		for row := command.Next(); row != nil; row = command.Next() {
 			var uid imap.UID
@@ -374,15 +374,10 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 		if err := command.Close(); err != nil {
 			return ErrClosed
 		}
-		if time.Since(lastProbe) > 2*time.Second {
-			start := time.Now()
-			if err := p.client.Noop().Wait(); err != nil {
-				return ErrClosed
-			}
-			p.latency.Store(int64(time.Since(start)))
-			lastProbe = time.Now()
-		}
 		if p.after == before {
+			// The empty FETCH is itself a direct IMAP command sample.
+			// A separate periodic NOOP delays the receive critical path.
+			p.observeEmptyControlFetch(fetchStarted)
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
