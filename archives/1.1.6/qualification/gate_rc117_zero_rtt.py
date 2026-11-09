@@ -21,6 +21,9 @@ MIN_THROUGHPUT_RATIO = 0.75
 def load_pair(folder):
     report = json.loads((Path(folder) / "SYNTHETIC_RTT_REPORT.json").read_text())
     older, newer = report["results"]
+    if (older.get("version"), newer.get("version")) != ("1.1.6-rc1", "1.1.7-rc2"):
+        raise ValueError(f"{folder}: expected immutable released RC1 vs 1.1.7 RC2, "
+                         f"got {older.get('version')} vs {newer.get('version')}")
     if not older["completed"] or not newer["completed"]:
         raise ValueError(f"{folder}: incomplete A/B trial")
     return older, newer
