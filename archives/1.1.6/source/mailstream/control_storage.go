@@ -318,7 +318,12 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 		end := uint32(math.MaxUint32)
 		before := p.after
 		fetchStarted := time.Now()
-		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{UID: true, RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
+		// RFC 3501 / RFC 9051: UID FETCH MUST include UID in every
+		// returned message even if it is not in the requested data items.
+		// Omit that redundant request token on every empty poll, while
+		// preserving RFC822.SIZE, UID validation and the exact poll schedule.
+		// No extra IMAP command or provider round-trip is introduced.
+		command := p.client.Fetch(imap.UIDSet{{Start: imap.UID(p.after + 1), Stop: imap.UID(end)}}, &imap.FetchOptions{RFC822Size: true, BodySection: []*imap.FetchItemBodySection{{Peek: true}}})
 		for row := command.Next(); row != nil; row = command.Next() {
 			var uid imap.UID
 			size := int64(-1)
