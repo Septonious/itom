@@ -610,6 +610,10 @@ func run() error {
 		clientNet.rtts = []time.Duration{3*time.Millisecond}
 	} else if *clientLatencyProfile == "mobile" {
 		clientNet.rtts = []time.Duration{30*time.Millisecond, 45*time.Millisecond, 85*time.Millisecond, 150*time.Millisecond, 70*time.Millisecond, 120*time.Millisecond, 50*time.Millisecond, 95*time.Millisecond}
+	} else if *clientLatencyProfile == "mobile-poor" {
+		// Generated stress hypothesis, not measured physical-provider RTT.
+		// Preserve the same serialized connection behavior at 150-500ms.
+		clientNet.rtts = []time.Duration{150*time.Millisecond, 250*time.Millisecond, 500*time.Millisecond, 200*time.Millisecond, 350*time.Millisecond, 450*time.Millisecond}
 	} else if *clientLatencyProfile != "historical" {
 		panic("invalid client IMAP latency profile")
 	}
