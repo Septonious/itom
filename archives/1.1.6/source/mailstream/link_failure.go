@@ -29,9 +29,21 @@ func classifyTLSHandshakeError(err error) error {
 		errors.As(err, &hostname) ||
 		errors.As(err, &certificate) ||
 		errors.As(err, &roots) ||
-		errors.As(err, &header) ||
-		errors.As(err, &alert) {
+		errors.As(err, &header) {
 		return ErrAuth
+	}
+	if errors.As(err, &alert) {
+		// RFC 8446: close_notify (0) and user_canceled (90) are
+		// intentional connection endings, not proof of bad credentials.
+		// A peer internal_error (80) is also not an identity rejection.
+		// Retry only these three through the existing bounded schedule;
+		// certificate, policy and protocol alerts remain permanent.
+		switch alert {
+		case tls.AlertError(0), tls.AlertError(80), tls.AlertError(90):
+			return ErrClosed
+		default:
+			return ErrAuth
+		}
 	}
 	return ErrClosed
 }
