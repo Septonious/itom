@@ -83,3 +83,58 @@ benchmarks. Treat this as a conservative fail-closed measured acceptance gate
 plus structural checks that forbid newly introduced waits. If even one measured
 RTT metric increases, investigate; do not promote this candidate as compliant
 until reproducible evidence clears the regression.
+
+## Continuation: lower overhead without delaying control delivery
+
+7. **Reuse the standing control-poll timer** instead of allocating a new
+   `time.After` per empty UID FETCH. Timer reset is performed at the same
+   point as the released 1 ms wait; the timer is stopped when an IMAP
+   command or cancellation wakes the reader. Go's post-1.23 timer semantics
+   prevent stale ticks from leaking between resets. A focused test and
+   benchmark exercise command wakeups and allocation count.
+8. **Omit redundant UID data-item requests from UID FETCH**, leaving the
+   absolute ascending UID range, mandatory `RFC822.SIZE`, literal read
+   bounds, UID-range checks and deletion/accounting proof unchanged.
+   RFC 3501 and RFC 9051 require that UID FETCH responses contain the
+   UID even if not explicitly requested. A verified-TLS memory-server
+   integration test checks both a normal data response and a forward range
+   beyond the mailbox tail. This reduces control request bytes but does
+   not introduce SEARCH/NOOP or a separate round trip.
+9. **Handle temporary IMAP LOGIN provider status codes:** `UNAVAILABLE`,
+   `INUSE`, `LIMIT`, and `SERVERBUG` now enter the existing bounded
+   startup retry policy. Explicit `AUTHENTICATIONFAILED`,
+   `AUTHORIZATIONFAILED`, `NOPERM` and certificate errors continue to
+   fail closed. A live TLS fixture tests two forced radio disconnects
+   followed by a successful authenticated connection.
+10. **Validation-only workflow** `.github/workflows/itom-117-rc2-safety.yml`
+    tests Go/core/native, a race-focused RC2 cohort, both Linux targets,
+    Android and Python acceptance gates. It does not invoke GitHub release
+    APIs, upload production binaries, or use signing secrets.
+
+### Local standalone microbenchmarks (NOT the ITOM transport RTT suite)
+
+Executed independently of GitHub Actions on a local x86-64 AMD EPYC
+container using Go **1.23.2**, not the pinned Go 1.27.1:
+
+| Microbenchmark | Reference | Candidate |
+| --- | ---: | ---: |
+| Timer allocation / operation | `time.After`: 3 | reset/stop reusable timer: 0 |
+| Timer benchmark time / operation | about 291–304 ns | about 46 ns |
+| MIME bytes for 65,536 random bytes | 82,414 | 82,244 |
+| MIME bytes for 256,000 random bytes | 321,486 | 320,820 |
+
+The MIME smoke test decoded both envelopes to the original random payload.
+The timer allocations and CPU times are compiler/runtime-specific and only
+demonstrate potential memory/CPU savings. They **are not measured network
+RTT**, actual ITOM throughput, mobile power use or provider interoperability.
+The UID command-byte savings likewise require the real TLS IMAP fixture
+and physical-provider check before being called field-qualified.
+
+### Runner blocker confirmed
+
+After adding the separate validation-only safety workflow, both `go-safety`
+and `android-validation` jobs failed before their first step; the RTT A/B
+matrix continues to fail the same way. A rerun of an earlier failed job
+also failed without execution or downloadable logs. No passing full-source
+test, measured RC2 RTT distribution, signed APK or new server executable
+is asserted from these failures.
