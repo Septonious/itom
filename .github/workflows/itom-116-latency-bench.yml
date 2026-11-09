@@ -45,7 +45,7 @@ jobs:
       - name: Verify RC-specific Go scheduling tests
         working-directory: archives/1.1.6/source/mailstream
         run: go test -count=1 -timeout=120s -run '^TestRC116' -v .
-      - name: Measure ASCII85 encoding CPU overhead
+      - name: Measure ASCII85 encoding CPU throughput on GitHub runner
         if: ${{ matrix.profile == 'mobile-20' }}
         working-directory: archives/1.1.6/source/mailstream
         run: go test -run '^$' -bench '^BenchmarkRC116MandatoryMIMEEncoding' -benchtime=200ms -count=1
@@ -99,9 +99,18 @@ jobs:
               b=[pair[1]['throughput_mbps'][direction] for pair in runs]
               print(f'{direction:>8} Mbps: 1.1.5={a}, RC1={b};'
                     f' medians {statistics.median(a):.2f} => {statistics.median(b):.2f}')
-              if not profile.startswith('mobile') and min(b)<200:
+              if profile not in ('mobile','mobile-20') and min(b)<200:
                   print('WARNING: one run fell below the 200Mbps high-capacity floor')
           PY
+      - name: Report five-pair measured provider MIME bytes per application byte
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_mime_efficiency.py' -v
+          python3 archives/1.1.6/qualification/mime_efficiency.py \
+            "bench-$PROFILE-1" "bench-$PROFILE-2" "bench-$PROFILE-3" \
+            "bench-$PROFILE-4" "bench-$PROFILE-5" --out "bench-$PROFILE-mime-efficiency.json"
       - name: Aggregate every measured RTT sample across five paired trials
         shell: bash
         env:
