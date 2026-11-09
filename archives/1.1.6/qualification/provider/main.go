@@ -588,7 +588,13 @@ func run() error {
 		clientNet.rtts = []time.Duration{30*time.Millisecond, 55*time.Millisecond, 100*time.Millisecond, 70*time.Millisecond}
 	}
 	if *clientLatencyProfile == "home" {
+		// Conservative effective IMAP latency model. Separate from ICMP
+		// to the provider host; TCP/TLS/IMAP work can exceed the wire RTT.
 		clientNet.rtts = []time.Duration{15*time.Millisecond, 20*time.Millisecond, 30*time.Millisecond, 18*time.Millisecond, 27*time.Millisecond, 22*time.Millisecond}
+	} else if *clientLatencyProfile == "home-icmp" {
+		// User's observed 3ms ICMP ping to imap.rambler.ru is a network
+		// floor calibration, NOT an observed IMAP command round trip.
+		clientNet.rtts = []time.Duration{3*time.Millisecond}
 	} else if *clientLatencyProfile == "mobile" {
 		clientNet.rtts = []time.Duration{30*time.Millisecond, 45*time.Millisecond, 85*time.Millisecond, 150*time.Millisecond, 70*time.Millisecond, 120*time.Millisecond, 50*time.Millisecond, 95*time.Millisecond}
 	} else if *clientLatencyProfile != "historical" {
