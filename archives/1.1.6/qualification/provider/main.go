@@ -479,6 +479,7 @@ func main() {
 func run() error {
 	mobileTails := flag.Bool("mobile-latency-tails", false, "field-observed effective client IMAP latency tails180/250ms among usual30-100ms")
 	mobileLatency := flag.Bool("mobile-latency", false, "independent variable 30-100 ms client IMAP path RTT")
+	clientLatencyProfile := flag.String("client-latency-profile", "historical", "1.1.6 reference: home 15-30ms or mobile 30-150ms")
 	rateDip := flag.Bool("client-rate-dip", false, "100 to 1 to 100 Mbps shared link: dip from second 10 through 25")
 	historyVector := flag.String("history-bytes", "", "generated fixture only: per-account debt used for physically seeded old DATA")
 	dir := flag.String("dir", "", "private fixture directory")
@@ -585,6 +586,13 @@ func run() error {
 	}
 	if *mobileLatency {
 		clientNet.rtts = []time.Duration{30*time.Millisecond, 55*time.Millisecond, 100*time.Millisecond, 70*time.Millisecond}
+	}
+	if *clientLatencyProfile == "home" {
+		clientNet.rtts = []time.Duration{15*time.Millisecond, 20*time.Millisecond, 30*time.Millisecond, 18*time.Millisecond, 27*time.Millisecond, 22*time.Millisecond}
+	} else if *clientLatencyProfile == "mobile" {
+		clientNet.rtts = []time.Duration{30*time.Millisecond, 45*time.Millisecond, 85*time.Millisecond, 150*time.Millisecond, 70*time.Millisecond, 120*time.Millisecond, 50*time.Millisecond, 95*time.Millisecond}
+	} else if *clientLatencyProfile != "historical" {
+		panic("invalid client IMAP latency profile")
 	}
 	if *mobileTails {
 		clientNet.rtts = []time.Duration{30*time.Millisecond,50*time.Millisecond,180*time.Millisecond,70*time.Millisecond,35*time.Millisecond,250*time.Millisecond,80*time.Millisecond,45*time.Millisecond}
