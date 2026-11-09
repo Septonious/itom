@@ -1228,7 +1228,7 @@ func (a *mailAccountState) run() {
 		}
 		plainMail := packMail(packets)
 		encoded := encodeMail(plainMail)
-		if a.link.optimizedMIME.Load() && !work.recovery {
+		if a.link.optimizedMIME.Load() && !work.recovery && preferASCII85(len(plainMail)) {
 			encoded = encodeMailASCII85(plainMail)
 		}
 		a.mu.Lock()
@@ -1954,7 +1954,7 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 
 func encodeMail(body []byte) []byte {
 	var out bytes.Buffer
-	out.WriteString("From: transport@itom.invalid\r\nTo: transport@itom.invalid\r\nSubject: ITOM3\r\nMIME-Version: 1.0\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\n\r\n")
+	out.WriteString(base64MIMEHeader)
 	b := base64.StdEncoding.EncodeToString(body)
 	for len(b) > 0 {
 		n := min(76, len(b))

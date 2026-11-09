@@ -48,7 +48,10 @@ func (s *Session) applyMailCodecNegotiation(f frame) (handled bool, err error) {
 	}
 	switch {
 	case s.server && f.kind == framePing && f.offset == mailCodecOfferNonce:
-		return true, s.trySend(frame{kind: framePong, offset: mailCodecSupportedNonce}, true)
+		// Optional transport optimization must never terminate an otherwise
+		// healthy session when the bounded priority queue is briefly full.
+		_ = s.trySend(frame{kind: framePong, offset: mailCodecSupportedNonce}, true)
+		return true, nil
 	case !s.server && f.kind == framePong && f.offset == mailCodecSupportedNonce:
 		// Do not repeatedly switch on retransmitted capability replies.
 		if !s.mailCodecActivated.CompareAndSwap(false, true) {
@@ -60,10 +63,11 @@ func (s *Session) applyMailCodecNegotiation(f frame) (handled bool, err error) {
 			s.mailCodecActivated.Store(false)
 			codec.setOptimizedMailCodec(false)
 		}
-		return true, err
+		return true, nil
 	case s.server && f.kind == framePing && f.offset == mailCodecActivateNonce:
 		codec.setOptimizedMailCodec(true)
-		return true, s.trySend(frame{kind: framePong, offset: mailCodecActiveNonce}, true)
+		_ = s.trySend(frame{kind: framePong, offset: mailCodecActiveNonce}, true)
+		return true, nil
 	case !s.server && f.kind == framePong && f.offset == mailCodecActiveNonce:
 		return true, nil
 	}
