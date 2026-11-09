@@ -1015,8 +1015,38 @@ func (a *mailAccountState) run() {
 				}
 			}
 		}
+		// Preserve one shared completion slot for a new control APPEND only
+		// while this endpoint is actively exchanging interactive traffic.
+		// Large DATA writes may otherwise fill all four in-flight operations
+		// and force a small ping/OPEN to wait for an unrelated bulk completion.
+		// Outside the short active interval bulk retains all four slots.
+		var reservedFast *mailWork
+		if a.link.reserveInteractiveWriterSlot(inFlight, time.Now()) && !(carry != nil && carry.control) {
+			a.mu.Lock()
+			hasControlWriter := a.controlWriter != nil
+			a.mu.Unlock()
+			if hasControlWriter {
+				select {
+				case urgent := <-a.fast:
+					reservedFast = &urgent
+				case err := <-completed:
+					inFlight--
+					if err != nil && !a.parking.Load() {
+						return
+					}
+					continue
+				case op := <-a.writerOps:
+					operation = &op
+					continue
+				case <-a.ctx.Done():
+					return
+				}
+			}
+		}
 		var work mailWork
-		if carry != nil && carry.control {
+		if reservedFast != nil {
+			work = *reservedFast
+		} else if carry != nil && carry.control {
 			// A control packet carried across a batch boundary is already
 			// accepted. New feedback must not overtake it indefinitely.
 			work, carry = *carry, nil
