@@ -119,6 +119,7 @@ type mailAccountState struct {
 type IMAPLink struct {
 	lastBulk            atomic.Int64
 	lastInteractive     atomic.Int64
+	lastUserTraffic     atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
 	cancel              context.CancelFunc
@@ -190,6 +191,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	lifetime, cancel := context.WithCancel(ctx)
 	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4)}
 	l.store = store
+	l.lastUserTraffic.Store(time.Now().UnixNano())
 	l.reclaimer = accounts[0].Reclamation
 	if l.reclaimer == nil {
 		l.reclaimer = NewReclamationCoordinator()
@@ -452,6 +454,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			}
 			a.mu.Unlock()
 			a.sentPacket(body)
+			l.lastUserTraffic.Store(time.Now().UnixNano())
 			if feedback {
 				l.mu.Lock()
 				l.feedbackAccount = uint64(index)
@@ -1562,6 +1565,7 @@ type mailPipe struct {
 	service           time.Duration
 	knownFolders      map[string]bool // SELECT owner only; never shared with a writer
 	uidControl        atomic.Bool
+	pollTraffic       *atomic.Int64 // user activity, nil for legacy isolated test readers
 	latency           atomic.Int64
 	latencyAt         atomic.Int64
 }

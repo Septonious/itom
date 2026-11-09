@@ -387,7 +387,7 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 				if err := p.runCommand(cmd); err != nil {
 					return err
 				}
-			case <-time.After(time.Millisecond):
+			case <-time.After(p.controlPollDelay(time.Now())):
 			}
 		}
 	}

@@ -80,7 +80,9 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 	if err != nil {
 		return
 	}
+	control.pollTraffic = &a.link.lastUserTraffic
 	control.onPacket = func(packet []byte) {
+		a.link.lastUserTraffic.Store(time.Now().UnixNano())
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, 0, true)
 	}
