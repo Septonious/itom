@@ -17,7 +17,7 @@ Each proposed runtime change must be compared against *the released 1.1.6 RC1*, 
 | Lossy | 2–20 / 0.5–5 Mbps | 0.5%, 2%, 5% packet loss | completion, duplicate handling, RTO, bounded retransmissions |
 | High-capacity guard | ~500 / 500 Mbps | 3 ms network floor and 15–30 ms IMAP model | no major 350–400 Mbps regression; loaded RTT tails stable |
 
-The fixture currently supports rate/latency restrictions and temporary rate dips. It **does not yet implement real transport loss or IP handovers**; those require separate fault-injection infrastructure, not fabricated successful CI claims.
+The fixture now supports integer-Mbps and exact kbps shaping for 2/0.5 Mbps, a generated 150–500 ms very-poor mobile latency profile, and temporary rate dips. It **does not yet implement real transport loss or IP handovers**; those require separate fault-injection infrastructure, not fabricated successful CI claims.
 
 **Prioritize:** transfer completion, session survival/reconnect, battery wakeups, IMAP commands and total wire bytes, correct mailbox retention/cleanup, loaded RTT p95, then median RTT and peak throughput. A speed gain is invalid if it makes the VPN unusable after a weak-radio interruption or increases retained storage without audited cleanup.
 
@@ -41,6 +41,6 @@ The fixture currently supports rate/latency restrictions and temporary rate dips
 - Compare the proposed branch with immutable **released** `v1.1.6-rc1` source, not with an untested previous commit.
 - Each completed paired run must have no *positive* measured RTT delta in **idle, loaded and after-load minimum/median/p95/p99/maximum**. A single higher metric **blocks the release**; do not average away a regression.
 - Both upload and download goodput must remain at least 75% of RC1 in each trial; also compare the best throughput across trials to protect maximum throughput. No fallback to a 200 Mbps absolute floor as a substitute for the 25% relative rule.
-- Three alternating-order synthetic A/B trials per network profile are the minimum screen (500 Mbps home, 3 ms home-icmp floor, 160/90 mobile, 20/5 mobile, 8/2 poor mobile). Runner jitter can make strict gates fail; that is a reason to gather more evidence, not to silently relax the constraint.
+- Five alternating-order synthetic A/B trials per network profile are the minimum screen (500 Mbps home, 3 ms home-icmp floor, 160/90 mobile, 20/5 mobile, 8/2 poor mobile, and 2/0.5 very poor mobile at 150–500 ms). Runner jitter can make strict gates fail; that is a reason to gather more evidence, not to silently relax the constraint.
 - The fixture cannot prove a literal zero-RTT-change guarantee on every real network, or model physical cellular loss/handover. Separate packet-loss/handover and actual phone/provider trials remain mandatory before a general release.
 - The Go toolchain and Android integration must pass, and matched server/APK artifacts must be built, signed and verified. **No RC2 artifacts should be released while GitHub Actions jobs fail before provisioning a runner.**
