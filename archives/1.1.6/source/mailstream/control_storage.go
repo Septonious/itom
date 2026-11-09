@@ -286,6 +286,14 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 // UID FETCH does not depend on sequence positions, which change after EXPUNGE.
 // Polls use an absolute forward UID range; no reversed n:* range re-reads the tail.
 func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error {
+	// One reusable timer per control reader. The released 1ms polling gap
+	// is unchanged; time.After created a fresh timer for every empty UID
+	// FETCH (often thousands per second across 15 accounts on fast IMAP).
+	// Reusing a stopped/drained timer removes steady-state timer allocations
+	// without introducing another wait or any network command.
+	pollTimer := time.NewTimer(time.Hour)
+	pollTimer.Stop()
+	defer pollTimer.Stop()
 	for {
 		p.phase.Store(11)
 		select {
@@ -378,16 +386,20 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 			// The empty FETCH is itself a direct IMAP command sample.
 			// A separate periodic NOOP delays the receive critical path.
 			p.observeEmptyControlFetch(fetchStarted)
+			pollTimer.Reset(p.controlPollDelay(time.Now()))
 			select {
 			case <-ctx.Done():
+				pollTimer.Stop()
 				return ctx.Err()
 			case <-p.done:
+				pollTimer.Stop()
 				return ErrClosed
 			case cmd := <-p.commands:
+				pollTimer.Stop()
 				if err := p.runCommand(cmd); err != nil {
 					return err
 				}
-			case <-time.After(p.controlPollDelay(time.Now())):
+			case <-pollTimer.C:
 			}
 		}
 	}
