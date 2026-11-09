@@ -26,8 +26,23 @@ jobs:
         with:
           go-version: "1.27.1"
           cache: false
+      - name: Isolated native test cohort before expensive full suite
+        working-directory: archives/1.1.6/source/native
+        run: go test -mod=readonly -count=1 -timeout=120s -v ./...
       - name: Source integrity, normal/race tests and native contracts
         run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-6-rc1
+      - name: Expose failed source safety diagnostics without upload-artifact
+        if: failure()
+        shell: bash
+        run: |
+          echo "Core test stage:"
+          cat "$SOURCE/dist/core-report.json" 2>/dev/null || true
+          echo "Core build log:"
+          tail -n 200 "$SOURCE/dist/core-build.log" 2>/dev/null || true
+          echo "Core stderr:"
+          tail -n 100 "$SOURCE/dist/core-test-stderr.log" 2>/dev/null || true
+          echo "Race stderr:"
+          tail -n 100 "$SOURCE/dist/core-race-stderr.log" 2>/dev/null || true
       - name: Focused low-latency regression tests
         working-directory: archives/1.1.6/source/mailstream
         run: |
