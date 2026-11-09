@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10160; versionName = "1.1.6-rc1"
+        versionCode = 10172; versionName = "1.1.7-rc2"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }
@@ -27,7 +27,7 @@ android {
             // debug signer must never overwrite or masquerade as stable 1.1.5.
             applicationIdSuffix = ".testing"
             versionNameSuffix = "-testing"
-            resValue("string", "app_name", "ITOM RC1 Test")
+            resValue("string", "app_name", "ITOM RC2 Test")
             if (itomSigningStore != null) signingConfig = signingConfigs.getByName("itomField")
         }
         release { isDebuggable = false; isMinifyEnabled = false;
