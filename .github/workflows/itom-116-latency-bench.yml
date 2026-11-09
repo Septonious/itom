@@ -28,6 +28,9 @@ jobs:
           - profile: mobile
             bitrate: "160"
             extra: "--client-upload-mbps 90 --client-download-mbps 160"
+          - profile: mobile-20
+            bitrate: "20"
+            extra: "--client-upload-mbps 5 --client-download-mbps 20"
           - profile: home-contention
             bitrate: "500"
             extra: "--append-service-ms 12 --bulk-publish-delay-ms 16"
@@ -42,6 +45,71 @@ jobs:
       - name: Verify RC-specific Go scheduling tests
         working-directory: archives/1.1.6/source/mailstream
         run: go test -count=1 -timeout=120s -run '^TestRC116' -v .
+      - name: Measure ASCII85 encoding CPU overhead
+        if: ${{ matrix.profile == 'mobile-20' }}
+        working-directory: archives/1.1.6/source/mailstream
+        run: go test -run '^
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+          BITRATE: ${{ matrix.bitrate }}
+          EXTRA: ${{ matrix.extra }}
+        run: |
+          set -euo pipefail
+          model="$PROFILE"
+          if [[ "$model" == "home-contention" ]]; then model=home; fi
+          if [[ "$model" == "mobile-20" ]]; then model=mobile; fi
+          for n in 1 2 3 4 5; do
+            order=baseline-first
+            if [[ "$n" == "2" || "$n" == "4" ]]; then order=candidate-first; fi
+            python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" \
+              --out "bench-$PROFILE-$n" \
+              --baseline archives/1.1.5/source/core --baseline-is-mailstream \
+              --latency-profile "$model" --client-mbps "$BITRATE" $EXTRA \
+              --accounts 15 --duration 8s --streams 8 --idle-probes 30 \
+              --post-probes 30 --order "$order"
+          done
+      - name: Print paired RTT medians, p95 and throughput, aggregate across repeats
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          python3 - <<'PY'
+          import os,statistics,json
+          from pathlib import Path
+          profile=os.environ['PROFILE']
+          runs=[]
+          for i in (1,2,3,4,5):
+              root=Path(f'bench-{profile}-{i}')
+              report=json.loads((root/'SYNTHETIC_RTT_REPORT.json').read_text())
+              baseline,candidate=report['results']
+              assert baseline['completed'] and candidate['completed']
+              runs.append((baseline,candidate))
+          print('\nMEASURED TLS APPLICATION RTT —',profile)
+          for phase in ('idle','loaded','after'):
+              for field in ('median_ms','p95_ms'):
+                  a=[pair[0]['rtt'][phase][field] for pair in runs]
+                  b=[pair[1]['rtt'][phase][field] for pair in runs]
+                  print(f'{phase:>6} {field:>10}: 1.1.5={a}, RC1={b};'
+                        f' aggregated median {statistics.median(a):.3f}ms => {statistics.median(b):.3f}ms;'
+                        f' delta {statistics.median(b)-statistics.median(a):+.3f}ms')
+          for direction in ('upload','download'):
+              a=[pair[0]['throughput_mbps'][direction] for pair in runs]
+              b=[pair[1]['throughput_mbps'][direction] for pair in runs]
+              print(f'{direction:>8} Mbps: 1.1.5={a}, RC1={b};'
+                    f' medians {statistics.median(a):.2f} => {statistics.median(b):.2f}')
+              if profile not in ('mobile','mobile-20') and min(b)<200:
+                  print('WARNING: one run fell below the 200Mbps high-capacity floor')
+          PY
+      - name: Aggregate every measured RTT sample across five paired trials
+        shell: bash
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          python3 archives/1.1.6/qualification/aggregate_rtt.py \
+            "bench-$PROFILE-1" "bench-$PROFILE-2" "bench-$PROFILE-3" \
+            "bench-$PROFILE-4" "bench-$PROFILE-5" --out "bench-$PROFILE-aggregate.json"
+ -bench '^BenchmarkRC116MandatoryMIMEEncoding' -benchtime=200ms -count=1
       - name: Measure five paired independent RTT distributions
         shell: bash
         env:
@@ -52,6 +120,7 @@ jobs:
           set -euo pipefail
           model="$PROFILE"
           if [[ "$model" == "home-contention" ]]; then model=home; fi
+          if [[ "$model" == "mobile-20" ]]; then model=mobile; fi
           for n in 1 2 3 4 5; do
             order=baseline-first
             if [[ "$n" == "2" || "$n" == "4" ]]; then order=candidate-first; fi
