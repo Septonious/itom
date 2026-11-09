@@ -10,7 +10,7 @@ import (
 )
 
 func TestRC116MandatorySevenBitMIMECiphertextRoundTrip(t *testing.T) {
-	for _, size := range []int{0, 1, 23, 128, 1024, 4096, 65536, 200000} {
+	for _, size := range []int{0, 1, 23, 128, 1024, 4096, 65536} {
 		var session SessionID
 		session[0] = 42
 		packet := header(sealed, session, 1)
@@ -34,6 +34,23 @@ func TestRC116MandatorySevenBitMIMECiphertextRoundTrip(t *testing.T) {
 		if err != nil || len(got) != 1 || !bytes.Equal(got[0], packet) {
 			t.Fatalf("MIME round-trip size=%d: count=%d err=%v", size, len(got), err)
 		}
+	}
+}
+
+func TestRC116MandatoryLargeBatchedMIMEEnvelope(t *testing.T) {
+	id := SessionID{1}
+	var packets [][]byte
+	for i := 0; i < 3; i++ {
+		packet := append(header(sealed, id, uint64(i+1)), make([]byte, 60000)...)
+		if _, err := rand.Read(packet[headerSize:]); err != nil { t.Fatal(err) }
+		packets = append(packets, packet)
+	}
+	plain := packMail(packets)
+	if len(plain) <= 160000 || len(plain) >= maxMailPlain { t.Fatalf("bad MIME batch length %d", len(plain)) }
+	got, err := decodeMail(encodeMail(plain))
+	if err != nil || len(got) != len(packets) { t.Fatalf("batch decode failed: count=%d err=%v", len(got), err) }
+	for i := range packets {
+		if !bytes.Equal(got[i], packets[i]) { t.Fatalf("batch entry %d corrupted", i) }
 	}
 }
 
