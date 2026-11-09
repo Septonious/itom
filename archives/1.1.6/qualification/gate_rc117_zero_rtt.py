@@ -18,8 +18,13 @@ DIRECTIONS = ("upload", "download")
 MIN_THROUGHPUT_RATIO = 0.75
 
 
-def load_pair(folder):
+def load_pair(folder, profile):
     report = json.loads((Path(folder) / "SYNTHETIC_RTT_REPORT.json").read_text())
+    expected_model = {"mobile-20": "mobile", "mobile-8": "mobile",
+                      "mobile-2": "mobile-poor"}.get(profile, profile)
+    if report.get("network_profile") != expected_model:
+        raise ValueError(f"{folder}: expected {expected_model} network model for {profile}; "
+                         f"got {report.get('network_profile')}")
     older, newer = report["results"]
     if (older.get("version"), newer.get("version")) != ("1.1.6-rc1", "1.1.7-rc2"):
         raise ValueError(f"{folder}: expected immutable released RC1 vs 1.1.7 RC2, "
@@ -32,7 +37,7 @@ def load_pair(folder):
 def check(folders, profile):
     if len(folders) < 5:
         raise ValueError("require at least five independent paired A/B trials")
-    pairs = [load_pair(folder) for folder in folders]
+    pairs = [load_pair(folder, profile) for folder in folders]
     issues = []
     for index, (baseline, candidate) in enumerate(pairs, 1):
         for phase in PHASES:
