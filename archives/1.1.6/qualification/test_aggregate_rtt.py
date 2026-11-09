@@ -29,6 +29,25 @@ class AggregateRTTTests(unittest.TestCase):
             self.assertEqual(result["per_phase"]["idle"]["p95_diff_ms"],-10)
             self.assertEqual(result["throughput_mbps"]["upload"]["1.1.6-rc1"]["minimum"],260)
 
+    def test_rc1_rc2_labels_are_exact_and_cannot_be_mixed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            roots=[self.make(temp,i) for i in range(3)]
+            for root in roots:
+                path=root/"manifest.json"
+                manifest=json.loads(path.read_text())
+                manifest.update({"baseline_version":"1.1.6-rc1","candidate_version":"1.1.7-rc2"})
+                path.write_text(json.dumps(manifest))
+            result=aggregate(roots)
+            self.assertEqual(result["baseline_version"],"1.1.6-rc1")
+            self.assertEqual(result["candidate_version"],"1.1.7-rc2")
+            self.assertEqual(result["per_phase"]["idle"]["1.1.7-rc2"]["pooled"]["count"],90)
+            self.assertEqual(result["throughput_mbps"]["download"]["1.1.7-rc2"]["minimum"],260)
+            broken=json.loads((roots[0]/"manifest.json").read_text())
+            broken["baseline_version"]="1.1.5"
+            (roots[0]/"manifest.json").write_text(json.dumps(broken))
+            with self.assertRaisesRegex(ValueError,"distinct baseline/candidate"):
+                aggregate(roots)
+
     def test_any_home_run_below_200_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             roots=[self.make(temp,i,candidate_speed=190 if i==3 else 250) for i in range(5)]
