@@ -398,18 +398,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	// Paired RC1 tests showed a higher loaded application RTT tail even though
 	// control FETCH/APPEND timing looked faster. Preserve proven RR admission
 	// until a queue-aware, end-to-end-attributed signal is demonstrated.
-	// The first interactive copy always retains the proven round-robin path.
-	// For the existing second (isolated) copy, prefer a rotating cohort of
-	// accounts with fresh authenticated DELIVERY RTT measurements. Never
-	// change the bulk or feedback distribution and never add another APPEND.
-	hedgeRanking := priority && exclude != nil && !feedback && !recovery &&
-		len(body) <= 4096+13+headerSize+16
-	ranked := hedgeRanking || experimentalInteractiveRankingEnabled && priority && !feedback && !recovery &&
-		len(body) <= 4096+13+headerSize+16
+	ranked := experimentalInteractiveRankingEnabled && priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16
 	var order []int
-	if hedgeRanking {
-		order = l.interactiveHedgeAccountOrder(start, peerAllowed, exclude)
-	} else if ranked {
+	if ranked {
 		order = l.interactiveAccountOrder(start, peerAllowed, exclude, true)
 	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
