@@ -1,0 +1,239 @@
+name: ITOM 1.1.6 RC1 build and field-test prerelease
+on:
+  push:
+    branches: [codex/itom-1.1.6-low-latency]
+    paths:
+      - "archives/1.1.6/**"
+      - ".github/workflows/itom-116-rc1.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: itom-116-rc1
+  cancel-in-progress: true
+env:
+  SOURCE: archives/1.1.6/source
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Source integrity, normal/race tests and native contracts
+        run: python3 "$SOURCE/tools/build.py" core --race --expect-revision itom-1-1-6-rc1
+      - name: Focused low-latency regression tests
+        working-directory: archives/1.1.6/source/mailstream
+        run: |
+          go test -p 2 -count=1 -timeout=120s -run '^TestRC116' -v .
+          go vet ./...
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-116-rc1-safety
+          path: archives/1.1.6/source/dist/core-*
+          if-no-files-found: warn
+          retention-days: 30
+  network-profiles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Paired home IMAP 15-30ms, 500Mbps physical reference
+        run: |
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out home-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 10 --post-probes 10 --order baseline-first
+      - name: Paired mobile IMAP 30-150ms, 160/90Mbps physical reference
+        run: |
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out mobile-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile mobile --client-mbps 160 --client-download-mbps 160 --client-upload-mbps 90 --accounts 15 --duration 8s --streams 8 --idle-probes 10 --post-probes 10 --order candidate-first
+      - name: Require complete application transfers, preserve exact measured results
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for profile in ('home-profile','mobile-profile'):
+              manifest=json.loads(Path(profile,'manifest.json').read_text())
+              assert manifest['rc116_latency_profile']==profile.split('-')[0]
+              for name in ('rc2','candidate'):
+                  p=Path(profile,name+'.json')
+                  assert p.is_file(),p
+                  result=json.loads(p.read_text())
+                  assert result.get('success') and result.get('stage')=='complete',(profile,name,result.get('error'),result.get('stage'))
+              print(profile,'reference and candidate completed; numerical RTT and throughput require paired evaluation')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-116-rc1-network-profiles
+          path: |
+            home-profile/
+            mobile-profile/
+          if-no-files-found: warn
+          retention-days: 30
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.1"
+          cache: false
+      - name: Produce exact Linux server binaries and source ZIP
+        run: |
+          set -euo pipefail
+          mkdir -p linux-assets
+          python3 "$SOURCE/tools/build.py" check --expect-revision itom-1-1-6-rc1
+          for arch in amd64 arm64; do
+            (cd "$SOURCE/core" && CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false -o "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-linux-$arch.bin" ./cmd/itom)
+          done
+          test "$(linux-assets/ITOM-1.1.6-RC1-linux-amd64.bin version)" = "ITOM itom-1-1-6-rc1 linux amd64"
+          python3 "$SOURCE/tools/package_sources.py" --output "$GITHUB_WORKSPACE/linux-assets/ITOM-1.1.6-RC1-sources.zip"
+          cp archives/1.1.6/RELEASE_NOTES.md linux-assets/RELEASE_NOTES.md
+          printf '%s\n' "$GITHUB_SHA" > linux-assets/SOURCE_COMMIT
+          (cd linux-assets && sha256sum *.bin *.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itom-116-rc1-linux-source
+          path: linux-assets/
+          if-no-files-found: error
+          retention-days: 30
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    env:
+      ITOM_ANDROID_KEYSTORE_B64: ${{ secrets.ITOM_ANDROID_KEYSTORE_B64 }}
+      ITOM_ANDROID_STORE_PASSWORD: ${{ secrets.ITOM_ANDROID_STORE_PASSWORD }}
+      ITOM_ANDROID_KEY_ALIAS: ${{ secrets.ITOM_ANDROID_KEY_ALIAS }}
+      ITOM_ANDROID_KEY_PASSWORD: ${{ secrets.ITOM_ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Load matching signer only if all private credentials are configured
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os,base64
+          from pathlib import Path
+          keys=('ITOM_ANDROID_KEYSTORE_B64','ITOM_ANDROID_STORE_PASSWORD','ITOM_ANDROID_KEY_ALIAS','ITOM_ANDROID_KEY_PASSWORD')
+          present=[bool(os.environ.get(k)) for k in keys]
+          if any(present) and not all(present):
+              raise SystemExit('Incomplete Android signing configuration')
+          if all(present):
+              target=Path(os.environ['RUNNER_TEMP'])/'itom-rc116-signing.jks'
+              target.write_bytes(base64.b64decode(os.environ[keys[0]],validate=True))
+              target.chmod(0o600)
+              with open(os.environ['GITHUB_ENV'],'a') as out:
+                  out.write('ITOM_ANDROID_SIGNING_STORE_FILE='+str(target)+'\n')
+              print('Private keystore loaded; certificate verification follows build')
+          else:
+              print('No signing secrets available: APK will be unsigned and cannot be installed')
+          PY
+      - name: Compile Android release, native JNI, tests and fatal lint
+        run: python3 "$SOURCE/tools/build.py" android --expect-revision itom-1-1-6-rc1 --accept-android-licenses
+      - name: Check ABI, identity and signer before packaging
+        run: |
+          set -euo pipefail
+          mkdir -p android-assets
+          python3 - <<'PY'
+          import json,os,zipfile,shutil
+          from pathlib import Path
+          base=Path(os.environ['SOURCE'])
+          meta=json.loads((base/'dist/build-report.json').read_text())
+          assert meta['status']=='passed' and meta['source_revision']=='itom-1-1-6-rc1'
+          assert meta['apk_identity']=={'application_id':'org.itom.client','version_code':10160,'version_name':'1.1.6-rc1'}
+          assert meta['android_variant']=='release'
+          apk=base/'dist/ITOM-1.1.6-RC1.apk'
+          with zipfile.ZipFile(apk) as z:
+              for abi in ('arm64-v8a','armeabi-v7a'):
+                  assert b'itom-1-1-6-rc1' in z.read('lib/'+abi+'/libgojni.so')
+          signed=bool(os.environ.get('ITOM_ANDROID_SIGNING_STORE_FILE'))
+          name='ITOM-1.1.6-RC1.apk' if signed else 'ITOM-1.1.6-RC1-UNSIGNED.apk'
+          shutil.copy2(apk,Path('android-assets')/name)
+          (Path('android-assets')/'SIGNING_STATUS.txt').write_text('Persistent signer verification required\n'if signed else 'UNSIGNED: cannot install or upgrade the phone; use retained private signing key\n')
+          shutil.copy2(base/'dist/build-report.json','android-assets/ANDROID_BUILD.json')
+          PY
+          signer="$(find "$HOME/.cache/itom-build" -name apksigner -type f -print -quit)"
+          if [ -n "${ITOM_ANDROID_SIGNING_STORE_FILE:-}" ]; then
+            test -x "$signer"
+            "$signer" verify --print-certs android-assets/ITOM-1.1.6-RC1.apk > android-assets/SIGNER.txt
+            grep -Fq '0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0' android-assets/SIGNER.txt
+            printf '%s\n' 'Verified as identical to ITOM 1.1.5 certificate' > android-assets/SIGNING_STATUS.txt
+          fi
+          (cd android-assets && sha256sum *.apk > ANDROID_SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itom-116-rc1-android
+          path: android-assets/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-116-rc1-android-logs
+          path: |
+            ${{ env.SOURCE }}/dist/*.log
+            ${{ env.SOURCE }}/dist/*.json
+          if-no-files-found: warn
+          retention-days: 30
+  prerelease:
+    needs: [safety, network-profiles, linux, android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: itom-116-rc1-linux-source
+          path: release-assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: itom-116-rc1-android
+          path: release-assets
+      - name: Verify matched source and hashes; generate manifest
+        run: |
+          set -euo pipefail
+          test "$(cat release-assets/SOURCE_COMMIT)" = "$GITHUB_SHA"
+          (cd release-assets && sha256sum -c SHA256SUMS && sha256sum -c ANDROID_SHA256SUMS)
+          python3 - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          root=Path('release-assets')
+          signed=(root/'ITOM-1.1.6-RC1.apk').exists()
+          evidence={'source_commit':os.environ['GITHUB_SHA'],'release_type':'experimental_prerelease','field_qualified':False,'signing_compatible_with_115':signed,'files':{}}
+          for p in root.iterdir():
+              if p.is_file():
+                  evidence['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+          (root/'RC_STATUS.json').write_text(json.dumps(evidence,indent=2)+'\n')
+          PY
+      - name: Publish distinct RC1 prerelease, never modify stable 1.1.5
+        run: |
+          set -euo pipefail
+          if gh release view v1.1.6-rc1 >/dev/null 2>&1; then
+            echo 'RC1 already exists, refusing to overwrite it' >&2
+            exit 1
+          fi
+          gh release create v1.1.6-rc1 release-assets/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'ITOM 1.1.6 RC1 — latency field testing' --notes-file archives/1.1.6/RELEASE_NOTES.md
+          gh release view v1.1.6-rc1 --json url,isPrerelease --jq '.'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-116-rc1-release-assets
+          path: release-assets/
+          if-no-files-found: warn
+          retention-days: 30
