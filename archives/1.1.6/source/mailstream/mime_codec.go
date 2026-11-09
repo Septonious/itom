@@ -4,11 +4,13 @@ import "encoding/ascii85"
 
 // Mandatory format for every ITOM 1.1.6 IMAP APPEND: 7-bit MIME and
 // ASCII85 ciphertext. No Base64 encoder, dual format, or negotiation.
-// Line lengths are bounded below the mail-format 998-octet limit.
+// The 960-octet line is below the mail-format 998-octet limit and
+// avoids half the wrapping overhead of RC1's 480-octet lines.
+// No new coalescing delay, negotiation, encoding, or protocol version.
 const ascii85MIMEHeader = "From: t@itom.invalid\r\nTo: t@itom.invalid\r\nSubject: ITOM4\r\nMIME-Version: 1.0\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: 7bit\r\n\r\n"
 
 const (
-	ascii85LineWidth  = 480
+	ascii85LineWidth  = 960
 	ascii85PlainBlock = ascii85LineWidth / 5 * 4
 )
 
