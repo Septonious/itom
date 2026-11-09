@@ -106,3 +106,71 @@ func TestTLSCertificateFailureStillRejectsAccount(t *testing.T) {
 		t.Fatalf("certificate rejection must remain permanent: %v",err)
 	}
 }
+
+
+func TestRC117IMAPProviderBusyOrTemporaryLoginDenialRetries(t *testing.T) {
+	for _, code := range []imap.ResponseCode{
+		imap.ResponseCodeUnavailable, imap.ResponseCodeInUse,
+		imap.ResponseCodeLimit, imap.ResponseCodeServerBug,
+	} {
+		for _, kind := range []imap.StatusResponseType{
+			imap.StatusResponseTypeNo, imap.StatusResponseTypeBad,
+		} {
+			if got := classifyIMAPLoginError(&imap.Error{Type: kind, Code: code}); !errors.Is(got, ErrClosed) {
+				t.Fatalf("temporarily unavailable provider %s/%s marked permanently invalid: %v", kind, code, got)
+			}
+		}
+	}
+	for _, code := range []imap.ResponseCode{
+		imap.ResponseCodeAuthenticationFailed,
+		imap.ResponseCodeAuthorizationFailed,
+		imap.ResponseCodeNoPerm,
+	} {
+		if got := classifyIMAPLoginError(&imap.Error{Type: imap.StatusResponseTypeNo, Code: code}); !errors.Is(got, ErrAuth) {
+			t.Fatalf("permanent credential/permission failure %s was retried: %v", code, got)
+		}
+	}
+}
+
+type rc117IntermittentTLSDialer struct{ calls int }
+
+func (d *rc117IntermittentTLSDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	d.calls++
+	if d.calls <= 2 {
+		conn, peer := net.Pipe()
+		peer.Close()
+		return conn, nil
+	}
+	return (&net.Dialer{}).DialContext(ctx, network, address)
+}
+
+// A mobile radio drop must not poison valid credentials or suppress the
+// next successful verified-TLS session startup on the same IMAP account.
+func TestRC117TwoRadioDropsThenRealTLSLoginSucceeds(t *testing.T) {
+	accounts, _ := applicationMailServer(t, false, false)
+	dialer := &rc117IntermittentTLSDialer{}
+	account := accounts[0]
+	account.Dialer = dialer
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for attempt := 0; attempt < 3; attempt++ {
+		p, err := openMailPipeAttempt(ctx, ctx, account)
+		if attempt < 2 {
+			if p != nil {
+				p.close()
+				t.Fatal("failed radio handshake unexpectedly succeeded")
+			}
+			if !errors.Is(err, ErrClosed) {
+				t.Fatalf("radio failure %d was not classified as retryable: %v", attempt, err)
+			}
+			continue
+		}
+		if err != nil || p == nil {
+			t.Fatalf("verified TLS/LOGIN failed after radio recovered: %v", err)
+		}
+		p.close()
+	}
+	if dialer.calls != 3 {
+		t.Fatalf("expected exactly three dial attempts, got %d", dialer.calls)
+	}
+}
