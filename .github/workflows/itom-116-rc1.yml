@@ -59,26 +59,41 @@ jobs:
         with:
           go-version: "1.27.1"
           cache: false
-      - name: Paired home IMAP 15-30ms, 500Mbps physical reference
+      - name: Unit-test RTT percentile and per-phase report generation
+        run: python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_rtt_report.py' -v
+      - name: Paired home 3ms ICMP-floor calibration, 500Mbps reference
         run: |
-          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out home-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 10 --post-probes 10 --order baseline-first
-      - name: Paired mobile IMAP 30-150ms, 160/90Mbps physical reference
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out home-icmp-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home-icmp --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
+      - name: Paired home 15-30ms effective IMAP-path model, 500Mbps reference
         run: |
-          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out mobile-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile mobile --client-mbps 160 --client-download-mbps 160 --client-upload-mbps 90 --accounts 15 --duration 8s --streams 8 --idle-probes 10 --post-probes 10 --order candidate-first
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out home-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order baseline-first
+      - name: Paired mobile IMAP 30-150ms, 160/90Mbps reference
+        run: |
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out mobile-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile mobile --client-mbps 160 --client-download-mbps 160 --client-upload-mbps 90 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
       - name: Require complete application transfers, preserve exact measured results
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
-          for profile in ('home-profile','mobile-profile'):
+          for profile, model in (('home-icmp-profile','home-icmp'),('home-profile','home'),('mobile-profile','mobile')):
               manifest=json.loads(Path(profile,'manifest.json').read_text())
-              assert manifest['rc116_latency_profile']==profile.split('-')[0]
+              assert manifest['rc116_latency_profile']==model
+              rtt=json.loads(Path(profile,'SYNTHETIC_RTT_REPORT.json').read_text())
+              assert rtt['network_profile']==model and len(rtt['results'])==2
               for name in ('rc2','candidate'):
                   p=Path(profile,name+'.json')
                   assert p.is_file(),p
                   result=json.loads(p.read_text())
                   assert result.get('success') and result.get('stage')=='complete',(profile,name,result.get('error'),result.get('stage'))
-              print(profile,'reference and candidate completed; numerical RTT and throughput require paired evaluation')
+                  for phase in ('IdleMS','LoadedMS','AfterMS'):
+                      samples=result.get(phase)
+                      assert isinstance(samples,list) and len(samples)>=3,(profile,name,phase)
+                  assert Path(profile,'SYNTHETIC_RTT_REPORT.csv').is_file()
+              candidate=json.loads(Path(profile,'candidate.json').read_text())
+              if model in ('home','home-icmp'):
+                  speeds={p['name']:p[p['name']]['full_phase_mbps'] for p in candidate['Phases']}
+                  assert speeds['upload']>=200 and speeds['download']>=200,(model,speeds)
+              print('RTT MEASURED, TRANSFERS VERIFIED:',model)
           PY
 
   release:
@@ -177,6 +192,33 @@ jobs:
                   info['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
           (root/'RC_STATUS.json').write_text(json.dumps(info,indent=2)+'\n')
           PY
+      - name: Repeat measured RTT profiles with final exact-source packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-home-icmp --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home-icmp --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-home --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order baseline-first
+          python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-mobile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile mobile --client-mbps 160 --client-download-mbps 160 --client-upload-mbps 90 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,zipfile,hashlib
+          inputs=[Path('release-rtt-home-icmp'),Path('release-rtt-home'),Path('release-rtt-mobile')]
+          names=['manifest.json','candidate.json','rc2.json','SYNTHETIC_RTT_REPORT.json','SYNTHETIC_RTT_REPORT.csv','SYNTHETIC_RTT_REPORT.md']
+          with zipfile.ZipFile('release-assets/ITOM-1.1.6-RC1-synthetic-rtt.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for folder in inputs:
+                  for name in names:
+                      path=folder/name
+                      assert path.is_file(),path
+                      z.write(path, str(path))
+                  report=json.loads((folder/'SYNTHETIC_RTT_REPORT.json').read_text())
+                  assert len(report['results'])==2 and all(r['completed'] for r in report['results'])
+                  assert all(r['rtt'][phase]['count']>0 for r in report['results'] for phase in ('idle','loaded','after'))
+                  candidate=json.loads((folder/'candidate.json').read_text())
+                  if folder.name!='release-rtt-mobile':
+                      speeds={p['name']:p[p['name']]['full_phase_mbps'] for p in candidate['Phases']}
+                      assert speeds['upload']>=200 and speeds['download']>=200,speeds
+          PY
+          (cd release-assets && sha256sum ITOM-1.1.6-RC1-synthetic-rtt.zip > RTT_SHA256SUMS)
       - name: Publish verified RC1 prerelease assets directly (no Actions artifact quota)
         shell: bash
         run: |
