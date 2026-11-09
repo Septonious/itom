@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10150; versionName = "1.1.5"
+        versionCode = 10160; versionName = "1.1.6-rc1"
         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")
     }

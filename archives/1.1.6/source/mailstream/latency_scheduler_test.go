@@ -17,7 +17,10 @@ func TestRC116InteractiveSelectionPrefersFastUnqueuedAccount(t *testing.T) {
 		l.accounts = append(l.accounts, a)
 		allowed[i] = true
 	}
-	l.accounts[0].controlQueued = 4
+	l.accounts[0].fast = make(chan mailWork, 4)
+	for i := 0; i < 4; i++ {
+		l.accounts[0].fast <- mailWork{}
+	}
 	order := l.interactiveAccountOrder(0, allowed, nil, true)
 	if order[0] != 1 || order[1] != 0 || order[2] != 2 {
 		t.Fatalf("unexpected queue-aware order: %v", order)

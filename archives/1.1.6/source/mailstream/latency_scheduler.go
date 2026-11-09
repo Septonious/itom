@@ -67,7 +67,7 @@ func (l *IMAPLink) interactiveAccountOrder(start int, allowed [20]bool, excluded
 				readService, appendService = 50*time.Millisecond, 50*time.Millisecond
 			}
 			service := max(readService, appendService)
-			cost = readService + appendService + time.Duration(a.controlQueued)*service
+			cost = readService + appendService + time.Duration(len(a.fast))*service
 			// Control and DATA APPEND sockets share an actor/completion budget.
 			if len(a.bulk) >= 8 {
 				cost += service
