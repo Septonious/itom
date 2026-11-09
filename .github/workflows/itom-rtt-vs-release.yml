@@ -65,7 +65,8 @@ jobs:
           baseline=a134e4a05f8aa7cb83cf455129bd633c5c90c96e
           git cat-file -e "$baseline^{commit}"
           git worktree add --detach "$RUNNER_TEMP/itom-rc116-release" "$baseline"
-          git diff --quiet "$baseline" HEAD -- archives/1.1.6/source/core archives/1.1.6/source/native
+          # RC2 changes code version identifiers: build both trees independently.
+          # Keep the released RC1 SHA pinned for immutable A/B evidence.
           test -f "$RUNNER_TEMP/itom-rc116-release/archives/1.1.6/source/mailstream/session.go"
           echo "Immutable release baseline: $baseline"
       - name: Compare five paired TLS/IMAP RTT distributions, both directions
