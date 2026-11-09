@@ -44,6 +44,8 @@ jobs:
         with:
           go-version: '1.27.1'
           cache: false
+      - name: Unit-test strict RTT and goodput rejection gate
+        run: python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_gate_rc117_zero_rtt.py' -v
       - name: Check full source and focused responsive feedback tests
         working-directory: archives/1.1.6/source/mailstream
         run: go test -count=1 -timeout=120s -run '^TestRC11[67]' -v .
