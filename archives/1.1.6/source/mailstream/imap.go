@@ -1593,7 +1593,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 	defer stopDialIO()
 	if err = conn.HandshakeContext(dial); err != nil {
 		raw.Close()
-		return nil, ErrAuth
+		return nil, classifyTLSHandshakeError(err)
 	}
 	p := &mailPipe{conn: conn, wake: make(chan struct{}, 1), done: make(chan struct{})}
 	p.commands = make(chan mailCommand, 1)
@@ -1613,7 +1613,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 	p.cancel = context.AfterFunc(ctx, func() { raw.Close(); p.client.Close() })
 	if err = p.client.Login(a.Username, a.Password).Wait(); err != nil {
 		p.close()
-		return nil, ErrAuth
+		return nil, classifyIMAPLoginError(err)
 	}
 	if !stopDialIO() {
 		p.close()
