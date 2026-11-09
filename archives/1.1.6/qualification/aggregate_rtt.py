@@ -80,7 +80,10 @@ def aggregate(paths):
             item[name]={"median":round(statistics.median(speeds),3),
                         "minimum":round(min(speeds),3),"all":speeds}
         output["throughput_mbps"][direction]=item
-        if profile!="mobile" and item[candidate_name]["minimum"]<200:
+        # A 200 Mbps absolute floor is meaningful only for the home link.
+        # Poor mobile (2/0.5 Mbps) is measured against the released RC1
+        # *relative* 75% goodput gate, never against a home-speed minimum.
+        if profile not in ("mobile", "mobile-poor") and item[candidate_name]["minimum"]<200:
             output["warnings"].append(f"{direction} high-capacity run fell below hard 200Mbps floor")
     print(f"\n=== AGGREGATED MEASURED RTT: {profile} ({len(results)} paired runs) ===",flush=True)
     for phase in ("idle","loaded","after"):
