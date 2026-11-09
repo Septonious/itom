@@ -30,8 +30,8 @@ def load_pair(folder):
 
 
 def check(folders, profile):
-    if len(folders) < 3:
-        raise ValueError("require at least three independent paired A/B trials")
+    if len(folders) < 5:
+        raise ValueError("require at least five independent paired A/B trials")
     pairs = [load_pair(folder) for folder in folders]
     issues = []
     for index, (baseline, candidate) in enumerate(pairs, 1):
