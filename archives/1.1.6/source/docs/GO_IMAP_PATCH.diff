@@ -1,0 +1,199 @@
+--- upstream/v2.0.0-beta.8/imapclient/client.go
++++ local/imapclient/client.go
+@@ -638,7 +638,7 @@
+ 
+ 	var tag, typ string
+ 	if !c.dec.Expect(c.dec.Special('*') || c.dec.Atom(&tag), "'*' or atom") {
+-		return fmt.Errorf("in response: cannot read tag: %v", c.dec.Err())
++		return fmt.Errorf("in response: cannot read tag: %w", c.dec.Err())
+ 	}
+ 	if !c.dec.ExpectSP() {
+ 		return fmt.Errorf("in response: %v", c.dec.Err())
+@@ -663,7 +663,7 @@
+ 		err = c.readResponseData(typ)
+ 	}
+ 	if err != nil {
+-		return fmt.Errorf("in %v: %v", token, err)
++		return fmt.Errorf("in %v: %w", token, err)
+ 	}
+ 
+ 	if !c.dec.ExpectCRLF() {
+@@ -1144,8 +1144,9 @@
+ 	var contReq *imapwire.ContinuationRequest
+ 	ce.client.mutex.Lock()
+ 	hasCapLiteralMinus := ce.client.caps.Has(imap.CapLiteralMinus)
++	hasCapLiteralPlus := ce.client.caps.Has(imap.CapLiteralPlus)
+ 	ce.client.mutex.Unlock()
+-	if size > 4096 || !hasCapLiteralMinus {
++	if !hasCapLiteralPlus && (size > 4096 || !hasCapLiteralMinus) {
+ 		contReq = ce.client.registerContReq(ce.cmd)
+ 	}
+ 	ce.client.setWriteTimeout(literalWriteTimeout)
+--- upstream/v2.0.0-beta.8/imapserver/capability.go
++++ local/imapserver/capability.go
+@@ -40,10 +40,10 @@
+ 	}
+ 
+ 	if available.Has(imap.CapIMAP4rev1) {
+-		caps = append(caps, []imap.Cap{
+-			imap.CapSASLIR,
+-			imap.CapLiteralMinus,
+-		}...)
++		caps = append(caps, imap.CapSASLIR)
++		if !available.Has(imap.CapLiteralPlus) {
++			caps = append(caps, imap.CapLiteralMinus)
++		}
+ 	}
+ 	if c.canStartTLS() {
+ 		caps = append(caps, imap.CapStartTLS)
+--- upstream/v2.0.0-beta.8/imapclient/fetch.go
++++ local/imapclient/fetch.go
+@@ -27,8 +27,11 @@
+ 	numKind := imapwire.NumSetKind(numSet)
+ 
+ 	cmd := &FetchCommand{
+-		numSet: numSet,
+-		msgs:   make(chan *FetchMessageData, 128),
++		numSet:        numSet,
++		requireBody:   len(options.BodySection) > 0,
++		requireBinary: len(options.BinarySection) > 0,
++		requireSize:   options.RFC822Size,
++		msgs:          make(chan *FetchMessageData, 128),
+ 	}
+ 	enc := c.beginCommand(uidCmdName("FETCH", numKind), cmd)
+ 	enc.SP().NumSet(numSet).SP()
+@@ -150,9 +153,10 @@
+ type FetchCommand struct {
+ 	commandBase
+ 
+-	numSet     imap.NumSet
+-	recvSeqSet imap.SeqSet
+-	recvUIDSet imap.UIDSet
++	numSet                                  imap.NumSet
++	recvSeqSet                              imap.SeqSet
++	recvUIDSet                              imap.UIDSet
++	requireBody, requireBinary, requireSize bool
+ 
+ 	msgs chan *FetchMessageData
+ 	prev *FetchMessageData
+@@ -172,7 +176,10 @@
+ 	return true
+ }
+ 
+-func (cmd *FetchCommand) recvUID(uid imap.UID) bool {
++func (cmd *FetchCommand) recvUID(uid imap.UID) bool { return cmd.recvUIDShape(uid, true) }
++
++// Update-only rows cannot consume the UID requested for a full message.
++func (cmd *FetchCommand) recvUIDShape(uid imap.UID, complete bool) bool {
+ 	set, ok := cmd.numSet.(imap.UIDSet)
+ 	if !ok || !set.Contains(uid) {
+ 		return false
+@@ -182,7 +189,9 @@
+ 		return false
+ 	}
+ 
+-	cmd.recvUIDSet.AddNum(uid)
++	if complete {
++		cmd.recvUIDSet.AddNum(uid)
++	}
+ 	return true
+ }
+ 
+@@ -263,8 +272,16 @@
+ }
+ 
+ func matchFetchItemBinarySection(cmd, resp *imap.FetchItemBinarySection) bool {
+-	// Ignore Partial and Peek: these are not echoed back by the server
+-	return intSliceEqual(cmd.Part, resp.Part)
++	if !intSliceEqual(cmd.Part, resp.Part) {
++		return false
++	}
++	// Some servers omit the origin for a complete section. This is safe for
++	// a zero-origin request only; never mistake a suffix for the whole body.
++	if resp.Partial == nil {
++		return cmd.Partial == nil || cmd.Partial.Offset == 0
++	}
++	// The response echoes the origin, not Partial.Size or Peek.
++	return cmd.Partial != nil && cmd.Partial.Offset == resp.Partial.Offset
+ }
+ 
+ func intSliceEqual(a, b []int) bool {
+@@ -610,6 +627,8 @@
+ 	// fashion: it can contain literals. Assume that the UID will be returned
+ 	// before any literal.
+ 	var uid imap.UID
++	var hasBody, hasBinary, hasSize bool
++	var matched *FetchCommand
+ 	handled := false
+ 	handleMsg := func() {
+ 		if handled {
+@@ -624,13 +643,14 @@
+ 
+ 			// Skip if we haven't requested or already handled this message
+ 			if _, ok := cmd.numSet.(imap.UIDSet); ok {
+-				return uid != 0 && cmd.recvUID(uid)
++				return uid != 0 && cmd.recvUIDShape(uid, (!cmd.requireBody || hasBody) && (!cmd.requireBinary || hasBinary) && (!cmd.requireSize || hasSize))
+ 			} else {
+ 				return seqNum != 0 && cmd.recvSeqNum(seqNum)
+ 			}
+ 		})
+ 		if cmd != nil {
+ 			cmd := cmd.(*FetchCommand)
++			matched = cmd
+ 			cmd.msgs <- msg
+ 		} else if handler := c.options.unilateralDataHandler().Fetch; handler != nil {
+ 			go handler(msg)
+@@ -640,7 +660,13 @@
+ 
+ 		handled = true
+ 	}
+-	defer handleMsg()
++	defer func() {
++		handleMsg()
++		// RFC822.SIZE may follow the streamed BODY literal.
++		if matched != nil && uid != 0 && (!matched.requireBody || hasBody) && (!matched.requireBinary || hasBinary) && (!matched.requireSize || hasSize) {
++			matched.recvUIDSet.AddNum(uid)
++		}
++	}()
+ 
+ 	numAtts := 0
+ 	return dec.ExpectList(func() error {
+@@ -694,6 +720,7 @@
+ 				return dec.Err()
+ 			}
+ 
++			hasSize = true
+ 			item = FetchItemDataRFC822Size{Size: size}
+ 		case "UID":
+ 			if !dec.ExpectSP() || !dec.ExpectUID(&uid) {
+@@ -703,6 +730,9 @@
+ 			item = FetchItemDataUID{UID: uid}
+ 		case "BODY", "BINARY":
+ 			if dec.Special('[') {
++				if attName == "BODY" {
++					hasBody = true
++				}
+ 				var section interface{}
+ 				switch attName {
+ 				case "BODY":
+@@ -719,7 +749,19 @@
+ 					if !dec.ExpectSpecial(']') {
+ 						return dec.Err()
+ 					}
+-					section = &imap.FetchItemBinarySection{Part: part}
++					// RFC 3516 section 4.3 permits an origin after BINARY[].
++					// The BODY parser already handles this, but BINARY previously
++					// expected a space here and truncated a valid FETCH row.
++					offset, err := readPartialOffset(dec)
++					if err != nil {
++						return fmt.Errorf("in section-binary origin: %v", err)
++					}
++					bs := &imap.FetchItemBinarySection{Part: part}
++					if offset != nil {
++						bs.Partial = &imap.SectionPartial{Offset: int64(*offset)}
++					}
++					hasBinary = true
++					section = bs
+ 				}
+ 
+ 				if !dec.ExpectSP() {

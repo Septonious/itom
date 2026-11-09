@@ -1,0 +1,158 @@
+{
+  "archive": "ITOM_TRANSPORT_FIELD39_FIX2_SOURCE.zip",
+  "revision": "transport-s1-perf5-field18",
+  "base_sha256": "30200ece21d2158c266abc953028aa7c3db6936f0fc3e7eee14893b249d3ce34",
+  "production_changed": false,
+  "unchanged_production_files": 227,
+  "changed_existing_files": [
+    "README.md",
+    "core/tunnel/http_scenario_test.go",
+    "source-info.json",
+    "tools/build_core.py",
+    "tools/test_core_tools.py"
+  ],
+  "go_gate": {
+    "source_revision": "transport-s1-perf5-field18",
+    "go": "1.27.1",
+    "status": "passed",
+    "race": true,
+    "stage": "complete",
+    "started_utc": "2026-10-06T19:48:51Z",
+    "apk_built": false,
+    "server_built": true,
+    "imap_tested": true,
+    "toolchain_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445",
+    "go_version_output": "go version go1.27.1 linux/amd64",
+    "imap_fork_manifest_sha256": "03b927d0c3cc73b793fe1a6dcef561397b254f10bc8850ce78c91190669b7fa8",
+    "tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 444,
+      "failed": 0,
+      "skipped": 4,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestFieldHTTPSColdStartAndDuplex130"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        }
+      ]
+    },
+    "performance_mode": "normal Go binary; local diagnostic assertions, not field speed qualification",
+    "field_performance_qualified": false,
+    "race_tests": {
+      "packages": [
+        "itom.local/core/cmd/itom",
+        "itom.local/core/datapath",
+        "itom.local/core/flow",
+        "itom.local/core/integration",
+        "itom.local/core/journal",
+        "itom.local/core/mailbox",
+        "itom.local/core/mailcontrol",
+        "itom.local/core/manager",
+        "itom.local/core/netroute",
+        "itom.local/core/pool",
+        "itom.local/core/probe",
+        "itom.local/core/recovery",
+        "itom.local/core/secure",
+        "itom.local/core/servercfg",
+        "itom.local/core/session",
+        "itom.local/core/socks",
+        "itom.local/core/tunnel",
+        "itom.local/core/wallet",
+        "itom.local/core/wire"
+      ],
+      "passed_test_events": 444,
+      "failed": 0,
+      "skipped": 4,
+      "skipped_optional": [
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestFieldHTTPSColdStartAndDuplex130"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationProductionHarness"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorNonOwnerRejoin"
+        },
+        {
+          "package": "itom.local/core/tunnel",
+          "test": "TestLoadedApplicationSupervisorOwnerSurvival"
+        }
+      ]
+    },
+    "imap_fork_tests": "passed",
+    "built_targets": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "live_provider_tested": false,
+    "vet": "passed",
+    "fuzz": "seed corpus only; no timed fuzz campaign"
+  },
+  "additional_final_http": {
+    "single_cpu_repetitions": 3,
+    "observed_mail_repetitions": 1,
+    "subcases_each": [
+      "nominal",
+      "provider_cap_recovers"
+    ],
+    "failed": 0
+  },
+  "native": {
+    "normal": "passed",
+    "race": "passed"
+  },
+  "kotlin_jvm": {
+    "tests": 57,
+    "failed": 0,
+    "skipped": 0,
+    "runner": "direct Kotlin2.2.10 compiler + JUnit4.13.2, JDK17; not Gradle all"
+  },
+  "python": {
+    "launcher": 34,
+    "core_tools": 31
+  },
+  "windows_test_binary": "cross-compiled, not executed",
+  "new_android_all_run": false,
+  "new_field_speed_measurement": false,
+  "live_provider_qualified": false,
+  "input_hashes": {
+    "core-report(20261006-194134).json": "b7699889535b0532f15c5c2f29e804be63064341737401c2a79f5efc3b90375e",
+    "core-test-events(20261006-194134).jsonl": "3913b8e9e64bc1a402215cd29c1881b1aa5647e0ba99536f81ed516529f64e33",
+    "core-build(20261006-194135).log": "2a26b3b3dd8de0f88b1a14347a5ad744644d57107dca33bbbcd7247e6914ccec"
+  }
+}

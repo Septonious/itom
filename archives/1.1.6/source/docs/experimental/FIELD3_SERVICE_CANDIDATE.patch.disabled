@@ -1,0 +1,178 @@
+--- a/core/tunnel/lane.go
++++ b/core/tunnel/lane.go
+@@ -380,7 +380,7 @@
+ func newLaneAttached(parent context.Context, server wire.ID, u servercfg.User, a servercfg.Account, dir string, side bool, m mailbox.Transport, diag *diagnostic, logical wire.ID, generation, carrierEpoch uint64) (*lane, error) {
+ 	ctx, cancel := context.WithCancel(parent)
+ 	ownerCtx, ownerCancel := context.WithCancel(parent)
+-	l := &lane{parentCtx: parent, ownerCtx: ownerCtx, ownerCancel: ownerCancel, ownerFrames: make(chan wire.Frame, 32), actorReady: make(chan struct{}), ctx: ctx, cancel: cancel, side: side, account: a, user: u, logicalSession: logical, generation: generation, carrierEpoch: carrierEpoch, dir: dir, mail: m, started: time.Now(), inputs: make(chan datapath.Input, 224), requests: make(chan request), dials: make(chan dialDone, 16), grants: make(chan wire.QuotaKey, 32), fastGrants: make(chan wire.QuotaKey, fastGrantReserve), grantLimits: map[wire.QuotaKey]wire.Quota{}, grantFast: map[wire.QuotaKey]bool{}, obsolete: map[journal.AttemptRef]bool{}, remote: map[wire.QuotaKey][]remoteLogicalAttempt{}, known: map[uint64]mailbox.Message{}, pending: map[[32]byte]mailbox.Message{}, reports: map[[32]byte]wire.UsageReport{}, opens: map[uint64]*opening{}, nextID: 1, issued: map[wire.QuotaKey]bool{}, issuedFast: map[wire.QuotaKey]bool{}, queued: map[wire.QuotaKey]bool{}, readWake: make(chan struct{}, 1)}
++	l := &lane{parentCtx: parent, ownerCtx: ownerCtx, ownerCancel: ownerCancel, ownerFrames: make(chan wire.Frame, 256), actorReady: make(chan struct{}), ctx: ctx, cancel: cancel, side: side, account: a, user: u, logicalSession: logical, generation: generation, carrierEpoch: carrierEpoch, dir: dir, mail: m, started: time.Now(), inputs: make(chan datapath.Input, 256), requests: make(chan request), dials: make(chan dialDone, 16), grants: make(chan wire.QuotaKey, 32), fastGrants: make(chan wire.QuotaKey, fastGrantReserve), grantLimits: map[wire.QuotaKey]wire.Quota{}, grantFast: map[wire.QuotaKey]bool{}, obsolete: map[journal.AttemptRef]bool{}, remote: map[wire.QuotaKey][]remoteLogicalAttempt{}, known: map[uint64]mailbox.Message{}, pending: map[[32]byte]mailbox.Message{}, reports: map[[32]byte]wire.UsageReport{}, opens: map[uint64]*opening{}, nextID: 1, issued: map[wire.QuotaKey]bool{}, issuedFast: map[wire.QuotaKey]bool{}, queued: map[wire.QuotaKey]bool{}, readWake: make(chan struct{}, 1)}
+ 	now := time.Now()
+ 	l.nextMaintenance = now.Add(runtimePhase(a.ID, side, 'm', runtimeMaintenanceInterval))
+ 	l.nextEcho = now.Add(runtimePhase(a.ID, side, 'e', 5*time.Second))
+@@ -1477,6 +1477,9 @@
+ 	if !l.maintenanceIO.CompareAndSwap(-1, 0) {
+ 		panic("ITOM cleanup I/O guard corrupt")
+ 	}
++	if l.stripe != nil {
++		l.stripe.releaseCleanup(l)
++	}
+ }
+ 
+ // WriteBatch stripes one logical Pump across healthy carriers in the same
+@@ -1934,6 +1937,7 @@
+ 	}
+ 	l.issued[offer.Key] = true
+ 	l.issuedFast[offer.Key] = fast
++	l.updateBulkRefillReserve()
+ 	return l.controlSend(offer)
+ }
+ 
+@@ -2177,7 +2181,11 @@
+ 			return errors.New("GRANT_DIRECTION")
+ 		}
+ 		wasUsable := l.issued[m.Key]
++		l.localGrantMu.Lock()
+ 		status, e := l.data.ApplyRemote(l.user.ID, l.data.Run(), m)
++		if e != nil {
++			l.localGrantMu.Unlock()
++		}
+ 		if errors.Is(e, journal.ErrMissing) {
+ 			return nil
+ 		}
+@@ -2191,6 +2199,8 @@
+ 		if wasUsable && status.Closed {
+ 			l.issued[m.Key] = false
+ 		}
++		l.updateBulkRefillReserve()
++		l.localGrantMu.Unlock()
+ 		return l.publishCleanup(status)
+ 	case wire.CleanupStatus:
+ 		return l.handleCleanupStatus(m)
+@@ -2202,7 +2212,8 @@
+ 			}
+ 			delete(l.issued, m.Key)
+ 			delete(l.issuedFast, m.Key)
+-					if e = l.controlSend(ack); e != nil {
++			l.updateBulkRefillReserve()
++			if e = l.controlSend(ack); e != nil {
+ 				return e
+ 			}
+ 			return l.offer()
+@@ -2819,3 +2830,14 @@
+ 	return nil
+ }
+ 
++// Closed remote bulk leases still hold physical debt, but are not usable. Keep
++// newly freed headroom for their replacement instead of letting local bulk
++// APPENDs repeatedly consume it first. This is admission service, never refund.
++func (l *lane) updateBulkRefillReserve() {
++	_, active := l.issuedGrantCounts()
++	missing := remoteBulkLeases - active
++	if missing < 0 {
++		missing = 0
++	}
++	l.bulkRefillReserve.Store(uint64(missing) * dataLeaseBytes)
++}
+--- a/core/tunnel/stripe.go
++++ b/core/tunnel/stripe.go
+@@ -184,6 +184,7 @@
+ 	logicalOwners map[string]*lane
+ 	ownerWG       sync.WaitGroup
+ 	stopped       bool
++	cleanupLanes  map[*lane]bool
+ 	crossLocal    map[stripeLocalKey][]remoteLogicalAttempt
+ 	crossRemote   map[stripeRemoteKey][]remoteLogicalAttempt
+ 	nextID        uint64
+@@ -378,6 +379,7 @@
+ 	g.mu.Lock()
+ 	if g.lanes[l.account.ID] == l {
+ 		delete(g.lanes, l.account.ID)
++		delete(g.cleanupLanes, l)
+ 	}
+ 	// The current perf4 slice does not migrate control/socket ownership. If an
+ 	// owner carrier disappears, retire its LogicalSession-wide stream routes in
+@@ -1024,3 +1026,42 @@
+ 	return false
+ }
+ 
++// Reserve at most N-1 maintenance lanes while N healthy DATA carriers exist.
++// Cleanup intent counts too, so waiting for in-flight fast work cannot reserve
++// every carrier and black-hole the session's interactive DATA. With one carrier
++// maintenance must proceed; its existing bounded cleanup pass remains the cap.
++func (g *stripeGroup) reserveCleanup(l *lane) bool {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	if g.cleanupLanes[l] {
++		return true
++	}
++	ready := 0
++	for _, p := range g.lanes {
++		if p == nil || !p.ready.Load() || (p.ctx != nil && p.ctx.Err() != nil) {
++			continue
++		}
++		if a, ok := p.mail.(interface{ DataAvailable() bool }); ok && !a.DataAvailable() {
++			continue
++		}
++		ready++
++	}
++	limit := ready - 1
++	if limit < 1 {
++		limit = 1
++	}
++	if len(g.cleanupLanes) >= limit {
++		return false
++	}
++	if g.cleanupLanes == nil {
++		g.cleanupLanes = make(map[*lane]bool)
++	}
++	g.cleanupLanes[l] = true
++	return true
++}
++func (g *stripeGroup) releaseCleanup(l *lane) {
++	g.mu.Lock()
++	delete(g.cleanupLanes, l)
++	g.mu.Unlock()
++	g.signal()
++}
+--- a/core/tunnel/control.go
++++ b/core/tunnel/control.go
+@@ -414,7 +414,7 @@
+ 				l.localGrantMu.Unlock()
+ 				return journal.Grant{}, profileErr
+ 			}
+-			if held.Bytes+bytes > profile.Bytes-localFastReserveBytes {
++			if held.Bytes+bytes > profile.Bytes-localFastReserveBytes-l.bulkRefillReserve.Load() {
+ 				if l.diag != nil {
+ 					l.diag.mu.Lock()
+ 					l.diag.line.LocalGrantHeadroomWaits++
+--- a/core/tunnel/cleanup.go
++++ b/core/tunnel/cleanup.go
+@@ -110,6 +110,10 @@
+ 	if l.gcBusy {
+ 		return false
+ 	}
++	if l.stripe != nil && !l.stripe.reserveCleanup(l) {
++		l.cleanupWanted.Store(false)
++		return false
++	}
+ 	// Announce maintenance intent before acquiring the physical guard. Without
+ 	// this reservation a continuous stream of fast DATA can win every 100 ms
+ 	// retry and starve cleanup indefinitely even though a dedicated cleaner IMAP
+--- a/core/tunnel/progress.go
++++ b/core/tunnel/progress.go
+@@ -17,6 +17,7 @@
+ 	FastUsable, BulkUsable, FastIssued, BulkIssued int
+ 	RemoteCleanup, Outbox, ControlQueue            int
+ 	Cleaning, CleanupWanted                        bool
++	BulkRefillBytes                                uint64
+ 	ProgressAgeMS                                  int64
+ 	Error                                          string
+ }
+@@ -24,6 +25,7 @@
+ func (l *lane) captureProgress() laneProgress {
+ 	s := laneProgress{Account: l.account.ID, Server: l.side, Epoch: l.carrierEpoch, Ready: l.ready.Load(), FastUsable: len(l.fastGrants), BulkUsable: len(l.grants), RemoteCleanup: len(l.remoteGC), ControlQueue: len(l.urgentQueue) + len(l.controlQueue) + len(l.maintenanceQueue), Cleaning: l.gcBusy, CleanupWanted: l.cleanupWanted.Load(), ProgressAgeMS: l.remoteProgressAge(time.Now()).Milliseconds()}
+ 	s.FastIssued, s.BulkIssued = l.issuedGrantCounts()
++	s.BulkRefillBytes = l.bulkRefillReserve.Load()
+ 	var err error
+ 	s.Data, err = l.data.Held(l.account.ID, l.user.ID)
+ 	if err != nil {
