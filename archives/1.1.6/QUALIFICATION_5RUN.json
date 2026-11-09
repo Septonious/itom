@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "run_id": 42636826612,
+  "run_url": "https://github.com/Septonious/itom/actions/runs/42636826612",
+  "commit": "c3c6fdbfb9a91433846f35f6975fbf3bbc62527e",
+  "release_revision": "itom-1-1-6-rc1",
+  "profiles": {
+    "home": {
+      "job_id": 129227075212,
+      "summary": [
+        "=== AGGREGATED MEASURED RTT: home (5 paired runs) ===",
+        "idle: median-of-medians 76.894 -> 72.894 ms; p95 (median of runs) 104.137 -> 97.708 ms (-6.429); pooled p95 105.104 -> 97.804 ms (-7.300), 150 candidate observations",
+        "loaded: median-of-medians 210.992 -> 212.834 ms; p95 (median of runs) 364.576 -> 368.780 ms (+4.204); pooled p95 362.157 -> 354.698 ms (-7.459), 170 candidate observations",
+        "after: median-of-medians 71.061 -> 72.505 ms; p95 (median of runs) 98.053 -> 101.641 ms (+3.588); pooled p95 97.265 -> 99.711 ms (+2.446), 150 candidate observations",
+        "upload: median throughput 300.82 -> 307.33 Mbps; candidate minimum 299.34 Mbps",
+        "download: median throughput 326.20 -> 330.13 Mbps; candidate minimum 327.63 Mbps",
+        "Wrote verified measured RTT aggregation: bench-home-aggregate.json"
+      ]
+    },
+    "home-icmp": {
+      "job_id": 129227075700,
+      "summary": [
+        "=== AGGREGATED MEASURED RTT: home-icmp (5 paired runs) ===",
+        "idle: median-of-medians 45.758 -> 44.264 ms; p95 (median of runs) 75.043 -> 77.309 ms (+2.266); pooled p95 74.804 -> 74.937 ms (+0.133), 150 candidate observations",
+        "loaded: median-of-medians 210.023 -> 201.740 ms; p95 (median of runs) 398.494 -> 333.953 ms (-64.541); pooled p95 398.494 -> 339.178 ms (-59.316), 170 candidate observations",
+        "after: median-of-medians 43.733 -> 41.147 ms; p95 (median of runs) 75.795 -> 73.554 ms (-2.241); pooled p95 76.772 -> 80.596 ms (+3.824), 150 candidate observations",
+        "upload: median throughput 308.75 -> 297.20 Mbps; candidate minimum 268.50 Mbps",
+        "download: median throughput 330.15 -> 340.28 Mbps; candidate minimum 336.66 Mbps",
+        "Wrote verified measured RTT aggregation: bench-home-icmp-aggregate.json"
+      ]
+    },
+    "mobile": {
+      "job_id": 129227075782,
+      "summary": [
+        "=== AGGREGATED MEASURED RTT: mobile (5 paired runs) ===",
+        "idle: median-of-medians 130.686 -> 122.783 ms; p95 (median of runs) 237.347 -> 247.327 ms (+9.980); pooled p95 235.552 -> 247.327 ms (+11.775), 150 candidate observations",
+        "loaded: median-of-medians 312.424 -> 300.006 ms; p95 (median of runs) 683.330 -> 790.694 ms (+107.364); pooled p95 767.857 -> 797.175 ms (+29.318), 200 candidate observations",
+        "after: median-of-medians 131.517 -> 125.272 ms; p95 (median of runs) 228.436 -> 243.598 ms (+15.162); pooled p95 229.450 -> 243.598 ms (+14.148), 150 candidate observations",
+        "upload: median throughput 58.57 -> 59.47 Mbps; candidate minimum 58.70 Mbps",
+        "download: median throughput 102.79 -> 103.39 Mbps; candidate minimum 102.86 Mbps",
+        "Wrote verified measured RTT aggregation: bench-mobile-aggregate.json"
+      ]
+    },
+    "home-contention": {
+      "job_id": 129227075853,
+      "summary": [
+        "=== AGGREGATED MEASURED RTT: home (5 paired runs) ===",
+        "idle: median-of-medians 102.881 -> 95.082 ms; p95 (median of runs) 125.312 -> 122.128 ms (-3.184); pooled p95 128.441 -> 125.743 ms (-2.698), 150 candidate observations",
+        "loaded: median-of-medians 216.590 -> 223.717 ms; p95 (median of runs) 349.128 -> 418.384 ms (+69.256); pooled p95 348.399 -> 352.992 ms (+4.593), 170 candidate observations",
+        "after: median-of-medians 97.344 -> 98.144 ms; p95 (median of runs) 118.396 -> 123.722 ms (+5.326); pooled p95 120.946 -> 124.010 ms (+3.064), 150 candidate observations",
+        "upload: median throughput 282.50 -> 295.64 Mbps; candidate minimum 292.13 Mbps",
+        "download: median throughput 320.86 -> 318.98 Mbps; candidate minimum 315.14 Mbps",
+        "Wrote verified measured RTT aggregation: bench-home-contention-aggregate.json"
+      ]
+    }
+  },
+  "pairs_per_profile": 5,
+  "field_qualified": false,
+  "method": "paired synthetic TLS application RTT; five runs per profile; raw observations collected inside GitHub runners; aggregated log summaries preserved",
+  "acceptance_note": "Home 15-30ms baseline pooled idle p95 105.104ms and candidate 97.804ms; median 76.894->72.894ms; home throughput 307.33up/330.13down; mobile pooled idle p95 +11.775ms; mobile variability remains."
+}
