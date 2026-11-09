@@ -303,15 +303,6 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 	return err
 }
 
-// An ACK for interactive control or small application DATA must not
-// acquire the extra 12–24 ms timer intended to amortize bulk feedback.
-// Reuse the existing bounded fast/control queue without duplication,
-// added IMAP connections, or changing bulk receipt batching.
-func (l *IMAPLink) SendPromptFeedback(ctx context.Context, body []byte) error {
-	_, err := l.sendClassMode(ctx, body, true, nil, false, false)
-	return err
-}
-
 // Adapt the bounded bulk-feedback coalescing interval to directly measured
 // empty UID FETCH service time. A fast provider can flush WINDOW/receipts
 // sooner; a slow provider needs more coalescing to avoid spending its limited
@@ -407,9 +398,18 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	// Paired RC1 tests showed a higher loaded application RTT tail even though
 	// control FETCH/APPEND timing looked faster. Preserve proven RR admission
 	// until a queue-aware, end-to-end-attributed signal is demonstrated.
-	ranked := experimentalInteractiveRankingEnabled && priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16
+	// The first interactive copy always retains the proven round-robin path.
+	// For the existing second (isolated) copy, prefer a rotating cohort of
+	// accounts with fresh authenticated DELIVERY RTT measurements. Never
+	// change the bulk or feedback distribution and never add another APPEND.
+	hedgeRanking := priority && exclude != nil && !feedback && !recovery &&
+		len(body) <= 4096+13+headerSize+16
+	ranked := hedgeRanking || experimentalInteractiveRankingEnabled && priority && !feedback && !recovery &&
+		len(body) <= 4096+13+headerSize+16
 	var order []int
-	if ranked {
+	if hedgeRanking {
+		order = l.interactiveHedgeAccountOrder(start, peerAllowed, exclude)
+	} else if ranked {
 		order = l.interactiveAccountOrder(start, peerAllowed, exclude, true)
 	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}

@@ -74,7 +74,18 @@ func (l *IMAPLink) releaseDelivery(id SessionID, sequence uint64, measured bool)
 		sample := &a.delivery[sequence%replaySlots]
 		if sample.id == id && sample.sequence == sequence && !sample.started.IsZero() {
 			if measured && !sample.retried {
-				a.rtt, a.rttAt = time.Since(sample.started), time.Duration(time.Now().UnixNano())
+				measuredRTT := time.Since(sample.started)
+				now := time.Duration(time.Now().UnixNano())
+				// Use end-to-end authenticated packet/receipt RTT rather
+				// than single IMAP FETCH service time. A bounded EWMA
+				// resists one delayed mailbox mutation hijacking the
+				// next interactive hedge for the entire 30-second window.
+				if a.rtt <= 0 || now-a.rttAt > 30*time.Second {
+					a.rtt = measuredRTT
+				} else {
+					a.rtt = (7*a.rtt + measuredRTT) / 8
+				}
+				a.rttAt = now
 			}
 			*sample = deliverySample{}
 		}
