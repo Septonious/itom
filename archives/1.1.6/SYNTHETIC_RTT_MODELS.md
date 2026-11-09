@@ -33,3 +33,19 @@ repeats all three profiles and packages raw arrays, manifests and reports as
 hard floor is enforced for each direction of the high-capacity HOME synthetic
 candidate, but actual field acceptance still requires repeated phone/home
 measurements, safety, tail-latency analysis, and compatible Android signing.
+
+## RC1 regression acceptance
+
+Before a candidate can be published, the synthetic test gate requires actual
+application RTT samples in idle, loaded, and post-load phases for both the
+untouched 1.1.5 reference and candidate. It rejects candidate median increases
+above max(12ms, 12% of reference) or p95 increases above max(20ms, 15% of
+reference) for idle/post-load and max(30ms, 15%) for loaded. Both directions
+must sustain >=200 Mbps on high-capacity HOME scenarios. These are early
+screening tolerances, not proof of field performance or p95 below 100 ms.
+
+Initial ranked-account routing was **not enabled in the deliverable** because
+paired tests showed loaded RTT tails worsening. The scheduler implementation
+remains in source for isolated experiments; production packet placement uses
+the proven 1.1.5 round-robin path while the NOOP-free control receiver is
+qualified separately.

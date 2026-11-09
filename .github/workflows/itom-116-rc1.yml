@@ -59,8 +59,8 @@ jobs:
         with:
           go-version: "1.27.1"
           cache: false
-      - name: Unit-test RTT percentile and per-phase report generation
-        run: python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_rtt_report.py' -v
+      - name: Unit-test RTT percentile reports and regression gates
+        run: python3 -m unittest discover -s archives/1.1.6/qualification -p 'test_*.py' -v
       - name: Paired home 3ms ICMP-floor calibration, 500Mbps reference
         run: |
           python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out home-icmp-profile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home-icmp --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
@@ -95,6 +95,8 @@ jobs:
                   assert speeds['upload']>=200 and speeds['download']>=200,(model,speeds)
               print('RTT MEASURED, TRANSFERS VERIFIED:',model)
           PY
+      - name: Reject material synthetic idle, loaded or post-load RTT regressions
+        run: python3 archives/1.1.6/qualification/gate_rc116.py home-icmp-profile home-profile mobile-profile
 
   release:
     needs: [safety, network-profiles]
@@ -199,6 +201,7 @@ jobs:
           python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-home-icmp --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home-icmp --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
           python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-home --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile home --client-mbps 500 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order baseline-first
           python3 archives/1.1.6/qualification/compare.py --go "$(command -v go)" --out release-rtt-mobile --baseline archives/1.1.5/source/core --baseline-is-mailstream --latency-profile mobile --client-mbps 160 --client-download-mbps 160 --client-upload-mbps 90 --accounts 15 --duration 8s --streams 8 --idle-probes 30 --post-probes 30 --order candidate-first
+          python3 archives/1.1.6/qualification/gate_rc116.py release-rtt-home-icmp release-rtt-home release-rtt-mobile
           python3 - <<'PY'
           from pathlib import Path
           import json,zipfile,hashlib
