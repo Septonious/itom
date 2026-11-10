@@ -67,7 +67,6 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 		if err != nil && control != nil {
 			control.close()
 		}
-		<-a.link.login
 	}()
 	stage := "control_login"
 	defer func() {
@@ -77,7 +76,21 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 	}()
 	a.phase(stage)
 	control, err = openMailPipe(a.ctx, a.config)
+	// The 4-slot login gate protects actual TLS/LOGIN operations only.
+	// Releasing it before provider LIST/CREATE/SELECT prevents a stalled
+	// 15-second CREATE on an unavailable account from starving authenticated
+	// session attachment on an already-ready account.
+	<-a.link.login
 	if err != nil {
+		return
+	}
+	// Metadata mutations retain their own four-operation bound so this
+	// fix does not introduce a burst of concurrent provider CREATEs.
+	select {
+	case a.link.metadata <- struct{}{}:
+		defer func() { <-a.link.metadata }()
+	case <-a.ctx.Done():
+		err = a.ctx.Err()
 		return
 	}
 	control.pollTraffic = &a.link.lastUserTraffic
