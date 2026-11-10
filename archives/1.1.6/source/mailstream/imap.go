@@ -141,6 +141,7 @@ type IMAPLink struct {
 	wg                  sync.WaitGroup
 	closeOnce           sync.Once
 	login               chan struct{}
+	metadata            chan struct{} // separate four-slot cap for slow LIST/CREATE/SELECT
 	retirements         chan Retirement
 	events              []MailEvent
 	eventNext           int
@@ -189,7 +190,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 		physical[key] = true
 	}
 	lifetime, cancel := context.WithCancel(ctx)
-	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4)}
+	l := &IMAPLink{ctx: lifetime, cancel: cancel, identity: identity, client: client, changed: make(chan struct{}), incoming: make(chan []byte, 512), login: make(chan struct{}, 4), metadata: make(chan struct{}, 4)}
 	l.store = store
 	l.lastUserTraffic.Store(time.Now().UnixNano())
 	l.reclaimer = accounts[0].Reclamation
