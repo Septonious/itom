@@ -51,7 +51,7 @@ func TestIdleDNSAssociationsCannotRejectTCPWorkers(t *testing.T) {
 
 func TestAnsweredUDPDNSAssociationReleasesIdleWorker(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	c := &Client{ctx: ctx, cancel: cancel, host: trafficHost{}, slots: make(chan struct{}, 128), dnsSlots: make(chan struct{}, 64)}
+	c := &Client{ctx: ctx, cancel: cancel, host: pressureDNSHost{}, slots: make(chan struct{}, 128), dnsSlots: make(chan struct{}, 64)}
 	defer func() { cancel(); c.wg.Wait() }()
 	a, b := net.Pipe()
 	defer b.Close()
