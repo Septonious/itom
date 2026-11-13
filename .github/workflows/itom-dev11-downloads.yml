@@ -40,15 +40,31 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo 'Release already exists; refusing to overwrite it.' >&2
-            exit 1
+            gh api "repos/$GH_REPO/releases?per_page=100" > existing-releases.json
+            python3 - <<'PYVERIFY'
+          import json,os
+          from pathlib import Path
+          rows=json.loads(Path('existing-releases.json').read_text())
+          matches=[r for r in rows if r['tag_name']==os.environ['TAG']]
+          assert len(matches)==1
+          r=matches[0]
+          assert r['draft'] and r['prerelease'], 'Only the exact unpublished draft may be resumed'
+          assert r['body'].strip()==Path('testing/dev11/downloads/RELEASE_NOTES.md').read_text().strip()
+          expected={f['name']:f for f in json.loads(Path('testing/dev11/downloads/manifest.json').read_text())['files']}
+          assert {a['name']for a in r['assets']}==set(expected)
+          for a in r['assets']:
+              assert a['state']=='uploaded' and a['size']==expected[a['name']]['bytes']
+              if a.get('digest'):assert a['digest']=='sha256:'+expected[a['name']]['sha256']
+          print('Resuming the exact existing draft; both assets will be downloaded and checked again.')
+          PYVERIFY
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --draft --prerelease --title "ITOM 1.2.5 RC3 DEV11 testing" --notes-file testing/dev11/downloads/RELEASE_NOTES.md release-assets/itom-dev11.apk release-assets/itom-dev11.bin
           fi
-          gh release create "$TAG" --target "$GITHUB_SHA" --draft --prerelease --title "ITOM 1.2.5 RC3 DEV11 testing" --notes-file testing/dev11/downloads/RELEASE_NOTES.md release-assets/itom-dev11.apk release-assets/itom-dev11.bin
       - name: Download and verify both assets before publishing
         run: |
           set -euo pipefail
           gh release download "$TAG" --dir release-readback
-          gh api "repos/$GH_REPO/releases/tags/$TAG" > release.json
+          gh api "repos/$GH_REPO/releases?per_page=100" > releases.json
           python3 - <<'PY'
           import hashlib,json,os
           from pathlib import Path
@@ -59,7 +75,10 @@ jobs:
           for name,f in expected.items():
               data=(Path('release-readback')/name).read_bytes()
               assert len(data)==f['bytes'] and hashlib.sha256(data).hexdigest()==f['sha256']
-          release=json.loads(Path('release.json').read_text())
+          rows=json.loads(Path('releases.json').read_text())
+          matches=[r for r in rows if r['tag_name']==os.environ['TAG']]
+          assert len(matches)==1
+          release=matches[0]
           assert release['tag_name']==os.environ['TAG'] and release['draft'] and release['prerelease']
           assert {a['name']for a in release['assets']}==set(expected)
           for asset in release['assets']:
