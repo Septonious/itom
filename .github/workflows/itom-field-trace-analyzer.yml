@@ -1,0 +1,34 @@
+name: ITOM field trace analyzer
+
+on:
+  pull_request:
+    paths:
+      - 'tools/itom_field_trace_compare.py'
+      - 'tools/test_itom_field_trace_compare.py'
+      - '.github/workflows/itom-field-trace-analyzer.yml'
+  push:
+    branches:
+      - 'research/field-rtt-staleness-20261113'
+    paths:
+      - 'tools/itom_field_trace_compare.py'
+      - 'tools/test_itom_field_trace_compare.py'
+      - '.github/workflows/itom-field-trace-analyzer.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax check
+        run: python -m py_compile tools/itom_field_trace_compare.py tools/test_itom_field_trace_compare.py
+      - name: Synthetic parser tests
+        run: python -m unittest discover -s tools -p 'test_itom_field_trace_compare.py' -v
+      - name: CLI help
+        run: python tools/itom_field_trace_compare.py --help
