@@ -1,0 +1,46 @@
+{
+  "local_source_commit": "f9da72c3cc8edfd2464867986966733caf6b4dfa",
+  "tag": "v1.2.5-rc3-dev11",
+  "files": [
+    {
+      "name": "itom-dev11.apk",
+      "encoding": "raw",
+      "bytes": 7206631,
+      "payload_bytes": 7206631,
+      "sha256": "c0e8d8b83eef25ae13cb488aa755d989b3ed89592d1d6ae61ba1ea2893a31315",
+      "parts": [
+        "apk-00.part",
+        "apk-01.part",
+        "apk-02.part",
+        "apk-03.part",
+        "apk-04.part",
+        "apk-05.part",
+        "apk-06.part",
+        "apk-07.part",
+        "apk-08.part",
+        "apk-09.part",
+        "apk-10.part",
+        "apk-11.part",
+        "apk-12.part",
+        "apk-13.part"
+      ]
+    },
+    {
+      "name": "itom-dev11.bin",
+      "encoding": "gzip",
+      "bytes": 9285792,
+      "payload_bytes": 3811871,
+      "sha256": "b04ae8c7d72d7f18156c20fce50ef17e715d9bbcb0360a8e7a33f96d6f3668aa",
+      "parts": [
+        "bin-00.part",
+        "bin-01.part",
+        "bin-02.part",
+        "bin-03.part",
+        "bin-04.part",
+        "bin-05.part",
+        "bin-06.part",
+        "bin-07.part"
+      ]
+    }
+  ]
+}

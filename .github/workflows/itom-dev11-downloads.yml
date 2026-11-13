@@ -1,0 +1,84 @@
+name: Publish verified ITOM DEV11 downloads
+on:
+  push:
+    branches: [codex/itom-dev11-downloads]
+    paths: [".github/workflows/itom-dev11-downloads.yml", "testing/dev11/downloads/**"]
+  workflow_dispatch:
+permissions: {contents: write}
+concurrency: {group: itom-dev11-downloads, cancel-in-progress: false}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: v1.2.5-rc3-dev11
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Restore the exact locally verified APK and server
+        run: |
+          python3 - <<'PY'
+          import gzip,hashlib,json
+          from pathlib import Path
+          base=Path('testing/dev11/downloads')
+          manifest=json.loads((base/'manifest.json').read_text())
+          assert manifest['tag']=='v1.2.5-rc3-dev11'
+          assert {f['name']for f in manifest['files']}=={'itom-dev11.apk','itom-dev11.bin'}
+          out=Path('release-assets');out.mkdir()
+          for f in manifest['files']:
+              assert all(Path(n).name==n and n.endswith('.part')for n in f['parts'])
+              encoded=b''.join((base/n).read_bytes()for n in f['parts'])
+              assert len(encoded)==f['payload_bytes']
+              data=gzip.decompress(encoded)if f['encoding']=='gzip'else encoded
+              assert len(data)==f['bytes'] and hashlib.sha256(data).hexdigest()==f['sha256']
+              (out/f['name']).write_bytes(data)
+              print(f['name'],len(data),'bytes; SHA-256 verified')
+          PY
+      - name: Create a testing draft with only the two requested assets
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to overwrite it.' >&2
+            exit 1
+          fi
+          gh release create "$TAG" --target "$GITHUB_SHA" --draft --prerelease --title "ITOM 1.2.5 RC3 DEV11 testing" --notes-file testing/dev11/downloads/RELEASE_NOTES.md release-assets/itom-dev11.apk release-assets/itom-dev11.bin
+      - name: Download and verify both assets before publishing
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --dir release-readback
+          gh api "repos/$GH_REPO/releases/tags/$TAG" > release.json
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          manifest=json.loads(Path('testing/dev11/downloads/manifest.json').read_text())
+          expected={f['name']:f for f in manifest['files']}
+          actual={p.name for p in Path('release-readback').iterdir()if p.is_file()}
+          assert actual==set(expected)
+          for name,f in expected.items():
+              data=(Path('release-readback')/name).read_bytes()
+              assert len(data)==f['bytes'] and hashlib.sha256(data).hexdigest()==f['sha256']
+          release=json.loads(Path('release.json').read_text())
+          assert release['tag_name']==os.environ['TAG'] and release['draft'] and release['prerelease']
+          assert {a['name']for a in release['assets']}==set(expected)
+          for asset in release['assets']:
+              f=expected[asset['name']]
+              assert asset['state']=='uploaded' and asset['size']==f['bytes']
+              if asset.get('digest'):assert asset['digest']=='sha256:'+f['sha256']
+          with Path(os.environ['GITHUB_ENV']).open('a')as f:f.write('RELEASE_ID='+str(release['id'])+'\n')
+          print('Both assets downloaded and verified; draft is ready to publish.')
+          PY
+      - name: Publish prerelease without changing the latest stable release
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" -F draft=false -F prerelease=true -f make_latest=false > published-release.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('published-release.json').read_text())
+          assert r['tag_name']==os.environ['TAG'] and not r['draft'] and r['prerelease']
+          assert {a['name']for a in r['assets']}=={'itom-dev11.apk','itom-dev11.bin'}
+          print(r['html_url'])
+          for a in r['assets']:print(a['browser_download_url'])
+          PY
