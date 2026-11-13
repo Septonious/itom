@@ -105,6 +105,7 @@ class Analysis:
         self.probe_failures = Counter()
         self.session = defaultdict(list)
         self.revisions = Counter()
+        self.builds = Counter()
         self.first_ms = None
         self.last_ms = None
         self.invalid_json = 0
@@ -172,6 +173,8 @@ class Analysis:
     def ingest(self, record, origin):
         if not isinstance(record, dict):
             return
+        if isinstance(record.get("build"), str):
+            self.builds[record["build"]] += 1
         if isinstance(record.get("transport"), dict):
             record = record["transport"]
         event = pick(record, "Event", "event")
@@ -252,6 +255,7 @@ class Analysis:
         return {
             "schema": 1,
             "revisions": dict(self.revisions),
+            "android_builds": dict(self.builds),
             "record_counts": dict(self.records),
             "events": dict(self.events),
             "first_timestamp_ms": self.first_ms,
@@ -289,7 +293,7 @@ def read_archive(path, analysis, origin):
         for member in sorted(members, key=rank):
             name = Path(member.filename).name
             is_trace = name.startswith(("transport-trace.jsonl", "startup-trace.jsonl"))
-            is_snapshot = name == "diagnostics.json" or (name.startswith("mailstream-") and name.endswith(".json"))
+            is_snapshot = name in ("diagnostics.json", "capture.json") or (name.startswith("mailstream-") and name.endswith(".json"))
             if not (is_trace or is_snapshot):
                 continue
             if member.file_size > MAX_MEMBER_BYTES:
