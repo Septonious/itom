@@ -1,0 +1,57 @@
+{
+  "tag": "v1.3.0-dev2",
+  "source_commit": "6a39aadd3bba86774498dc7d1c2749c5a823e613",
+  "certificate_sha256": "0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0",
+  "files": [
+    {
+      "name": "itom-1.3.0-dev2.apk",
+      "bytes": 7249915,
+      "sha256": "d27861d6cf722ea318b4ae47804717c62a16da527fbc32fb7512c5c4bebd0cbc",
+      "parts": [
+        "itom-1.3.0-dev2.apk.000.part",
+        "itom-1.3.0-dev2.apk.001.part",
+        "itom-1.3.0-dev2.apk.002.part",
+        "itom-1.3.0-dev2.apk.003.part",
+        "itom-1.3.0-dev2.apk.004.part",
+        "itom-1.3.0-dev2.apk.005.part",
+        "itom-1.3.0-dev2.apk.006.part",
+        "itom-1.3.0-dev2.apk.007.part",
+        "itom-1.3.0-dev2.apk.008.part",
+        "itom-1.3.0-dev2.apk.009.part",
+        "itom-1.3.0-dev2.apk.010.part",
+        "itom-1.3.0-dev2.apk.011.part",
+        "itom-1.3.0-dev2.apk.012.part",
+        "itom-1.3.0-dev2.apk.013.part"
+      ],
+      "encoding": "raw",
+      "payload_bytes": 7249915
+    },
+    {
+      "name": "itom-1.3.0-dev2.bin",
+      "bytes": 9425056,
+      "sha256": "09274c5e20b332d2e129cd0dde3e9345ba97d83d172115bdd2a74519648242a5",
+      "parts": [
+        "itom-1.3.0-dev2.bin.000.part",
+        "itom-1.3.0-dev2.bin.001.part",
+        "itom-1.3.0-dev2.bin.002.part",
+        "itom-1.3.0-dev2.bin.003.part",
+        "itom-1.3.0-dev2.bin.004.part",
+        "itom-1.3.0-dev2.bin.005.part",
+        "itom-1.3.0-dev2.bin.006.part",
+        "itom-1.3.0-dev2.bin.007.part"
+      ],
+      "encoding": "gzip",
+      "payload_bytes": 3852528
+    }
+  ],
+  "source_snapshot": {
+    "bytes": 1751109,
+    "sha256": "19b778013d2b496db6790a8b3eb2cab3a375cc7fdfe4db62b14ae3f594423fb3",
+    "parts": [
+      "source-snapshot.000.part",
+      "source-snapshot.001.part",
+      "source-snapshot.002.part",
+      "source-snapshot.003.part"
+    ]
+  }
+}
