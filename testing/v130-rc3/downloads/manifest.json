@@ -1,0 +1,57 @@
+{
+  "tag": "v1.3.0-rc3",
+  "source_commit": "085531fab072478bd8ff60feb78e374ce892eb1b",
+  "source_snapshot": {
+    "bytes": 1779101,
+    "sha256": "822221e08e9a5110498ac4570cdd65370196167f06ce3f5e6ef18ecfadf6b26f",
+    "parts": [
+      "source-snapshot.000.part",
+      "source-snapshot.001.part",
+      "source-snapshot.002.part",
+      "source-snapshot.003.part"
+    ]
+  },
+  "certificate_sha256": "0fdd51e00489c93b13ed5ce35e13257a9c8964f2f93b1660e5e542cfbf6fb4f0",
+  "files": [
+    {
+      "name": "itom-1.3.0-rc3.apk",
+      "bytes": 7297087,
+      "sha256": "549057eef11bd11d987006e45e1e6aab5d8a2ac1488ca4ded4e976765e3e7e1f",
+      "parts": [
+        "itom-1.3.0-rc3.apk.000.part",
+        "itom-1.3.0-rc3.apk.001.part",
+        "itom-1.3.0-rc3.apk.002.part",
+        "itom-1.3.0-rc3.apk.003.part",
+        "itom-1.3.0-rc3.apk.004.part",
+        "itom-1.3.0-rc3.apk.005.part",
+        "itom-1.3.0-rc3.apk.006.part",
+        "itom-1.3.0-rc3.apk.007.part",
+        "itom-1.3.0-rc3.apk.008.part",
+        "itom-1.3.0-rc3.apk.009.part",
+        "itom-1.3.0-rc3.apk.010.part",
+        "itom-1.3.0-rc3.apk.011.part",
+        "itom-1.3.0-rc3.apk.012.part",
+        "itom-1.3.0-rc3.apk.013.part"
+      ],
+      "encoding": "raw",
+      "payload_bytes": 7297087
+    },
+    {
+      "name": "itom-1.3.0-rc3.bin",
+      "bytes": 9597088,
+      "sha256": "e044cb218bfc242f1cbac9ed67c2baf2154c0155ab0513d9e71f6b7519ee4ec0",
+      "parts": [
+        "itom-1.3.0-rc3.bin.000.part",
+        "itom-1.3.0-rc3.bin.001.part",
+        "itom-1.3.0-rc3.bin.002.part",
+        "itom-1.3.0-rc3.bin.003.part",
+        "itom-1.3.0-rc3.bin.004.part",
+        "itom-1.3.0-rc3.bin.005.part",
+        "itom-1.3.0-rc3.bin.006.part",
+        "itom-1.3.0-rc3.bin.007.part"
+      ],
+      "encoding": "gzip",
+      "payload_bytes": 3915017
+    }
+  ]
+}
