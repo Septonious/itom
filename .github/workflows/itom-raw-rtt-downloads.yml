@@ -25,6 +25,7 @@ jobs:
       GH_PROMPT_DISABLED: '1'
       TAG: raw-rtt-v1.0
       RELEASE_TITLE: ITOM Raw RTT 1.0 diagnostic preview
+      ASSET_COMMIT: d7767f39fcfe9367f382860efbcf81ed7e717a2e
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -32,57 +33,45 @@ jobs:
       - name: Verify the local packaging hashes
         working-directory: testing/raw-rtt/downloads
         run: sha256sum --check --strict SHA256SUMS
-      - name: Stage the prerelease and verify both assets
+      - name: Verify the staged draft by ID
         working-directory: testing/raw-rtt/downloads
         shell: bash
         run: |
           set -euo pipefail
-          release_metadata() {
-            gh api "repos/$GH_REPO/releases?per_page=100" --paginate --jq ".[] | select(.tag_name == \"$TAG\")"
-          }
-
-          release_metadata > "$RUNNER_TEMP/release.json"
-          if [[ ! -s "$RUNNER_TEMP/release.json" ]]; then
-            gh release create "$TAG" --target "$GITHUB_SHA" --draft --prerelease \
-              --title "$RELEASE_TITLE" --notes-file RELEASE_NOTES.md \
-              itom-raw-rtt.apk itom-raw-rtt-peer-linux-amd64
-            release_metadata > "$RUNNER_TEMP/release.json"
-          fi
-
-          python3 - <<'PY'
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
+          python3 - <<'PYCODE'
           import json
           import os
           from pathlib import Path
 
           temp = Path(os.environ["RUNNER_TEMP"])
-          release = json.loads((temp / "release.json").read_text(encoding="utf-8"))
+          releases = [release for page in json.loads((temp / "releases.json").read_text())
+                      for release in page if release["name"] == os.environ["RELEASE_TITLE"]]
+          assert len(releases) == 1, f"Expected one diagnostic preview draft, got {len(releases)}"
+          release = releases[0]
+          assert release["target_commitish"] == os.environ["ASSET_COMMIT"]
+          assert release["prerelease"]
+          assert release["tag_name"] in (os.environ["TAG"], "untagged-dc26f292794f22f684c4")
+          assert release["body"].strip() == Path("RELEASE_NOTES.md").read_text().strip()
           hashes = {name: checksum for checksum, name in
                     (line.split() for line in Path("SHA256SUMS").read_text().splitlines())}
-          assert release["tag_name"] == os.environ["TAG"]
-          assert release["prerelease"] and release["name"] == os.environ["RELEASE_TITLE"]
-          assert release["target_commitish"] == os.environ["GITHUB_SHA"]
-          assert release["body"].strip() == Path("RELEASE_NOTES.md").read_text().strip()
           assets = {asset["name"]: asset for asset in release["assets"]}
-          assert set(assets) <= set(hashes), "The existing release contains unexpected assets"
+          assert set(assets) == set(hashes)
           for name, asset in assets.items():
               assert asset["state"] == "uploaded" and asset["size"] == Path(name).stat().st_size
               if asset.get("digest"):
                   assert asset["digest"] == "sha256:" + hashes[name]
-          missing = sorted(hashes.keys() - assets.keys())
-          assert release["draft"] or not missing
-          (temp / "missing-assets").write_text("".join(name + "\n" for name in missing))
+          (temp / "asset-ids").write_text("".join(f"{name} {asset['id']}\n" for name, asset in assets.items()))
           with Path(os.environ["GITHUB_ENV"]).open("a") as stream:
               stream.write(f"RELEASE_ID={release['id']}\n")
               stream.write(f"RELEASE_DRAFT={str(release['draft']).lower()}\n")
-          PY
-
-          while IFS= read -r asset; do
-            gh release upload "$TAG" "$asset"
-          done < "$RUNNER_TEMP/missing-assets"
-
-          gh release download "$TAG" --dir "$RUNNER_TEMP/release-readback"
+          PYCODE
+          mkdir -p "$RUNNER_TEMP/readback"
+          while read -r name id; do
+            gh api -H 'Accept: application/octet-stream' "repos/$GH_REPO/releases/assets/$id" > "$RUNNER_TEMP/readback/$name"
+          done < "$RUNNER_TEMP/asset-ids"
           (
-            cd "$RUNNER_TEMP/release-readback"
+            cd "$RUNNER_TEMP/readback"
             sha256sum --check --strict "$GITHUB_WORKSPACE/testing/raw-rtt/downloads/SHA256SUMS"
           )
       - name: Publish the prerelease
@@ -91,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" \
-            -F draft=false -F prerelease=true -f make_latest=false \
+            -F draft=false -F prerelease=true -f make_latest=false -f tag_name="$TAG" \
             --jq '.html_url'
       - name: Verify public downloads
         working-directory: testing/raw-rtt/downloads
