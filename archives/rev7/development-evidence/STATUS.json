@@ -1,7 +1,0 @@
-{
-  "classification": "UNQUALIFIED_DEVELOPMENT_CHECKPOINT",
-  "all_internal_gates_passed": false,
-  "release_packaging_allowed": false,
-  "new_release_published": false,
-  "notes": "Whole candidate qualification is still pending; exploratory failures remain failures. Latest directional ordinal fix has passed focused race tests."
-}

@@ -1,1 +1,0 @@
-Stopped to add an actual server-supervisor restart to the native IMAP admin recovery regression. No failed case waived; final source must pass all ten gates afresh.

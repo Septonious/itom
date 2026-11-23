@@ -1,3 +1,0 @@
-RUN candidate-python
-RESULT candidate-python PASS
-RUN candidate-field-repeated
