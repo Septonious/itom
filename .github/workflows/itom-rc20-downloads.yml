@@ -1,0 +1,112 @@
+name: Publish verified ITOM RC20 downloads
+
+'on':
+  push:
+    branches:
+      - codex/itom-v150-rc20-downloads
+    paths:
+      - .github/workflows/itom-rc20-downloads.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: itom-v150-rc20-downloads
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Septonious/itom'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      GH_PROMPT_DISABLED: '1'
+      TAG: v1.5.0-rc20
+      RELEASE_TITLE: ITOM 1.5.0 RC20 field test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify the local packaging hashes
+        working-directory: testing/rc20/downloads
+        run: sha256sum --check --strict SHA256SUMS
+      - name: Stage the prerelease and verify both assets
+        working-directory: testing/rc20/downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_metadata() {
+            gh api "repos/$GH_REPO/releases?per_page=100" --paginate --jq ".[] | select(.tag_name == \"$TAG\")"
+          }
+
+          release_metadata > "$RUNNER_TEMP/release.json"
+          if [[ ! -s "$RUNNER_TEMP/release.json" ]]; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --draft --prerelease \
+              --title "$RELEASE_TITLE" --notes-file RELEASE_NOTES.md \
+              itom-1.5.0-rc20.apk itom-1.5.0-rc20.bin
+            release_metadata > "$RUNNER_TEMP/release.json"
+          fi
+
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          temp = Path(os.environ["RUNNER_TEMP"])
+          release = json.loads((temp / "release.json").read_text(encoding="utf-8"))
+          hashes = {name: checksum for checksum, name in
+                    (line.split() for line in Path("SHA256SUMS").read_text().splitlines())}
+          assert release["tag_name"] == os.environ["TAG"]
+          assert release["prerelease"] and release["name"] == os.environ["RELEASE_TITLE"]
+          assert release["target_commitish"] == os.environ["GITHUB_SHA"]
+          assert release["body"].strip() == Path("RELEASE_NOTES.md").read_text().strip()
+          assets = {asset["name"]: asset for asset in release["assets"]}
+          assert set(assets) <= set(hashes), "The existing release contains unexpected assets"
+          for name, asset in assets.items():
+              assert asset["state"] == "uploaded" and asset["size"] == Path(name).stat().st_size
+              if asset.get("digest"):
+                  assert asset["digest"] == "sha256:" + hashes[name]
+          missing = sorted(hashes.keys() - assets.keys())
+          assert release["draft"] or not missing
+          (temp / "missing-assets").write_text("".join(name + "\n" for name in missing))
+          with Path(os.environ["GITHUB_ENV"]).open("a") as stream:
+              stream.write(f"RELEASE_ID={release['id']}\n")
+              stream.write(f"RELEASE_DRAFT={str(release['draft']).lower()}\n")
+          PY
+
+          while IFS= read -r asset; do
+            gh release upload "$TAG" "$asset"
+          done < "$RUNNER_TEMP/missing-assets"
+
+          gh release download "$TAG" --dir "$RUNNER_TEMP/release-readback"
+          (
+            cd "$RUNNER_TEMP/release-readback"
+            sha256sum --check --strict "$GITHUB_WORKSPACE/testing/rc20/downloads/SHA256SUMS"
+          )
+      - name: Publish the prerelease
+        if: env.RELEASE_DRAFT == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GH_REPO/releases/$RELEASE_ID" \
+            -F draft=false -F prerelease=true -f make_latest=false \
+            --jq '.html_url'
+      - name: Verify public downloads
+        working-directory: testing/rc20/downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          directory="$RUNNER_TEMP/release-public"
+          mkdir -p "$directory"
+          for asset in itom-1.5.0-rc20.apk itom-1.5.0-rc20.bin; do
+            url="https://github.com/$GH_REPO/releases/download/$TAG/$asset"
+            curl --fail --silent --show-error --location --retry 4 --retry-all-errors \
+              --max-time 90 --output "$directory/$asset" "$url"
+            printf '%s\n' "$url"
+          done
+          (
+            cd "$directory"
+            sha256sum --check --strict "$GITHUB_WORKSPACE/testing/rc20/downloads/SHA256SUMS"
+          )
