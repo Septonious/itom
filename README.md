@@ -1,5 +1,7 @@
 # ITOM
 
+Development of 1.5.1 is on `main`. The transport checkpoint uses the 1.1.6 RC1 field-tested source as its reference. Test inputs, thresholds and reproduction commands are in the [1.5.1 qualification guide](src/qualification/README.md).
+
 **ITOM 1.1.5 is stable and complete.** All main transport goals have been met and surpassed, with field acceptance confirmed on 8 November 2026.
 
 [Stable release and downloads](https://github.com/Septonious/itom/releases/tag/v1.1.5) · [Release notes](releases/1.1.5/RELEASE_NOTES.md) · [Completion record](releases/1.1.5/RELEASE_STATUS.json) · [Exact released source](https://github.com/Septonious/itom/tree/v1.1.5/archives/1.1.5/source)
