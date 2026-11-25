@@ -1,0 +1,55 @@
+name: Recover archived ITOM Android source
+on:
+  push:
+    branches: [codex/itom-android-source-recovery]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: testing/v130-rc3/downloads
+          persist-credentials: false
+      - name: Reconstruct and verify original source snapshot
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, tarfile, zipfile, shutil
+          base = pathlib.Path('testing/v130-rc3/downloads')
+          manifest = json.loads((base/'manifest.json').read_text())
+          src = manifest['source_snapshot']
+          assert manifest['source_commit'] == '085531fab072478bd8ff60feb78e374ce892eb1b'
+          data = b''.join((base/n).read_bytes() for n in src['parts'])
+          assert len(data) == 1779101
+          assert hashlib.sha256(data).hexdigest() == '822221e08e9a5110498ac4570cdd65370196167f06ce3f5e6ef18ecfadf6b26f'
+          out=pathlib.Path('recovered');out.mkdir()
+          path=out/'ITOM-1.3.0-RC3-source-snapshot'
+          path.write_bytes(data)
+          if zipfile.is_zipfile(path):
+              final=path.with_suffix('.zip');path.rename(final)
+              with zipfile.ZipFile(final) as z:
+                  assert z.testzip() is None
+                  names=z.namelist()
+          elif tarfile.is_tarfile(path):
+              final=path.with_suffix('.tar.gz' if data[:2] == b'\x1f\x8b' else '.tar');path.rename(final)
+              with tarfile.open(final) as t:
+                  names=t.getnames()
+          else:
+              raise RuntimeError('Unknown source archive format')
+          assert any(n.endswith('android/app/build.gradle.kts') for n in names), 'Android source not present'
+          (out/'inventory.txt').write_text('\n'.join(names)+'\n')
+          shutil.copy2(base/'manifest.json', out/'manifest.json')
+          shutil.copy2(base/'RELEASE_NOTES.md', out/'RELEASE_NOTES.md')
+          print('Verified historical source:',final.name)
+          print('Entries:',len(names))
+          print('Android project:',[n for n in names if n.endswith(('android/app/build.gradle.kts','android/settings.gradle.kts','source-info.json'))])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.3.0-RC3-verified-source-recovery
+          path: recovered/
+          if-no-files-found: error
