@@ -1,0 +1,41 @@
+name: ITOM 1.5.1 native qualification screen
+on:
+  push:
+    branches: [codex/itom-v151-interactive-isolation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+      - name: Export exact Go source
+        run: git archive --format=tar.gz --output=itom-v151-source.tar.gz HEAD src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itom-v151-exact-source
+          path: itom-v151-source.tar.gz
+          if-no-files-found: error
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Focused dispatcher regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=10 -run '^(TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate)$' .
+      - name: Native qualification gate unit tests
+        working-directory: src/qualification
+        run: python3 -m unittest test_home_gate
+      - name: Eight-account native screen
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-screen" --screen
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-native-screen
+          path: ${{ runner.temp }}/itom-screen/
+          if-no-files-found: ignore
