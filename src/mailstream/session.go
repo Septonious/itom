@@ -404,6 +404,13 @@ func (s *Session) dispatchLoop() {
 			return cmp.Compare(a.sequence, b.sequence)
 		})
 		sent := 0
+		// An unavailable ordinary control carrier must not hold up a fresh
+		// interactive publication on its independent writer. Preserve bulk
+		// backpressure and retry the blocked control path on the next wake.
+		controlBlocked := false
+		fast, hasFast := s.link.(interface {
+			SendInteractive(context.Context, []byte) error
+		})
 		for _, next := range batch {
 			if sent >= 32 {
 				break
@@ -412,6 +419,15 @@ func (s *Session) dispatchLoop() {
 			selected := next.packet
 			if s.pending[next.sequence] != selected {
 				s.mu.Unlock()
+				continue
+			}
+			interactive := selected.priority && selected.attempts == 0 &&
+				(selected.kind == frameData || selected.kind == frameOpen || selected.kind == frameOpenOK || selected.kind == framePing || selected.kind == framePong)
+			if controlBlocked && !interactive {
+				s.mu.Unlock()
+				if !selected.priority {
+					break
+				}
 				continue
 			}
 			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
@@ -433,8 +449,6 @@ func (s *Session) dispatchLoop() {
 				return
 			}
 			wire, priority := selected.wire, selected.priority
-			interactive := priority && selected.attempts == 0 &&
-				(selected.kind == frameData || selected.kind == frameOpen || selected.kind == frameOpenOK || selected.kind == framePing || selected.kind == framePong)
 			s.mu.Unlock()
 			var err error
 			started := time.Now()
@@ -447,14 +461,16 @@ func (s *Session) dispatchLoop() {
 				SendFeedback(context.Context, []byte) error
 			}); ok && selected.kind == frameWindow {
 				err = feedback.SendFeedback(s.ctx, wire)
-			} else if fast, ok := s.link.(interface {
-				SendInteractive(context.Context, []byte) error
-			}); interactive && ok {
+			} else if interactive && hasFast {
 				err = fast.SendInteractive(s.ctx, wire)
 			} else {
 				err = s.link.Send(s.ctx, wire, priority)
 			}
 			if errors.Is(err, ErrCapacity) {
+				if hasFast && priority && !interactive {
+					controlBlocked = true
+					continue
+				}
 				break
 			}
 			if err != nil {
