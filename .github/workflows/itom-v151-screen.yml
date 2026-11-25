@@ -8,7 +8,7 @@ permissions:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +27,7 @@ jobs:
           cache: false
       - name: Focused dispatcher regressions
         working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=10 -run '^(TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate)$' .
+        run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
       - name: Native qualification gate unit tests
         working-directory: src/qualification
         run: python3 -m unittest test_home_gate
@@ -38,4 +38,12 @@ jobs:
         with:
           name: itom-v151-native-screen
           path: ${{ runner.temp }}/itom-screen/
+          if-no-files-found: ignore
+      - name: Full native qualification matrix
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-matrix"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-native-matrix
+          path: ${{ runner.temp }}/itom-matrix/
           if-no-files-found: ignore

@@ -410,11 +410,21 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
 	failed := 0
-	for n := 0; n < len(l.accounts); n++ {
-		index := (start + n) % len(l.accounts)
+	// Preserve round-robin ties. Give fresh control traffic one bounded
+	// scan for an idle independent publisher before falling back to ordinary
+	// admission. Command RTT alone cannot predict a writer's queued delay.
+	preferIdle := matched && priority && !feedback && !recovery && !ranked
+	count := len(l.accounts)
+	scans := count
+	if preferIdle {
+		scans += count
+	}
+	for n := 0; n < scans; n++ {
+		index := (start + n) % count
 		if ranked {
 			index = order[n]
 		}
+		idlePass := preferIdle && n < count
 		a := l.accounts[index]
 		if !peerAllowed[index] {
 			continue
@@ -422,7 +432,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if a == exclude || !a.mu.TryLock() {
 			continue
 		}
-		if a.failed {
+		if a.failed && !idlePass {
 			failed++
 		}
 		budget := prototypePhysicalBudget
@@ -442,7 +452,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if matched {
 			available = available && a.id == packetID
 		}
-		if !available {
+		if !available || idlePass && (!independent || len(a.interactive) != 0 || len(a.controlWriter.interactiveTags) >= cap(a.controlWriter.interactiveTags)) {
 			a.mu.Unlock()
 			continue
 		}
