@@ -49,7 +49,10 @@ func (p *bulkPacer) ready(n int, rate float64, now time.Time) bool {
 		// Starting each burst at the late wake rounds every interval upward
 		// and can systematically depress the measured delivery rate. Bound
 		// carry to one tick so idle time cannot accumulate a burst of credit.
-		p.started, p.bytes = maxTime(deadline, now.Add(-5*time.Millisecond)), 0
+		if floor := now.Add(-5 * time.Millisecond); deadline.Before(floor) {
+			deadline = floor
+		}
+		p.started, p.bytes = deadline, 0
 	}
 	quantum := max(maxMailPlain, min(4*maxMailPlain, int(rate*0.008)))
 	if p.bytes+n <= quantum {
