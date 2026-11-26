@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  verify:
+  native:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -25,6 +25,15 @@ jobs:
       - name: Native module regression tests
         working-directory: src/native
         run: go test -race -mod=readonly ./...
+  rc20:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/v1.5.0-rc20
@@ -42,3 +51,12 @@ jobs:
           name: rc20-jni-descriptors
           path: rc20-jni-descriptors.txt
           if-no-files-found: warn
+      - name: Extract verified RC20 routing datasets
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Validate real RC20 datasets
+        working-directory: src/native
+        run: ITOM_RC20_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly -v ./routepolicy -run '^TestRC20PackagedAssets$'
