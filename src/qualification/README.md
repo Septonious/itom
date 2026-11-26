@@ -21,3 +21,5 @@ The home release gate requires all of the following.
 - Successful native TCP transfers, bidirectional bytes on all eight accounts and zero unexpected provider logins.
 
 The fixed grant isolates transport performance. Dynamic account allocation, Android routing, upgrade compatibility and physical-device field results require separate verification before distribution.
+
+An additional `python3 src/qualification/run_home.py /tmp/itom-relay-screen --screen --encrypted-exit` run exercises the real TLS 1.3 exit and the native TCP frontend with a fresh 15-to-8 grant. The relay is local; this tests correctness and goodput, not the actual inter-VPS WAN latency. The ordinary screen remains independent.

@@ -8,13 +8,16 @@ import (
 	"itom.local/core/adminserver"
 	"itom.local/core/manager"
 	"itom.local/core/probe"
+	"itom.local/core/relay"
 	"itom.local/core/servercfg"
 	"itom.local/core/tunnel"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 const revision = tunnel.TransportRevision
@@ -49,6 +52,8 @@ func run(args []string) error {
 	watch := flags.Bool("watch", false, "refresh traffic every second until Ctrl+C")
 	message := flags.String("text", "", "current server message (maximum 2048 UTF-8 bytes)")
 	clearMessage := flags.Bool("clear", false, "clear the current server message")
+	exitConfig := flags.String("config", "", "private exit or egress JSON file")
+	target := flags.String("target", "example.com:443", "authenticated egress probe destination")
 	if e := flags.Parse(args); e != nil {
 		return e
 	}
@@ -56,6 +61,67 @@ func run(args []string) error {
 		return errors.New("unexpected arguments")
 	}
 	switch command {
+	case "exit":
+		path := *exitConfig
+		if path == "" {
+			path = filepath.Join(*state, "exit.json")
+		}
+		c, e := relay.Load(path)
+		if e != nil {
+			return e
+		}
+		if c.Listen == "" {
+			return errors.New("exit listen address required")
+		}
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, terminationSignal())
+		defer stop()
+		ln, e := net.Listen("tcp", c.Listen)
+		if e != nil {
+			return e
+		}
+		log.Print("event=encrypted_exit_listening address=" + ln.Addr().String())
+		metrics := &relay.Metrics{}
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			ticker := time.NewTicker(2 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					s := metrics.Snapshot()
+					log.Printf("event=exit_runtime upload_bytes=%d download_bytes=%d active_connections=%d sampled_at_ms=%d", s.UploadBytes, s.DownloadBytes, s.ActiveConnections, time.Now().UnixMilli())
+				}
+			}
+		}()
+		e = relay.ServeMeasured(ctx, c, ln, metrics)
+		stop()
+		<-done
+		return e
+	case "egress-test":
+		path := *exitConfig
+		if path == "" {
+			path = filepath.Join(*state, "egress.json")
+		}
+		c, e := relay.Load(path)
+		if e != nil {
+			return e
+		}
+		d, e := relay.New(c)
+		if e != nil {
+			return e
+		}
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, terminationSignal())
+		defer stop()
+		conn, e := d.Connect(ctx, *target)
+		if e != nil {
+			return e
+		}
+		defer conn.Close()
+		fmt.Println("Authenticated encrypted exit TCP connection succeeded (no direct fallback).")
+		return nil
 	case "admin-guard":
 		return adminserver.RunGuard(*state, *transaction)
 	case "message":
@@ -133,7 +199,15 @@ func run(args []string) error {
 		}
 		admin := adminserver.New(ctx, *state)
 		defer admin.Close()
-		e = tunnel.ServeManaged(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial)
+		upstream, e := loadEgress(filepath.Join(*state, "egress.json"))
+		if e != nil {
+			return e
+		}
+		if upstream != nil {
+			upstream.Log = logger
+			log.Print("event=encrypted_egress_enabled")
+		}
+		e = tunnel.ServeManagedWithExit(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial, upstream)
 		if ctx.Err() != nil {
 			if verifyErr := manager.VerifyCapacityState(*state); verifyErr != nil {
 				return errors.Join(e, verifyErr)
@@ -168,7 +242,7 @@ func run(args []string) error {
 		fmt.Printf("Noise + IMAP roundtrip OK; account=%s RTT=%s\n", *account, rtt.Round(1e6))
 		return nil
 	default:
-		return errors.New("commands: menu, serve, probe, imap-check, install, update-from-tmp, uninstall, traffic, message, version, journal-profile, diagnostics")
+		return errors.New("commands: menu, serve, exit, egress-test, probe, imap-check, install, update-from-tmp, uninstall, traffic, message, version, journal-profile, diagnostics")
 	}
 }
 func main() {
@@ -176,4 +250,15 @@ func main() {
 		fmt.Fprintln(os.Stderr, "ITOM:", e)
 		os.Exit(1)
 	}
+}
+
+func loadEgress(path string) (*relay.Dialer, error) {
+	c, e := relay.Load(path)
+	if errors.Is(e, os.ErrNotExist) {
+		return nil, nil
+	}
+	if e != nil {
+		return nil, e
+	}
+	return relay.New(c)
 }

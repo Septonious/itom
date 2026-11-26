@@ -1,7 +1,7 @@
 name: ITOM 1.5.1 native qualification screen
 on:
   push:
-    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration, codex/itom-v151-rc4]
+    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration, codex/itom-v151-rc5]
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,6 +38,12 @@ jobs:
       - name: Server allocation and cellular controller tests
         working-directory: src/core
         run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+      - name: RC5 encrypted exit and storage grant regression tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 ./relay ./tunnel -run 'Test(RC5|Relay|WrongKey|DirectFallback|ConcurrentRelay|Cancellation|ShutdownWith|RC4FieldGrant|SessionAdmission)'
+      - name: Preserve healthy control writer on cleanup failure
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
       - name: Verify qualification module dependency closure
         working-directory: src/qualification
         run: go list -mod=readonly -deps ./provider ./worker > /dev/null
@@ -45,12 +51,22 @@ jobs:
         working-directory: src/qualification
         run: python3 -m unittest test_home_gate
       - name: Eight-account native screen
+        id: native_screen
         run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-screen" --screen
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: itom-v151-native-screen
           path: ${{ runner.temp }}/itom-screen/
+          if-no-files-found: ignore
+      - name: Encrypted exit native screen
+        if: ${{ !cancelled() && steps.native_screen.outcome != 'skipped' }}
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-exit-screen" --screen --encrypted-exit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-encrypted-exit-screen
+          path: ${{ runner.temp }}/itom-exit-screen/
           if-no-files-found: ignore
       - name: Full native qualification matrix
         run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-matrix"

@@ -23,7 +23,7 @@ def build(package, dest):
     return hashlib.sha256(dest.read_bytes()).hexdigest()
 
 
-def run(provider, worker, dest, seconds, mode, cycles, service):
+def run(provider, worker, dest, seconds, mode, cycles, service, encrypted=False):
     dest.mkdir()
     with tempfile.TemporaryDirectory() as name, (dest / "log.txt").open("w") as log:
         state = Path(name)
@@ -48,6 +48,8 @@ def run(provider, worker, dest, seconds, mode, cycles, service):
                        "-active-grant", "8", "-production-grant", "-account-probes", "-light-cycles", str(cycles),
                        "-duration", f"{seconds}s", "-streams", "8", "-download-first",
                        "-idle-probes", "24", "-post-probes", "24"]
+            if encrypted:
+                command.append("-encrypted-exit")
             result = subprocess.run(command, env=dict(os.environ, SSL_CERT_FILE=cfg["root"]),
                                     stdout=log, stderr=log, timeout=2*seconds + 100 + 75*cycles)
         finally:
@@ -59,6 +61,8 @@ def run(provider, worker, dest, seconds, mode, cycles, service):
                 proc.wait()
     data = json.loads((dest / "result.json").read_text())
     problems = check(data, seconds, cycles)
+    if encrypted and data.get("encrypted_exit") is not True:
+        problems.append("missing encrypted-exit fixture evidence")
     ramp = {}
     for phase in data.get("Phases", []):
         direction = phase.get("name")
@@ -75,6 +79,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--screen", action="store_true", help="one short measurement; never qualifies an RC")
+    parser.add_argument("--encrypted-exit", action="store_true", help="test the same native path via the OLCRTC-compatible TLS exit")
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -88,7 +93,7 @@ def main():
             matrix = [(15, "minus")] if args.screen else [(d, m) for m in ("minus", "plus") for d in (15, 60)]
             for seconds, mode in matrix:
                 label = f"run-{repeat+1}-{mode}-{seconds}s"
-                problems = run(provider, worker, out / label, seconds, mode, 2, False)
+                problems = run(provider, worker, out / label, seconds, mode, 2, False, args.encrypted_exit)
                 manifest["runs"].append({"name": label, "errors": problems})
                 output(out / "gate.json", manifest)
                 if problems:
@@ -96,7 +101,7 @@ def main():
                     return 1
                 print(label, "passed", flush=True)
         if not args.screen:
-            problems = run(provider, worker, out / "provider-delay-holdout", 15, "minus", 2, True)
+            problems = run(provider, worker, out / "provider-delay-holdout", 15, "minus", 2, True, args.encrypted_exit)
             manifest["runs"].append({"name": "provider-delay-holdout", "errors": problems})
             output(out / "gate.json", manifest)
             if problems:

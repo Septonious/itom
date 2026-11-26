@@ -129,6 +129,7 @@ type result struct {
 	RecoveryCompletedBeforePhase int      `json:"recovery_completed_before_phase,omitempty"`
 	InitialRecoveredClientBytes  int64    `json:"initial_recovered_client_bytes,omitempty"`
 	Inventory                    int      `json:"configured_accounts"`
+	EncryptedExit                bool     `json:"encrypted_exit"`
 	Granted                      []string `json:"granted_accounts"`
 	Version                      string   `json:"version"`
 	Success                      bool     `json:"success"`
@@ -175,6 +176,7 @@ func run() (err error) {
 	lightCycles := flag.Int("light-cycles", 0, "cycles of simultaneous TCP opens, bidirectional bursts and true application idle")
 	activeGrant := flag.Int("active-grant", 0, "number of provisioned accounts in the fixed qualification grant; zero uses all")
 	productionGrant := flag.Bool("production-grant", false, "exercise production grant negotiation with the complete profile")
+	encryptedExit := flag.Bool("encrypted-exit", false, "use authenticated TLS foreign-exit fixture")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
 	if *lightCycles < 0 || *lightCycles > 5 {
@@ -196,7 +198,7 @@ func run() (err error) {
 		}
 		defer func() { pprof.StopCPUProfile(); f.Close() }()
 	}
-	r := result{Version: *label, Stage: "configuration"}
+	r := result{Version: *label, Stage: "configuration", EncryptedExit: *encryptedExit}
 	// Preserve bounded local fixture traces on functional failure as well.
 	defer func() {
 		for _, side := range []string{"server", "client"} {
@@ -347,7 +349,7 @@ func run() (err error) {
 	}
 	serverDone := make(chan error, 1)
 	go func() {
-		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String())
+		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String(), *encryptedExit)
 	}()
 	defer func() {
 		cancel()

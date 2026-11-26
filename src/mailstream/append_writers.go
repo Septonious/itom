@@ -74,8 +74,61 @@ func (a *mailAccountState) openAppendWriters(attempt context.Context, writer **m
 	return nil
 }
 
-// Cleanup retains its existing one-attempt behavior and unchanged audit rules.
+// Cleanup operates only on the DATA writer. Do not destroy a healthy independent
+// control APPEND connection after a refused STORE/EXPUNGE. Existing reservation
+// and audit rules remain unchanged. A failed replacement is still handled by
+// the normal writer recovery loop, which owns both sockets.
 func (a *mailAccountState) reopenAppendWriters(attempt context.Context, writer **mailPipe, completed chan error, inFlight *int, wait *sync.WaitGroup) {
+	a.mu.Lock()
+	control := a.controlWriter
+	a.mu.Unlock()
+	if control != nil && !a.parking.Load() && a.ctx.Err() == nil {
+		select {
+		case <-control.done:
+		case <-control.client.Closed():
+		default:
+			a.mu.Lock()
+			a.writer = nil
+			a.mu.Unlock()
+			if *writer != nil {
+				(*writer).close()
+				*writer = nil
+			}
+			wait.Wait()
+			for {
+				select {
+				case <-completed:
+					continue
+				default:
+				}
+				break
+			}
+			*inFlight = 0
+			select {
+			case a.link.login <- struct{}{}:
+			case <-attempt.Done():
+				return
+			case <-a.ctx.Done():
+				return
+			}
+			defer func() { <-a.link.login }()
+			bounded, cancel := context.WithTimeout(attempt, 15*time.Second)
+			defer cancel()
+			fresh, err := openMailPipeAttempt(bounded, a.ctx, a.config)
+			if err != nil {
+				return
+			}
+			if a.parking.Load() || a.ctx.Err() != nil {
+				fresh.close()
+				return
+			}
+			*writer = fresh
+			a.mu.Lock()
+			a.writer = fresh
+			a.mu.Unlock()
+			return
+		}
+	}
 	companion := a.closeAppendWriters(writer, completed, inFlight, wait)
 	_ = a.openAppendWriters(attempt, writer, companion)
 }

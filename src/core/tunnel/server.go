@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"itom.local/core/accountpolicy"
+	"itom.local/core/relay"
 	"itom.local/core/servercfg"
 	"itom.local/core/wire"
 	mailstream "itom.local/mailstream"
@@ -25,6 +26,12 @@ func Serve(ctx context.Context, c servercfg.Config, dir string, log func(string)
 	return ServeManaged(ctx, c, dir, log, nil)
 }
 func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+	return ServeManagedWithExit(ctx, c, dir, log, managed, nil)
+}
+
+// ServeManagedWithExit routes ordinary tunneled TCP via the optional authenticated
+// exit. Admin and readiness endpoints stay local; IMAP never uses this dialer.
+func ServeManagedWithExit(ctx context.Context, c servercfg.Config, dir string, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error), upstream *relay.Dialer) error {
 	trace, err := newTrace(dir)
 	if err != nil {
 		return err
@@ -73,7 +80,9 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		}
 		active++
 		p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: c.Server, Provider: c.Provider, User: u, Accounts: c.Accounts, Transport: c.TransportForUsers()}
-		go func() { done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, reclaimer, log, managed) }()
+		go func() {
+			done <- serveProfile(ctx, p, trace, traffic[u.ID], admission, reclaimer, log, managed, upstream)
+		}()
 	}
 	if active == 0 {
 		return servercfg.ErrConfig
@@ -87,7 +96,7 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 	}
 	return result
 }
-func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, reclaimer *mailstream.ReclamationCoordinator, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error)) error {
+func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, traffic *trafficCounters, admission *sessionAdmission, reclaimer *mailstream.ReclamationCoordinator, log func(string), managed func(context.Context, servercfg.User, wire.Connect) (*net.TCPConn, bool, error), upstream *relay.Dialer) error {
 	accounts, key, err := profileAccounts(p, &net.Dialer{Timeout: 15 * time.Second}, nil)
 	if err != nil {
 		return err
@@ -133,7 +142,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 				return traffic.wrap(conn), nil
 			}
 		}
-		conn, err := mailstream.PublicDial(ctx, network, address)
+		conn, err := dialUserExit(ctx, network, address, upstream)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +164,13 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 				if s := current.Load(); s != nil {
 					session = s.Snapshot()
 				}
-				snapshot := map[string]any{"Event": "runtime", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "Session": session, "ExitUploadBytes": traffic.upload.Load(), "ExitDownloadBytes": traffic.download.Load(), "SampledAtMS": time.Now().UnixMilli()}
+				mail := link.Snapshot()
+				if current.Load() != nil {
+					if admission.observeStorage(p.User.ID, mail, time.Now()) && log != nil {
+						log("event=storage_grant_replacement user=" + p.User.ID)
+					}
+				}
+				snapshot := map[string]any{"Event": "runtime", "Revision": TransportRevision, "User": p.User.ID, "Mail": mail, "Session": session, "EncryptedExit": upstream != nil, "ExitUploadBytes": traffic.upload.Load(), "ExitDownloadBytes": traffic.download.Load(), "SampledAtMS": time.Now().UnixMilli()}
 				_ = trace.record(snapshot)
 				if !trace.disabled {
 					_ = writePrivate(filepath.Join(filepath.Dir(trace.path), "mailstream-"+p.User.ID+".json"), snapshot)
@@ -186,6 +201,7 @@ type sessionAdmission struct {
 	accounts []string
 	grants   map[string][]string
 	order    []string
+	storage  map[string]*storageGrantWatch
 }
 
 // Prefer usable storage headroom, not raw account IDs or lowest instantaneous
@@ -246,6 +262,7 @@ func (a *sessionAdmission) acquirePreferred(identity string, preferred []string)
 			a.owners[identity]--
 			if a.owners[identity] == 0 {
 				delete(a.owners, identity)
+				delete(a.storage, identity)
 				for i, u := range a.order {
 					if u == identity {
 						a.order = append(a.order[:i], a.order[i+1:]...)
