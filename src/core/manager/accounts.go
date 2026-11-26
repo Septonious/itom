@@ -147,34 +147,11 @@ func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
 		}
 		fmt.Fprintf(u.Out, "\n[%d/%d] %s — purge started\n", i+1, len(cfg.Accounts), account.Mail.Username)
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-		dial := u.adminDial
-		if dial == nil {
-			dial = func(ctx context.Context, cfg mailbox.Config) (accountAdmin, error) {
-				return mailbox.DialAdmin(ctx, cfg)
-			}
-		}
-		admin, err := dial(ctx, account.Mail)
-		if err != nil {
-			cancel()
-			failures = append(failures, account.Mail.Username+": "+err.Error())
-			fmt.Fprintf(u.Out, "%s — connection failed: %v\n", account.Mail.Username, err)
-			continue
-		}
-		report, purgeErr := admin.PurgeAll(ctx)
-		closeErr := admin.Close()
+		purgeErr := u.purgeAccountRetry(ctx, account.Mail)
 		cancel()
-		for _, item := range report.Items {
-			fmt.Fprintf(u.Out, "%s | %q — %s\n", account.Mail.Username, item.Name, item.Outcome)
-		}
-		if purgeErr == nil && closeErr == nil && report.Verified {
+		if purgeErr == nil {
 			fmt.Fprintf(u.Out, "%s — purge confirmed\n", account.Mail.Username)
 			continue
-		}
-		if purgeErr == nil {
-			purgeErr = closeErr
-		}
-		if purgeErr == nil {
-			purgeErr = errors.New("IMAP_PURGE_INCOMPLETE")
 		}
 		failures = append(failures, account.Mail.Username+": "+purgeErr.Error())
 		fmt.Fprintf(u.Out, "%s — purge not confirmed: %v\n", account.Mail.Username, purgeErr)
@@ -184,6 +161,55 @@ func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
 	}
 	fmt.Fprintln(u.Out, "\nAll mail accounts were purged serially. ITOM configuration is preserved.")
 	return nil
+}
+
+// Retry an explicitly requested offline purge only on a fresh connection.
+// After an ambiguous DELETE, the next PurgeAll starts with a fresh LIST,
+// rather than replaying the command on a dead socket. Never refund retention
+// debt here: only the transport's verified audit may do so.
+func (u *UI) purgeAccountRetry(ctx context.Context, cfg mailbox.Config) error {
+	dial := u.adminDial
+	if dial == nil {
+		dial = func(ctx context.Context, cfg mailbox.Config) (accountAdmin, error) {
+			return mailbox.DialAdmin(ctx, cfg)
+		}
+	}
+	var last error
+	for attempt := 0; attempt < 3; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := u.stopped(); err != nil {
+			return err
+		}
+		if attempt > 0 {
+			fmt.Fprintf(u.Out, "%s — retry %d/2 after unconfirmed purge: %v\n", cfg.Username, attempt, last)
+			if err := u.waitAdmin(ctx, time.Duration(5*attempt)*time.Second); err != nil {
+				return err
+			}
+			if err := u.stopped(); err != nil {
+				return err
+			}
+		}
+		admin, err := dial(ctx, cfg)
+		if err != nil {
+			last = err
+			continue
+		}
+		report, purgeErr := admin.PurgeAll(ctx)
+		closeErr := admin.Close()
+		for _, item := range report.Items {
+			fmt.Fprintf(u.Out, "%s | %q — %s\n", cfg.Username, item.Name, item.Outcome)
+		}
+		if purgeErr == nil && closeErr == nil && report.Verified {
+			return nil
+		}
+		last = errors.Join(purgeErr, closeErr)
+		if last == nil {
+			last = errors.New("IMAP_PURGE_INCOMPLETE")
+		}
+	}
+	return last
 }
 
 func (u *UI) resetAccounts(selected servercfg.Config) error {

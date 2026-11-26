@@ -628,11 +628,18 @@ func (l *IMAPLink) Detach(id SessionID) {
 		a.attachMu.Lock()
 		a.mu.Lock()
 		current := a.id == id
+		// A standing control reader may still be retrying LOGIN or mailbox
+		// creation. Its APPEND actor has not started, so sending a writer
+		// operation to it would block teardown and every future handshake.
+		// Only accounts that owned DATA or APPEND sockets need detaching.
+		hasWriters := a.writer != nil || a.controlWriter != nil
 		a.mu.Unlock()
 		if current {
 			a.closeData()
 		}
-		_ = a.changeWriter(false)
+		if current || hasWriters {
+			_ = a.changeWriter(false)
+		}
 		a.attachMu.Unlock()
 	}
 	l.notify()

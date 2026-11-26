@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -169,6 +170,7 @@ func TestFailedPurgePreservesLocalCapacity(t *testing.T) {
 	ui := New(dir)
 	ui.Out = io.Discard
 	ui.stoppedCheck = func() error { return nil }
+	ui.pauseAdmin = func(context.Context, time.Duration) error { return nil }
 	ui.adminDial = func(context.Context, mailbox.Config) (accountAdmin, error) {
 		return nil, errors.New("provider folders unavailable")
 	}

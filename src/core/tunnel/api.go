@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc5-dev"
+const TransportRevision = "itom-1-5-1-rc6-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
