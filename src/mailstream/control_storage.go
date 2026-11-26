@@ -288,6 +288,8 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 	for {
 		p.phase.Store(11)
 		select {
+		case <-p.pauseRead:
+			return nil
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-p.done:

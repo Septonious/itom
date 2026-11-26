@@ -1,6 +1,10 @@
 package mailstream
 
-import "context"
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 // installInitialGrant is deliberately restricted to the pre-DATA handshake.
 // No live account is stopped: its DATA generation and UID cursor cannot be
@@ -33,17 +37,72 @@ func (l *IMAPLink) installInitialGrant(ctx context.Context, id SessionID, ids []
 		return ErrProtocol
 	}
 	l.grantSession, l.grant = id, allowed
-	l.mu.Unlock()
-	if !l.client { return nil }
-	for _, a := range l.accounts {
-		if !allowed[a.config.ID] { a.unallocated.Store(true); a.cancel() }
+	l.stableGrant = allowed
+	// Until the peer acknowledges a new active set, ordinary traffic must
+	// continue to use the original grant, including grant-update frames.
+	if !l.client {
+		l.remoteActive = allowed
 	}
+	l.mu.Unlock()
+	if !l.client {
+		return nil
+	}
+	// Mark unallocated before canceling an in-progress bootstrap attempt.
+	// The account actor stays alive and can be reactivated without resetting
+	// its retained mailbox state when a later authenticated grant expands.
 	for _, a := range l.accounts {
-		if allowed[a.config.ID] { continue }
+		if allowed[a.config.ID] {
+			continue
+		}
+		a.unallocated.Store(true)
+		a.scaleBlocked.Store(true)
+		a.mu.Lock()
+		stop := a.startupStop
+		a.mu.Unlock()
+		if stop != nil {
+			stop()
+		}
 		select {
-		case <-a.stopped:
-		case <-ctx.Done(): return ctx.Err()
-		case <-l.ctx.Done(): return ErrClosed
+		case a.startupWake <- struct{}{}:
+		default:
+		}
+	}
+	results := make(chan error, len(l.accounts))
+	n := 0
+	for _, a := range l.accounts {
+		if allowed[a.config.ID] {
+			continue
+		}
+		n++
+		go func() {
+			for {
+				err := a.scale(ctx, false)
+				if !errors.Is(err, ErrCapacity) {
+					if a.ctx.Err() != nil {
+						err = nil
+					}
+					results <- err
+					return
+				}
+				select {
+				case <-ctx.Done():
+					results <- ctx.Err()
+					return
+				case <-time.After(10 * time.Millisecond):
+				}
+			}
+		}()
+	}
+	for range n {
+		select {
+		case err := <-results:
+			if err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-l.ctx.Done():
+			return ErrClosed
 		}
 	}
 	return nil

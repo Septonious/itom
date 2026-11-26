@@ -53,20 +53,97 @@ func unique(values []string) []string {
 	return result
 }
 
- // InitialGrant assigns a newly admitted session while preserving existing grants.
- // Existing users remain pinned until a generation-safe live resize is implemented.
- // Unused accounts are preferred; sharing is allowed to satisfy the minimum.
+// InitialGrant assigns a newly admitted session while preserving existing grants.
+// Existing users remain pinned until a generation-safe live resize is implemented.
+// Unused accounts are preferred; sharing is allowed to satisfy the minimum.
 func InitialGrant(accounts []string, existing map[string][]string) []string {
 	accounts = unique(accounts)
 	n, u := len(accounts), len(existing)+1
-	if n < 10 { return accounts }
+	if n < 10 {
+		return accounts
+	}
 	count := max(5, n/u)
-	if u == 1 { count = (n+1)/2 }
+	if u == 1 {
+		count = (n + 1) / 2
+	}
 	used := map[string]bool{}
-	for _, grant := range existing { for _, id := range grant { used[id] = true } }
+	for _, grant := range existing {
+		for _, id := range grant {
+			used[id] = true
+		}
+	}
 	result := make([]string, 0, count)
-	for _, shared := range []bool{false,true} {
-		for _, id := range accounts { if used[id] == shared && len(result)<count { result = append(result,id) } }
+	for _, shared := range []bool{false, true} {
+		for _, id := range accounts {
+			if used[id] == shared && len(result) < count {
+				result = append(result, id)
+			}
+		}
 	}
 	return result
+}
+
+// Rebalance preserves as many existing exclusive assignments as possible,
+// allocating the remainder in stable admission order. Shared mailboxes are
+// used only when the five-account minimum requires them.
+func Rebalance(accounts, online []string, previous map[string][]string) map[string][]string {
+	accounts = unique(accounts)
+	n := len(accounts)
+	seen := map[string]bool{}
+	users := []string{}
+	for _, u := range online {
+		if u != "" && !seen[u] {
+			seen[u] = true
+			users = append(users, u)
+		}
+	}
+	out := map[string][]string{}
+	if len(users) == 0 {
+		return out
+	}
+	if n < 10 {
+		for _, u := range users {
+			out[u] = slices.Clone(accounts)
+		}
+		return out
+	}
+	counts := map[string]int{}
+	used := map[string]bool{}
+	valid := map[string]bool{}
+	for _, a := range accounts {
+		valid[a] = true
+	}
+	for i, u := range users {
+		k := n / len(users)
+		if i < n%len(users) {
+			k++
+		}
+		if len(users) == 1 {
+			k = (n + 1) / 2
+		}
+		counts[u] = max(5, k)
+		out[u] = []string{}
+		for _, a := range previous[u] {
+			if valid[a] && !used[a] && len(out[u]) < counts[u] {
+				out[u] = append(out[u], a)
+				used[a] = true
+			}
+		}
+	}
+	for _, u := range users {
+		for _, a := range accounts {
+			if !used[a] && len(out[u]) < counts[u] {
+				out[u] = append(out[u], a)
+				used[a] = true
+			}
+		}
+	}
+	for _, u := range users {
+		for _, a := range accounts {
+			if len(out[u]) < counts[u] && !slices.Contains(out[u], a) {
+				out[u] = append(out[u], a)
+			}
+		}
+	}
+	return out
 }

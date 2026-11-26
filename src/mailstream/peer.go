@@ -93,13 +93,19 @@ func (l *IMAPLink) sendOnAccount(ctx context.Context, id SessionID, account stri
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	l.mu.Lock()
+	allowed := l.grantSession != id || l.grant[account]
+	l.mu.Unlock()
+	if !allowed {
+		return ErrCapacity
+	}
 	for _, a := range l.accounts {
 		if a.config.ID != account {
 			continue
 		}
 		work := mailWork{body: bytes.Clone(wire), control: true, charge: len(wire)*3/2 + 512}
 		a.mu.Lock()
-		if !a.ready || a.failed || a.id != id {
+		if !a.ready || a.failed || a.id != id || a.scaleBlocked.Load() {
 			a.mu.Unlock()
 			return ErrClosed
 		}

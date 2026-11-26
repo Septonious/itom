@@ -61,7 +61,9 @@ func ServeManaged(ctx context.Context, c servercfg.Config, dir string, log func(
 		return errors.New("MAILSTREAM_SOCKET_BUDGET")
 	}
 	admission := &sessionAdmission{limit: slots, owners: map[string]int{}, grants: map[string][]string{}}
-	for _, account := range c.Accounts { admission.accounts = append(admission.accounts, account.ID) }
+	for _, account := range c.Accounts {
+		admission.accounts = append(admission.accounts, account.ID)
+	}
 	reclaimer := mailstream.NewReclamationCoordinator()
 	active := 0
 	for _, u := range c.Users {
@@ -161,7 +163,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 		}
 	}()
 	defer func() { stop(); <-joined }()
-	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) { return admission.acquire(p.User.ID) }, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
+	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) { return admission.acquire(p.User.ID) }, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
 		current.Store(s)
 		_ = trace.record(map[string]any{"Event": "session_ready", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
 		if log != nil {
@@ -175,11 +177,12 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 // At the default ten sockets/account, two profiles can wait but only one may
 // add its DATA pair. A refused second user gets an encrypted BUSY response.
 type sessionAdmission struct {
-	mu     sync.Mutex
-	limit  int
-	owners map[string]int
+	mu       sync.Mutex
+	limit    int
+	owners   map[string]int
 	accounts []string
-	grants map[string][]string
+	grants   map[string][]string
+	order    []string
 }
 
 func (a *sessionAdmission) acquire(identity string) (func(), error) {
@@ -188,9 +191,9 @@ func (a *sessionAdmission) acquire(identity string) (func(), error) {
 	if a.owners[identity] == 0 && len(a.owners) >= a.limit {
 		return nil, mailstream.ErrBusy
 	}
-	if a.owners[identity] == 0 && len(a.accounts) >= 10 {
-		if a.grants == nil { a.grants = map[string][]string{} }
-		a.grants[identity] = accountpolicy.InitialGrant(a.accounts, a.grants)
+	if a.owners[identity] == 0 {
+		a.order = append(a.order, identity)
+		a.grants = accountpolicy.Rebalance(a.accounts, a.order, a.grants)
 	}
 	a.owners[identity]++
 	var once sync.Once
@@ -201,7 +204,13 @@ func (a *sessionAdmission) acquire(identity string) (func(), error) {
 			a.owners[identity]--
 			if a.owners[identity] == 0 {
 				delete(a.owners, identity)
-				delete(a.grants, identity)
+				for i, u := range a.order {
+					if u == identity {
+						a.order = append(a.order[:i], a.order[i+1:]...)
+						break
+					}
+				}
+				a.grants = accountpolicy.Rebalance(a.accounts, a.order, a.grants)
 			}
 		})
 	}, nil

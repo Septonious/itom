@@ -48,39 +48,48 @@ type pendingPacket struct {
 }
 
 type Session struct {
-	ctx             context.Context
-	cancel          context.CancelFunc
-	link            Link
-	cipher          *cipherPair
-	server          bool
-	dial            func(context.Context, string, string) (net.Conn, error)
-	mu              sync.Mutex
-	streams         map[uint32]*Stream
-	closedStreams   map[uint32]*terminalStream
-	bulkOutstanding uint64
-	receiveBuffered atomic.Int64
-	lastInbound     atomic.Int64
-	nextStream      uint32
-	pending         map[uint64]*pendingPacket
-	pendingBytes    int
-	delivery        deliveryWindow
-	changed         chan struct{}
-	wake            chan struct{}
-	input           chan []byte
-	receipts        chan receiptRequest
-	receiptRetries  atomic.Uint64
-	openRefusals    atomic.Uint64
-	openWaits       atomic.Uint64
-	retransmissions uint64
-	seen            [replaySlots]uint64
-	seenValid       [replaySlots]bool
-	highest         uint64
-	rtt, variation  time.Duration
-	pings           map[uint64]chan struct{}
-	nextPing        uint64
-	accountPings    map[uint64]accountProbe
-	err             error
-	wg              sync.WaitGroup
+	grantUpdateMu       sync.Mutex
+	grantVersion        uint64
+	grantAck            atomic.Uint64
+	grantRequests       chan grantRequest
+	grantRequestVersion uint64 // receive owner only
+	activeLimit         atomic.Int32
+	accountSetMu        sync.Mutex
+	accountSetVersion   uint64
+	accountSetAck       atomic.Uint64
+	ctx                 context.Context
+	cancel              context.CancelFunc
+	link                Link
+	cipher              *cipherPair
+	server              bool
+	dial                func(context.Context, string, string) (net.Conn, error)
+	mu                  sync.Mutex
+	streams             map[uint32]*Stream
+	closedStreams       map[uint32]*terminalStream
+	bulkOutstanding     uint64
+	receiveBuffered     atomic.Int64
+	lastInbound         atomic.Int64
+	nextStream          uint32
+	pending             map[uint64]*pendingPacket
+	pendingBytes        int
+	delivery            deliveryWindow
+	changed             chan struct{}
+	wake                chan struct{}
+	input               chan []byte
+	receipts            chan receiptRequest
+	receiptRetries      atomic.Uint64
+	openRefusals        atomic.Uint64
+	openWaits           atomic.Uint64
+	retransmissions     uint64
+	seen                [replaySlots]uint64
+	seenValid           [replaySlots]bool
+	highest             uint64
+	rtt, variation      time.Duration
+	pings               map[uint64]chan struct{}
+	nextPing            uint64
+	accountPings        map[uint64]accountProbe
+	err                 error
+	wg                  sync.WaitGroup
 }
 
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
@@ -95,6 +104,11 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 	// Sequence zero was the authenticated READY/READY_ACK. It must never
 	// enter the application engine as a replayed session transition.
 	s.seen[0], s.seenValid[0] = 0, true
+	if !server {
+		s.grantRequests = make(chan grantRequest, 1)
+		s.wg.Add(1)
+		go func() { defer s.wg.Done(); s.grantWorker() }()
+	}
 	s.wg.Add(4)
 	go func() { defer s.wg.Done(); <-ctx.Done(); s.fail(ErrClosed) }()
 	go func() { defer s.wg.Done(); s.receiveLoop() }()
@@ -615,6 +629,12 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameGrantUpdate || f.kind == frameGrantAck {
+		return s.applyGrantFrame(f)
+	}
+	if f.kind == frameAccountSet || f.kind == frameAccountSetAck {
+		return s.applyAccountSet(f)
+	}
 	if f.kind == frameControlRead || f.kind == frameControlCollected || f.kind == frameStorageRecovered || f.kind == frameStoragePressure {
 		if maintenance, ok := s.link.(maintenanceLink); ok {
 			return maintenance.applyMaintenance(s.cipher.id, f)

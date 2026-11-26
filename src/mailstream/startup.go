@@ -26,14 +26,30 @@ func missingMailbox(err error) bool {
 // Retry only accounts that have never entered service. Published queues,
 // replay state and established readers are never replaced by this loop.
 // Each failed attempt closes its sockets before releasing the login gate.
+var errAccountDormant = errors.New("MAILSTREAM_ACCOUNT_DORMANT")
+
 func (a *mailAccountState) startControls() (*mailPipe, *mailPipe, error) {
 	for attempt := uint32(0); ; attempt++ {
 		a.mu.Lock()
+		if a.unallocated.Load() {
+			a.mu.Unlock()
+			return nil, nil, errAccountDormant
+		}
+		startup, cancel := context.WithCancel(a.ctx)
+		a.startupStop = cancel
 		a.startupAttempts++
 		a.startupRetryAt = time.Time{}
 		a.failure = ""
 		a.mu.Unlock()
-		control, writer, err := a.openControls()
+		control, writer, err := a.openControls(startup)
+		cancel()
+		a.mu.Lock()
+		a.startupStop = nil
+		dormant := a.unallocated.Load()
+		a.mu.Unlock()
+		if dormant && err != nil {
+			return nil, nil, errAccountDormant
+		}
 		if err == nil || a.ctx.Err() != nil || errors.Is(err, ErrAuth) || errors.Is(err, ErrStorage) {
 			return control, writer, err
 		}
@@ -52,16 +68,18 @@ func (a *mailAccountState) startControls() (*mailPipe, *mailPipe, error) {
 		case <-a.ctx.Done():
 			timer.Stop()
 			return nil, nil, context.Cause(a.ctx)
+		case <-a.startupWake:
+			timer.Stop()
 		case <-timer.C:
 		}
 	}
 }
 
-func (a *mailAccountState) openControls() (control, writer *mailPipe, err error) {
+func (a *mailAccountState) openControls(attempt context.Context) (control, writer *mailPipe, err error) {
 	select {
 	case a.link.login <- struct{}{}:
-	case <-a.ctx.Done():
-		return nil, nil, a.ctx.Err()
+	case <-attempt.Done():
+		return nil, nil, attempt.Err()
 	}
 	defer func() {
 		if err != nil && control != nil {
@@ -76,10 +94,17 @@ func (a *mailAccountState) openControls() (control, writer *mailPipe, err error)
 		}
 	}()
 	a.phase(stage)
-	control, err = openMailPipe(a.ctx, a.config)
+	control, err = openMailPipeAttempt(attempt, a.ctx, a.config)
 	if err != nil {
 		return
 	}
+	stopAttempt := context.AfterFunc(attempt, control.close)
+	defer func() {
+		if !stopAttempt() && err == nil {
+			err = attempt.Err()
+			control.close()
+		}
+	}()
 	control.onPacket = func(packet []byte) {
 		a.downBytes.Add(uint64(len(packet)))
 		a.link.note("received", a.config.ID, packet, 0, true)

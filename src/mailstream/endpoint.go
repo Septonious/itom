@@ -73,8 +73,12 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 				}
 				if len(f.data) != 0 {
 					carrier, ok := link.(*IMAPLink)
-					if !ok { return nil, ErrProtocol }
-					if err = carrier.installInitialGrant(ctx, h.id, strings.Split(string(f.data), ",")); err != nil { return nil, err }
+					if !ok {
+						return nil, ErrProtocol
+					}
+					if err = carrier.installInitialGrant(ctx, h.id, strings.Split(string(f.data), ",")); err != nil {
+						return nil, err
+					}
 				}
 				if confirmed, ok := link.(interface{ ConfirmPeer([]byte) }); ok {
 					confirmed.ConfirmPeer(packet)
@@ -141,6 +145,8 @@ type ServerOptions struct {
 	IdleTimeout time.Duration
 	// InitialAccountGrant runs after authenticated admission. Nil preserves legacy behavior.
 	InitialAccountGrant func() []string
+	// LiveAccountGrant supplies a current balanced grant; nil disables live redistribution.
+	LiveAccountGrant func() []string
 }
 
 func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byte, dial func(context.Context, string, string) (net.Conn, error), options ServerOptions) error {
@@ -291,11 +297,23 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 			}
 			closeActive()
 			var grant []string
-			if options.InitialAccountGrant != nil { grant = options.InitialAccountGrant() }
+			if options.InitialAccountGrant != nil {
+				grant = options.InitialAccountGrant()
+			}
 			if len(grant) != 0 {
 				carrier, ok := link.(*IMAPLink)
-				if !ok { if nextRelease != nil { nextRelease() }; return ErrProtocol }
-				if err = carrier.installInitialGrant(ctx, id, grant); err != nil { if nextRelease != nil { nextRelease() }; return err }
+				if !ok {
+					if nextRelease != nil {
+						nextRelease()
+					}
+					return ErrProtocol
+				}
+				if err = carrier.installInitialGrant(ctx, id, grant); err != nil {
+					if nextRelease != nil {
+						nextRelease()
+					}
+					return err
+				}
 			}
 			if err = link.Attach(ctx, id); err != nil {
 				if carrier, ok := link.(interface{ Detach(SessionID) }); ok {
@@ -318,6 +336,9 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 			}
 			// Reserve nonce zero for READY_ACK before any session worker can seal.
 			active = newSession(ctx, link, candidate.cipher, true, dial)
+			if options.LiveAccountGrant != nil && len(grant) > 0 {
+				active.startGrantUpdates(options.LiveAccountGrant)
+			}
 			activeDone = active.Done()
 			current = &candidateSession{cipher: candidate.cipher, hello: candidate.hello, reply: reply, created: candidate.created}
 			delete(pending, id)

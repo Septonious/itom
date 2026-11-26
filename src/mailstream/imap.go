@@ -56,6 +56,8 @@ type mailWork struct {
 	charge   int
 }
 type writerOperation struct {
+	scale       int // -1: park, +1: resume, 0: existing operation
+	scaleCtx    context.Context
 	cleanup     *cleanupJob
 	maintenance bool
 	enable      bool
@@ -66,61 +68,64 @@ type mailCommand struct {
 	done chan error
 }
 type mailAccountState struct {
-	interactive                         chan mailWork
-	growing                             chan struct{}
-	link                                *IMAPLink
-	config                              MailAccount
-	ctx                                 context.Context
-	cancel                              context.CancelFunc
-	mu                                  sync.Mutex
-	ready, failed                       bool
-	stopped chan struct{}
-	unallocated atomic.Bool
-	stage                               string
-	failure                             string
-	startupAttempts                     uint32
-	startupRetryAt                      time.Time
-	control, writer, data               *mailPipe
-	controlWriter                       *mailPipe
-	writerRecovering                    bool
-	writerReconnects                    uint64
-	writerRecoveryReason                string
-	writerRecoveryStop                  context.CancelFunc
-	dataDone                            chan struct{}
-	attachStop, dataStop                context.CancelFunc
-	id                                  SessionID
-	attachMu                            sync.Mutex
-	fast                                chan mailWork
-	bulk                                chan mailWork
-	spent                               int
-	queuedBytes                         int
-	controlQueued                       int
-	bulkBlocked                         bool
-	collectionPaged                     bool // provider refused or timed out a collection
-	reserved, recovered                 int
-	storageKey                          []byte
-	appended, received                  atomic.Uint64
-	dataAppendCount, controlAppendCount atomic.Uint64
-	dataMIMEBytes, controlMIMEBytes     atomic.Uint64
-	appendLatency                       atomic.Int64
+	startupStop                                               context.CancelFunc
+	startupWake                                               chan struct{}
+	interactive                                               chan mailWork
+	growing                                                   chan struct{}
+	link                                                      *IMAPLink
+	config                                                    MailAccount
+	ctx                                                       context.Context
+	cancel                                                    context.CancelFunc
+	mu                                                        sync.Mutex
+	ready, failed                                             bool
+	stopped                                                   chan struct{}
+	unallocated                                               atomic.Bool
+	scaleBlocked                                              atomic.Bool
+	stage                                                     string
+	failure                                                   string
+	startupAttempts                                           uint32
+	startupRetryAt                                            time.Time
+	control, writer, data                                     *mailPipe
+	controlWriter                                             *mailPipe
+	writerRecovering                                          bool
+	writerReconnects                                          uint64
+	writerRecoveryReason                                      string
+	writerRecoveryStop                                        context.CancelFunc
+	dataDone                                                  chan struct{}
+	attachStop, dataStop                                      context.CancelFunc
+	id                                                        SessionID
+	attachMu                                                  sync.Mutex
+	fast                                                      chan mailWork
+	bulk                                                      chan mailWork
+	spent                                                     int
+	queuedBytes                                               int
+	controlQueued                                             int
+	bulkBlocked                                               bool
+	collectionPaged                                           bool // provider refused or timed out a collection
+	reserved, recovered                                       int
+	storageKey                                                []byte
+	appended, received                                        atomic.Uint64
+	dataAppendCount, controlAppendCount                       atomic.Uint64
+	dataMIMEBytes, controlMIMEBytes                           atomic.Uint64
+	appendLatency                                             atomic.Int64
 	interactiveQueueUS, interactiveTagUS, interactiveAppendUS atomic.Int64
-	retired                             atomic.Uint64
-	segments                            map[segmentKey]*segmentRecord
-	remoteSegments                      map[segmentKey]*segmentRecord
-	routes                              map[uint32]uint32
-	routesChanged                       chan struct{}
-	routeSession                        SessionID
-	routeConsumed                       uint32
-	parking, reclaiming                 atomic.Bool
-	collectionBorrowedAt                atomic.Int64
-	collectRemote                       bool // Account.mu: alternate eligible ownership directions
-	writerOps                           chan writerOperation
-	delivery                            [replaySlots]deliverySample
-	streams                             map[uint32]bool
-	rtt, rttAt                          time.Duration
-	upBytes, downBytes                  atomic.Uint64
-	recoveryFailure                     string
-	maintenance                         retentionMaintenance
+	retired                                                   atomic.Uint64
+	segments                                                  map[segmentKey]*segmentRecord
+	remoteSegments                                            map[segmentKey]*segmentRecord
+	routes                                                    map[uint32]uint32
+	routesChanged                                             chan struct{}
+	routeSession                                              SessionID
+	routeConsumed                                             uint32
+	parking, reclaiming                                       atomic.Bool
+	collectionBorrowedAt                                      atomic.Int64
+	collectRemote                                             bool // Account.mu: alternate eligible ownership directions
+	writerOps                                                 chan writerOperation
+	delivery                                                  [replaySlots]deliverySample
+	streams                                                   map[uint32]bool
+	rtt, rttAt                                                time.Duration
+	upBytes, downBytes                                        atomic.Uint64
+	recoveryFailure                                           string
+	maintenance                                               retentionMaintenance
 }
 
 type IMAPLink struct {
@@ -136,6 +141,10 @@ type IMAPLink struct {
 	attached            SessionID
 	grantSession        SessionID
 	grant               map[string]bool
+	stableGrant         map[string]bool
+	grantChanging       bool
+	remoteActive        map[string]bool
+	remoteActiveVersion uint64
 	roundRobin          uint64
 	bulkAccount         uint64
 	bulkBytes           int
@@ -208,7 +217,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	l.retirements = make(chan Retirement, 64)
 	for _, config := range accounts {
 		life, stop := context.WithCancel(lifetime)
-		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, stopped: make(chan struct{}), interactive: make(chan mailWork, 16), fast: make(chan mailWork, 32), bulk: make(chan mailWork, 16)}
+		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, stopped: make(chan struct{}), startupWake: make(chan struct{}, 1), interactive: make(chan mailWork, 16), fast: make(chan mailWork, 32), bulk: make(chan mailWork, 16)}
 		a.segments = map[segmentKey]*segmentRecord{}
 		a.remoteSegments = map[segmentKey]*segmentRecord{}
 		a.routes = map[uint32]uint32{}
@@ -381,7 +390,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
 	var peerAllowed [20]bool
 	for i, a := range l.accounts {
-		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID])
+		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID]) && (!matched || l.remoteActive == nil || l.remoteActive[a.config.ID])
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
 	if feedback {
@@ -436,6 +445,10 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			continue
 		}
 		if a == exclude || !a.mu.TryLock() {
+			continue
+		}
+		if a.scaleBlocked.Load() {
+			a.mu.Unlock()
 			continue
 		}
 		if a.failed && !idlePass {
@@ -597,7 +610,10 @@ func (l *IMAPLink) Detach(id SessionID) {
 	}
 	l.attached = SessionID{}
 	l.grantSession = SessionID{}
+	l.stableGrant = nil
+	l.grantChanging = false
 	l.grant = nil
+	l.remoteActive, l.remoteActiveVersion = nil, 0
 	l.mu.Unlock()
 	for _, a := range l.accounts {
 		a.mu.Lock()
@@ -760,13 +776,7 @@ func (a *mailAccountState) attach(id SessionID) error {
 	// A short read still fetches immediately; this never waits to fill a batch.
 	p.fetchBatch = 32
 	a.configureSegments(p, id)
-	p.onPacket = func(packet []byte) {
-		if len(packet) > 4096 {
-			a.link.lastBulk.Store(time.Now().UnixNano())
-		}
-		a.downBytes.Add(uint64(len(packet)))
-		a.link.note("received", a.config.ID, packet, p.generation, false)
-	}
+	a.dataCallback(p)
 	a.link.mu.Lock()
 	current = a.link.attached
 	a.link.mu.Unlock()
@@ -836,10 +846,14 @@ func (a *mailAccountState) changeWriter(enable bool) error {
 func (a *mailAccountState) run() {
 	defer a.fail()
 	control, writer, err := a.startControls()
-	if err != nil {
+	if err != nil && !errors.Is(err, errAccountDormant) {
 		return
 	}
-	defer control.close()
+	defer func() {
+		if control != nil {
+			control.close()
+		}
+	}()
 	var appendWait sync.WaitGroup
 	defer func() {
 		if writer != nil {
@@ -855,27 +869,36 @@ func (a *mailAccountState) run() {
 		appendWait.Wait()
 	}()
 	a.mu.Lock()
-	a.control, a.writer, a.ready = control, writer, true
+	a.control, a.writer, a.ready = control, writer, control != nil
 	a.stage, a.failure = "serving", ""
+	if control == nil {
+		a.stage = "unallocated"
+		a.parking.Store(true)
+	}
 	a.mu.Unlock()
 	a.link.notify()
 	a.link.mu.Lock()
 	id := a.link.attached
 	a.link.mu.Unlock()
-	if id != (SessionID{}) {
+	if control != nil && id != (SessionID{}) {
 		if a.link.peerAllows(a.config.ID, id) {
 			go func() { _ = a.attach(id) }()
 		}
 	}
-	readDone := make(chan struct{})
-	go func() {
-		defer close(readDone)
-		if err := control.receive(a.ctx, a.link.incoming); err != nil {
-			a.failedStage("control_receive", err)
-			a.fail()
+	var readDone chan struct{}
+	if control != nil {
+		readDone = a.startReader(control, false)
+	}
+	defer func() {
+		a.cancel()
+		if control != nil {
+			control.close()
+		}
+		if readDone != nil {
+			<-readDone
 		}
 	}()
-	defer func() { a.cancel(); control.close(); <-readDone }()
+	var parkedControl, parkedData *readerCheckpoint
 	created := map[string]bool{a.link.controlFolder(true): true}
 	dataAppends := map[SessionID]uint32{}
 	completed := make(chan error, 4)
@@ -994,6 +1017,17 @@ func (a *mailAccountState) run() {
 		// Optional collection must also yield to a control packet held
 		// outside the queue at a MIME boundary, not just entries in fast.
 		if operation != nil && !(carry != nil && carry.control && (operation.maintenance || operation.cleanup != nil)) {
+			if operation.scale != 0 {
+				op := operation
+				operation = nil
+				if op.scale < 0 {
+					err = a.parkReaders(op.scaleCtx, &control, &readDone, &writer, completed, &inFlight, &parkedControl, &parkedData)
+				} else {
+					err = a.resumeReaders(op.scaleCtx, &control, &readDone, &writer, &parkedControl, &parkedData)
+				}
+				op.done <- err
+				continue
+			}
 			if operation.maintenance {
 				a.processMaintenance(&writer, completed, &inFlight, &appendWait)
 				operation = nil
@@ -1376,22 +1410,23 @@ func (a *mailAccountState) run() {
 }
 
 type MailSnapshot struct {
-	Reclamation    ReclamationSnapshot   `json:"reclamation"`
-	Accounts       int                   `json:"accounts"`
-	AllocatedAccounts int `json:"allocated_accounts"`
-	GrantNegotiated bool `json:"grant_negotiated"`
-	Ready          int                   `json:"ready_accounts"`
-	Writers        int                   `json:"writer_accounts"`
-	ControlWriters int                   `json:"control_writer_accounts"`
-	Data           int                   `json:"data_accounts"`
-	Failed         int                   `json:"failed_accounts"`
-	Appended       uint64                `json:"appended_messages"`
-	Retired        uint64                `json:"retired_segments"`
-	RetainedBytes  int                   `json:"retained_bytes"`
-	ReservedBytes  int                   `json:"reserved_retention_bytes"`
-	RecoveredBytes int                   `json:"recovered_retention_bytes"`
-	Durable        bool                  `json:"retention_durable"`
-	Lines          []MailAccountSnapshot `json:"lines"`
+	Reclamation       ReclamationSnapshot   `json:"reclamation"`
+	Accounts          int                   `json:"accounts"`
+	AllocatedAccounts int                   `json:"allocated_accounts"`
+	GrantChanging     bool                  `json:"grant_changing"`
+	GrantNegotiated   bool                  `json:"grant_negotiated"`
+	Ready             int                   `json:"ready_accounts"`
+	Writers           int                   `json:"writer_accounts"`
+	ControlWriters    int                   `json:"control_writer_accounts"`
+	Data              int                   `json:"data_accounts"`
+	Failed            int                   `json:"failed_accounts"`
+	Appended          uint64                `json:"appended_messages"`
+	Retired           uint64                `json:"retired_segments"`
+	RetainedBytes     int                   `json:"retained_bytes"`
+	ReservedBytes     int                   `json:"reserved_retention_bytes"`
+	RecoveredBytes    int                   `json:"recovered_retention_bytes"`
+	Durable           bool                  `json:"retention_durable"`
+	Lines             []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
 	ControlMessageReservations uint64 `json:"control_message_reservations"`
@@ -1426,7 +1461,7 @@ type MailAccountSnapshot struct {
 	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
 	PeerVerified               bool   `json:"peer_verified"`
 	Account                    string `json:"account"`
-	Allocated bool `json:"allocated"`
+	Allocated                  bool   `json:"allocated"`
 	Stage                      string `json:"stage"`
 	Failure                    string `json:"failure,omitempty"`
 	Ready                      bool   `json:"ready"`
@@ -1445,6 +1480,7 @@ type MailAccountSnapshot struct {
 	DataGeneration             uint32 `json:"data_generation"`
 	RTTMillis                  int64  `json:"rtt_ms"`
 	RTTFresh                   bool   `json:"rtt_fresh"`
+	IMAPLatencyFresh           bool   `json:"imap_latency_fresh"`
 	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
 	UploadBytes, DownloadBytes uint64
 }
@@ -1462,10 +1498,13 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 	l.mu.Lock()
 	var verified, allocated [20]bool
 	s.GrantNegotiated = l.grantSession != (SessionID{})
+	s.GrantChanging = l.grantChanging
 	for i, a := range l.accounts {
 		verified[i] = l.peers[a.config.ID]
-		allocated[i] = !s.GrantNegotiated || l.grant[a.config.ID]
-		if allocated[i] { s.AllocatedAccounts++ }
+		allocated[i] = !s.GrantNegotiated || l.stableGrant[a.config.ID]
+		if allocated[i] {
+			s.AllocatedAccounts++
+		}
 	}
 	l.mu.Unlock()
 	for i, a := range l.accounts {
@@ -1532,6 +1571,8 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.UploadBytes, line.DownloadBytes = a.upBytes.Load(), a.downBytes.Load()
 		if a.control != nil {
 			line.IMAPLatencyMillis = measuredMillis(time.Duration(a.control.latency.Load()))
+			at := a.control.latencyAt.Load()
+			line.IMAPLatencyFresh = at != 0 && time.Now().UnixNano()-at < int64(5*time.Second)
 		}
 		if p := a.data; p != nil {
 			line.DataPhase = p.phase.Load()
@@ -1550,6 +1591,10 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 }
 
 type mailPipe struct {
+	waitingRoute      bool
+	resumeRoute       func(context.Context) error
+	pauseRead         chan struct{}
+	slot              uint32
 	interactiveMu     sync.Mutex
 	interactiveTags   chan struct{}
 	interactiveWait   sync.WaitGroup
@@ -1607,7 +1652,7 @@ func openMailPipeAttempt(attempt, ctx context.Context, a MailAccount) (*mailPipe
 		raw.Close()
 		return nil, ErrAuth
 	}
-	p := &mailPipe{conn: conn, interactiveTags: make(chan struct{}, 2), wake: make(chan struct{}, 1), done: make(chan struct{})}
+	p := &mailPipe{pauseRead: make(chan struct{}), conn: conn, interactiveTags: make(chan struct{}, 2), wake: make(chan struct{}, 1), done: make(chan struct{})}
 	p.commands = make(chan mailCommand, 1)
 
 	changed := func() {
@@ -1749,7 +1794,20 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 	if p.uidControl.Load() {
 		return p.receiveControl(ctx, out)
 	}
+	if p.waitingRoute {
+		if err := p.resumeRoute(ctx); err != nil {
+			if errors.Is(err, errReaderPaused) {
+				return nil
+			}
+			return err
+		}
+	}
 	for {
+		select {
+		case <-p.pauseRead:
+			return nil
+		default:
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -1776,6 +1834,9 @@ func (p *mailPipe) receive(ctx context.Context, out chan<- []byte) error {
 				return ErrProtocol
 			}
 			if err := p.rotate(ctx); err != nil {
+				if errors.Is(err, errReaderPaused) {
+					return nil
+				}
 				return err
 			}
 			continue

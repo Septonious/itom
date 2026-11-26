@@ -52,16 +52,16 @@ type StartupProgress struct {
 }
 type ClientSnapshot struct {
 	Stats
-	ServerMessage         string
-	ServerMessageRevision uint64
-	SampledAtMS           int64
-	Lines                 []LineDiagnostic
-	Events                []string
-	TransportStreams      int
-	ConfiguredAccounts int
-	AllocatedAccounts int
+	ServerMessage          string
+	ServerMessageRevision  uint64
+	SampledAtMS            int64
+	Lines                  []LineDiagnostic
+	Events                 []string
+	TransportStreams       int
+	ConfiguredAccounts     int
+	AllocatedAccounts      int
 	AssignedSocketCapacity int
-	GrantNegotiated bool
+	GrantNegotiated        bool
 }
 type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
@@ -84,18 +84,19 @@ type ProbeSnapshot struct {
 	Failure                string
 }
 type Client struct {
-	session    *mailstream.Session
-	link       *mailstream.IMAPLink
-	profile    servercfg.Profile
-	cancel     context.CancelFunc
-	workers    sync.WaitGroup
-	mu         sync.Mutex
-	probe      ProbeSnapshot
-	events     []string
-	trace      *traceWriter
-	rates      map[string]accountRate
-	snapshotMu sync.Mutex
-	closeOnce  sync.Once
+	session     *mailstream.Session
+	link        *mailstream.IMAPLink
+	profile     servercfg.Profile
+	cancel      context.CancelFunc
+	workers     sync.WaitGroup
+	mu          sync.Mutex
+	probe       ProbeSnapshot
+	events      []string
+	trace       *traceWriter
+	rates       map[string]accountRate
+	snapshotMu  sync.Mutex
+	closeOnce   sync.Once
+	networkType string
 }
 
 func profileIdentity(p servercfg.Profile) string {
@@ -283,6 +284,8 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	recordRuntime()
 	owned = true
 	client.workers.Add(1)
+	go client.accountController(life)
+	client.workers.Add(1)
 	go func() {
 		defer client.workers.Done()
 		ticker := time.NewTicker(2 * time.Second)
@@ -409,7 +412,9 @@ func (c *Client) Snapshot() ClientSnapshot {
 		}
 		s.ActiveLines += active
 		lineCapacity := 0
-		if line.Allocated { lineCapacity = mailstream.ConnectionsPerAccount }
+		if line.Allocated {
+			lineCapacity = mailstream.ConnectionsPerAccount
+		}
 		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: lineCapacity,
 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})

@@ -235,6 +235,8 @@ func (a *mailAccountState) waitRoute(ctx context.Context, p *mailPipe, id Sessio
 		case <-p.done:
 			return 0, ErrClosed
 		case <-changed:
+		case <-p.pauseRead:
+			return 0, errReaderPaused
 		case <-tick.C:
 			stop := p.limit(10 * time.Second)
 			err := p.client.Noop().Wait()
@@ -246,8 +248,20 @@ func (a *mailAccountState) waitRoute(ctx context.Context, p *mailPipe, id Sessio
 	}
 }
 func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
-	generation, slot := uint32(0), uint32(0)
+	p.resumeRoute = func(ctx context.Context) error {
+		next, err := a.waitRoute(ctx, p, id, p.generation)
+		if err != nil {
+			return err
+		}
+		if _, err = p.selectLog(a.link.segmentFolder(id, false, next), false); err != nil {
+			return err
+		}
+		p.slot = next
+		p.waitingRoute = false
+		return nil
+	}
 	p.rotate = func(ctx context.Context) error {
+		generation, slot := p.generation, p.slot
 		if generation == ^uint32(0) {
 			return ErrCapacity
 		}
@@ -277,15 +291,8 @@ func (a *mailAccountState) configureSegments(p *mailPipe, id SessionID) {
 		p.generation = generation
 		p.generationDebug.Store(generation)
 		p.phase.Store(10)
-		next, err := a.waitRoute(ctx, p, id, generation)
-		if err != nil {
-			return err
-		}
-		slot = next
-		if _, err = p.selectLog(a.link.segmentFolder(id, false, slot), false); err != nil {
-			return err
-		}
-		return nil
+		p.waitingRoute = true
+		return p.resumeRoute(ctx)
 	}
 }
 
