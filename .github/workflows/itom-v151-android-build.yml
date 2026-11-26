@@ -1,7 +1,7 @@
-name: ITOM 1.5.1 Android integration build
+name: ITOM 1.5.1 RC2 Android and Linux build
 on:
   push:
-    branches: [codex/itom-v151-android-integration]
+    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc2-ramp]
   workflow_dispatch:
 permissions:
   contents: read
@@ -79,9 +79,9 @@ jobs:
           export PATH="$(go env GOPATH)/bin:$PATH"
           mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
           gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
-      - name: Build independently installable Android development APK
+      - name: Build development APK and release variant
         working-directory: src/android
-        run: gradle --no-daemon :domain:test :app:testDebugUnitTest :app:assembleDebug
+        run: gradle --no-daemon :domain:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:assembleDebug :app:assembleRelease
       - name: Build matching Linux AMD64 server
         working-directory: src/core
         run: |
@@ -89,11 +89,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
       - name: Stage artifacts
         run: |
-          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-routing-dev.apk
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc2-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc2-dev-release-UNSIGNED.apk
           cd dist
-          sha256sum itom-linux-amd64 itom-1.5.1-routing-dev.apk > SHA256SUMS
+          sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-routing-development
+          name: ITOM-1.5.1-RC2-development
           path: dist/
           if-no-files-found: error
