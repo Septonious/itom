@@ -1,0 +1,44 @@
+name: ITOM 1.5.1 routing reconstruction checks
+on:
+  push:
+    branches: [codex/itom-v151-routing-reconstruction]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Native routing unit and race tests
+        working-directory: src/native
+        run: go test -race -mod=readonly ./routepolicy
+      - name: Native module regression tests
+        working-directory: src/native
+        run: go test -race -mod=readonly ./...
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Recover exact RC20 method descriptors
+        run: |
+          set -o pipefail
+          python3 src/qualification/rc20_jni_inventory.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS | tee rc20-jni-descriptors.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc20-jni-descriptors
+          path: rc20-jni-descriptors.txt
+          if-no-files-found: warn

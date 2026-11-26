@@ -100,7 +100,7 @@ func (c *Client) answer(raw []byte) ([]byte, error) {
 		return nil, errors.New("DNS_NAME")
 	}
 	response := dnsmessage.Message{Header: dnsmessage.Header{ID: request.ID, Response: true, RecursionDesired: request.RecursionDesired, RecursionAvailable: true}, Questions: request.Questions}
-	if c.host.Route(name) == "BLOCK" {
+	if c.route(name, netip.Addr{}) == "BLOCK" {
 		response.RCode = dnsmessage.RCodeNameError
 		return response.Pack()
 	}

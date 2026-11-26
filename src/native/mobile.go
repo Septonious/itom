@@ -16,6 +16,7 @@ import (
 	"itom.local/core/socks"
 	"itom.local/core/tunnel"
 	"itom.local/core/wire"
+	"itom.local/mobile/routepolicy"
 	"net"
 	"net/netip"
 	"os"
@@ -43,6 +44,8 @@ type config struct {
 	Socks       socks.Endpoint
 	Diagnostics bool
 	DNSResolver *dnsSettings
+	RoutingPolicy json.RawMessage
+	RoutingDataDir string
 }
 type Client struct {
 	admin    adminClientState
@@ -65,6 +68,7 @@ type Client struct {
 	tcp      atomic.Int64
 	failure  atomic.Pointer[string]
 	traffic  trafficDiagnostics
+	routing *routepolicy.Policy
 }
 
 // New starts provider connections and SOCKS but does not take ownership of TUN.
@@ -91,8 +95,14 @@ func New(raw, dir string, host Host) (*Client, error) {
 			return nil, errors.New("UNDERLYING_DNS_INVALID")
 		}
 	}
+	var policy *routepolicy.Policy
+	if len(cfg.RoutingPolicy) != 0 || cfg.RoutingDataDir != "" {
+		var err error
+		policy, err = routepolicy.Load(string(cfg.RoutingPolicy), cfg.RoutingDataDir)
+		if err != nil { return nil, err }
+	}
 	ctx, cancel := context.WithCancel(context.Background())
-	c := &Client{ctx: ctx, cancel: cancel, host: host, slots: make(chan struct{}, 128), dnsSlots: make(chan struct{}, 64)}
+	c := &Client{ctx: ctx, cancel: cancel, host: host, routing: policy, slots: make(chan struct{}, 128), dnsSlots: make(chan struct{}, 64)}
 	progress, stopProgress := reportStartup(ctx, cancel, host, 3*len(cfg.Profile.Accounts))
 	defer stopProgress()
 	control := func(_, _ string, r syscall.RawConn) error {
@@ -233,6 +243,29 @@ func (c *Client) Attach(fd int) error {
 	c.device = d
 	c.stack = s
 	return nil
+}
+
+// ReplaceTun consumes the detached replacement descriptor on every path.
+// Build the new stack first; a failed replacement must retain the active stack.
+// Existing flows on the old stack are interrupted, but the provider session and
+// SOCKS listener are retained. The public Go signature is provisional pending DEX verification.
+func (c *Client) ReplaceTun(fd int) error {
+ c.mu.Lock()
+ if c.closed || c.device == nil || fd < 0 {
+  c.mu.Unlock()
+  closeTUNFD(fd)
+  return errors.New("TUN_STATE")
+ }
+ d,e:=fdbased.Open(strconv.Itoa(fd),1500,0)
+ if e!=nil { c.mu.Unlock();closeTUNFD(fd);return e }
+ s,e:=tun.CreateStack(&tun.Config{LinkEndpoint:d,TransportHandler:nativeHandler{c}})
+ if e!=nil {c.mu.Unlock();d.Close();return e}
+ oldStack,oldDevice:=c.stack,c.device
+ c.stack,c.device=s,d
+ c.mu.Unlock()
+ if oldStack!=nil{oldStack.Close()}
+ if oldDevice!=nil{oldDevice.Close()}
+ return nil
 }
 
 // os.File owns a native handle on Windows and a descriptor on Android/Unix.
@@ -387,7 +420,9 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 			target.Host = name
 		}
 	}
-	route := c.host.Route(target.Host)
+	originalHost := target.Host
+	ip, _ := netip.ParseAddr(originalHost)
+	route := c.route(originalHost, ip)
 	if route != "VPN" && route != "DIRECT" {
 		return nil, netip.AddrPort{}, socks.OpenError{Code: wire.ReasonPolicy}
 	}
@@ -399,9 +434,12 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 			if err != nil {
 				return nil, netip.AddrPort{}, err
 			}
+			if len(addresses) == 0 { return nil, netip.AddrPort{}, errors.New("DNS_NO_ADDRESS") }
 			target.Host = addresses[0].String()
+			if c.routing != nil { route = c.route(originalHost, addresses[0]) }
 		}
 	}
+	if c.routing != nil && c.resolver == nil && !ip.IsValid() { return nil, netip.AddrPort{}, errors.New("ROUTING_RESOLVER_MISSING") }
 	switch route {
 	case "VPN":
 		return c.pool.Open(ctx, target)
