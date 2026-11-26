@@ -42,8 +42,14 @@ func (p *bulkPacer) ready(n int, rate float64, now time.Time) bool {
 		return true
 	}
 	interval := time.Duration(float64(p.bytes) / rate * float64(time.Second))
-	if p.started.IsZero() || !now.Before(p.started.Add(interval)) {
+	if p.started.IsZero() {
 		p.started, p.bytes = now, 0
+	} else if deadline := p.started.Add(interval); !now.Before(deadline) {
+		// Keep the fractional scheduling remainder across dispatcher ticks.
+		// Starting each burst at the late wake rounds every interval upward
+		// and can systematically depress the measured delivery rate. Bound
+		// carry to one tick so idle time cannot accumulate a burst of credit.
+		p.started, p.bytes = maxTime(deadline, now.Add(-5*time.Millisecond)), 0
 	}
 	quantum := max(maxMailPlain, min(4*maxMailPlain, int(rate*0.008)))
 	if p.bytes+n <= quantum {

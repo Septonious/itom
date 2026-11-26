@@ -23,6 +23,10 @@ func (a *mailAccountState) publishInteractive() {
 
 func (a *mailAccountState) writeInteractive(work mailWork) error {
 	p := work.target
+	dequeued := time.Now()
+	if !work.queuedAt.IsZero() {
+		a.interactiveQueueUS.Store(dequeued.Sub(work.queuedAt).Microseconds())
+	}
 	p.interactiveMu.Lock()
 	defer p.interactiveMu.Unlock()
 	select {
@@ -34,6 +38,7 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 		a.dropInteractive(work)
 		return nil
 	}
+	a.interactiveTagUS.Store(time.Since(dequeued).Microseconds())
 	inFlight := false
 	defer func() {
 		if !inFlight {
@@ -91,6 +96,7 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 			}
 			return
 		}
+		a.interactiveAppendUS.Store(time.Since(started).Microseconds())
 		a.controlAppended(result, len(encoded))
 		a.appendCompleted(true, len(encoded), started)
 		a.upBytes.Add(uint64(len(work.body)))

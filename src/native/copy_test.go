@@ -67,7 +67,7 @@ func TestCandidateTransportVersion(t *testing.T) {
 	// The prior assertion required the stable "-final" suffix even in a
 	// development RC. Guard the complete candidate revision instead, so a
 	// mislabeled stable or older binary cannot pass qualification.
-	if got := Version(); got != "itom-1-5-1-rc2-dev" || strings.HasSuffix(got, "-final") {
+	if got := Version(); got != "itom-1-5-1-rc3-dev" || strings.HasSuffix(got, "-final") {
 		t.Fatalf("expected exact 1.5.1 RC1 development identity; got %q", got)
 	}
 }

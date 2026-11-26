@@ -1,7 +1,7 @@
 name: ITOM 1.5.1 native qualification screen
 on:
   push:
-    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration]
+    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration, codex/itom-v151-rc3]
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,6 +28,9 @@ jobs:
       - name: Focused dispatcher regressions
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
+      - name: RC3 pacing, maintenance and allocation planner regression tests
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC3|TestBulkControlUrgency|TestPacingOnly|TestMeasuredBulkBurst|TestInteractiveReceiptsBound' .
       - name: Verify qualification module dependency closure
         working-directory: src/qualification
         run: go list -mod=readonly -deps ./provider ./worker > /dev/null

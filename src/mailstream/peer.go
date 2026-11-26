@@ -111,6 +111,7 @@ func (l *IMAPLink) sendOnAccount(ctx context.Context, id SessionID, account stri
 		if a.controlWriter != nil && a.interactive != nil && !a.parking.Load() && !a.writerRecovering {
 			queue = a.interactive
 			work.target = a.controlWriter
+			work.queuedAt = time.Now()
 		}
 		select {
 		case queue <- work:

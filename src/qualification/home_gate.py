@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 
 IDS = [f"a{i:02}" for i in range(1, 9)]
 BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
-REVISION = "itom-1-5-1-rc2-dev"
+REVISION = "itom-1-5-1-rc3-dev"
 
 
 def ramp_summary(rates, seconds):

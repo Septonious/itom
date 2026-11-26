@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.itom.domain.*
 
-@Composable fun RulesScreen(policy: RoutingPolicy, appPolicy: AppPolicy, busy: Boolean, apps: () -> Unit, updateOptions: (RoutingPolicy) -> Unit = {}, apply: (RouteAction, List<String>) -> Unit) {
+@Composable fun RulesScreen(policy: RoutingPolicy, appPolicy: AppPolicy, busy: Boolean, apps: () -> Unit, updateOptions: (RoutingPolicy) -> Unit = {}, updateApps: (Boolean) -> Unit = {}, apply: (RouteAction, List<String>) -> Unit) {
     var selected by rememberSaveable { mutableStateOf(RouteAction.VPN) }
     var vpn by rememberSaveable { mutableStateOf(policy.rules.VPN.joinToString("\n")) }
     var block by rememberSaveable { mutableStateOf(policy.rules.Block.joinToString("\n")) }
@@ -31,25 +31,32 @@ import org.itom.domain.*
     val scope = rememberCoroutineScope()
     LaunchedEffect(policy) { result = "" }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        SmallNote("Block → VPN → Direct → GeoSite/GeoIP → VPN. First match wins.")
+        SmallNote("Applies to all profiles. Changes apply on the next connection.")
         InfoCard(Modifier.fillMaxWidth()) {
-            Text("Automatic routing", style = MaterialTheme.typography.titleMedium)
-            RoutingToggle("Russian websites", policy.ruSitesDirect, !busy) { updateOptions(policy.copy(ruSitesDirect = it)) }
+            Text("Direct", style = MaterialTheme.typography.titleMedium)
+            RoutingToggle("Russian sites", policy.ruSitesDirect, !busy) { updateOptions(policy.copy(ruSitesDirect = it)) }
+            SmallNote("GeoSite and .ru or .рф domains")
             RoutingToggle("Russian IP addresses", policy.ruIpsDirect, !busy) { updateOptions(policy.copy(ruIpsDirect = it)) }
+            SmallNote("IPv4 and IPv6 ranges in GeoIP")
+            RoutingToggle("Russian applications", appPolicy.autoRussian, !busy) { updateApps(it) }
+            SmallNote("Automatically bypass the VPN for recognized apps")
+        }
+        NavigationRow(Glyph.APPS, "Applications", "${appPolicy.directPackages.size} direct · ${appPolicy.vpnPackages.size} VPN", apps)
+        InfoCard(Modifier.fillMaxWidth()) {
             Text("Blocking", style = MaterialTheme.typography.titleMedium)
             RoutingToggle("Ads and trackers", policy.blockAdsTrackers, !busy) { updateOptions(policy.copy(blockAdsTrackers = it)) }
-            RoutingToggle("Malicious domains", policy.blockMalware, !busy) { updateOptions(policy.copy(blockMalware = it)) }
+            SmallNote("GeoSite and HaGeZi blocklists")
+            RoutingToggle("Malicious sites", policy.blockMalware, !busy) { updateOptions(policy.copy(blockMalware = it)) }
+            SmallNote("HaGeZi threat intelligence list")
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        InfoCard(Modifier.fillMaxWidth()) {
+            Text("Custom rules", style = MaterialTheme.typography.titleMedium)
+            SmallNote("Block takes priority, then VPN, then Direct. Unmatched traffic uses VPN.")
             listOf(RouteAction.BLOCK, RouteAction.VPN, RouteAction.DIRECT).forEach { action ->
                 val active = selected == action
-                InfoCard(Modifier.weight(1f).semantics { this.selected = active }, accent = if (active) routeColor(action) else null,
-                    contentPadding = 12.dp, onClick = { selected = action }) {
-                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        RouteIcon(action, Modifier.size(25.dp))
-                        Text(routeName(action), style = MaterialTheme.typography.titleMedium, color = if (active) routeColor(action) else Ink)
-                        Text("${policy.rules.entries(action).size} rules", style = MaterialTheme.typography.labelSmall, color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                OutlinedButton(onClick = { selected = action }, modifier = Modifier.fillMaxWidth().semantics { this.selected = active }) {
+                    Text(routeName(action), color = routeColor(action), modifier = Modifier.weight(1f))
+                    Text("${policy.rules.entries(action).size} rules", color = Muted)
                 }
             }
         }
@@ -63,9 +70,8 @@ import org.itom.domain.*
             SmallNote("Domain or IP, domain:, full:, ip:, geosite: and geoip:ru. One rule per line.")
             GradientButton("Apply ${routeName(selected)}", { apply(selected, text.lines()) }, Modifier.fillMaxWidth(), enabled = !busy, glyph = Glyph.CHECK)
         }
-        NavigationRow(Glyph.APPS, "Applications", "Direct: ${appPolicy.directPackages.size} · VPN: ${appPolicy.vpnPackages.size}", apps)
         InfoCard(Modifier.fillMaxWidth()) {
-            Text("Address check", style = MaterialTheme.typography.titleMedium)
+            Text("Check a destination", style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = test, onValueChange = { test = it; result = "" }, label = { Text("Domain or IP") }, singleLine = true,
                     shape = MaterialTheme.shapes.medium, modifier = Modifier.weight(1f))
@@ -90,6 +96,6 @@ import org.itom.domain.*
 @Composable private fun RoutingToggle(name: String, checked: Boolean, enabled: Boolean, change: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Switch(checked = checked, enabled = enabled, onCheckedChange = change)
+        ItomSwitch(checked = checked, enabled = enabled, onCheckedChange = change)
     }
 }

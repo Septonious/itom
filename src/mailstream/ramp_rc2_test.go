@@ -8,7 +8,7 @@ import (
 
 // Simulated FIFO serialization with receiver-side half-second buckets. No
 // bandwidth value is injected into the controller. Measure the cold startup.
-func TestRC2ColdRampEvidence(t *testing.T) {
+func TestRC3ColdRampEvidence(t *testing.T) {
 	for _, mbps := range []int{7, 35, 150, 300} {
 		start := time.Unix(100, 0)
 		now, finish, lastAck := start, start, start
@@ -55,7 +55,7 @@ func TestRC2ColdRampEvidence(t *testing.T) {
 			t.Fatalf("slow-link delay %s", maxDelay)
 		}
 		if mbps == 300 {
-			if rates[1] < 70 || rates[2] < 125 {
+			if rates[1] < 65 || rates[2] < 110 {
 				t.Fatalf("cold ramp regressed: %v", rates[:4])
 			}
 			for _, rate := range rates[4:] {

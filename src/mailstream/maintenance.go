@@ -641,6 +641,14 @@ func (a *mailAccountState) deferMaintenanceLocked() bool {
 	if a.historyRequiredLocked() && !a.maintenance.recoveryReady || max(a.maintenance.controlBytes, a.maintenance.incomingBytes) >= controlCollectionBytes || a.controlMessagePressureLocked() {
 		return false
 	}
+	// A moderately large, provably consumed tail must not wait indefinitely
+	// for a quiet interval. Keep the hard caps and audited UID fences unchanged.
+	// Give DATA collection priority for small tails, and let the existing
+	// shared mutation lease bound concurrent reclamation.
+	m := &a.maintenance
+	if a.controlMessageReservationsLocked() >= 1024 || len(m.reads) >= 1024 {
+		return false
+	}
 	last := a.link.lastBulk.Load()
 	return last != 0 && time.Since(time.Unix(0, last)) < 300*time.Millisecond
 }

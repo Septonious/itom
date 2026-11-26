@@ -33,7 +33,6 @@ type deliveryWindow struct {
 	saturatedBytes          int
 	controlRTT, controlBase time.Duration
 	controlSlowUntil        time.Time
-	controlAt               time.Time
 	horizon                 time.Duration
 	adaptive                bool
 }
@@ -68,7 +67,6 @@ func (w *deliveryWindow) deliveryHorizon(now time.Time) time.Duration {
 func (w *deliveryWindow) observeInteractive(sample time.Duration, now time.Time) {
 	if sample > 0 {
 		w.controlRTT = sample
-		w.controlAt = now
 		if w.controlBase == 0 || sample < w.controlBase {
 			w.controlBase = sample
 		}
@@ -167,15 +165,7 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	lowQueue := w.bulkRTT <= w.base+250*time.Millisecond && !now.Before(w.controlSlowUntil)
 	if w.limited {
 		if lowQueue {
-			growth := n
-			// A short, independently measured control RTT and a clean bulk
-			// delivery path permit a bounded faster cold start. Never use
-			// an empty IMAP command as a bandwidth estimate. Beyond 2 MiB
-			// return to the existing byte-clocked controller.
-			if w.adaptive && w.controlRTT > 0 && w.controlRTT <= 200*time.Millisecond && now.Sub(w.controlAt) <= time.Second && w.bulkRTT <= 350*time.Millisecond && w.limit < 2<<20 {
-				growth += min(n/2, max(0, (2<<20)-w.limit-n))
-			}
-			w.limit = min(maxPendingBytes, w.limit+growth)
+			w.limit = min(maxPendingBytes, w.limit+n)
 		} else if ceiling := int(w.rate * w.deliveryHorizon(now).Seconds()); ceiling > w.allowance() {
 			// Spend already measured headroom on the ACK clock rather than
 			// pausing another estimator interval on every slow receipt round.

@@ -40,7 +40,7 @@ import org.itom.domain.*
         }
         Row(Modifier.fillMaxWidth()) {
             AccountMetric("Streams using account", line.field("TCPStreams") ?: "—", Ink, Modifier.weight(1f))
-            AccountMetric("Active lanes", "${line.field("ActiveLines") ?: "—"}/${line.field("TotalLines") ?: "—"}", color, Modifier.weight(1f))
+            AccountMetric("IMAP sockets", "${line.field("ActiveLines") ?: "—"}/${line.field("TotalLines") ?: "—"}", color, Modifier.weight(1f))
         }
     }
 }

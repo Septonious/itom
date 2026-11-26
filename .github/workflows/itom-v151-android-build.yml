@@ -1,7 +1,7 @@
-name: ITOM 1.5.1 RC2 Android and Linux build
+name: ITOM 1.5.1 RC3 Android and Linux build
 on:
   push:
-    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc2-ramp]
+    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc3]
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,7 +30,7 @@ jobs:
         run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
       - name: Full native tests including real routing datasets
         working-directory: src/native
-        run: ITOM_RC20_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly ./...
+        run: ITOM_RC30_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly ./...
   build:
     needs: native-validation
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
           sparse-checkout: testing/rc20/downloads
           fetch-depth: 1
           persist-credentials: false
-      - name: Verify and bundle actual RC20 routing data
+      - name: Verify and bundle actual RC30 routing data
         run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
       - uses: actions/setup-go@v5
         with:
@@ -89,12 +89,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
       - name: Stage artifacts
         run: |
-          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc2-dev-testing.apk
-          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc2-dev-release-UNSIGNED.apk
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc3-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc3-dev-release-UNSIGNED.apk
           cd dist
           sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-RC2-development
+          name: ITOM-1.5.1-RC3-development
           path: dist/
           if-no-files-found: error

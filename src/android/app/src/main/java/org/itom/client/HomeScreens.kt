@@ -212,21 +212,14 @@ import kotlin.math.sin
     val diagnostics = remember(session.transport) { TransportDiagnostics.parse(session.transport) }
     val configured = diagnostics.root.field("ConfiguredAccounts")?.toIntOrNull()?.takeIf { it > 0 }
         ?: profile?.accounts?.count { it.enabled } ?: 0
-    val allocated = diagnostics.root.field("AllocatedAccounts")?.toIntOrNull()?.coerceIn(0, configured)
-        ?: if (session.phase == Phase.CONNECTED) configured else 0
+    val allocated = diagnostics.root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { it in 0..configured }
+    val activeAccounts = diagnostics.lines.count { it.field("Ready") == "true" }
     val capacity = diagnostics.assignedSocketCapacity(
         configured, session.metrics.totalLines.takeIf { it > 0 } ?: profile?.totalLines ?: 0)
-    val mode = diagnostics.root.field("AccountPoolMode")?.takeIf { it.isNotBlank() }
-        ?: if (allocated == configured) "Normal" else "Shared"
     val live = session.metrics.activeLines
     val sockets = if (capacity == 0) "0/0" else "$live/$capacity"
-    val state = when {
-        allocated == 0 && session.phase == Phase.CONNECTING -> "Waiting for account allocation"
-        allocated == 0 -> "No allocated accounts"
-        allocated >= configured -> "$allocated accounts · Normal"
-        live > capacity -> "$allocated/$configured accounts · Draining"
-        else -> "$allocated/$configured accounts · $mode"
-    }
+    val state = if (allocated == null) "$activeAccounts/$configured active accounts · allocation not reported"
+        else "$activeAccounts/$allocated/$configured active / allocated / configured"
     InfoCard(Modifier.fillMaxWidth(), contentPadding = if (compact) 10.dp else 14.dp) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Vital("RTT", Presentation.rtt(session.metrics.rttMs), rttColor(session.metrics.rttMs, config.settings.rttThresholds), Modifier.weight(1f))
@@ -236,7 +229,7 @@ import kotlin.math.sin
             Vital("IMAP sockets", sockets, if (live > capacity) Yellow else Ink, Modifier.weight(1.3f))
         }
         Text(state, modifier = Modifier.fillMaxWidth().padding(top = 5.dp), textAlign = TextAlign.Center,
-            color = Muted, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            color = Muted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

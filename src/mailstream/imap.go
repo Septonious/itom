@@ -47,6 +47,7 @@ const maximumRetentionBudget = prototypePhysicalBudget + maintenanceReserve
 const maxMailPlain = 256 << 10
 
 type mailWork struct {
+	queuedAt time.Time
 	target   *mailPipe
 	body     []byte
 	control  bool
@@ -100,6 +101,7 @@ type mailAccountState struct {
 	dataAppendCount, controlAppendCount atomic.Uint64
 	dataMIMEBytes, controlMIMEBytes     atomic.Uint64
 	appendLatency                       atomic.Int64
+	interactiveQueueUS, interactiveTagUS, interactiveAppendUS atomic.Int64
 	retired                             atomic.Uint64
 	segments                            map[segmentKey]*segmentRecord
 	remoteSegments                      map[segmentKey]*segmentRecord
@@ -461,6 +463,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			q = a.fast
 			if independent {
 				work.target = a.controlWriter
+				work.queuedAt = time.Now()
 				q = a.interactive
 			}
 		}
@@ -1405,6 +1408,9 @@ type MailAccountSnapshot struct {
 	DataMIMEBytes              uint64 `json:"data_mime_bytes"`
 	ControlMIMEBytes           uint64 `json:"control_mime_bytes"`
 	AppendCompletionMS         int64  `json:"append_completion_ms"`
+	InteractiveQueueUS         int64  `json:"interactive_queue_last_us"`
+	InteractiveTagUS           int64  `json:"interactive_tag_wait_last_us"`
+	InteractiveAppendUS        int64  `json:"interactive_append_last_us"`
 	QueuedMIMEBytes            int    `json:"queued_mime_bytes"`
 	StartupAttempts            uint32 `json:"startup_attempts"`
 	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
@@ -1475,6 +1481,9 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
 		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()
 		line.AppendCompletionMS = time.Duration(a.appendLatency.Load()).Milliseconds()
+		line.InteractiveQueueUS = a.interactiveQueueUS.Load()
+		line.InteractiveTagUS = a.interactiveTagUS.Load()
+		line.InteractiveAppendUS = a.interactiveAppendUS.Load()
 		line.QueuedMIMEBytes = a.queuedBytes
 		line.StartupAttempts = a.startupAttempts
 		if !a.startupRetryAt.IsZero() {
