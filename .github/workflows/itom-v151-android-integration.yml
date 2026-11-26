@@ -1,0 +1,82 @@
+name: Recover Android integration source and inspect RC20 calls
+on:
+  push:
+    branches: [codex/itom-v151-routing-reconstruction]
+    paths:
+      - .github/workflows/itom-v151-android-integration.yml
+      - src/qualification/recover_android_source.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            src
+            .github
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          ref: 5a6bf9532c872b868ef8365da84f43f7a25cc501
+          path: historical
+          sparse-checkout: testing/v130-rc3/downloads
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify and extract Android source
+        run: python3 src/qualification/recover_android_source.py historical/testing/v130-rc3/downloads src/android
+      - name: Publish isolated source integration branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c codex/itom-v151-android-integration
+          git add -- src/android
+          git diff --cached --stat
+          git commit -m "Recover verified historical Android source for 1.5.1 integration"
+          git push origin HEAD:refs/heads/codex/itom-v151-android-integration
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-android-source
+          path: src/android/
+  rc20-call-sites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify RC20 APK and signatures
+        run: python3 src/qualification/rc20_jni_inventory.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS
+      - name: Disassemble DEX call sites
+        shell: bash
+        run: |
+          set -euo pipefail
+          tool="$(find "$ANDROID_HOME/build-tools" -type f -name dexdump | sort -V | tail -n 1)"
+          test -x "$tool"
+          mkdir -p "$RUNNER_TEMP/dex"
+          unzip -j rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk 'classes*.dex' -d "$RUNNER_TEMP/dex"
+          for dex in "$RUNNER_TEMP"/dex/classes*.dex; do
+            "$tool" -d "$dex" | grep -E -B 65 -A 25 'invoke-.*(checkRouting|validateRoutingData|validateRoutingPolicy|replaceTun|rebindNetwork|setNetworkType)' >> rc20-calls.txt || test "${PIPESTATUS[1]}" = 1
+          done
+          test -s rc20-calls.txt
+          wc -l rc20-calls.txt
+          grep -E -B 12 -A 5 'invoke-.*(checkRouting|validateRoutingData|validateRoutingPolicy|replaceTun|rebindNetwork|setNetworkType)' rc20-calls.txt | head -n 280 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc20-call-sites
+          path: rc20-calls.txt
+          if-no-files-found: error
