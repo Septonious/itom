@@ -41,3 +41,9 @@ func TestSingleRussianCategory(t *testing.T){
  if p.Decide("local.example",netip.Addr{})!=Direct{t.Fatal("category-ru alias not used")}
  if _,e=Load("{\"direct\":[\"geosite:ru\"]}",dir);e==nil{t.Fatal("explicit missing category accepted")}
 }
+
+func TestLegacyBareRulesAndDetailedResult(t *testing.T){
+ p,e:=Load("{\"direct\":[\".ru\",\"пример.рф\",\"192.0.2.0/24\",\"2001:db8::1\"],\"proxy\":[\"full:forced.ru\"]}",data(t));if e!=nil{t.Fatal(e)}
+ for _,h:=range []string{"news.ru","xn--e1afmkfd.xn--p1ai","192.0.2.10","2001:db8::1"}{d:=p.DecideDetailed(h,netip.Addr{});if d.Action!=Direct||d.Matched==""{t.Errorf("%s: %+v",h,d)}}
+ if d:=p.DecideDetailed("forced.ru",netip.Addr{});d.Action!=VPN||d.Matched!="full:forced.ru"{t.Fatal(d)}
+}

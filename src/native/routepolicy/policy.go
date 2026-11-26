@@ -15,6 +15,7 @@ import (
  "regexp"
  "strings"
  "unicode"
+ "golang.org/x/net/idna"
 )
 
 type Action string
@@ -42,6 +43,11 @@ type domains struct {
 }
 func newDomains() *domains { return &domains{full:map[string]struct{}{},suffix:map[string]struct{}{}} }
 func normalize(s string) string { return strings.ToLower(strings.TrimSuffix(strings.TrimSpace(s),".")) }
+func canonicalHost(s string) string {
+ s=normalize(strings.TrimPrefix(s,"."))
+ if ascii,err:=idna.Lookup.ToASCII(s);err==nil{return ascii}
+ return ""
+}
 func validDomain(s string) bool {
  if len(s)==0 || len(s)>253 { return false }
  for _,label:=range strings.Split(s,".") {
@@ -87,15 +93,15 @@ func parseRules(lines []string) ([]rule,error) {
   line=strings.TrimSpace(line)
   if line==""||strings.HasPrefix(line,"#"){continue}
   if len(line)>1024{return nil,errors.New("ROUTING_RULE_SIZE")}
-  k,v,ok:=strings.Cut(line,":");if !ok{k,v="domain",line}
+  k,v,ok:=strings.Cut(line,":");if ip,e:=netip.ParseAddr(line);e==nil&&ip.IsValid(){k,v,ok="ip",line,true}else if p,e:=netip.ParsePrefix(line);e==nil&&p.IsValid(){k,v,ok="ip",line,true};if !ok{k,v="domain",line}
   k=strings.ToLower(strings.TrimSpace(k));v=normalize(v)
   r:=rule{kind:k,value:v}
   switch k {
   case "domain","full":
-   if !validDomain(v){return nil,fmt.Errorf("ROUTING_DOMAIN: %q",line)}
+   r.value=canonicalHost(v);if !validDomain(r.value){return nil,fmt.Errorf("ROUTING_DOMAIN: %q",line)}
   case "ip":
    if ip,e:=netip.ParseAddr(v);e==nil{r.prefix=netip.PrefixFrom(ip.Unmap(),ip.Unmap().BitLen())}else{
-    p,e:=netip.ParsePrefix(v);if e!=nil||p.Addr().Is4In6(){return nil,fmt.Errorf("ROUTING_IP: %q",line)};r.prefix=p.Masked()
+    p,e:=netip.ParsePrefix(v);if e!=nil{return nil,fmt.Errorf("ROUTING_IP: %q",line)};if p.Addr().Is4In6(){if p.Bits()<96{return nil,fmt.Errorf("ROUTING_IP: %q",line)};p=netip.PrefixFrom(p.Addr().Unmap(),p.Bits()-96)};r.prefix=p.Masked()
    }
   case "geosite":
    if v==""{return nil,errors.New("ROUTING_GEOSITE_EMPTY")}
@@ -124,18 +130,32 @@ func (p *Policy) matches(rs []rule,h string,ip netip.Addr) bool {
  }
  return false
 }
-// Decide considers the original domain and resolved address together, so an
-// explicit IP block overrides a domain VPN/direct rule. Unknown traffic uses VPN.
-func (p *Policy) Decide(host string, ip netip.Addr) Action {
+// Decision is the stable RC20 routing-check JSON contract. Native dispatch
+// uses Action only; matched/reason are human-readable local rule evidence.
+type Decision struct {
+ Action Action
+ Matched string
+ Rule string
+ Reason string
+}
+func decision(action Action, matched, reason string) Decision {return Decision{action,matched,matched,reason}}
+func (p *Policy) firstMatch(rs []rule,h string,ip netip.Addr) string {
+ for _,r:=range rs {if p.matches([]rule{r},h,ip){return r.kind+":"+r.value}}
+ return ""
+}
+func (p *Policy) Decide(host string,ip netip.Addr) Action {return p.DecideDetailed(host,ip).Action}
+func (p *Policy) DecideDetailed(host string, ip netip.Addr) Decision {
  h:=normalize(host)
- if literal,e:=netip.ParseAddr(h);e==nil{if !ip.IsValid(){ip=literal.Unmap()};h=""}
- if p.matches(p.block,h,ip) || (p.cfg.Ads&&(p.ads.match(h)||p.sites["category-ads-all"].match(h))) || (p.cfg.Malware&&p.malware.match(h)){return Block}
- if h=="github.com"||h=="cdn.jsdelivr.net"||suffixMatch(h,"githubusercontent.com"){return VPN}
- if p.matches(p.vpn,h,ip){return VPN}
- if p.matches(p.direct,h,ip){return Direct}
- if p.cfg.RUSites&&(p.sites["ru"].match(h)||p.sites["category-ru"].match(h)||strings.HasSuffix(h,".ru")||strings.HasSuffix(h,".рф")||strings.HasSuffix(h,".xn--p1ai")){return Direct}
- if p.cfg.RUIPs&&p.russianIP(ip){return Direct}
- return VPN
+ if literal,e:=netip.ParseAddr(h);e==nil{if !ip.IsValid(){ip=literal.Unmap()};h=""}else{h=canonicalHost(h)}
+ if m:=p.firstMatch(p.block,h,ip);m!=""{return decision(Block,m,"custom block")}
+ if p.cfg.Ads&&(p.ads.match(h)||p.sites["category-ads-all"].match(h)){return decision(Block,"ads-trackers","advertising or tracking")}
+ if p.cfg.Malware&&p.malware.match(h){return decision(Block,"malware","malware list")}
+ if h=="github.com"||h=="cdn.jsdelivr.net"||suffixMatch(h,"githubusercontent.com"){return decision(VPN,"geodata-update","dataset update host")}
+ if m:=p.firstMatch(p.vpn,h,ip);m!=""{return decision(VPN,m,"custom VPN")}
+ if m:=p.firstMatch(p.direct,h,ip);m!=""{return decision(Direct,m,"custom direct")}
+ if p.cfg.RUSites&&(p.sites["ru"].match(h)||p.sites["category-ru"].match(h)||strings.HasSuffix(h,".ru")||strings.HasSuffix(h,".xn--p1ai")){return decision(Direct,"geosite:category-ru","Russian domain")}
+ if p.cfg.RUIPs&&p.russianIP(ip){return decision(Direct,"geoip:ru","Russian IP")}
+ return decision(VPN,"","default rule")
 }
 func readData(dir,name string) ([]byte,error) {
  f,e:=os.Open(filepath.Join(dir,name));if e!=nil{return nil,e};defer f.Close()

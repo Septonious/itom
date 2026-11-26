@@ -189,7 +189,7 @@ fun errorText(code: String) = when (code) {
                                 if (graph.backend.snapshot.value.profileId == id) graph.backend.stop()
                             } }, onImport = { page = Page.IMPORT },
                             onMessage = ::message)
-                        Page.RULES -> RulesScreen(config.settings.routing, config.settings.appRouting, busy, { page = Page.APPS }) { action, entries -> perform { graph.vault.rules(action, entries); restartIfActive(); message("${routeName(action)} rules saved.") } }
+                        Page.RULES -> RulesScreen(config.settings.routing, config.settings.appRouting, busy, { page = Page.APPS }, { policy -> perform { graph.vault.routingOptions(policy); restartIfActive() } }) { action, entries -> perform { graph.vault.rules(action, entries); restartIfActive(); message("${routeName(action)} rules saved.") } }
                         Page.APPS -> AppsScreen(config.settings.appRouting, graph.catalog, busy, ::back) { policy, _ -> perform { graph.vault.apps(policy, graph.catalog.load()); restartIfActive(); page = Page.RULES } }
                         Page.IMPORT -> ImportScreen(busy, ::message) { invitation -> perform { graph.vault.importInvitation(invitation); restartIfActive(); page = Page.PROFILES } }
                         Page.EDIT_PROFILE -> {

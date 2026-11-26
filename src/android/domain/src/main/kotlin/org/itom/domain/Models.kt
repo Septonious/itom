@@ -48,8 +48,13 @@ data class AddressRules(val VPN: List<String> = emptyList(), val Block: List<Str
 @Serializable
 data class RoutingPolicy(
     @SerialName("schema_version") val schemaVersion: Int = 1, val scope: String = "global",
+    // Retained for old vault schema compatibility. Native routing enforces block-first order.
     val priority: List<RouteAction> = listOf(RouteAction.VPN, RouteAction.BLOCK, RouteAction.DIRECT),
     @SerialName("default_action") val defaultAction: RouteAction = RouteAction.VPN, val rules: AddressRules = AddressRules(),
+    @SerialName("ru_sites_direct") val ruSitesDirect: Boolean = true,
+    @SerialName("ru_ips_direct") val ruIpsDirect: Boolean = true,
+    @SerialName("block_ads_trackers") val blockAdsTrackers: Boolean = true,
+    @SerialName("block_malware") val blockMalware: Boolean = true,
 )
 @Serializable
 enum class AppMode { @SerialName("all") ALL, @SerialName("exclude_selected") EXCLUDE_SELECTED, @SerialName("include_selected") INCLUDE_SELECTED }

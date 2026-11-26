@@ -21,6 +21,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.itom.client.*
 import org.itom.domain.*
+import org.itom.client.NativeRouting
 import org.itom.nativecore.mobile.Client
 import org.itom.nativecore.mobile.Host
 import org.itom.nativecore.mobile.Mobile
@@ -161,8 +162,8 @@ class ItomVpnService : VpnService() {
                     attachedNetworkHandle.compareAndSet(attached, chosen!!.networkHandle)) {
                     underlyingWasLost.set(false)
                     networkEvent("transport_soft_rebind_${kind?.name?.lowercase() ?: "other"}", chosen)
-                    // A socket is network-bound, but the Noise session and TUN
-                    // need not be. Reopen only the physical IMAP connections.
+                    // Keep the TUN and foreground service, replace the provider generation.
+                    // Existing tunneled TCP sessions may need to reconnect.
                     traceClient.get()?.rebindNetwork()
                     lastSoftRebindAt.set(SystemClock.elapsedRealtime())
                     softRebindAttempts.incrementAndGet()
@@ -204,7 +205,9 @@ class ItomVpnService : VpnService() {
             val dns = underlyingDNS()
             val config = backend.vault.runtime(profileId, revision, dns)
             diagnosticsEnabled = config.settings.diagnosticsEnabled
-            val router = Router(config.settings.routing)
+            val routingData = NativeRouting.prepare(this@ItomVpnService)
+            val runtimeJson = JSONObject(config.json).put("RoutingPolicy", NativeRouting.json(config.settings.routing))
+                .put("RoutingDataDir", routingData.absolutePath).toString()
             val host = object : Host {
                 override fun startup(snapshot: String): Boolean = callbacks.call("UNDERLYING_NETWORK_FAILED", false) {
                     if (!sessionJob.isActive) return@call false
@@ -231,13 +234,11 @@ class ItomVpnService : VpnService() {
                         true
                     } catch (_: Exception) { false }
                 }
-                override fun route(host: String): String = try {
-                    val decision = if (Addresses.ip(host) != null) router.decide(address = host) else router.decide(host = host)
-                    decision.action.name
-                } catch (_: Exception) { "BLOCK" }
+                // Native policy is authoritative. A missing policy must fail closed.
+                override fun route(host: String): String = "BLOCK"
             }
             val directory = File(noBackupFilesDir, "transport/$profileId").apply { mkdirs() }
-            native = Mobile.new_(config.json, directory.absolutePath, host)
+            native = Mobile.new_(runtimeJson, directory.absolutePath, host)
             val core = requireNotNull(native)
             traceClient.set(core)
             backend.adminClient = core
@@ -280,7 +281,7 @@ class ItomVpnService : VpnService() {
                 // The physical network, not the VPN network, decides whether
                 // severe-mobile account confinement is eligible.
                 val physical = selectedUnderlying.get()
-                core.setMobileNetwork(kindOf(physical?.let { capabilities[it] }) == NetworkKind.MOBILE)
+                core.setNetworkType(when (kindOf(physical?.let { capabilities[it] })) { NetworkKind.WIFI -> "wifi"; NetworkKind.MOBILE -> "cellular"; else -> "unknown" })
                 val snapshot = core.snapshot()
                 backend.adminState.value = core.adminSnapshot()
                 if (diagnosticsEnabled && backend.snapshot.value.generation == g) backend.diagnosticState.value = core.diagnostics()
@@ -289,7 +290,8 @@ class ItomVpnService : VpnService() {
                 // A long interval with no Wi-Fi or mobile network is not a
                 // terminal VPN failure. Preserve the foreground session and
                 // its network callbacks until a usable network returns.
-                if (underlyingAvailable) demand(stats.optString("Error").isEmpty(), "TRANSPORT_FAILED")
+                val rebinding = stats.optBoolean("NetworkRebinding", false)
+                if (underlyingAvailable && !rebinding) demand(stats.optString("Error").isEmpty(), "TRANSPORT_FAILED")
                 val active = if (underlyingAvailable) stats.getInt("ActiveLines") else 0
                 if (active > 0) {
                     lastHealthy = now
@@ -308,7 +310,7 @@ class ItomVpnService : VpnService() {
                     stats.optInt("RTTMillis").takeIf { active > 0 && it > 0 },
                     stats.getInt("TCP"), active, stats.getInt("TotalLines")), stats.toString(), now)
                 previous = now; previousDown = down; previousUp = up
-                if (now - lastTransportHealthCheck >= 5000 && !restartForNetwork.get()) {
+                if (!rebinding && now - lastTransportHealthCheck >= 5000 && !restartForNetwork.get()) {
                     lastTransportHealthCheck = now
                     // DEV7: authenticated application acknowledgements and DATA
                     // delivery determine progress. Heartbeats and ready sockets
@@ -344,8 +346,8 @@ class ItomVpnService : VpnService() {
                                 networkEvent("transport_no_delivery_last_resort", selectedUnderlying.get())
                                 if (restartForNetwork.compareAndSet(false, true)) sessionJob.cancel()
                             }
-                            RecoveryStep.ACCOUNT -> if (now - lastSoftRebindAt.get() >= 15_000 &&
-                                core.recoverStalledAccount()) {
+                            RecoveryStep.ACCOUNT -> if (now - lastSoftRebindAt.get() >= 15_000) {
+                                core.rebindNetwork()
                                 networkEvent("transport_no_delivery_account_rebind", selectedUnderlying.get())
                                 lastSoftRebindAt.set(now)
                                 softRebindAttempts.incrementAndGet()

@@ -2,6 +2,7 @@ package mobile
 
 import (
  "errors"
+ "encoding/json"
  "net/netip"
  "strings"
  "itom.local/mobile/routepolicy"
@@ -30,7 +31,9 @@ func CheckRouting(first,second,host,address string) (string,error) {
  var ip netip.Addr
  if address!=""{ip,err=netip.ParseAddr(address);if err!=nil{return "",errors.New("ROUTING_TARGET_ADDRESS")}}
  p,err:=routepolicy.Load(raw,dir);if err!=nil{return "",err}
- return string(p.Decide(host,ip)),nil
+ decision:=p.DecideDetailed(host,ip)
+ encoded,err:=json.Marshal(decision)
+ return string(encoded),err
 }
 func (c *Client) route(host string,ip netip.Addr) string {
  if c.routing==nil{return c.host.Route(host)}

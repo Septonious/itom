@@ -1,0 +1,70 @@
+name: ITOM 1.5.1 Android integration build
+on:
+  push:
+    branches: [codex/itom-v151-android-integration]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify and bundle actual RC20 routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - name: Ensure pinned Android SDK and NDK
+        run: |
+          sdkmanager --channel=3 'platforms;android-29' 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - name: Run native race tests
+        working-directory: src/native
+        run: go test -race -mod=readonly ./...
+      - name: Compile matching ARM64 native AAR
+        working-directory: src/native
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
+          gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
+      - name: Build independently installable Android development APK
+        working-directory: src/android
+        run: gradle --no-daemon :domain:test :app:testDebugUnitTest :app:assembleDebug
+      - name: Build matching Linux AMD64 server
+        working-directory: src/core
+        run: |
+          mkdir -p ../../dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
+      - name: Stage artifacts
+        run: |
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-routing-dev.apk
+          cd dist
+          sha256sum itom-linux-amd64 itom-1.5.1-routing-dev.apk > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.5.1-routing-development
+          path: dist/
+          if-no-files-found: error

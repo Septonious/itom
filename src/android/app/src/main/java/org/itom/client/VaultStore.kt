@@ -183,8 +183,16 @@ class VaultStore(private val context: Context) {
             credentials = v.credentials - p.accounts.map { it.credentialRef }.toSet(), keys = v.keys - p.encryptionKeyRef, incompleteProfileIds = v.incompleteProfileIds - id)
     }
     suspend fun rules(action: RouteAction, entries: List<String>) = update { v ->
-        val canonical = entries.filter { it.isNotBlank() }.map { CompiledRule.parse(it).source }.distinct()
-        v.copy(settings = v.settings.copy(routing = v.settings.routing.copy(rules = v.settings.routing.rules.with(action, canonical))))
+        val canonical = NativeRule.canonicalList(entries)
+        val policy = v.settings.routing.copy(rules = v.settings.routing.rules.with(action, canonical))
+        NativeRouting.validate(context, policy)
+        v.copy(settings = v.settings.copy(routing = policy))
+    }
+    suspend fun routingOptions(policy: RoutingPolicy) = update { v ->
+        val next = v.settings.routing.copy(ruSitesDirect = policy.ruSitesDirect, ruIpsDirect = policy.ruIpsDirect,
+            blockAdsTrackers = policy.blockAdsTrackers, blockMalware = policy.blockMalware)
+        NativeRouting.validate(context, next)
+        v.copy(settings = v.settings.copy(routing = next))
     }
     suspend fun apps(policy: AppPolicy, catalog: List<InstalledApp>) = update { v ->
         AppSelection.validate(policy, catalog); v.copy(settings = v.settings.copy(appRouting = policy))
