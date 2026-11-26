@@ -61,7 +61,9 @@ func (c *Client) adminRequest(q adminapi.Request) (adminapi.Response, error) {
 	}
 	ctx, cancel := context.WithTimeout(c.ctx, 20*time.Second)
 	defer cancel()
-	stream, _, e := c.pool.Open(ctx, wire.Connect{Host: adminapi.Host, Port: adminapi.Port})
+	pool := c.currentPool()
+	if pool == nil { return r, errors.New("ADMIN_CONNECTION_FAILED") }
+	stream, _, e := pool.Open(ctx, wire.Connect{Host: adminapi.Host, Port: adminapi.Port})
 	if e != nil {
 		return r, errors.New("ADMIN_CONNECTION_FAILED")
 	}
@@ -109,7 +111,7 @@ func (c *Client) startAdmin(key, uid string) {
 			case <-c.admin.wake:
 				timer.Stop()
 			}
-			if c.pool.Stats().ActiveLines == 0 {
+			if pool := c.currentPool(); pool == nil || pool.Stats().ActiveLines == 0 {
 				delay = time.Second
 				continue
 			}

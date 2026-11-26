@@ -53,7 +53,13 @@ type Client struct {
 	cancel   context.CancelFunc
 	host     Host
 	dialer   *netroute.Dialer
-	pool     *tunnel.Client
+	pool     transportPool
+	poolMu sync.RWMutex
+	rebindRequests chan struct{}
+	startTransport func(context.Context) (transportPool, error)
+	rebinding atomic.Bool
+	rebindFailure atomic.Pointer[string]
+	expectedLines int
 	mu       sync.Mutex
 	closed   bool
 	device   device.Device
@@ -156,14 +162,15 @@ func New(raw, dir string, host Host) (*Client, error) {
 	}
 	var resolverErr error
 	c.resolver, resolverErr = newDNSResolver(settings, c.dialer.Socket.DialContext, func(ctx context.Context, network, address string) (net.Conn, error) {
-		if network != "tcp" || c.pool == nil {
+		pool := c.currentPool()
+		if network != "tcp" || pool == nil {
 			return nil, errors.New("DNS_TUNNEL_UNAVAILABLE")
 		}
 		host, port, err := net.SplitHostPort(address)
 		if err != nil || port != "53" {
 			return nil, errors.New("DNS_ADDRESS")
 		}
-		stream, _, err := c.pool.Open(ctx, wire.Connect{Host: host, Port: 53})
+		stream, _, err := pool.Open(ctx, wire.Connect{Host: host, Port: 53})
 		if err != nil {
 			return nil, err
 		}
@@ -188,10 +195,16 @@ func New(raw, dir string, host Host) (*Client, error) {
 		cancel()
 		return nil, e
 	}
-	c.pool, e = tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, Progress: progress, FrontendDiagnostics: func() any { return c.trafficSnapshot() }})
+	initial, e := tunnel.StartClientWithOptions(ctx, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, Progress: progress, FrontendDiagnostics: func() any { return c.trafficSnapshot() }})
 	if e != nil {
 		c.Close()
 		return nil, e
+	}
+	c.swapPool(initial)
+	c.expectedLines = initial.Stats().TotalLines
+	c.startTransport = func(life context.Context) (transportPool,error) {
+		fresh, err := tunnel.StartClientWithOptions(life, cfg.Profile, filepath.Join(dir, "transport"), tunnel.NetworkDial(c.dialer), tunnel.ClientOptions{Diagnostics: cfg.Diagnostics, FrontendDiagnostics: func() any { return c.trafficSnapshot() }})
+		if err != nil { return nil, err }; return fresh, nil
 	}
 	sc := socks.DefaultConfig()
 	if cfg.Socks.Authentication {
@@ -219,6 +232,7 @@ func New(raw, dir string, host Host) (*Client, error) {
 			c.cancel()
 		}
 	}()
+	c.startNetworkRebind()
 	c.startAdmin(cfg.Profile.User.Key, cfg.Profile.User.ID)
 	return c, nil
 }
@@ -249,7 +263,7 @@ func (c *Client) Attach(fd int) error {
 // ReplaceTun consumes the detached replacement descriptor on every path.
 // Build the new stack first; a failed replacement must retain the active stack.
 // Existing flows on the old stack are interrupted, but the provider session and
-// SOCKS listener are retained. The public Go signature is provisional pending DEX verification.
+// SOCKS listener are retained. The public Go int maps to Java long, as required by RC20.
 func (c *Client) ReplaceTun(fd int) error {
  c.mu.Lock()
  if c.closed || c.device == nil || fd < 0 {
@@ -294,8 +308,8 @@ func (c *Client) Close() {
 		c.device.Close()
 	}
 	c.mu.Unlock()
-	if c.pool != nil {
-		c.pool.Close()
+	if pool := c.swapPool(nil); pool != nil {
+		pool.Close()
 	}
 	c.wg.Wait()
 	if c.dns != nil {
@@ -303,15 +317,16 @@ func (c *Client) Close() {
 	}
 }
 func (c *Client) Stats() string {
-	var s tunnel.Stats
-	if c.pool != nil {
-		s = c.pool.Stats()
+	s := tunnel.Stats{TotalLines: c.expectedLines}
+	pool := c.currentPool()
+	if pool != nil {
+		s = pool.Stats()
 		s.TCP = int(c.tcp.Load())
 	}
 	err := ""
-	if c.pool != nil {
-		err = c.pool.Failure()
-	}
+	if pool != nil {
+		err = pool.Failure()
+	} else if failure := c.rebindFailure.Load(); failure != nil { err = *failure }
 	if e := c.failure.Load(); e != nil {
 		err = *e
 	}
@@ -319,15 +334,16 @@ func (c *Client) Stats() string {
 		tunnel.Stats
 		Upload, Download uint64
 		Error            string
-	}{s, c.up.Load(), c.down.Load(), err})
+		NetworkRebinding bool
+	}{s, c.up.Load(), c.down.Load(), err, c.rebinding.Load()})
 	return string(b)
 }
 
 // Snapshot is one observation for UI counters, readiness and diagnostics.
 func (c *Client) Snapshot() string {
-	var snapshot tunnel.ClientSnapshot
-	if c.pool != nil {
-		snapshot = c.pool.Snapshot()
+	snapshot := tunnel.ClientSnapshot{Stats:tunnel.Stats{TotalLines:c.expectedLines}}
+	if pool := c.currentPool(); pool != nil {
+		snapshot = pool.Snapshot()
 	}
 	native := c.trafficSnapshot()
 	raw, _ := json.Marshal(struct {
@@ -342,6 +358,7 @@ type clientObservation struct {
 	Upload, Download uint64
 	OpeningTCP       int64
 	Error            string
+	NetworkRebinding bool
 }
 
 // Both public snapshots use established application connections for TCP. The
@@ -349,13 +366,13 @@ type clientObservation struct {
 func (c *Client) decorateSnapshot(snapshot tunnel.ClientSnapshot, native trafficSnapshot) clientObservation {
 	snapshot.TCP = int(native.ActiveTCP)
 	err := ""
-	if c.pool != nil {
-		err = c.pool.Failure()
-	}
+	if pool := c.currentPool(); pool != nil {
+		err = pool.Failure()
+	} else if failure := c.rebindFailure.Load(); failure != nil { err = *failure }
 	if failure := c.failure.Load(); failure != nil {
 		err = *failure
 	}
-	return clientObservation{snapshot, native.Upload, native.Download, native.Opening, err}
+	return clientObservation{snapshot, native.Upload, native.Download, native.Opening, err, c.rebinding.Load()}
 }
 
 func (c *Client) worker(conn net.Conn, fn func())    { c.workerOn(conn, fn, c.slots, false) }
@@ -443,7 +460,9 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 	if c.routing != nil && c.resolver == nil && !ip.IsValid() { return nil, netip.AddrPort{}, errors.New("ROUTING_RESOLVER_MISSING") }
 	switch route {
 	case "VPN":
-		return c.pool.Open(ctx, target)
+		pool := c.currentPool()
+		if pool == nil { return nil, netip.AddrPort{}, errors.New("NETWORK_TRANSPORT_UNAVAILABLE") }
+		return pool.Open(ctx, target)
 	case "DIRECT":
 		conn, e := c.dialer.DialContext(ctx, "tcp4", net.JoinHostPort(target.Host, strconv.Itoa(int(target.Port))))
 		if e != nil {
@@ -509,7 +528,8 @@ func (c *Client) recordCopyEnd(stream socks.Stream, direction string, n int64, e
 }
 
 func (c *Client) recordCopyStage(stream socks.Stream, direction string, n int64, err error, stage string) {
-	if c.pool == nil {
+	pool := c.currentPool()
+	if pool == nil {
 		return
 	}
 	id := uint64(0)
@@ -518,7 +538,7 @@ func (c *Client) recordCopyStage(stream socks.Stream, direction string, n int64,
 			id = identified.StreamID()
 		}
 	}
-	c.pool.RecordApplicationCopyEvent(id, direction, n, err, stage)
+	pool.RecordApplicationCopyEvent(id, direction, n, err, stage)
 }
 
 func (c *Client) handleUDP(conn adapter.UDPConn) {
@@ -559,11 +579,12 @@ func (h nativeHandler) HandleUDP(conn adapter.UDPConn) { h.c.handleUDP(conn) }
 
 // Diagnostics returns bounded, credential-free provider operation history.
 func (c *Client) Diagnostics() string {
-	if c.pool == nil {
-		return "{}"
+	pool := c.currentPool()
+	if pool == nil {
+		b,_:=json.Marshal(map[string]any{"NetworkRebinding":c.rebinding.Load(),"Client":json.RawMessage(c.Snapshot()),"Native":c.trafficSnapshot()});return string(b)
 	}
 	var evidence map[string]json.RawMessage
-	if err := json.Unmarshal([]byte(c.pool.Diagnostics()), &evidence); err != nil {
+	if err := json.Unmarshal([]byte(pool.Diagnostics()), &evidence); err != nil {
 		return "{}"
 	}
 	var snapshot tunnel.ClientSnapshot
@@ -580,21 +601,23 @@ func (c *Client) Diagnostics() string {
 
 // RecordNetworkEvent accepts only the core's bounded callback vocabulary.
 func (c *Client) RecordNetworkEvent(kind string, handle int64) {
-	if c.pool != nil {
-		c.pool.RecordNetworkEvent(kind, handle)
+	if pool := c.currentPool(); pool != nil {
+		pool.RecordNetworkEvent(kind, handle)
 	}
 }
 
 // AccountRTTMicros returns a fresh same-account echo including queue time.
 func (c *Client) AccountRTTMicros(account string, deadlineMillis int) (int64, error) {
-	if c == nil || c.pool == nil {
+	if c == nil {
 		return 0, errors.New("client unavailable")
 	}
+	pool := c.currentPool()
+	if pool == nil { return 0, errors.New("client unavailable") }
 	if deadlineMillis < 1 || deadlineMillis > 30000 {
 		return 0, errors.New("invalid probe deadline")
 	}
 	ctx, cancel := context.WithTimeout(c.ctx, time.Duration(deadlineMillis)*time.Millisecond)
 	defer cancel()
-	d, err := c.pool.PingAccount(ctx, account)
+	d, err := pool.PingAccount(ctx, account)
 	return d.Microseconds(), err
 }
