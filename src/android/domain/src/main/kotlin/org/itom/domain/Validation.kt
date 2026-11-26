@@ -56,6 +56,7 @@ object Validation {
         demand(s.rttThresholds.greenMax in 1..5000 && s.rttThresholds.yellowMax in s.rttThresholds.greenMax + 1..10000, "RTT_THRESHOLDS")
         demand(s.routing.priority.all { s.routing.rules.entries(it).size <= 256 }, "TOO_MANY_RULES")
         s.routing.priority.forEach { action -> NativeRule.canonicalList(s.routing.rules.entries(action)) }
+        AppRouting.validateStored(s.appRouting)
         demand(s.appRouting.packages.distinct().size == s.appRouting.packages.size && s.appRouting.packages.size <= 4096, "INVALID_APP_LIST")
         demand(s.appRouting.packages.all { it.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*")) }, "INVALID_PACKAGE")
         demand(s.appRouting.mode != AppMode.INCLUDE_SELECTED || s.appRouting.packages.isNotEmpty(), "EMPTY_INCLUDE")

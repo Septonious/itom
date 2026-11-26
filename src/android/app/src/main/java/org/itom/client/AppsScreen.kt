@@ -24,8 +24,8 @@ import kotlinx.coroutines.CancellationException
 import org.itom.domain.*
 
 @Composable fun AppsScreen(saved: AppPolicy, catalogSource: PackageCatalog, busy: Boolean, cancel: () -> Unit, apply: (AppPolicy, List<InstalledApp>) -> Unit) {
-    var mode by rememberSaveable { mutableStateOf(saved.mode) }
-    var selected by rememberSaveable { mutableStateOf(saved.packages.toList()) }
+    var policy by remember { mutableStateOf(saved) }
+    var initialized by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var system by rememberSaveable { mutableStateOf(false) }
     var selectedOnly by rememberSaveable { mutableStateOf(false) }
@@ -36,23 +36,29 @@ import org.itom.domain.*
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(refresh) {
         loading = true; error = null
-        try { catalog = catalogSource.load() } catch (e: CancellationException) { throw e } catch (_: Exception) { error = "Could not load the application list." }
+        try {
+            catalog = catalogSource.load()
+            if (!initialized) { policy = AppRouting.migrate(saved, catalog); initialized = true }
+        } catch (e: CancellationException) { throw e }
+        catch (_: Exception) { error = "Could not load the application list." }
         finally { loading = false }
     }
-    val selectedSet = remember(selected) { selected.toSet() }
-    val visible = remember(catalog, query, system, selectedOnly, selectedSet, mode) {
-        catalog.filter { (system || !it.system) && (!selectedOnly || mode == AppMode.ALL || it.packageName in selectedSet) &&
+    val direct = policy.directPackages.toSet()
+    val vpn = policy.vpnPackages.toSet()
+    val missing = (direct + vpn) - catalog.map { it.packageName }.toSet()
+    val groups = remember(catalog) { catalog.groupBy { it.uid } }
+    val excluded = remember(policy, catalog) { AppRouting.exclusions(policy, catalog) }
+    val visible = remember(catalog, query, system, selectedOnly, direct, vpn) {
+        catalog.filter { (system || !it.system) && (!selectedOnly || it.packageName in direct || it.packageName in vpn) &&
             (it.label.contains(query, true) || it.packageName.contains(query, true)) }
     }
-    val missing = remember(selectedSet, catalog, mode) { if (mode == AppMode.ALL) emptySet() else selectedSet - catalog.map { it.packageName }.toSet() }
-    val groupSizes = remember(catalog) { catalog.groupingBy { it.uid }.eachCount() }
-    val canApply = !busy && !loading && error == null && missing.isEmpty() && (mode != AppMode.INCLUDE_SELECTED || selected.isNotEmpty())
+    val canApply = !busy && !loading && error == null && missing.isEmpty()
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
             GlyphButton(Glyph.BACK, "Cancel selection and return to rules", cancel, Blue, !busy)
             Column(Modifier.weight(1f)) {
-                Text("Applications", style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(if (mode == AppMode.ALL) "All applications use VPN" else "Selected: ${selected.size}", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Applications", style = MaterialTheme.typography.headlineSmall)
+                Text("Direct: ${direct.size} · VPN: ${vpn.size}", color = Muted, style = MaterialTheme.typography.bodySmall)
             }
             GlyphButton(Glyph.REFRESH, "Refresh applications", { refresh++ }, enabled = !loading && !busy)
         }
@@ -61,46 +67,32 @@ import org.itom.domain.*
             trailingIcon = { if (query.isNotEmpty()) GlyphButton(Glyph.CLOSE, "Clear search", { query = "" }) },
             shape = MaterialTheme.shapes.large, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }))
-        // Search and actions are pinned; options and applications share the full remaining viewport.
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
             item(key = "options") {
-                Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        listOf(AppMode.ALL to "All through VPN", AppMode.EXCLUDE_SELECTED to "Direct", AppMode.INCLUDE_SELECTED to "VPN only").forEach { (value, label) ->
-                            val active = mode == value
-                            InfoCard(Modifier.weight(1f).semantics { this.selected = active }, accent = if (active) Blue else null,
-                                contentPadding = 9.dp, onClick = if (!busy) ({ mode = value }) else null) {
-                                Column(Modifier.fillMaxWidth().heightIn(min = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Text(label, style = MaterialTheme.typography.labelSmall, color = if (active) Blue else Muted, maxLines = 2)
-                                }
-                            }
-                        }
+                InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Russian apps direct automatically", Modifier.weight(1f))
+                        Switch(checked = policy.autoRussian, enabled = !busy, onCheckedChange = { policy = policy.copy(autoRussian = it) })
                     }
-                    SmallNote(when (mode) {
-                        AppMode.ALL -> "Address rules apply to all applications."
-                        AppMode.EXCLUDE_SELECTED -> "Selected applications bypass VPN and all address rules, including Block."
-                        AppMode.INCLUDE_SELECTED -> "Only selected applications use VPN. Others bypass it, including Block rules."
-                    })
-                    InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            AppIcon(Glyph.SETTINGS, color = Blue)
-                            Text("System applications", Modifier.weight(1f).padding(horizontal = 10.dp), style = MaterialTheme.typography.bodyMedium)
-                            ItomSwitch(checked = system, onCheckedChange = { system = it })
-                        }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("System applications", Modifier.weight(1f))
+                        ItomSwitch(checked = system, onCheckedChange = { system = it })
                     }
+                    SmallNote("Direct apps bypass VPN and all address rules. VPN apps still follow destination rules.")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = !selectedOnly, onClick = { selectedOnly = false }, label = { Text("All") })
-                        FilterChip(selected = selectedOnly, onClick = { selectedOnly = true }, label = { Text("Selected") })
+                        FilterChip(selected = selectedOnly, onClick = { selectedOnly = true }, label = { Text("Overrides") })
                         Spacer(Modifier.weight(1f))
-                        Text("${visible.size}", Modifier.align(Alignment.CenterVertically), color = Muted, style = MaterialTheme.typography.labelMedium)
+                        Text("${visible.size}", Modifier.align(Alignment.CenterVertically), color = Muted)
                     }
-                    if (mode != AppMode.ALL && selected.isNotEmpty()) SmallNote("Applications sharing an Android UID are selected together.")
                 }
             }
             if (!loading && error == null && missing.isNotEmpty()) item(key = "missing") {
-                InfoCard(Modifier.fillMaxWidth(), accent = Red, contentPadding = 12.dp) {
-                    SmallNote("Selected applications no longer installed: ${missing.size}", color = Red)
-                    TextButton(enabled = !busy, onClick = { selected = (selectedSet - missing).toList() }) { Text("Remove missing applications") }
+                InfoCard(Modifier.fillMaxWidth(), accent = Red) {
+                    SmallNote("Missing applications: ${missing.size}", color = Red)
+                    TextButton(onClick = {
+                        policy = policy.copy(directPackages = (direct - missing).sorted(), vpnPackages = (vpn - missing).sorted())
+                    }, enabled = !busy) { Text("Remove missing applications") }
                 }
             }
             if (loading) item(key = "loading") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
@@ -110,23 +102,25 @@ import org.itom.domain.*
                     TextButton(onClick = { refresh++ }) { Text("Retry") }
                 }
             }
-            if (!loading && error == null && visible.isEmpty()) item(key = "empty") {
-                InfoCard(Modifier.fillMaxWidth()) { Text("No results"); SmallNote("Change the search or list filters.") }
-            }
             items(visible, key = { "app:${it.packageName}" }, contentType = { "app" }) { app ->
-                val checked = mode == AppMode.ALL || app.packageName in selectedSet
-                val selectable = mode != AppMode.ALL && !busy && !loading && error == null
-                InfoCard(Modifier.fillMaxWidth().toggleable(checked, enabled = selectable, role = Role.Checkbox,
-                    onValueChange = { selected = AppSelection.toggle(selectedSet, app, catalog).toList() }),
-                    accent = if (checked && mode != AppMode.ALL) Blue else null, contentPadding = 14.dp) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+                val choice = AppRouting.choice(policy, app.packageName)
+                val group = groups[app.uid].orEmpty()
+                val pinned = AppRouting.groupCaptured(group)
+                InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         InstalledAppIcon(app.packageName, catalogSource, refresh)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Column(Modifier.weight(1f)) {
                             Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(app.packageName, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            if ((groupSizes[app.uid] ?: 0) > 1) Text("Linked applications: ${groupSizes[app.uid]}", color = Blue, style = MaterialTheme.typography.labelSmall)
+                            Text(if (app.packageName in excluded) "Effective: direct" else "Effective: VPN", style = MaterialTheme.typography.labelSmall, color = Blue)
+                            if (group.size > 1) Text("Shared UID · ${group.size}", color = Muted, style = MaterialTheme.typography.labelSmall)
                         }
-                        Checkbox(checked = checked, enabled = selectable, onCheckedChange = null)
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        listOf(AppRouteChoice.AUTO to "Auto", AppRouteChoice.DIRECT to "Direct", AppRouteChoice.VPN to "VPN").forEach { (option, title) ->
+                            FilterChip(selected = choice == option, label = { Text(title) }, enabled = !busy && (!pinned || option != AppRouteChoice.DIRECT),
+                                onClick = { policy = AppRouting.select(policy, app, catalog, option) })
+                        }
                     }
                 }
             }
@@ -135,7 +129,7 @@ import org.itom.domain.*
             OutlinedButton(onClick = cancel, enabled = !busy, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = MaterialTheme.shapes.medium) { Text("Cancel") }
             GradientButton(if (busy) "Saving…" else "Save", {
                 keyboard?.hide()
-                apply(AppPolicy(mode, if (mode == AppMode.ALL) emptyList() else selected.sorted()), catalog)
+                apply(policy, catalog)
             }, Modifier.weight(1.3f), enabled = canApply, glyph = Glyph.CHECK)
         }
     }

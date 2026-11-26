@@ -63,7 +63,7 @@ import org.itom.domain.*
             SmallNote("Domain or IP, domain:, full:, ip:, geosite: and geoip:ru. One rule per line.")
             GradientButton("Apply ${routeName(selected)}", { apply(selected, text.lines()) }, Modifier.fillMaxWidth(), enabled = !busy, glyph = Glyph.CHECK)
         }
-        NavigationRow(Glyph.APPS, "Applications", appModeName(appPolicy.mode) + if (appPolicy.mode == AppMode.ALL) "" else " · ${appPolicy.packages.size}", apps)
+        NavigationRow(Glyph.APPS, "Applications", "Direct: ${appPolicy.directPackages.size} · VPN: ${appPolicy.vpnPackages.size}", apps)
         InfoCard(Modifier.fillMaxWidth()) {
             Text("Address check", style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -245,25 +245,24 @@ class ItomVpnService : VpnService() {
             val initialNetwork = selectedNetwork()
             networkEvent("initial_${kindOf(initialNetwork?.let { capabilities[it] })?.name?.lowercase() ?: "none"}", initialNetwork)
             currentCoroutineContext().ensureActive()
-            val builder = Builder().setSession("ITOM").setMtu(1500)
-                .addAddress("172.19.0.1", 30).addDnsServer("172.19.0.2").addRoute("0.0.0.0", 0)
-                .addAddress("fd19:6974:6f6d::1", 128).addRoute("::", 0)
-                .setBlocking(false)
-            val apps = config.settings.appRouting
-            when (apps.mode) {
-                AppMode.INCLUDE_SELECTED -> {
-                    demand(apps.packages.isNotEmpty(), "EMPTY_INCLUDE")
-                    apps.packages.forEach { builder.addAllowedApplication(it) }
-                }
-                AppMode.EXCLUDE_SELECTED -> {
-                    builder.addDisallowedApplication(packageName)
-                    apps.packages.filter { it != packageName }.forEach { builder.addDisallowedApplication(it) }
-                }
-                AppMode.ALL -> builder.addDisallowedApplication(packageName)
+            suspend fun establishTun(apps: AppPolicy, replace: Boolean) {
+                val catalog = (application as ItomApplication).graph.catalog.load()
+                val builder = Builder().setSession("ITOM").setMtu(1500)
+                    .addAddress("172.19.0.1", 30).addDnsServer("172.19.0.2").addRoute("0.0.0.0", 0)
+                    .addAddress("fd19:6974:6f6d::1", 128).addRoute("::", 0)
+                    .setBlocking(false)
+                builder.addDisallowedApplication(packageName)
+                AppRouting.exclusions(apps, catalog).filter { it != packageName }.sorted().forEach { builder.addDisallowedApplication(it) }
+                currentCoroutineContext().ensureActive()
+                demand(backend.snapshot.value.generation == g, "CONFIG_CHANGED")
+                val tun = builder.establish() ?: throw DomainError("VPN_PERMISSION_REVOKED")
+                try {
+                    val fd = tun.detachFd().toLong()
+                    if (replace) core.replaceTun(fd) else core.attach(fd)
+                } finally { tun.close() }
             }
-            // Establish immediately: while reconnecting, captured traffic cannot escape.
-            val tun = builder.establish() ?: throw DomainError("VPN_PERMISSION_REVOKED")
-            try { core.attach(tun.detachFd().toLong()) } finally { tun.close() }
+            var appliedApps = config.settings.appRouting
+            establishTun(appliedApps, false)
             // Only now is the native transport actually attached to this network.
             // A switch during startup is handled by the next callback or heartbeat.
             attachedNetworkHandle.set(initialNetwork?.networkHandle ?: 0L)
@@ -278,6 +277,12 @@ class ItomVpnService : VpnService() {
             var lastDemandAt = started
             while (currentCoroutineContext().isActive && backend.snapshot.value.generation == g) {
                 val now = SystemClock.elapsedRealtime()
+                val latestApps = backend.vault.state.value.settings.appRouting
+                if (latestApps != appliedApps) {
+                    establishTun(latestApps, true)
+                    appliedApps = latestApps
+                    networkEvent("app_routing_tun_replaced", selectedUnderlying.get())
+                }
                 // The physical network, not the VPN network, decides whether
                 // severe-mobile account confinement is eligible.
                 val physical = selectedUnderlying.get()
@@ -387,7 +392,7 @@ class ItomVpnService : VpnService() {
                     // Never restart a user-stopped generation. A handover must
                     // first fully close its sockets and TUN, then reopen cleanly.
                     val restarting = restartForNetwork.get() && !stoppedByNetworkPolicy.get() &&
-                        backend.restartAfterHandover(g, profileId, revision, backend.snapshot.value.metrics.totalLines)
+                        backend.restartAfterHandover(g, profileId, backend.vault.state.value.revision, backend.snapshot.value.metrics.totalLines)
                     if (!restarting) {
                         if (failure == null || stoppedByNetworkPolicy.get()) backend.machine.stop(g)
                         else backend.machine.fail(g, failure!!)

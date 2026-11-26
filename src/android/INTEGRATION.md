@@ -20,3 +20,5 @@ Development APK uses application ID org.itom.client.testing. Do not upgrade
 the original signed RC20 with this candidate. The old Android UI, app-policy
 migration, live TUN rebuild, automatic app classification and GeoData updater
 still require completion. No production signing keys are read by CI.
+
+Application routing now uses per-app Auto / Direct / VPN choices, complete shared-UID groups, and captured DownloadManager. Legacy policies can be migrated in the app picker. Changes rebuild only the TUN in the running service. Destination rules remain reconnect-only. Device validation remains outstanding.

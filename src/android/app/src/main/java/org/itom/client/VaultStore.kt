@@ -195,7 +195,8 @@ class VaultStore(private val context: Context) {
         v.copy(settings = v.settings.copy(routing = next))
     }
     suspend fun apps(policy: AppPolicy, catalog: List<InstalledApp>) = update { v ->
-        AppSelection.validate(policy, catalog); v.copy(settings = v.settings.copy(appRouting = policy))
+        AppSelection.validate(policy, catalog); AppRouting.validate(policy, catalog)
+        v.copy(settings = v.settings.copy(appRouting = policy))
     }
     suspend fun importInvitation(invitation: Invitation) = update { v ->
         Validation.invitation(invitation, System.currentTimeMillis() / 1000)

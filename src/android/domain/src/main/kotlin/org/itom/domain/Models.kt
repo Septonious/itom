@@ -59,7 +59,12 @@ data class RoutingPolicy(
 @Serializable
 enum class AppMode { @SerialName("all") ALL, @SerialName("exclude_selected") EXCLUDE_SELECTED, @SerialName("include_selected") INCLUDE_SELECTED }
 @Serializable
-data class AppPolicy(val mode: AppMode = AppMode.ALL, val packages: List<String> = emptyList()) {
+data class AppPolicy(
+    val mode: AppMode = AppMode.ALL, val packages: List<String> = emptyList(),
+    @SerialName("auto_russian") val autoRussian: Boolean = true,
+    @SerialName("direct") val directPackages: List<String> = emptyList(),
+    @SerialName("vpn") val vpnPackages: List<String> = emptyList(),
+) {
     fun captures(packageName: String): Boolean = when (mode) { AppMode.ALL -> true; AppMode.EXCLUDE_SELECTED -> packageName !in packages; AppMode.INCLUDE_SELECTED -> packageName in packages }
 }
 data class InstalledApp(val packageName: String, val label: String, val system: Boolean, val uid: Int)
