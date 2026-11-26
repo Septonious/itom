@@ -52,11 +52,14 @@ jobs:
           path: rc20-jni-descriptors.txt
           if-no-files-found: warn
       - name: Extract verified RC20 routing datasets
+        if: always()
         run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
       - uses: actions/setup-go@v5
+        if: always()
         with:
           go-version: '1.27.1'
           cache: false
       - name: Validate real RC20 datasets
+        if: always()
         working-directory: src/native
         run: ITOM_RC20_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly -v ./routepolicy -run '^TestRC20PackagedAssets$'
