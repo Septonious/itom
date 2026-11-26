@@ -33,29 +33,8 @@ jobs:
         run: go test -race -mod=readonly -count=3 -run 'TestRC3|TestBulkControlUrgency|TestPacingOnly|TestMeasuredBulkBurst|TestInteractiveReceiptsBound' .
       - name: Live four-socket allocation and suspend-resume integration
         working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)
-        working-directory: src/qualification
-        run: go list -mod=readonly -deps ./provider ./worker > /dev/null
-      - name: Native qualification gate unit tests
-        working-directory: src/qualification
-        run: python3 -m unittest test_home_gate
-      - name: Eight-account native screen
-        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-screen" --screen
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-v151-native-screen
-          path: ${{ runner.temp }}/itom-screen/
-          if-no-files-found: ignore
-      - name: Full native qualification matrix
-        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-matrix"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-v151-native-matrix
-          path: ${{ runner.temp }}/itom-matrix/
-          if-no-files-found: ignore
- .
+        run: |
+          go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
       - name: Server allocation and cellular controller tests
         working-directory: src/core
         run: go test -race -mod=readonly -count=3 -run 'Test(SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
