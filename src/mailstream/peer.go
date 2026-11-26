@@ -46,7 +46,7 @@ func (l *IMAPLink) ConfirmPeer(packet []byte) {
 func (l *IMAPLink) peerAllows(account string, id SessionID) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return !l.client || l.peerSession != id || len(l.peers) == 0 || l.peers[account]
+	return (l.grantSession != id || l.grant[account]) && (!l.client || l.peerSession != id || len(l.peers) == 0 || l.peers[account])
 }
 
 // accountRoute is local attachment state, not a claim about the remote peer.

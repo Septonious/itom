@@ -52,3 +52,21 @@ func unique(values []string) []string {
 	}
 	return result
 }
+
+ // InitialGrant assigns a newly admitted session while preserving existing grants.
+ // Existing users remain pinned until a generation-safe live resize is implemented.
+ // Unused accounts are preferred; sharing is allowed to satisfy the minimum.
+func InitialGrant(accounts []string, existing map[string][]string) []string {
+	accounts = unique(accounts)
+	n, u := len(accounts), len(existing)+1
+	if n < 10 { return accounts }
+	count := max(5, n/u)
+	if u == 1 { count = (n+1)/2 }
+	used := map[string]bool{}
+	for _, grant := range existing { for _, id := range grant { used[id] = true } }
+	result := make([]string, 0, count)
+	for _, shared := range []bool{false,true} {
+		for _, id := range accounts { if used[id] == shared && len(result)<count { result = append(result,id) } }
+	}
+	return result
+}

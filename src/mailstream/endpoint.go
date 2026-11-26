@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -61,14 +62,19 @@ func Connect(ctx context.Context, link Link, identity string, psk []byte) (*Sess
 					continue
 				}
 				f, err := decodeFrame(body)
-				if err != nil || seq != 0 || f.stream != 0 || f.offset != 0 || len(f.data) != 0 {
+				if err != nil || seq != 0 || f.stream != 0 || f.offset != 0 {
 					continue
 				}
-				if f.kind == frameBusy {
+				if f.kind == frameBusy && len(f.data) == 0 {
 					return nil, ErrBusy
 				}
 				if f.kind != frameReadyAck {
 					continue
+				}
+				if len(f.data) != 0 {
+					carrier, ok := link.(*IMAPLink)
+					if !ok { return nil, ErrProtocol }
+					if err = carrier.installInitialGrant(ctx, h.id, strings.Split(string(f.data), ",")); err != nil { return nil, err }
 				}
 				if confirmed, ok := link.(interface{ ConfirmPeer([]byte) }); ok {
 					confirmed.ConfirmPeer(packet)
@@ -133,6 +139,8 @@ type ServerOptions struct {
 	// Its release must not run until the previous DATA readers have joined.
 	Admit       func() (release func(), err error)
 	IdleTimeout time.Duration
+	// InitialAccountGrant runs after authenticated admission. Nil preserves legacy behavior.
+	InitialAccountGrant func() []string
 }
 
 func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byte, dial func(context.Context, string, string) (net.Conn, error), options ServerOptions) error {
@@ -282,6 +290,13 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 				}
 			}
 			closeActive()
+			var grant []string
+			if options.InitialAccountGrant != nil { grant = options.InitialAccountGrant() }
+			if len(grant) != 0 {
+				carrier, ok := link.(*IMAPLink)
+				if !ok { if nextRelease != nil { nextRelease() }; return ErrProtocol }
+				if err = carrier.installInitialGrant(ctx, id, grant); err != nil { if nextRelease != nil { nextRelease() }; return err }
+			}
 			if err = link.Attach(ctx, id); err != nil {
 				if carrier, ok := link.(interface{ Detach(SessionID) }); ok {
 					carrier.Detach(id)
@@ -296,7 +311,7 @@ func ServeWithOptions(ctx context.Context, link Link, identity string, psk []byt
 				continue
 			}
 			release = nextRelease
-			plain, _ := (frame{kind: frameReadyAck}).encode()
+			plain, _ := (frame{kind: frameReadyAck, data: []byte(strings.Join(grant, ","))}).encode()
 			reply, _, err := candidate.cipher.seal(plain)
 			if err != nil {
 				return err

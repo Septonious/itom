@@ -74,6 +74,8 @@ type mailAccountState struct {
 	cancel                              context.CancelFunc
 	mu                                  sync.Mutex
 	ready, failed                       bool
+	stopped chan struct{}
+	unallocated atomic.Bool
 	stage                               string
 	failure                             string
 	startupAttempts                     uint32
@@ -132,6 +134,8 @@ type IMAPLink struct {
 	mu                  sync.Mutex
 	accounts            []*mailAccountState
 	attached            SessionID
+	grantSession        SessionID
+	grant               map[string]bool
 	roundRobin          uint64
 	bulkAccount         uint64
 	bulkBytes           int
@@ -204,7 +208,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	l.retirements = make(chan Retirement, 64)
 	for _, config := range accounts {
 		life, stop := context.WithCancel(lifetime)
-		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, interactive: make(chan mailWork, 16), fast: make(chan mailWork, 32), bulk: make(chan mailWork, 16)}
+		a := &mailAccountState{link: l, config: config, ctx: life, cancel: stop, stopped: make(chan struct{}), interactive: make(chan mailWork, 16), fast: make(chan mailWork, 32), bulk: make(chan mailWork, 16)}
 		a.segments = map[segmentKey]*segmentRecord{}
 		a.remoteSegments = map[segmentKey]*segmentRecord{}
 		a.routes = map[uint32]uint32{}
@@ -224,7 +228,7 @@ func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 	}
 	for _, a := range l.accounts {
 		l.wg.Add(1)
-		go func() { defer l.wg.Done(); a.run() }()
+		go func() { defer l.wg.Done(); defer close(a.stopped); a.run() }()
 		l.wg.Add(1)
 		go func() { defer l.wg.Done(); a.publishInteractive() }()
 	}
@@ -294,7 +298,7 @@ func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
 
 func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude *mailAccountState) (*mailAccountState, error) {
 	kind, _, seq, err := parseHeader(body)
-	recovery := err == nil && len(body) <= 512 && (kind == hello || kind == accept || kind == sealed && seq == 0)
+	recovery := err == nil && len(body) <= 1024 && (kind == hello || kind == accept || kind == sealed && seq == 0)
 	return l.sendClass(ctx, body, priority, exclude, recovery)
 }
 func (l *IMAPLink) SendHousekeeping(ctx context.Context, body []byte) error {
@@ -377,7 +381,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
 	var peerAllowed [20]bool
 	for i, a := range l.accounts {
-		peerAllowed[i] = (!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]
+		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID])
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
 	if feedback {
@@ -592,6 +596,8 @@ func (l *IMAPLink) Detach(id SessionID) {
 		return
 	}
 	l.attached = SessionID{}
+	l.grantSession = SessionID{}
+	l.grant = nil
 	l.mu.Unlock()
 	for _, a := range l.accounts {
 		a.mu.Lock()
@@ -621,7 +627,9 @@ func (l *IMAPLink) Detach(id SessionID) {
 func (a *mailAccountState) fail() {
 	a.mu.Lock()
 	a.failed = true
-	if a.failure == "" {
+	if a.unallocated.Load() {
+		a.stage, a.failure = "unallocated", ""
+	} else if a.failure == "" {
 		a.failure = "MAIL_ACCOUNT_UNAVAILABLE"
 	}
 	a.ready = false
@@ -1370,6 +1378,8 @@ func (a *mailAccountState) run() {
 type MailSnapshot struct {
 	Reclamation    ReclamationSnapshot   `json:"reclamation"`
 	Accounts       int                   `json:"accounts"`
+	AllocatedAccounts int `json:"allocated_accounts"`
+	GrantNegotiated bool `json:"grant_negotiated"`
 	Ready          int                   `json:"ready_accounts"`
 	Writers        int                   `json:"writer_accounts"`
 	ControlWriters int                   `json:"control_writer_accounts"`
@@ -1416,6 +1426,7 @@ type MailAccountSnapshot struct {
 	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
 	PeerVerified               bool   `json:"peer_verified"`
 	Account                    string `json:"account"`
+	Allocated bool `json:"allocated"`
 	Stage                      string `json:"stage"`
 	Failure                    string `json:"failure,omitempty"`
 	Ready                      bool   `json:"ready"`
@@ -1449,9 +1460,12 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 	}
 	l.reclaimer.mu.Unlock()
 	l.mu.Lock()
-	var verified [20]bool
+	var verified, allocated [20]bool
+	s.GrantNegotiated = l.grantSession != (SessionID{})
 	for i, a := range l.accounts {
 		verified[i] = l.peers[a.config.ID]
+		allocated[i] = !s.GrantNegotiated || l.grant[a.config.ID]
+		if allocated[i] { s.AllocatedAccounts++ }
 	}
 	l.mu.Unlock()
 	for i, a := range l.accounts {
@@ -1470,13 +1484,13 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		if !a.failed && a.ready && a.id != (SessionID{}) {
 			s.Data++
 		}
-		if a.failed {
+		if a.failed && !a.unallocated.Load() {
 			s.Failed++
 		}
 		s.RetainedBytes += a.spent
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
-		line := MailAccountSnapshot{Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, ControlWriter: controlWriter, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line := MailAccountSnapshot{Allocated: allocated[i], Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, ControlWriter: controlWriter, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		line.WriterRecovering, line.WriterReconnects, line.WriterRecoveryReason = a.writerRecovering, a.writerReconnects, a.writerRecoveryReason
 		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
 		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()

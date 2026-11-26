@@ -58,6 +58,10 @@ type ClientSnapshot struct {
 	Lines                 []LineDiagnostic
 	Events                []string
 	TransportStreams      int
+	ConfiguredAccounts int
+	AllocatedAccounts int
+	AssignedSocketCapacity int
+	GrantNegotiated bool
 }
 type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
@@ -380,7 +384,8 @@ func (c *Client) Snapshot() ClientSnapshot {
 	defer c.snapshotMu.Unlock()
 	mail := c.link.Snapshot()
 	streams := c.session.ActiveStreams()
-	s := ClientSnapshot{Stats: Stats{TotalLines: mailstream.ConnectionsPerAccount * len(c.profile.Accounts), TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli()}
+	capacity := mailstream.ConnectionsPerAccount * mail.AllocatedAccounts
+	s := ClientSnapshot{Stats: Stats{TotalLines: capacity, TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli(), ConfiguredAccounts: len(c.profile.Accounts), AllocatedAccounts: mail.AllocatedAccounts, AssignedSocketCapacity: capacity, GrantNegotiated: mail.GrantNegotiated}
 	for _, line := range mail.Lines {
 		account := line.Account
 		for _, a := range c.profile.Accounts {
@@ -403,7 +408,9 @@ func (c *Client) Snapshot() ClientSnapshot {
 			active++
 		}
 		s.ActiveLines += active
-		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: mailstream.ConnectionsPerAccount,
+		lineCapacity := 0
+		if line.Allocated { lineCapacity = mailstream.ConnectionsPerAccount }
+		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: lineCapacity,
 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})
 	}
