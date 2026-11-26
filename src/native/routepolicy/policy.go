@@ -172,7 +172,7 @@ func category(b []byte) (string,[][]byte,error) {
  if err==nil&&name==""{err=errors.New("ROUTING_DATA_CATEGORY")}
  return name,entries,err
 }
-func loadSites(raw []byte,wanted map[string]bool) (map[string]*domains,error) {
+func loadSites(raw []byte,wanted,required map[string]bool) (map[string]*domains,error) {
  out:=map[string]*domains{}
  err:=fields(raw,func(f field)error{
   if f.number!=1||f.wire!=2{return nil}
@@ -193,7 +193,7 @@ func loadSites(raw []byte,wanted map[string]bool) (map[string]*domains,error) {
   return nil
  })
  if err!=nil{return nil,err}
- for name:=range wanted{if out[name]==nil{return nil,fmt.Errorf("ROUTING_GEOSITE_MISSING: %s",name)}}
+ for name:=range required{if out[name]==nil{return nil,fmt.Errorf("ROUTING_GEOSITE_MISSING: %s",name)}}
  return out,nil
 }
 func loadRU(raw []byte) (map[netip.Prefix]struct{},[]int,error) {
@@ -230,9 +230,11 @@ func Load(raw,dir string) (*Policy,error) {
  if p.vpn,e=parseRules(cfg.Proxy);e!=nil{return nil,e}
  if p.direct,e=parseRules(cfg.Direct);e!=nil{return nil,e}
  wanted:=map[string]bool{"ru":true,"category-ru":true,"category-ads-all":true}
- for _,rs:=range [][]rule{p.block,p.vpn,p.direct}{for _,r:=range rs{if r.kind=="geosite"{wanted[r.value]=true}}}
+ required:=map[string]bool{"category-ads-all":true}
+ for _,rs:=range [][]rule{p.block,p.vpn,p.direct}{for _,r:=range rs{if r.kind=="geosite"{wanted[r.value]=true;required[r.value]=true}}}
  b,e:=readData(dir,"geosite.dat");if e!=nil{return nil,e}
- if p.sites,e=loadSites(b,wanted);e!=nil{return nil,e}
+ if p.sites,e=loadSites(b,wanted,required);e!=nil{return nil,e}
+ if p.sites["ru"]==nil&&p.sites["category-ru"]==nil{return nil,errors.New("ROUTING_GEOSITE_RU_MISSING")}
  b,e=readData(dir,"geoip.dat");if e!=nil{return nil,e}
  if p.ru,p.ruBits,e=loadRU(b);e!=nil{return nil,e}
  b,e=readData(dir,"ads-trackers.txt");if e!=nil{return nil,e}

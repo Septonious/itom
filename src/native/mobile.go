@@ -69,6 +69,7 @@ type Client struct {
 	failure  atomic.Pointer[string]
 	traffic  trafficDiagnostics
 	routing *routepolicy.Policy
+	networkType atomic.Pointer[string]
 }
 
 // New starts provider connections and SOCKS but does not take ownership of TUN.
@@ -572,6 +573,7 @@ func (c *Client) Diagnostics() string {
 	native := c.trafficSnapshot()
 	evidence["Client"], _ = json.Marshal(c.decorateSnapshot(snapshot, native))
 	evidence["Native"], _ = json.Marshal(native)
+	if networkType := c.networkType.Load(); networkType != nil { evidence["NetworkType"], _ = json.Marshal(*networkType) }
 	raw, _ := json.Marshal(evidence)
 	return string(raw)
 }

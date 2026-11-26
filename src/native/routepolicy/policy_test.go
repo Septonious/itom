@@ -32,3 +32,12 @@ func TestInvalidInputs(t *testing.T){
  dir:=data(t);for _,raw:=range []string{"null","{} {}","{\"geoip\":true}","{\"direct\":[\"geoip:us\"]}","{\"direct\":[\"geosite:unknown\"]}","{\"direct\":[\"ip:192.0.2.0/99\"]}","{\"direct\":[\"regexp:.*\"]}","{\"direct\":[\"*.example\"]}"}{if _,e:=Load(raw,dir);e==nil{t.Errorf("accepted %s",raw)}}
  if e:=os.WriteFile(filepath.Join(dir,"geoip.dat"),[]byte{10,255},0600);e!=nil{t.Fatal(e)};if _,e:=Load("{}",dir);e==nil{t.Fatal("accepted corrupt protobuf")}
 }
+
+func TestSingleRussianCategory(t *testing.T){
+ dir:=data(t)
+ raw:=append(cat("category-ru",dom(2,"local.example")),cat("category-ads-all",dom(0,"advertising"))...)
+ if e:=os.WriteFile(filepath.Join(dir,"geosite.dat"),raw,0600);e!=nil{t.Fatal(e)}
+ p,e:=Load("{}",dir);if e!=nil{t.Fatal(e)}
+ if p.Decide("local.example",netip.Addr{})!=Direct{t.Fatal("category-ru alias not used")}
+ if _,e=Load("{\"direct\":[\"geosite:ru\"]}",dir);e==nil{t.Fatal("explicit missing category accepted")}
+}
