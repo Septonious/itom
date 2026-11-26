@@ -1,6 +1,6 @@
 import unittest
 
-from home_gate import BURSTS, IDS, REVISION, check
+from home_gate import BURSTS, IDS, REVISION, check, ramp_summary
 
 
 def control():
@@ -51,6 +51,14 @@ class HomeGateTests(unittest.TestCase):
         r = control()
         r["Provider"]["peak"]["a09"] = 1
         self.assertTrue(check(r, 15, 1))
+
+    def test_ramp_requires_four_consecutive_active_buckets(self):
+        r = control()
+        r["Phases"][0]["download"]["half_second_mbps"][:10] = [500, 150] * 5
+        self.assertTrue(any("ramp" in e for e in check(r, 15, 1)))
+        self.assertEqual(ramp_summary([100]*6 + [250]*24, 15)["ramp_to_200_seconds"], 5)
+        self.assertIsNone(ramp_summary([199]*30 + [900]*4, 15)["ramp_to_200_seconds"])
+        self.assertTrue(ramp_summary([200]*20 + [250]*10, 15)["still_ramping"])
 
     def test_complete_trace_and_stream_churn(self):
         r = control()

@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import time
 
-from home_gate import check
+from home_gate import check, ramp_summary
 
 HERE = Path(__file__).resolve().parent
 
@@ -59,6 +59,13 @@ def run(provider, worker, dest, seconds, mode, cycles, service):
                 proc.wait()
     data = json.loads((dest / "result.json").read_text())
     problems = check(data, seconds, cycles)
+    ramp = {}
+    for phase in data.get("Phases", []):
+        direction = phase.get("name")
+        rates = phase.get(direction, {}).get("half_second_mbps", [])
+        if direction in ("download", "upload") and len(rates) >= seconds * 2:
+            ramp[direction] = ramp_summary(rates, seconds)
+    output(dest / "ramp.json", ramp)
     if result.returncode:
         problems.append(f"worker exit {result.returncode}")
     return problems

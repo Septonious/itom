@@ -4,7 +4,20 @@ from collections import Counter, defaultdict
 
 IDS = [f"a{i:02}" for i in range(1, 9)]
 BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
-REVISION = "itom-1-5-1-rc1-dev"
+REVISION = "itom-1-5-1-rc2-dev"
+
+
+def ramp_summary(rates, seconds):
+    """Receiver-only active-interval evidence; exclude post-send drain."""
+    active = rates[:seconds * 2]
+    ramp = next(((i + 4) / 2 for i in range(len(active) - 3)
+                 if min(active[i:i+4]) > 200), None)
+    previous = sum(active[-20:-10]) / 10 if len(active) >= 20 else None
+    tail = sum(active[-10:]) / 10 if len(active) >= 10 else None
+    return {"ramp_to_200_seconds": ramp,
+            "first_second_mbps": sum(active[:2]) / 2 if len(active) >= 2 else None,
+            "preceding_5s_mbps": previous, "last_5s_mbps": tail,
+            "still_ramping": tail > previous * 1.10 if previous is not None else None}
 
 
 def check(result, seconds, light_cycles):
@@ -64,6 +77,9 @@ def check(result, seconds, light_cycles):
         else:
             floor = min(sum(rates[i:i+20])/20 for i in range(10, n - 19))
             require(floor > 200, f"{direction} weakest post-ramp 10s {floor:.2f} Mbps")
+            ramp = ramp_summary(rates, seconds)["ramp_to_200_seconds"]
+            require(ramp is not None and ramp <= 5,
+                    f"{direction} failed sustained 200 Mbps ramp within 5s (observed {ramp})")
         rtts(p.get("loaded_ms"), f"{direction} app")
     light = result.get("light") or []
     expected = {}
