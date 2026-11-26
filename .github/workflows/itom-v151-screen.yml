@@ -1,7 +1,7 @@
 name: ITOM 1.5.1 native qualification screen
 on:
   push:
-    branches: [codex/itom-v151-interactive-isolation]
+    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration]
   workflow_dispatch:
 permissions:
   contents: read
