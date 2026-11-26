@@ -22,3 +22,7 @@ migration, live TUN rebuild, automatic app classification and GeoData updater
 still require completion. No production signing keys are read by CI.
 
 Application routing now uses per-app Auto / Direct / VPN choices, complete shared-UID groups, and captured DownloadManager. Legacy policies can be migrated in the app picker. Changes rebuild only the TUN in the running service. Destination rules remain reconnect-only. Device validation remains outstanding.
+
+## CI checkpoint
+
+Android/native build at 3cdeaca8 passed (run 45834875690, artifact 15124538247). The qualification runner at the same revision did not start a benchmark: its independent Go module lacked the transitive x/text v0.42.0 checksums for the IDNA classifier. Pin the same dependency and checksum as the already passing native module, and validate the qualification dependency closure in readonly mode. No changes to transport scheduling, benchmark workloads, thresholds, or acceptance logic. The development APK is not a production release.

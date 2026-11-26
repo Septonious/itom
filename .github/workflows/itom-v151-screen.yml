@@ -28,6 +28,9 @@ jobs:
       - name: Focused dispatcher regressions
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
+      - name: Verify qualification module dependency closure
+        working-directory: src/qualification
+        run: go list -mod=readonly -deps ./provider ./worker > /dev/null
       - name: Native qualification gate unit tests
         working-directory: src/qualification
         run: python3 -m unittest test_home_gate
