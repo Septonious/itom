@@ -101,7 +101,8 @@ type mailAccountState struct {
 	queuedBytes                                               int
 	controlQueued                                             int
 	bulkBlocked                                               bool
-	collectionPaged                                           bool // provider refused or timed out a collection
+	collectionPaged                                           bool   // provider refused or timed out a collection
+	collectionPageLimit                                       uint64 // adaptive per-account retry message ceiling
 	reserved, recovered                                       int
 	storageKey                                                []byte
 	appended, received                                        atomic.Uint64
@@ -1472,6 +1473,9 @@ type MailAccountSnapshot struct {
 	WriterRecoveryReason       string `json:"writer_recovery_reason,omitempty"`
 	Data                       bool   `json:"data"`
 	RetainedBytes              int    `json:"retained_bytes"`
+	BulkHeadroomBytes          int    `json:"bulk_headroom_bytes"`
+	BulkBlocked                bool   `json:"bulk_blocked"`
+	CollectionPageLimit        uint64 `json:"collection_page_limit"`
 	ReservedBytes              int    `json:"reserved_retention_bytes"`
 	RecoveredBytes             int    `json:"recovered_retention_bytes"`
 	DataPhase                  int32  `json:"data_phase"`
@@ -1543,6 +1547,9 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()
 		}
 		line.ReservedBytes, line.RecoveredBytes = a.reserved, a.recovered
+		line.BulkHeadroomBytes = max(0, prototypePhysicalBudget-reservationQuantum-a.spent-a.queuedBytes)
+		line.BulkBlocked = a.bulkBlocked
+		line.CollectionPageLimit = a.collectionMessageLimitLocked()
 		line.ControlMessageReservations = a.controlMessageReservationsLocked()
 		line.ControlMessageLimit = controlMessageLimit
 		line.ControlRecoveryReserve = controlRecoveryMessages

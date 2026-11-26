@@ -174,6 +174,7 @@ func run() (err error) {
 	minimumReadyAccounts := flag.Int("minimum-ready-accounts", 0, "explicit degraded fixture only: minimum ready account roles before transferring")
 	lightCycles := flag.Int("light-cycles", 0, "cycles of simultaneous TCP opens, bidirectional bursts and true application idle")
 	activeGrant := flag.Int("active-grant", 0, "number of provisioned accounts in the fixed qualification grant; zero uses all")
+	productionGrant := flag.Bool("production-grant", false, "exercise production grant negotiation with the complete profile")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
 	if *lightCycles < 0 || *lightCycles > 5 {
@@ -330,9 +331,18 @@ func run() (err error) {
 	if grant < 1 || grant > p.Accounts {
 		return errors.New("invalid fixed account grant")
 	}
-	for i := 0; i < grant; i++ {
+	configured := grant
+	if *productionGrant {
+		if p.Accounts < 10 || grant != (p.Accounts+1)/2 || *minimumReadyAccounts != 0 {
+			return errors.New("production grant fixture requires full single-user allocation")
+		}
+		configured = p.Accounts
+	}
+	for i := 0; i < configured; i++ {
 		name := fmt.Sprintf("a%02d", i+1)
-		r.Granted = append(r.Granted, name)
+		if !*productionGrant {
+			r.Granted = append(r.Granted, name)
+		}
 		cfg.Accounts = append(cfg.Accounts, servercfg.Account{ID: name, Mail: mailbox.Config{Host: "127.0.0.1", Port: p.ServerPort, TLS: "tls", Username: name, Password: "fixture-only"}})
 	}
 	serverDone := make(chan error, 1)
@@ -394,6 +404,9 @@ func run() (err error) {
 	ready := time.NewTimer(45 * time.Second)
 	defer ready.Stop()
 	requiredLines := client.Stats().TotalLines
+	if *productionGrant {
+		requiredLines = grant * 4
+	}
 	if *minimumReadyAccounts > 0 {
 		if *minimumReadyAccounts > grant {
 			return errors.New("invalid minimum account count")
@@ -409,6 +422,33 @@ func run() (err error) {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-time.After(50 * time.Millisecond):
+		}
+	}
+	if *productionGrant {
+		var diag struct {
+			Mail struct {
+				Accounts   int  `json:"accounts"`
+				Allocated  int  `json:"allocated_accounts"`
+				Negotiated bool `json:"grant_negotiated"`
+				Lines      []struct {
+					Account   string `json:"account"`
+					Allocated bool   `json:"allocated"`
+				} `json:"lines"`
+			}
+		}
+		if err = json.Unmarshal([]byte(client.Diagnostics()), &diag); err != nil {
+			return err
+		}
+		if !diag.Mail.Negotiated || diag.Mail.Accounts != p.Accounts || diag.Mail.Allocated != grant || client.Stats().TotalLines != requiredLines {
+			return fmt.Errorf("production grant mismatch: configured=%d allocated=%d negotiated=%v stats=%+v", diag.Mail.Accounts, diag.Mail.Allocated, diag.Mail.Negotiated, client.Stats())
+		}
+		for _, line := range diag.Mail.Lines {
+			if line.Allocated {
+				r.Granted = append(r.Granted, line.Account)
+			}
+		}
+		if len(r.Granted) != grant {
+			return errors.New("production grant inventory mismatch")
 		}
 	}
 	r.StartupMS = time.Since(started).Milliseconds()
@@ -428,7 +468,7 @@ func run() (err error) {
 					return
 				default:
 				}
-				account := profile.Accounts[ordinal%len(profile.Accounts)].ID
+				account := r.Granted[ordinal%len(r.Granted)]
 				phase := probePhase.Load().(string)
 				begin := time.Now()
 				bounded, cancelProbe := context.WithTimeout(ctx, *probeTimeout)

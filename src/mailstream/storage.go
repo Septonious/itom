@@ -49,6 +49,7 @@ type segmentRecord struct {
 	retired, queued, refused, remote, requested, announced bool
 	collected                                              bool
 	readyAt                                                time.Time
+	retryMessages                                          uint64
 }
 type cleanupJob struct {
 	account *mailAccountState
@@ -466,6 +467,9 @@ func (p *mailPipe) reclaim(job cleanupJob, c *ReclamationCoordinator, budgets ..
 	if rec.refused {
 		pageBytes = collectionPageBytes
 		pageMessages = collectionRetryMessages
+		if rec.retryMessages > 0 {
+			pageMessages = min(pageMessages, rec.retryMessages)
+		}
 	} else if len(budgets) > 0 {
 		pages = 3
 	}

@@ -16,6 +16,7 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 	// Historical sweeps must not starve exact current-session collection.
 	a.mu.Lock()
 	job.record.refused = job.record.refused || a.collectionPaged
+	job.record.retryMessages = a.collectionMessageLimitLocked()
 	maintenance := a.maintenance.requested && a.controlMessagePressureLocked()
 	if maintenance {
 		job.record.queued = false
@@ -119,6 +120,9 @@ func (a *mailAccountState) processCleanup(job cleanupJob, writer **mailPipe, com
 		if !stopped {
 			reason = "CLEANUP_TIMEOUT"
 		}
+		a.mu.Lock()
+		a.noteCollectionFailureLocked()
+		a.mu.Unlock()
 		c.pause(reason, a)
 	}
 	unqueue(leased)

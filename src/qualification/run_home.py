@@ -45,7 +45,7 @@ def run(provider, worker, dest, seconds, mode, cycles, service):
             cfg = json.loads(descriptor.read_text())
             command = [worker, "-provider", descriptor, "-out", dest / "result.json",
                        "-state", state / "state", "-label", "candidate", "-frontend", "native-tun",
-                       "-active-grant", "8", "-account-probes", "-light-cycles", str(cycles),
+                       "-active-grant", "8", "-production-grant", "-account-probes", "-light-cycles", str(cycles),
                        "-duration", f"{seconds}s", "-streams", "8", "-download-first",
                        "-idle-probes", "24", "-post-probes", "24"]
             result = subprocess.run(command, env=dict(os.environ, SSL_CERT_FILE=cfg["root"]),

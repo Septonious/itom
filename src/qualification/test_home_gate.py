@@ -1,6 +1,6 @@
 import unittest
 
-from home_gate import BURSTS, IDS, REVISION, check, ramp_summary
+from home_gate import ALL_IDS, BURSTS, IDS, REVISION, check, ramp_summary
 
 
 def control():
@@ -18,11 +18,13 @@ def control():
     stages = ["idle", "download", "upload", "post_load", *(p["name"] for p in light)]
     return {
         "success": True, "stage": "complete", "configured_accounts": 15, "granted_accounts": IDS,
-        "Provider": {"connection_rejections": 0, "peak": dict.fromkeys(IDS, 8),
-                     "successful_logins": dict.fromkeys(IDS, 8)},
+        "Provider": {"connection_rejections": 0, "peak": {i: 8 if i in IDS else 2 for i in ALL_IDS},
+                     "successful_logins": {i: 8 if i in IDS else 2 for i in ALL_IDS}},
         "diagnostics": {"Revision": REVISION, "QualificationAppTCP": {"segments_sent": 2, "segments_received": 2},
-                        "Mail": {"lines": [dict(account=i, ready=True, data=True, peer_verified=True,
-                                                UploadBytes=90000, DownloadBytes=90000) for i in IDS]}},
+                        "Client": {"ActiveLines": 32, "TotalLines": 32},
+                        "Mail": {"accounts": 15, "allocated_accounts": 8, "grant_negotiated": True,
+                                 "lines": [dict(account=i, allocated=i in IDS, ready=i in IDS, data=i in IDS, peer_verified=i in IDS,
+                                                UploadBytes=90000, DownloadBytes=90000) for i in ALL_IDS]}},
         "IdleMS": [100], "AfterMS": [100], "Phases": phases, "light": light,
         "account_samples": [dict(phase=s, account=i, rtt_ms=110) for s in stages for i in IDS],
     }
@@ -49,7 +51,15 @@ class HomeGateTests(unittest.TestCase):
         r["Phases"][0]["download"]["half_second_mbps"][10:] = [200]*20
         self.assertTrue(check(r, 15, 1))
         r = control()
-        r["Provider"]["peak"]["a09"] = 1
+        r["Provider"]["peak"]["a09"] = 3
+        self.assertTrue(check(r, 15, 1))
+
+    def test_full_profile_required(self):
+        r = control()
+        r["diagnostics"]["Mail"]["accounts"] = 8
+        self.assertTrue(check(r, 15, 1))
+        r = control()
+        r["diagnostics"]["Client"]["ActiveLines"] = 60
         self.assertTrue(check(r, 15, 1))
 
     def test_ramp_requires_four_consecutive_active_buckets(self):

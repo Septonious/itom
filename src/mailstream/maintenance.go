@@ -50,6 +50,29 @@ const collectionPageSize = 256
 const collectionRetryMessages = 32
 const collectionTimeout = 8 * time.Second
 
+// A fixed 32-message fallback is insufficient when the provider repeatedly
+// times out even on small EXPUNGE operations. Keep reducing the actual mutation
+// scope after a failed leased attempt. Do not refund debt on errors or relax the
+// audit fence; keep the learned ceiling for this account's lifetime.
+func (a *mailAccountState) collectionMessageLimitLocked() uint64 {
+	if a.collectionPageLimit != 0 {
+		return a.collectionPageLimit
+	}
+	if a.collectionPaged {
+		return collectionRetryMessages
+	}
+	return collectionPageSize
+}
+
+func (a *mailAccountState) noteCollectionFailureLocked() {
+	if a.collectionPageLimit == 0 {
+		a.collectionPageLimit = collectionRetryMessages
+	} else {
+		a.collectionPageLimit = max(1, a.collectionPageLimit/2)
+	}
+	a.collectionPaged = true
+}
+
 // A DATA generation can contain tens of MiB even with only 128 messages.
 // Bound retry/historical mutation work by actual MIME bytes, independently
 // of the UID page cap. Healthy complete DATA keeps its amortized fast path.
@@ -238,10 +261,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	remote, start, cin, cout, boundary := m.remoteRead, m.remoteStartOut, m.clearedIn, m.clearedOut, m.boundaryOut
 	historical := idle || a.historyRequiredLocked()
 	recovering := historical && !m.recoveryReady
-	pageMessages := uint64(collectionPageSize)
-	if a.collectionPaged {
-		pageMessages = collectionRetryMessages
-	}
+	pageMessages := a.collectionMessageLimitLocked()
 	a.mu.Unlock()
 	if idle {
 		l.mu.Lock()
@@ -266,7 +286,7 @@ func (a *mailAccountState) maintenanceStep(ctx context.Context, p *mailPipe, idl
 	a.mu.Lock()
 	if retry != "" {
 		a.collectionPaged = true
-		pageMessages = collectionRetryMessages
+		pageMessages = a.collectionMessageLimitLocked()
 	}
 	inventoried := m.inventoried
 	a.mu.Unlock()
@@ -525,7 +545,7 @@ func (l *IMAPLink) idleMaintenance(a *mailAccountState) {
 		return
 	}
 	a.mu.Lock()
-	a.collectionPaged = true
+	a.noteCollectionFailureLocked()
 	a.mu.Unlock()
 	c.pause("MAINTENANCE_FAILED", a)
 }
@@ -600,7 +620,7 @@ func (a *mailAccountState) processMaintenance(writer **mailPipe, completed chan 
 			reason = "MAINTENANCE_TIMEOUT"
 		}
 		a.mu.Lock()
-		a.collectionPaged = true
+		a.noteCollectionFailureLocked()
 		a.mu.Unlock()
 		c.pause(reason, a)
 	}

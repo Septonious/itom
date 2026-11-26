@@ -3,8 +3,9 @@ import math
 from collections import Counter, defaultdict
 
 IDS = [f"a{i:02}" for i in range(1, 9)]
+ALL_IDS = [f"a{i:02}" for i in range(1, 16)]
 BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
-REVISION = "itom-1-5-1-rc3-dev"
+REVISION = "itom-1-5-1-rc4-dev"
 
 
 def ramp_summary(rates, seconds):
@@ -39,22 +40,45 @@ def check(result, seconds, light_cycles):
 
     require(result.get("success") is True and result.get("stage") == "complete",
             "worker failed: " + str(result.get("error", result.get("stage"))))
-    require(result.get("configured_accounts") == 15 and result.get("granted_accounts") == IDS,
-            "expected the fixed eight-account grant out of fifteen provisioned mailboxes")
+    granted = result.get("granted_accounts") or []
+    grant_set = set(granted)
+    require(result.get("configured_accounts") == 15 and len(granted) == 8
+            and len(grant_set) == 8 and grant_set <= set(ALL_IDS),
+            "expected eight negotiated accounts from fifteen configured mailboxes")
     provider = result.get("Provider") or {}
     require(provider.get("connection_rejections") == 0, "provider refused a login or did not report admission")
-    require(provider.get("peak") == dict.fromkeys(IDS, 8), "physical account/socket limits or coverage")
-    require(provider.get("successful_logins") == dict.fromkeys(IDS, 8), "extra logins or a missing role")
+    for metric in ("peak", "successful_logins"):
+        counts = provider.get(metric) or {}
+        require(set(counts) == set(ALL_IDS), f"{metric}: missing physical account evidence")
+        for who in ALL_IDS:
+            n = counts.get(who, 0)
+            # All server control readers remain warm. Unallocated clients may
+            # bootstrap a single reader before the authenticated grant arrives.
+            require(n == 8 if who in grant_set else 1 <= n <= 2,
+                    f"{metric}: unexpected physical connections on {who}: {n}")
     diag = result.get("diagnostics") or {}
     require(diag.get("Revision") == REVISION, "unexpected transport revision")
     tcp = diag.get("QualificationAppTCP", {})
     require(tcp.get("segments_sent", 0) > 0 and tcp.get("segments_received", 0) > 0,
             "no native TUN application TCP evidence")
     mail = diag.get("Mail", {})
-    payload = {row["account"] for row in mail.get("lines", [])
+    client = diag.get("Client", {})
+    require(mail.get("accounts") == 15 and mail.get("allocated_accounts") == 8
+            and mail.get("grant_negotiated") is True and client.get("ActiveLines") == 32
+            and client.get("TotalLines") == 32,
+            "missing full-profile authenticated grant or physical client capacity")
+    lines = mail.get("lines", [])
+    require(len(lines) == 15 and {row["account"] for row in lines} == set(ALL_IDS),
+            "missing configured account diagnostics")
+    require({row["account"] for row in lines if row.get("allocated")} == grant_set,
+            "diagnostic grant mismatch")
+    require(not any(row.get("ready") or row.get("data") or row.get("writer") or row.get("control_writer")
+                    for row in lines if row["account"] not in grant_set),
+            "unallocated client account remained active")
+    payload = {row["account"] for row in lines
                if row.get("ready") and row.get("data") and row.get("peer_verified")
                and min(row.get("UploadBytes", 0), row.get("DownloadBytes", 0)) > 65536}
-    require(payload == set(IDS), "eight verified bidirectional physical accounts required")
+    require(payload == grant_set, "eight verified bidirectional physical accounts required")
     rtts(result.get("IdleMS"), "idle app", True)
     rtts(result.get("AfterMS"), "post-load app", True)
     phases = result.get("Phases") or []
@@ -106,6 +130,6 @@ def check(result, seconds, light_cycles):
     require(errors == 0, f"{errors} account probe errors")
     stages = ["idle", "download", "upload", "post_load", *expected] if light_cycles else ["idle", "download", "upload", "post_load"]
     for stage in stages:
-        for who in IDS:
+        for who in granted:
             rtts(samples[stage, who], f"{stage} {who}", stage not in ("download", "upload"))
     return problems

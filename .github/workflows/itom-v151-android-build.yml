@@ -1,7 +1,7 @@
-name: ITOM 1.5.1 RC3 Android and Linux build
+name: ITOM 1.5.1 RC4 Android and Linux build
 on:
   push:
-    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc3]
+    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc4]
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,7 +32,10 @@ jobs:
           go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
       - name: Server allocation and cellular controller tests
         working-directory: src/core
-        run: go test -race -mod=readonly -count=3 -run 'Test(SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+        run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+      - name: RC4 bounded collection and field allocation regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC4|TestCollectionRetriesBoundTinyMessagesAfterFailure|TestHistoricalDataUsesBoundedHealthyPagesAndConservativeRetries|TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit' .
       - name: Extract verified routing data
         run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
       - name: Full native tests including real routing datasets
@@ -96,12 +99,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
       - name: Stage artifacts
         run: |
-          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc3-dev-testing.apk
-          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc3-dev-release-UNSIGNED.apk
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc4-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc4-dev-release-UNSIGNED.apk
           cd dist
           sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-RC3-development
+          name: ITOM-1.5.1-RC4-development
           path: dist/
           if-no-files-found: error

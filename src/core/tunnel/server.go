@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -154,7 +155,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 				if s := current.Load(); s != nil {
 					session = s.Snapshot()
 				}
-				snapshot := map[string]any{"Event": "runtime", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "Session": session, "SampledAtMS": time.Now().UnixMilli()}
+				snapshot := map[string]any{"Event": "runtime", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "Session": session, "ExitUploadBytes": traffic.upload.Load(), "ExitDownloadBytes": traffic.download.Load(), "SampledAtMS": time.Now().UnixMilli()}
 				_ = trace.record(snapshot)
 				if !trace.disabled {
 					_ = writePrivate(filepath.Join(filepath.Dir(trace.path), "mailstream-"+p.User.ID+".json"), snapshot)
@@ -163,7 +164,9 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 		}
 	}()
 	defer func() { stop(); <-joined }()
-	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) { return admission.acquire(p.User.ID) }, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
+	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) {
+		return admission.acquirePreferred(p.User.ID, preferredGrantAccounts(link.Snapshot().Lines))
+	}, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
 		current.Store(s)
 		_ = trace.record(map[string]any{"Event": "session_ready", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
 		if log != nil {
@@ -185,7 +188,40 @@ type sessionAdmission struct {
 	order    []string
 }
 
+// Prefer usable storage headroom, not raw account IDs or lowest instantaneous
+// RTT. The existing admission-order planner still controls exact grant sizes
+// and exclusivity. Do not evict accounts from already admitted users merely
+// because an instantaneous sample changes.
+func preferredGrantAccounts(lines []mailstream.MailAccountSnapshot) []string {
+	lines = append([]mailstream.MailAccountSnapshot(nil), lines...)
+	sort.SliceStable(lines, func(i, j int) bool {
+		a, b := lines[i], lines[j]
+		if (a.Failure != "") != (b.Failure != "") {
+			return a.Failure == ""
+		}
+		if a.BulkHeadroomBytes != b.BulkHeadroomBytes {
+			return a.BulkHeadroomBytes > b.BulkHeadroomBytes
+		}
+		if a.StoragePressure != b.StoragePressure {
+			return !a.StoragePressure
+		}
+		if a.Ready != b.Ready {
+			return a.Ready
+		}
+		return a.Account < b.Account
+	})
+	ids := make([]string, 0, len(lines))
+	for _, line := range lines {
+		ids = append(ids, line.Account)
+	}
+	return ids
+}
+
 func (a *sessionAdmission) acquire(identity string) (func(), error) {
+	return a.acquirePreferred(identity, nil)
+}
+
+func (a *sessionAdmission) acquirePreferred(identity string, preferred []string) (func(), error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.owners[identity] == 0 && len(a.owners) >= a.limit {
@@ -193,6 +229,12 @@ func (a *sessionAdmission) acquire(identity string) (func(), error) {
 	}
 	if a.owners[identity] == 0 {
 		a.order = append(a.order, identity)
+		if a.grants == nil {
+			a.grants = make(map[string][]string)
+		}
+		// Rebalance treats previous entries as ordered preferences and validates
+		// each against the configured pool. Existing users are processed first.
+		a.grants[identity] = append([]string(nil), preferred...)
 		a.grants = accountpolicy.Rebalance(a.accounts, a.order, a.grants)
 	}
 	a.owners[identity]++
