@@ -212,13 +212,14 @@ import kotlin.math.sin
     val diagnostics = remember(session.transport) { TransportDiagnostics.parse(session.transport) }
     val configured = diagnostics.root.field("ConfiguredAccounts")?.toIntOrNull()?.takeIf { it > 0 }
         ?: profile?.accounts?.count { it.enabled } ?: 0
-    val allocated = diagnostics.root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { it in 0..configured }
-    val activeAccounts = diagnostics.lines.count { it.field("Ready") == "true" }
+    val liveSession = session.phase == Phase.CONNECTING || session.phase == Phase.CONNECTED
+    val allocated = diagnostics.root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { liveSession && diagnostics.root.field("GrantNegotiated") == "true" && it in 0..configured }
+    val activeAccounts = if (liveSession) diagnostics.lines.count { it.field("Ready") == "true" } else 0
     val capacity = diagnostics.assignedSocketCapacity(
         configured, session.metrics.totalLines.takeIf { it > 0 } ?: profile?.totalLines ?: 0)
-    val live = session.metrics.activeLines
+    val live = if (liveSession) session.metrics.activeLines else 0
     val sockets = if (capacity == 0) "0/0" else "$live/$capacity"
-    val state = if (allocated == null) "$activeAccounts/$configured active accounts · allocation not reported"
+    val state = if (allocated == null) "$activeAccounts active / — allocated / $configured configured"
         else "$activeAccounts/$allocated/$configured active / allocated / configured"
     InfoCard(Modifier.fillMaxWidth(), contentPadding = if (compact) 10.dp else 14.dp) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -282,6 +283,6 @@ import kotlin.math.sin
             }
             Text("↓ ${Presentation.rate(session.metrics.downBps)}", color = Blue)
             Text("↑ ${Presentation.rate(session.metrics.upBps)}", color = Green)
-            SmallNote("RTT ${Presentation.rtt(session.metrics.rttMs)} · TCP ${session.metrics.tcp} · lanes ${Presentation.lanes(session.metrics.activeLines, session.metrics.totalLines, null)}")
+            SmallNote("RTT ${Presentation.rtt(session.metrics.rttMs)} · TCP ${session.metrics.tcp} · sockets ${Presentation.lanes(session.metrics.activeLines, session.metrics.totalLines, null)}")
         }
 }

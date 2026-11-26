@@ -14,7 +14,7 @@ class AccountScaleTest {
                 userId = "12345678", providerId = "scale", encryptionKeyRef = "keystore:scale-key",
                 mailboxNamespace = "itom-scale", accounts = accounts)
             Validation.profile(profile)
-            assertEquals(count * 2 + 1, profile.totalLines)
+            assertEquals(count * 4, profile.totalLines)
             assertEquals(count, profile.accounts.map { it.credentialRef }.toSet().size)
         }
     }

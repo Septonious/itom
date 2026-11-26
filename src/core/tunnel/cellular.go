@@ -35,7 +35,7 @@ func (p *cellularPolicy) decide(capacity int, latency float64, demand bool) int 
 	if p.base == 0 || latency < p.base {
 		p.base = latency
 	}
-	bad := latency > max(250, 3*p.base)
+	bad := latency >= 250 || latency > max(100, 3*p.base)
 	good := latency <= max(120, 1.5*p.base)
 	if bad {
 		p.severe++

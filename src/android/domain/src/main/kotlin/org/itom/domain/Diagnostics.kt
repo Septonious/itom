@@ -19,11 +19,11 @@ fun JsonObject.field(name: String): String? = (get(name) as? JsonPrimitive)?.con
 fun JsonObject.objectField(name: String): JsonObject? = get(name) as? JsonObject
 
 data class TransportDiagnostics(val root: JsonObject, val lines: List<JsonObject>) {
-    /** One control anchor per endpoint; data roles belong to temporary account leases. */
+    /** Four physical IMAP sockets per allocated account. */
     fun assignedSocketCapacity(configuredAccounts: Int, fallback: Int): Int {
         root.field("AssignedSocketCapacity")?.toIntOrNull()?.takeIf { it in 0..4096 }?.let { return it }
         val allocated = root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { it in 0..configuredAccounts }
-        if (allocated != null) return if (allocated == 0) 0 else allocated * 2 + 1
+        if (allocated != null) return allocated * 4
         return fallback.coerceIn(0, 4096)
     }
     val assignedLines: List<JsonObject> get() = lines.filter {

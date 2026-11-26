@@ -75,10 +75,10 @@ class DiagnosticsTest {
     }
 
     @Test fun socketCapacityUsesTheSameTopologyBeforeAndAfterAdmission() {
-        assertEquals(31, TransportDiagnostics.parse("{}").assignedSocketCapacity(15, 31))
-        assertEquals(31, TransportDiagnostics.parse("""{"StartupStage":"NOISE","TotalLines":31}""").assignedSocketCapacity(15, 31))
-        assertEquals(11, TransportDiagnostics.parse("""{"AllocatedAccounts":5}""").assignedSocketCapacity(15, 31))
-        assertEquals(0, TransportDiagnostics.parse("""{"AllocatedAccounts":0}""").assignedSocketCapacity(15, 31))
-        assertEquals(12, TransportDiagnostics.parse("""{"Client":{"AssignedSocketCapacity":12,"AllocatedAccounts":5}}""").assignedSocketCapacity(15, 31))
+        assertEquals(60, TransportDiagnostics.parse("{}").assignedSocketCapacity(15, 60))
+        assertEquals(60, TransportDiagnostics.parse("""{"StartupStage":"NOISE","TotalLines":31}""").assignedSocketCapacity(15, 60))
+        assertEquals(20, TransportDiagnostics.parse("""{"AllocatedAccounts":5}""").assignedSocketCapacity(15, 60))
+        assertEquals(0, TransportDiagnostics.parse("""{"AllocatedAccounts":0}""").assignedSocketCapacity(15, 60))
+        assertEquals(12, TransportDiagnostics.parse("""{"Client":{"AssignedSocketCapacity":12,"AllocatedAccounts":5}}""").assignedSocketCapacity(15, 60))
     }
 }

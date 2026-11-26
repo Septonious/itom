@@ -34,3 +34,17 @@ func TestCellularPolicy(t *testing.T) {
 		t.Fatal(n)
 	}
 }
+
+func TestCellularInitiallyPoor(t *testing.T) {
+	var p cellularPolicy
+	p.decide(8, 350, true)
+	if n := p.decide(8, 350, true); n != 1 {
+		t.Fatal(n)
+	}
+	for i := 0; i < 6; i++ {
+		p.decide(8, 80, true)
+	}
+	if p.limit != 8 {
+		t.Fatal(p.limit)
+	}
+}

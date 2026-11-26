@@ -1,5 +1,7 @@
 package org.itom.client
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,17 +21,39 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.itom.domain.*
 
-@Composable fun RulesScreen(policy: RoutingPolicy, appPolicy: AppPolicy, busy: Boolean, apps: () -> Unit, updateOptions: (RoutingPolicy) -> Unit = {}, updateApps: (Boolean) -> Unit = {}, apply: (RouteAction, List<String>) -> Unit) {
-    var selected by rememberSaveable { mutableStateOf(RouteAction.VPN) }
-    var vpn by rememberSaveable { mutableStateOf(policy.rules.VPN.joinToString("\n")) }
-    var block by rememberSaveable { mutableStateOf(policy.rules.Block.joinToString("\n")) }
-    var direct by rememberSaveable { mutableStateOf(policy.rules.Direct.joinToString("\n")) }
+@Composable fun RulesScreen(policy: RoutingPolicy, appPolicy: AppPolicy, busy: Boolean, apps: () -> Unit, updateOptions: (RoutingPolicy) -> Unit = {}, updateApps: (Boolean) -> Unit = {}, importRules: (AddressRules) -> Unit, onMessage: (String) -> Unit, apply: (RouteAction, List<String>) -> Unit) {
+    var selected by rememberSaveable { mutableStateOf<RouteAction?>(null) }
+    var draft by rememberSaveable { mutableStateOf("") }
+    var destination by rememberSaveable { mutableStateOf(false) }
     var test by rememberSaveable { mutableStateOf("") }
     var result by remember { mutableStateOf("") }
     var checking by remember { mutableStateOf(false) }
+    var updating by remember { mutableStateOf(false) }
+    var updated by remember { mutableStateOf("") }
+    var incoming by remember { mutableStateOf<AddressRules?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     LaunchedEffect(policy) { result = "" }
+    LaunchedEffect(Unit) { updated = withContext(Dispatchers.IO) { NativeRouting.updatedLabel(context) } }
+    val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            try { incoming = RoutingRulesExchange.decode(readBounded(context, uri, RoutingRulesExchange.LIMIT).toString(Charsets.UTF_8)) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { onMessage("Invalid routing rule document.") }
+        }
+    }
+    val exportPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            try {
+                val bytes = RoutingRulesExchange.encode(policy.rules).toByteArray(Charsets.UTF_8)
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: throw DomainError("FILE_UNAVAILABLE")
+                }
+                onMessage("Custom rules exported.")
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { onMessage("Could not export rules.") }
+        }
+    }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SmallNote("Applies to all profiles. Changes apply on the next connection.")
         InfoCard(Modifier.fillMaxWidth()) {
@@ -53,44 +77,65 @@ import org.itom.domain.*
             Text("Custom rules", style = MaterialTheme.typography.titleMedium)
             SmallNote("Block takes priority, then VPN, then Direct. Unmatched traffic uses VPN.")
             listOf(RouteAction.BLOCK, RouteAction.VPN, RouteAction.DIRECT).forEach { action ->
-                val active = selected == action
-                OutlinedButton(onClick = { selected = action }, modifier = Modifier.fillMaxWidth().semantics { this.selected = active }) {
+                OutlinedButton(onClick = { draft = policy.rules.entries(action).joinToString("\n"); selected = action }, modifier = Modifier.fillMaxWidth(), enabled = !busy && !updating) {
                     Text(routeName(action), color = routeColor(action), modifier = Modifier.weight(1f))
                     Text("${policy.rules.entries(action).size} rules", color = Muted)
+                    AppIcon(Glyph.NEXT, Modifier.size(18.dp))
                 }
             }
-        }
-        val text = when (selected) { RouteAction.VPN -> vpn; RouteAction.BLOCK -> block; RouteAction.DIRECT -> direct }
-        InfoCard(Modifier.fillMaxWidth()) {
-            Text("Addresses · ${routeName(selected)}", style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(value = text, onValueChange = {
-                if (it.length <= 128 * 1024) when (selected) { RouteAction.VPN -> vpn = it; RouteAction.BLOCK -> block = it; RouteAction.DIRECT -> direct = it }
-            }, label = { Text("One address per line") }, placeholder = { Text("google.com\n.ru\n192.0.2.0/24") }, minLines = 4, maxLines = 8,
-                shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
-            SmallNote("Domain or IP, domain:, full:, ip:, geosite: and geoip:ru. One rule per line.")
-            GradientButton("Apply ${routeName(selected)}", { apply(selected, text.lines()) }, Modifier.fillMaxWidth(), enabled = !busy, glyph = Glyph.CHECK)
+            TextButton(onClick = { destination = true }, enabled = !updating) { Text("Check a destination", color = Blue) }
         }
         InfoCard(Modifier.fillMaxWidth()) {
-            Text("Check a destination", style = MaterialTheme.typography.titleMedium)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = test, onValueChange = { test = it; result = "" }, label = { Text("Domain or IP") }, singleLine = true,
-                    shape = MaterialTheme.shapes.medium, modifier = Modifier.weight(1f))
-                GlyphButton(Glyph.SEARCH, "Check saved rules", {
-                    if (!checking) scope.launch {
-                        checking = true
-                        try { result = withContext(Dispatchers.IO) { NativeRouting.check(context, policy, test) } }
-                        catch (e: CancellationException) { throw e }
-                        catch (_: Exception) { result = "Invalid rule, target or routing data" }
-                        finally { checking = false }
-                    }
-                }, Blue)
-            }
-            if (checking) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if (result.isNotEmpty()) Text(result, color = Blue)
-            SmallNote("Saved rules are checked without opening a connection.")
+            Text("GeoSite and GeoIP", style = MaterialTheme.typography.titleMedium)
+            SmallNote(updated.ifBlank { "Reading dataset information…" })
+            OutlinedButton(enabled = !busy && !updating, onClick = {
+                updating = true
+                scope.launch {
+                    try {
+                        updated = withContext(Dispatchers.IO) { NativeRouting.updateLists(context, policy); NativeRouting.updatedLabel(context) }
+                        onMessage("Routing lists updated. Apply on next connection.")
+                    } catch (e: CancellationException) { throw e }
+                    catch (_: Exception) { onMessage("Update failed. Previous lists retained.") }
+                    finally { updating = false }
+                }
+            }) { Text(if (updating) "Updating…" else "Update lists") }
+            if (updating) LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedButton(onClick = { importPicker.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }, enabled = !busy && !updating, modifier = Modifier.weight(1f)) { Text("Import rules") }
+            OutlinedButton(onClick = { exportPicker.launch("itom-routing-rules.json") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Export rules") }
         }
         Spacer(Modifier.height(4.dp))
     }
+    selected?.let { action ->
+        AlertDialog(onDismissRequest = { selected = null }, title = { Text("${routeName(action)} rules") }, text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(draft, { if (it.length <= 128 * 1024) draft = it }, label = { Text("One address per line") }, placeholder = { Text("google.com\n.ru\n192.0.2.0/24") }, minLines = 4, maxLines = 8, modifier = Modifier.fillMaxWidth())
+                SmallNote("Domain or IP, domain:, full:, ip:, geosite: and geoip:ru.")
+            }
+        }, confirmButton = { TextButton(enabled = !busy, onClick = { apply(action, draft.lines()); selected = null }) { Text("Save") } }, dismissButton = { TextButton(onClick = { selected = null }) { Text("Cancel") } })
+    }
+    if (destination) AlertDialog(onDismissRequest = { destination = false }, title = { Text("Check a destination") }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(test, { test = it; result = "" }, label = { Text("Domain or IP") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            if (checking) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (result.isNotEmpty()) Text(result, color = Blue)
+            SmallNote("Checks saved rules without opening a connection.")
+        }
+    }, confirmButton = { TextButton(enabled = !checking && test.isNotBlank(), onClick = {
+        checking = true
+        scope.launch {
+            try { result = withContext(Dispatchers.IO) { NativeRouting.check(context, policy, test) } }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { result = "Invalid target or routing data" }
+            finally { checking = false }
+        }
+    }) { Text("Check") } }, dismissButton = { TextButton(onClick = { destination = false }) { Text("Close") } })
+    incoming?.let { rules -> AlertDialog(onDismissRequest = { incoming = null }, title = { Text("Replace custom rules?") },
+        text = { Text("Import ${rules.Block.size} Block, ${rules.VPN.size} VPN and ${rules.Direct.size} Direct rules. Existing custom rules will be replaced. Other settings are unchanged.") },
+        confirmButton = { TextButton(enabled = !busy, onClick = { importRules(rules); incoming = null }) { Text("Import") } },
+        dismissButton = { TextButton(onClick = { incoming = null }) { Text("Cancel") } }) }
+
 }
 
 @Composable private fun RoutingToggle(name: String, checked: Boolean, enabled: Boolean, change: (Boolean) -> Unit) {

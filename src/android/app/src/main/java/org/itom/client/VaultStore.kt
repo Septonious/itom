@@ -188,6 +188,11 @@ class VaultStore(private val context: Context) {
         NativeRouting.validate(context, policy)
         v.copy(settings = v.settings.copy(routing = policy))
     }
+    suspend fun importRules(rules: AddressRules) = update { v ->
+        val policy = v.settings.routing.copy(rules = RoutingRulesExchange.canonical(rules))
+        NativeRouting.validate(context, policy)
+        v.copy(settings = v.settings.copy(routing = policy))
+    }
     suspend fun routingOptions(policy: RoutingPolicy) = update { v ->
         val next = v.settings.routing.copy(ruSitesDirect = policy.ruSitesDirect, ruIpsDirect = policy.ruIpsDirect,
             blockAdsTrackers = policy.blockAdsTrackers, blockMalware = policy.blockMalware)

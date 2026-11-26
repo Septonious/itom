@@ -37,7 +37,7 @@ data class ServerProfile(
     // legacy pins must fall back to DNS rather than splitting the profile.
     fun effectiveIMAPDialIP(): String = if (imapDialIP.isNotEmpty()) imapDialIP
         else accounts.map { it.dialIP }.distinct().singleOrNull().orEmpty()
-    val totalLines: Int get() = accounts.count { it.enabled } * 2 + 1 }
+    val totalLines: Int get() = accounts.count { it.enabled } * 4 }
 @Serializable
 enum class RouteAction { VPN, @SerialName("Block") BLOCK, @SerialName("Direct") DIRECT }
 @Serializable

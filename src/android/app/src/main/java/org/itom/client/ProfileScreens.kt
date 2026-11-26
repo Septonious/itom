@@ -81,7 +81,7 @@ import java.util.Base64
                     if (profile.profileId in config.incompleteProfileIds) Text("Setup required", style = MaterialTheme.typography.labelSmall, color = Yellow)
                     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                         Column(Modifier.weight(1f)) { SmallNote("User ID"); Text(profile.userId) }
-                        Column(Modifier.weight(1f)) { SmallNote("Active lanes"); Text(profile.totalLines.toString()) }
+                        Column(Modifier.weight(1f)) { SmallNote("Max IMAP sockets"); Text(profile.totalLines.toString()) }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         OutlinedButton(enabled = !busy && !active, onClick = { onSelect(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
@@ -113,7 +113,7 @@ import java.util.Base64
         confirmButton = { TextButton(enabled = !busy, onClick = { onDelete(p.profileId); removing = null }) { Text("Remove", color = Red) } }, dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } }) }
 }
 
-private suspend fun readBounded(context: Context, uri: Uri, limit: Int): ByteArray = withContext(Dispatchers.IO) {
+internal suspend fun readBounded(context: Context, uri: Uri, limit: Int): ByteArray = withContext(Dispatchers.IO) {
     context.contentResolver.openInputStream(uri)?.use { input ->
         val buffer = ByteArray(8192); val out = ByteArrayOutputStream()
         while (true) { currentCoroutineContext().ensureActive(); val n = input.read(buffer); if (n < 0) break; demand(out.size() + n <= limit, "DOCUMENT_TOO_LARGE"); out.write(buffer, 0, n) }
@@ -224,7 +224,7 @@ private suspend fun decodeQr(context: Context, uri: Uri): String = withContext(D
                 Text(profile.name, style = MaterialTheme.typography.titleLarge)
                 Text("User ID: ${profile.userId}")
                 SmallNote("Server ID: ${profile.serverId}")
-                SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled · ${profile.totalLines} lanes")
+                SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled · ${profile.totalLines} IMAP sockets")
                 profile.accounts.map { "${it.host}:${it.port}" }.distinct().forEach { SmallNote(it) }
                 SmallNote("Folders: ${profile.mailboxNamespace}")
                 SmallNote("Key SHA-256: $fingerprint")
