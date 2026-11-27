@@ -51,7 +51,7 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
 	if err := VerifyCapacityState(u.State); err != nil {
 		return err
 	}
-	fmt.Fprintln(u.Out, "Permanently deletes ALL accessible folders and messages in this account, including non-ITOM mail. INBOX and folders protected by the provider are emptied. Stop all clients using this account. Other accounts are unaffected.")
+	fmt.Fprintln(u.Out, "Permanently deletes ALL accessible folders and messages in this account, including non-ITOM mail. INBOX and known system folders (Trash, Spam, SentBox, DraftBox) are emptied in place, never deleted or unsubscribed. Stop all clients using this account. Known-broken legacy folders are skipped untouched. Other accounts are unaffected.")
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Minute)
 	defer cancel()
 	dial := u.adminDial
@@ -91,12 +91,16 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
 	}
 	fmt.Fprintln(u.Out, "Purging…")
 	report, err := admin.PurgeAll(ctx)
-	labels := map[string]string{"DELETED": "folder deleted", "KEPT_EMPTY": "folder retained and emptied", "NOT_EMPTIED": "purge not confirmed", "UNKNOWN": "outcome not confirmed", "UNSUBSCRIBE_REFUSED": "could not remove subscription"}
+	labels := map[string]string{"DELETED": "folder deleted", "KEPT_EMPTY": "folder retained and emptied", "NOT_EMPTIED": "purge not confirmed", "UNKNOWN": "outcome not confirmed", "UNSUBSCRIBE_REFUSED": "could not remove subscription", "SKIPPED_PROTECTED": "protected legacy folder retained untouched"}
 	for _, item := range report.Items {
-		fmt.Fprintf(u.Out, "%q — %s\n", item.Name, labels[item.Outcome])
+		fmt.Fprintf(u.Out, "%q — %s", item.Name, labels[item.Outcome])
+		if item.Reason != "" {
+			fmt.Fprintf(u.Out, " (%s)", item.Reason)
+		}
+		fmt.Fprintln(u.Out)
 	}
 	if report.Verified {
-		fmt.Fprintln(u.Out, "Verification complete. Remaining folders:")
+		fmt.Fprintln(u.Out, "Verification complete for non-protected folders. Remaining folders:")
 		for _, name := range report.Remaining {
 			fmt.Fprintf(u.Out, "  %q\n", name)
 		}
@@ -134,7 +138,7 @@ func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
 	if len(cfg.Accounts) == 0 {
 		return errors.New("no mail accounts")
 	}
-	fmt.Fprintln(u.Out, "FULL PURGE: removes all accessible messages and user folders in ALL configured mail accounts. Protected system folders are emptied. Accounts are processed serially with pauses.")
+	fmt.Fprintln(u.Out, "FULL PURGE: removes all accessible messages and user folders in ALL configured mail accounts. INBOX and known system folders (Trash, Spam, SentBox, DraftBox) are emptied in place, never deleted or unsubscribed; known-broken legacy folders are skipped untouched. Accounts are processed serially with pauses.")
 	var failures []string
 	for i, account := range cfg.Accounts {
 		if i > 0 {
@@ -159,7 +163,7 @@ func (u *UI) purgeAllAccounts(cfg servercfg.Config) error {
 	if len(failures) != 0 {
 		return fmt.Errorf("full purge completed with errors: %s", strings.Join(failures, "; "))
 	}
-	fmt.Fprintln(u.Out, "\nAll mail accounts were purged serially. ITOM configuration is preserved.")
+	fmt.Fprintln(u.Out, "\nAll accessible non-protected mail was purged serially. System folders were retained empty; protected folders and ITOM configuration are preserved.")
 	return nil
 }
 
@@ -199,7 +203,11 @@ func (u *UI) purgeAccountRetry(ctx context.Context, cfg mailbox.Config) error {
 		report, purgeErr := admin.PurgeAll(ctx)
 		closeErr := admin.Close()
 		for _, item := range report.Items {
-			fmt.Fprintf(u.Out, "%s | %q — %s\n", cfg.Username, item.Name, item.Outcome)
+			fmt.Fprintf(u.Out, "%s | %q — %s", cfg.Username, item.Name, item.Outcome)
+			if item.Reason != "" {
+				fmt.Fprintf(u.Out, " (%s)", item.Reason)
+			}
+			fmt.Fprintln(u.Out)
 		}
 		if purgeErr == nil && closeErr == nil && report.Verified {
 			return nil
