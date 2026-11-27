@@ -153,7 +153,15 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 	if rate >= budget*.70 {
 		m.goodRate = max(16000, min(budget, rate*1.20))
 	}
-	candidate := min(budget*1.35, max(budget*1.05, rate*1.35))
+	// A low-delay, receipt-clock-limited sender can recover faster than
+	// the conservative congestion probe. Double only a well-utilized small
+	// budget after a healthy round; once above the small-rate region or
+	// when delay increases, retain the existing conservative ramp.
+	gain := 1.35
+	if budget < 500_000 && rate >= budget*.85 && base > 0 && bulk <= base+150*time.Millisecond && !rising && !m.reverseDemand && m.badSamples == 0 {
+		gain = 1.8
+	}
+	candidate := min(budget*gain, max(budget*1.05, rate*gain))
 	if rate < budget*.55 {
 		// A sparse receipt train is not proof of spare capacity. Lower an
 		// obviously oversized probe, but permit a small trial if receipts
@@ -272,7 +280,7 @@ func (s *Session) ObserveApplicationRTT(sample time.Duration) {
 	// Severe application delay with little/no bulk flight is not a capacity
 	// measurement. It does justify a conservative next-burst probe; keep
 	// the learned rate untouched and avoid admitting a full startup burst.
-	if sample >= 1500*time.Millisecond && s.delivery.bulkFlight > 0 && !m.progressAt.IsZero() && now.Sub(m.progressAt) >= 3*time.Second {
+	if !m.draining && sample >= 1500*time.Millisecond && s.delivery.bulkFlight > 0 && !m.progressAt.IsZero() && now.Sub(m.progressAt) >= 3*time.Second {
 		m.draining = true
 		m.recoverySamples = 0
 	}
@@ -355,4 +363,12 @@ func (m *mobileFlow) noteBulkRetry(now time.Time) {
 	if m.draining {
 		m.retryAt = now.Add(2 * time.Second)
 	}
+}
+
+// Caller holds Session.mu. pendingBytes includes both queued and published
+// packets awaiting receipt; bulkOutstanding includes consumed-byte credit
+// not yet refunded. Neither control-only traffic nor credit-only tails should
+// reserve the mobile client's uplink for a downlink that has already drained.
+func (s *Session) peerDownloadDemandLocked() uint64 {
+	return min(s.bulkOutstanding, uint64(max(0, s.pendingBytes)))
 }

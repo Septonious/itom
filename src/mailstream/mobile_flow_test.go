@@ -409,3 +409,60 @@ func TestMobileWindowAllowsBoundedLongRound(t *testing.T) {
 		t.Fatal("drain allowance", got)
 	}
 }
+
+func TestMobileFastRecoveryRequiresHealthyReceiptRound(t *testing.T) {
+	now := time.Unix(1000, 0)
+	for _, tc := range []struct {
+		name    string
+		bulk    time.Duration
+		reverse bool
+		rate    float64
+		want    float64
+	}{
+		{"healthy", 180 * time.Millisecond, false, 100_000, 180_000},
+		{"queued", 500 * time.Millisecond, false, 100_000, 135_000},
+		{"reverse", 180 * time.Millisecond, true, 100_000, 135_000},
+		{"underutilized", 180 * time.Millisecond, false, 70_000, 105_000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := mobileFlow{}
+			m.reset(true)
+			m.probeRate = 100_000
+			m.reverseDemand = tc.reverse
+			m.observeRate(tc.rate, now, true, tc.bulk, 100*time.Millisecond)
+			if got := m.pacing(now); got < tc.want-1 || got > tc.want+1 {
+				t.Fatal("unexpected recovery rate", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMobileApplicationStallDoesNotClearDrainEvidence(t *testing.T) {
+	s := &Session{}
+	s.delivery.mobile.reset(true)
+	m := &s.delivery.mobile
+	m.draining = true
+	m.progressAt = time.Now().Add(-5 * time.Second)
+	m.recoverySamples = 1
+	s.delivery.bulkFlight = maxWire
+	s.ObserveApplicationRTT(2 * time.Second)
+	if m.recoverySamples != 1 {
+		t.Fatal("lost existing drain evidence", m.recoverySamples)
+	}
+}
+
+func TestPeerDownloadDemandExcludesCreditOnlyTail(t *testing.T) {
+	s := &Session{bulkOutstanding: 2 << 20}
+	for _, tc := range []struct {
+		pending           int
+		outstanding, want uint64
+	}{
+		{0, 2 << 20, 0}, {64, 2 << 20, 64}, {256 << 10, 2 << 20, 256 << 10}, {512 << 10, 0, 0}, {512 << 10, 128 << 10, 128 << 10},
+	} {
+		s.pendingBytes = tc.pending
+		s.bulkOutstanding = tc.outstanding
+		if got := s.peerDownloadDemandLocked(); got != tc.want {
+			t.Fatal("incorrect peer demand", tc, got)
+		}
+	}
+}

@@ -778,7 +778,10 @@ func (s *Session) apply(f frame) error {
 			if s.server && f.offset&bearerDemand != 0 {
 				s.mu.Lock()
 				data = make([]byte, 17)
-				binary.BigEndian.PutUint64(data, s.bulkOutstanding)
+				// Application credit can remain outstanding after all DATA
+				// has been received (WINDOW and graceful FIN are asynchronous).
+				// Advertise actual queued/flight work, not stale credit debt.
+				binary.BigEndian.PutUint64(data, s.peerDownloadDemandLocked())
 				binary.BigEndian.PutUint64(data[8:], s.delivery.totalDelivered)
 				if s.delivery.mobile.draining {
 					data[16] = 1
