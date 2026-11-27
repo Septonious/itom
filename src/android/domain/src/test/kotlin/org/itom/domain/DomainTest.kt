@@ -328,7 +328,10 @@ class DomainTest {
             "USER_ID" to d.copy(userId = "01234567"), "PSK_FORMAT" to d.copy(pskBase64 = "abcd"),
             "ACCOUNT_COUNT" to d.copy(accounts = emptyList()), "ACCOUNT_COUNT" to d.copy(accounts = listOf(a.copy(enabled = false))),
             "IMAP_PORT" to d.copy(accounts = listOf(a.copy(port = "65536"))), "IMAP_PORT" to d.copy(accounts = listOf(a.copy(port = "port"))),
-            "IMAP_HOST" to d.copy(accounts = listOf(a.copy(host = "https://imap.example.invalid")) + d.accounts.drop(1)),
+            "IMAP_HOST" to d.copy(accounts = d.accounts.map { it.copy(host = "https://imap.example.invalid") }),
+            "MIXED_PROVIDERS" to d.copy(accounts = listOf(a.copy(host = "imap.other.invalid")) + d.accounts.drop(1)),
+            "ACCOUNT_COUNT_MINIMUM_4" to d.copy(accounts = d.accounts.take(3)),
+            "ACCOUNT_COUNT_MINIMUM_4" to d.copy(accounts = d.accounts.mapIndexed { index, account -> account.copy(enabled = index < 3) }),
             "CREDENTIAL_FORMAT" to d.copy(accounts = listOf(a.copy(username = "x\r\nLOGOUT")) + d.accounts.drop(1)),
             "DUPLICATE_ACCOUNT" to d.copy(accounts = listOf(a, a.copy(localRef = "keystore:another")) + d.accounts.drop(1)),
         )

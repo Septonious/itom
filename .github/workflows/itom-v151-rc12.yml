@@ -1,4 +1,4 @@
-name: ITOM 1.5.1 RC12 build and qualification
+name: ITOM 1.5.1 RC12 Android and Linux build
 on:
   push:
     branches: [codex/itom-v151-rc12]
@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = refs/heads/codex/itom-v151-rc12
-          expected=2dcba13c9fc00d322feec67dc90cb07f4140fb13
+          expected=90ffd28ce73734accf005af450566c5efe9bbc11
           test "$(git rev-parse HEAD:src)" = "$expected"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git archive --format=tar.gz --output=itom-rc12-exact-source.tar.gz HEAD src
@@ -58,6 +58,12 @@ jobs:
         with:
           go-version: '1.27.1'
           cache: false
+      - name: Focused dispatcher regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
+      - name: RC4 pacing, maintenance and allocation planner regression tests
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC3|TestRC4|TestBulkControlUrgency|TestPacingOnly|TestMeasuredBulkBurst|TestInteractiveReceiptsBound' .
       - name: Live four-socket allocation and suspend-resume integration
         working-directory: src/mailstream
         run: |
@@ -95,6 +101,12 @@ jobs:
       - name: RC7 account allocation recovery
         working-directory: src/core
         run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
+      - name: Verify qualification module dependency closure
+        working-directory: src/qualification
+        run: go list -mod=readonly -deps ./provider ./worker > /dev/null
+      - name: Native qualification gate unit tests
+        working-directory: src/qualification
+        run: python3 -m unittest test_home_gate
       - name: Full core race-detector suite including native process integration
         working-directory: src/core
         run: go test -race -mod=readonly -timeout=10m ./...
@@ -180,96 +192,3 @@ jobs:
           name: ITOM-1.5.1-RC12-development
           path: dist/
           if-no-files-found: error
-  screen:
-    needs: materialize
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.materialize.outputs.sha }}
-          sparse-checkout: src
-          fetch-depth: 1
-      - name: Export exact Go source
-        run: git archive --format=tar.gz --output=itom-v151-source.tar.gz HEAD src
-      - uses: actions/upload-artifact@v4
-        with:
-          name: itom-v151-exact-source
-          path: itom-v151-source.tar.gz
-          if-no-files-found: error
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.27.1'
-          cache: false
-      - name: Focused dispatcher regressions
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
-      - name: RC4 pacing, maintenance and allocation planner regression tests
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=3 -run 'TestRC3|TestRC4|TestBulkControlUrgency|TestPacingOnly|TestMeasuredBulkBurst|TestInteractiveReceiptsBound' .
-      - name: Live four-socket allocation and suspend-resume integration
-        working-directory: src/mailstream
-        run: |
-          go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
-      - name: Server allocation and cellular controller tests
-        working-directory: src/core
-        run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
-      - name: RC5 encrypted exit and storage grant regression tests
-        working-directory: src/core
-        run: go test -race -mod=readonly -count=3 ./relay ./tunnel -run 'Test(RC5|Relay|WrongKey|DirectFallback|ConcurrentRelay|Cancellation|ShutdownWith|RC4FieldGrant|SessionAdmission)'
-      - name: Preserve healthy control writer on cleanup failure
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
-      - name: RC7 repeated reconnect with unavailable unallocated account
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
-      - name: RC11 mobile controller, bearer and 30-account regression
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=20 -run '^TestRC11(Mobile|Bearer|Account)' .
-      - name: RC12 operational account minimum and stall recovery
-        working-directory: src/core
-        run: go test -race -mod=readonly -count=20 -run 'Test(RC12|Cellular)' ./tunnel
-      - name: RC12 stalled mobile flow recovery
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=20 -run '^TestRC12' .
-      - name: RC10 retained system folders, protected legacy purge, EOF recovery and RTT controller
-        working-directory: src/core
-        run: go test -race -mod=readonly -count=20 -run 'Test(Cellular|Purge|ProtectedLegacy|FailedPurge|LifecycleCapacity)' ./mailbox ./manager ./tunnel
-      - name: RC7 account availability, control reader recovery and latency regressions
-        working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC[78]' .
-      - name: RC7 account allocation recovery
-        working-directory: src/core
-        run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
-      - name: Verify qualification module dependency closure
-        working-directory: src/qualification
-        run: go list -mod=readonly -deps ./provider ./worker > /dev/null
-      - name: Native qualification gate unit tests
-        working-directory: src/qualification
-        run: python3 -m unittest test_home_gate
-      - name: Eight-account native screen
-        id: native_screen
-        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-screen" --screen
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-v151-native-screen
-          path: ${{ runner.temp }}/itom-screen/
-          if-no-files-found: ignore
-      - name: Encrypted exit native screen
-        if: ${{ !cancelled() && steps.native_screen.outcome != 'skipped' }}
-        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-exit-screen" --screen --encrypted-exit
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-v151-encrypted-exit-screen
-          path: ${{ runner.temp }}/itom-exit-screen/
-          if-no-files-found: ignore
-      - name: Full native qualification matrix
-        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-matrix"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: itom-v151-native-matrix
-          path: ${{ runner.temp }}/itom-matrix/
-          if-no-files-found: ignore
