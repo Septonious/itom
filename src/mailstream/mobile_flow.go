@@ -168,6 +168,15 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 		// are consistent and the budget was merely flight-limited.
 		candidate = max(16000, min(budget*1.05, max(budget*.85, rate*1.8)))
 	}
+	// Reverse demand alone is not congestion. A mobile uplink that has
+	// recovered from a radio outage must be able to probe above a tiny
+	// reservation budget while downstream control and DATA receipts remain
+	// healthy. Bound the trial to a small rate, and never override a hold.
+	if m.reverseDemand && budget < 250_000 && m.badSamples == 0 &&
+		m.controlDelay > 0 && m.controlDelay <= max(250*time.Millisecond, base+100*time.Millisecond) &&
+		previous > 0 && bulk <= previous+75*time.Millisecond && rate >= budget*.70 {
+		candidate = max(candidate, min(250_000, min(budget*1.5, budget+32_000)))
+	}
 	m.probeRate = min(12_500_000, candidate)
 	m.capacity = max(m.capacity, m.goodRate)
 	m.probeAt = now

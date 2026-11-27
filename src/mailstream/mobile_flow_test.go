@@ -466,3 +466,33 @@ func TestPeerDownloadDemandExcludesCreditOnlyTail(t *testing.T) {
 		}
 	}
 }
+
+func TestMobileReverseDemandPermitsHealthyRecovery(t *testing.T) {
+	now := time.Unix(1000, 0)
+	for _, tc := range []struct {
+		name  string
+		delay time.Duration
+		hold  bool
+		want  float64
+	}{
+		{"healthy", 150 * time.Millisecond, false, 132_000},
+		{"queued", 500 * time.Millisecond, false, 121_500},
+		{"hold", 150 * time.Millisecond, true, 100_000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := mobileFlow{}
+			m.reset(true)
+			m.probeRate = 100_000
+			m.reverseDemand = true
+			m.controlDelay = tc.delay
+			m.lastBulk = 180 * time.Millisecond
+			if tc.hold {
+				m.reverseHoldUntil = now.Add(time.Second)
+			}
+			m.observeRate(90_000, now, true, 180*time.Millisecond, 100*time.Millisecond)
+			if v := m.pacing(now); v < tc.want-1 || v > tc.want+1 {
+				t.Fatal(v, tc.want)
+			}
+		})
+	}
+}

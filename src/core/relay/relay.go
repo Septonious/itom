@@ -128,10 +128,10 @@ func policy(c Config, server bool) (*tls.Config, error) {
 	if e != nil {
 		return nil, e
 	}
-	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{"olcrtc-relay/1"}, SessionTicketsDisabled: true}
+	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{relayProtocolV2, relayProtocolV1}, SessionTicketsDisabled: true}
 	p.InsecureSkipVerify = true //nolint:gosec // mandatory VerifyConnection pins the PSK-derived identity, no public CA or hostname.
 	p.VerifyConnection = func(cs tls.ConnectionState) error {
-		if cs.NegotiatedProtocol != "olcrtc-relay/1" || len(cs.PeerCertificates) != 1 {
+		if (cs.NegotiatedProtocol != relayProtocolV1 && cs.NegotiatedProtocol != relayProtocolV2) || len(cs.PeerCertificates) != 1 {
 			return errors.New("relay authentication failed")
 		}
 		pub, ok := cs.PeerCertificates[0].PublicKey.(ed25519.PublicKey)
@@ -247,6 +247,9 @@ func (d *Dialer) Connect(ctx context.Context, target string) (net.Conn, error) {
 	}
 	_ = conn.SetDeadline(time.Time{})
 	ok = true
+	if conn.ConnectionState().NegotiatedProtocol == relayProtocolV2 {
+		return newCreditConn(conn), nil
+	}
 	return conn, nil
 }
 
@@ -396,9 +399,14 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 		return
 	}
 	_ = c.SetDeadline(time.Time{})
+	var link net.Conn = c
+	if c.ConnectionState().NegotiatedProtocol == relayProtocolV2 {
+		link = newCreditConn(c)
+		defer link.Close()
+	}
 	done := make(chan struct{})
 	go func() {
-		_, e := io.Copy(upload, c)
+		_, e := io.Copy(upload, link)
 		if e != nil {
 			_ = out.Close()
 		} else if half, ok := out.(interface{ CloseWrite() error }); ok {
@@ -406,8 +414,8 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 		}
 		close(done)
 	}()
-	_, _ = io.Copy(c, download)
-	_ = c.CloseWrite()
-	_ = c.SetReadDeadline(time.Now().Add(30 * time.Second))
+	_, _ = io.Copy(link, download)
+	_ = link.(interface{ CloseWrite() error }).CloseWrite()
+	_ = link.SetReadDeadline(time.Now().Add(30 * time.Second))
 	<-done
 }
