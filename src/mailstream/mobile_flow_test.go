@@ -328,3 +328,25 @@ func TestRC14AsymmetricRecovery(t *testing.T) {
 		}
 	})
 }
+
+// Continuous sparse flight with receipt gaps longer than the old idle
+// threshold must still train the rate estimator.
+func TestSparseMobileFlightRetainsReceiptClock(t *testing.T) {
+	now := time.Unix(1000, 0)
+	w := deliveryWindow{adaptive: true}
+	w.mobile.reset(true)
+	w.mobile.probeRate = 100_000
+	w.base = 100 * time.Millisecond
+	for i := range 8 {
+		mark := w.sent(48<<10, now, true)
+		w.limited = true
+		now = now.Add(1100 * time.Millisecond)
+		w.delivered(48<<10, 1100*time.Millisecond, now, true, mark)
+		if i > 0 && w.mobile.updated.IsZero() {
+			t.Fatal("continuous flight lost delivery rate estimator")
+		}
+	}
+	if w.rate <= 0 || w.mobile.lastRate <= 0 {
+		t.Fatal("continuous sparse flight failed to measure delivered bytes", w.rate, w.mobile.lastRate)
+	}
+}

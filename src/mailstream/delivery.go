@@ -107,7 +107,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	}
 	// Light probes and an idle opposite direction are not capacity samples.
 	// Restart from a safe flight bound, without dividing bytes by an idle gap.
-	if w.last.IsZero() || now.Sub(w.last) > max(time.Second, 4*w.base) {
+	// A sparse but continuously outstanding mobile flight is not idle.
+	// Restarting on each long receipt round erases recovery rate samples.
+	activeMobileFlight := w.mobile.enabled && (w.bulkFlight > n || w.limited ||
+		w.pacer.deferrals > w.mobile.lastDeferrals)
+	if w.last.IsZero() || !activeMobileFlight && now.Sub(w.last) > max(time.Second, 4*w.base) {
 		w.start, w.acked, w.rate = now, 0, 0
 		w.limit = initialDeliveryWindow
 		w.bulkRTT, w.horizon = 0, 0
