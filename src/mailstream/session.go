@@ -686,7 +686,14 @@ func (s *Session) receiveLoop() {
 					s.fail(creditErr)
 					return
 				}
-				if storage, ok := s.link.(StorageLink); ok {
+				if batched, ok := s.link.(interface {
+					AcknowledgeBatch(SessionID, []uint64) error
+				}); ok {
+					if err := batched.AcknowledgeBatch(s.cipher.id, acknowledged); err != nil {
+						s.fail(err)
+						return
+					}
+				} else if storage, ok := s.link.(StorageLink); ok {
 					for _, id := range acknowledged {
 						if err := storage.Acknowledge(s.cipher.id, id); err != nil {
 							s.fail(err)

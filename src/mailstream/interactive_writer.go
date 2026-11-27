@@ -6,22 +6,55 @@ import "time"
 // independent publisher lets interactive traffic progress during DATA literal
 // continuation, rollover and cleanup. Each writer has two bounded tag slots.
 func (a *mailAccountState) publishInteractive() {
+	var carry *mailWork
 	for {
-		select {
-		case <-a.ctx.Done():
-			return
-		case work := <-a.interactive:
-			if err := a.writeInteractive(work); err != nil && a.ctx.Err() == nil {
-				a.failedStage("interactive_append", err)
-				// Leave the charge for an uncertain publication intact. Closing
-				// this socket wakes the ordinary writer's recovery owner.
-				work.target.conn.NetConn().Close()
+		var work mailWork
+		if carry != nil {
+			work, carry = *carry, nil
+		} else {
+			select {
+			case <-a.ctx.Done():
+				return
+			case work = <-a.interactive:
 			}
+		}
+		next, err := a.writeInteractive(work)
+		carry = next
+		if err != nil && a.ctx.Err() == nil {
+			a.failedStage("interactive_append", err)
+			// Leave the charge for an uncertain publication intact. Closing this
+			// socket wakes the ordinary writer's recovery owner.
+			work.target.conn.NetConn().Close()
 		}
 	}
 }
 
-func (a *mailAccountState) writeInteractive(work mailWork) error {
+// Already queued small packets for this publisher can share one MIME message.
+// Do not add any coalescing timer or change route choice: an isolated request
+// still publishes immediately and account-pinned traffic stays on its account.
+// Stay below LITERAL- size after MIME encoding; preserve the next accepted
+// packet as carry if a publication/identity boundary is encountered.
+func collectInteractive(first mailWork, q <-chan mailWork) ([]mailWork, *mailWork) {
+	batch := []mailWork{first}
+	size := 6 + 4 + len(first.body)
+	_, id, _, _ := parseHeader(first.body)
+	for len(batch) < 8 && size < 2048 {
+		select {
+		case next := <-q:
+			_, nextID, _, err := parseHeader(next.body)
+			if err != nil || nextID != id || next.target != first.target || size+4+len(next.body) > 2048 {
+				return batch, &next
+			}
+			batch = append(batch, next)
+			size += 4 + len(next.body)
+		default:
+			return batch, nil
+		}
+	}
+	return batch, nil
+}
+
+func (a *mailAccountState) writeInteractive(work mailWork) (*mailWork, error) {
 	p := work.target
 	dequeued := time.Now()
 	if !work.queuedAt.IsZero() {
@@ -33,10 +66,10 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 	case p.interactiveTags <- struct{}{}:
 	case <-p.done:
 		a.dropInteractive(work)
-		return nil
+		return nil, nil
 	case <-a.ctx.Done():
 		a.dropInteractive(work)
-		return nil
+		return nil, nil
 	}
 	a.interactiveTagUS.Store(time.Since(dequeued).Microseconds())
 	inFlight := false
@@ -47,34 +80,44 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 	}()
 	_, id, _, err := parseHeader(work.body)
 	if err != nil {
-		return err
+		a.dropInteractive(work)
+		return nil, err
 	}
-	encoded := encodeMail(work.body)
+	batch, carry := collectInteractive(work, a.interactive)
+	packets := make([][]byte, 0, len(batch))
+	charge := 0
+	for _, item := range batch {
+		packets = append(packets, item.body)
+		charge += item.charge
+	}
+	encoded := encodeMail(packMail(packets))
 	a.mu.Lock()
-	a.queuedBytes -= work.charge
+	a.queuedBytes -= charge
 	if a.id != id || a.controlWriter != p || a.parking.Load() || a.ctx.Err() != nil {
-		a.controlQueued--
+		a.controlQueued -= len(batch)
 		a.mu.Unlock()
-		return nil
+		return carry, nil
 	}
 	select {
 	case <-p.done:
-		a.controlQueued--
+		a.controlQueued -= len(batch)
 		a.mu.Unlock()
-		return nil
+		return carry, nil
 	default:
 	}
-	a.reserveControlPublicationLocked(1)
+	a.reserveControlPublicationLocked(len(batch))
 	err = a.chargeLocked(len(encoded))
 	a.mu.Unlock()
 	if err != nil {
-		return err
+		return carry, err
 	}
-	a.link.note("append", a.config.ID, work.body, 0, true)
+	for _, packet := range packets {
+		a.link.note("append", a.config.ID, packet, 0, true)
+	}
 	started := time.Now()
 	cmd, err := p.startAppend(a.link.controlFolder(true), encoded)
 	if err != nil {
-		return err
+		return carry, err
 	}
 	// Once the literal is written, the next small request can be submitted
 	// without waiting a provider round trip for this command's tagged result.
@@ -100,9 +143,11 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 		a.observeControlPublication(time.Since(started))
 		a.controlAppended(result, len(encoded))
 		a.appendCompleted(true, len(encoded), started)
-		a.upBytes.Add(uint64(len(work.body)))
+		for _, packet := range packets {
+			a.upBytes.Add(uint64(len(packet)))
+		}
 	}()
-	return nil
+	return carry, nil
 }
 
 func (a *mailAccountState) dropInteractive(work mailWork) {
@@ -111,7 +156,6 @@ func (a *mailAccountState) dropInteractive(work mailWork) {
 	a.queuedBytes -= work.charge
 	a.mu.Unlock()
 }
-
 func (p *mailPipe) closeInteractiveWriter() {
 	p.close()
 	p.interactiveMu.Lock()
