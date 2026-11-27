@@ -350,3 +350,29 @@ func TestSparseMobileFlightRetainsReceiptClock(t *testing.T) {
 		t.Fatal("continuous sparse flight failed to measure delivered bytes", w.rate, w.mobile.lastRate)
 	}
 }
+
+func TestMobileReverseDemandReservesControlHeadroom(t *testing.T) {
+	now := time.Unix(1000, 0)
+	m := mobileFlow{}
+	m.reset(true)
+	m.probeRate = 500_000
+	m.lastRate = 500_000
+	m.controlDelay = 100 * time.Millisecond
+	m.observeDelay(300*time.Millisecond, 100*time.Millisecond, now, true)
+	if m.probeRate != 500_000 {
+		t.Fatal("undemanded reservation", m.probeRate)
+	}
+	m.reverseDemand = true
+	m.observeDelay(300*time.Millisecond, 100*time.Millisecond, now.Add(time.Second), true)
+	if m.probeRate != 400_000 {
+		t.Fatal("reverse demand did not reserve headroom", m.probeRate)
+	}
+	m.observeRate(400_000, now.Add(2*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
+	if m.probeRate != 400_000 {
+		t.Fatal("hold did not prevent immediate refill", m.probeRate)
+	}
+	m.observeRate(400_000, now.Add(5*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
+	if m.probeRate <= 400_000 {
+		t.Fatal("healthy delivery did not resume probing", m.probeRate)
+	}
+}

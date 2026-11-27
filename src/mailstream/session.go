@@ -416,6 +416,12 @@ func (s *Session) dispatchLoop() {
 		clear(batch)
 		batch = batch[:0]
 		s.mu.Lock()
+		// Only the mobile client's uplink is reserved for fresh authenticated
+		// downstream demand; the RU server's independent downlink is not.
+		s.delivery.mobile.reverseDemand = !s.server && !s.peerDemandAt.IsZero() && now.Sub(s.peerDemandAt) < 6*time.Second && s.peerBulkPending >= 128<<10
+		if !s.delivery.mobile.reverseDemand {
+			s.delivery.mobile.reverseHoldUntil = time.Time{}
+		}
 		s.delivery.mobile.progress(now, s.delivery.totalDelivered, s.delivery.bulkFlight)
 		rto := min(8*time.Second, max(750*time.Millisecond, 2*s.rtt+4*s.variation))
 		for seq, p := range s.pending {

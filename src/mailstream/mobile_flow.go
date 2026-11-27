@@ -30,6 +30,8 @@ type mobileFlow struct {
 	ratePeak            float64
 	ratePeakAt          time.Time
 	lastBusy            time.Time
+	reverseDemand       bool
+	reverseHoldUntil    time.Time
 }
 
 const mobileStartRate = 1_000_000
@@ -55,6 +57,16 @@ func (m *mobileFlow) observeDelay(rtt, base time.Duration, now time.Time, busy b
 		return
 	}
 	if m.probeRate > 0 {
+		// On an asymmetric bearer, a saturated uplink may deliver its own
+		// DATA on time while starving the peer of FETCH/APPEND control.
+		// A fresh authenticated downstream backlog plus a rising control
+		// delay justifies a small uplink reduction even if our own delivery
+		// rate still looks healthy. Never reserve capacity for stale demand.
+		if m.reverseDemand && base > 0 && rtt > max(250*time.Millisecond, base+150*time.Millisecond) && !now.Before(m.reverseHoldUntil) && m.probeRate > 64_000 {
+			m.probeRate = max(64_000, m.probeRate*.8)
+			m.probeAt = now
+			m.reverseHoldUntil = now.Add(3 * time.Second)
+		}
 		// A rising control queue is a corroborating signal, not an absolute
 		// RTT gate. Back off at most once per second during an active probe.
 		previous := m.controlDelay
@@ -132,7 +144,7 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 		m.badSamples = 0
 		return
 	}
-	if rising || !m.probeAt.IsZero() && now.Sub(m.probeAt) < time.Second {
+	if rising || now.Before(m.reverseHoldUntil) || !m.probeAt.IsZero() && now.Sub(m.probeAt) < time.Second {
 		return
 	}
 	// If the sender is constrained by the window/pacer, try a modest extra
