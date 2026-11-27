@@ -14,7 +14,13 @@ import (
 // paths. Replace both at once; verify real DATA echo and all eight physical
 // account sets without recreating the stream or session.
 func TestRC7ReplaceTwoFailedAccountsInLiveSession(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	testRC7Repair(t, false)
+}
+func TestRC7FailedReplacementDoesNotWedgeGrant(t *testing.T) {
+	testRC7Repair(t, true)
+}
+func testRC7Repair(t *testing.T, failReplacement bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 65*time.Second)
 	defer cancel()
 	accounts, _ := applicationMailServerAccounts(t, true, false, nil, nil, 15)
 	srv, e := NewIMAPLink(ctx, "rc7-repair", accounts, false)
@@ -92,8 +98,26 @@ func TestRC7ReplaceTwoFailedAccountsInLiveSession(t *testing.T) {
 	replacement := append([]string(nil), ids...)
 	replacement[0] = accounts[8].ID
 	replacement[4] = accounts[9].ID
+	if failReplacement {
+		cli.account(accounts[8].ID).fail()
+		desired.Store(&replacement)
+		await(12*time.Second, func() bool {
+			m := srv.Snapshot()
+			if !m.GrantChanging {
+				return false
+			}
+			for _, a := range m.Lines {
+				if a.Account == accounts[8].ID {
+					return a.PeerUnavailable
+				}
+			}
+			return false
+		})
+		replacement = append([]string(nil), replacement...)
+		replacement[0] = accounts[10].ID
+	}
 	desired.Store(&replacement)
-	await(12*time.Second, func() bool {
+	await(32*time.Second, func() bool {
 		m := cli.Snapshot()
 		if m.Data != 8 || m.Ready != 8 || m.AllocatedAccounts != 8 || m.Writers != 8 || m.ControlWriters != 8 || m.GrantChanging {
 			return false
