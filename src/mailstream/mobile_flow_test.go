@@ -364,15 +364,15 @@ func TestMobileReverseDemandReservesControlHeadroom(t *testing.T) {
 	}
 	m.reverseDemand = true
 	m.observeDelay(300*time.Millisecond, 100*time.Millisecond, now.Add(time.Second), true)
-	if m.probeRate != 400_000 {
+	if m.probeRate != 440_000 {
 		t.Fatal("reverse demand did not reserve headroom", m.probeRate)
 	}
-	m.observeRate(400_000, now.Add(2*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
-	if m.probeRate != 400_000 {
+	m.observeRate(440_000, now.Add(2*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
+	if m.probeRate != 440_000 {
 		t.Fatal("hold did not prevent immediate refill", m.probeRate)
 	}
-	m.observeRate(400_000, now.Add(5*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
-	if m.probeRate <= 400_000 {
+	m.observeRate(440_000, now.Add(5*time.Second), true, 250*time.Millisecond, 100*time.Millisecond)
+	if m.probeRate <= 440_000 {
 		t.Fatal("healthy delivery did not resume probing", m.probeRate)
 	}
 }

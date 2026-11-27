@@ -63,9 +63,9 @@ func (m *mobileFlow) observeDelay(rtt, base time.Duration, now time.Time, busy b
 		// delay justifies a small uplink reduction even if our own delivery
 		// rate still looks healthy. Never reserve capacity for stale demand.
 		if m.reverseDemand && base > 0 && rtt > max(250*time.Millisecond, base+150*time.Millisecond) && !now.Before(m.reverseHoldUntil) && m.probeRate > 64_000 {
-			m.probeRate = max(64_000, m.probeRate*.8)
+			m.probeRate = max(64_000, m.probeRate*.88)
 			m.probeAt = now
-			m.reverseHoldUntil = now.Add(3 * time.Second)
+			m.reverseHoldUntil = now.Add(2 * time.Second)
 		}
 		// A rising control queue is a corroborating signal, not an absolute
 		// RTT gate. Back off at most once per second during an active probe.
