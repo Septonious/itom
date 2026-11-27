@@ -234,11 +234,20 @@ func (s *Stream) Read(p []byte) (int, error) {
 				s.receiveLimit = streamWindow
 				grew = true
 			}
+			// Cellular sends cap outstanding per-stream credit; acknowledge consumption
+			// more frequently so that a full window can resume promptly.
+			s.session.mu.Lock()
+			mobile := s.session.delivery.mobile.enabled
+			s.session.mu.Unlock()
+			threshold := uint64(2 * initialStreamWindow)
+			if mobile {
+				threshold = initialStreamWindow
+			}
 			// The first window expansion remains immediate. Once bulk is
 			// established, amortize credit announcements across 512 KiB.
 			// Even 64 active streams leave at most 32 MiB unannounced,
 			// below the shared 60 MiB bulk allowance. Close reports the tail.
-			sendWindow := grew || consumed-s.advertised >= 2*initialStreamWindow
+			sendWindow := grew || consumed-s.advertised >= threshold
 			if sendWindow {
 				s.advertised = consumed
 			}
@@ -280,8 +289,8 @@ func (s *Stream) Write(p []byte) (int, error) {
 			s.mu.Unlock()
 			return written, os.ErrDeadlineExceeded
 		}
-		room := uint64(s.peerWindow) - (s.sendOffset - s.peerConsumed)
 		s.session.mu.Lock()
+		room := streamSendRoom(s.peerWindow, s.sendOffset-s.peerConsumed, s.session.delivery.mobile.enabled)
 		credit := s.session.changed
 		if s.sendOffset >= streamPrefix {
 			room = min(room, bulkBudget-s.session.bulkOutstanding)
@@ -297,7 +306,11 @@ func (s *Stream) Write(p []byte) (int, error) {
 			}
 			continue
 		}
-		n := min(len(p), maxPayload-13, int(room))
+		payloadLimit := maxPayload - 13
+		if s.session.delivery.mobile.enabled {
+			payloadLimit = mobilePayloadLimit(s.session.delivery.mobile.pacing(time.Now()))
+		}
+		n := min(len(p), payloadLimit, int(room))
 		offset := s.sendOffset
 		deadline := s.writeDeadline
 		if offset > ^uint64(0)-uint64(n) {
@@ -464,4 +477,24 @@ func bridge(a, b net.Conn) {
 	go copyOne(a, b)
 	go copyOne(b, a)
 	wg.Wait()
+}
+
+// Apply local backpressure without revoking credit already advertised by the
+// receiver. A bearer handover may leave more than the new limit outstanding;
+// saturate at zero until consumption catches up, never wrap unsigned credit.
+func streamSendRoom(peerWindow int, outstanding uint64, mobile bool) uint64 {
+	if mobile {
+		peerWindow = min(peerWindow, 1<<20)
+	}
+	if outstanding >= uint64(peerWindow) {
+		return 0
+	}
+	return uint64(peerWindow) - outstanding
+}
+
+// A long literal cannot be preempted once the TCP serializer owns it. On a
+// slow bearer, bound new DATA fragments to roughly 75ms of measured wire
+// service; preserve the normal frame size when the bearer recovers.
+func mobilePayloadLimit(rate float64) int {
+	return min(maxPayload-13, max(16<<10, int(rate*.075)))
 }
