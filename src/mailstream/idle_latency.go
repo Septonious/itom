@@ -23,6 +23,39 @@ func (a *mailAccountState) controlReadDelay() time.Duration {
 	return time.Millisecond
 }
 
+// Once a desktop grant is attached, bounded empty-FETCH backoff reduces
+// provider load without parking the socket. Mobile, grant transitions,
+// pre-negotiation startup and standby mailboxes keep their original policy.
+func (a *mailAccountState) controlIdleEligible() bool {
+	l := a.link
+	if l.mobileFeedback.Load() {
+		return false
+	}
+	// lastBulk is shared by both publication and the DATA reader. Never
+	// slow feedback polling during active transfer or the initial drain.
+	if last := l.lastBulk.Load(); last != 0 && time.Since(time.Unix(0, last)) < time.Second {
+		return false
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.attached != (SessionID{}) && l.grantSession == l.attached && !l.grantChanging && l.grant[a.config.ID]
+}
+
+// The reader owns emptyStreak. A real message or unsolicited wake resets it.
+// The timer is a fallback for providers that do not send unsolicited EXISTS.
+func idleControlDelay(base time.Duration, emptyStreak int, eligible bool) time.Duration {
+	if base != time.Millisecond || !eligible {
+		return base
+	}
+	if emptyStreak >= 32 {
+		return 8 * time.Millisecond
+	}
+	if emptyStreak >= 8 {
+		return 4 * time.Millisecond
+	}
+	return base
+}
+
 // Only the independent interactive APPEND completion updates this score.
 // Use a short EWMA plus dispersion rather than selecting lucky minima.
 func (a *mailAccountState) observeControlPublication(d time.Duration) {

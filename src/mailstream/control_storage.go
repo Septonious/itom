@@ -285,6 +285,7 @@ func (a *mailAccountState) refundControlLocked(mark uidWatermark) error {
 // UID FETCH does not depend on sequence positions, which change after EXPUNGE.
 // Polls use an absolute forward UID range; no reversed n:* range re-reads the tail.
 func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error {
+	emptyStreak := 0
 	for {
 		p.phase.Store(11)
 		select {
@@ -380,10 +381,12 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 			// A separate periodic NOOP delays the receive critical path.
 			p.observeEmptyControlFetch(fetchStarted)
 			p.emptyControlFetches.Add(1)
+			emptyStreak = min(32, emptyStreak+1)
 			delay := time.Millisecond
 			if p.controlPollDelay != nil {
 				delay = p.controlPollDelay()
 			}
+			delay = idleControlDelay(delay, emptyStreak, p.controlIdleEligible != nil && p.controlIdleEligible())
 			p.controlPollMS.Store(delay.Milliseconds())
 			select {
 			case <-ctx.Done():
@@ -396,8 +399,11 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 				}
 			case <-p.wake:
 				// An unsolicited EXISTS update can interrupt standby polling.
+				emptyStreak = 0
 			case <-time.After(delay):
 			}
+		} else {
+			emptyStreak = 0
 		}
 	}
 }

@@ -82,6 +82,7 @@ type Session struct {
 	openWaits                          atomic.Uint64
 	exitOpens                          exitOpenCounters
 	retransmissions                    uint64
+	retransmitKinds                    [256]uint64
 	seen                               [replaySlots]uint64
 	seenValid                          [replaySlots]bool
 	highest                            uint64
@@ -566,6 +567,7 @@ func (s *Session) dispatchLoop() {
 				}
 				if p.attempts != 0 {
 					s.retransmissions++
+					s.retransmitKinds[p.kind]++
 				}
 				p.sent = started
 				p.attempts++
@@ -985,6 +987,7 @@ type Snapshot struct {
 	Closed                     bool             `json:"closed"`
 	Failure                    string           `json:"failure,omitempty"`
 	ReceiptBackpressure        uint64           `json:"receipt_backpressure"`
+	RetransmitKinds            map[byte]uint64  `json:"retransmissions_by_frame_kind,omitempty"`
 	Retransmissions            uint64           `json:"retransmissions"`
 	BulkOutstanding            uint64           `json:"bulk_outstanding_bytes"`
 	ReceiveBuffered            int64            `json:"receive_buffered_bytes"`
@@ -999,6 +1002,14 @@ func (s *Session) Snapshot() Snapshot {
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
+	for kind, count := range s.retransmitKinds {
+		if count != 0 {
+			if snapshot.RetransmitKinds == nil {
+				snapshot.RetransmitKinds = make(map[byte]uint64)
+			}
+			snapshot.RetransmitKinds[byte(kind)] = count
+		}
+	}
 	snapshot.PeerDemandFresh = !s.peerDemandAt.IsZero() && time.Since(s.peerDemandAt) < 6*time.Second
 	if snapshot.PeerDemandFresh {
 		snapshot.PeerBulkPending = s.peerBulkPending

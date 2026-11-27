@@ -118,6 +118,7 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 	}
 	control.uidControl.Store(true)
 	control.controlPollDelay = a.controlReadDelay
+	control.controlIdleEligible = a.controlIdleEligible
 	// A missing-folder SELECT/STATUS can stall instead of returning NONEXISTENT.
 	// Inventory the two owned control names with LIST first; do not CREATE
 	// existing folders, since some providers stall that redundant mutation too.

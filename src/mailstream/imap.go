@@ -54,6 +54,7 @@ type mailWork struct {
 	body     []byte
 	control  bool
 	feedback bool
+	spill    bool // bounded desktop feedback on independent control carrier
 	recovery bool
 	charge   int
 }
@@ -73,6 +74,7 @@ type mailAccountState struct {
 	startupStop                                                context.CancelFunc
 	startupWake                                                chan struct{}
 	interactive                                                chan mailWork
+	feedbackSpill                                              atomic.Bool
 	growing                                                    chan struct{}
 	link                                                       *IMAPLink
 	config                                                     MailAccount
@@ -492,7 +494,12 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if !priority {
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
-		independent := matched && priority && (!feedback || l.mobileFeedback.Load()) && !recovery && a.controlWriter != nil && !a.parking.Load() && a.interactive != nil
+		// Desktop feedback normally stays coalesced on the DATA actor. When
+		// that owner is congested or reclaiming, borrow at most one companion
+		// publication, and only on an otherwise empty independent lane.
+		companion := matched && priority && !recovery && a.controlWriter != nil && !a.parking.Load() && a.interactive != nil
+		spill := companion && feedback && !l.mobileFeedback.Load() && !a.feedbackSpill.Load() && len(a.interactive) == 0 && len(a.controlWriter.interactiveTags) == 0 && (len(a.fast) >= 2 || len(a.bulk) > 0 || a.reclaiming.Load())
+		independent := companion && (!feedback || l.mobileFeedback.Load() || spill)
 		available := a.ready && !a.failed && !a.writerRecovering && (!a.reclaiming.Load() || independent) && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
 		messageBudget := uint64(controlMessageLimit)
 		if recovery {
@@ -510,6 +517,10 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			continue
 		}
 		q := a.bulk
+		work.spill = spill
+		if spill {
+			a.feedbackSpill.Store(true)
+		}
 		if priority {
 			q = a.fast
 			if independent {
@@ -570,6 +581,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			}
 			return a, nil
 		default:
+			if spill {
+				a.feedbackSpill.Store(false)
+			}
 			a.mu.Unlock()
 		}
 	}
@@ -1757,6 +1771,7 @@ type mailPipe struct {
 	onPacket            func([]byte)
 	onControlConsumed   func(imap.UID, uint32, int)
 	controlPollDelay    func() time.Duration
+	controlIdleEligible func() bool
 	controlPollMS       atomic.Int64
 	emptyControlFetches atomic.Uint64
 	controlEOF          atomic.Bool

@@ -107,6 +107,7 @@ func (a *mailAccountState) reopenReader(ctx context.Context, c *readerCheckpoint
 		p.onPacket = old.onPacket
 		p.onControlConsumed = old.onControlConsumed
 		p.controlPollDelay = old.controlPollDelay
+		p.controlIdleEligible = old.controlIdleEligible
 		p.emptyControlFetches.Store(old.emptyControlFetches.Load())
 	}
 	return p, nil

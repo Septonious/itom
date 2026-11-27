@@ -19,7 +19,7 @@ func (a *mailAccountState) publishInteractive() {
 			}
 		}
 		batch := []mailWork{work}
-		if work.feedback {
+		if work.feedback && !work.spill {
 			_, id, _, _ := parseHeader(work.body)
 			size := 10 + len(work.body)
 		collect:
@@ -27,7 +27,7 @@ func (a *mailAccountState) publishInteractive() {
 				select {
 				case next := <-a.interactive:
 					_, nextID, _, err := parseHeader(next.body)
-					if !next.feedback || next.target != work.target || err != nil || nextID != id || size+4+len(next.body) > maxMailPlain {
+					if !next.feedback || next.spill || next.target != work.target || err != nil || nextID != id || size+4+len(next.body) > maxMailPlain {
 						carry = &next
 						break collect
 					}
@@ -53,6 +53,12 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 
 func (a *mailAccountState) writeInteractiveBatch(batch []mailWork) error {
 	work := batch[0]
+	published := false
+	defer func() {
+		if work.spill && !published {
+			a.feedbackSpill.Store(false)
+		}
+	}()
 	p := work.target
 	dequeued := time.Now()
 	if !work.queuedAt.IsZero() {
@@ -131,7 +137,11 @@ func (a *mailAccountState) writeInteractiveBatch(batch []mailWork) error {
 	// without waiting a provider round trip for this command's tagged result.
 	p.interactiveWait.Add(1)
 	inFlight = true
+	published = true
 	go func() {
+		if work.spill {
+			defer a.feedbackSpill.Store(false)
+		}
 		defer p.interactiveWait.Done()
 		defer func() { <-p.interactiveTags }()
 		result, err := cmd.Wait()
