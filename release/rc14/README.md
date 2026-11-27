@@ -1,4 +1,4 @@
-# ITOM 1.5.1 RC14 development checkpoint — UNQUALIFIED
+# ITOM 1.5.1 RC14 development candidate — local Go gate passed
 
 Based on RC13 commit 3e85b2c19b32cbbe936656e8592568bf670a0bff.
 
@@ -8,4 +8,4 @@ Based on RC13 commit 3e85b2c19b32cbbe936656e8592568bf670a0bff.
 - Direct clipboard profile import; retain RC13 Home/Profile and IPv4-first identity changes.
 - Consolidated parallel cached Actions workflow; release publication requires all mandatory checks. Manual topology qualification models client/Rambler/RU server and configurable encrypted exit delay.
 
-Local Go 1.27.1, restored offline cache. Focused controller, pacing, purge, manager, provider and Python checks passed. Full mailstream race run failed a control-mailbox recovery assertion and was later killed; isolated reruns passed without changing that test. Full core/native/qualification compilation is blocked by missing golang.org/x/text v0.42.0 in offline cache. Android SDK and real routing dataset not available locally. Simulated recovery throughput is not a field speed qualification. No release Actions until full local Go gate passes. Checkpoint only; do not deploy as a qualified release.
+Local Go 1.27.1 and repaired offline cache: all four module dependency checks and full race suites passed. Core 78, native 41 plus actual packaged routing fixture 1, qualification 2, mailstream 130 top-level test passes; Python 6/6. Full mailstream race run 398.437 seconds (including previous control-mailbox recovery failure and writer keepalive recovery). No test assertions changed for this rerun. Routing fixture extracted from the checksum-verified RC13 build. Source tree 8f279e1868b762af3d2e0ed985eb4fb3e6a3e12e. Android compilation and unit tests require Actions; actual cellular/desktop performance qualification remains outstanding. This is a development candidate, not a field-qualified release.
