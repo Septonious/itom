@@ -1,0 +1,400 @@
+ }
+ 
+-// Only decrease on a ten-second rolling application RTT average, never
++// Only decrease on a five-second rolling application RTT average, never
+ // because of provider IMAP service latency or idle traffic. Apply at most
+ // one reduction per window so overlapping measurements cannot cause collapse.
+ func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int, demand bool, now time.Time) int {
+@@ -130,6 +129,8 @@ type cellularEvidence struct {
+ 	active, streams, queued, slots, busy  int
+ 	serviceCapacity, publications         float64
+ 	bulkPressure, retries, timeout, fresh bool
++	stalled                               bool // outstanding traffic without useful delivery
++	queueBytes                            int
+ }
+ 
+ func (e cellularEvidence) overloaded() bool {
+@@ -146,6 +147,9 @@ func (e cellularEvidence) minimum(capacity int) int {
+ 	}
+ 	return min(capacity, n)
+ }
++
++// Congestion takes precedence over mailbox saturation. A timeout or retry
++// is not evidence that more simultaneous sockets would improve the bearer.
+ func (p *cellularPolicy) decideObserved(capacity int, average time.Duration, samples int, demand bool, now time.Time, e cellularEvidence) int {
+ 	if capacity < servercfg.MinOperationalAccounts {
+ 		return 0
+@@ -154,46 +158,43 @@ func (p *cellularPolicy) decideObserved(capacity int, average time.Duration, sam
+ 		p.limit = capacity
+ 	}
+ 	p.limit = min(capacity, max(servercfg.MinOperationalAccounts, p.limit))
+-	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < cellularRTTWindow {
++	severe := (e.timeout || average >= 1500*time.Millisecond) && (e.stalled || e.bulkPressure || e.retries || e.queueBytes > 128<<10) && (demand || e.streams > 0 || e.queued > 0)
++	congested := (e.timeout || samples >= 2 && average > 400*time.Millisecond) && (e.bulkPressure || e.stalled || e.retries || e.queueBytes > 128<<10)
++	interval := cellularRTTWindow
++	if severe {
++		interval = cellularEmergencyInterval
++	}
++	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < interval {
+ 		return p.limit
+ 	}
+-	previous := p.limit
+-	// Restore the last operating point if a reduction made no material
+-	// improvement. Timeout/command pressure can expand even at >700ms.
+-	if p.beforeReduction > p.limit && samples >= 2 && average >= 400*time.Millisecond && average >= p.rttBeforeReduction*9/10 {
+-		p.limit = min(capacity, p.beforeReduction)
+-		p.beforeReduction = 0
+-	} else if (e.timeout || e.overloaded()) && (e.streams > 0 || e.queued > 0) {
+-		p.limit = min(capacity, p.limit+accountStep(capacity, 20))
+-		p.beforeReduction = 0
+-	} else if e.active < servercfg.MinOperationalAccounts {
+-		p.limit = min(capacity, max(p.limit, servercfg.MinOperationalAccounts))
+-	} else if average > 400*time.Millisecond {
+-		// High RTT alone, especially while idle/stalled, is not evidence
+-		// that reducing physical accounts will improve radio service.
+-		if samples < 2 || !e.fresh || !e.bulkPressure || e.overloaded() {
+-			p.healthy = 0
+-			return p.limit
++	old := p.limit
++	if severe || congested {
++		percent := 10
++		if average > 600*time.Millisecond {
++			percent = 20
+ 		}
+-		p.decide(capacity, average, samples, demand, now)
+-		p.limit = max(p.limit, e.minimum(capacity))
+-		if p.limit < previous {
+-			p.beforeReduction, p.rttBeforeReduction = previous, average
++		if severe || average >= 700*time.Millisecond {
++			percent = 35
+ 		}
++		p.limit = max(servercfg.MinOperationalAccounts, p.limit-accountStep(capacity, percent))
++		p.healthy = 0
++	} else if e.active < servercfg.MinOperationalAccounts {
++		// The reconfiguration worker recovers the missing essential paths;
++		// do not expand the target in response to a missing physical socket.
++		p.healthy = 0
++	} else if !e.fresh || e.timeout || e.retries || e.stalled || samples < 2 || average > 400*time.Millisecond {
++		p.healthy = 0
+ 	} else {
+ 		p.decide(capacity, average, samples, demand, now)
+-		if p.limit > previous || (samples >= 2 && average <= 300*time.Millisecond) {
+-			p.beforeReduction = 0
+-		}
+ 	}
+-	if p.limit != previous {
++	if old != p.limit {
+ 		p.lastChange = now
+ 		p.healthy = 0
+ 	}
+ 	return p.limit
+ }
+ func canLearnCellularBaseline(e cellularEvidence, rtt int64, demand bool, settled bool) bool {
+-	return settled && e.fresh && !e.timeout && !e.retries && !e.overloaded() && !demand && e.streams == 0 && e.queued == 0 && rtt > 0 && rtt <= 400
++	return settled && e.fresh && !e.timeout && !e.retries && !e.stalled && !e.overloaded() && !demand && e.streams == 0 && e.queued == 0 && rtt > 0 && rtt <= 400
+ }
+ func accountStep(capacity, percent int) int { return max(1, (capacity*percent+50)/100) }
+ 
+@@ -242,15 +243,53 @@ func (c *Client) accountController(ctx context.Context) {
+ 	var wasMobile bool
+ 	var epoch uint64
+ 	var bearerSince time.Time
+-	last := 0
++	last := -1
++	type result struct {
++		desired int
++		err     error
++	}
++	done := make(chan result, 1)
++	var busy bool
++	var cancelChange context.CancelFunc
++	var nextAttempt time.Time
++	var failures int
++	var applied = -1
++	var lastDelivered uint64
++	var lastProgress time.Time
++	defer func() {
++		if cancelChange != nil {
++			cancelChange()
++		}
++		if busy {
++			<-done
++		}
++	}()
+ 	for {
+ 		select {
+ 		case <-ctx.Done():
+ 			return
++		case outcome := <-done:
++			busy = false
++			cancelChange = nil
++			if outcome.desired != last {
++				nextAttempt = time.Time{}
++				continue
++			}
++			if outcome.err == nil {
++				applied = outcome.desired
++				failures = 0
++				nextAttempt = time.Time{}
++				c.RecordNetworkEvent("ACCOUNT_LIMIT_APPLIED", int64(outcome.desired))
++			} else {
++				failures++
++				nextAttempt = time.Now().Add(time.Second * time.Duration(1<<min(failures, 4)))
++				c.RecordNetworkEvent("ACCOUNT_LIMIT_RETRY", int64(outcome.desired))
++			}
++			continue
+ 		case <-tick.C:
+ 		}
+ 		mail := c.link.Snapshot()
+-		if !mail.GrantNegotiated || mail.GrantChanging || mail.AllocatedAccounts < servercfg.MinOperationalAccounts {
++		if !mail.GrantNegotiated || mail.AllocatedAccounts < servercfg.MinOperationalAccounts {
+ 			continue
+ 		}
+ 		now := time.Now()
+@@ -258,6 +297,10 @@ func (c *Client) accountController(ctx context.Context) {
+ 		if mobile != wasMobile || currentEpoch != epoch {
+ 			policy = cellularPolicy{}
+ 			last = -1
++			applied = -1
++			nextAttempt = time.Time{}
++			lastProgress = now
++			lastPressure = time.Time{}
+ 			wasMobile = mobile
+ 			epoch = currentEpoch
+ 			bearerSince = now
+@@ -272,7 +315,8 @@ func (c *Client) accountController(ctx context.Context) {
+ 		elapsed := now.Sub(sampled).Seconds()
+ 		for _, line := range mail.Lines {
+ 			old, ok := previous[line.Account]
+-			if line.Ready && line.Data && line.Writer && line.ControlWriter {
++			evidence.queueBytes += line.QueuedMIMEBytes
++			if line.Allocated && line.Ready && line.Data && line.Writer && line.ControlWriter && !line.ScaleBlocked {
+ 				active++
+ 				evidence.queued += line.ControlQueued
+ 				evidence.slots += line.InteractiveSlots
+@@ -294,14 +338,8 @@ func (c *Client) accountController(ctx context.Context) {
+ 		if active != lastActive {
+ 			bearerSince = now
+ 			lastActive = active
+-			samples = 0
+-			c.mu.Lock()
+-			if c.rttEpoch == epoch {
+-				c.rttHistory = nil
+-				c.rttSince = now
+-			}
+-			c.mu.Unlock()
+-		}
++		} // never erase bearer RTT on socket churn
++
+ 		// Physical byte counters include hedges/control; report effective
+ 		// shares, never use them as independent capacity measurements.
+ 		snapshot := c.session.Snapshot()
+@@ -315,8 +353,13 @@ func (c *Client) accountController(ctx context.Context) {
+ 		}
+ 		previousRetries, previousBackpressure = snapshot.Retransmissions, snapshot.ReceiptBackpressure
+ 		evidence.retries = !lastPressure.IsZero() && now.Sub(lastPressure) < cellularRTTWindow
+-		evidence.bulkPressure = snapshot.BulkDeliveryFlight >= 128<<10 && snapshot.MobileGuarded && snapshot.BulkWindowLimited
+-		settled := now.Sub(bearerSince) >= cellularRTTWindow
++		if lastProgress.IsZero() || snapshot.UniqueBulkDelivered != lastDelivered || snapshot.BulkDeliveryFlight == 0 && snapshot.PendingBytes < 128<<10 {
++			lastProgress = now
++		}
++		lastDelivered = snapshot.UniqueBulkDelivered
++		evidence.stalled = (snapshot.BulkDeliveryFlight > 0 || snapshot.PendingBytes >= 128<<10) && now.Sub(lastProgress) >= 3*time.Second
++		evidence.bulkPressure = snapshot.BulkDeliveryFlight >= 128<<10 || snapshot.PendingBytes >= 128<<10 || evidence.queueBytes >= 128<<10
++		settled := now.Sub(bearerSince) >= cellularRTTWindow && !mail.GrantChanging && !busy
+ 		base := baselines[active]
+ 		if base == nil {
+ 			base = &cellularBaseline{}
+@@ -327,11 +370,7 @@ func (c *Client) accountController(ctx context.Context) {
+ 		}
+ 		lastProbe = probe.SampledAtMS
+ 		median, sigma := base.estimate()
+-		// Once fresh RTT has recovered, don't remove more accounts based on
+-		// older backlog. Raw 10s thresholds still govern sustained reductions.
+-		if average > 400*time.Millisecond && probe.Failure == "" && now.UnixMilli()-probe.SampledAtMS < 3000 && probe.RTTMillis <= 300 {
+-			samples = 0
+-		}
++
+ 		c.mu.Lock()
+ 		c.cellularUpBPS, c.cellularDownBPS = up/uint64(max(1, active)), down/uint64(max(1, active))
+ 		c.cellularBaseMS, c.cellularVariationMS = median.Milliseconds(), sigma.Milliseconds()
+@@ -342,10 +381,6 @@ func (c *Client) accountController(ctx context.Context) {
+ 		desired := 0
+ 		target := mail.AllocatedAccounts
+ 		if mobile {
+-			// Wait for a complete window on a new bearer before reducing.
+-			if now.Sub(bearerSince) < cellularRTTWindow {
+-				samples = 0
+-			}
+ 			desired = policy.decideObserved(target, average, samples, demand, now, evidence)
+ 			target = desired
+ 		}
+@@ -358,27 +393,31 @@ func (c *Client) accountController(ctx context.Context) {
+ 		if changedBearer {
+ 			continue
+ 		}
+-		if target == active && last == desired {
+-			continue
+-		}
+-		// Unknown and wired bearers keep all allocated accounts. Persist that limit
+-		// even if the physical count already matches, for future grant expansion.
+-		change, cancel := context.WithTimeout(ctx, 15*time.Second)
+-		err := c.session.SetActiveLimit(change, desired)
+-		cancel()
+-		if err == nil {
++		congested := mobile && (evidence.timeout || average > 400*time.Millisecond || evidence.stalled || evidence.retries)
++		c.session.SetMobileRecovery(congested, desired)
++		if desired != last {
+ 			last = desired
+-			bearerSince = time.Now()
+-			if mobile {
+-				policy.lastChange = bearerSince
+-				c.mu.Lock()
+-				if c.rttEpoch == epoch {
+-					c.rttHistory = nil
+-					c.rttSince = bearerSince
+-				}
+-				c.mu.Unlock()
++			nextAttempt = time.Time{}
++			failures = 0
++			if cancelChange != nil {
++				cancelChange()
+ 			}
+ 			c.RecordNetworkEvent("ACCOUNT_LIMIT_CHANGED", int64(target))
+ 		}
++		if busy || now.Before(nextAttempt) || mail.GrantChanging {
++			continue
++		}
++		// Do not repeatedly revive optional accounts simply because their physical
++		// socket count is temporarily below target. Grant health owns replacements.
++		if applied == desired && (active == target || congested && active < target && active >= servercfg.MinOperationalAccounts) {
++			continue
++		}
++		if congested && active >= servercfg.MinOperationalAccounts && active < target {
++			continue
++		}
++		change, cancel := context.WithTimeout(ctx, 15*time.Second)
++		cancelChange = cancel
++		busy = true
++		go func(wanted int) { defer cancel(); done <- result{wanted, c.session.SetActiveLimit(change, wanted)} }(desired)
+ 	}
+ }
+diff --git a/src/core/tunnel/cellular_test.go b/src/core/tunnel/cellular_test.go
+index 6db6347..24b5706 100644
+--- a/src/core/tunnel/cellular_test.go
++++ b/src/core/tunnel/cellular_test.go
+@@ -46,7 +46,7 @@ func TestCellularPercentagesAndBaseline(t *testing.T) {
+ }
+ func TestCellularRTTWindowAndBearerReset(t *testing.T) {
+ 	now := time.Now()
+-	c := &Client{networkType: "cellular", rttHistory: []rttSample{{now.Add(-10 * time.Second), 5 * time.Second}, {now.Add(-9 * time.Second), 100 * time.Millisecond}, {now.Add(-5 * time.Second), 800 * time.Millisecond}, {now, 200 * time.Millisecond}}}
++	c := &Client{networkType: "cellular", rttHistory: []rttSample{{now.Add(-5 * time.Second), 5 * time.Second}, {now.Add(-4 * time.Second), 100 * time.Millisecond}, {now.Add(-2 * time.Second), 800 * time.Millisecond}, {now, 200 * time.Millisecond}}}
+ 	avg, n, epoch, mobile := c.cellularRTT(now)
+ 	if !mobile || n != 3 || avg != 1100*time.Millisecond/3 {
+ 		t.Fatalf("average %v samples %d", avg, n)
+@@ -85,7 +85,7 @@ func TestCellularFourAccountMinimum(t *testing.T) {
+ 	}
+ }
+ 
+-func TestRC12CellularStallCannotReduce(t *testing.T) {
++func TestRC13CellularStallRecovery(t *testing.T) {
+ 	now := time.Now()
+ 	p := cellularPolicy{}
+ 	for i := 0; i < 8; i++ {
+@@ -95,8 +95,8 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
+ 		}
+ 	}
+ 	p = cellularPolicy{limit: 4}
+-	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 6 {
+-		t.Fatal("recovery requires expansion", got)
++	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 4 {
++		t.Fatal("timeout must not expand", got)
+ 	}
+ 	p = cellularPolicy{limit: 8}
+ 	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, serviceCapacity: 20, publications: 5}
+@@ -104,8 +104,8 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
+ 		t.Fatal("bulk reduction", got)
+ 	}
+ 	e.active = 5
+-	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 8 {
+-		t.Fatal("failed reduction rollback", got)
++	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 4 {
++		t.Fatal("sustained congestion must drain toward four", got)
+ 	}
+ 	e = cellularEvidence{active: 4, streams: 15, fresh: true}
+ 	if canLearnCellularBaseline(e, 200, false, true) || canLearnCellularBaseline(cellularEvidence{fresh: true}, 1519, false, true) {
+@@ -115,3 +115,34 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
+ 		t.Fatal("healthy idle not learned")
+ 	}
+ }
++
++func TestRC13WorstCaseCellularReplay(t *testing.T) {
++	now := time.Unix(1000, 0)
++	p := cellularPolicy{}
++	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, retries: true, queueBytes: 2610000, stalled: true}
++	if got := p.decideObserved(8, 4591*time.Millisecond, 2, true, now, e); got != 5 {
++		t.Fatal(got)
++	}
++	e.timeout = true
++	e.fresh = false
++	e.active = 7
++	if got := p.decideObserved(8, 5*time.Second, 1, true, now.Add(2*time.Second), e); got != 5 {
++		t.Fatal("emergency cooldown", got)
++	}
++	if got := p.decideObserved(8, 5*time.Second, 1, true, now.Add(3*time.Second), e); got != 4 {
++		t.Fatal("timeout must drain", got)
++	}
++	for i := 4; i < 80; i++ {
++		e.active = 4
++		if got := p.decideObserved(8, 5*time.Second, 0, true, now.Add(time.Duration(i)*time.Second), e); got != 4 {
++			t.Fatal("floor", got)
++		}
++	}
++	e = cellularEvidence{active: 4, streams: 8, fresh: true}
++	if got := p.decideObserved(8, 250*time.Millisecond, 2, true, now.Add(81*time.Second), e); got != 4 {
++		t.Fatal("expansion without confirmation", got)
++	}
++	if got := p.decideObserved(8, 250*time.Millisecond, 2, true, now.Add(86*time.Second), e); got != 6 {
++		t.Fatal("recovery expansion", got)
++	}
++}
+diff --git a/src/core/tunnel/rc13_metrics_test.go b/src/core/tunnel/rc13_metrics_test.go
+new file mode 100644
+index 0000000..14d24de
+--- /dev/null
++++ b/src/core/tunnel/rc13_metrics_test.go
+@@ -0,0 +1,25 @@
++package tunnel
++
++import (
++	"itom.local/mailstream"
++	"testing"
++)
++
++func TestRC13PhysicalOverlapDoesNotExceedStableGrant(t *testing.T) {
++	physical, serving := 0, 0
++	for i := 0; i < 10; i++ {
++		line := mailstream.MailAccountSnapshot{Allocated: i < 8, PhysicalSockets: 4}
++		if i >= 8 {
++			line.PhysicalSockets = 1
++			line.Failed = true
++		}
++		physical += line.PhysicalSockets
++		serving += servingSocketCount(line)
++	}
++	if physical != 34 || serving != 32 {
++		t.Fatal(physical, serving)
++	}
++	if servingSocketCount(mailstream.MailAccountSnapshot{Allocated: true, PhysicalSockets: 4, ScaleBlocked: true}) != 0 {
++		t.Fatal("parked actor counted")
++	}
++}
+diff --git a/src/mailstream/account_health.go b/src/mailstream/account_health.go
+index 786e900..7458112 100644
+--- a/src/mailstream/account_health.go
++++ b/src/mailstream/account_health.go
+@@ -29,6 +29,9 @@ func (s *Session) reportAccountHealth(l *IMAPLink) {
+ 			if !negotiated {
+ 				continue
+ 			}
++			if !proposed && l.mobileRecovery.Load() && l.servingCount() >= max(1, int(s.minimumActive.Load())) {

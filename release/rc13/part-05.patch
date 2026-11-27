@@ -1,0 +1,27 @@
+ 		if err != nil {
+ 			return nil, err
+ 		}
+@@ -62,6 +81,10 @@ func (c *Client) ExitIdentity() (string, error) {
+ 	if err != nil {
+ 		return "", err
+ 	}
++	ip, parseErr := netip.ParseAddr(result.IP)
++	if parseErr != nil || ip.Unmap().Is4() != netip.MustParseAddr(target).Is4() {
++		return "", errors.New("EXIT_IP_FAMILY")
++	}
+ 	if c.currentPool() != pool || c.rebinding.Load() || ctx.Err() != nil {
+ 		return "", errors.New("EXIT_GENERATION_CHANGED")
+ 	}
+diff --git a/src/qualification/home_gate.py b/src/qualification/home_gate.py
+index fb5b76a..eec3e73 100644
+--- a/src/qualification/home_gate.py
++++ b/src/qualification/home_gate.py
+@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
+ IDS = [f"a{i:02}" for i in range(1, 9)]
+ ALL_IDS = [f"a{i:02}" for i in range(1, 16)]
+ BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
+-REVISION = "itom-1-5-1-rc12-dev"
++REVISION = "itom-1-5-1-rc13-dev"
+ 
+ 
+ def ramp_summary(rates, seconds):

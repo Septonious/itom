@@ -1,0 +1,400 @@
++// congestion evidence. Learned capacity survives, but bulk admission stops.
++func (m *mobileFlow) beginRecovery(now time.Time) {
++	m.draining = false
++	m.recoverySamples = 0
++	m.recoveryGain = .10
++	m.recoveryAt = now
++	m.guardUntil = now.Add(5 * time.Second)
++	m.gain = .1
++}
++func (m *mobileFlow) progress(now time.Time, delivered uint64, flight int) {
++	if !m.enabled {
++		return
++	}
++	if m.progressAt.IsZero() {
++		m.progressAt = now
++		m.progressBytes = delivered
++	}
++	if delivered != m.progressBytes {
++		m.progressBytes = delivered
++		m.progressAt = now
++		if m.draining {
++			m.recoverySamples++
++			if m.recoverySamples >= 3 && flight <= 2*maxWire {
++				m.beginRecovery(now)
++			}
++		}
++	}
++	if flight == 0 {
++		m.progressAt = now
++		return
++	}
++	if now.Sub(m.progressAt) >= 3*time.Second {
++		m.draining = true
++		m.recoverySamples = 0
++		m.recoveryGain = .1
++	}
++}
++func (m *mobileFlow) permitBulkRetry(now time.Time) bool {
++	return !m.draining || !now.Before(m.retryAt)
++}
++func (m *mobileFlow) noteBulkRetry(now time.Time) {
++	if m.draining {
++		m.retryAt = now.Add(2 * time.Second)
++	}
++}
+diff --git a/src/mailstream/mobile_flow_test.go b/src/mailstream/mobile_flow_test.go
+index 4224c0a..e4bff7c 100644
+--- a/src/mailstream/mobile_flow_test.go
++++ b/src/mailstream/mobile_flow_test.go
+@@ -144,3 +144,41 @@ func TestRC12MobileStallGuardsNextBurstWithoutInventingCapacity(t *testing.T) {
+ 		t.Fatal("guard did not expire", got)
+ 	}
+ }
++
++func TestRC13MobileDrainWithoutReceipts(t *testing.T) {
++	now := time.Unix(1000, 0)
++	m := mobileFlow{}
++	m.reset(true)
++	c := m.capacity
++	m.progress(now, 0, 750000)
++	m.progress(now.Add(3*time.Second), 0, 750000)
++	if !m.draining || m.capacity != c || m.pacing(now.Add(3*time.Second)) > 64000 {
++		t.Fatal("did not drain", m)
++	}
++	if !m.permitBulkRetry(now.Add(3 * time.Second)) {
++		t.Fatal("first retry denied")
++	}
++	m.noteBulkRetry(now.Add(3 * time.Second))
++	if m.permitBulkRetry(now.Add(4 * time.Second)) {
++		t.Fatal("retry burst")
++	}
++	m.progress(now.Add(9*time.Second), 0, 750000)
++	if !m.draining {
++		t.Fatal("timer-only recovery")
++	}
++	m.progress(now.Add(10*time.Second), 750000, 0)
++	m.observeDelay(250*time.Millisecond, 200*time.Millisecond, now.Add(11*time.Second), false)
++	m.observeDelay(250*time.Millisecond, 200*time.Millisecond, now.Add(12*time.Second), false)
++	if m.draining || m.recoveryGain != .1 {
++		t.Fatal("recovery", m)
++	}
++	if got := m.pacing(now.Add(time.Minute)); got > c*.11 {
++		t.Fatal("expired guard caused burst", got)
++	}
++	for i := 0; i < 10; i++ {
++		m.observeRate(c, now.Add(time.Duration(i+13)*time.Second), true, 250*time.Millisecond, 200*time.Millisecond)
++	}
++	if m.recoveryGain != 0 {
++		t.Fatal("healthy progress failed to restore capacity", m.recoveryGain)
++	}
++}
+diff --git a/src/mailstream/session.go b/src/mailstream/session.go
+index 4ce20ab..e197a2a 100644
+--- a/src/mailstream/session.go
++++ b/src/mailstream/session.go
+@@ -42,56 +42,63 @@ type pendingPacket struct {
+ 	wire         []byte
+ 	priority     bool
+ 	sent         time.Time
++	firstQueued  time.Time
+ 	attempts     int
+ 	kind         byte
+ 	stream       uint32
+ }
+ 
+ type Session struct {
+-	grantUpdateMu       sync.Mutex
+-	grantVersion        uint64
+-	grantAck            atomic.Uint64
+-	grantRequests       chan grantRequest
+-	grantRequestVersion uint64 // receive owner only
+-	activeLimit         atomic.Int32
+-	minimumActive       atomic.Int32
+-	accountSetMu        sync.Mutex
+-	accountSetVersion   uint64
+-	accountSetAck       atomic.Uint64
+-	ctx                 context.Context
+-	cancel              context.CancelFunc
+-	link                Link
+-	cipher              *cipherPair
+-	server              bool
+-	dial                func(context.Context, string, string) (net.Conn, error)
+-	mu                  sync.Mutex
+-	streams             map[uint32]*Stream
+-	closedStreams       map[uint32]*terminalStream
+-	bulkOutstanding     uint64
+-	receiveBuffered     atomic.Int64
+-	lastInbound         atomic.Int64
+-	nextStream          uint32
+-	pending             map[uint64]*pendingPacket
+-	pendingBytes        int
+-	delivery            deliveryWindow
+-	changed             chan struct{}
+-	wake                chan struct{}
+-	input               chan []byte
+-	receipts            chan receiptRequest
+-	receiptRetries      atomic.Uint64
+-	openRefusals        atomic.Uint64
+-	openWaits           atomic.Uint64
+-	retransmissions     uint64
+-	seen                [replaySlots]uint64
+-	seenValid           [replaySlots]bool
+-	highest             uint64
+-	rtt, variation      time.Duration
+-	pings               map[uint64]chan struct{}
+-	nextPing            uint64
+-	peerBearerSequence  uint64
+-	accountPings        map[uint64]accountProbe
+-	err                 error
+-	wg                  sync.WaitGroup
++	grantUpdateMu              sync.Mutex
++	grantVersion               uint64
++	grantAck                   atomic.Uint64
++	grantRequests              chan grantRequest
++	grantRequestVersion        uint64 // receive owner only
++	activeLimit                atomic.Int32
++	controllerLimit            atomic.Int32
++	controllerManaged          atomic.Bool
++	controllerEpoch            atomic.Uint64
++	minimumActive              atomic.Int32
++	accountSetMu               sync.Mutex
++	accountSetVersion          uint64
++	accountSetAck              atomic.Uint64
++	ctx                        context.Context
++	cancel                     context.CancelFunc
++	link                       Link
++	cipher                     *cipherPair
++	server                     bool
++	dial                       func(context.Context, string, string) (net.Conn, error)
++	mu                         sync.Mutex
++	streams                    map[uint32]*Stream
++	closedStreams              map[uint32]*terminalStream
++	bulkOutstanding            uint64
++	receiveBuffered            atomic.Int64
++	lastInbound                atomic.Int64
++	nextStream                 uint32
++	pending                    map[uint64]*pendingPacket
++	pendingBytes               int
++	delivery                   deliveryWindow
++	changed                    chan struct{}
++	wake                       chan struct{}
++	input                      chan []byte
++	receipts                   chan receiptRequest
++	receiptRetries             atomic.Uint64
++	openRefusals               atomic.Uint64
++	openWaits                  atomic.Uint64
++	retransmissions            uint64
++	appAckedPackets            uint64
++	appPayloadBytes            uint64
++	lastAppAck, lastAppPayload time.Time
++	seen                       [replaySlots]uint64
++	seenValid                  [replaySlots]bool
++	highest                    uint64
++	rtt, variation             time.Duration
++	pings                      map[uint64]chan struct{}
++	nextPing                   uint64
++	peerBearerSequence         uint64
++	accountPings               map[uint64]accountProbe
++	err                        error
++	wg                         sync.WaitGroup
+ }
+ 
+ func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
+@@ -103,6 +110,7 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
+ 	s.delivery.adaptive = true // Both directions use compression-safe bulk feedback.
+ 	s.closedStreams = map[uint32]*terminalStream{}
+ 	s.lastInbound.Store(time.Now().UnixNano())
++	s.lastAppAck, s.lastAppPayload = time.Now(), time.Now()
+ 	// Sequence zero was the authenticated READY/READY_ACK. It must never
+ 	// enter the application engine as a replayed session transition.
+ 	s.seen[0], s.seenValid[0] = 0, true
+@@ -246,7 +254,7 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
+ 		if room {
+ 			wire, seq, err := s.cipher.seal(plain)
+ 			if err == nil {
+-				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream}
++				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream, firstQueued: time.Now()}
+ 				s.pendingBytes += len(wire)
+ 				s.notifyLocked()
+ 			}
+@@ -404,9 +412,14 @@ func (s *Session) dispatchLoop() {
+ 		clear(batch)
+ 		batch = batch[:0]
+ 		s.mu.Lock()
++		s.delivery.mobile.progress(now, s.delivery.totalDelivered, s.delivery.bulkFlight)
+ 		rto := min(8*time.Second, max(750*time.Millisecond, 2*s.rtt+4*s.variation))
+ 		for seq, p := range s.pending {
+-			if p.sent.IsZero() || now.Sub(p.sent) >= retryAfter(p, rto) {
++			retry := retryAfter(p, rto)
++			if s.delivery.mobile.enabled && s.delivery.mobile.draining && p.attempts > 0 && negotiationControl(p.kind) {
++				retry = max(retry, 3*time.Second)
++			}
++			if p.sent.IsZero() || now.Sub(p.sent) >= retry {
+ 				batch = append(batch, candidate{seq, p})
+ 			}
+ 		}
+@@ -466,13 +479,17 @@ func (s *Session) dispatchLoop() {
+ 				}
+ 				continue
+ 			}
+-			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
++			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && (s.delivery.mobile.enabled && s.delivery.mobile.draining || s.delivery.flight+len(selected.wire) > s.delivery.allowance()) {
+ 				s.delivery.limited = true
+ 				s.mu.Unlock()
+ 				continue
+ 			}
+ 			if selected.kind == frameData && !selected.priority {
+ 				at := time.Now()
++				if selected.attempts > 0 && s.delivery.mobile.enabled && !s.delivery.mobile.permitBulkRetry(at) {
++					s.mu.Unlock()
++					continue
++				}
+ 				if !s.delivery.pacer.readyQuantum(len(selected.wire), s.delivery.pacingRate(at), at, s.delivery.mobile.enabled) {
+ 					// Priority traffic was sorted first and remains immediate.
+ 					s.mu.Unlock()
+@@ -525,6 +542,9 @@ func (s *Session) dispatchLoop() {
+ 			s.mu.Lock()
+ 			if selected.kind == frameData && !selected.priority {
+ 				s.delivery.pacer.admitted(len(wire))
++				if selected.attempts > 0 && s.delivery.mobile.enabled {
++					s.delivery.mobile.noteBulkRetry(time.Now())
++				}
+ 			}
+ 			if p := s.pending[next.sequence]; p == selected {
+ 				if p.attempts == 0 && p.kind == frameData {
+@@ -585,12 +605,18 @@ func (s *Session) receiveLoop() {
+ 					if p == nil {
+ 						continue
+ 					}
++					if p.attempts > 0 && (p.kind == frameData || p.kind == frameOpen || p.kind == frameOpenOK || p.kind == frameFIN) {
++						s.appAckedPackets++
++						s.lastAppAck = time.Now()
++					}
+ 					if p.kind == frameData && p.attempts > 0 {
+ 						sample := time.Duration(0)
+ 						if p.attempts == 1 {
+ 							sample = time.Since(p.sent)
+ 						}
+ 						s.delivery.delivered(len(p.wire), sample, time.Now(), !p.priority, p.deliveryMark)
++						s.appPayloadBytes += uint64(len(p.wire))
++						s.lastAppPayload = time.Now()
+ 					}
+ 					if p.attempts == 1 && !p.sent.IsZero() {
+ 						sample := time.Since(p.sent)
+@@ -642,6 +668,12 @@ func (s *Session) receiveLoop() {
+ 					s.fail(fmt.Errorf("MAILSTREAM_FRAME_%d: %w", f.kind, err))
+ 					return
+ 				}
++				if f.kind == frameData {
++					s.mu.Lock()
++					s.appPayloadBytes += uint64(len(f.data))
++					s.lastAppPayload = time.Now()
++					s.mu.Unlock()
++				}
+ 				s.seen[seq%replaySlots], s.seenValid[seq%replaySlots] = seq, true
+ 				s.highest = max(s.highest, seq)
+ 			}
+@@ -894,8 +926,15 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
+ }
+ 
+ type Snapshot struct {
++	AppAckedPackets            uint64 `json:"app_acked_packets"`
++	AppPayloadBytes            uint64 `json:"app_payload_bytes"`
++	LastAppAckAgeMS            int64  `json:"last_app_ack_age_ms"`
++	LastAppPayloadAgeMS        int64  `json:"last_app_payload_age_ms"`
++	OldestPendingAgeMS         int64  `json:"oldest_pending_age_ms"`
+ 	MobilePacing               bool   `json:"mobile_pacing"`
+ 	MobileCapacityBPS          int64  `json:"mobile_capacity_bytes_per_second"`
++	UniqueBulkDelivered        uint64 `json:"unique_bulk_delivered_bytes"`
++	MobileDraining             bool   `json:"mobile_draining"`
+ 	MobileGuarded              bool   `json:"mobile_guarded"`
+ 	BulkPacingRateBPS          int64  `json:"bulk_pacing_bytes_per_second"`
+ 	BulkPacingDeferrals        uint64 `json:"bulk_pacing_deferrals"`
+@@ -932,6 +971,24 @@ func (s *Session) Snapshot() Snapshot {
+ 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
+ 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
+ 		DeliveryFlight: s.delivery.flight, BulkDeliveryFlight: s.delivery.bulkFlight, DeliveryWindow: s.delivery.allowance()}
++	now := time.Now()
++	snapshot.AppAckedPackets = s.appAckedPackets
++	snapshot.AppPayloadBytes = s.appPayloadBytes
++	if !s.lastAppAck.IsZero() {
++		snapshot.LastAppAckAgeMS = now.Sub(s.lastAppAck).Milliseconds()
++	}
++	if !s.lastAppPayload.IsZero() {
++		snapshot.LastAppPayloadAgeMS = now.Sub(s.lastAppPayload).Milliseconds()
++	}
++	for _, p := range s.pending {
++		if p.kind == frameData || p.kind == frameOpen || p.kind == frameOpenOK || p.kind == frameFIN {
++			if !p.firstQueued.IsZero() {
++				snapshot.OldestPendingAgeMS = max(snapshot.OldestPendingAgeMS, now.Sub(p.firstQueued).Milliseconds())
++			}
++		}
++	}
++	snapshot.UniqueBulkDelivered = s.delivery.totalDelivered
++	snapshot.MobileDraining = s.delivery.mobile.draining
+ 	snapshot.MobilePacing = s.delivery.mobile.enabled
+ 	if snapshot.MobilePacing {
+ 		snapshot.MobileCapacityBPS = int64(s.delivery.mobile.capacity)
+diff --git a/src/native/copy_test.go b/src/native/copy_test.go
+index 45c0183..185debe 100644
+--- a/src/native/copy_test.go
++++ b/src/native/copy_test.go
+@@ -67,7 +67,7 @@ func TestCandidateTransportVersion(t *testing.T) {
+ 	// The prior assertion required the stable "-final" suffix even in a
+ 	// development RC. Guard the complete candidate revision instead, so a
+ 	// mislabeled stable or older binary cannot pass qualification.
+-	if got := Version(); got != "itom-1-5-1-rc12-dev" || strings.HasSuffix(got, "-final") {
++	if got := Version(); got != "itom-1-5-1-rc13-dev" || strings.HasSuffix(got, "-final") {
+ 		t.Fatalf("expected exact 1.5.1 RC1 development identity; got %q", got)
+ 	}
+ }
+diff --git a/src/native/exit_identity.go b/src/native/exit_identity.go
+index 038f3ed..8d00912 100644
+--- a/src/native/exit_identity.go
++++ b/src/native/exit_identity.go
+@@ -8,6 +8,7 @@ import (
+ 	"io"
+ 	"net"
+ 	"net/http"
++	"net/netip"
+ 	"time"
+ 
+ 	"itom.local/core/wire"
+@@ -17,18 +18,36 @@ import (
+ // not Android's network resolver, a routing-rule verdict, or a direct socket.
+ // It follows the configured server-side exit and cannot fall back to direct.
+ func (c *Client) ExitIdentity() (string, error) {
+-	const host = "www.cloudflare.com"
+ 	pool := c.currentPool()
+ 	if pool == nil || c.rebinding.Load() {
+ 		return "", errors.New("EXIT_NOT_CONNECTED")
+ 	}
+-	ctx, cancel := context.WithTimeout(c.ctx, 15*time.Second)
++	ctx, cancel := context.WithTimeout(c.ctx, 18*time.Second)
++	defer cancel()
++	// Both targets are public Cloudflare resolver/HTTP trace endpoints. TLS
++	// still verifies one.one.one.one, and the dial always goes through pool.Open.
++	for _, target := range []string{"1.1.1.1", "2606:4700:4700::1111"} {
++		attempt, stop := context.WithTimeout(ctx, 8*time.Second)
++		result, err := c.exitIdentityFamily(attempt, pool, target)
++		stop()
++		if err == nil {
++			return result, nil
++		}
++		if ctx.Err() != nil {
++			break
++		}
++	}
++	return "", errors.New("EXIT_IP_UNAVAILABLE")
++}
++func (c *Client) exitIdentityFamily(parent context.Context, pool transportPool, target string) (string, error) {
++	const host = "one.one.one.one"
++	ctx, cancel := context.WithTimeout(parent, 8*time.Second)
+ 	defer cancel()
+ 	transport := &http.Transport{DisableKeepAlives: true, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}, DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+ 		if address != host+":443" {
+ 			return nil, errors.New("EXIT_TARGET_INVALID")
+ 		}
+-		stream, _, err := pool.Open(ctx, wire.Connect{Host: host, Port: 443})
++		stream, _, err := pool.Open(ctx, wire.Connect{Host: target, Port: 443})

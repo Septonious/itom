@@ -1,0 +1,400 @@
+diff --git a/src/android/app/build.gradle.kts b/src/android/app/build.gradle.kts
+index de3b8f9..cc4684e 100644
+--- a/src/android/app/build.gradle.kts
++++ b/src/android/app/build.gradle.kts
+@@ -11,7 +11,7 @@ android {
+     defaultConfig {
+         applicationId = "org.itom.client"
+         minSdk = 29; targetSdk = 37
+-        versionCode = 10532; versionName = "1.5.1-rc12-dev"
++        versionCode = 10533; versionName = "1.5.1-rc13-dev"
+         ndk { abiFilters.addAll(if (itomAbi == "arm64") listOf("arm64-v8a") else listOf("arm64-v8a", "armeabi-v7a")) }
+         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
+         buildConfigField("int", "CONFIG_SCHEMA", "5")
+diff --git a/src/android/app/src/main/java/org/itom/client/HomeScreens.kt b/src/android/app/src/main/java/org/itom/client/HomeScreens.kt
+index 7712d34..7912c7e 100644
+--- a/src/android/app/src/main/java/org/itom/client/HomeScreens.kt
++++ b/src/android/app/src/main/java/org/itom/client/HomeScreens.kt
+@@ -74,7 +74,6 @@ import kotlin.math.sin
+             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
+                 Column(Modifier.weight(.44f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                     ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
+-                    ProfileSwitch(config, session, true, profiles)
+                 }
+                 Column(Modifier.weight(.56f), verticalArrangement = Arrangement.spacedBy(gap)) {
+                     SpeedCards(session, true)
+@@ -84,7 +83,6 @@ import kotlin.math.sin
+         } else {
+             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                 ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
+-                ProfileSwitch(config, session, compact, profiles)
+                 Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                     Text("Traffic", Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = Muted)
+                     GlowDot(if (session.phase == Phase.CONNECTED) color else Muted)
+@@ -130,7 +128,7 @@ import kotlin.math.sin
+                 Label(Modifier.weight(1f))
+             }
+         } else {
+-            val ringSize = minOf(availableWidth, (availableHeight - textBudget).coerceAtLeast(48.dp), 286.dp)
++            val ringSize = minOf(availableWidth, (availableHeight - textBudget).coerceAtLeast(48.dp), 340.dp)
+             Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                 PowerOrb(session.phase, color, angle, toggle, Modifier.size(ringSize))
+                 Label(Modifier.fillMaxWidth())
+@@ -173,21 +171,6 @@ import kotlin.math.sin
+     }
+ }
+ 
+-@Composable private fun ProfileSwitch(config: PublicConfig, session: SessionSnapshot, compact: Boolean, onClick: () -> Unit) {
+-    val profile = config.selected
+-    InfoCard(Modifier.fillMaxWidth(), contentPadding = if (compact) 12.dp else 16.dp, onClick = onClick) {
+-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+-            IconBadge(if (profile == null) Glyph.PLUS else Glyph.SERVERS, modifier = Modifier.size(if (compact) 36.dp else 42.dp))
+-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+-                if (profile == null) Text("Add profile", style = MaterialTheme.typography.titleMedium)
+-                else ExitIdentityTitle(session.exitIdentities[profile.profileId])
+-                Text(profile?.let { "${it.providerId} · ID ${it.userId}" } ?: "Server invitation", style = MaterialTheme.typography.bodySmall, color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+-            }
+-            AppIcon(Glyph.NEXT, Modifier.size(18.dp))
+-        }
+-    }
+-}
+-
+ @Composable private fun SpeedCards(session: SessionSnapshot, compact: Boolean) {
+     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+         SpeedCard("Download", session.metrics.downBps, Glyph.DOWN, Blue, session, true, compact, Modifier.weight(1f))
+diff --git a/src/android/app/src/main/java/org/itom/client/ProfileScreens.kt b/src/android/app/src/main/java/org/itom/client/ProfileScreens.kt
+index 7d9c185..55f12a7 100644
+--- a/src/android/app/src/main/java/org/itom/client/ProfileScreens.kt
++++ b/src/android/app/src/main/java/org/itom/client/ProfileScreens.kt
+@@ -60,15 +60,11 @@ import java.io.ByteArrayOutputStream
+                         IconBadge(Glyph.SERVERS, color = if (active) Blue else Muted)
+                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                             ExitIdentityTitle(session.exitIdentities[profile.profileId])
+-                            SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled")
++                            SmallNote("${profile.accounts.count { it.enabled }} accounts")
+                         }
+                         if (active) StatusLabel("Selected", Blue)
+                     }
+                     if (profile.profileId in config.incompleteProfileIds) Text("Setup required", style = MaterialTheme.typography.labelSmall, color = Yellow)
+-                    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+-                        Column(Modifier.weight(1f)) { SmallNote("User ID"); Text(profile.userId) }
+-                        Column(Modifier.weight(1f)) { SmallNote("Max IMAP sockets"); Text(profile.totalLines.toString()) }
+-                    }
+                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                         OutlinedButton(enabled = !busy, onClick = { onEdit(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) { Text("Edit") }
+                         TextButton(modifier = Modifier.weight(1f), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) {
+@@ -78,6 +74,9 @@ import java.io.ByteArrayOutputStream
+                     if (expanded == profile.profileId) {
+                         HorizontalDivider(color = Outline)
+                         SmallNote("Server ID: ${profile.serverId}")
++                        SmallNote("User ID: ${profile.userId}")
++                        SmallNote("Provider: ${profile.providerId}")
++                        SmallNote("Max IMAP sockets: ${profile.totalLines}")
+                         SmallNote("Folders: ${profile.mailboxNamespace}")
+                         SmallNote(if (profile.profileId in config.incompleteProfileIds) "Enter the key and account credentials in the editor." else "The key is protected by Android Keystore.")
+                         profile.accounts.forEachIndexed { index, account -> SmallNote("Account ${index + 1} · ${account.host}:${account.port} · ${if (account.enabled) "enabled" else "disabled"}") }
+diff --git a/src/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt b/src/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt
+index 3dc8329..c699ed4 100644
+--- a/src/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt
++++ b/src/android/app/src/main/java/org/itom/client/backend/ItomVpnService.kt
+@@ -313,7 +313,7 @@ class ItomVpnService : VpnService() {
+                 if (rebinding || !underlyingAvailable) {
+                     exitLookup?.cancel(); exitLookup = null; exitRequested = false
+                     backend.machine.exitIdentity(g, profileId, null)
+-                } else if (active > 0 && backend.snapshot.value.phase == Phase.CONNECTED && !exitRequested) {
++                } else if (active > 0 && backend.snapshot.value.phase == Phase.CONNECTED && !exitRequested && stats.optLong("RTTMillis", 0) in 1L..700L && stats.optLong("CellularRTTAverageMillis", 0) <= 700) {
+                     exitRequested = true
+                     exitLookup = scope.launch {
+                         val identity = try {
+@@ -327,10 +327,11 @@ class ItomVpnService : VpnService() {
+                 val down = stats.getLong("Download"); val up = stats.getLong("Upload")
+                 if (down > previousDown || up > previousUp) lastDemandAt = now
+                 val elapsed = (now - previous).coerceAtLeast(1)
+-                backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
++                val acceptedMetrics = backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
+                     (up - previousUp).coerceAtLeast(0) * 8000 / elapsed,
+                     stats.optInt("RTTMillis").takeIf { active > 0 && it > 0 },
+                     stats.getInt("TCP"), active, stats.getInt("TotalLines")), stats.toString(), now)
++                if (!acceptedMetrics && backend.snapshot.value.generation == g) networkEvent("invalid_metrics_sample", selectedUnderlying.get())
+                 previous = now; previousDown = down; previousUp = up
+                 if (!rebinding && now - lastTransportHealthCheck >= 5000 && !restartForNetwork.get()) {
+                     lastTransportHealthCheck = now
+@@ -362,7 +363,8 @@ class ItomVpnService : VpnService() {
+                             mailboxOutstanding = outstanding,
+                             selectiveAttempts = softRebindAttempts.get()
+                         )
+-                        when (transportRecoveryStep(progress)) {
++                        val cellularRecovery = kindOf(physical?.let { capabilities[it] }) == NetworkKind.MOBILE && active >= 16
++                        when (if (cellularRecovery) RecoveryStep.NONE else transportRecoveryStep(progress)) {
+                             RecoveryStep.NONE -> Unit
+                             RecoveryStep.RESTART -> if (now - lastSoftRebindAt.get() >= 20_000) {
+                                 networkEvent("transport_no_delivery_last_resort", selectedUnderlying.get())
+diff --git a/src/android/domain/src/main/kotlin/org/itom/domain/Session.kt b/src/android/domain/src/main/kotlin/org/itom/domain/Session.kt
+index e37042a..e1c9e8a 100644
+--- a/src/android/domain/src/main/kotlin/org/itom/domain/Session.kt
++++ b/src/android/domain/src/main/kotlin/org/itom/domain/Session.kt
+@@ -54,7 +54,7 @@ class SessionMachine {
+     @Synchronized fun sample(generation: Long, metrics: Metrics, transport: String, sampledAt: Long?): Boolean {
+         val s = mutable.value
+         if (s.generation != generation || s.phase !in setOf(Phase.CONNECTING, Phase.CONNECTED)) return false
+-        demand(metrics.downBps >= 0 && metrics.upBps >= 0 && metrics.tcp >= 0 && metrics.activeLines in 0..metrics.totalLines && (metrics.rttMs == null || metrics.rttMs >= 0), "INVALID_METRICS")
++        if (metrics.downBps < 0 || metrics.upBps < 0 || metrics.tcp < 0 || metrics.activeLines !in 0..metrics.totalLines || (metrics.rttMs != null && metrics.rttMs < 0)) return false // telemetry cannot terminate the VPN
+         mutable.value = s.copy(metrics = metrics, transport = transport, sampledAt = sampledAt, history = if (s.phase == Phase.CONNECTED) (s.history + Sample(metrics.downBps, metrics.upBps)).takeLast(60) else s.history)
+         return true
+     }
+diff --git a/src/android/domain/src/test/kotlin/org/itom/domain/DomainTest.kt b/src/android/domain/src/test/kotlin/org/itom/domain/DomainTest.kt
+index 0191c9d..98ade77 100644
+--- a/src/android/domain/src/test/kotlin/org/itom/domain/DomainTest.kt
++++ b/src/android/domain/src/test/kotlin/org/itom/domain/DomainTest.kt
+@@ -8,6 +8,16 @@ import java.util.Base64
+ import kotlin.test.*
+ 
+ class DomainTest {
++    @Test fun transientOverlappingSocketMetricsDoNotDisconnect() {
++        val m = SessionMachine(); val g = m.begin("local", 1, 32)
++        assertTrue(m.connected(g, 1, interfaceUp = true))
++        assertTrue(m.sample(g, Metrics(activeLines = 32, totalLines = 32), "valid", 2))
++        assertFalse(m.sample(g, Metrics(activeLines = 34, totalLines = 32), "overlap", 3))
++        assertEquals(Phase.CONNECTED, m.state.value.phase)
++        assertTrue(m.state.value.vpnInterfaceUp)
++        assertEquals(32, m.state.value.metrics.activeLines)
++        assertTrue(m.sample(g, Metrics(activeLines = 16, totalLines = 32), "recovered", 4))
++    }
+     private fun profile() = ServerProfile(profileId = "local", name = "Server", serverId = "1234567890abcdef1234567890abcdef", userId = "12345678", providerId = "test",
+         encryptionKeyRef = "keystore:pair", mailboxNamespace = "ITOM/12345678/unique",
+         accounts = (1..4).map { n -> MailAccount("mail$n", "Mail $n", "imap.example.invalid", credentialRef = "keystore:mail$n", providerId = "test") })
+diff --git a/src/core/mailbox/admin.go b/src/core/mailbox/admin.go
+index c6f3a1c..a3a0802 100644
+--- a/src/core/mailbox/admin.go
++++ b/src/core/mailbox/admin.go
+@@ -22,7 +22,7 @@ type Folder struct {
+ 	Delimiter rune
+ 	Attrs     []imap.MailboxAttr
+ }
+-type PurgeItem struct{ Name, Outcome string }
++type PurgeItem struct{ Name, Outcome, Reason string }
+ type PurgeReport struct {
+ 	Items     []PurgeItem
+ 	Remaining []string
+@@ -295,7 +295,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
+ 		}
+ 		if protected[f.Name] {
+ 			if !reportedProtected[f.Name] {
+-				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
++				report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: "SKIPPED_PROTECTED"})
+ 				reportedProtected[f.Name] = true
+ 			}
+ 			return nil
+@@ -304,7 +304,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
+ 			return err
+ 		}
+ 		outcome, err := purgeOne(ctx, a, f.Name, keep)
+-		report.Items = append(report.Items, PurgeItem{f.Name, outcome})
++		report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: outcome, Reason: FailureReason(err)})
+ 		if err == nil {
+ 			delete(unresolved, f.Name)
+ 			if outcome == "KEPT_EMPTY" {
+@@ -365,7 +365,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
+ 		report.Remaining = append(report.Remaining, f.Name)
+ 		if protected[f.Name] {
+ 			if !reportedProtected[f.Name] {
+-				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
++				report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: "SKIPPED_PROTECTED"})
+ 			}
+ 			continue
+ 		}
+diff --git a/src/core/manager/accounts.go b/src/core/manager/accounts.go
+index f37904d..bfa0ff3 100644
+--- a/src/core/manager/accounts.go
++++ b/src/core/manager/accounts.go
+@@ -93,7 +93,11 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
+ 	report, err := admin.PurgeAll(ctx)
+ 	labels := map[string]string{"DELETED": "folder deleted", "KEPT_EMPTY": "folder retained and emptied", "NOT_EMPTIED": "purge not confirmed", "UNKNOWN": "outcome not confirmed", "UNSUBSCRIBE_REFUSED": "could not remove subscription", "SKIPPED_PROTECTED": "protected legacy folder retained untouched"}
+ 	for _, item := range report.Items {
+-		fmt.Fprintf(u.Out, "%q — %s\n", item.Name, labels[item.Outcome])
++		fmt.Fprintf(u.Out, "%q — %s", item.Name, labels[item.Outcome])
++		if item.Reason != "" {
++			fmt.Fprintf(u.Out, " (%s)", item.Reason)
++		}
++		fmt.Fprintln(u.Out)
+ 	}
+ 	if report.Verified {
+ 		fmt.Fprintln(u.Out, "Verification complete for non-protected folders. Remaining folders:")
+diff --git a/src/core/manager/manager.go b/src/core/manager/manager.go
+index 1975f38..c6727c7 100644
+--- a/src/core/manager/manager.go
++++ b/src/core/manager/manager.go
+@@ -9,6 +9,7 @@ import (
+ 	"itom.local/core/mailbox"
+ 	"itom.local/core/probe"
+ 	"itom.local/core/servercfg"
++	"itom.local/core/tunnel"
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
+@@ -70,7 +71,13 @@ func (u *UI) system(action string) error {
+ 		return err
+ 	}
+ 	if action == "stop" {
+-		return VerifyCapacityState(u.State)
++		if err := VerifyCapacityState(u.State); err != nil {
++			return err
++		}
++	}
++	if action == "start" || action == "stop" {
++		out, _ := exec.Command("systemctl", "is-active", "itom.service").Output()
++		fmt.Fprintf(u.Out, "Service: %s\n", strings.TrimSpace(string(out)))
+ 	}
+ 	return nil
+ }
+@@ -97,7 +104,8 @@ func (u *UI) Run() error {
+ 		return e
+ 	}
+ 	for {
+-		fmt.Fprintln(u.Out, "\nITOM — server manager\nEncrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n18. Update from newest ITOM .bin in /tmp\n0. Exit")
++		fmt.Fprintf(u.Out, "\nITOM — server manager (%s)\n", tunnel.TransportRevision)
++		fmt.Fprintln(u.Out, "Encrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n18. Update from newest ITOM .bin in /tmp\n0. Exit")
+ 		s, e := u.ask("Selection")
+ 		if e == io.EOF {
+ 			return nil
+@@ -105,6 +113,12 @@ func (u *UI) Run() error {
+ 		if e != nil {
+ 			return e
+ 		}
++		if s != "0" && s != "2" && s != "11" && s != "16" && s != "18" {
++			if _, err := os.Stat(u.db()); errors.Is(err, os.ErrNotExist) {
++				fmt.Fprintln(u.Out, "Server not initialized. Select 2 to initialize.")
++				continue
++			}
++		}
+ 		switch s {
+ 		case "0":
+ 			return nil
+@@ -313,10 +327,10 @@ func (u *UI) accounts() error {
+ 	if e = cfg.Validate(); e != nil {
+ 		return e
+ 	}
+-	return servercfg.Update(u.db(), func(c *servercfg.Config) error {
+-		_, err := c.AddAccount(cfg)
++	if err := u.validateNewAccount(cfg); err != nil {
+ 		return err
+-	})
++	}
++	return servercfg.Update(u.db(), func(c *servercfg.Config) error { _, err := c.AddAccount(cfg); return err })
+ }
+ func (u *UI) users() error {
+ 	c, e := servercfg.Load(u.db())
+@@ -634,3 +648,21 @@ func (u *UI) diagnostics() error {
+ 	fmt.Fprintln(u.Out, "Saved. Restart the service using menu item 9. Android tracing is controlled separately.")
+ 	return nil
+ }
++
++// Authentication and NOOP only, before persisting a new mailbox. No legacy
++// folders are selected or modified. Password echo remains unchanged.
++func (u *UI) validateNewAccount(cfg mailbox.Config) error {
++	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
++	defer cancel()
++	c, err := mailbox.Dial(ctx, cfg, []string{"itom-validation"})
++	if err != nil {
++		return fmt.Errorf("IMAP check failed (%s)", mailbox.FailureReason(err))
++	}
++	defer c.Close()
++	_, err = c.Ping(ctx)
++	if err != nil {
++		return fmt.Errorf("IMAP NOOP failed (%s)", mailbox.FailureReason(err))
++	}
++	fmt.Fprintln(u.Out, "IMAP authentication and NOOP successful.")
++	return nil
++}
+diff --git a/src/core/tunnel/api.go b/src/core/tunnel/api.go
+index 4928224..abffb11 100644
+--- a/src/core/tunnel/api.go
++++ b/src/core/tunnel/api.go
+@@ -27,7 +27,7 @@ import (
+ 	mailstream "itom.local/mailstream"
+ )
+ 
+-const TransportRevision = "itom-1-5-1-rc12-dev"
++const TransportRevision = "itom-1-5-1-rc13-dev"
+ const pathHost = "path.mailstream.itom.invalid"
+ 
+ type Dial = mailstream.NetworkDialer
+@@ -61,6 +61,7 @@ type ClientSnapshot struct {
+ 	ConfiguredAccounts                                 int
+ 	AllocatedAccounts                                  int
+ 	AssignedSocketCapacity                             int
++	PhysicalSocketCount                                int
+ 	GrantNegotiated                                    bool
+ 	CellularRTTAverageMillis                           int64
+ 	CellularRTTSamples                                 int
+@@ -74,6 +75,7 @@ type LineDiagnostic struct {
+ 	AccountID                       string
+ 	Ready                           bool
+ 	ActiveLines, TotalLines         int
++	PhysicalSockets                 int
+ 	RTTMillis, IMAPLatencyMillis    int64
+ 	RTTFresh                        bool
+ 	RTTAgeMillis                    int64
+@@ -437,19 +439,22 @@ func (c *Client) Snapshot() ClientSnapshot {
+ 				break
+ 			}
+ 		}
+-		active := line.PhysicalSockets
++		s.PhysicalSocketCount += line.PhysicalSockets
++		active := servingSocketCount(line)
+ 		s.ActiveLines += active
+ 		lineCapacity := 0
+ 		if line.Allocated {
+ 			lineCapacity = mailstream.ConnectionsPerAccount
+ 		}
+-		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: lineCapacity,
++		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, PhysicalSockets: line.PhysicalSockets, ActiveLines: active, TotalLines: lineCapacity,
+ 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, RTTAgeMillis: line.RTTAgeMillis, IMAPLatencyMillis: line.IMAPLatencyMillis,
+ 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})
+ 	}
+ 	c.mu.Lock()
+ 	c.sampleAccountRates(s.Lines, time.Now())
+-	s.RTTMillis = c.probe.RTTMillis
++	if c.probe.Failure == "" && time.Now().UnixMilli()-c.probe.SampledAtMS < 5000 {
++		s.RTTMillis = c.probe.RTTMillis
++	}
+ 	average, samples := c.cellularRTTLocked(time.Now())
+ 	s.CellularRTTAverageMillis, s.CellularRTTSamples, s.CellularDesiredAccounts = average.Milliseconds(), samples, c.cellularDesired
+ 	if mail.GrantNegotiated {
+@@ -507,3 +512,10 @@ func diagnosticPath(dir string) string { return filepath.Join(dir, "transport-tr
+ func (c *Client) PingAccount(ctx context.Context, account string) (time.Duration, error) {
+ 	return c.session.PingAccount(ctx, account)
+ }
++
++func servingSocketCount(line mailstream.MailAccountSnapshot) int {
++	if !line.Allocated || line.ScaleBlocked || line.Failed {
++		return 0
++	}
++	return min(mailstream.ConnectionsPerAccount, max(0, line.PhysicalSockets))
++}
+diff --git a/src/core/tunnel/cellular.go b/src/core/tunnel/cellular.go
+index fcf4964..ca64c81 100644
+--- a/src/core/tunnel/cellular.go
++++ b/src/core/tunnel/cellular.go
+@@ -26,7 +26,8 @@ func (c *Client) SetNetworkType(kind string) {
+ 	}
+ }
+ 
+-const cellularRTTWindow = 10 * time.Second
++const cellularRTTWindow = 5 * time.Second
++const cellularEmergencyInterval = 3 * time.Second
+ 
+ type mailRate struct{ up, down, control uint64 }
+ 
+@@ -68,14 +69,12 @@ func (c *Client) cellularRTTLocked(now time.Time) (time.Duration, int) {
+ }
+ 
+ type cellularPolicy struct {
+-	healthy            int
+-	limit              int
+-	lastChange         time.Time
+-	beforeReduction    int
+-	rttBeforeReduction time.Duration
++	healthy    int
++	limit      int
++	lastChange time.Time
