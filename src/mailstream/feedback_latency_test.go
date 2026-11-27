@@ -54,3 +54,18 @@ func TestRC116FeedbackCoalescingAdaptsToIMAPLatency(t *testing.T) {
 		t.Fatalf("inbound idle feedback delay = %v", d)
 	}
 }
+
+func TestWiFiFeedbackAndRecoveryUseDataWriter(t *testing.T) {
+	l := &IMAPLink{}
+	for _, mobile := range []bool{false, true, false} {
+		l.cellularBearer.Store(mobile)
+		if l.useDataPublisher(mailWork{control: true}) {
+			t.Fatal("interactive control was diverted")
+		}
+		for _, work := range []mailWork{{control: true, feedback: true}, {control: true, recovery: true}} {
+			if l.useDataPublisher(work) == mobile {
+				t.Fatal("incorrect bearer routing", mobile, work)
+			}
+		}
+	}
+}

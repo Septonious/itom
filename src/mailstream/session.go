@@ -111,6 +111,9 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 		dial = publicDial
 	}
 	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan receiptRequest, 1024), pings: map[uint64]chan struct{}{}}
+	if carrier, ok := link.(*IMAPLink); ok {
+		carrier.cellularBearer.Store(false)
+	}
 	s.delivery.adaptive = true // Both directions use compression-safe bulk feedback.
 	s.closedStreams = map[uint32]*terminalStream{}
 	s.lastInbound.Store(time.Now().UnixNano())
@@ -347,6 +350,14 @@ func (s *Session) receiptLoop() {
 				delay := 2 * time.Millisecond
 				if request.bulk {
 					delay = 8 * time.Millisecond
+					s.mu.Lock()
+					if !s.delivery.mobile.enabled {
+						// Bulk receipts are cumulative batches of sequence IDs. At
+						// high rates an 8ms timer wastes APPEND commands; interactive
+						// receipts still preempt this timer within 2ms.
+						delay = 20 * time.Millisecond
+					}
+					s.mu.Unlock()
 				}
 				deadline = now.Add(delay)
 				timer.Reset(delay)

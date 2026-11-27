@@ -228,6 +228,9 @@ func bearerPingToken(seq uint64, mobile bool) uint64 {
 	return token
 }
 func (s *Session) setCellularLocked(enabled bool) {
+	if link, ok := s.link.(*IMAPLink); ok {
+		link.cellularBearer.Store(enabled)
+	}
 	if s.delivery.mobile.enabled == enabled {
 		return
 	}

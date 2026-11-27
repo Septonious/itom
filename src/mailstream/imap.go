@@ -139,6 +139,7 @@ type IMAPLink struct {
 	lastBulk            atomic.Int64
 	lastInboundBulk     atomic.Int64
 	mobileRecovery      atomic.Bool
+	cellularBearer      atomic.Bool
 	recoveryMu          sync.Mutex
 	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
@@ -1381,7 +1382,10 @@ func (a *mailAccountState) run() {
 			return
 		}
 		target := writer
-		if work.control {
+		// Preserve the independent interactive publisher on Wi-Fi even when
+		// feedback and storage traffic are busy.
+		feedbackOnData := writer != nil && a.link.useDataPublisher(work)
+		if work.control && !feedbackOnData {
 			a.mu.Lock()
 			target = a.controlWriter
 			a.mu.Unlock()
@@ -1475,17 +1479,19 @@ func (a *mailAccountState) run() {
 		}
 		appendStarted := time.Now()
 		cmd, startErr := target.startAppend(folder, encoded)
-		if work.control {
+		if work.control && !feedbackOnData {
 			lastControlWrite = time.Now()
 		} else {
 			lastWrite = time.Now()
-			lastBulkWrite = lastWrite
+			if !work.control {
+				lastBulkWrite = lastWrite
+			}
 		}
 		if startErr != nil {
 			if a.parking.Load() {
 				continue
 			}
-			if work.control && recoverControlAppend(controlWriterAppendError{startErr}) {
+			if work.control && !feedbackOnData && recoverControlAppend(controlWriterAppendError{startErr}) {
 				continue
 			}
 			a.failedStage("writer_append_start", startErr)
@@ -1516,7 +1522,7 @@ func (a *mailAccountState) run() {
 					a.upBytes.Add(uint64(len(packet)))
 				}
 			}
-			if err != nil && segment == nil {
+			if err != nil && segment == nil && !feedbackOnData {
 				err = controlWriterAppendError{err}
 			}
 			select {
@@ -2331,4 +2337,8 @@ func (a *mailAccountState) appendCompleted(control bool, n int, started time.Tim
 			break
 		}
 	}
+}
+
+func (l *IMAPLink) useDataPublisher(work mailWork) bool {
+	return (work.feedback || work.recovery) && !l.cellularBearer.Load()
 }

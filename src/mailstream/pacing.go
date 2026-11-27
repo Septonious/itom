@@ -62,7 +62,9 @@ func (p *bulkPacer) readyQuantum(n int, rate float64, now time.Time, mobile bool
 	}
 	quantum := max(maxMailPlain, min(4*maxMailPlain, int(rate*0.008)))
 	if mobile {
-		quantum = max(maxWire, min(maxMailPlain, int(rate*0.025)))
+		// A packet already queued before a rate change must still fit,
+		// but short new fragments need not be combined into a 64KiB burst.
+		quantum = max(n, min(maxMailPlain, int(rate*0.025)))
 	}
 	if p.bytes+n <= quantum {
 		return true
