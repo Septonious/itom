@@ -14,8 +14,9 @@ const storageGrantCooldown = 30 * time.Second
 const storageGrantMinimumHeadroom = 8 << 20
 
 type storageGrantWatch struct {
-	blocked map[string]int
-	last    time.Time
+	blocked     map[string]int
+	unavailable map[string]int
+	last        time.Time
 }
 
 func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailSnapshot, now time.Time) bool {
@@ -38,7 +39,7 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 	}
 	w := a.storage[identity]
 	if w == nil {
-		w = &storageGrantWatch{blocked: map[string]int{}}
+		w = &storageGrantWatch{blocked: map[string]int{}, unavailable: map[string]int{}}
 		a.storage[identity] = w
 	}
 	for _, id := range grant {
@@ -46,14 +47,17 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 		if !ok {
 			return false
 		}
+		// The server keeps its readers warm even when the client parks accounts.
+		if !line.Ready || line.PeerUnavailable {
+			w.unavailable[id]++
+		} else {
+			delete(w.unavailable, id)
+		}
 		if line.BulkHeadroomBytes < 512<<10 || line.BulkBlocked && (line.StoragePressure || line.PeerStoragePressure) {
 			w.blocked[id]++
 		} else {
 			delete(w.blocked, id)
 		}
-	}
-	if !w.last.IsZero() && now.Sub(w.last) < storageGrantCooldown {
-		return false
 	}
 	occupied := map[string]bool{}
 	for _, g := range a.grants {
@@ -61,33 +65,56 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 			occupied[id] = true
 		}
 	}
-	var spare string
-	var best int
-	for _, id := range preferredGrantAccounts(mail.Lines) {
-		line := inventory[id]
-		if occupied[id] || !slices.Contains(a.accounts, id) || !line.Ready || line.Failure != "" || line.BulkBlocked || line.PeerStoragePressure || line.BulkHeadroomBytes < storageGrantMinimumHeadroom {
+	// Replace persistent unavailable paths in one authenticated update. A
+	// single replacement could leave another dead account in the desired set,
+	// preventing either peer from completing the all-account preparation.
+	next := slices.Clone(grant)
+	replaced := false
+	pick := func(old string, storage bool) string {
+		for _, id := range preferredGrantAccounts(mail.Lines) {
+			line := inventory[id]
+			if occupied[id] || !slices.Contains(a.accounts, id) || !line.Ready || line.Failure != "" || line.BulkBlocked || line.PeerStoragePressure || line.PeerUnavailable || line.BulkHeadroomBytes < storageGrantMinimumHeadroom {
+				continue
+			}
+			if storage && line.BulkHeadroomBytes-inventory[old].BulkHeadroomBytes < storageGrantMinimumHeadroom {
+				continue
+			}
+			return id
+		}
+		return ""
+	}
+	for i, id := range grant {
+		if w.unavailable[id] < 3 {
 			continue
 		}
-		spare, best = id, line.BulkHeadroomBytes
-		break
-	}
-	if spare == "" {
-		return false
-	}
-	worst := -1
-	for i, id := range grant {
-		line := inventory[id]
-		if w.blocked[id] >= 3 && best-line.BulkHeadroomBytes >= storageGrantMinimumHeadroom && (worst < 0 || line.BulkHeadroomBytes < inventory[grant[worst]].BulkHeadroomBytes) {
-			worst = i
+		spare := pick(id, false)
+		if spare == "" {
+			return false
 		}
+		next[i], occupied[spare], replaced = spare, true, true
 	}
-	if worst < 0 {
-		return false
+	if !replaced {
+		if !w.last.IsZero() && now.Sub(w.last) < storageGrantCooldown {
+			return false
+		}
+		worst := -1
+		for i, id := range grant {
+			if w.blocked[id] >= 3 && (worst < 0 || inventory[id].BulkHeadroomBytes < inventory[grant[worst]].BulkHeadroomBytes) {
+				worst = i
+			}
+		}
+		if worst < 0 {
+			return false
+		}
+		spare := pick(grant[worst], true)
+		if spare == "" {
+			return false
+		}
+		next[worst] = spare
 	}
-	next := slices.Clone(grant)
-	next[worst] = spare
 	a.grants[identity] = next
 	w.last = now
 	clear(w.blocked)
+	clear(w.unavailable)
 	return true
 }

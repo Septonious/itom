@@ -146,6 +146,8 @@ type IMAPLink struct {
 	grantChanging       bool
 	remoteActive        map[string]bool
 	remoteActiveVersion uint64
+	remoteUnavailable   map[string]bool
+	remoteHealthVersion uint64
 	roundRobin          uint64
 	bulkAccount         uint64
 	bulkBytes           int
@@ -615,6 +617,7 @@ func (l *IMAPLink) Detach(id SessionID) {
 	l.grantChanging = false
 	l.grant = nil
 	l.remoteActive, l.remoteActiveVersion = nil, 0
+	l.remoteUnavailable, l.remoteHealthVersion = nil, 0
 	l.mu.Unlock()
 	for _, a := range l.accounts {
 		a.mu.Lock()
@@ -1468,6 +1471,7 @@ type MailAccountSnapshot struct {
 	StartupAttempts            uint32 `json:"startup_attempts"`
 	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
 	PeerVerified               bool   `json:"peer_verified"`
+	PeerUnavailable            bool   `json:"peer_unavailable"`
 	Account                    string `json:"account"`
 	Allocated                  bool   `json:"allocated"`
 	Stage                      string `json:"stage"`
@@ -1507,11 +1511,12 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 	}
 	l.reclaimer.mu.Unlock()
 	l.mu.Lock()
-	var verified, allocated [20]bool
+	var verified, allocated, unavailable [20]bool
 	s.GrantNegotiated = l.grantSession != (SessionID{})
 	s.GrantChanging = l.grantChanging
 	for i, a := range l.accounts {
 		verified[i] = l.peers[a.config.ID]
+		unavailable[i] = l.remoteUnavailable[a.config.ID]
 		allocated[i] = !s.GrantNegotiated || l.stableGrant[a.config.ID]
 		if allocated[i] {
 			s.AllocatedAccounts++
@@ -1572,6 +1577,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.StorageRecoveryReady = a.maintenance.recoveryReady || a.maintenance.recovered
 		line.MaintenanceFailure = a.maintenance.failure
 		line.PeerVerified = verified[i]
+		line.PeerUnavailable = unavailable[i]
 		line.RecoveryFailure = a.recoveryFailure
 		if a.control != nil {
 			line.ControlPhase = a.control.phase.Load()

@@ -215,6 +215,13 @@ func preferredGrantAccounts(lines []mailstream.MailAccountSnapshot) []string {
 		if (a.Failure != "") != (b.Failure != "") {
 			return a.Failure == ""
 		}
+		// Prefer a usable standing reader over small differences in storage headroom.
+		usable := func(x mailstream.MailAccountSnapshot) bool {
+			return x.Ready && !x.BulkBlocked && x.BulkHeadroomBytes >= storageGrantMinimumHeadroom
+		}
+		if usable(a) != usable(b) {
+			return usable(a)
+		}
 		if a.BulkHeadroomBytes != b.BulkHeadroomBytes {
 			return a.BulkHeadroomBytes > b.BulkHeadroomBytes
 		}

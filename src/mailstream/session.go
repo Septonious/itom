@@ -108,6 +108,10 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 		s.grantRequests = make(chan grantRequest, 1)
 		s.wg.Add(1)
 		go func() { defer s.wg.Done(); s.grantWorker() }()
+		if carrier, ok := link.(*IMAPLink); ok {
+			s.wg.Add(1)
+			go func() { defer s.wg.Done(); s.reportAccountHealth(carrier) }()
+		}
 	}
 	s.wg.Add(4)
 	go func() { defer s.wg.Done(); <-ctx.Done(); s.fail(ErrClosed) }()
@@ -629,6 +633,9 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameAccountHealth {
+		return s.applyAccountHealth(f)
+	}
 	if f.kind == frameGrantUpdate || f.kind == frameGrantAck {
 		return s.applyGrantFrame(f)
 	}
