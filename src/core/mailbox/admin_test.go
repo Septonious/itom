@@ -138,7 +138,7 @@ func TestProtectedLegacyNames(t *testing.T) {
 		name string
 		want bool
 	}{
-		{"itom-old-up-session-v2", true}, {"ITOM-old-down-SESSION-V2", true}, {"WSIT_s2c", true}, {"wsit-legacy-s2c-00", true}, {"wsit-c2s", false}, {"itom-new-c-u", false}, {"itom-new-d-00", false}, {"personal-s2c", false}, {"itom-session-v20", false},
+		{"itom-old-up-session-v2", true}, {"ITOM-old-down-SESSION-V2", true}, {"S2C-01", true}, {"S2C-01/child", true}, {"S2C-02", false}, {"WSIT_s2c", true}, {"wsit-legacy-s2c-00", true}, {"wsit-c2s", false}, {"itom-new-c-u", false}, {"itom-new-d-00", false}, {"personal-s2c", false}, {"itom-session-v20", false},
 	} {
 		if got := protectedLegacyFolder(Folder{Name: v.name, Delimiter: '/'}); got != v.want {
 			t.Errorf("%q: %v", v.name, got)
@@ -153,7 +153,7 @@ func TestPurgeRC10RecreatedSystemFolders(t *testing.T) {
 	systems := []string{"INBOX", "Trash", "Spam", "SentBox", "DraftBox", "Localized-Sent"}
 	for _, fail := range []bool{false, true} {
 		f := &purgeFixture{folders: map[string]Folder{}, messages: map[string]int{}, emptyFails: map[string]bool{}, recreateSystem: true}
-		for _, n := range append(append([]string{}, systems...), legacy, "WSIT-old-s2c", "itom-new-c-u", "itom-new-d-00") {
+		for _, n := range append(append([]string{}, systems...), legacy, "WSIT-old-s2c", "S2C-01", "S2C-01/child", "itom-new-c-u", "itom-new-d-00") {
 			f.folders[n] = Folder{Name: n, Delimiter: '/'}
 			f.messages[n] = 3
 		}
@@ -179,7 +179,7 @@ func TestPurgeRC10RecreatedSystemFolders(t *testing.T) {
 				t.Fatal("messages left in", n)
 			}
 		}
-		for _, n := range []string{legacy, "WSIT-old-s2c"} {
+		for _, n := range []string{legacy, "WSIT-old-s2c", "S2C-01", "S2C-01/child"} {
 			if f.messages[n] != 3 || slices.Contains(f.emptied, n) || !slices.Contains(r.Remaining, n) {
 				t.Fatal("legacy folder touched", n)
 			}

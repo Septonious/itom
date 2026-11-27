@@ -127,9 +127,9 @@ func (u *UI) Run() error {
 		case "2":
 			e = u.init()
 		case "3":
-			e = u.accounts()
+			e = u.submenu(u.accounts)
 		case "4":
-			e = u.users()
+			e = u.submenu(u.users)
 		case "5":
 			e = u.export()
 		case "6":
@@ -210,6 +210,21 @@ func (u *UI) init() error {
 		return e
 	})
 }
+
+var errMenuBack = errors.New("menu back")
+
+func (u *UI) submenu(action func() error) error {
+	for {
+		err := action()
+		if errors.Is(err, errMenuBack) || errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			fmt.Fprintln(u.Out, "Error:", err)
+		}
+	}
+}
+
 func (u *UI) accounts() error {
 	c, e := servercfg.Load(u.db())
 	if e != nil {
@@ -221,9 +236,12 @@ func (u *UI) accounts() error {
 			fmt.Fprintf(u.Out, "  TCP pinned to %s; TLS name %s\n", a.Mail.DialIP, a.Mail.Host)
 		}
 	}
-	choice, e := u.ask("1 add, 2 change password, 3 remove account from ITOM, 4 delete all folders and messages in this account, 5 purge ALL mail accounts, 6 reset accounts database, 7 IMAP IP pinning, 0 back")
-	if e != nil || choice == "0" {
+	choice, e := u.ask("1 add, 2 change password, 3 remove account from ITOM, 4 delete all folders and messages in this account, 5 purge ALL mail accounts, 6 reset accounts database, 7 IMAP IP pinning, 8 bulk import, 0 back")
+	if e != nil {
 		return e
+	}
+	if choice == "0" {
+		return errMenuBack
 	}
 	if e = u.stopped(); e != nil {
 		return e
@@ -280,7 +298,7 @@ func (u *UI) accounts() error {
 			return errors.New("account not found")
 		})
 	}
-	if choice != "1" {
+	if choice != "1" && choice != "8" {
 		return errors.New("unknown menu option")
 	}
 	var cfg mailbox.Config
@@ -316,6 +334,9 @@ func (u *UI) accounts() error {
 			}
 		}
 	}
+	if choice == "8" {
+		return u.bulkImport(cfg)
+	}
 	cfg.Username, e = u.ask("Username")
 	if e != nil {
 		return e
@@ -341,8 +362,11 @@ func (u *UI) users() error {
 		fmt.Fprintf(u.Out, "%s | %s | enabled=%t\n", x.ID, x.Name, x.Enabled)
 	}
 	choice, e := u.ask("1 add, 2 rename, 3 enable/disable, 4 remove client from server, 0 back")
-	if e != nil || choice == "0" {
+	if e != nil {
 		return e
+	}
+	if choice == "0" {
+		return errMenuBack
 	}
 	if e = u.stopped(); e != nil {
 		return e
@@ -665,4 +689,70 @@ func (u *UI) validateNewAccount(cfg mailbox.Config) error {
 	}
 	fmt.Fprintln(u.Out, "IMAP authentication and NOOP successful.")
 	return nil
+}
+
+// Import one provider's tab-delimited credentials. Validate each row before
+// staging; commit the verified rows together without changing existing IDs.
+func (u *UI) bulkImport(base mailbox.Config) error {
+	fmt.Fprintln(u.Out, "Paste username<TAB>password, one per line. Empty line finishes. Password input remains visible.")
+	var rows []mailbox.Config
+	for i := 0; ; i++ {
+		line, err := u.In.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
+		if line == "" {
+			break
+		}
+		if i >= 30 {
+			fmt.Fprintf(u.Out, "Row %d skipped: maximum 30 input rows per batch\n", i+1)
+			continue
+		}
+		if len(line) > 4096 {
+			fmt.Fprintf(u.Out, "Row %d skipped: INPUT_LIMIT\n", i+1)
+			continue
+		}
+		username, password, ok := strings.Cut(line, "\t")
+		if !ok {
+			fmt.Fprintf(u.Out, "Row %d skipped: expected tab delimiter\n", i+1)
+			continue
+		}
+		cfg := base
+		cfg.Username = strings.TrimSpace(username)
+		cfg.Password = password
+		if cfg.Validate() != nil {
+			fmt.Fprintf(u.Out, "Row %d skipped: invalid credentials or endpoint\n", i+1)
+			continue
+		}
+		if err = u.validateNewAccount(cfg); err != nil {
+			fmt.Fprintf(u.Out, "Row %d skipped: %v\n", i+1, err)
+			continue
+		}
+		rows = append(rows, cfg)
+	}
+	if len(rows) == 0 {
+		return errors.New("no validated accounts to import")
+	}
+	if err := u.stopped(); err != nil {
+		return err
+	}
+	added := 0
+	err := servercfg.Update(u.db(), func(c *servercfg.Config) error {
+		for _, cfg := range rows {
+			if _, err := c.AddAccount(cfg); err != nil {
+				fmt.Fprintln(u.Out, "Skipped duplicate or invalid account")
+				continue
+			}
+			added++
+		}
+		if added == 0 {
+			return errors.New("no new valid accounts")
+		}
+		return nil
+	})
+	if err == nil {
+		fmt.Fprintf(u.Out, "Imported %d validated accounts.\n", added)
+	}
+	return err
 }

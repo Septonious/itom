@@ -9,7 +9,6 @@ type mobileFlow struct {
 	capacity            float64 // acknowledged wire bytes per second
 	updated             time.Time
 	lastDeferrals       uint64
-	lowSamples          int
 	guardUntil          time.Time
 	gain                float64
 	appBase             time.Duration
@@ -19,8 +18,18 @@ type mobileFlow struct {
 	retryAt             time.Time
 	recoverySamples     int
 	recoveryGain        float64
-	recoveryAt          time.Time
 	idleBase, idleSigma time.Duration
+	lastBulk            time.Duration
+	goodRate            float64
+	probeRate           float64
+	probeAt             time.Time
+	badSamples          int
+	controlDelay        time.Duration
+	controlAt           time.Time
+	lastRate            float64
+	ratePeak            float64
+	ratePeakAt          time.Time
+	lastBusy            time.Time
 }
 
 const mobileStartRate = 1_000_000
@@ -28,98 +37,128 @@ const mobileStartRate = 1_000_000
 func (m *mobileFlow) reset(enabled bool) {
 	*m = mobileFlow{enabled: enabled, capacity: mobileStartRate}
 }
+
+// Each sender has its own receipt clock and learns its own direction. Do
+// not turn a high absolute application RTT into a bulk outage when receipts
+// continue to arrive. Only lack of progress enters the hard drain state.
 func (m *mobileFlow) observeDelay(rtt, base time.Duration, now time.Time, busy bool) {
 	if rtt <= 0 {
 		return
 	}
-	if rtt <= 400*time.Millisecond && !busy && m.draining {
+	if m.draining && !busy && rtt < 2*time.Second {
 		m.recoverySamples++
 		if m.recoverySamples >= 2 {
 			m.beginRecovery(now)
 		}
 	}
-	if m.recoveryGain > 0 && !m.draining && rtt > 700*time.Millisecond && busy {
-		m.draining = true
-		m.recoverySamples = 0
-	}
-	if !busy || rtt <= 0 {
+	if !busy || m.draining {
 		return
 	}
-	gain := 1.0
-	if rtt >= 700*time.Millisecond || base > 0 && rtt-base > 350*time.Millisecond {
-		gain = .50
-	} else if rtt > 400*time.Millisecond && (base == 0 || rtt-base > 100*time.Millisecond) {
-		gain = .82
-	}
-	if gain < 1 {
-		if now.Before(m.guardUntil) {
-			gain = min(gain, m.gain)
+	if m.probeRate > 0 {
+		// A rising control queue is a corroborating signal, not an absolute
+		// RTT gate. Back off at most once per second during an active probe.
+		previous := m.controlDelay
+		if previous == 0 {
+			previous = base
 		}
-		m.gain = gain
+		stale := !m.progressAt.IsZero() && now.Sub(m.progressAt) >= time.Second
+		underDelivery := m.lastRate > 0 && m.lastRate < m.probeRate*.75
+		if previous > 0 && rtt > previous+max(250*time.Millisecond, previous/2) && now.Sub(m.controlAt) >= time.Second && (stale || underDelivery || rtt >= 1500*time.Millisecond) {
+			m.probeRate = max(16000, m.probeRate*.65)
+			m.probeAt, m.controlAt = now, now
+		}
+		if m.controlDelay == 0 {
+			m.controlDelay = rtt
+		} else {
+			m.controlDelay = (3*m.controlDelay + rtt) / 4
+		}
+		return
+	}
+	if rtt >= 700*time.Millisecond || base > 0 && rtt-base > 350*time.Millisecond {
+		m.gain = .5
+		m.guardUntil = now.Add(2 * time.Second)
+	} else if rtt > 400*time.Millisecond && (base == 0 || rtt-base > 100*time.Millisecond) {
+		m.gain = .82
 		m.guardUntil = now.Add(2 * time.Second)
 	}
 }
+
+// The rate sample is unique, acknowledged wire bytes per second. A bounded
+// upward probe can be made on a stable delivery round even if the absolute
+// RTT is higher than an old minimum. Failed probes retreat to the last
+// delivered operating point rather than restarting at ten percent.
 func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk, base time.Duration) {
 	if rate <= 0 || !m.updated.IsZero() && now.Sub(m.updated) < 250*time.Millisecond {
 		return
 	}
 	m.updated = now
+	if m.ratePeakAt.IsZero() || now.Sub(m.ratePeakAt) >= time.Second {
+		m.ratePeak, m.ratePeakAt = rate, now
+	} else {
+		m.ratePeak = max(m.ratePeak, rate)
+	}
+	m.lastRate = m.ratePeak
+	rate = m.ratePeak
 	if m.draining {
 		return
 	}
-	if m.recoveryGain > 0 {
-		if base > 0 && bulk > base+350*time.Millisecond {
-			m.draining = true
-			m.recoverySamples = 0
-			return
-		}
-		if limited && base > 0 && bulk > 0 && bulk <= base+150*time.Millisecond && now.Sub(m.recoveryAt) >= time.Second {
-			m.recoveryGain = min(1, m.recoveryGain*1.35)
-			m.recoveryAt = now
-			if m.recoveryGain >= 1 {
-				m.recoveryGain = 0
-			}
-		}
-		return
-	}
-	if base > 0 && bulk > base+250*time.Millisecond {
-		m.observeDelay(bulk, base, now, true)
-	}
-	// Do not learn a new ceiling from idle or intentionally throttled throughput.
-	if !limited {
-		m.lowSamples = 0
-		return
-	}
-	if now.Before(m.guardUntil) {
-		// A genuine radio capacity drop is visible even below the guard's
-		// commanded rate. Require several samples and independent bulk delay.
-		if base > 0 && bulk > base+250*time.Millisecond && rate < m.pacing(now)*.65 {
-			m.lowSamples++
+	previous := m.lastBulk
+	if bulk > 0 {
+		if previous == 0 {
+			m.lastBulk = bulk
 		} else {
-			m.lowSamples = 0
+			m.lastBulk = (3*previous + bulk) / 4
 		}
-		if m.lowSamples >= 4 {
-			m.capacity = max(64_000, max(rate*1.2/m.gain, m.capacity*.85))
-			m.lowSamples = 0
-		}
+	}
+	if !limited || bulk <= 0 {
+		m.badSamples = 0
 		return
 	}
-	if rate > m.capacity*.80 {
-		m.capacity = min(1.10*m.capacity, max(m.capacity, 1.10*rate))
-		m.lowSamples = 0
-	} else if rate < m.capacity*.65 && base > 0 && bulk > base+150*time.Millisecond {
-		m.lowSamples++
-		if m.lowSamples >= 4 {
-			m.capacity = max(64_000, max(rate*1.15, m.capacity*.85))
-			m.lowSamples = 0
-		}
+	budget := m.pacing(now)
+	rising := previous > 0 && bulk > previous+max(150*time.Millisecond, previous/3)
+	if (rising || bulk > max(base+350*time.Millisecond, 2*base)) && rate < budget*.65 {
+		m.badSamples++
 	} else {
-		m.lowSamples = 0
+		m.badSamples = 0
 	}
+	if m.badSamples >= 2 {
+		fallback := max(16000, rate*1.20)
+		if m.goodRate > 0 {
+			fallback = min(fallback, m.goodRate)
+		}
+		m.probeRate = min(budget*.8, fallback)
+		m.probeRate = max(16000, m.probeRate)
+		m.probeAt = now
+		m.badSamples = 0
+		return
+	}
+	if rising || !m.probeAt.IsZero() && now.Sub(m.probeAt) < time.Second {
+		return
+	}
+	// If the sender is constrained by the window/pacer, try a modest extra
+	// quantum on stable receipt progress. Never jump to the reference radio
+	// capacity, and never learn from an idle or deliberately throttled sample.
+	if rate >= budget*.70 {
+		m.goodRate = max(16000, min(budget, rate*1.20))
+	}
+	candidate := min(budget*1.35, max(budget*1.05, rate*1.35))
+	if rate < budget*.55 {
+		// A sparse receipt train is not proof of spare capacity. Lower an
+		// obviously oversized probe, but permit a small trial if receipts
+		// are consistent and the budget was merely flight-limited.
+		candidate = max(16000, min(budget*1.05, max(budget*.85, rate*1.8)))
+	}
+	m.probeRate = min(12_500_000, candidate)
+	m.capacity = max(m.capacity, m.goodRate)
+	m.probeAt = now
+	m.recoveryGain = 0
 }
 func (m *mobileFlow) pacing(now time.Time) float64 {
 	if m.draining {
 		return min(64_000, m.capacity*.05)
+	}
+	if m.probeRate > 0 {
+		return m.probeRate
 	}
 	if m.recoveryGain > 0 {
 		return max(16_000, m.capacity*m.recoveryGain)
@@ -133,39 +172,33 @@ func (m *mobileFlow) horizon(base, saturated time.Duration) time.Duration {
 	return min(900*time.Millisecond, max(200*time.Millisecond, max(base, saturated))+75*time.Millisecond)
 }
 func (m *mobileFlow) window(base, saturated time.Duration, now time.Time) int {
-	// 75ms queue allowance, with conservative bootstrap and bounded baseline.
 	if m.draining {
 		return 2 * maxWire
 	}
 	baseline := max(base, saturated)
-	if baseline <= 0 {
+	if baseline <= 0 && m.lastBulk <= 0 {
 		if now.Before(m.guardUntil) && m.gain <= .5 {
-			return maxWire * 2
+			return 2 * maxWire
 		}
 		return 256 << 10
 	}
+	// Receipt latency includes provider APPEND/FETCH, not just propagation.
+	// Allow a full measured delivery round, bounded to prevent delay from
+	// turning into an unlimited backlog. Drain never admits new bulk.
 	horizon := m.horizon(base, saturated)
-	gain := 1.0
-	if m.recoveryGain > 0 {
-		gain = m.recoveryGain
+	if m.lastBulk > 0 {
+		horizon = max(horizon, min(1500*time.Millisecond, min(baseline+250*time.Millisecond, m.lastBulk)+75*time.Millisecond))
 	}
-	if now.Before(m.guardUntil) {
-		gain = m.gain
-	}
-	limit := int(m.capacity * gain * horizon.Seconds())
-	// Severe excess delay requires an actual drain, not merely a slower refill.
-	// The bound is relaxed automatically after fresh healthy samples.
-	if gain <= .5 {
-		limit = min(limit, 256<<10)
-	}
-	return min(maxPendingBytes, max(2*maxWire, limit))
+	limit := int(m.pacing(now) * horizon.Seconds())
+	return min(8<<20, max(2*maxWire, limit))
 }
 
 // The old peer treats Ping offsets as opaque tokens and echoes them. High
-// marker bits advertise the bearer; the low 62 bits remain monotonic.
+// marker bits advertise the bearer; the low 61 bits remain monotonic.
 const bearerMarker uint64 = 1 << 63
 const bearerMobile uint64 = 1 << 62
-const bearerSeqMask uint64 = (1 << 62) - 1
+const bearerDemand uint64 = 1 << 61
+const bearerSeqMask uint64 = (1 << 61) - 1
 
 func bearerPingToken(seq uint64, mobile bool) uint64 {
 	token := bearerMarker | (seq & bearerSeqMask)
@@ -227,11 +260,14 @@ func (s *Session) ObserveApplicationRTT(sample time.Duration) {
 	// Severe application delay with little/no bulk flight is not a capacity
 	// measurement. It does justify a conservative next-burst probe; keep
 	// the learned rate untouched and avoid admitting a full startup burst.
-	if sample >= 1500*time.Millisecond && s.delivery.bulkFlight > 0 {
+	if sample >= 1500*time.Millisecond && s.delivery.bulkFlight > 0 && !m.progressAt.IsZero() && now.Sub(m.progressAt) >= 3*time.Second {
 		m.draining = true
 		m.recoverySamples = 0
 	}
 	if sample >= 700*time.Millisecond && s.delivery.bulkFlight == 0 {
+		if m.probeRate > 0 {
+			m.probeRate = min(m.probeRate, 500_000)
+		}
 		m.gain = .5
 		if until := now.Add(6 * time.Second); until.After(m.guardUntil) {
 			m.guardUntil = until
@@ -251,7 +287,14 @@ func (m *mobileFlow) beginRecovery(now time.Time) {
 	m.draining = false
 	m.recoverySamples = 0
 	m.recoveryGain = .10
-	m.recoveryAt = now
+	m.probeRate = 0
+	if m.goodRate > 0 {
+		m.probeRate = max(16_000, m.goodRate*.7)
+	}
+	m.probeAt = now
+	m.lastBulk = 0
+	m.controlDelay = 0
+	m.badSamples = 0
 	m.guardUntil = now.Add(5 * time.Second)
 	m.gain = .1
 }
@@ -275,12 +318,22 @@ func (m *mobileFlow) progress(now time.Time, delivered uint64, flight int) {
 	}
 	if flight == 0 {
 		m.progressAt = now
+		if !m.draining && !m.lastBusy.IsZero() && now.Sub(m.lastBusy) > 5*time.Second && m.probeRate > mobileStartRate {
+			// Keep learned goodput, but re-probe after idle: the same cellular
+			// bearer may now have very different service capacity.
+			m.probeRate = mobileStartRate
+			m.probeAt = now
+			m.lastBulk = 0
+			m.controlDelay = 0
+		}
 		return
 	}
+	m.lastBusy = now
 	if now.Sub(m.progressAt) >= 3*time.Second {
 		m.draining = true
 		m.recoverySamples = 0
 		m.recoveryGain = .1
+		m.probeRate = 0
 	}
 }
 func (m *mobileFlow) permitBulkRetry(now time.Time) bool {

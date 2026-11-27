@@ -48,6 +48,7 @@ type providerConfig struct {
 	ServerPort         int `json:"server_port"`
 	Root, Key, Metrics string
 	Accounts           int
+	CellularCycle      bool `json:"cellular_cycle"`
 }
 type clock struct {
 	mu              sync.Mutex
@@ -176,9 +177,14 @@ func run() (err error) {
 	lightCycles := flag.Int("light-cycles", 0, "cycles of simultaneous TCP opens, bidirectional bursts and true application idle")
 	activeGrant := flag.Int("active-grant", 0, "number of provisioned accounts in the fixed qualification grant; zero uses all")
 	productionGrant := flag.Bool("production-grant", false, "exercise production grant negotiation with the complete profile")
+	cellular := flag.Bool("cellular", false, "enable production cellular controller and directional pacing")
+	exitRTT := flag.Duration("exit-rtt", 0, "additional inter-VPS round trip in encrypted-exit fixture")
 	encryptedExit := flag.Bool("encrypted-exit", false, "use authenticated TLS foreign-exit fixture")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
+	if *exitRTT < 0 || *exitRTT > 500*time.Millisecond || *exitRTT > 0 && !*encryptedExit {
+		return errors.New("invalid exit RTT")
+	}
 	if *lightCycles < 0 || *lightCycles > 5 {
 		return errors.New("invalid light workload cycle count")
 	}
@@ -349,7 +355,7 @@ func run() (err error) {
 	}
 	serverDone := make(chan error, 1)
 	go func() {
-		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String(), *encryptedExit)
+		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String(), *encryptedExit, *exitRTT)
 	}()
 	defer func() {
 		cancel()
@@ -397,7 +403,7 @@ func run() (err error) {
 	}
 	r.Stage = "startup"
 	started := time.Now()
-	client, err := startPerformanceClient(ctx, profile, filepath.Join(*state, "client"), *frontend)
+	client, err := startPerformanceClient(ctx, profile, filepath.Join(*state, "client"), *frontend, *cellular)
 	if err != nil {
 		return err
 	}
@@ -746,6 +752,16 @@ func run() (err error) {
 				}
 				r.LoadedMS = append(r.LoadedMS, ms)
 			}
+		}
+	}
+	if p.CellularCycle {
+		response, e := (&http.Client{Timeout: 2 * time.Second}).Post(strings.TrimSuffix(p.Metrics, "/metrics")+"/scenario-start", "", nil)
+		if e != nil {
+			return e
+		}
+		response.Body.Close()
+		if response.StatusCode != http.StatusNoContent {
+			return errors.New("cellular scenario did not start")
 		}
 	}
 	for cycle := 0; cycle < *cycles; cycle++ {

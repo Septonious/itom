@@ -20,9 +20,11 @@ type network struct {
 	readBitsPerSecond, writeBitsPerSecond int64
 	readNext, writeNext                   time.Time
 	bitsPerSecond                         int64
-	dipStart time.Time
-	dipDuration time.Duration
-	dipBitsPerSecond int64
+	dipStart                              time.Time
+	dipDuration                           time.Duration
+	dipBitsPerSecond                      int64
+	scenarioStart                         time.Time
+	scenario                              []rateStage
 	rtts                                  []time.Duration
 	step                                  time.Duration
 	bytes                                 atomic.Uint64
@@ -42,17 +44,44 @@ func (n *network) schedule(size int, outgoing bool) time.Time {
 		}
 	}
 	begin := maxTime(now, *next)
-	*next = n.serializationEnd(begin, int64(size)*8, rate)
+	*next = n.serializationEndDirection(begin, int64(size)*8, rate, outgoing)
 	rtt := n.rtts[int(time.Since(n.start)/n.step)%len(n.rtts)]
 	return next.Add(rtt / 2)
 }
+
 // Integrate finite link service across the dip boundaries, including bytes
 // queued before the rate changes. The same queue is shared by every socket.
+type rateStage struct {
+	duration         time.Duration
+	upload, download int64
+}
+
 func (n *network) serializationEnd(begin time.Time, bits, baseRate int64) time.Time {
+	return n.serializationEndDirection(begin, bits, baseRate, false)
+}
+func (n *network) serializationEndDirection(begin time.Time, bits, baseRate int64, outgoing bool) time.Time {
 	for {
 		rate := baseRate
 		var boundary time.Time
-		if n.dipBitsPerSecond > 0 {
+		if !n.scenarioStart.IsZero() && len(n.scenario) > 0 {
+			start := n.scenarioStart
+			if begin.Before(start) {
+				boundary = start
+			} else {
+				for _, stage := range n.scenario {
+					end := start.Add(stage.duration)
+					if begin.Before(end) {
+						rate = stage.upload
+						if outgoing {
+							rate = stage.download
+						}
+						boundary = end
+						break
+					}
+					start = end
+				}
+			}
+		} else if n.dipBitsPerSecond > 0 {
 			start := n.dipStart
 			end := start.Add(n.dipDuration)
 			if begin.Before(start) {
@@ -61,11 +90,15 @@ func (n *network) serializationEnd(begin time.Time, bits, baseRate int64) time.T
 				rate, boundary = n.dipBitsPerSecond, end
 			}
 		}
-		needed := time.Duration((bits*int64(time.Second)+rate-1)/rate)
+		if rate == 0 && !boundary.IsZero() {
+			begin = boundary
+			continue
+		}
+		needed := time.Duration((bits*int64(time.Second) + rate - 1) / rate)
 		if boundary.IsZero() || !begin.Add(needed).After(boundary) {
 			return begin.Add(needed)
 		}
-		bits -= int64(boundary.Sub(begin))*rate/int64(time.Second)
+		bits -= int64(boundary.Sub(begin)) * rate / int64(time.Second)
 		begin = boundary
 	}
 }

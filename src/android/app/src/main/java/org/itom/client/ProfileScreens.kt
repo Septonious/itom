@@ -41,15 +41,14 @@ import java.io.ByteArrayOutputStream
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Server profiles", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            GlyphButton(Glyph.PLUS, "Add server", onImport, Blue, !busy)
+            TextButton(onClick = onImport, enabled = !busy) { Text("Import from clipboard", color = Blue) }
         }
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
             if (config.profiles.isEmpty()) item {
                 InfoCard(Modifier.fillMaxWidth()) {
                     IconBadge(Glyph.SERVERS)
-                    Text("Add your first server", style = MaterialTheme.typography.titleLarge)
-                    SmallNote("Import an invitation containing the profile, accounts and your User ID.")
-                    GradientButton("Add profile", onImport, Modifier.fillMaxWidth(), !busy, Glyph.PLUS)
+                    Text("No server profiles", style = MaterialTheme.typography.titleLarge)
+                    SmallNote("Copy your invitation, then tap Import from clipboard.")
                 }
             }
             items(config.profiles, key = { it.profileId }) { profile ->
@@ -102,35 +101,4 @@ internal suspend fun readBounded(context: Context, uri: Uri, limit: Int): ByteAr
         while (true) { currentCoroutineContext().ensureActive(); val n = input.read(buffer); if (n < 0) break; demand(out.size() + n <= limit, "DOCUMENT_TOO_LARGE"); out.write(buffer, 0, n) }
         out.toByteArray()
     } ?: throw DomainError("FILE_UNAVAILABLE")
-}
-@Composable fun ImportScreen(busy: Boolean, onMessage: (String) -> Unit, onImport: (Invitation) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var reading by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        GradientButton("Import from clipboard", {
-            // Read only after an explicit tap while this screen is in the foreground.
-            // Never retain the raw invitation in Compose state or display its secrets.
-            reading = true
-            scope.launch {
-                try {
-                    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
-                    val clip = clipboard?.primaryClip
-                    val raw = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
-                    if (raw.isNullOrBlank()) {
-                        onMessage("Clipboard does not contain an ITOM invitation.")
-                    } else if (raw.length > Codec.INVITATION_LIMIT * 4 / 3 + 32) {
-                        onMessage("The invitation is too large.")
-                    } else {
-                        val invitation = withContext(Dispatchers.Default) { Codec.invitation(raw.trim(), System.currentTimeMillis() / 1000) }
-                        onImport(invitation)
-                    }
-                } catch (e: CancellationException) { throw e }
-                catch (e: DomainError) { onMessage(errorText(e.code)) }
-                catch (_: Exception) { onMessage("Could not import the invitation.") }
-                finally { reading = false }
-            }
-        }, Modifier.fillMaxWidth(), enabled = !busy && !reading, glyph = Glyph.PLUS)
-        if (reading) LinearProgressIndicator(Modifier.fillMaxWidth())
-    }
 }

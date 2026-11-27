@@ -49,56 +49,60 @@ type pendingPacket struct {
 }
 
 type Session struct {
-	grantUpdateMu              sync.Mutex
-	grantVersion               uint64
-	grantAck                   atomic.Uint64
-	grantRequests              chan grantRequest
-	grantRequestVersion        uint64 // receive owner only
-	activeLimit                atomic.Int32
-	controllerLimit            atomic.Int32
-	controllerManaged          atomic.Bool
-	controllerEpoch            atomic.Uint64
-	minimumActive              atomic.Int32
-	accountSetMu               sync.Mutex
-	accountSetVersion          uint64
-	accountSetAck              atomic.Uint64
-	ctx                        context.Context
-	cancel                     context.CancelFunc
-	link                       Link
-	cipher                     *cipherPair
-	server                     bool
-	dial                       func(context.Context, string, string) (net.Conn, error)
-	mu                         sync.Mutex
-	streams                    map[uint32]*Stream
-	closedStreams              map[uint32]*terminalStream
-	bulkOutstanding            uint64
-	receiveBuffered            atomic.Int64
-	lastInbound                atomic.Int64
-	nextStream                 uint32
-	pending                    map[uint64]*pendingPacket
-	pendingBytes               int
-	delivery                   deliveryWindow
-	changed                    chan struct{}
-	wake                       chan struct{}
-	input                      chan []byte
-	receipts                   chan receiptRequest
-	receiptRetries             atomic.Uint64
-	openRefusals               atomic.Uint64
-	openWaits                  atomic.Uint64
-	retransmissions            uint64
-	appAckedPackets            uint64
-	appPayloadBytes            uint64
-	lastAppAck, lastAppPayload time.Time
-	seen                       [replaySlots]uint64
-	seenValid                  [replaySlots]bool
-	highest                    uint64
-	rtt, variation             time.Duration
-	pings                      map[uint64]chan struct{}
-	nextPing                   uint64
-	peerBearerSequence         uint64
-	accountPings               map[uint64]accountProbe
-	err                        error
-	wg                         sync.WaitGroup
+	grantUpdateMu                      sync.Mutex
+	grantVersion                       uint64
+	grantAck                           atomic.Uint64
+	grantRequests                      chan grantRequest
+	grantRequestVersion                uint64 // receive owner only
+	activeLimit                        atomic.Int32
+	controllerLimit                    atomic.Int32
+	controllerManaged                  atomic.Bool
+	controllerEpoch                    atomic.Uint64
+	minimumActive                      atomic.Int32
+	accountSetMu                       sync.Mutex
+	accountSetVersion                  uint64
+	accountSetAck                      atomic.Uint64
+	ctx                                context.Context
+	cancel                             context.CancelFunc
+	link                               Link
+	cipher                             *cipherPair
+	server                             bool
+	dial                               func(context.Context, string, string) (net.Conn, error)
+	mu                                 sync.Mutex
+	streams                            map[uint32]*Stream
+	closedStreams                      map[uint32]*terminalStream
+	bulkOutstanding                    uint64
+	receiveBuffered                    atomic.Int64
+	lastInbound                        atomic.Int64
+	nextStream                         uint32
+	pending                            map[uint64]*pendingPacket
+	pendingBytes                       int
+	delivery                           deliveryWindow
+	changed                            chan struct{}
+	wake                               chan struct{}
+	input                              chan []byte
+	receipts                           chan receiptRequest
+	receiptRetries                     atomic.Uint64
+	openRefusals                       atomic.Uint64
+	openWaits                          atomic.Uint64
+	retransmissions                    uint64
+	appAckedPackets                    uint64
+	appPayloadBytes                    uint64
+	lastAppAck, lastAppPayload         time.Time
+	seen                               [replaySlots]uint64
+	seenValid                          [replaySlots]bool
+	highest                            uint64
+	rtt, variation                     time.Duration
+	pings                              map[uint64]chan struct{}
+	nextPing                           uint64
+	peerBearerSequence                 uint64
+	peerDemandSequence                 uint64
+	peerBulkPending, peerBulkDelivered uint64
+	peerDemandAt                       time.Time
+	peerDraining                       bool
+	accountPings                       map[uint64]accountProbe
+	err                                error
+	wg                                 sync.WaitGroup
 }
 
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
@@ -736,15 +740,33 @@ func (s *Session) apply(f frame) error {
 		}
 	}
 	if f.kind == framePing || f.kind == framePong {
-		if f.stream != 0 || len(f.data) != 0 {
+		if f.stream != 0 || (len(f.data) != 0 && (f.kind != framePong || s.server || f.offset&bearerDemand == 0 || len(f.data) != 17)) {
 			return ErrProtocol
 		}
 		if f.kind == framePing {
 			s.observePeerBearer(f.offset)
-			return s.trySend(frame{kind: framePong, offset: f.offset}, true)
+			var data []byte
+			if s.server && f.offset&bearerDemand != 0 {
+				s.mu.Lock()
+				data = make([]byte, 17)
+				binary.BigEndian.PutUint64(data, s.bulkOutstanding)
+				binary.BigEndian.PutUint64(data[8:], s.delivery.totalDelivered)
+				if s.delivery.mobile.draining {
+					data[16] = 1
+				}
+				s.mu.Unlock()
+			}
+			return s.trySend(frame{kind: framePong, offset: f.offset, data: data}, true)
 		}
 		s.mu.Lock()
 		if pong := s.pings[f.offset]; pong != nil {
+			if len(f.data) == 17 && f.offset&bearerSeqMask > s.peerDemandSequence {
+				s.peerDemandSequence = f.offset & bearerSeqMask
+				s.peerBulkPending = binary.BigEndian.Uint64(f.data)
+				s.peerBulkDelivered = binary.BigEndian.Uint64(f.data[8:])
+				s.peerDraining = f.data[16] != 0
+				s.peerDemandAt = time.Now()
+			}
 			close(pong)
 			delete(s.pings, f.offset)
 		}
@@ -906,7 +928,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 	s.nextPing++
 	id := s.nextPing
 	if !s.server {
-		id = bearerPingToken(id, s.delivery.mobile.enabled)
+		id = bearerPingToken(id, s.delivery.mobile.enabled) | bearerDemand
 	}
 	done := make(chan struct{})
 	s.pings[id] = done
@@ -926,6 +948,10 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	PeerBulkPending            uint64 `json:"peer_bulk_pending_bytes"`
+	PeerBulkDelivered          uint64 `json:"peer_bulk_delivered_bytes"`
+	PeerDemandFresh            bool   `json:"peer_demand_fresh"`
+	PeerDraining               bool   `json:"peer_draining"`
 	AppAckedPackets            uint64 `json:"app_acked_packets"`
 	AppPayloadBytes            uint64 `json:"app_payload_bytes"`
 	LastAppAckAgeMS            int64  `json:"last_app_ack_age_ms"`
@@ -972,6 +998,10 @@ func (s *Session) Snapshot() Snapshot {
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, BulkDeliveryFlight: s.delivery.bulkFlight, DeliveryWindow: s.delivery.allowance()}
 	now := time.Now()
+	snapshot.PeerDemandFresh = !s.peerDemandAt.IsZero() && now.Sub(s.peerDemandAt) < 6*time.Second
+	if snapshot.PeerDemandFresh {
+		snapshot.PeerBulkPending, snapshot.PeerBulkDelivered, snapshot.PeerDraining = s.peerBulkPending, s.peerBulkDelivered, s.peerDraining
+	}
 	snapshot.AppAckedPackets = s.appAckedPackets
 	snapshot.AppPayloadBytes = s.appPayloadBytes
 	if !s.lastAppAck.IsZero() {

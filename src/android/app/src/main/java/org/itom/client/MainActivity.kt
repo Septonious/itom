@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.ui.platform.LocalContext
 import org.itom.domain.*
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
 enum class Page(val title: String, val root: String) {
     HOME("ITOM", "home"), PROFILES("Profiles", "profiles"), RULES("Rules", "rules"), SETTINGS("Settings", "settings"),
-    APPS("Applications", "rules"), IMPORT("Add server", "profiles"), EDIT_PROFILE("Profile editor", "profiles"), DASHBOARD("Statistics", "home"),
+    APPS("Applications", "rules"), EDIT_PROFILE("Profile editor", "profiles"), DASHBOARD("Statistics", "home"),
     SOCKS("SOCKS5", "settings"), NETWORKS("VPN networks", "settings"), DNS("DNS", "settings"), NOTIFICATION("Notification", "settings"), DIAGNOSTICS("Diagnostics", "settings")
 }
 
@@ -90,6 +93,7 @@ fun errorText(code: String) = when (code) {
 }
 
 @Composable fun ItomApp(graph: AppGraph) {
+    val context = LocalContext.current
     val config by graph.vault.state.collectAsStateWithLifecycle()
     val session by graph.backend.snapshot.collectAsStateWithLifecycle()
     val diagnostics by graph.backend.diagnostics.collectAsStateWithLifecycle()
@@ -191,7 +195,16 @@ fun errorText(code: String) = when (code) {
                                 graph.vault.remove(id)
                                 // Start may have been tapped while the disk transaction was in flight.
                                 if (graph.backend.snapshot.value.profileId == id) graph.backend.stop()
-                            } }, onImport = { page = Page.IMPORT },
+                            } }, onImport = { perform {
+                                val clip = context.getSystemService(android.content.ClipboardManager::class.java)?.primaryClip
+                                val raw = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
+                                if (raw.isNullOrBlank()) { message("Clipboard does not contain an ITOM invitation."); return@perform }
+                                if (raw.length > Codec.INVITATION_LIMIT * 4 / 3 + 32) { message("The invitation is too large."); return@perform }
+                                val invitation = withContext(Dispatchers.Default) { Codec.invitation(raw.trim(), System.currentTimeMillis() / 1000) }
+                                graph.vault.importInvitation(invitation)
+                                restartIfActive()
+                                message("Profile imported.")
+                            } },
                             onMessage = ::message)
                         Page.RULES -> RulesScreen(config.settings.routing, config.settings.appRouting, busy, { page = Page.APPS },
                             { policy -> perform { graph.vault.routingOptions(policy) } },
@@ -199,7 +212,6 @@ fun errorText(code: String) = when (code) {
                             importRules = { rules -> perform { graph.vault.importRules(rules); message("Rules imported. Apply on next connection.") } },
                             onMessage = ::message) { action, entries -> perform { graph.vault.rules(action, entries); message("${routeName(action)} rules saved.") } }
                         Page.APPS -> AppsScreen(config.settings.appRouting, graph.catalog, busy, ::back) { policy, _ -> perform { graph.vault.apps(policy, graph.catalog.load()); if (graph.backend.snapshot.value.phase == Phase.CONNECTING) restartIfActive(); page = Page.RULES } }
-                        Page.IMPORT -> ImportScreen(busy, ::message) { invitation -> perform { graph.vault.importInvitation(invitation); restartIfActive(); page = Page.PROFILES } }
                         Page.EDIT_PROFILE -> {
                             val id = editingProfileId
                             if (id == null) LaunchedEffect(Unit) { page = Page.PROFILES }

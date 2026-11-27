@@ -23,3 +23,27 @@ The home release gate requires all of the following.
 The fixed grant isolates transport performance. Dynamic account allocation, Android routing, upgrade compatibility and physical-device field results require separate verification before distribution.
 
 An additional `python3 src/qualification/run_home.py /tmp/itom-relay-screen --screen --encrypted-exit` run exercises the real TLS 1.3 exit and the native TCP frontend with a fresh 15-to-8 grant. The relay is local; this tests correctness and goodput, not the actual inter-VPS WAN latency. The ordinary screen remains independent.
+
+## RC14 Rambler/RU cellular scenario (manual, separate from build)
+
+```
+python3 src/qualification/run_cellular.py /tmp/itom-rc14-cellular --exit-rtt 80ms
+```
+
+The same production native-TUN client, TLS IMAP provider fixture, managed Russian
+server and actual authenticated relay are used in direct and encrypted modes.
+The client-facing provider socket rate is changed over time (30/30 for 8 s,
+49.1/4.52 for 12 s, 2.5/1.5 for 8 s, zero for 2 s, then recovered 49.1/4.52
+Mbps down/up). All connections share independent uplink/downlink serialization
+queues including command and receipt traffic. The provider's RU-server side
+has 2–10 ms RTT; client RTT varies 30–150 ms, independent provider service
+costs are configurable. The encrypted relay hop has a separate, configurable
+pipelined propagation delay (80 ms is an illustrative default, not a measured
+inter-VPS RTT). It does not inflate internal mailbox transport RTT. The outage
+is delayed serialization, not a model of radio packet loss or TCP resets.
+
+This manual scenario checks byte integrity, continued delivery, recovery of
+both directions, and fresh HTTPS after load; it does not substitute for a
+real-device performance gate or the existing desktop qualification. The
+local dependency cache must contain the pinned `golang.org/x/text v0.42.0`
+module before the native worker can be compiled.

@@ -156,7 +156,7 @@ func protectedLegacyFolder(f Folder) bool {
 	}
 	for _, part := range parts {
 		name := strings.ToLower(part)
-		if name == "session-v2" || strings.HasSuffix(name, "-session-v2") {
+		if name == "s2c-01" || name == "session-v2" || strings.HasSuffix(name, "-session-v2") {
 			return true
 		}
 		tokens := strings.FieldsFunc(name, func(r rune) bool { return r == '-' || r == '_' || r == ' ' || r == '.' })

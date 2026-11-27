@@ -1,6 +1,7 @@
 package mailstream
 
 import (
+	"encoding/binary"
 	"testing"
 	"time"
 )
@@ -12,27 +13,25 @@ func TestRC11MobileBudgetAndGuard(t *testing.T) {
 	if got := w.allowance(); got != 256<<10 {
 		t.Fatal(got)
 	}
-	for i := 0; i < 20; i++ {
-		w.mobile.observeRate(5_342_000, now.Add(time.Duration(i)*250*time.Millisecond), true, 550*time.Millisecond, 550*time.Millisecond)
+	// The new receipt-driven probe must discover a higher rate with stable
+	// delivery RTT; a historical 300ms floor must not trap a 600ms round.
+	w.mobile.beginRecovery(now)
+	for i := 1; i <= 16; i++ {
+		at := now.Add(time.Duration(i) * time.Second)
+		w.mobile.observeRate(w.mobile.pacing(at)*.95, at, true, 600*time.Millisecond, 300*time.Millisecond)
 	}
-	if w.mobile.capacity > 6_800_000 || w.mobile.capacity < 2_000_000 {
-		t.Fatal(w.mobile.capacity)
+	if got := w.pacingRate(now.Add(17 * time.Second)); got < 2_000_000 || got > 12_500_000 {
+		t.Fatal("recovery did not probe", got)
 	}
+	w.mobile.reset(true)
 	w.mobile.capacity = 2_150_000
 	w.base = 550 * time.Millisecond
-	if got := w.allowance(); got < 1_340_000 || got > 1_350_000 {
-		t.Fatal(got)
-	}
 	w.mobile.observeDelay(1277*time.Millisecond, 179*time.Millisecond, now, true)
-	if got := w.allowance(); got > 810_000 {
-		t.Fatal(got)
-	}
 	if got := w.pacingRate(now); got != 1_075_000 {
 		t.Fatal(got)
 	}
-	w.mobile.observeRate(200_000, now.Add(6*time.Second), true, 550*time.Millisecond, 550*time.Millisecond)
-	if w.pacingRate(now.Add(7*time.Second)) <= 0 {
-		t.Fatal("no recovery")
+	if got := w.allowanceAt(now); got > 810_000 {
+		t.Fatal(got)
 	}
 	var p bulkPacer
 	if !p.readyQuantum(maxWire, 1_000_000, now, true) {
@@ -61,6 +60,35 @@ func TestRC11BearerTokenMonotonic(t *testing.T) {
 	if s.delivery.mobile.enabled {
 		t.Fatal("legacy ping changed mode")
 	}
+	client := &Session{pings: map[uint64]chan struct{}{}}
+	id := bearerPingToken(7, true) | bearerDemand
+	client.pings[id] = make(chan struct{})
+	data := make([]byte, 17)
+	binary.BigEndian.PutUint64(data, 261000)
+	binary.BigEndian.PutUint64(data[8:], 123456)
+	if err := client.apply(frame{kind: framePong, offset: id, data: data}); err != nil {
+		t.Fatal(err)
+	}
+	if snap := client.Snapshot(); !snap.PeerDemandFresh || snap.PeerBulkPending != 261000 || snap.PeerBulkDelivered != 123456 {
+		t.Fatal(snap)
+	}
+	// An older or unsolicited reply cannot replace the active estimate.
+	id = bearerPingToken(6, true) | bearerDemand
+	client.pings[id] = make(chan struct{})
+	binary.BigEndian.PutUint64(data, 1)
+	if err := client.apply(frame{kind: framePong, offset: id, data: data}); err != nil {
+		t.Fatal(err)
+	}
+	if client.Snapshot().PeerBulkPending != 261000 {
+		t.Fatal("stale feedback applied")
+	}
+	// RC13 echoes an empty pong, preserving backward compatibility.
+	id = bearerPingToken(8, true) | bearerDemand
+	client.pings[id] = make(chan struct{})
+	if err := client.apply(frame{kind: framePong, offset: id}); err != nil {
+		t.Fatal(err)
+	}
+
 }
 func TestRC11AccountArrayCapacity(t *testing.T) {
 	l := &IMAPLink{reclaimer: NewReclamationCoordinator()}
@@ -178,7 +206,125 @@ func TestRC13MobileDrainWithoutReceipts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		m.observeRate(c, now.Add(time.Duration(i+13)*time.Second), true, 250*time.Millisecond, 200*time.Millisecond)
 	}
-	if m.recoveryGain != 0 {
-		t.Fatal("healthy progress failed to restore capacity", m.recoveryGain)
+	if m.pacing(now.Add(23*time.Second)) < c {
+		t.Fatal("healthy progress failed to restore capacity", m.pacing(now.Add(23*time.Second)))
 	}
+}
+
+// Sender-local controllers operate against distinct serialization queues. The
+// reverse path charges receipt/control traffic; an outage delays bytes rather
+// than falsely acknowledging them. This is a synthetic delivery-clock model,
+// not a real provider throughput measurement.
+func TestRC14AsymmetricRecovery(t *testing.T) {
+	type f struct {
+		sent, ack   time.Time
+		mark        deliveryMark
+		receiptSent bool
+	}
+	type lane struct {
+		w       deliveryWindow
+		pending []f
+		bytes   [5]int
+	}
+	t.Run("rambler-shared-receipts", func(t *testing.T) {
+		lanes := [2]lane{}
+		for i := range lanes {
+			lanes[i].w.adaptive = true
+			lanes[i].w.mobile.reset(true)
+		}
+		start := time.Unix(1000, 0)
+		next := [2]time.Time{start, start}
+		rates := [5][2]int{{30_000_000, 30_000_000}, {49_100_000, 4_520_000}, {2_500_000, 1_500_000}, {0, 0}, {49_100_000, 4_520_000}}
+		ends := [5]int{12, 32, 44, 47, 87}
+		phaseAt := func(at time.Time) int {
+			for i, end := range ends {
+				if at.Before(start.Add(time.Duration(end) * time.Second)) {
+					return i
+				}
+			}
+			return 4
+		}
+		charge := func(i, n int, now time.Time) time.Time {
+			at := maxTime(next[i], now)
+			bits := int64(n * 8)
+			for bits > 0 {
+				p := phaseAt(at)
+				r := int64(rates[p][i])
+				boundary := start.Add(time.Duration(ends[p]) * time.Second)
+				if p == 4 {
+					at = at.Add(time.Duration(bits * int64(time.Second) / r))
+					break
+				}
+				if r == 0 {
+					at = boundary
+					continue
+				}
+				dt := time.Duration(bits * int64(time.Second) / r)
+				if !at.Add(dt).After(boundary) {
+					at = at.Add(dt)
+					break
+				}
+				bits -= int64(boundary.Sub(at)) * r / int64(time.Second)
+				at = boundary
+			}
+			next[i] = at
+			return at
+		}
+		const quantum = 48 << 10
+		for tick := 0; tick < ends[4]*200; tick++ {
+			now := start.Add(time.Duration(tick) * 5 * time.Millisecond)
+			phase := phaseAt(now)
+			for i := range lanes {
+				l := &lanes[i]
+				w := &l.w
+				for j := range l.pending {
+					p := &l.pending[j]
+					if !p.receiptSent && !now.Before(p.ack) {
+						p.ack = charge(1-i, 512, now).Add(330 * time.Millisecond)
+						p.receiptSent = true
+					}
+				}
+				for len(l.pending) > 0 && l.pending[0].receiptSent && !now.Before(l.pending[0].ack) {
+					p := l.pending[0]
+					l.pending = l.pending[1:]
+					w.delivered(quantum, now.Sub(p.sent), now, true, p.mark)
+					l.bytes[phase] += quantum
+				}
+				w.mobile.progress(now, w.totalDelivered, w.bulkFlight)
+				if tick%100 == 0 && phase != 3 {
+					w.observeInteractive(160*time.Millisecond+max(0, next[0].Sub(now), next[1].Sub(now)), now)
+				}
+			}
+			for i := range lanes {
+				l := &lanes[i]
+				w := &l.w
+				for range 8 {
+					if w.mobile.draining || w.flight+quantum > w.allowanceAt(now) {
+						w.limited = true
+						break
+					}
+					if !w.pacer.readyQuantum(quantum, w.pacingRate(now), now, true) {
+						break
+					}
+					w.pacer.admitted(quantum)
+					end := charge(i, quantum, now)
+					l.pending = append(l.pending, f{now, end.Add(170 * time.Millisecond), w.sent(quantum, now, true), false})
+				}
+				if w.allowanceAt(now) > 8<<20 {
+					t.Fatal("unbounded window")
+				}
+			}
+		}
+		for i, l := range lanes {
+			for p, n := range l.bytes {
+				t.Logf("direction=%d phase=%d bytes=%d", i, p, n)
+			}
+			if l.bytes[1] == 0 || l.bytes[2] == 0 || l.bytes[4] == 0 {
+				t.Fatal("no progress", i, l.bytes)
+			}
+			if l.bytes[4]/40 < l.bytes[2]/12 {
+				t.Fatal("did not recover", i, l.bytes)
+			}
+		}
+	})
 }

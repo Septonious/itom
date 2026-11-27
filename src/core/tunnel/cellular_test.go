@@ -145,4 +145,21 @@ func TestRC13WorstCaseCellularReplay(t *testing.T) {
 	if got := p.decideObserved(8, 250*time.Millisecond, 2, true, now.Add(86*time.Second), e); got != 6 {
 		t.Fatal("recovery expansion", got)
 	}
+	// Downstream data is queued at the RU peer. Moderate receipt jitter
+	// cannot suppress a bounded expansion when local IMAP and delivery are healthy.
+	p = cellularPolicy{limit: 4}
+	e = cellularEvidence{active: 4, streams: 41, fresh: true, remoteDemand: true, remoteProgress: true, localHealthy: true, retries: true}
+	if n := p.decideObserved(8, 1261*time.Millisecond, 2, true, now, e); n != 4 {
+		t.Fatal(n)
+	}
+	if n := p.decideObserved(8, 1261*time.Millisecond, 2, true, now.Add(time.Second), e); n != 5 {
+		t.Fatal("downstream probe", n)
+	}
+	e.remoteProgress = false
+	e.timeout = true
+	e.stalled = true
+	if n := p.decideObserved(8, 5*time.Second, 1, true, now.Add(4*time.Second), e); n != 4 {
+		t.Fatal("outage floor", n)
+	}
+
 }

@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -31,6 +32,11 @@ func InstallLatestUpload(out io.Writer) error {
 		return err
 	}
 	fmt.Fprintf(out, "Newest upload: %s\nSHA256: %x\n", path, sha256.Sum256(data))
+	oldRevision := "not installed / unavailable"
+	if old, readErr := os.ReadFile("/usr/local/bin/itom"); readErr == nil {
+		oldRevision = uploadRevision(old)
+	}
+	fmt.Fprintf(out, "Installed revision: %s\nCandidate revision: %s\n", oldRevision, uploadRevision(data))
 	return installData(data, out)
 }
 
@@ -118,4 +124,21 @@ func validateUpload(data []byte) error {
 		return errors.New("ITOM binary must be a standalone executable")
 	}
 	return nil
+}
+
+// Inspect a version marker without executing an uploaded executable as root.
+// Ambiguous matches are explicitly unknown rather than guessing.
+func uploadRevision(data []byte) string {
+	matches := regexp.MustCompile(`itom-[0-9]+-[0-9]+-[0-9]+-rc[0-9]+-(dev|final)`).FindAll(data, -1)
+	value := ""
+	for _, match := range matches {
+		if value != "" && value != string(match) {
+			return "unknown (ambiguous markers)"
+		}
+		value = string(match)
+	}
+	if value == "" {
+		return "unknown"
+	}
+	return value
 }

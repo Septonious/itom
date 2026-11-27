@@ -126,13 +126,17 @@ func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int
 // Account-count decisions must distinguish shared bearer delay from mailbox
 // pressure. Measured APPEND service is advisory, not independent radio capacity.
 type cellularEvidence struct {
-	active, streams, queued, slots, busy  int
-	serviceCapacity, publications         float64
-	bulkPressure, retries, timeout, fresh bool
-	stalled                               bool // outstanding traffic without useful delivery
-	queueBytes                            int
+	active, streams, queued, slots, busy       int
+	serviceCapacity, publications              float64
+	bulkPressure, retries, timeout, fresh      bool
+	stalled                                    bool // outstanding traffic without useful delivery
+	queueBytes                                 int
+	remoteDemand, remoteProgress, localHealthy bool
 }
 
+func (e cellularEvidence) downstreamProbe(average time.Duration) bool {
+	return e.remoteDemand && e.remoteProgress && e.localHealthy && e.fresh && !e.timeout && !e.stalled && !e.bulkPressure && average > 0 && average < 1500*time.Millisecond
+}
 func (e cellularEvidence) overloaded() bool {
 	return e.retries || e.queued > max(2, e.active) || (e.slots > 0 && e.busy*4 >= e.slots*3 && e.queued > 0) || (e.serviceCapacity > 0 && e.publications >= .8*e.serviceCapacity)
 }
@@ -159,7 +163,7 @@ func (p *cellularPolicy) decideObserved(capacity int, average time.Duration, sam
 	}
 	p.limit = min(capacity, max(servercfg.MinOperationalAccounts, p.limit))
 	severe := (e.timeout || average >= 1500*time.Millisecond) && (e.stalled || e.bulkPressure || e.retries || e.queueBytes > 128<<10) && (demand || e.streams > 0 || e.queued > 0)
-	congested := (e.timeout || samples >= 2 && average > 400*time.Millisecond) && (e.bulkPressure || e.stalled || e.retries || e.queueBytes > 128<<10)
+	congested := (e.timeout || samples >= 2 && average > 400*time.Millisecond) && (e.bulkPressure || e.stalled || e.retries && !e.downstreamProbe(average) || e.queueBytes > 128<<10)
 	interval := cellularRTTWindow
 	if severe {
 		interval = cellularEmergencyInterval
@@ -182,6 +186,15 @@ func (p *cellularPolicy) decideObserved(capacity int, average time.Duration, sam
 		// The reconfiguration worker recovers the missing essential paths;
 		// do not expand the target in response to a missing physical socket.
 		p.healthy = 0
+	} else if e.downstreamProbe(average) && samples >= 2 && p.limit < capacity {
+		// Downstream backlog lives at the peer. Probe one extra account after
+		// two fresh decisions when the local carrier is healthy, even if IMAP
+		// delivery latency is naturally above the idle threshold.
+		p.healthy++
+		if p.healthy >= 2 {
+			p.limit++
+			p.healthy = 0
+		}
 	} else if !e.fresh || e.timeout || e.retries || e.stalled || samples < 2 || average > 400*time.Millisecond {
 		p.healthy = 0
 	} else {
@@ -254,7 +267,8 @@ func (c *Client) accountController(ctx context.Context) {
 	var nextAttempt time.Time
 	var failures int
 	var applied = -1
-	var lastDelivered uint64
+	var lastDelivered, lastPeerDelivered uint64
+	var lastPeerProgress time.Time
 	var lastProgress time.Time
 	defer func() {
 		if cancelChange != nil {
@@ -301,6 +315,7 @@ func (c *Client) accountController(ctx context.Context) {
 			nextAttempt = time.Time{}
 			lastProgress = now
 			lastPressure = time.Time{}
+			lastPeerProgress = time.Time{}
 			wasMobile = mobile
 			epoch = currentEpoch
 			bearerSince = now
@@ -312,12 +327,16 @@ func (c *Client) accountController(ctx context.Context) {
 		active := 0
 		evidence := cellularEvidence{}
 		var up, down uint64
+		var imapSamples []int64
 		elapsed := now.Sub(sampled).Seconds()
 		for _, line := range mail.Lines {
 			old, ok := previous[line.Account]
 			evidence.queueBytes += line.QueuedMIMEBytes
 			if line.Allocated && line.Ready && line.Data && line.Writer && line.ControlWriter && !line.ScaleBlocked {
 				active++
+				if line.IMAPLatencyFresh && line.IMAPLatencyMillis > 0 {
+					imapSamples = append(imapSamples, line.IMAPLatencyMillis)
+				}
 				evidence.queued += line.ControlQueued
 				evidence.slots += line.InteractiveSlots
 				evidence.busy += line.InteractiveBusy
@@ -343,7 +362,17 @@ func (c *Client) accountController(ctx context.Context) {
 		// Physical byte counters include hedges/control; report effective
 		// shares, never use them as independent capacity measurements.
 		snapshot := c.session.Snapshot()
-		demand := snapshot.PendingBytes >= 128<<10 || snapshot.DeliveryFlight >= 128<<10 || max(up, down) >= 1_000_000
+		if snapshot.PeerDemandFresh && snapshot.PeerBulkDelivered > lastPeerDelivered {
+			lastPeerProgress = now
+		}
+		if snapshot.PeerDemandFresh {
+			lastPeerDelivered = snapshot.PeerBulkDelivered
+		}
+		evidence.remoteDemand = snapshot.PeerDemandFresh && snapshot.PeerBulkPending >= 128<<10 && !snapshot.PeerDraining
+		evidence.remoteProgress = !lastPeerProgress.IsZero() && now.Sub(lastPeerProgress) < 5*time.Second
+		sort.Slice(imapSamples, func(i, j int) bool { return imapSamples[i] < imapSamples[j] })
+		evidence.localHealthy = len(imapSamples) > 0 && imapSamples[len(imapSamples)/2] <= 150
+		demand := evidence.remoteDemand || snapshot.PendingBytes >= 128<<10 || snapshot.DeliveryFlight >= 128<<10 || max(up, down) >= 1_000_000
 		probe := c.Probe()
 		evidence.active, evidence.streams = active, snapshot.Streams
 		evidence.fresh = probe.Failure == "" && probe.SampledAtMS > 0 && now.UnixMilli()-probe.SampledAtMS < 3000
@@ -393,7 +422,7 @@ func (c *Client) accountController(ctx context.Context) {
 		if changedBearer {
 			continue
 		}
-		congested := mobile && (evidence.timeout || average > 400*time.Millisecond || evidence.stalled || evidence.retries)
+		congested := mobile && (evidence.timeout || evidence.stalled || (evidence.retries || average > 400*time.Millisecond) && !evidence.downstreamProbe(average))
 		c.session.SetMobileRecovery(congested, desired)
 		if desired != last {
 			last = desired

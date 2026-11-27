@@ -77,9 +77,13 @@ func (c *nativePerformanceClient) Open(ctx context.Context, target wire.Connect)
 	return conn, netip.AddrPort{}, nil
 }
 
-func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, frontend string) (performanceClient, error) {
+func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, frontend string, cellular bool) (performanceClient, error) {
 	if frontend == "direct" {
-		return tunnel.StartClientWithOptions(ctx, p, dir, nil, tunnel.ClientOptions{Diagnostics: true})
+		c, err := tunnel.StartClientWithOptions(ctx, p, dir, nil, tunnel.ClientOptions{Diagnostics: true})
+		if err == nil && cellular {
+			c.SetNetworkType("cellular")
+		}
+		return c, err
 	}
 	if frontend != "native-tun" {
 		return nil, errors.New("unsupported frontend")
@@ -97,6 +101,9 @@ func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, front
 	client, e := mobile.New(string(raw), dir, nativeHost{ctx})
 	if e != nil {
 		return nil, e
+	}
+	if cellular {
+		client.SetNetworkType("cellular")
 	}
 	fail := func(err error) (performanceClient, error) { client.Close(); return nil, err }
 	pair, e := unix.Socketpair(unix.AF_UNIX, unix.SOCK_DGRAM|unix.SOCK_NONBLOCK, 0)

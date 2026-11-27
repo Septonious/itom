@@ -203,7 +203,11 @@ func (u *UI) purgeAccountRetry(ctx context.Context, cfg mailbox.Config) error {
 		report, purgeErr := admin.PurgeAll(ctx)
 		closeErr := admin.Close()
 		for _, item := range report.Items {
-			fmt.Fprintf(u.Out, "%s | %q — %s\n", cfg.Username, item.Name, item.Outcome)
+			fmt.Fprintf(u.Out, "%s | %q — %s", cfg.Username, item.Name, item.Outcome)
+			if item.Reason != "" {
+				fmt.Fprintf(u.Out, " (%s)", item.Reason)
+			}
+			fmt.Fprintln(u.Out)
 		}
 		if purgeErr == nil && closeErr == nil && report.Verified {
 			return nil

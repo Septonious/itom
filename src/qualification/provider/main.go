@@ -479,7 +479,8 @@ func main() {
 func run() error {
 	mobileTails := flag.Bool("mobile-latency-tails", false, "field-observed effective client IMAP latency tails180/250ms among usual30-100ms")
 	mobileLatency := flag.Bool("mobile-latency", false, "independent variable 30-100 ms client IMAP path RTT")
-	clientLatencyProfile := flag.String("client-latency-profile", "historical", "1.1.6 reference: home 15-30ms or mobile 30-150ms")
+	clientLatencyProfile := flag.String("client-latency-profile", "historical", "home, mobile, or rambler-cellular (field-calibrated variable RTT)")
+	cellularCycle := flag.Bool("rambler-cellular-cycle", false, "30/30 → 49.1/4.52 → 2.5/1.5 → outage → recovered link, activated by worker")
 	rateDip := flag.Bool("client-rate-dip", false, "100 to 1 to 100 Mbps shared link: dip from second 10 through 25")
 	historyVector := flag.String("history-bytes", "", "generated fixture only: per-account debt used for physically seeded old DATA")
 	dir := flag.String("dir", "", "private fixture directory")
@@ -577,12 +578,21 @@ func run() error {
 	defer provider.Close()
 	clientNet := &network{start: time.Now(), bitsPerSecond: *clientMbps * 1_000_000, step: 500 * time.Millisecond, rtts: []time.Duration{0}}
 	if *rateDip {
-		if *clientMbps != 100 || *clientUpload != 0 || *clientDownload != 0 { return errors.New("rate dip requires shared 100 Mbps link") }
+		if *clientMbps != 100 || *clientUpload != 0 || *clientDownload != 0 {
+			return errors.New("rate dip requires shared 100 Mbps link")
+		}
 		clientNet.dipStart, clientNet.dipDuration, clientNet.dipBitsPerSecond = clientNet.start.Add(10*time.Second), 15*time.Second, 1_000_000
 	}
 	if *clientUpload > 0 {
 		clientNet.readBitsPerSecond = *clientUpload * 1_000_000
 		clientNet.writeBitsPerSecond = *clientDownload * 1_000_000
+	}
+	if *cellularCycle {
+		if *rateDip {
+			return errors.New("cellular cycle and historical rate dip are mutually exclusive")
+		}
+		clientNet.readBitsPerSecond, clientNet.writeBitsPerSecond = 4_520_000, 49_100_000
+		clientNet.scenario = []rateStage{{8 * time.Second, 30_000_000, 30_000_000}, {12 * time.Second, 4_520_000, 49_100_000}, {8 * time.Second, 1_500_000, 2_500_000}, {2 * time.Second, 0, 0}}
 	}
 	serverNet := &network{start: clientNet.start, bitsPerSecond: 1_000_000_000, step: 700 * time.Millisecond, rtts: []time.Duration{0}}
 	if *variable {
@@ -590,23 +600,26 @@ func run() error {
 		serverNet.rtts = []time.Duration{40 * time.Millisecond, 20 * time.Millisecond, 30 * time.Millisecond, 25 * time.Millisecond}
 	}
 	if *mobileLatency {
-		clientNet.rtts = []time.Duration{30*time.Millisecond, 55*time.Millisecond, 100*time.Millisecond, 70*time.Millisecond}
+		clientNet.rtts = []time.Duration{30 * time.Millisecond, 55 * time.Millisecond, 100 * time.Millisecond, 70 * time.Millisecond}
 	}
-	if *clientLatencyProfile == "home" {
+	if *clientLatencyProfile == "rambler-cellular" {
+		clientNet.rtts = []time.Duration{30 * time.Millisecond, 45 * time.Millisecond, 80 * time.Millisecond, 150 * time.Millisecond, 40 * time.Millisecond, 95 * time.Millisecond}
+		serverNet.rtts = []time.Duration{2 * time.Millisecond, 3 * time.Millisecond, 5 * time.Millisecond, 10 * time.Millisecond}
+	} else if *clientLatencyProfile == "home" {
 		// Conservative effective IMAP latency model. Separate from ICMP
 		// to the provider host; TCP/TLS/IMAP work can exceed the wire RTT.
-		clientNet.rtts = []time.Duration{15*time.Millisecond, 20*time.Millisecond, 30*time.Millisecond, 18*time.Millisecond, 27*time.Millisecond, 22*time.Millisecond}
+		clientNet.rtts = []time.Duration{15 * time.Millisecond, 20 * time.Millisecond, 30 * time.Millisecond, 18 * time.Millisecond, 27 * time.Millisecond, 22 * time.Millisecond}
 	} else if *clientLatencyProfile == "home-icmp" {
 		// User's observed 3ms ICMP ping to imap.rambler.ru is a network
 		// floor calibration, NOT an observed IMAP command round trip.
-		clientNet.rtts = []time.Duration{3*time.Millisecond}
+		clientNet.rtts = []time.Duration{3 * time.Millisecond}
 	} else if *clientLatencyProfile == "mobile" {
-		clientNet.rtts = []time.Duration{30*time.Millisecond, 45*time.Millisecond, 85*time.Millisecond, 150*time.Millisecond, 70*time.Millisecond, 120*time.Millisecond, 50*time.Millisecond, 95*time.Millisecond}
+		clientNet.rtts = []time.Duration{30 * time.Millisecond, 45 * time.Millisecond, 85 * time.Millisecond, 150 * time.Millisecond, 70 * time.Millisecond, 120 * time.Millisecond, 50 * time.Millisecond, 95 * time.Millisecond}
 	} else if *clientLatencyProfile != "historical" {
 		panic("invalid client IMAP latency profile")
 	}
 	if *mobileTails {
-		clientNet.rtts = []time.Duration{30*time.Millisecond,50*time.Millisecond,180*time.Millisecond,70*time.Millisecond,35*time.Millisecond,250*time.Millisecond,80*time.Millisecond,45*time.Millisecond}
+		clientNet.rtts = []time.Duration{30 * time.Millisecond, 50 * time.Millisecond, 180 * time.Millisecond, 70 * time.Millisecond, 35 * time.Millisecond, 250 * time.Millisecond, 80 * time.Millisecond, 45 * time.Millisecond}
 	}
 	if *worst {
 		clientNet.rtts = []time.Duration{50 * time.Millisecond}
@@ -630,6 +643,18 @@ func run() error {
 		return err
 	}
 	mux := http.NewServeMux()
+	mux.HandleFunc("/scenario-start", func(w http.ResponseWriter, r *http.Request) {
+		clientNet.mu.Lock()
+		defer clientNet.mu.Unlock()
+		if len(clientNet.scenario) == 0 {
+			http.Error(w, "no scenario configured", http.StatusBadRequest)
+			return
+		}
+		if clientNet.scenarioStart.IsZero() {
+			clientNet.scenarioStart = time.Now()
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
 	mux.HandleFunc("/phase", func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		clientNet.mu.Lock()
@@ -648,7 +673,7 @@ func run() error {
 	web := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	defer web.Close()
 	go web.Serve(control)
-	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "client_upload_mbps": *clientUpload, "client_download_mbps": *clientDownload, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
+	ready := map[string]any{"client_port": ports[0], "server_port": ports[1], "root": certPath, "key": keyPath, "metrics": "http://" + control.Addr().String() + "/metrics", "accounts": *accounts, "variable": *variable, "cellular_cycle": *cellularCycle, "client_upload_mbps": *clientUpload, "client_download_mbps": *clientDownload, "client_shared_mbps": *clientMbps, "server_shared_mbps": 1000}
 	body, _ := json.MarshalIndent(ready, "", "  ")
 	if err = os.WriteFile(filepath.Join(*dir, "provider.json"), body, 0600); err != nil {
 		return err

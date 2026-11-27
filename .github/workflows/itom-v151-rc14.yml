@@ -1,0 +1,179 @@
+name: ITOM 1.5.1 RC14 Android and Linux build
+on:
+  push:
+    branches: [codex/itom-v151-rc14]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itom-release-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  go-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [mailstream, core, native, qualification]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: src/${{ matrix.module }}/go.sum
+      - uses: actions/checkout@v4
+        if: matrix.module == 'native'
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          persist-credentials: false
+      - name: Real routing dataset (native only)
+        if: matrix.module == 'native'
+        run: |
+          python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
+          echo "ITOM_RC20_DATA_DIR=$RUNNER_TEMP/rc20-data" >> "$GITHUB_ENV"
+      - name: Full module regression suite once
+        working-directory: src/${{ matrix.module }}
+        run: go test -race -mod=readonly -count=1 -timeout=10m ./...
+      - name: Qualification gate unit tests
+        if: matrix.module == 'qualification'
+        working-directory: src/qualification
+        run: python3 -m unittest test_home_gate
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          persist-credentials: false
+      - name: Verify and bundle routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-read-only: false
+      - uses: actions/cache@v4
+        id: aar
+        with:
+          path: src/android/app/libs/itom.aar
+          key: itom-aar-linux-arm64-go1.27.1-ndk28.2.13676358-api29-${{ hashFiles('src/native/**', 'src/core/**', 'src/mailstream/**', '!**/*_test.go') }}
+      - name: Install only missing pinned SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$manager"
+          missing=()
+          for item in 'platforms;android-29' 'platforms;android-37.0' 'build-tools;36.0.0'; do
+            dir="${item/;/\/}"
+            test -f "$sdk/$dir/source.properties" || missing+=("$item")
+          done
+          if [ '${{ steps.aar.outputs.cache-hit }}' != true ]; then
+            test -f "$sdk/ndk/28.2.13676358/source.properties" || missing+=('ndk;28.2.13676358')
+          fi
+          if ((${#missing[@]})); then "$manager" --sdk_root="$sdk" --channel=3 "${missing[@]}"; fi
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$sdk/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - uses: actions/setup-go@v5
+        if: steps.aar.outputs.cache-hit != 'true'
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: src/native/go.sum
+      - name: Compile native AAR on cache miss
+        if: steps.aar.outputs.cache-hit != 'true'
+        working-directory: src/native
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
+          gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
+      - name: Test Android and build APKs
+        working-directory: src/android
+        run: gradle --no-daemon --build-cache :domain:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:assembleDebug :app:assembleRelease
+      - name: Verify and stage APKs
+        run: |
+          mkdir -p dist
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc14-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc14-dev-release-UNSIGNED.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify dist/itom-1.5.1-rc14-dev-testing.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc14-staged-android-unqualified
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 2
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: src/core/go.sum
+      - name: Build and verify Linux server
+        working-directory: src/core
+        run: |
+          mkdir -p ../../dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64.bin ./cmd/itom
+          ../../dist/itom-linux-amd64.bin version | grep 'itom-1-5-1-rc14-dev'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc14-staged-linux-unqualified
+          path: dist/itom-linux-amd64.bin
+          if-no-files-found: error
+          retention-days: 2
+  publish:
+    needs: [go-validation, android, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rc14-staged-*-unqualified
+          path: dist
+          merge-multiple: true
+      - name: Verify exact source and final package
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git rev-parse HEAD > dist/BUILD-SOURCE.txt
+          git rev-parse HEAD:src > dist/BUILD-SOURCE-TREE.txt
+          git archive --format=tar.gz --output=dist/ITOM-RC14-exact-source.tar.gz HEAD src
+          chmod +x dist/itom-linux-amd64.bin
+          dist/itom-linux-amd64.bin version | grep 'itom-1-5-1-rc14-dev'
+          cd dist
+          sha256sum itom-linux-amd64.bin *.apk BUILD-SOURCE*.txt ITOM-RC14-exact-source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.5.1-RC14-development
+          path: dist/
+          if-no-files-found: error
