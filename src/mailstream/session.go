@@ -54,6 +54,7 @@ type Session struct {
 	grantRequests       chan grantRequest
 	grantRequestVersion uint64 // receive owner only
 	activeLimit         atomic.Int32
+	minimumActive       atomic.Int32
 	accountSetMu        sync.Mutex
 	accountSetVersion   uint64
 	accountSetAck       atomic.Uint64
@@ -920,6 +921,7 @@ type Snapshot struct {
 	BulkOutstanding            uint64 `json:"bulk_outstanding_bytes"`
 	ReceiveBuffered            int64  `json:"receive_buffered_bytes"`
 	DeliveryFlight             int    `json:"delivery_flight_bytes"`
+	BulkDeliveryFlight         int    `json:"bulk_delivery_flight_bytes"`
 	DeliveryWindow             int    `json:"delivery_window_bytes"`
 }
 
@@ -929,7 +931,7 @@ func (s *Session) Snapshot() Snapshot {
 	snapshot := Snapshot{BulkPacingRateBPS: int64(s.delivery.pacingRate(time.Now())), BulkPacingDeferrals: s.delivery.pacer.deferrals, InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
-		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
+		DeliveryFlight: s.delivery.flight, BulkDeliveryFlight: s.delivery.bulkFlight, DeliveryWindow: s.delivery.allowance()}
 	snapshot.MobilePacing = s.delivery.mobile.enabled
 	if snapshot.MobilePacing {
 		snapshot.MobileCapacityBPS = int64(s.delivery.mobile.capacity)

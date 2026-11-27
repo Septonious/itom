@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc11-dev"
+const TransportRevision = "itom-1-5-1-rc12-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -137,7 +137,10 @@ func profileConfigHash(p servercfg.Profile) string {
 	return hex.EncodeToString(digest[:])
 }
 func profileAccounts(p servercfg.Profile, d Dial, roots *tls.Config) ([]mailstream.MailAccount, []byte, error) {
-	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled || len(p.Accounts) == 0 {
+	if len(p.Accounts) < servercfg.MinOperationalAccounts {
+		return nil, nil, servercfg.ErrMinimumAccounts
+	}
+	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled {
 		return nil, nil, servercfg.ErrConfig
 	}
 	if err := (servercfg.Config{Schema: 1, Server: p.Server, Provider: p.Provider, Users: []servercfg.User{p.User}, Accounts: p.Accounts, Transport: p.Transport}).Validate(); err != nil {
@@ -264,6 +267,11 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		}
 		return nil, err
 	}
+	if link.Snapshot().AllocatedAccounts < servercfg.MinOperationalAccounts {
+		session.Close()
+		return nil, servercfg.ErrMinimumAccounts
+	}
+	session.SetMinimumActiveAccounts(servercfg.MinOperationalAccounts)
 	client = &Client{session: session, link: link, profile: p, cancel: cancel, trace: trace}
 	progressMu.Lock()
 	observedSession = session

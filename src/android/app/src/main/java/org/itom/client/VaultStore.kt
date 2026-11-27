@@ -74,6 +74,7 @@ class VaultStore(private val context: Context) {
         val p = v.profiles.singleOrNull { it.profileId == profileId } ?: throw DomainError("PROFILE_MISSING")
         demand(profileId !in v.incompleteProfileIds, "PROFILE_INCOMPLETE")
         Validation.vault(v)
+        Validation.profile(p)
         val key = java.util.Base64.getDecoder().decode(v.keys.getValue(p.encryptionKeyRef).pskBase64)
         val user = org.json.JSONObject().put("uid", p.userId).put("name", p.name).put("enabled", true)
             .put("key", key.joinToString("") { "%02x".format(it.toInt() and 255) })

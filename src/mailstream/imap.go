@@ -1488,71 +1488,74 @@ type MailSnapshot struct {
 	Lines             []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
-	ControlMessageReservations uint64 `json:"control_message_reservations"`
-	ControlMessageLimit        int    `json:"control_message_limit"`
-	ControlRecoveryReserve     int    `json:"control_recovery_reserve"`
-	ControlBackpressure        bool   `json:"control_backpressure"`
-	ControlOutgoingBytes       int    `json:"control_outgoing_retained_bytes"`
-	ControlIncomingBytes       int    `json:"control_incoming_retained_bytes"`
-	ControlOutstanding         int    `json:"control_outstanding"`
-	ControlCollected           uint64 `json:"control_messages_collected"`
-	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
-	StorageRecoveryDeferred    bool   `json:"storage_recovery_deferred"`
-	StoragePressure            bool   `json:"storage_pressure"`
-	PeerStoragePressure        bool   `json:"peer_storage_pressure"`
-	StorageRecoveryReady       bool   `json:"storage_recovery_ready"`
-	MaintenanceFailure         string `json:"maintenance_failure,omitempty"`
-	Housekeeping               bool   `json:"housekeeping"`
-	RecoveryFailure            string `json:"recovery_failure,omitempty"`
-	ControlPhase               int32  `json:"control_phase"`
-	ControlCursor              uint32 `json:"control_cursor"`
-	ControlCount               uint32 `json:"control_count"`
-	DataAppended               uint64 `json:"data_appended_messages"`
-	ControlAppended            uint64 `json:"control_appended_messages"`
-	DataMIMEBytes              uint64 `json:"data_mime_bytes"`
-	ControlMIMEBytes           uint64 `json:"control_mime_bytes"`
-	AppendCompletionMS         int64  `json:"append_completion_ms"`
-	InteractiveQueueUS         int64  `json:"interactive_queue_last_us"`
-	InteractiveTagUS           int64  `json:"interactive_tag_wait_last_us"`
-	InteractiveAppendUS        int64  `json:"interactive_append_last_us"`
-	ControlReconnects          uint64 `json:"control_reconnects"`
-	ControlPublicationMeanUS   int64  `json:"control_publication_mean_us"`
-	ControlPublicationJitterUS int64  `json:"control_publication_jitter_us"`
-	ControlPollMS              int64  `json:"control_poll_ms"`
-	EmptyControlFetches        uint64 `json:"empty_control_fetches"`
-	QueuedMIMEBytes            int    `json:"queued_mime_bytes"`
-	StartupAttempts            uint32 `json:"startup_attempts"`
-	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
-	PeerVerified               bool   `json:"peer_verified"`
-	PeerUnavailable            bool   `json:"peer_unavailable"`
-	Account                    string `json:"account"`
-	Allocated                  bool   `json:"allocated"`
-	Stage                      string `json:"stage"`
-	Failure                    string `json:"failure,omitempty"`
-	Ready                      bool   `json:"ready"`
-	Writer                     bool   `json:"writer"`
-	ControlWriter              bool   `json:"control_writer"`
-	WriterRecovering           bool   `json:"writer_recovering"`
-	WriterReconnects           uint64 `json:"writer_reconnects"`
-	WriterRecoveryReason       string `json:"writer_recovery_reason,omitempty"`
-	Data                       bool   `json:"data"`
-	PhysicalSockets            int    `json:"physical_sockets"`
-	RetainedBytes              int    `json:"retained_bytes"`
-	BulkHeadroomBytes          int    `json:"bulk_headroom_bytes"`
-	BulkBlocked                bool   `json:"bulk_blocked"`
-	CollectionPageLimit        uint64 `json:"collection_page_limit"`
-	ReservedBytes              int    `json:"reserved_retention_bytes"`
-	RecoveredBytes             int    `json:"recovered_retention_bytes"`
-	DataPhase                  int32  `json:"data_phase"`
-	DataCursor                 uint32 `json:"data_cursor"`
-	DataCount                  uint32 `json:"data_count"`
-	DataGeneration             uint32 `json:"data_generation"`
-	RTTMillis                  int64  `json:"rtt_ms"`
-	RTTFresh                   bool   `json:"rtt_fresh"`
-	RTTAgeMillis               int64  `json:"rtt_age_ms"`
-	IMAPLatencyFresh           bool   `json:"imap_latency_fresh"`
-	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
-	UploadBytes, DownloadBytes uint64
+	ControlMessageReservations        uint64 `json:"control_message_reservations"`
+	ControlMessageLimit               int    `json:"control_message_limit"`
+	ControlRecoveryReserve            int    `json:"control_recovery_reserve"`
+	ControlBackpressure               bool   `json:"control_backpressure"`
+	ControlOutgoingBytes              int    `json:"control_outgoing_retained_bytes"`
+	ControlIncomingBytes              int    `json:"control_incoming_retained_bytes"`
+	ControlOutstanding                int    `json:"control_outstanding"`
+	ControlCollected                  uint64 `json:"control_messages_collected"`
+	AbandonedEmptied                  uint64 `json:"abandoned_folders_emptied"`
+	StorageRecoveryDeferred           bool   `json:"storage_recovery_deferred"`
+	StoragePressure                   bool   `json:"storage_pressure"`
+	PeerStoragePressure               bool   `json:"peer_storage_pressure"`
+	StorageRecoveryReady              bool   `json:"storage_recovery_ready"`
+	MaintenanceFailure                string `json:"maintenance_failure,omitempty"`
+	Housekeeping                      bool   `json:"housekeeping"`
+	RecoveryFailure                   string `json:"recovery_failure,omitempty"`
+	ControlPhase                      int32  `json:"control_phase"`
+	ControlCursor                     uint32 `json:"control_cursor"`
+	ControlCount                      uint32 `json:"control_count"`
+	DataAppended                      uint64 `json:"data_appended_messages"`
+	ControlAppended                   uint64 `json:"control_appended_messages"`
+	DataMIMEBytes                     uint64 `json:"data_mime_bytes"`
+	ControlMIMEBytes                  uint64 `json:"control_mime_bytes"`
+	AppendCompletionMS                int64  `json:"append_completion_ms"`
+	InteractiveQueueUS                int64  `json:"interactive_queue_last_us"`
+	InteractiveTagUS                  int64  `json:"interactive_tag_wait_last_us"`
+	InteractiveAppendUS               int64  `json:"interactive_append_last_us"`
+	ControlReconnects                 uint64 `json:"control_reconnects"`
+	ControlPublicationMeanUS          int64  `json:"control_publication_mean_us"`
+	ControlPublicationJitterUS        int64  `json:"control_publication_jitter_us"`
+	ControlPollMS                     int64  `json:"control_poll_ms"`
+	EmptyControlFetches               uint64 `json:"empty_control_fetches"`
+	QueuedMIMEBytes                   int    `json:"queued_mime_bytes"`
+	ControlQueued                     int    `json:"control_queued"`
+	InteractiveSlots, InteractiveBusy int
+	ControlServiceAgeMS               int64  `json:"control_service_age_ms"`
+	StartupAttempts                   uint32 `json:"startup_attempts"`
+	StartupRetryAtMS                  int64  `json:"startup_retry_at_ms,omitempty"`
+	PeerVerified                      bool   `json:"peer_verified"`
+	PeerUnavailable                   bool   `json:"peer_unavailable"`
+	Account                           string `json:"account"`
+	Allocated                         bool   `json:"allocated"`
+	Stage                             string `json:"stage"`
+	Failure                           string `json:"failure,omitempty"`
+	Ready                             bool   `json:"ready"`
+	Writer                            bool   `json:"writer"`
+	ControlWriter                     bool   `json:"control_writer"`
+	WriterRecovering                  bool   `json:"writer_recovering"`
+	WriterReconnects                  uint64 `json:"writer_reconnects"`
+	WriterRecoveryReason              string `json:"writer_recovery_reason,omitempty"`
+	Data                              bool   `json:"data"`
+	PhysicalSockets                   int    `json:"physical_sockets"`
+	RetainedBytes                     int    `json:"retained_bytes"`
+	BulkHeadroomBytes                 int    `json:"bulk_headroom_bytes"`
+	BulkBlocked                       bool   `json:"bulk_blocked"`
+	CollectionPageLimit               uint64 `json:"collection_page_limit"`
+	ReservedBytes                     int    `json:"reserved_retention_bytes"`
+	RecoveredBytes                    int    `json:"recovered_retention_bytes"`
+	DataPhase                         int32  `json:"data_phase"`
+	DataCursor                        uint32 `json:"data_cursor"`
+	DataCount                         uint32 `json:"data_count"`
+	DataGeneration                    uint32 `json:"data_generation"`
+	RTTMillis                         int64  `json:"rtt_ms"`
+	RTTFresh                          bool   `json:"rtt_fresh"`
+	RTTAgeMillis                      int64  `json:"rtt_age_ms"`
+	IMAPLatencyFresh                  bool   `json:"imap_latency_fresh"`
+	IMAPLatencyMillis                 int64  `json:"imap_latency_ms"`
+	UploadBytes, DownloadBytes        uint64
 }
 
 func (l *IMAPLink) Snapshot() MailSnapshot {
@@ -1618,6 +1621,14 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.InteractiveTagUS = a.interactiveTagUS.Load()
 		line.InteractiveAppendUS = a.interactiveAppendUS.Load()
 		line.QueuedMIMEBytes = a.queuedBytes
+		line.ControlQueued = a.controlQueued
+		if p := a.controlWriter; p != nil {
+			line.InteractiveSlots, line.InteractiveBusy = cap(p.interactiveTags), len(p.interactiveTags)
+		}
+		line.ControlServiceAgeMS = -1
+		if at := a.controlServiceAt.Load(); at > 0 {
+			line.ControlServiceAgeMS = max(0, time.Since(time.Unix(0, at)).Milliseconds())
+		}
 		line.StartupAttempts = a.startupAttempts
 		if !a.startupRetryAt.IsZero() {
 			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()

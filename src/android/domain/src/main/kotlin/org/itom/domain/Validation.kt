@@ -11,7 +11,10 @@ object Validation {
         return if (bytes.size == 4) (bytes[0].toInt() and 255) !in 224..239 && !bytes.all { it == (-1).toByte() }
         else (bytes[0].toInt() and 255) != 255
     }
-    fun profile(p: ServerProfile) {
+    const val MIN_OPERATIONAL_ACCOUNTS = 4
+    fun profile(p: ServerProfile) = profile(p, requireOperational = true)
+    // Keep old vault records readable so an obsolete profile can be repaired/deleted.
+    private fun profile(p: ServerProfile, requireOperational: Boolean) {
         demand(p.schemaVersion == 2, "PROFILE_VERSION")
         demand(p.profileId.matches(Regex("[A-Za-z0-9_-]{1,64}")), "PROFILE_ID")
         demand(p.name.isNotBlank() && p.name.length <= 80 && p.name.none(Char::isISOControl), "PROFILE_NAME")
@@ -24,6 +27,7 @@ object Validation {
         demand(p.transportProfile in setOf("balanced-lab-v1", "imap-tcp-v1"), "TRANSPORT_PROFILE")
         demand(validDialIP(p.imapDialIP), "IMAP_DIAL_IP_INVALID")
         demand(p.accounts.isNotEmpty() && p.accounts.any { it.enabled }, "ACCOUNT_COUNT")
+        if (requireOperational) demand(p.accounts.count { it.enabled } >= MIN_OPERATIONAL_ACCOUNTS, "ACCOUNT_COUNT_MINIMUM_4")
         val resources = p.transportResources
         demand(resources.layout in setOf("auto", "mixed", "split") && resources.dataShards in setOf(1, 2, 4) &&
             resources.participants in 1..16 && resources.accountSessions in (2 * resources.participants)..128 &&
@@ -91,7 +95,7 @@ object Validation {
         demand(v.profiles.map { it.serverId }.distinct().size == v.profiles.size, "DUPLICATE_SERVER")
         demand(v.selectedProfileId == null || v.profiles.any { it.profileId == v.selectedProfileId }, "SELECTED_PROFILE_MISSING")
         demand(v.incompleteProfileIds.all { id -> v.profiles.any { it.profileId == id } }, "INCOMPLETE_PROFILE_MISSING")
-        v.profiles.forEach(::profile); settings(v.settings)
+        v.profiles.forEach { profile(it, requireOperational = false) }; settings(v.settings)
         if (v.settings.socks.authentication) demand(v.socksCredential != null, "SOCKS_CREDENTIALS")
         v.socksCredential?.let { c ->
             demand(c.username.toByteArray(Charsets.UTF_8).size in 1..255 && c.password.toByteArray(Charsets.UTF_8).size in 1..255 &&

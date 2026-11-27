@@ -92,6 +92,9 @@ func (m *mobileFlow) window(base, saturated time.Duration, now time.Time) int {
 	// 75ms queue allowance, with conservative bootstrap and bounded baseline.
 	baseline := max(base, saturated)
 	if baseline <= 0 {
+		if now.Before(m.guardUntil) && m.gain <= .5 {
+			return maxWire * 2
+		}
 		return 256 << 10
 	}
 	horizon := m.horizon(base, saturated)
@@ -168,7 +171,17 @@ func (s *Session) ObserveApplicationRTT(sample time.Duration) {
 	if m.idleBase > 0 {
 		baseline = m.idleBase + min(150*time.Millisecond, 3*m.idleSigma)
 	}
-	m.observeDelay(sample, baseline, time.Now(), s.delivery.bulkFlight > 0)
+	now := time.Now()
+	m.observeDelay(sample, baseline, now, s.delivery.bulkFlight > 0)
+	// Severe application delay with little/no bulk flight is not a capacity
+	// measurement. It does justify a conservative next-burst probe; keep
+	// the learned rate untouched and avoid admitting a full startup burst.
+	if sample >= 700*time.Millisecond && s.delivery.bulkFlight == 0 {
+		m.gain = .5
+		if until := now.Add(6 * time.Second); until.After(m.guardUntil) {
+			m.guardUntil = until
+		}
+	}
 }
 
 func (s *Session) SetMobileBaseline(base, variation time.Duration) {

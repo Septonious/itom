@@ -10,9 +10,9 @@ import kotlin.test.*
 class DomainTest {
     private fun profile() = ServerProfile(profileId = "local", name = "Server", serverId = "1234567890abcdef1234567890abcdef", userId = "12345678", providerId = "test",
         encryptionKeyRef = "keystore:pair", mailboxNamespace = "ITOM/12345678/unique",
-        accounts = listOf(MailAccount("mail", "Mail", "imap.example.invalid", credentialRef = "keystore:mail", providerId = "test")))
+        accounts = (1..4).map { n -> MailAccount("mail$n", "Mail $n", "imap.example.invalid", credentialRef = "keystore:mail$n", providerId = "test") })
     private fun invitation() = Invitation(2, profile(), "abcdef1234567890abcdef1234567890", Base64.getEncoder().encodeToString(ByteArray(32) { it.toByte() }),
-        mapOf("keystore:mail" to MailCredential("test@example.invalid", "TEST_ONLY_PASSWORD")), expires = 2_100_000_000L)
+        profile().accounts.associate { it.credentialRef to MailCredential("test-${it.id}@example.invalid", "TEST_ONLY_PASSWORD") }, expires = 2_100_000_000L)
         .also { Validation.invitation(it, 1L) } // Negative cases must start from a valid fixture.
     private fun error(code: String, block: () -> Unit) { assertEquals(code, assertFailsWith<DomainError>(block = block).code) }
     private fun policy(vpn: List<String> = emptyList(), block: List<String> = emptyList(), direct: List<String> = emptyList()) = RoutingPolicy(rules = AddressRules(vpn, block, direct))
@@ -23,11 +23,11 @@ class DomainTest {
             .also(Validation::vault)
     }
     private fun secondProfile() = profile().copy(profileId = "second", serverId = "22222222222222222222222222222222",
-        encryptionKeyRef = "keystore:second_pair", accounts = listOf(profile().accounts.single().copy(credentialRef = "keystore:second_mail")))
+        encryptionKeyRef = "keystore:second_pair", accounts = profile().accounts.map { it.copy(credentialRef = "keystore:second_${it.id}") })
     private fun twoProfileVault(): VaultDocument {
         val v = editorVault(); val other = secondProfile()
         return v.copy(profiles = v.profiles + other,
-            credentials = v.credentials + ("keystore:second_mail" to MailCredential("other@example.invalid", "OTHER_PASSWORD")),
+            credentials = v.credentials + other.accounts.associate { it.credentialRef to MailCredential("other-${it.id}@example.invalid", "OTHER_PASSWORD") },
             keys = v.keys + (other.encryptionKeyRef to PairSecret("22222222222222222222222222222222", invitation().pskBase64))).also(Validation::vault)
     }
 
@@ -40,9 +40,9 @@ class DomainTest {
         for (value in listOf("imap.example.org", "127.0.0.1:993", "[::1]", "fe80::1%wlan0", "0.0.0.0", "::", "239.0.0.1", "ff02::1")) {
             error("IMAP_DIAL_IP_INVALID") { Validation.profile(p.copy(imapDialIP = value)) }
         }
-        val legacy = p.copy(accounts = listOf(p.accounts.single().copy(dialIP = "81.19.77.171")))
+        val legacy = p.copy(accounts = p.accounts.map { it.copy(dialIP = "81.19.77.171") })
         assertEquals("81.19.77.171", legacy.effectiveIMAPDialIP())
-        val mixed = legacy.copy(accounts = legacy.accounts + legacy.accounts.single().copy(id = "second", dialIP = "81.19.77.168", credentialRef = "keystore:second"))
+        val mixed = legacy.copy(accounts = legacy.accounts + legacy.accounts.first().copy(id = "second", dialIP = "81.19.77.168", credentialRef = "keystore:second"))
         assertEquals("", mixed.effectiveIMAPDialIP()) // no split endpoints for old profiles
         val v = twoProfileVault()
         val startTLS = v.copy(profiles = v.profiles.map { profile -> profile.copy(accounts = profile.accounts.map { it.copy(tls = "starttls", dialIP = "81.19.77.171") }) })
@@ -125,7 +125,7 @@ class DomainTest {
     }
     @Test fun invalidUidAndInsecureTlsRejected() {
         listOf("01234567", "1234567", "123456789", "1234567x").forEach { uid -> error("USER_ID") { Validation.profile(profile().copy(userId = uid)) } }
-        val p = profile(); error("TLS_REQUIRED") { Validation.profile(p.copy(accounts = listOf(p.accounts[0].copy(verifyCertificate = false)))) }
+        val p = profile(); error("TLS_REQUIRED") { Validation.profile(p.copy(accounts = listOf(p.accounts[0].copy(verifyCertificate = false)) + p.accounts.drop(1))) }
     }
     @Test fun renamingDoesNotChangeServerIdentity() {
         val old = profile(); val renamed = old.copy(name = "Renamed")
@@ -167,7 +167,7 @@ class DomainTest {
     }
     @Test fun loginNewlinesRejected() {
         val i = invitation()
-        error("CREDENTIAL_FORMAT") { Validation.invitation(Invitation(2, i.profile, i.pairId, i.pskBase64, mapOf("keystore:mail" to MailCredential("a\r\nLOGOUT", "pass")), i.expires), 1) }
+        error("CREDENTIAL_FORMAT") { Validation.invitation(Invitation(2, i.profile, i.pairId, i.pskBase64, i.credentials + (i.profile.accounts.first().credentialRef to MailCredential("a\r\nLOGOUT", "pass")), i.expires), 1) }
     }
     @Test fun duplicateKeysIncludingEscapedKeysRejected() {
         error("DUPLICATE_JSON_KEY") { Codec.preflight("{\"a\":1,\"a\":2}", 1000) }
@@ -279,22 +279,22 @@ class DomainTest {
         val key = Base64.getEncoder().encodeToString(ByteArray(32) { 42 })
         val draft = edit.initial.copy(name = "Changed", serverId = "abcdefabcdefabcdefabcdefabcdefab", userId = "87654321",
             providerId = "NEW_MAIL", mailboxNamespace = "ITOM/87654321/new", pairId = "fedcba9876543210fedcba9876543210", pskBase64 = key,
-            accounts = listOf(edit.initial.accounts.single().copy(id = "renamed_mail", name = "Primary", host = "imap.new.example.invalid", port = "1993",
-                username = "new@example.invalid", password = "  NEW_PASSWORD  ")))
+            accounts = edit.initial.accounts.mapIndexed { index, a -> a.copy(id = if (index == 0) "renamed_mail" else a.id, name = "Account $index", host = "imap.new.example.invalid", port = "1993",
+                username = "new$index@example.invalid", password = "  NEW_PASSWORD  ") })
         val next = ProfileEditing.apply(v, edit.profileId, edit.revision, draft)
         val loaded = Codec.vault(Codec.encode(next))
         val p = loaded.profiles.single()
         assertEquals("local", p.profileId); assertEquals(v.selectedProfileId, loaded.selectedProfileId)
         assertEquals("87654321", p.userId); assertEquals(draft.serverId, p.serverId); assertEquals("Changed", p.name)
         assertEquals(draft.mailboxNamespace, p.mailboxNamespace); assertEquals("new_mail", p.providerId)
-        assertEquals("new_mail", p.accounts.single().providerId); assertEquals(1993, p.accounts.single().port)
-        assertEquals("renamed_mail", p.accounts.single().id); assertEquals(draft.accounts.single().host, p.accounts.single().host)
+        assertEquals("new_mail", p.accounts.first().providerId); assertEquals(1993, p.accounts.first().port)
+        assertEquals("renamed_mail", p.accounts.first().id); assertEquals(draft.accounts.first().host, p.accounts.first().host)
         assertEquals(key, loaded.keys.getValue(p.encryptionKeyRef).pskBase64)
         assertEquals(draft.pairId, loaded.keys.getValue(p.encryptionKeyRef).pairId)
-        assertEquals("new@example.invalid", loaded.credentials.getValue(p.accounts.single().credentialRef).username)
-        assertEquals("  NEW_PASSWORD  ", loaded.credentials.getValue(p.accounts.single().credentialRef).password)
+        assertEquals("new0@example.invalid", loaded.credentials.getValue(p.accounts.first().credentialRef).username)
+        assertEquals("  NEW_PASSWORD  ", loaded.credentials.getValue(p.accounts.first().credentialRef).password)
         assertEquals(v.settings, loaded.settings)
-        assertEquals("12345678", v.profiles.single().userId); assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.single().password)
+        assertEquals("12345678", v.profiles.single().userId); assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.first().password)
         assertFalse(Codec.exportPublic(p).contains("NEW_PASSWORD")); assertFalse(Codec.exportPublic(p).contains(key))
     }
 
@@ -302,13 +302,14 @@ class DomainTest {
         val v = twoProfileVault(); val before = Codec.encode(v); val edit = ProfileEditing.open(v, "local")
         val new = ProfileEditing.newAccount(edit.initial.accounts).copy(username = "added@example.invalid", password = "ADDED_PASSWORD")
         val disabled = ProfileEditing.newAccount(edit.initial.accounts).copy(username = "disabled@example.invalid", password = "DISABLED_PASSWORD", enabled = false)
-        val next = ProfileEditing.apply(v, "local", edit.revision, edit.initial.copy(accounts = listOf(new, disabled)))
-        assertEquals(4, next.profiles.first { it.profileId == "local" }.totalLines)
-        assertFalse("keystore:mail" in next.credentials)
-        assertEquals(setOf(new.localRef, disabled.localRef, "keystore:second_mail"), next.credentials.keys)
-        assertEquals("OTHER_PASSWORD", next.credentials.getValue("keystore:second_mail").password)
+        val kept = edit.initial.accounts.drop(1)
+        val next = ProfileEditing.apply(v, "local", edit.revision, edit.initial.copy(accounts = listOf(new, disabled) + kept))
+        assertEquals(16, next.profiles.first { it.profileId == "local" }.totalLines)
+        assertFalse(edit.initial.accounts.first().localRef in next.credentials)
+        assertEquals(setOf(new.localRef, disabled.localRef) + kept.map { it.localRef } + secondProfile().accounts.map { it.credentialRef }, next.credentials.keys)
+        assertEquals("OTHER_PASSWORD", next.credentials.getValue(secondProfile().accounts.first().credentialRef).password)
         assertEquals(v.profiles[1], next.profiles[1]); assertSame(v.keys["keystore:second_pair"], next.keys["keystore:second_pair"])
-        assertEquals(listOf(true, false), next.profiles.first().accounts.map { it.enabled })
+        assertEquals(listOf(true, false, true, true, true), next.profiles.first().accounts.map { it.enabled })
         assertEquals(before, Codec.encode(v))
     }
 
@@ -322,14 +323,14 @@ class DomainTest {
     }
 
     @Test fun invalidEditorValuesLeaveSourceVaultIntact() {
-        val v = editorVault(); val before = Codec.encode(v); val d = ProfileEditing.open(v, "local").initial; val a = d.accounts.single()
+        val v = editorVault(); val before = Codec.encode(v); val d = ProfileEditing.open(v, "local").initial; val a = d.accounts.first()
         val invalid = listOf(
             "USER_ID" to d.copy(userId = "01234567"), "PSK_FORMAT" to d.copy(pskBase64 = "abcd"),
             "ACCOUNT_COUNT" to d.copy(accounts = emptyList()), "ACCOUNT_COUNT" to d.copy(accounts = listOf(a.copy(enabled = false))),
             "IMAP_PORT" to d.copy(accounts = listOf(a.copy(port = "65536"))), "IMAP_PORT" to d.copy(accounts = listOf(a.copy(port = "port"))),
-            "IMAP_HOST" to d.copy(accounts = listOf(a.copy(host = "https://imap.example.invalid"))),
-            "CREDENTIAL_FORMAT" to d.copy(accounts = listOf(a.copy(username = "x\r\nLOGOUT"))),
-            "DUPLICATE_ACCOUNT" to d.copy(accounts = listOf(a, a.copy(localRef = "keystore:another"))),
+            "IMAP_HOST" to d.copy(accounts = listOf(a.copy(host = "https://imap.example.invalid")) + d.accounts.drop(1)),
+            "CREDENTIAL_FORMAT" to d.copy(accounts = listOf(a.copy(username = "x\r\nLOGOUT")) + d.accounts.drop(1)),
+            "DUPLICATE_ACCOUNT" to d.copy(accounts = listOf(a, a.copy(localRef = "keystore:another")) + d.accounts.drop(1)),
         )
         invalid.forEach { (code, draft) -> error(code) { ProfileEditing.apply(v, "local", v.revision, draft) }; assertEquals(before, Codec.encode(v)) }
     }
@@ -338,26 +339,26 @@ class DomainTest {
         val v = twoProfileVault(); val edit = ProfileEditing.open(v, "local"); val before = Codec.encode(v)
         error("DUPLICATE_SERVER") { ProfileEditing.apply(v, "local", v.revision, edit.initial.copy(serverId = secondProfile().serverId)) }
         error("VAULT_CREDENTIALS") { ProfileEditing.apply(v, "local", v.revision,
-            edit.initial.copy(accounts = listOf(edit.initial.accounts.single().copy(localRef = "keystore:second_mail")))) }
+            edit.initial.copy(accounts = listOf(edit.initial.accounts.first().copy(localRef = secondProfile().accounts.first().credentialRef)) + edit.initial.accounts.drop(1))) }
         assertEquals(before, Codec.encode(v))
     }
 
     @Test fun emptySecretFieldsCannotEraseRealConnectionSecrets() {
         val v = editorVault(); val d = ProfileEditing.open(v, "local").initial
-        error("CREDENTIAL_FORMAT") { ProfileEditing.apply(v, "local", v.revision, d.copy(accounts = listOf(d.accounts.single().copy(password = "")))) }
+        error("CREDENTIAL_FORMAT") { ProfileEditing.apply(v, "local", v.revision, d.copy(accounts = listOf(d.accounts.first().copy(password = "")) + d.accounts.drop(1))) }
         error("PAIR_ID") { ProfileEditing.apply(v, "local", v.revision, d.copy(pairId = "", pskBase64 = "")) }
-        assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.single().password)
+        assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.first().password)
     }
 
     @Test fun incompleteProfileRequiresAllSecretsAndThenBecomesReady() {
         val v = VaultDocument(profiles = listOf(profile()), selectedProfileId = "local", incompleteProfileIds = setOf("local"))
         val old = Codec.vault(Codec.encode(v)); val d = ProfileEditing.open(old, "local").initial
-        assertEquals("", d.pskBase64); assertEquals("", d.accounts.single().password)
+        assertEquals("", d.pskBase64); assertEquals("", d.accounts.first().password)
         error("CREDENTIAL_FORMAT") { ProfileEditing.apply(old, "local", 0, d.copy(name = "Renamed")) }
         val supplied = d.copy(pairId = invitation().pairId, pskBase64 = invitation().pskBase64,
-            accounts = listOf(d.accounts.single().copy(username = "user@example.invalid", password = "SUPPLIED_PASSWORD")))
+            accounts = d.accounts.map { it.copy(username = "user-${it.id}@example.invalid", password = "SUPPLIED_PASSWORD") })
         val saved = Codec.vault(Codec.encode(ProfileEditing.apply(old, "local", 0, supplied)))
-        assertTrue(saved.incompleteProfileIds.isEmpty()); assertEquals("SUPPLIED_PASSWORD", saved.credentials.values.single().password)
+        assertTrue(saved.incompleteProfileIds.isEmpty()); assertEquals("SUPPLIED_PASSWORD", saved.credentials.values.first().password)
         assertEquals(supplied, ProfileEditing.open(saved, "local").initial)
         assertEquals(setOf("local"), old.incompleteProfileIds); assertTrue(old.credentials.isEmpty())
     }
@@ -375,15 +376,15 @@ class DomainTest {
     @Test fun addingAccountDoesNotCopyAnotherAccountsCredentials() {
         val d = ProfileEditing.open(editorVault(), "local").initial
         val added = ProfileEditing.newAccount(d.accounts)
-        assertEquals(d.accounts.single().host, added.host); assertEquals("993", added.port)
+        assertEquals(d.accounts.first().host, added.host); assertEquals("993", added.port)
         assertTrue(added.username.isEmpty()); assertTrue(added.password.isEmpty())
-        assertNotEquals(d.accounts.single().localRef, added.localRef); assertNotEquals(added.localRef, ProfileEditing.newAccount(d.accounts).localRef)
-        assertEquals("TEST_ONLY_PASSWORD", d.accounts.single().password)
+        assertNotEquals(d.accounts.first().localRef, added.localRef); assertNotEquals(added.localRef, ProfileEditing.newAccount(d.accounts).localRef)
+        assertEquals("TEST_ONLY_PASSWORD", d.accounts.first().password)
     }
 
     @Test fun editorDraftDiagnosticsNeverPrintSecretMaterial() {
         val edit = ProfileEditing.open(editorVault(), "local")
-        listOf(edit.toString(), edit.initial.toString(), edit.initial.accounts.single().toString()).forEach {
+        listOf(edit.toString(), edit.initial.toString(), edit.initial.accounts.first().toString()).forEach {
             assertFalse(it.contains("TEST_ONLY_PASSWORD")); assertFalse(it.contains(invitation().pskBase64)); assertFalse(it.contains("test@example.invalid"))
         }
     }
@@ -429,4 +430,20 @@ class DomainTest {
         assertNull(machine.state.value.sampledAt)
         assertFalse(machine.sample(current, Metrics(activeLines=20,totalLines=20), "late-ready", 3))
     }
+    @Test fun exitIdentityIsBoundToProfileAndGeneration() {
+        val m = SessionMachine()
+        val g = m.begin("local", 1, 16)
+        assertFalse(m.exitIdentity(g, "local", ExitIdentity("8.8.8.8", "US")))
+        assertTrue(m.connected(g, 1))
+        assertFalse(m.exitIdentity(g, "other", ExitIdentity("8.8.8.8", "US")))
+        assertTrue(m.exitIdentity(g, "local", ExitIdentity("8.8.8.8", "US")))
+        assertEquals("8.8.8.8", m.state.value.exitIdentities["local"]?.ip)
+        m.stop(g)
+        val next = m.begin("local", 2, 16)
+        assertFalse(m.exitIdentity(g, "local", ExitIdentity("1.1.1.1", "AU")))
+        assertNull(m.state.value.exitIdentities["local"])
+        assertTrue(m.connected(next, 2))
+        assertTrue(m.exitIdentity(next, "local", ExitIdentity("2606:4700::1111", "")))
+    }
+
 }

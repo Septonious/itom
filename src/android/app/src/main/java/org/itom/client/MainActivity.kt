@@ -53,7 +53,7 @@ fun errorText(code: String) = when (code) {
     "PROVIDER_ID" -> "Provider ID: up to 64 lowercase ASCII letters, digits, hyphens or underscores."
     "FOLDER_NAMESPACE" -> "Mailbox namespace: 2 to 128 ASCII letters, digits, dots, hyphens, underscores or slashes; empty segments and .. are not allowed."
     "PSK_FORMAT" -> "The key must contain 32 bytes encoded in Base64."
-    "ACCOUNT_COUNT" -> "A profile needs at least one account, with at least one enabled."
+    "ACCOUNT_COUNT", "ACCOUNT_COUNT_MINIMUM_4" -> "ITOM requires at least four enabled IMAP accounts."
     "ACCOUNT_ID" -> "Account ID: 1 to 64 ASCII letters, digits, hyphens or underscores."
     "DUPLICATE_ACCOUNT" -> "Account IDs must be unique within a profile."
     "IMAP_PORT" -> "IMAP port must be a number from 1 to 65535."
@@ -148,6 +148,10 @@ fun errorText(code: String) = when (code) {
         val profile = current.selected
         if (current.loading || current.error != null) { message(errorText("VAULT_UNAVAILABLE")); return }
         if (profile == null) { page = Page.PROFILES; return }
+        if (profile.accounts.count { it.enabled } < Validation.MIN_OPERATIONAL_ACCOUNTS) {
+            editingProfileId = profile.profileId; page = Page.EDIT_PROFILE
+            message(errorText("ACCOUNT_COUNT_MINIMUM_4")); return
+        }
         if (profile.profileId in current.incompleteProfileIds) {
             editingProfileId = profile.profileId; page = Page.EDIT_PROFILE
             message("Enter the encryption key and credentials for every IMAP account."); return
@@ -181,7 +185,7 @@ fun errorText(code: String) = when (code) {
                     config.error != null -> PageColumn { Text(errorText(config.error!!)); GradientButton("Retry", { scope.launch { graph.vault.load() } }) }
                     else -> when (page) {
                         Page.HOME -> HomeScreen(config, session, { orbit }, { orbit = it }, ::toggle, { page = Page.PROFILES })
-                        Page.PROFILES -> ProfilesScreen(config, busy, onSelect = { id -> perform { graph.vault.select(id); restartIfActive() } },
+                        Page.PROFILES -> ProfilesScreen(config, session, busy, onSelect = { id -> perform { graph.vault.select(id); restartIfActive() } },
                             onEdit = { id -> editingProfileId = id; page = Page.EDIT_PROFILE }, onDelete = { id -> perform {
                                 if (graph.backend.snapshot.value.profileId == id) graph.backend.stop()
                                 graph.vault.remove(id)

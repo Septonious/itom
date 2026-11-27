@@ -16,8 +16,8 @@ func (c Config) androidInvitation(uid string) ([]byte, error) {
 	if e := c.Validate(); e != nil {
 		return nil, e
 	}
-	if len(c.Accounts) == 0 {
-		return nil, ErrConfig
+	if len(c.Accounts) < MinOperationalAccounts {
+		return nil, ErrMinimumAccounts
 	}
 	var u User
 	for _, x := range c.Users {

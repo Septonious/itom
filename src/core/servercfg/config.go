@@ -21,6 +21,10 @@ import (
 
 var ErrConfig = errors.New("SERVER_CONFIG")
 var ErrConfigSize = errors.New("SERVER_CONFIG_TOO_LARGE")
+var ErrMinimumAccounts = errors.New("ACCOUNT_COUNT_MINIMUM_4")
+
+// Administrative setup may contain fewer accounts; operational profiles may not.
+const MinOperationalAccounts = 4
 
 // Limit decoded configuration bytes, not the number of carrier accounts.
 // All writers and readers share this bound so a valid update remains readable.
@@ -343,8 +347,8 @@ func (c Config) Export(uid, path string) error {
 	if err := c.Validate(); err != nil {
 		return err
 	}
-	if len(c.Accounts) == 0 {
-		return ErrConfig
+	if len(c.Accounts) < MinOperationalAccounts {
+		return ErrMinimumAccounts
 	}
 	var u User
 	for _, x := range c.Users {
@@ -404,8 +408,8 @@ func ReadProfile(path string) (Profile, error) {
 		return p, ErrConfig
 	}
 	c := Config{Schema: 1, Server: p.Server, Provider: p.Provider, Users: []User{p.User}, Accounts: p.Accounts, Transport: p.Transport}
-	if len(p.Accounts) == 0 {
-		return p, ErrConfig
+	if len(p.Accounts) < MinOperationalAccounts {
+		return p, ErrMinimumAccounts
 	}
 	return p, c.Validate()
 }

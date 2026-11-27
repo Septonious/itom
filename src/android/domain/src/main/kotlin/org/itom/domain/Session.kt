@@ -8,12 +8,14 @@ import java.util.Locale
 enum class Phase { OFF, CONNECTING, CONNECTED, ERROR }
 data class Metrics(val downBps: Long = 0, val upBps: Long = 0, val rttMs: Int? = null, val tcp: Int = 0, val activeLines: Int = 0, val totalLines: Int = 0)
 data class Sample(val downBps: Long, val upBps: Long)
+data class ExitIdentity(val ip: String, val country: String = "")
 data class SessionSnapshot(
     val phase: Phase = Phase.OFF, val generation: Long = 0, val configRevision: Long = 0,
     val profileId: String? = null, val startedAt: Long? = null, val metrics: Metrics = Metrics(),
     val history: List<Sample> = emptyList(), val error: String? = null,
     val vpnInterfaceUp: Boolean = false,
     val transport: String = "{}", val sampledAt: Long? = null,
+    val exitIdentities: Map<String, ExitIdentity> = emptyMap(),
 )
 
 /** Synchronous generation checks make cancellation linearizable across coroutine callbacks. */
@@ -22,18 +24,26 @@ class SessionMachine {
     val state: StateFlow<SessionSnapshot> = mutable.asStateFlow()
     @Synchronized fun begin(profileId: String, revision: Long, total: Int): Long {
         val next = mutable.value.generation + 1
-        mutable.value = SessionSnapshot(Phase.CONNECTING, next, revision, profileId, metrics = Metrics(totalLines = total))
+        mutable.value = SessionSnapshot(Phase.CONNECTING, next, revision, profileId, metrics = Metrics(totalLines = total), exitIdentities = mutable.value.exitIdentities - profileId)
         return next
     }
     /** Unavailable transport rejects a start without emitting a fictitious connecting state. */
     @Synchronized fun reject(profileId: String, revision: Long, total: Int, code: String) {
         mutable.value = SessionSnapshot(phase = Phase.ERROR, generation = mutable.value.generation + 1,
-            configRevision = revision, profileId = profileId, metrics = Metrics(totalLines = total), error = code)
+            configRevision = revision, profileId = profileId, metrics = Metrics(totalLines = total), error = code, exitIdentities = mutable.value.exitIdentities - profileId)
     }
     @Synchronized fun connected(generation: Long, now: Long, interfaceUp: Boolean = false): Boolean {
         val s = mutable.value
         if (s.generation != generation || s.phase != Phase.CONNECTING) return false
         mutable.value = s.copy(phase = Phase.CONNECTED, startedAt = now, vpnInterfaceUp = interfaceUp)
+        return true
+    }
+    @Synchronized fun exitIdentity(generation: Long, profileId: String, identity: ExitIdentity?): Boolean {
+        val s = mutable.value
+        if (s.generation != generation || s.profileId != profileId || s.phase != Phase.CONNECTED) return false
+        if (identity != null && (Addresses.ip(identity.ip) == null || identity.country.isNotEmpty() && !identity.country.matches(Regex("[A-Z]{2}")))) return false
+        val next = s.exitIdentities - profileId
+        mutable.value = s.copy(exitIdentities = if (identity == null) next else next + (profileId to identity))
         return true
     }
     @Synchronized fun metrics(generation: Long, metrics: Metrics): Boolean {
@@ -58,7 +68,7 @@ class SessionMachine {
     @Synchronized fun stop(expectedGeneration: Long? = null): Boolean {
         // Delayed notification commands belong to the session that created them.
         if (expectedGeneration != null && mutable.value.generation != expectedGeneration) return false
-        mutable.value = SessionSnapshot(generation = mutable.value.generation + 1)
+        mutable.value = SessionSnapshot(generation = mutable.value.generation + 1, exitIdentities = mutable.value.exitIdentities)
         return true
     }
 }

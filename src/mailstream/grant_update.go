@@ -228,6 +228,9 @@ func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
 	}
 	s.accountSetMu.Lock()
 	defer s.accountSetMu.Unlock()
+	if len(req.ids) < int(s.minimumActive.Load()) {
+		return ErrCapacity
+	}
 	desired, err := l.knownGrant(req.ids)
 	if err != nil {
 		return err

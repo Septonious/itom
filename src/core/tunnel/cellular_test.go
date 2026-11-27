@@ -17,7 +17,7 @@ func TestCellularPolicy(t *testing.T) {
 	for _, v := range []struct {
 		ms   int
 		want int
-	}{{401, 27}, {650, 21}, {700, 10}, {850, 1}, {250, 1}, {250, 7}, {250, 7}, {250, 13}} {
+	}{{401, 27}, {650, 21}, {700, 10}, {850, 4}, {250, 4}, {250, 10}, {250, 10}, {250, 16}} {
 		if got := p.decide(30, time.Duration(v.ms)*time.Millisecond, 5, true, now); got != v.want {
 			t.Fatalf("%dms: got %d want %d", v.ms, got, v.want)
 		}
@@ -61,5 +61,57 @@ func TestCellularRTTWindowAndBearerReset(t *testing.T) {
 	}
 	if n := (&cellularPolicy{}).decide(8, 800*time.Millisecond, 1, true, now); n != 8 {
 		t.Fatal("one spike cut accounts", n)
+	}
+}
+
+func TestCellularFourAccountMinimum(t *testing.T) {
+	now := time.Now()
+	for _, capacity := range []int{4, 5, 8, 20, 25, 30} {
+		p := cellularPolicy{}
+		for i := 0; i < 20; i++ {
+			got := p.decide(capacity, 5*time.Second, 5, true, now.Add(time.Duration(i)*cellularRTTWindow))
+			if got < 4 || got > capacity {
+				t.Fatalf("capacity=%d got=%d", capacity, got)
+			}
+		}
+		if p.limit != 4 {
+			t.Fatalf("capacity=%d floor=%d", capacity, p.limit)
+		}
+	}
+	for n := 0; n < 4; n++ {
+		if got := (&cellularPolicy{}).decide(n, time.Second, 5, true, now); got != 0 {
+			t.Fatalf("invalid allocation %d: %d", n, got)
+		}
+	}
+}
+
+func TestRC12CellularStallCannotReduce(t *testing.T) {
+	now := time.Now()
+	p := cellularPolicy{}
+	for i := 0; i < 8; i++ {
+		e := cellularEvidence{active: 8, streams: 16, fresh: true, serviceCapacity: 12, publications: 2}
+		if got := p.decideObserved(8, 2*time.Second, 5, true, now.Add(time.Duration(i)*10*time.Second), e); got != 8 {
+			t.Fatal("idle/stall reduction", got)
+		}
+	}
+	p = cellularPolicy{limit: 4}
+	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 6 {
+		t.Fatal("recovery requires expansion", got)
+	}
+	p = cellularPolicy{limit: 8}
+	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, serviceCapacity: 20, publications: 5}
+	if got := p.decideObserved(8, 800*time.Millisecond, 5, true, now, e); got != 5 {
+		t.Fatal("bulk reduction", got)
+	}
+	e.active = 5
+	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 8 {
+		t.Fatal("failed reduction rollback", got)
+	}
+	e = cellularEvidence{active: 4, streams: 15, fresh: true}
+	if canLearnCellularBaseline(e, 200, false, true) || canLearnCellularBaseline(cellularEvidence{fresh: true}, 1519, false, true) {
+		t.Fatal("stalled sample learned")
+	}
+	if !canLearnCellularBaseline(cellularEvidence{active: 8, fresh: true}, 228, false, true) {
+		t.Fatal("healthy idle not learned")
 	}
 }

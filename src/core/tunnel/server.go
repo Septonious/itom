@@ -41,8 +41,8 @@ func ServeManagedWithExit(ctx context.Context, c servercfg.Config, dir string, l
 	if err = c.Validate(); err != nil {
 		return err
 	}
-	if len(c.Accounts) == 0 {
-		return servercfg.ErrConfig
+	if len(c.Accounts) < servercfg.MinOperationalAccounts {
+		return servercfg.ErrMinimumAccounts
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -182,6 +182,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) {
 		return admission.acquirePreferred(p.User.ID, preferredGrantAccounts(link.Snapshot().Lines))
 	}, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
+		s.SetMinimumActiveAccounts(servercfg.MinOperationalAccounts)
 		current.Store(s)
 		_ = trace.record(map[string]any{"Event": "session_ready", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
 		if log != nil {

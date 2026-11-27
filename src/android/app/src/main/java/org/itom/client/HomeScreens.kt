@@ -74,7 +74,7 @@ import kotlin.math.sin
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(.44f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(gap)) {
                     ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
-                    ProfileSwitch(config, true, profiles)
+                    ProfileSwitch(config, session, true, profiles)
                 }
                 Column(Modifier.weight(.56f), verticalArrangement = Arrangement.spacedBy(gap)) {
                     SpeedCards(session, true)
@@ -84,7 +84,7 @@ import kotlin.math.sin
         } else {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(gap)) {
                 ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
-                ProfileSwitch(config, compact, profiles)
+                ProfileSwitch(config, session, compact, profiles)
                 Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Traffic", Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = Muted)
                     GlowDot(if (session.phase == Phase.CONNECTED) color else Muted)
@@ -173,13 +173,14 @@ import kotlin.math.sin
     }
 }
 
-@Composable private fun ProfileSwitch(config: PublicConfig, compact: Boolean, onClick: () -> Unit) {
+@Composable private fun ProfileSwitch(config: PublicConfig, session: SessionSnapshot, compact: Boolean, onClick: () -> Unit) {
     val profile = config.selected
     InfoCard(Modifier.fillMaxWidth(), contentPadding = if (compact) 12.dp else 16.dp, onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             IconBadge(if (profile == null) Glyph.PLUS else Glyph.SERVERS, modifier = Modifier.size(if (compact) 36.dp else 42.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(profile?.name ?: "Add profile", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (profile == null) Text("Add profile", style = MaterialTheme.typography.titleMedium)
+                else ExitIdentityTitle(session.exitIdentities[profile.profileId])
                 Text(profile?.let { "${it.providerId} · ID ${it.userId}" } ?: "Server invitation", style = MaterialTheme.typography.bodySmall, color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             AppIcon(Glyph.NEXT, Modifier.size(18.dp))

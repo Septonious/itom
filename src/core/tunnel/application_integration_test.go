@@ -82,16 +82,18 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 		t.Fatal(err)
 	}
 	backend := imapmemserver.New()
-	backend.AddUser(imapmemserver.NewUser("native-fixture", "fixture-password"))
+	for i := 1; i <= 4; i++ {
+		backend.AddUser(imapmemserver.NewUser("native-fixture"+strconv.Itoa(i), "fixture-password"))
+	}
 	var connections, peak, providerLimit atomic.Int64
-	providerLimit.Store(10)
+	providerLimit.Store(40)
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		n := connections.Add(1)
 		for old := peak.Load(); n > old && !peak.CompareAndSwap(old, n); old = peak.Load() {
 		}
 		if n > providerLimit.Load() {
 			connections.Add(-1)
-			return nil, nil, errors.New("fixture provider ten-connection limit")
+			return nil, nil, errors.New("fixture provider aggregate connection limit")
 		}
 		return &countedProviderSession{Session: backend.NewSession(), count: &connections}, nil, nil
 	}})
@@ -125,8 +127,11 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 		t.Fatal(err)
 	}
 	other.Key = hex.EncodeToString(key)
-	account := servercfg.Account{ID: "a01", Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture", Password: "fixture-password"}}
-	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: []servercfg.Account{account}, Users: []servercfg.User{u, other}}
+	var accounts []servercfg.Account
+	for i := 1; i <= 4; i++ {
+		accounts = append(accounts, servercfg.Account{ID: "a0" + strconv.Itoa(i), Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture" + strconv.Itoa(i), Password: "fixture-password"}})
+	}
+	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: accounts, Users: []servercfg.User{u, other}}
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	serverDone := make(chan error, 1)
@@ -277,12 +282,12 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	if err != nil || traffic.Running || len(traffic.Users) != 2 || traffic.Users[0].Upload < 128<<10 || traffic.Users[0].Download < 128<<10 {
 		t.Fatalf("actual exit counters missing or stale: %+v error=%v", traffic, err)
 	}
-	if peak.Load() > 10 {
+	if peak.Load() > 40 {
 		t.Fatal("exceeded provider connection limit", peak.Load())
 	}
-	t.Logf("two configured identities, provider peak=%d/10; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
+	t.Logf("two configured identities, provider peak=%d/40; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
 	t.Log("new runtime reached native protected sockets, authenticated DATA readiness, SOCKS HTTPS and IPv4 TUN HTTPS")
-	providerLimit.Store(16)
+	providerLimit.Store(64)
 	peak.Store(0)
 	testConcurrentUsers(t, cfg, origin.Listener.Addr().String(), mailPEM, httpsPEM, &peak)
 

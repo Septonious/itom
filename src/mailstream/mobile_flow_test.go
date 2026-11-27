@@ -127,3 +127,20 @@ func TestRC11MobileVariableRateModel(t *testing.T) {
 		}
 	}
 }
+
+func TestRC12MobileStallGuardsNextBurstWithoutInventingCapacity(t *testing.T) {
+	s := &Session{}
+	s.delivery.mobile.reset(true)
+	initial := s.delivery.mobile.capacity
+	s.ObserveApplicationRTT(2 * time.Second)
+	m := &s.delivery.mobile
+	if m.capacity != initial || m.gain != .5 || !time.Now().Before(m.guardUntil) {
+		t.Fatal("missing conservative guard", m.capacity, m.gain)
+	}
+	if got := s.delivery.allowance(); got != 2*maxWire {
+		t.Fatal("initial burst not bounded", got)
+	}
+	if got := m.pacing(m.guardUntil.Add(time.Second)); got != initial*1.05 {
+		t.Fatal("guard did not expire", got)
+	}
+}

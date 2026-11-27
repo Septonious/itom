@@ -37,6 +37,9 @@ func (s *Session) applyAccountSet(f frame) error {
 			return s.trySend(frame{kind: frameAccountSetAck, offset: f.offset}, true)
 		}
 		ids := strings.Split(string(f.data), ",")
+		if len(ids) < int(s.minimumActive.Load()) {
+			return ErrCapacity
+		}
 		allowed, err := l.validateActiveSet(s.cipher.id, ids)
 		if err != nil {
 			return err
@@ -84,6 +87,9 @@ func (s *Session) SetActiveAccounts(ctx context.Context, ids []string) error {
 	return s.setActiveAccountsLocked(ctx, l, ids)
 }
 func (s *Session) setActiveAccountsLocked(ctx context.Context, l *IMAPLink, ids []string) error {
+	if len(ids) < int(s.minimumActive.Load()) {
+		return ErrCapacity // never park more accounts to satisfy a sub-floor proposal
+	}
 	allowed, err := l.validateActiveSet(s.cipher.id, ids)
 	if err != nil {
 		return err
@@ -230,6 +236,14 @@ func (a *mailAccountState) ensureActive(ctx context.Context, id SessionID) error
 	}
 }
 
+// SetMinimumActiveAccounts is configured by the production client after authentication.
+// Low-level protocol tests may still exercise smaller synthetic account sets.
+func (s *Session) SetMinimumActiveAccounts(minimum int) {
+	s.accountSetMu.Lock()
+	defer s.accountSetMu.Unlock()
+	s.minimumActive.Store(int32(max(0, minimum)))
+}
+
 // SetActiveLimit chooses healthy already-active paths first, without changing
 // the authenticated allocation. A zero limit means all assigned accounts.
 func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
@@ -246,7 +260,11 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
 	}
 	grant := l.stableGrant
 	l.mu.Unlock()
-	s.activeLimit.Store(int32(limit))
+	minimum := max(1, int(s.minimumActive.Load()))
+	if len(grant) < minimum || (limit != 0 && limit < minimum) {
+		return ErrCapacity
+	}
+	requested := limit
 	if limit == 0 || limit > len(grant) {
 		limit = len(grant)
 	}
@@ -265,9 +283,10 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
 			}
 		}
 	}
-	if len(ids) == 0 {
-		return ErrCapacity
+	if len(ids) < minimum {
+		return ErrCapacity // keep surviving paths; do not commit a smaller active set
 	}
+	s.activeLimit.Store(int32(requested))
 	target := map[string]bool{}
 	for _, id := range ids {
 		target[id] = true

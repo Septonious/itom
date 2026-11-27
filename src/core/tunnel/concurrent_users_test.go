@@ -82,8 +82,8 @@ func testConcurrentUsers(t *testing.T, cfg servercfg.Config, origin string, mail
 			t.Fatal("concurrent authenticated startup", j.err)
 		}
 		clients[j.i] = j.c
-		if s := j.c.Snapshot(); s.ActiveLines != 4 || s.TotalLines != 4 {
-			t.Fatalf("four real lines were not ready: %+v", s.Stats)
+		if s := j.c.Snapshot(); s.ActiveLines != 16 || s.TotalLines != 16 {
+			t.Fatalf("sixteen real lines were not ready: %+v", s.Stats)
 		}
 	}
 	transfer := func(i int) error {
@@ -131,8 +131,8 @@ func testConcurrentUsers(t *testing.T, cfg servercfg.Config, origin string, mail
 	if err := transfer(1); err != nil {
 		t.Fatal("one user's disconnect interrupted the other", err)
 	}
-	if peak.Load() > 16 {
+	if peak.Load() > 64 {
 		t.Fatal("provider connection budget exceeded", peak.Load())
 	}
-	t.Logf("two simultaneous users: 4/4 lines each, HTTPS integrity, exit isolation, independent disconnect; peak %d/16", peak.Load())
+	t.Logf("two simultaneous users: 16/16 lines each, HTTPS integrity, exit isolation, independent disconnect; peak %d/64", peak.Load())
 }

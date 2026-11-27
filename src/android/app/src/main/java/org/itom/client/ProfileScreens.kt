@@ -22,7 +22,7 @@ import org.itom.domain.*
 import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun ProfilesScreen(config: PublicConfig, busy: Boolean, onSelect: (String) -> Unit, onEdit: (String) -> Unit,
+@Composable fun ProfilesScreen(config: PublicConfig, session: SessionSnapshot, busy: Boolean, onSelect: (String) -> Unit, onEdit: (String) -> Unit,
     onDelete: (String) -> Unit, onImport: () -> Unit, onMessage: (String) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
     var removing by remember { mutableStateOf<ServerProfile?>(null) }
@@ -38,12 +38,12 @@ import java.io.ByteArrayOutputStream
             } catch (e: CancellationException) { throw e } catch (_: Exception) { onMessage("Could not export the profile.") }
         }
     }
-    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Server profiles", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             GlyphButton(Glyph.PLUS, "Add server", onImport, Blue, !busy)
         }
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
+        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
             if (config.profiles.isEmpty()) item {
                 InfoCard(Modifier.fillMaxWidth()) {
                     IconBadge(Glyph.SERVERS)
@@ -54,34 +54,33 @@ import java.io.ByteArrayOutputStream
             }
             items(config.profiles, key = { it.profileId }) { profile ->
                 val active = profile.profileId == config.selectedProfileId
-                InfoCard(Modifier.fillMaxWidth(), accent = if (active) Blue else null) {
+                InfoCard(Modifier.fillMaxWidth(), accent = if (active) Blue else null, contentPadding = 12.dp,
+                    onClick = if (!busy && !active) ({ onSelect(profile.profileId) }) else null) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         IconBadge(Glyph.SERVERS, color = if (active) Blue else Muted)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(profile.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                            ExitIdentityTitle(session.exitIdentities[profile.profileId])
                             SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled")
                         }
                         if (active) StatusLabel("Selected", Blue)
                     }
                     if (profile.profileId in config.incompleteProfileIds) Text("Setup required", style = MaterialTheme.typography.labelSmall, color = Yellow)
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                         Column(Modifier.weight(1f)) { SmallNote("User ID"); Text(profile.userId) }
                         Column(Modifier.weight(1f)) { SmallNote("Max IMAP sockets"); Text(profile.totalLines.toString()) }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(enabled = !busy && !active, onClick = { onSelect(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
-                            if (active) { AppIcon(Glyph.CHECK, Modifier.size(16.dp), Blue); Spacer(Modifier.width(6.dp)) }
-                            Text(if (active) "Selected" else "Select")
-                        }
                         OutlinedButton(enabled = !busy, onClick = { onEdit(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) { Text("Edit") }
+                        TextButton(modifier = Modifier.weight(1f), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) {
+                            Text(if (expanded == profile.profileId) "Hide details" else "Profile details")
+                        }
                     }
-                    TextButton(modifier = Modifier.fillMaxWidth(), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) { Text(if (expanded == profile.profileId) "Hide details" else "Profile details") }
                     if (expanded == profile.profileId) {
                         HorizontalDivider(color = Outline)
                         SmallNote("Server ID: ${profile.serverId}")
                         SmallNote("Folders: ${profile.mailboxNamespace}")
                         SmallNote(if (profile.profileId in config.incompleteProfileIds) "Enter the key and account credentials in the editor." else "The key is protected by Android Keystore.")
-                        profile.accounts.forEach { SmallNote("${it.name} · ${it.host}:${it.port} · ${if (it.enabled) "enabled" else "disabled"}") }
+                        profile.accounts.forEachIndexed { index, account -> SmallNote("Account ${index + 1} · ${account.host}:${account.port} · ${if (account.enabled) "enabled" else "disabled"}") }
                         SmallNote("Export metadata: servers, folders and IDs, without passwords or keys.")
                         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             OutlinedButton(enabled = !busy, onClick = { exportId = profile.profileId; exportFile.launch("ITOM_profile_${profile.profileId}.json") }) {
@@ -94,7 +93,7 @@ import java.io.ByteArrayOutputStream
             }
         }
     }
-    removing?.let { p -> AlertDialog(onDismissRequest = { removing = null }, title = { Text("Remove profile?") }, text = { Text("${p.name}: local settings and secrets will be removed. The server registration will remain.") },
+    removing?.let { p -> AlertDialog(onDismissRequest = { removing = null }, title = { Text("Remove profile?") }, text = { Text("Local settings and secrets for this profile will be removed. The server registration will remain.") },
         confirmButton = { TextButton(enabled = !busy, onClick = { onDelete(p.profileId); removing = null }) { Text("Remove", color = Red) } }, dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } }) }
 }
 

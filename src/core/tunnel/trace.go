@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"itom.local/core/servercfg"
 	mailstream "itom.local/mailstream"
 )
 
@@ -60,6 +61,8 @@ func failureCode(err error) string {
 		return "TIMEOUT"
 	case errors.Is(err, mailstream.ErrAuth):
 		return "AUTHENTICATION"
+	case errors.Is(err, servercfg.ErrMinimumAccounts):
+		return "ACCOUNT_COUNT_MINIMUM_4"
 	case errors.Is(err, mailstream.ErrCapacity):
 		return "CAPACITY"
 	case errors.Is(err, mailstream.ErrBusy):
