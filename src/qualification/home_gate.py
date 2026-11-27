@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 IDS = [f"a{i:02}" for i in range(1, 9)]
 ALL_IDS = [f"a{i:02}" for i in range(1, 16)]
 BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
-REVISION = "itom-1-5-1-rc8-dev"
+REVISION = "itom-1-5-1-rc9-dev"
 
 
 def ramp_summary(rates, seconds):

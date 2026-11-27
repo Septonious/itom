@@ -1,7 +1,7 @@
-name: ITOM 1.5.1 RC7 Android and Linux build
+name: ITOM 1.5.1 RC9 Android and Linux build
 on:
   push:
-    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc7]
+    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc7, codex/itom-v151-rc9]
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,12 +45,12 @@ jobs:
       - name: RC7 repeated reconnect with unavailable unallocated account
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
-      - name: RC7 offline purge recovery and retention safety
+      - name: RC9 protected legacy purge, EOF recovery, and RTT-window controller
         working-directory: src/core
-        run: go test -race -mod=readonly -count=3 -run 'TestPurgeRetryFreshConnection|TestFailedPurgePreservesLocalCapacity' ./manager
+        run: go test -race -mod=readonly -count=20 -run 'Test(Cellular|Purge|ProtectedLegacy|FailedPurge|LifecycleCapacity)' ./mailbox ./manager ./tunnel
       - name: RC7 account availability, control reader recovery and latency regressions
         working-directory: src/mailstream
-        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC7' .
+        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC[78]' .
       - name: RC7 account allocation recovery
         working-directory: src/core
         run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
@@ -117,12 +117,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
       - name: Stage artifacts
         run: |
-          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc7-dev-testing.apk
-          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc7-dev-release-UNSIGNED.apk
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc9-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc9-dev-release-UNSIGNED.apk
           cd dist
           sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-RC7-development
+          name: ITOM-1.5.1-RC9-development
           path: dist/
           if-no-files-found: error

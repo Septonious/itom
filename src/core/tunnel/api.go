@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc8-dev"
+const TransportRevision = "itom-1-5-1-rc9-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -52,16 +52,19 @@ type StartupProgress struct {
 }
 type ClientSnapshot struct {
 	Stats
-	ServerMessage          string
-	ServerMessageRevision  uint64
-	SampledAtMS            int64
-	Lines                  []LineDiagnostic
-	Events                 []string
-	TransportStreams       int
-	ConfiguredAccounts     int
-	AllocatedAccounts      int
-	AssignedSocketCapacity int
-	GrantNegotiated        bool
+	ServerMessage            string
+	ServerMessageRevision    uint64
+	SampledAtMS              int64
+	Lines                    []LineDiagnostic
+	Events                   []string
+	TransportStreams         int
+	ConfiguredAccounts       int
+	AllocatedAccounts        int
+	AssignedSocketCapacity   int
+	GrantNegotiated          bool
+	CellularRTTAverageMillis int64
+	CellularRTTSamples       int
+	CellularDesiredAccounts  int
 }
 type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
@@ -85,19 +88,22 @@ type ProbeSnapshot struct {
 	Failure                string
 }
 type Client struct {
-	session     *mailstream.Session
-	link        *mailstream.IMAPLink
-	profile     servercfg.Profile
-	cancel      context.CancelFunc
-	workers     sync.WaitGroup
-	mu          sync.Mutex
-	probe       ProbeSnapshot
-	events      []string
-	trace       *traceWriter
-	rates       map[string]accountRate
-	snapshotMu  sync.Mutex
-	closeOnce   sync.Once
-	networkType string
+	session         *mailstream.Session
+	link            *mailstream.IMAPLink
+	profile         servercfg.Profile
+	cancel          context.CancelFunc
+	workers         sync.WaitGroup
+	mu              sync.Mutex
+	probe           ProbeSnapshot
+	events          []string
+	trace           *traceWriter
+	rates           map[string]accountRate
+	snapshotMu      sync.Mutex
+	closeOnce       sync.Once
+	networkType     string
+	rttEpoch        uint64
+	rttHistory      []rttSample
+	cellularDesired int
 }
 
 func profileIdentity(p servercfg.Profile) string {
@@ -360,10 +366,28 @@ func (c *Client) Close() error {
 	return nil
 }
 func (c *Client) samplePing(ctx context.Context) (time.Duration, error) {
+	c.mu.Lock()
+	epoch := c.rttEpoch
+	c.mu.Unlock()
+	started := time.Now()
 	d, err := c.session.Ping(ctx)
+	now := time.Now()
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.probe.SampledAtMS = time.Now().UnixMilli()
+	c.probe.SampledAtMS = now.UnixMilli()
+	// Retain actual elapsed time for timed-out probes (a lower bound), not
+	// stale successful RTT. Other errors are not RTT measurements.
+	if epoch == c.rttEpoch && (err == nil || errors.Is(err, context.DeadlineExceeded)) {
+		value := d
+		if err != nil {
+			value = now.Sub(started)
+		}
+		c.rttHistory = trimRTT(c.rttHistory, now)
+		c.rttHistory = append(c.rttHistory, rttSample{now, value})
+		if len(c.rttHistory) > 64 {
+			c.rttHistory = c.rttHistory[len(c.rttHistory)-64:]
+		}
+	}
 	if err != nil {
 		c.probe.Failures++
 		c.probe.Failure = failureCode(err)
@@ -423,6 +447,8 @@ func (c *Client) Snapshot() ClientSnapshot {
 	c.mu.Lock()
 	c.sampleAccountRates(s.Lines, time.Now())
 	s.RTTMillis = c.probe.RTTMillis
+	average, samples := c.cellularRTTLocked(time.Now())
+	s.CellularRTTAverageMillis, s.CellularRTTSamples, s.CellularDesiredAccounts = average.Milliseconds(), samples, c.cellularDesired
 	s.Events = append([]string(nil), c.events...)
 	c.mu.Unlock()
 	return s

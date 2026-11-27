@@ -2,67 +2,106 @@ package tunnel
 
 import (
 	"context"
-	"sort"
 	"strings"
 	"time"
 )
 
-// Bearer is merely a policy selector. Only fresh provider IMAP latency
-// determines link quality; application RTT and packet loss do not enter it.
+// Network changes invalidate samples from the old bearer, including probes
+// already in flight. Only fresh application RTT determines reductions.
 func (c *Client) SetNetworkType(kind string) {
 	c.mu.Lock()
-	c.networkType = strings.ToLower(kind)
-	c.mu.Unlock()
+	defer c.mu.Unlock()
+	kind = strings.ToLower(kind)
+	if c.networkType != kind {
+		c.networkType = kind
+		c.rttEpoch++
+		c.rttHistory = nil
+	}
+}
+
+const cellularRTTWindow = 10 * time.Second
+
+type rttSample struct {
+	at    time.Time
+	value time.Duration
+}
+
+func trimRTT(samples []rttSample, now time.Time) []rttSample {
+	cutoff := now.Add(-cellularRTTWindow)
+	n := 0
+	for _, s := range samples {
+		if s.at.After(cutoff) {
+			samples[n] = s
+			n++
+		}
+	}
+	return samples[:n]
+}
+func (c *Client) cellularRTT(now time.Time) (time.Duration, int, uint64, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	mobile := c.networkType == "cellular" || c.networkType == "mobile"
+	average, n := c.cellularRTTLocked(now)
+	return average, n, c.rttEpoch, mobile
+}
+
+func (c *Client) cellularRTTLocked(now time.Time) (time.Duration, int) {
+	c.rttHistory = trimRTT(c.rttHistory, now)
+	var sum time.Duration
+	for _, s := range c.rttHistory {
+		sum += s.value
+	}
+	n := len(c.rttHistory)
+	if n == 0 {
+		return 0, 0
+	}
+	return sum / time.Duration(n), n
 }
 
 type cellularPolicy struct {
-	base                  float64
-	severe, healthy, idle int
-	limit                 int
+	healthy      int
+	limit        int
+	lastDecrease time.Time
 }
 
-func (p *cellularPolicy) decide(capacity int, latency float64, demand bool) int {
+// Only decrease on a ten-second rolling application RTT average, never
+// because of provider IMAP service latency or idle traffic. Apply at most
+// one reduction per window so overlapping measurements cannot cause collapse.
+func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int, demand bool, now time.Time) int {
 	if capacity < 1 {
 		return 0
 	}
 	if p.limit == 0 {
-		p.limit = min(2, capacity)
+		p.limit = capacity
 	}
 	p.limit = min(p.limit, capacity)
-	if latency <= 0 {
+	if samples < 2 {
+		p.healthy = 0
 		return p.limit
 	}
-	if p.base == 0 || latency < p.base {
-		p.base = latency
-	}
-	bad := latency >= 250 || latency > max(100, 3*p.base)
-	good := latency <= max(120, 1.5*p.base)
-	if bad {
-		p.severe++
-		p.healthy = 0
-		p.idle = 0
-	} else {
-		p.severe = 0
-		if good {
-			p.healthy++
-		} else {
+	if average <= 400*time.Millisecond {
+		p.healthy++
+		if demand && p.healthy >= 2 && (p.lastDecrease.IsZero() || now.Sub(p.lastDecrease) >= cellularRTTWindow) {
+			p.limit = min(capacity, max(p.limit+1, p.limit*2))
 			p.healthy = 0
 		}
-		if demand {
-			p.idle = 0
-		} else {
-			p.idle++
-		}
+		return p.limit
 	}
+	p.healthy = 0
+	if !p.lastDecrease.IsZero() && now.Sub(p.lastDecrease) < cellularRTTWindow {
+		return p.limit
+	}
+	previous := p.limit
 	switch {
-	case p.severe >= 2:
-		p.limit = 1
-	case demand && p.healthy >= 2:
-		p.limit = min(capacity, max(p.limit+1, p.limit*2))
-		p.healthy = 0
-	case p.idle >= 12:
+	case average >= 700*time.Millisecond:
+		p.limit = max(1, p.limit/2)
+	case average > 600*time.Millisecond:
+		p.limit = max(1, p.limit-max(2, (p.limit+2)/3))
+	default:
 		p.limit = max(1, p.limit-1)
-		p.idle = 0
+	}
+	if previous != p.limit {
+		p.lastDecrease = now
 	}
 	return p.limit
 }
@@ -73,6 +112,8 @@ func (c *Client) accountController(ctx context.Context) {
 	var policy cellularPolicy
 	var previous uint64
 	var wasMobile bool
+	var epoch uint64
+	var bearerSince time.Time
 	last := 0
 	for {
 		select {
@@ -80,28 +121,26 @@ func (c *Client) accountController(ctx context.Context) {
 			return
 		case <-tick.C:
 		}
-		c.mu.Lock()
-		mobile := c.networkType == "cellular" || c.networkType == "mobile"
-		c.mu.Unlock()
 		mail := c.link.Snapshot()
 		if !mail.GrantNegotiated || mail.GrantChanging || mail.AllocatedAccounts == 0 {
 			continue
 		}
-		if mobile != wasMobile {
+		now := time.Now()
+		average, samples, currentEpoch, mobile := c.cellularRTT(now)
+		if mobile != wasMobile || currentEpoch != epoch {
 			policy = cellularPolicy{}
 			last = -1
 			wasMobile = mobile
+			epoch = currentEpoch
+			bearerSince = now
+			previous = 0
 		}
 		var total uint64
-		var latency []float64
 		active := 0
 		for _, line := range mail.Lines {
 			total += line.UploadBytes + line.DownloadBytes
 			if line.Ready && line.Data && line.Writer && line.ControlWriter {
 				active++
-				if line.IMAPLatencyFresh && line.IMAPLatencyMillis > 0 {
-					latency = append(latency, float64(line.IMAPLatencyMillis))
-				}
 			}
 		}
 		var rate uint64
@@ -112,14 +151,22 @@ func (c *Client) accountController(ctx context.Context) {
 		desired := 0
 		target := mail.AllocatedAccounts
 		if mobile {
-			sort.Float64s(latency)
-			var sample float64
-			if len(latency) > 0 {
-				sample = latency[len(latency)/2]
-			}
 			demand := c.session.Snapshot().PendingBytes >= 256<<10 || rate >= uint64(max(active, 1))*250000
-			desired = policy.decide(target, sample, demand)
+			// Wait for a complete window on a new bearer before reducing.
+			if now.Sub(bearerSince) < cellularRTTWindow {
+				samples = 0
+			}
+			desired = policy.decide(target, average, samples, demand, now)
 			target = desired
+		}
+		c.mu.Lock()
+		changedBearer := c.rttEpoch != epoch
+		if !changedBearer {
+			c.cellularDesired = desired
+		}
+		c.mu.Unlock()
+		if changedBearer {
+			continue
 		}
 		if target == active && last == desired {
 			continue
