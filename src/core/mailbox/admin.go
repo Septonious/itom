@@ -20,6 +20,7 @@ type Admin struct {
 type Folder struct {
 	Name      string
 	Delimiter rune
+	Attrs     []imap.MailboxAttr
 }
 type PurgeItem struct{ Name, Outcome string }
 type PurgeReport struct {
@@ -83,7 +84,7 @@ func (a *Admin) Folders(ctx context.Context) ([]Folder, error) {
 				return ErrLimit
 			}
 			seen[row.Mailbox] = true
-			result = append(result, Folder{Name: row.Mailbox, Delimiter: row.Delim})
+			result = append(result, Folder{Name: row.Mailbox, Delimiter: row.Delim, Attrs: append([]imap.MailboxAttr(nil), row.Attrs...)})
 		}
 		return cmd.Close()
 	})
@@ -188,6 +189,23 @@ func protectedPurgeFolders(folders []Folder) map[string]bool {
 	return protected
 }
 
+// Retain built-in mailboxes even when DELETE would return OK. Rambler
+// recreates these folders. DELETE is not evidence of an empty mailbox.
+// Match root names case-insensitively and honor roles advertised by LIST.
+func retainSystemFolder(f Folder) bool {
+	switch strings.ToLower(f.Name) {
+	case "inbox", "trash", "spam", "sentbox", "draftbox", "sent", "sent items", "sent mail", "drafts", "junk", "junk email", "deleted items":
+		return true
+	}
+	for _, attr := range f.Attrs {
+		switch strings.ToLower(string(attr)) {
+		case `\all`, `\archive`, `\drafts`, `\flagged`, `\junk`, `\sent`, `\trash`, `\important`:
+			return true
+		}
+	}
+	return false
+}
+
 // A tiny command boundary lets regression tests inject provider EOFs without
 // changing the real admin connection, scoped commands, or retention journals.
 type purgeBackend interface {
@@ -239,106 +257,155 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
 		}
 		return folders[i].Name > folders[j].Name
 	})
-	protected := protectedPurgeFolders(folders)
+	protected := map[string]bool{}
+	retained := map[string]bool{}
 	keptEmpty := map[string]bool{}
-	var unresolved = map[string]error{}
-	// Keep recovery bounded even if every folder triggers a provider failure.
-	recoveries := 0
+	unresolved := map[string]error{}
 	present := map[string]bool{}
-	for _, f := range folders {
-		present[f.Name] = true
+	// Keep protections even if a subsequent LIST omits attributes.
+	remember := func(list []Folder) {
+		present = map[string]bool{}
+		for _, f := range list {
+			present[f.Name] = true
+			if retainSystemFolder(f) {
+				retained[f.Name] = true
+			}
+		}
+		for name := range protectedPurgeFolders(list) {
+			protected[name] = true
+		}
+		// Avoid recursively deleting the ancestor of a retained system folder.
+		for _, f := range list {
+			if !retained[f.Name] || f.Delimiter == 0 {
+				continue
+			}
+			for _, parent := range list {
+				if strings.HasPrefix(f.Name, parent.Name+string(f.Delimiter)) {
+					protected[parent.Name] = true
+				}
+			}
+		}
 	}
-	for _, f := range folders {
+	remember(folders)
+	recoveries := 0
+	reportedProtected := map[string]bool{}
+	process := func(f Folder, keep bool) error {
 		if !present[f.Name] {
-			continue
+			return nil
 		}
 		if protected[f.Name] {
-			report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
-			continue
+			if !reportedProtected[f.Name] {
+				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
+				reportedProtected[f.Name] = true
+			}
+			return nil
 		}
-		if err = a.wait(ctx); err != nil {
-			return report, err
+		if err := a.wait(ctx); err != nil {
+			return err
 		}
-		outcome, err := purgeOne(ctx, a, f.Name)
+		outcome, err := purgeOne(ctx, a, f.Name, keep)
 		report.Items = append(report.Items, PurgeItem{f.Name, outcome})
 		if err == nil {
+			delete(unresolved, f.Name)
 			if outcome == "KEPT_EMPTY" {
 				keptEmpty[f.Name] = true
 			}
-			continue
+			return nil
 		}
 		unresolved[f.Name] = err
+		delete(keptEmpty, f.Name)
 		if commandRefused(err) {
-			continue
+			return nil
 		}
-		// An ambiguous operation poisons the connection, not the whole list.
-		// Reconnect and LIST before continuing, never retry this name on a
-		// dead socket. Final LIST can prove a lost DELETE response succeeded.
+		// Preserve bounded fresh-socket recovery after ambiguous mutations.
 		recoveries++
 		if recoveries > 8 {
-			return report, errors.Join(err, errors.New("IMAP_PURGE_RECOVERY_LIMIT"))
+			return errors.Join(err, errors.New("IMAP_PURGE_RECOVERY_LIMIT"))
 		}
-		if err = a.reopen(ctx); err != nil {
-			return report, err
+		if err := a.reopen(ctx); err != nil {
+			return err
 		}
 		fresh, err := a.Folders(ctx)
 		if err != nil {
+			return err
+		}
+		remember(fresh)
+		return nil
+	}
+	// Delete ordinary folders first: the provider may move their contents
+	// to Trash. Refresh inventory, then empty system folders in place.
+	for _, f := range folders {
+		if retained[f.Name] && !protected[f.Name] {
+			continue
+		}
+		if err := process(f, false); err != nil {
 			return report, err
 		}
-		present = map[string]bool{}
-		for _, f := range fresh {
-			present[f.Name] = true
+	}
+	fresh, err := a.Folders(ctx)
+	if err != nil {
+		return report, err
+	}
+	remember(fresh)
+	for _, f := range fresh {
+		if !retained[f.Name] && !protected[f.Name] {
+			continue
 		}
-		for name := range protectedPurgeFolders(fresh) {
-			protected[name] = true
+		if err := process(f, true); err != nil {
+			return report, err
 		}
 	}
 	after, err := a.Folders(ctx)
 	if err != nil {
 		return report, err
 	}
-	for name := range protectedPurgeFolders(after) {
-		protected[name] = true
-	}
-	failed := false
+	remember(after)
+	var unverified []string
 	for _, f := range after {
 		report.Remaining = append(report.Remaining, f.Name)
-		if !protected[f.Name] && !keptEmpty[f.Name] {
-			failed = true
+		if protected[f.Name] {
+			if !reportedProtected[f.Name] {
+				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
+			}
+			continue
 		}
-		if !protected[f.Name] && unresolved[f.Name] != nil {
-			failed = true
+		if !keptEmpty[f.Name] || unresolved[f.Name] != nil {
+			unverified = append(unverified, f.Name)
 		}
 	}
-	report.Verified = !failed
-	if failed {
-		return report, errors.New("IMAP_PURGE_INCOMPLETE")
+	report.Verified = len(unverified) == 0
+	if !report.Verified {
+		sort.Strings(unverified)
+		return report, fmt.Errorf("IMAP_PURGE_INCOMPLETE: remaining unverified folders %q", unverified)
 	}
 	return report, nil
 }
-func purgeOne(ctx context.Context, a purgeBackend, name string) (string, error) {
-	// INBOX is retained and emptied. Other system folders keep the existing
-	// provider-NO fallback. A tagged NO is distinct from an unknown outcome.
-	if !strings.EqualFold(name, "INBOX") {
-		err := a.deleteFolder(ctx, name)
-		if err == nil {
-			return finishDelete(ctx, a, name)
+func purgeOne(ctx context.Context, a purgeBackend, name string, keep bool) (string, error) {
+	// Never DELETE or UNSUBSCRIBE a known system folder, regardless of
+	// provider responses. Empty verifies zero messages after CLOSE.
+	if keep {
+		if err := a.empty(ctx, name); err != nil {
+			return "NOT_EMPTIED", err
 		}
-		if !commandRefused(err) {
-			return "UNKNOWN", err
-		}
+		return "KEPT_EMPTY", nil
+	}
+	// Ordinary folders retain the tagged-NO fallback.
+	err := a.deleteFolder(ctx, name)
+	if err == nil {
+		return finishDelete(ctx, a, name)
+	}
+	if !commandRefused(err) {
+		return "UNKNOWN", err
 	}
 	if err := a.empty(ctx, name); err != nil {
 		return "NOT_EMPTIED", err
 	}
-	if !strings.EqualFold(name, "INBOX") {
-		err := a.deleteFolder(ctx, name)
-		if err == nil {
-			return finishDelete(ctx, a, name)
-		}
-		if !commandRefused(err) {
-			return "UNKNOWN", err
-		}
+	err = a.deleteFolder(ctx, name)
+	if err == nil {
+		return finishDelete(ctx, a, name)
+	}
+	if !commandRefused(err) {
+		return "UNKNOWN", err
 	}
 	return "KEPT_EMPTY", nil
 }
