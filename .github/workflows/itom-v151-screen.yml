@@ -1,7 +1,7 @@
 name: ITOM 1.5.1 native qualification screen
 on:
   push:
-    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration, codex/itom-v151-rc6]
+    branches: [codex/itom-v151-interactive-isolation, codex/itom-v151-android-integration, codex/itom-v151-rc7]
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,12 +44,18 @@ jobs:
       - name: Preserve healthy control writer on cleanup failure
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
-      - name: RC6 repeated reconnect with unavailable unallocated account
+      - name: RC7 repeated reconnect with unavailable unallocated account
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
-      - name: RC6 offline purge recovery and retention safety
+      - name: RC7 offline purge recovery and retention safety
         working-directory: src/core
         run: go test -race -mod=readonly -count=3 -run 'TestPurgeRetryFreshConnection|TestFailedPurgePreservesLocalCapacity' ./manager
+      - name: RC7 account availability, control reader recovery and latency regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC7' .
+      - name: RC7 account allocation recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
       - name: Verify qualification module dependency closure
         working-directory: src/qualification
         run: go list -mod=readonly -deps ./provider ./worker > /dev/null
