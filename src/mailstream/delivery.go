@@ -13,6 +13,7 @@ type deliveryMark struct {
 
 type deliveryWindow struct {
 	pacer                   bulkPacer
+	mobile                  mobileFlow
 	bulkFlight              int
 	totalDelivered          uint64
 	deliveredAt, firstSent  time.Time
@@ -43,7 +44,11 @@ const initialDeliveryWindow = 512 << 10
 // This is a ceiling on measured-rate headroom, never an initial flight grant.
 const maxBulkDeliveryHorizon = 1750 * time.Millisecond
 
-func (w *deliveryWindow) allowance() int {
+func (w *deliveryWindow) allowance() int { return w.allowanceAt(time.Now()) }
+func (w *deliveryWindow) allowanceAt(now time.Time) int {
+	if w.mobile.enabled {
+		return w.mobile.window(w.base, w.saturatedBase, now)
+	}
 	if w.limit == 0 {
 		return initialDeliveryWindow
 	}
@@ -51,6 +56,9 @@ func (w *deliveryWindow) allowance() int {
 }
 
 func (w *deliveryWindow) deliveryHorizon(now time.Time) time.Duration {
+	if w.mobile.enabled {
+		return w.mobile.horizon(w.base, w.saturatedBase)
+	}
 	horizon := min(maxBulkDeliveryHorizon, max(500*time.Millisecond, w.base+250*time.Millisecond))
 	if w.saturatedBase > 0 {
 		// Learn the full DATA path from a complete flight-limited round,
@@ -67,6 +75,9 @@ func (w *deliveryWindow) deliveryHorizon(now time.Time) time.Duration {
 func (w *deliveryWindow) observeInteractive(sample time.Duration, now time.Time) {
 	if sample > 0 {
 		w.controlRTT = sample
+		if w.mobile.enabled {
+			w.mobile.observeDelay(sample, w.controlBase, now, w.bulkFlight > 0)
+		}
 		if w.controlBase == 0 || sample < w.controlBase {
 			w.controlBase = sample
 		}
@@ -105,13 +116,18 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 	}
 	if len(marks) > 0 && !marks[0].sent.IsZero() {
 		m := marks[0]
-		if w.limited && w.bulkFlight >= initialDeliveryWindow/2 && sample > 0 {
+		if w.limited && w.bulkFlight >= func() int {
+			if w.mobile.enabled {
+				return maxPayload
+			}
+			return initialDeliveryWindow / 2
+		}() && sample > 0 {
 			// Weight a full flight by bytes: one fast setup/tail fragment or
 			// an unusually fast account cannot label the whole DATA path.
 			bucket := min(len(w.saturatedSamples)-1, int(sample/(25*time.Millisecond)))
 			w.saturatedSamples[bucket] += n
 			w.saturatedBytes += n
-			if w.saturatedBytes >= initialDeliveryWindow {
+			if w.saturatedBytes >= initialDeliveryWindow || w.mobile.enabled && w.saturatedBytes >= 2*maxWire {
 				left := (w.saturatedBytes + 1) / 2
 				for i, bytes := range w.saturatedSamples {
 					left -= bytes
@@ -181,6 +197,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 			rate = min(rate, w.rateSampleMax)
 		}
 		w.rateSampleMax = 0
+		if w.mobile.enabled {
+			limited := w.limited || w.pacer.deferrals > w.mobile.lastDeferrals
+			w.mobile.lastDeferrals = w.pacer.deferrals
+			w.mobile.observeRate(rate, now, limited, w.bulkRTT, max(w.base, w.saturatedBase))
+		}
 		// A single sparse receipt batch is not a capacity drop. Keep a short
 		// peak of compression-safe delivery samples; expire it promptly when
 		// a genuinely slower path supplies lower samples for a full second.

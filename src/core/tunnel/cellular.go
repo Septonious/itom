@@ -2,6 +2,7 @@ package tunnel
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"time"
 )
@@ -16,10 +17,16 @@ func (c *Client) SetNetworkType(kind string) {
 		c.networkType = kind
 		c.rttEpoch++
 		c.rttHistory = nil
+		c.rttSince = time.Now()
+		if c.session != nil {
+			c.session.SetCellular(kind == "cellular" || kind == "mobile")
+		}
 	}
 }
 
 const cellularRTTWindow = 10 * time.Second
+
+type mailRate struct{ up, down uint64 }
 
 type rttSample struct {
 	at    time.Time
@@ -59,9 +66,9 @@ func (c *Client) cellularRTTLocked(now time.Time) (time.Duration, int) {
 }
 
 type cellularPolicy struct {
-	healthy      int
-	limit        int
-	lastDecrease time.Time
+	healthy    int
+	limit      int
+	lastChange time.Time
 }
 
 // Only decrease on a ten-second rolling application RTT average, never
@@ -79,38 +86,81 @@ func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int
 		p.healthy = 0
 		return p.limit
 	}
+	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < cellularRTTWindow {
+		return p.limit
+	}
+	previous := p.limit
 	if average <= 400*time.Millisecond {
 		p.healthy++
-		if demand && p.healthy >= 2 && (p.lastDecrease.IsZero() || now.Sub(p.lastDecrease) >= cellularRTTWindow) {
-			p.limit = min(capacity, max(p.limit+1, p.limit*2))
+		if demand && p.healthy >= 2 {
+			percent := 10
+			if average <= 300*time.Millisecond {
+				percent = 20
+			}
+			p.limit = min(capacity, p.limit+accountStep(capacity, percent))
+			if p.limit != previous {
+				p.lastChange = now
+			}
 			p.healthy = 0
 		}
 		return p.limit
 	}
 	p.healthy = 0
-	if !p.lastDecrease.IsZero() && now.Sub(p.lastDecrease) < cellularRTTWindow {
-		return p.limit
-	}
-	previous := p.limit
 	switch {
 	case average >= 700*time.Millisecond:
-		p.limit = max(1, p.limit/2)
+		p.limit = max(1, p.limit-accountStep(capacity, 35))
 	case average > 600*time.Millisecond:
-		p.limit = max(1, p.limit-max(2, (p.limit+2)/3))
+		p.limit = max(1, p.limit-accountStep(capacity, 20))
 	default:
-		p.limit = max(1, p.limit-1)
+		p.limit = max(1, p.limit-accountStep(capacity, 10))
 	}
 	if previous != p.limit {
-		p.lastDecrease = now
+		p.lastChange = now
 	}
 	return p.limit
+}
+func accountStep(capacity, percent int) int { return max(1, (capacity*percent+50)/100) }
+
+// Robust idle baseline indexed by the actual live count. It is advisory;
+// raw RTT remains the threshold for reducing accounts.
+type cellularBaseline struct{ values []time.Duration }
+
+func (b *cellularBaseline) add(v time.Duration) {
+	if v <= 0 {
+		return
+	}
+	b.values = append(b.values, v)
+	if len(b.values) > 31 {
+		b.values = b.values[len(b.values)-31:]
+	}
+}
+func (b *cellularBaseline) estimate() (time.Duration, time.Duration) {
+	if len(b.values) < 5 {
+		return 0, 0
+	}
+	v := append([]time.Duration(nil), b.values...)
+	sort.Slice(v, func(i, j int) bool { return v[i] < v[j] })
+	median := v[len(v)/2]
+	for i, x := range v {
+		if x < median {
+			v[i] = median - x
+		} else {
+			v[i] = x - median
+		}
+	}
+	sort.Slice(v, func(i, j int) bool { return v[i] < v[j] })
+	return median, time.Duration(float64(v[len(v)/2]) * 1.4826)
 }
 func (c *Client) accountController(ctx context.Context) {
 	defer c.workers.Done()
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
 	var policy cellularPolicy
-	var previous uint64
+	var previous = map[string]mailRate{}
+	var baselines = map[int]*cellularBaseline{}
+	var sampled time.Time
+	var lastActive int
+	var lastProbe int64
 	var wasMobile bool
 	var epoch uint64
 	var bearerSince time.Time
@@ -133,25 +183,67 @@ func (c *Client) accountController(ctx context.Context) {
 			wasMobile = mobile
 			epoch = currentEpoch
 			bearerSince = now
-			previous = 0
+			previous = map[string]mailRate{}
+			baselines = map[int]*cellularBaseline{}
+			sampled = time.Time{}
+			lastActive = 0
 		}
-		var total uint64
 		active := 0
+		var up, down uint64
+		elapsed := now.Sub(sampled).Seconds()
 		for _, line := range mail.Lines {
-			total += line.UploadBytes + line.DownloadBytes
+			old, ok := previous[line.Account]
 			if line.Ready && line.Data && line.Writer && line.ControlWriter {
 				active++
+				if ok && !sampled.IsZero() && elapsed > 0 && line.UploadBytes >= old.up && line.DownloadBytes >= old.down {
+					up += uint64(float64(line.UploadBytes-old.up) * 8 / elapsed)
+					down += uint64(float64(line.DownloadBytes-old.down) * 8 / elapsed)
+				}
 			}
+			previous[line.Account] = mailRate{line.UploadBytes, line.DownloadBytes}
 		}
-		var rate uint64
-		if previous != 0 && total >= previous {
-			rate = total - previous
+		sampled = now
+		if active != lastActive {
+			bearerSince = now
+			lastActive = active
+			samples = 0
+			c.mu.Lock()
+			if c.rttEpoch == epoch {
+				c.rttHistory = nil
+				c.rttSince = now
+			}
+			c.mu.Unlock()
 		}
-		previous = total
+		// Physical byte counters include hedges/control; report effective
+		// shares, never use them as independent capacity measurements.
+		snapshot := c.session.Snapshot()
+		demand := snapshot.PendingBytes >= 128<<10 || snapshot.DeliveryFlight >= 128<<10 || max(up, down) >= 1_000_000
+		probe := c.Probe()
+		base := baselines[active]
+		if base == nil {
+			base = &cellularBaseline{}
+			baselines[active] = base
+		}
+		if !demand && active > 0 && probe.SampledAtMS != lastProbe && probe.Failure == "" {
+			base.add(time.Duration(probe.RTTMillis) * time.Millisecond)
+		}
+		lastProbe = probe.SampledAtMS
+		median, sigma := base.estimate()
+		// Once fresh RTT has recovered, don't remove more accounts based on
+		// older backlog. Raw 10s thresholds still govern sustained reductions.
+		if average > 400*time.Millisecond && probe.Failure == "" && now.UnixMilli()-probe.SampledAtMS < 3000 && probe.RTTMillis <= 300 {
+			samples = 0
+		}
+		c.mu.Lock()
+		c.cellularUpBPS, c.cellularDownBPS = up/uint64(max(1, active)), down/uint64(max(1, active))
+		c.cellularBaseMS, c.cellularVariationMS = median.Milliseconds(), sigma.Milliseconds()
+		if mobile && c.rttEpoch == epoch {
+			c.session.SetMobileBaseline(median, sigma)
+		}
+		c.mu.Unlock()
 		desired := 0
 		target := mail.AllocatedAccounts
 		if mobile {
-			demand := c.session.Snapshot().PendingBytes >= 256<<10 || rate >= uint64(max(active, 1))*250000
 			// Wait for a complete window on a new bearer before reducing.
 			if now.Sub(bearerSince) < cellularRTTWindow {
 				samples = 0
@@ -178,6 +270,16 @@ func (c *Client) accountController(ctx context.Context) {
 		cancel()
 		if err == nil {
 			last = desired
+			bearerSince = time.Now()
+			if mobile {
+				policy.lastChange = bearerSince
+				c.mu.Lock()
+				if c.rttEpoch == epoch {
+					c.rttHistory = nil
+					c.rttSince = bearerSince
+				}
+				c.mu.Unlock()
+			}
 			c.RecordNetworkEvent("ACCOUNT_LIMIT_CHANGED", int64(target))
 		}
 	}

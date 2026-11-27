@@ -11,7 +11,7 @@ import (
 
 func TestRC7IdleSelectionUsesIndependentPublicationTail(t *testing.T) {
 	l := &IMAPLink{ctx: context.Background(), attached: SessionID{1}}
-	var allowed [20]bool
+	var allowed [MaxAccounts]bool
 	for i, ms := range []int{30, 75, 45, 35} {
 		a := &mailAccountState{ready: true, controlWriter: &mailPipe{interactiveTags: make(chan struct{}, 2)}, interactive: make(chan mailWork, 16)}
 		a.observeControlPublication(time.Duration(ms) * time.Millisecond)
@@ -125,7 +125,7 @@ func TestRC7ControlEOFResumesSameAccountAndStream(t *testing.T) {
 func TestRC8LoadedTailRankingRetainsHealthyRotation(t *testing.T) {
 	l := &IMAPLink{ctx: context.Background(), attached: SessionID{1}}
 	l.lastBulk.Store(time.Now().UnixNano())
-	var allowed [20]bool
+	var allowed [MaxAccounts]bool
 	for i, ms := range []int{45, 50, 53, 48} {
 		a := &mailAccountState{ready: true, controlWriter: &mailPipe{interactiveTags: make(chan struct{}, 2)}, interactive: make(chan mailWork, 16)}
 		a.observeControlPublication(time.Duration(ms) * time.Millisecond)

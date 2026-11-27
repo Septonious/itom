@@ -47,6 +47,7 @@ const prototypePhysicalBudget = 64 << 20
 const maintenanceReserve = 64 << 10
 const maximumRetentionBudget = prototypePhysicalBudget + maintenanceReserve
 const maxMailPlain = 256 << 10
+const MaxAccounts = 30
 
 type mailWork struct {
 	queuedAt time.Time
@@ -198,7 +199,7 @@ func NewIMAPLink(ctx context.Context, identity string, accounts []MailAccount, c
 }
 
 func newIMAPLink(ctx context.Context, identity string, accounts []MailAccount, client bool, store *retentionStore) (*IMAPLink, error) {
-	if !validIdentity(identity) || len(accounts) == 0 || len(accounts) > 20 {
+	if !validIdentity(identity) || len(accounts) == 0 || len(accounts) > MaxAccounts {
 		return nil, ErrProtocol
 	}
 	seen := map[string]bool{}
@@ -408,7 +409,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	}
 	l.mu.Lock()
 	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
-	var peerAllowed, preferred [20]bool
+	var peerAllowed, preferred [MaxAccounts]bool
 	preferTarget := negotiation && matched && l.client && l.healthTarget != nil
 	for i, a := range l.accounts {
 		preferred[i] = preferTarget && l.healthTarget[a.config.ID]
@@ -1535,6 +1536,7 @@ type MailAccountSnapshot struct {
 	WriterReconnects           uint64 `json:"writer_reconnects"`
 	WriterRecoveryReason       string `json:"writer_recovery_reason,omitempty"`
 	Data                       bool   `json:"data"`
+	PhysicalSockets            int    `json:"physical_sockets"`
 	RetainedBytes              int    `json:"retained_bytes"`
 	BulkHeadroomBytes          int    `json:"bulk_headroom_bytes"`
 	BulkBlocked                bool   `json:"bulk_blocked"`
@@ -1564,7 +1566,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 	}
 	l.reclaimer.mu.Unlock()
 	l.mu.Lock()
-	var verified, allocated, unavailable [20]bool
+	var verified, allocated, unavailable [MaxAccounts]bool
 	s.GrantNegotiated = l.grantSession != (SessionID{})
 	s.GrantChanging = l.grantChanging
 	for i, a := range l.accounts {
@@ -1599,6 +1601,15 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
 		line := MailAccountSnapshot{Allocated: allocated[i], Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, ControlWriter: controlWriter, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		for _, pipe := range []*mailPipe{a.control, a.writer, a.controlWriter, a.data} {
+			if pipe != nil && pipe.conn != nil {
+				select {
+				case <-pipe.done:
+				default:
+					line.PhysicalSockets++
+				}
+			}
+		}
 		line.WriterRecovering, line.WriterReconnects, line.WriterRecoveryReason = a.writerRecovering, a.writerReconnects, a.writerRecoveryReason
 		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
 		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()

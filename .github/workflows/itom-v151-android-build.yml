@@ -1,7 +1,7 @@
-name: ITOM 1.5.1 RC10 Android and Linux build
+name: ITOM 1.5.1 RC11 Android and Linux build
 on:
   push:
-    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc7, codex/itom-v151-rc9, codex/itom-v151-rc10]
+    branches: [codex/itom-v151-android-integration, codex/itom-v151-rc7, codex/itom-v151-rc9, codex/itom-v151-rc10, codex/itom-v151-rc11]
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,6 +45,9 @@ jobs:
       - name: RC7 repeated reconnect with unavailable unallocated account
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
+      - name: RC11 mobile controller, bearer and 30-account regression
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=20 -run '^TestRC11(Mobile|Bearer|Account)' .
       - name: RC10 retained system folders, protected legacy purge, EOF recovery and RTT controller
         working-directory: src/core
         run: go test -race -mod=readonly -count=20 -run 'Test(Cellular|Purge|ProtectedLegacy|FailedPurge|LifecycleCapacity)' ./mailbox ./manager ./tunnel
@@ -117,12 +120,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
       - name: Stage artifacts
         run: |
-          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc10-dev-testing.apk
-          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc10-dev-release-UNSIGNED.apk
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc11-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc11-dev-release-UNSIGNED.apk
           cd dist
           sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-RC10-development
+          name: ITOM-1.5.1-RC11-development
           path: dist/
           if-no-files-found: error

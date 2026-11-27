@@ -7,7 +7,7 @@ import (
 
 func TestRC116InteractiveSelectionPrefersFastUnqueuedAccount(t *testing.T) {
 	l := &IMAPLink{}
-	var allowed [20]bool
+	var allowed [MaxAccounts]bool
 	for i, ms := range []int{20, 30, 100} {
 		p := &mailPipe{}
 		p.latency.Store(int64(time.Duration(ms) * time.Millisecond))
@@ -33,7 +33,7 @@ func TestRC116InteractiveSelectionPrefersFastUnqueuedAccount(t *testing.T) {
 
 func TestRC116InteractiveSelectionPreservesStableTiesAndExclusion(t *testing.T) {
 	l := &IMAPLink{}
-	var allowed [20]bool
+	var allowed [MaxAccounts]bool
 	for i := 0; i < 3; i++ {
 		l.accounts = append(l.accounts, &mailAccountState{ready: true})
 		allowed[i] = true
@@ -50,12 +50,12 @@ func TestRC116InteractiveSelectionPreservesStableTiesAndExclusion(t *testing.T) 
 
 func TestRC116EmptyFetchSamplesWithoutSeparateProbe(t *testing.T) {
 	p := &mailPipe{}
-	p.observeEmptyControlFetch(time.Now().Add(-20*time.Millisecond))
+	p.observeEmptyControlFetch(time.Now().Add(-20 * time.Millisecond))
 	if p.latency.Load() < int64(10*time.Millisecond) || p.latencyAt.Load() == 0 {
 		t.Fatalf("empty FETCH not measured: %s", time.Duration(p.latency.Load()))
 	}
 	previous := p.latency.Load()
-	p.observeEmptyControlFetch(time.Now().Add(-30*time.Millisecond))
+	p.observeEmptyControlFetch(time.Now().Add(-30 * time.Millisecond))
 	if p.latency.Load() <= previous {
 		t.Fatal("empty FETCH EWMA failed to update")
 	}

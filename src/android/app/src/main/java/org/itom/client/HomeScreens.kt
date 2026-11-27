@@ -5,8 +5,8 @@ import org.json.JSONObject
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -27,6 +27,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,14 +69,11 @@ import kotlin.math.sin
         val availableHeight = maxHeight
         val wide = availableWidth >= 540.dp && availableWidth > availableHeight
         val compact = availableHeight < 570.dp || LocalDensity.current.fontScale > 1.2f
-        val heroHeight = if (wide) 200.dp else minOf(availableWidth, 286.dp) + 62.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
-        val controlsBudget = if (compact) 220.dp else 350.dp
-        val scrollControls = availableHeight < heroHeight + controlsBudget || LocalDensity.current.fontScale > 1.3f
-        val gap = if (compact) 8.dp else 12.dp
+        val gap = if (availableHeight < 420.dp) 4.dp else if (compact) 8.dp else 12.dp
         if (wide) {
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(.44f).fillMaxHeight().then(if (scrollControls) Modifier.verticalScroll(rememberScrollState()) else Modifier), verticalArrangement = Arrangement.spacedBy(gap)) {
-                    ConnectionHero(session, color, angle, toggle, (if (scrollControls) Modifier.height(heroHeight) else Modifier.weight(1f)).fillMaxWidth())
+                Column(Modifier.weight(.44f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                    ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
                     ProfileSwitch(config, true, profiles)
                 }
                 Column(Modifier.weight(.56f), verticalArrangement = Arrangement.spacedBy(gap)) {
@@ -80,10 +82,10 @@ import kotlin.math.sin
                 }
             }
         } else {
-            Column(Modifier.fillMaxSize().then(if (scrollControls) Modifier.verticalScroll(rememberScrollState()) else Modifier), verticalArrangement = Arrangement.spacedBy(gap)) {
-                ConnectionHero(session, color, angle, toggle, (if (scrollControls) Modifier.height(heroHeight) else Modifier.weight(1f)).fillMaxWidth())
+            Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(gap)) {
+                ConnectionHero(session, color, angle, toggle, Modifier.weight(1f).fillMaxWidth())
                 ProfileSwitch(config, compact, profiles)
-                if (!compact) Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Traffic", Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = Muted)
                     GlowDot(if (session.phase == Phase.CONNECTED) color else Muted)
                     Text(if (session.phase == Phase.CONNECTED) "LIVE" else "IDLE", fontSize = 10.sp, color = Muted, letterSpacing = 1.sp)
@@ -112,7 +114,7 @@ import kotlin.math.sin
         val fontScale = LocalDensity.current.fontScale
         val textBudget = 62.dp * fontScale.coerceAtLeast(1f)
         val horizontal = availableHeight < textBudget + 88.dp
-        val compactOrbSize = minOf(availableHeight, availableWidth * .35f).coerceAtLeast(48.dp)
+        val compactOrbSize = minOf(availableHeight, availableWidth * .35f).coerceAtLeast(0.dp)
         @Composable fun Label(modifier: Modifier = Modifier) {
             Column(modifier.then(if (session.error != null) Modifier.heightIn(min = 48.dp)
                 .clickable(role = Role.Button, onClickLabel = "Show disconnection reason", onClick = { showError = true }) else Modifier),
@@ -203,7 +205,7 @@ import kotlin.math.sin
             FitText(rate.substringBefore(' '), Modifier.weight(1f), maxSize = if (compact) 26 else 32)
             Text(rate.substringAfter(' '), color = Muted, fontSize = 10.sp, modifier = Modifier.padding(bottom = 3.dp))
         }
-        if (!compact) Sparkline(session.history.takeLast(24), down, color, Modifier.fillMaxWidth().height(23.dp))
+        Sparkline(session.history.takeLast(24), down, color, Modifier.fillMaxWidth().height(if (compact) 12.dp else 23.dp))
     }
 }
 
@@ -212,25 +214,25 @@ import kotlin.math.sin
     val diagnostics = remember(session.transport) { TransportDiagnostics.parse(session.transport) }
     val configured = diagnostics.root.field("ConfiguredAccounts")?.toIntOrNull()?.takeIf { it > 0 }
         ?: profile?.accounts?.count { it.enabled } ?: 0
-    val liveSession = session.phase == Phase.CONNECTING || session.phase == Phase.CONNECTED
-    val allocated = diagnostics.root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { liveSession && diagnostics.root.field("GrantNegotiated") == "true" && it in 0..configured }
-    val activeAccounts = if (liveSession) diagnostics.lines.count { it.field("Ready") == "true" } else 0
-    val capacity = diagnostics.assignedSocketCapacity(
-        configured, session.metrics.totalLines.takeIf { it > 0 } ?: profile?.totalLines ?: 0)
-    val live = if (liveSession) session.metrics.activeLines else 0
-    val sockets = if (capacity == 0) "0/0" else "$live/$capacity"
-    val state = if (allocated == null) "$activeAccounts active / — allocated / $configured configured"
-        else "$activeAccounts/$allocated/$configured active / allocated / configured"
+    val sockets = diagnostics.socketCounts(session.phase, session.metrics.activeLines, configured)
+    val color = when (sockets.band) { 1 -> Green; 2 -> Yellow; 3 -> Red; else -> Ink }
+    val text = buildAnnotatedString {
+        withStyle(SpanStyle(color = color)) { append(sockets.active.toString()) }
+        append(" / ${sockets.target?.toString() ?: "—"} / ${sockets.maximum?.toString() ?: "—"}")
+    }
     InfoCard(Modifier.fillMaxWidth(), contentPadding = if (compact) 10.dp else 14.dp) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Vital("RTT", Presentation.rtt(session.metrics.rttMs), rttColor(session.metrics.rttMs, config.settings.rttThresholds), Modifier.weight(1f))
             VerticalDivider(Modifier.height(28.dp), color = Outline)
             Vital("TCP streams", session.metrics.tcp.toString(), Ink, Modifier.weight(1f))
             VerticalDivider(Modifier.height(28.dp), color = Outline)
-            Vital("IMAP sockets", sockets, if (live > capacity) Yellow else Ink, Modifier.weight(1.3f))
+            Column(Modifier.weight(1.65f).padding(horizontal = 3.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("IMAP sockets", color = Muted, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                BasicText(text, Modifier.fillMaxWidth().semantics { contentDescription = "${sockets.active} active, ${sockets.target ?: "unknown"} targeted, ${sockets.maximum ?: "unknown"} maximum IMAP sockets" },
+                    style = MaterialTheme.typography.bodyLarge.copy(color = Ink, fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", textAlign = TextAlign.Center, lineHeight = TextUnit.Unspecified),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 21.sp, stepSize = 1.sp))
+            }
         }
-        Text(state, modifier = Modifier.fillMaxWidth().padding(top = 5.dp), textAlign = TextAlign.Center,
-            color = Muted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

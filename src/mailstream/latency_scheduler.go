@@ -32,13 +32,13 @@ const experimentalInteractiveRankingEnabled = false
 
 type interactiveRoute struct {
 	index int
-	cost time.Duration
+	cost  time.Duration
 }
 
 // Only small interactive data/control uses the ranked candidate order;
 // bulk/feedback retain the unchanged 1.1.5 placement. The admission path
 // independently validates every account after ranking.
-func (l *IMAPLink) interactiveAccountOrder(start int, allowed [20]bool, excluded *mailAccountState, interactive bool) []int {
+func (l *IMAPLink) interactiveAccountOrder(start int, allowed [MaxAccounts]bool, excluded *mailAccountState, interactive bool) []int {
 	candidates := make([]interactiveRoute, len(l.accounts))
 	now := time.Now()
 	for n := range candidates {

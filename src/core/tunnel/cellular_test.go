@@ -9,40 +9,39 @@ func TestCellularPolicy(t *testing.T) {
 	now := time.Now()
 	var p cellularPolicy
 	for i := 0; i < 60; i++ {
-		if n := p.decide(8, 400*time.Millisecond, 5, false, now.Add(time.Duration(i)*time.Second)); n != 8 {
-			t.Fatal("healthy idle shrank", n)
+		if n := p.decide(30, 400*time.Millisecond, 5, false, now.Add(time.Duration(i)*time.Second)); n != 30 {
+			t.Fatal(n)
 		}
 	}
 	now = now.Add(time.Minute)
-	if n := p.decide(8, 401*time.Millisecond, 5, true, now); n != 7 {
-		t.Fatal(n)
+	for _, v := range []struct {
+		ms   int
+		want int
+	}{{401, 27}, {650, 21}, {700, 10}, {850, 1}, {250, 1}, {250, 7}, {250, 7}, {250, 13}} {
+		if got := p.decide(30, time.Duration(v.ms)*time.Millisecond, 5, true, now); got != v.want {
+			t.Fatalf("%dms: got %d want %d", v.ms, got, v.want)
+		}
+		if v.ms > 400 && v.want > 1 {
+			if got := p.decide(30, 900*time.Millisecond, 5, true, now.Add(time.Millisecond)); got != v.want {
+				t.Fatalf("overlapping reduction %d", got)
+			}
+		}
+		now = now.Add(10 * time.Second)
 	}
-	if n := p.decide(8, 650*time.Millisecond, 5, true, now.Add(time.Second)); n != 7 {
-		t.Fatal("overlapping reduction", n)
+}
+func TestCellularPercentagesAndBaseline(t *testing.T) {
+	for _, v := range []struct{ n, p, want int }{{20, 35, 7}, {25, 35, 9}, {30, 35, 11}, {20, 20, 4}, {25, 10, 3}, {30, 20, 6}, {1, 10, 1}} {
+		if got := accountStep(v.n, v.p); got != v.want {
+			t.Fatal(v, got)
+		}
 	}
-	now = now.Add(10 * time.Second)
-	if n := p.decide(8, 650*time.Millisecond, 5, true, now); n != 4 {
-		t.Fatal(n)
+	var b cellularBaseline
+	for _, v := range []int{156, 167, 179, 191, 1000} {
+		b.add(time.Duration(v) * time.Millisecond)
 	}
-	now = now.Add(10 * time.Second)
-	if n := p.decide(8, 700*time.Millisecond, 5, true, now); n != 2 {
-		t.Fatal(n)
-	}
-	now = now.Add(10 * time.Second)
-	if n := p.decide(8, 850*time.Millisecond, 5, true, now); n != 1 {
-		t.Fatal(n)
-	}
-	if n := p.decide(8, 50*time.Millisecond, 0, true, now); n != 1 {
-		t.Fatal("missing measurement", n)
-	}
-	for i := 0; i < 10; i++ {
-		p.decide(8, 250*time.Millisecond, 5, true, now.Add(time.Duration(10+i)*time.Second))
-	}
-	if p.limit != 8 {
-		t.Fatal("no recovery", p.limit)
-	}
-	if n := p.decide(5, 0, 0, false, now.Add(time.Minute)); n != 5 {
-		t.Fatal(n)
+	base, variation := b.estimate()
+	if base != 179*time.Millisecond || variation < 17*time.Millisecond || variation > 19*time.Millisecond {
+		t.Fatal(base, variation)
 	}
 }
 func TestCellularRTTWindowAndBearerReset(t *testing.T) {

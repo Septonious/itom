@@ -87,6 +87,7 @@ type Session struct {
 	rtt, variation      time.Duration
 	pings               map[uint64]chan struct{}
 	nextPing            uint64
+	peerBearerSequence  uint64
 	accountPings        map[uint64]accountProbe
 	err                 error
 	wg                  sync.WaitGroup
@@ -471,7 +472,7 @@ func (s *Session) dispatchLoop() {
 			}
 			if selected.kind == frameData && !selected.priority {
 				at := time.Now()
-				if !s.delivery.pacer.ready(len(selected.wire), s.delivery.pacingRate(at), at) {
+				if !s.delivery.pacer.readyQuantum(len(selected.wire), s.delivery.pacingRate(at), at, s.delivery.mobile.enabled) {
 					// Priority traffic was sorted first and remains immediate.
 					s.mu.Unlock()
 					break
@@ -706,6 +707,7 @@ func (s *Session) apply(f frame) error {
 			return ErrProtocol
 		}
 		if f.kind == framePing {
+			s.observePeerBearer(f.offset)
 			return s.trySend(frame{kind: framePong, offset: f.offset}, true)
 		}
 		s.mu.Lock()
@@ -870,6 +872,9 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 	}
 	s.nextPing++
 	id := s.nextPing
+	if !s.server {
+		id = bearerPingToken(id, s.delivery.mobile.enabled)
+	}
 	done := make(chan struct{})
 	s.pings[id] = done
 	s.mu.Unlock()
@@ -888,6 +893,9 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	MobilePacing               bool   `json:"mobile_pacing"`
+	MobileCapacityBPS          int64  `json:"mobile_capacity_bytes_per_second"`
+	MobileGuarded              bool   `json:"mobile_guarded"`
 	BulkPacingRateBPS          int64  `json:"bulk_pacing_bytes_per_second"`
 	BulkPacingDeferrals        uint64 `json:"bulk_pacing_deferrals"`
 	InteractiveReceiptRTTMS    int64  `json:"interactive_receipt_rtt_ms"`
@@ -922,6 +930,11 @@ func (s *Session) Snapshot() Snapshot {
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
+	snapshot.MobilePacing = s.delivery.mobile.enabled
+	if snapshot.MobilePacing {
+		snapshot.MobileCapacityBPS = int64(s.delivery.mobile.capacity)
+		snapshot.MobileGuarded = time.Now().Before(s.delivery.mobile.guardUntil)
+	}
 	if s.err != nil {
 		snapshot.Failure = s.err.Error()
 	}

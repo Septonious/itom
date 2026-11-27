@@ -18,7 +18,28 @@ fun diagnosticLevel(code: String): DiagnosticLevel = when {
 fun JsonObject.field(name: String): String? = (get(name) as? JsonPrimitive)?.contentOrNull
 fun JsonObject.objectField(name: String): JsonObject? = get(name) as? JsonObject
 
+data class SocketCounts(val active: Int, val target: Int?, val maximum: Int?) {
+    val band: Int get() = when {
+        target == null || target == 0 -> 0
+        active == target -> 1
+        active * 2 < target -> 3
+        else -> 2
+    }
+}
+
 data class TransportDiagnostics(val root: JsonObject, val lines: List<JsonObject>) {
+    fun socketCounts(phase: Phase, active: Int, configured: Int): SocketCounts {
+        val live = phase == Phase.CONNECTED || phase == Phase.CONNECTING
+        if (!live) return SocketCounts(0, null, null)
+        if (root.field("GrantNegotiated") != "true") return SocketCounts(active.coerceAtLeast(0), null, null)
+        val allocated = root.field("AllocatedAccounts")?.toIntOrNull()?.takeIf { it in 0..configured }
+        val maximum = allocated?.times(4)
+        val target = maximum?.let { max ->
+            root.field("TargetSocketCapacity")?.toIntOrNull()?.takeIf { it in 0..max }
+                ?: root.field("CellularDesiredAccounts")?.toIntOrNull()?.takeIf { it > 0 }?.coerceAtMost(allocated!!)?.times(4) ?: max
+        }
+        return SocketCounts(active.coerceAtLeast(0), target, maximum)
+    }
     /** Four physical IMAP sockets per allocated account. */
     fun assignedSocketCapacity(configuredAccounts: Int, fallback: Int): Int {
         root.field("AssignedSocketCapacity")?.toIntOrNull()?.takeIf { it in 0..4096 }?.let { return it }

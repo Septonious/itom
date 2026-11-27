@@ -54,7 +54,7 @@ func (a *mailAccountState) observeControlPublication(d time.Duration) {
 	a.controlServiceAt.Store(time.Now().UnixNano())
 }
 
-func (l *IMAPLink) idleInteractiveOrder(start int, allowed [20]bool, excluded *mailAccountState) []int {
+func (l *IMAPLink) idleInteractiveOrder(start int, allowed [MaxAccounts]bool, excluded *mailAccountState) []int {
 	now := time.Now()
 	bulk := l.lastBulk.Load()
 	loaded := bulk != 0 && now.Sub(time.Unix(0, bulk)) < time.Second
