@@ -137,6 +137,8 @@ type mailAccountState struct {
 
 type IMAPLink struct {
 	lastBulk            atomic.Int64
+	mobileRecovery      atomic.Bool
+	recoveryMu          sync.Mutex
 	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
 	ctx                 context.Context
@@ -1540,6 +1542,8 @@ type MailAccountSnapshot struct {
 	WriterRecoveryReason              string `json:"writer_recovery_reason,omitempty"`
 	Data                              bool   `json:"data"`
 	PhysicalSockets                   int    `json:"physical_sockets"`
+	ScaleBlocked                      bool   `json:"scale_blocked"`
+	Failed                            bool   `json:"failed"`
 	RetainedBytes                     int    `json:"retained_bytes"`
 	BulkHeadroomBytes                 int    `json:"bulk_headroom_bytes"`
 	BulkBlocked                       bool   `json:"bulk_blocked"`
@@ -1603,7 +1607,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		s.RetainedBytes += a.spent
 		s.ReservedBytes += a.reserved
 		s.RecoveredBytes += a.recovered
-		line := MailAccountSnapshot{Allocated: allocated[i], Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, ControlWriter: controlWriter, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
+		line := MailAccountSnapshot{Allocated: allocated[i], ScaleBlocked: a.scaleBlocked.Load(), Failed: a.failed, Housekeeping: borrowed[a], Account: a.config.ID, Stage: a.stage, Failure: a.failure, Ready: a.ready, Writer: writer, ControlWriter: controlWriter, Data: !a.failed && a.ready && a.id != (SessionID{}), RetainedBytes: a.spent}
 		for _, pipe := range []*mailPipe{a.control, a.writer, a.controlWriter, a.data} {
 			if pipe != nil && pipe.conn != nil {
 				select {

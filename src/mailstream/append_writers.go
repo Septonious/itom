@@ -153,7 +153,15 @@ func (a *mailAccountState) recoverIdleAppendWriters(writer **mailPipe, completed
 		a.link.notify()
 	}()
 	companion := a.closeAppendWriters(writer, completed, inFlight, wait)
+	release, slotErr := a.link.recoverySlot(retryCtx)
+	if slotErr != nil {
+		return false
+	}
+	defer release()
 	for tries := uint(0); a.ctx.Err() == nil && !a.parking.Load(); tries++ {
+		if a.link.mobileRecovery.Load() && a.link.servingCount() >= 4 {
+			return false
+		}
 		if err := a.openAppendWriters(retryCtx, writer, companion); err == nil {
 			a.mu.Lock()
 			a.writerReconnects++

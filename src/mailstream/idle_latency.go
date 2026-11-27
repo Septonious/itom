@@ -124,6 +124,11 @@ func (a *mailAccountState) recoverControlReader(old *mailPipe) (*mailPipe, error
 	a.phase("control_reconnecting")
 	ctx, cancel := context.WithTimeout(a.ctx, 4*time.Second)
 	defer cancel()
+	release, slotErr := a.link.recoverySlot(ctx)
+	if slotErr != nil {
+		return nil, slotErr
+	}
+	defer release()
 	select {
 	case a.link.login <- struct{}{}:
 	case <-ctx.Done():

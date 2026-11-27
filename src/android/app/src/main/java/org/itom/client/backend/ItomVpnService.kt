@@ -313,7 +313,7 @@ class ItomVpnService : VpnService() {
                 if (rebinding || !underlyingAvailable) {
                     exitLookup?.cancel(); exitLookup = null; exitRequested = false
                     backend.machine.exitIdentity(g, profileId, null)
-                } else if (active > 0 && backend.snapshot.value.phase == Phase.CONNECTED && !exitRequested) {
+                } else if (active > 0 && backend.snapshot.value.phase == Phase.CONNECTED && !exitRequested && stats.optLong("RTTMillis", 0) in 1L..700L && stats.optLong("CellularRTTAverageMillis", 0) <= 700) {
                     exitRequested = true
                     exitLookup = scope.launch {
                         val identity = try {
@@ -327,10 +327,11 @@ class ItomVpnService : VpnService() {
                 val down = stats.getLong("Download"); val up = stats.getLong("Upload")
                 if (down > previousDown || up > previousUp) lastDemandAt = now
                 val elapsed = (now - previous).coerceAtLeast(1)
-                backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
+                val acceptedMetrics = backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
                     (up - previousUp).coerceAtLeast(0) * 8000 / elapsed,
                     stats.optInt("RTTMillis").takeIf { active > 0 && it > 0 },
                     stats.getInt("TCP"), active, stats.getInt("TotalLines")), stats.toString(), now)
+                if (!acceptedMetrics && backend.snapshot.value.generation == g) networkEvent("invalid_metrics_sample", selectedUnderlying.get())
                 previous = now; previousDown = down; previousUp = up
                 if (!rebinding && now - lastTransportHealthCheck >= 5000 && !restartForNetwork.get()) {
                     lastTransportHealthCheck = now
@@ -362,7 +363,8 @@ class ItomVpnService : VpnService() {
                             mailboxOutstanding = outstanding,
                             selectiveAttempts = softRebindAttempts.get()
                         )
-                        when (transportRecoveryStep(progress)) {
+                        val cellularRecovery = kindOf(physical?.let { capabilities[it] }) == NetworkKind.MOBILE && active >= 16
+                        when (if (cellularRecovery) RecoveryStep.NONE else transportRecoveryStep(progress)) {
                             RecoveryStep.NONE -> Unit
                             RecoveryStep.RESTART -> if (now - lastSoftRebindAt.get() >= 20_000) {
                                 networkEvent("transport_no_delivery_last_resort", selectedUnderlying.get())

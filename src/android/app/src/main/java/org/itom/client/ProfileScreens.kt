@@ -60,15 +60,11 @@ import java.io.ByteArrayOutputStream
                         IconBadge(Glyph.SERVERS, color = if (active) Blue else Muted)
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
                             ExitIdentityTitle(session.exitIdentities[profile.profileId])
-                            SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled")
+                            SmallNote("${profile.accounts.count { it.enabled }} accounts")
                         }
                         if (active) StatusLabel("Selected", Blue)
                     }
                     if (profile.profileId in config.incompleteProfileIds) Text("Setup required", style = MaterialTheme.typography.labelSmall, color = Yellow)
-                    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                        Column(Modifier.weight(1f)) { SmallNote("User ID"); Text(profile.userId) }
-                        Column(Modifier.weight(1f)) { SmallNote("Max IMAP sockets"); Text(profile.totalLines.toString()) }
-                    }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         OutlinedButton(enabled = !busy, onClick = { onEdit(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) { Text("Edit") }
                         TextButton(modifier = Modifier.weight(1f), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) {
@@ -78,6 +74,9 @@ import java.io.ByteArrayOutputStream
                     if (expanded == profile.profileId) {
                         HorizontalDivider(color = Outline)
                         SmallNote("Server ID: ${profile.serverId}")
+                        SmallNote("User ID: ${profile.userId}")
+                        SmallNote("Provider: ${profile.providerId}")
+                        SmallNote("Max IMAP sockets: ${profile.totalLines}")
                         SmallNote("Folders: ${profile.mailboxNamespace}")
                         SmallNote(if (profile.profileId in config.incompleteProfileIds) "Enter the key and account credentials in the editor." else "The key is protected by Android Keystore.")
                         profile.accounts.forEachIndexed { index, account -> SmallNote("Account ${index + 1} · ${account.host}:${account.port} · ${if (account.enabled) "enabled" else "disabled"}") }

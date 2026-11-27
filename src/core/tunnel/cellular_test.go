@@ -46,7 +46,7 @@ func TestCellularPercentagesAndBaseline(t *testing.T) {
 }
 func TestCellularRTTWindowAndBearerReset(t *testing.T) {
 	now := time.Now()
-	c := &Client{networkType: "cellular", rttHistory: []rttSample{{now.Add(-10 * time.Second), 5 * time.Second}, {now.Add(-9 * time.Second), 100 * time.Millisecond}, {now.Add(-5 * time.Second), 800 * time.Millisecond}, {now, 200 * time.Millisecond}}}
+	c := &Client{networkType: "cellular", rttHistory: []rttSample{{now.Add(-5 * time.Second), 5 * time.Second}, {now.Add(-4 * time.Second), 100 * time.Millisecond}, {now.Add(-2 * time.Second), 800 * time.Millisecond}, {now, 200 * time.Millisecond}}}
 	avg, n, epoch, mobile := c.cellularRTT(now)
 	if !mobile || n != 3 || avg != 1100*time.Millisecond/3 {
 		t.Fatalf("average %v samples %d", avg, n)
@@ -85,7 +85,7 @@ func TestCellularFourAccountMinimum(t *testing.T) {
 	}
 }
 
-func TestRC12CellularStallCannotReduce(t *testing.T) {
+func TestRC13CellularStallRecovery(t *testing.T) {
 	now := time.Now()
 	p := cellularPolicy{}
 	for i := 0; i < 8; i++ {
@@ -95,8 +95,8 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
 		}
 	}
 	p = cellularPolicy{limit: 4}
-	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 6 {
-		t.Fatal("recovery requires expansion", got)
+	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 4 {
+		t.Fatal("timeout must not expand", got)
 	}
 	p = cellularPolicy{limit: 8}
 	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, serviceCapacity: 20, publications: 5}
@@ -104,8 +104,8 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
 		t.Fatal("bulk reduction", got)
 	}
 	e.active = 5
-	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 8 {
-		t.Fatal("failed reduction rollback", got)
+	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 4 {
+		t.Fatal("sustained congestion must drain toward four", got)
 	}
 	e = cellularEvidence{active: 4, streams: 15, fresh: true}
 	if canLearnCellularBaseline(e, 200, false, true) || canLearnCellularBaseline(cellularEvidence{fresh: true}, 1519, false, true) {
@@ -113,5 +113,36 @@ func TestRC12CellularStallCannotReduce(t *testing.T) {
 	}
 	if !canLearnCellularBaseline(cellularEvidence{active: 8, fresh: true}, 228, false, true) {
 		t.Fatal("healthy idle not learned")
+	}
+}
+
+func TestRC13WorstCaseCellularReplay(t *testing.T) {
+	now := time.Unix(1000, 0)
+	p := cellularPolicy{}
+	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, retries: true, queueBytes: 2610000, stalled: true}
+	if got := p.decideObserved(8, 4591*time.Millisecond, 2, true, now, e); got != 5 {
+		t.Fatal(got)
+	}
+	e.timeout = true
+	e.fresh = false
+	e.active = 7
+	if got := p.decideObserved(8, 5*time.Second, 1, true, now.Add(2*time.Second), e); got != 5 {
+		t.Fatal("emergency cooldown", got)
+	}
+	if got := p.decideObserved(8, 5*time.Second, 1, true, now.Add(3*time.Second), e); got != 4 {
+		t.Fatal("timeout must drain", got)
+	}
+	for i := 4; i < 80; i++ {
+		e.active = 4
+		if got := p.decideObserved(8, 5*time.Second, 0, true, now.Add(time.Duration(i)*time.Second), e); got != 4 {
+			t.Fatal("floor", got)
+		}
+	}
+	e = cellularEvidence{active: 4, streams: 8, fresh: true}
+	if got := p.decideObserved(8, 250*time.Millisecond, 2, true, now.Add(81*time.Second), e); got != 4 {
+		t.Fatal("expansion without confirmation", got)
+	}
+	if got := p.decideObserved(8, 250*time.Millisecond, 2, true, now.Add(86*time.Second), e); got != 6 {
+		t.Fatal("recovery expansion", got)
 	}
 }

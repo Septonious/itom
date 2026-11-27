@@ -196,6 +196,7 @@ func (s *Session) startGrantUpdates(get func() []string) {
 }
 func (s *Session) grantWorker() {
 	var pending *grantRequest
+	var failures int
 	for {
 		if pending == nil {
 			select {
@@ -206,19 +207,46 @@ func (s *Session) grantWorker() {
 			}
 		}
 		ctx, cancel := context.WithTimeout(s.ctx, 15*time.Second)
+		epoch := s.controllerEpoch.Load()
+		watchDone := make(chan struct{})
+		go func() {
+			defer close(watchDone)
+			tick := time.NewTicker(250 * time.Millisecond)
+			defer tick.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-tick.C:
+					if s.controllerEpoch.Load() != epoch {
+						cancel()
+						return
+					}
+				}
+			}
+		}()
 		err := s.applyLiveGrant(ctx, *pending)
 		cancel()
+		<-watchDone
 		if err == nil {
 			pending = nil
+			failures = 0
 			continue
+		}
+		failures++
+		delay := time.Second
+		if l, ok := s.link.(*IMAPLink); ok && l.mobileRecovery.Load() {
+			delay = time.Second * time.Duration(1<<min(failures, 4))
 		}
 		select {
 		case <-s.ctx.Done():
 			return
 		case req := <-s.grantRequests:
 			pending = &req
-		case <-time.After(time.Second):
+			failures = 0
+		case <-time.After(delay):
 		}
+
 	}
 }
 func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
@@ -245,6 +273,9 @@ func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
 	}
 	// Keep established paths first when a mobile controller limits the count.
 	limit := int(s.activeLimit.Load())
+	if s.controllerManaged.Load() {
+		limit = int(s.controllerLimit.Load())
+	}
 	if limit <= 0 || limit > len(req.ids) {
 		limit = len(req.ids)
 	}
@@ -255,6 +286,9 @@ func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
 			a.mu.Lock()
 			serving := a.ready && a.id == s.cipher.id && !a.scaleBlocked.Load()
 			a.mu.Unlock()
+			if !ready && l.mobileRecovery.Load() && len(target) >= max(1, int(s.minimumActive.Load())) {
+				continue
+			}
 			if serving == ready && len(target) < limit {
 				target = append(target, name)
 			}

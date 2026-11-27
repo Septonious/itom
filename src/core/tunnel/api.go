@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc12-dev"
+const TransportRevision = "itom-1-5-1-rc13-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -61,6 +61,7 @@ type ClientSnapshot struct {
 	ConfiguredAccounts                                 int
 	AllocatedAccounts                                  int
 	AssignedSocketCapacity                             int
+	PhysicalSocketCount                                int
 	GrantNegotiated                                    bool
 	CellularRTTAverageMillis                           int64
 	CellularRTTSamples                                 int
@@ -74,6 +75,7 @@ type LineDiagnostic struct {
 	AccountID                       string
 	Ready                           bool
 	ActiveLines, TotalLines         int
+	PhysicalSockets                 int
 	RTTMillis, IMAPLatencyMillis    int64
 	RTTFresh                        bool
 	RTTAgeMillis                    int64
@@ -437,19 +439,22 @@ func (c *Client) Snapshot() ClientSnapshot {
 				break
 			}
 		}
-		active := line.PhysicalSockets
+		s.PhysicalSocketCount += line.PhysicalSockets
+		active := servingSocketCount(line)
 		s.ActiveLines += active
 		lineCapacity := 0
 		if line.Allocated {
 			lineCapacity = mailstream.ConnectionsPerAccount
 		}
-		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: lineCapacity,
+		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, PhysicalSockets: line.PhysicalSockets, ActiveLines: active, TotalLines: lineCapacity,
 			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, RTTAgeMillis: line.RTTAgeMillis, IMAPLatencyMillis: line.IMAPLatencyMillis,
 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})
 	}
 	c.mu.Lock()
 	c.sampleAccountRates(s.Lines, time.Now())
-	s.RTTMillis = c.probe.RTTMillis
+	if c.probe.Failure == "" && time.Now().UnixMilli()-c.probe.SampledAtMS < 5000 {
+		s.RTTMillis = c.probe.RTTMillis
+	}
 	average, samples := c.cellularRTTLocked(time.Now())
 	s.CellularRTTAverageMillis, s.CellularRTTSamples, s.CellularDesiredAccounts = average.Milliseconds(), samples, c.cellularDesired
 	if mail.GrantNegotiated {
@@ -506,4 +511,11 @@ func diagnosticPath(dir string) string { return filepath.Join(dir, "transport-tr
 
 func (c *Client) PingAccount(ctx context.Context, account string) (time.Duration, error) {
 	return c.session.PingAccount(ctx, account)
+}
+
+func servingSocketCount(line mailstream.MailAccountSnapshot) int {
+	if !line.Allocated || line.ScaleBlocked || line.Failed {
+		return 0
+	}
+	return min(mailstream.ConnectionsPerAccount, max(0, line.PhysicalSockets))
 }

@@ -106,24 +106,34 @@ func (s *Session) setActiveAccountsLocked(ctx context.Context, l *IMAPLink, ids 
 			return ErrClosed
 		}
 	}
-	// Login concurrently, bounded by the shared provider startup semaphore.
-	results := make(chan error, len(ids))
-	for _, name := range ids {
-		a := l.account(name)
-		go func() { results <- a.ensureActive(ctx, s.cipher.id) }()
-	}
-	for range ids {
-		select {
-		case err := <-results:
-			if err != nil {
+	// Recover only essential paths serially on a congested bearer. Normal
+	// operation still uses the provider login semaphore and parallel attach.
+	if l.mobileRecovery.Load() {
+		for _, name := range ids {
+			if err := l.account(name).ensureActive(ctx, s.cipher.id); err != nil {
 				return err
 			}
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-s.ctx.Done():
-			return ErrClosed
+		}
+	} else {
+		workCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		results := make(chan error, len(ids))
+		for _, name := range ids {
+			a := l.account(name)
+			go func() { results <- a.ensureActive(workCtx, s.cipher.id) }()
+		}
+		var first error
+		for range ids {
+			if err := <-results; err != nil && first == nil {
+				first = err
+				cancel()
+			}
+		}
+		if first != nil {
+			return first
 		}
 	}
+
 	s.accountSetVersion++
 	revision := s.accountSetVersion
 	if err = s.send(ctx, frame{kind: frameAccountSet, offset: revision, data: []byte(strings.Join(ids, ","))}, true); err != nil {
@@ -283,9 +293,23 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
 			}
 		}
 	}
+	if l.mobileRecovery.Load() && l.servingCount() >= minimum {
+		kept := ids[:0]
+		for _, name := range ids {
+			a := l.account(name)
+			a.mu.Lock()
+			ready := a.ready && a.id == s.cipher.id && !a.failed && !a.scaleBlocked.Load()
+			a.mu.Unlock()
+			if ready {
+				kept = append(kept, name)
+			}
+		}
+		ids = kept
+	}
 	if len(ids) < minimum {
 		return ErrCapacity // keep surviving paths; do not commit a smaller active set
 	}
+	// The controller publishes its desired limit before the asynchronous operation.
 	s.activeLimit.Store(int32(requested))
 	target := map[string]bool{}
 	for _, id := range ids {
@@ -305,4 +329,50 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
 		return nil
 	}
 	return s.setActiveAccountsLocked(ctx, l, ids)
+}
+
+// Desired is safe to publish from the decision loop while a grant operation is
+// blocked. No provider I/O or accountSetMu is involved.
+func (s *Session) SetMobileRecovery(congested bool, desired int) {
+	if l, ok := s.link.(*IMAPLink); ok && !s.server {
+		if l.mobileRecovery.Swap(congested) != congested {
+			s.controllerEpoch.Add(1)
+		}
+	}
+	if s.controllerLimit.Swap(int32(desired)) != int32(desired) || !s.controllerManaged.Swap(true) {
+		s.controllerEpoch.Add(1)
+	}
+	s.controllerManaged.Store(true)
+}
+func (l *IMAPLink) servingCount() int {
+	n := 0
+	for _, a := range l.accounts {
+		a.mu.Lock()
+		ready := a.ready && !a.failed && a.data != nil && a.writer != nil && a.controlWriter != nil && !a.scaleBlocked.Load()
+		a.mu.Unlock()
+		if ready {
+			n++
+		}
+	}
+	return n
+}
+
+// An unavailable optional actor must not start a wave of TLS logins on a
+// congested link. Its durable debt remains available for later reclamation.
+func (l *IMAPLink) recoverySlot(ctx context.Context) (func(), error) {
+	if !l.mobileRecovery.Load() {
+		return func() {}, nil
+	}
+	for !l.recoveryMu.TryLock() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+	if l.mobileRecovery.Load() && l.servingCount() >= 4 {
+		l.recoveryMu.Unlock()
+		return nil, ErrCapacity
+	}
+	return l.recoveryMu.Unlock, nil
 }

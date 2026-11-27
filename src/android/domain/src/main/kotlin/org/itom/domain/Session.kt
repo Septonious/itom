@@ -54,7 +54,7 @@ class SessionMachine {
     @Synchronized fun sample(generation: Long, metrics: Metrics, transport: String, sampledAt: Long?): Boolean {
         val s = mutable.value
         if (s.generation != generation || s.phase !in setOf(Phase.CONNECTING, Phase.CONNECTED)) return false
-        demand(metrics.downBps >= 0 && metrics.upBps >= 0 && metrics.tcp >= 0 && metrics.activeLines in 0..metrics.totalLines && (metrics.rttMs == null || metrics.rttMs >= 0), "INVALID_METRICS")
+        if (metrics.downBps < 0 || metrics.upBps < 0 || metrics.tcp < 0 || metrics.activeLines !in 0..metrics.totalLines || (metrics.rttMs != null && metrics.rttMs < 0)) return false // telemetry cannot terminate the VPN
         mutable.value = s.copy(metrics = metrics, transport = transport, sampledAt = sampledAt, history = if (s.phase == Phase.CONNECTED) (s.history + Sample(metrics.downBps, metrics.upBps)).takeLast(60) else s.history)
         return true
     }

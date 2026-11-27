@@ -144,3 +144,41 @@ func TestRC12MobileStallGuardsNextBurstWithoutInventingCapacity(t *testing.T) {
 		t.Fatal("guard did not expire", got)
 	}
 }
+
+func TestRC13MobileDrainWithoutReceipts(t *testing.T) {
+	now := time.Unix(1000, 0)
+	m := mobileFlow{}
+	m.reset(true)
+	c := m.capacity
+	m.progress(now, 0, 750000)
+	m.progress(now.Add(3*time.Second), 0, 750000)
+	if !m.draining || m.capacity != c || m.pacing(now.Add(3*time.Second)) > 64000 {
+		t.Fatal("did not drain", m)
+	}
+	if !m.permitBulkRetry(now.Add(3 * time.Second)) {
+		t.Fatal("first retry denied")
+	}
+	m.noteBulkRetry(now.Add(3 * time.Second))
+	if m.permitBulkRetry(now.Add(4 * time.Second)) {
+		t.Fatal("retry burst")
+	}
+	m.progress(now.Add(9*time.Second), 0, 750000)
+	if !m.draining {
+		t.Fatal("timer-only recovery")
+	}
+	m.progress(now.Add(10*time.Second), 750000, 0)
+	m.observeDelay(250*time.Millisecond, 200*time.Millisecond, now.Add(11*time.Second), false)
+	m.observeDelay(250*time.Millisecond, 200*time.Millisecond, now.Add(12*time.Second), false)
+	if m.draining || m.recoveryGain != .1 {
+		t.Fatal("recovery", m)
+	}
+	if got := m.pacing(now.Add(time.Minute)); got > c*.11 {
+		t.Fatal("expired guard caused burst", got)
+	}
+	for i := 0; i < 10; i++ {
+		m.observeRate(c, now.Add(time.Duration(i+13)*time.Second), true, 250*time.Millisecond, 200*time.Millisecond)
+	}
+	if m.recoveryGain != 0 {
+		t.Fatal("healthy progress failed to restore capacity", m.recoveryGain)
+	}
+}

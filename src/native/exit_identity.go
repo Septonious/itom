@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"itom.local/core/wire"
@@ -17,18 +18,36 @@ import (
 // not Android's network resolver, a routing-rule verdict, or a direct socket.
 // It follows the configured server-side exit and cannot fall back to direct.
 func (c *Client) ExitIdentity() (string, error) {
-	const host = "www.cloudflare.com"
 	pool := c.currentPool()
 	if pool == nil || c.rebinding.Load() {
 		return "", errors.New("EXIT_NOT_CONNECTED")
 	}
-	ctx, cancel := context.WithTimeout(c.ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(c.ctx, 18*time.Second)
+	defer cancel()
+	// Both targets are public Cloudflare resolver/HTTP trace endpoints. TLS
+	// still verifies one.one.one.one, and the dial always goes through pool.Open.
+	for _, target := range []string{"1.1.1.1", "2606:4700:4700::1111"} {
+		attempt, stop := context.WithTimeout(ctx, 8*time.Second)
+		result, err := c.exitIdentityFamily(attempt, pool, target)
+		stop()
+		if err == nil {
+			return result, nil
+		}
+		if ctx.Err() != nil {
+			break
+		}
+	}
+	return "", errors.New("EXIT_IP_UNAVAILABLE")
+}
+func (c *Client) exitIdentityFamily(parent context.Context, pool transportPool, target string) (string, error) {
+	const host = "one.one.one.one"
+	ctx, cancel := context.WithTimeout(parent, 8*time.Second)
 	defer cancel()
 	transport := &http.Transport{DisableKeepAlives: true, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}, DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
 		if address != host+":443" {
 			return nil, errors.New("EXIT_TARGET_INVALID")
 		}
-		stream, _, err := pool.Open(ctx, wire.Connect{Host: host, Port: 443})
+		stream, _, err := pool.Open(ctx, wire.Connect{Host: target, Port: 443})
 		if err != nil {
 			return nil, err
 		}
@@ -61,6 +80,10 @@ func (c *Client) ExitIdentity() (string, error) {
 	result, err := parseExitTrace(string(raw))
 	if err != nil {
 		return "", err
+	}
+	ip, parseErr := netip.ParseAddr(result.IP)
+	if parseErr != nil || ip.Unmap().Is4() != netip.MustParseAddr(target).Is4() {
+		return "", errors.New("EXIT_IP_FAMILY")
 	}
 	if c.currentPool() != pool || c.rebinding.Load() || ctx.Err() != nil {
 		return "", errors.New("EXIT_GENERATION_CHANGED")

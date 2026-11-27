@@ -9,6 +9,7 @@ import (
 	"itom.local/core/mailbox"
 	"itom.local/core/probe"
 	"itom.local/core/servercfg"
+	"itom.local/core/tunnel"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,7 +71,13 @@ func (u *UI) system(action string) error {
 		return err
 	}
 	if action == "stop" {
-		return VerifyCapacityState(u.State)
+		if err := VerifyCapacityState(u.State); err != nil {
+			return err
+		}
+	}
+	if action == "start" || action == "stop" {
+		out, _ := exec.Command("systemctl", "is-active", "itom.service").Output()
+		fmt.Fprintf(u.Out, "Service: %s\n", strings.TrimSpace(string(out)))
 	}
 	return nil
 }
@@ -97,13 +104,20 @@ func (u *UI) Run() error {
 		return e
 	}
 	for {
-		fmt.Fprintln(u.Out, "\nITOM — server manager\nEncrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n18. Update from newest ITOM .bin in /tmp\n0. Exit")
+		fmt.Fprintf(u.Out, "\nITOM — server manager (%s)\n", tunnel.TransportRevision)
+		fmt.Fprintln(u.Out, "Encrypted IMAP transport for Android VPN.\n1. Status\n2. Initialize server\n3. Mail accounts\n4. Clients\n5. Export Android profile\n6. Check IMAP accounts\n7. Start service\n8. Stop service\n9. Restart service\n10. Live logs\n11. Install/update service\n12. Live packet trace\n13. Export full diagnostics\n14. Server logging and tracing\n15. Live client traffic\n16. Uninstall ITOM from server\n17. Server message\n18. Update from newest ITOM .bin in /tmp\n0. Exit")
 		s, e := u.ask("Selection")
 		if e == io.EOF {
 			return nil
 		}
 		if e != nil {
 			return e
+		}
+		if s != "0" && s != "2" && s != "11" && s != "16" && s != "18" {
+			if _, err := os.Stat(u.db()); errors.Is(err, os.ErrNotExist) {
+				fmt.Fprintln(u.Out, "Server not initialized. Select 2 to initialize.")
+				continue
+			}
 		}
 		switch s {
 		case "0":
@@ -313,10 +327,10 @@ func (u *UI) accounts() error {
 	if e = cfg.Validate(); e != nil {
 		return e
 	}
-	return servercfg.Update(u.db(), func(c *servercfg.Config) error {
-		_, err := c.AddAccount(cfg)
+	if err := u.validateNewAccount(cfg); err != nil {
 		return err
-	})
+	}
+	return servercfg.Update(u.db(), func(c *servercfg.Config) error { _, err := c.AddAccount(cfg); return err })
 }
 func (u *UI) users() error {
 	c, e := servercfg.Load(u.db())
@@ -632,5 +646,23 @@ func (u *UI) diagnostics() error {
 		return e
 	}
 	fmt.Fprintln(u.Out, "Saved. Restart the service using menu item 9. Android tracing is controlled separately.")
+	return nil
+}
+
+// Authentication and NOOP only, before persisting a new mailbox. No legacy
+// folders are selected or modified. Password echo remains unchanged.
+func (u *UI) validateNewAccount(cfg mailbox.Config) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	c, err := mailbox.Dial(ctx, cfg, []string{"itom-validation"})
+	if err != nil {
+		return fmt.Errorf("IMAP check failed (%s)", mailbox.FailureReason(err))
+	}
+	defer c.Close()
+	_, err = c.Ping(ctx)
+	if err != nil {
+		return fmt.Errorf("IMAP NOOP failed (%s)", mailbox.FailureReason(err))
+	}
+	fmt.Fprintln(u.Out, "IMAP authentication and NOOP successful.")
 	return nil
 }

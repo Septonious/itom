@@ -93,7 +93,11 @@ func (u *UI) accountMaintenance(cfg servercfg.Config, choice string) error {
 	report, err := admin.PurgeAll(ctx)
 	labels := map[string]string{"DELETED": "folder deleted", "KEPT_EMPTY": "folder retained and emptied", "NOT_EMPTIED": "purge not confirmed", "UNKNOWN": "outcome not confirmed", "UNSUBSCRIBE_REFUSED": "could not remove subscription", "SKIPPED_PROTECTED": "protected legacy folder retained untouched"}
 	for _, item := range report.Items {
-		fmt.Fprintf(u.Out, "%q — %s\n", item.Name, labels[item.Outcome])
+		fmt.Fprintf(u.Out, "%q — %s", item.Name, labels[item.Outcome])
+		if item.Reason != "" {
+			fmt.Fprintf(u.Out, " (%s)", item.Reason)
+		}
+		fmt.Fprintln(u.Out)
 	}
 	if report.Verified {
 		fmt.Fprintln(u.Out, "Verification complete for non-protected folders. Remaining folders:")

@@ -22,7 +22,7 @@ type Folder struct {
 	Delimiter rune
 	Attrs     []imap.MailboxAttr
 }
-type PurgeItem struct{ Name, Outcome string }
+type PurgeItem struct{ Name, Outcome, Reason string }
 type PurgeReport struct {
 	Items     []PurgeItem
 	Remaining []string
@@ -295,7 +295,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
 		}
 		if protected[f.Name] {
 			if !reportedProtected[f.Name] {
-				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
+				report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: "SKIPPED_PROTECTED"})
 				reportedProtected[f.Name] = true
 			}
 			return nil
@@ -304,7 +304,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
 			return err
 		}
 		outcome, err := purgeOne(ctx, a, f.Name, keep)
-		report.Items = append(report.Items, PurgeItem{f.Name, outcome})
+		report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: outcome, Reason: FailureReason(err)})
 		if err == nil {
 			delete(unresolved, f.Name)
 			if outcome == "KEPT_EMPTY" {
@@ -365,7 +365,7 @@ func purgeFolders(ctx context.Context, a purgeBackend) (PurgeReport, error) {
 		report.Remaining = append(report.Remaining, f.Name)
 		if protected[f.Name] {
 			if !reportedProtected[f.Name] {
-				report.Items = append(report.Items, PurgeItem{f.Name, "SKIPPED_PROTECTED"})
+				report.Items = append(report.Items, PurgeItem{Name: f.Name, Outcome: "SKIPPED_PROTECTED"})
 			}
 			continue
 		}

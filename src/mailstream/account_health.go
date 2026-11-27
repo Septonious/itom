@@ -29,6 +29,9 @@ func (s *Session) reportAccountHealth(l *IMAPLink) {
 			if !negotiated {
 				continue
 			}
+			if !proposed && l.mobileRecovery.Load() && l.servingCount() >= max(1, int(s.minimumActive.Load())) {
+				continue
+			}
 			var unavailable []string
 			for _, a := range l.accounts {
 				name := a.config.ID
