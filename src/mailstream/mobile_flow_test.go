@@ -376,3 +376,36 @@ func TestMobileReverseDemandReservesControlHeadroom(t *testing.T) {
 		t.Fatal("healthy delivery did not resume probing", m.probeRate)
 	}
 }
+
+func TestMobileDrainTicksPreserveReceiptEvidence(t *testing.T) {
+	now := time.Unix(1000, 0)
+	m := mobileFlow{}
+	m.reset(true)
+	m.progress(now, 0, 4*maxWire)
+	m.progress(now.Add(3*time.Second), 0, 4*maxWire)
+	m.progress(now.Add(4*time.Second), uint64(maxWire), 3*maxWire)
+	m.progress(now.Add(8*time.Second), uint64(maxWire), 3*maxWire)
+	if !m.draining || m.recoverySamples != 1 {
+		t.Fatal("drain tick discarded receipt evidence", m)
+	}
+	m.progress(now.Add(9*time.Second), uint64(2*maxWire), 3*maxWire)
+	m.progress(now.Add(10*time.Second), uint64(3*maxWire), 2*maxWire)
+	if m.draining {
+		t.Fatal("drained flight did not recover", m)
+	}
+}
+
+func TestMobileWindowAllowsBoundedLongRound(t *testing.T) {
+	now := time.Unix(1000, 0)
+	m := mobileFlow{}
+	m.reset(true)
+	m.probeRate = 1_000_000
+	m.lastBulk = 700 * time.Millisecond
+	if got := m.window(100*time.Millisecond, 100*time.Millisecond, now); got != 675_000 {
+		t.Fatal("bounded round allowance", got)
+	}
+	m.draining = true
+	if got := m.window(100*time.Millisecond, 100*time.Millisecond, now); got != 2*maxWire {
+		t.Fatal("drain allowance", got)
+	}
+}

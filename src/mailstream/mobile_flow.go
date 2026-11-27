@@ -199,7 +199,7 @@ func (m *mobileFlow) window(base, saturated time.Duration, now time.Time) int {
 	// turning into an unlimited backlog. Drain never admits new bulk.
 	horizon := m.horizon(base, saturated)
 	if m.lastBulk > 0 {
-		horizon = max(horizon, min(1500*time.Millisecond, min(baseline+250*time.Millisecond, m.lastBulk)+75*time.Millisecond))
+		horizon = max(horizon, min(1500*time.Millisecond, min(baseline+500*time.Millisecond, m.lastBulk)+75*time.Millisecond))
 	}
 	limit := int(m.pacing(now) * horizon.Seconds())
 	return min(8<<20, max(2*maxWire, limit))
@@ -341,7 +341,7 @@ func (m *mobileFlow) progress(now time.Time, delivered uint64, flight int) {
 		return
 	}
 	m.lastBusy = now
-	if now.Sub(m.progressAt) >= 3*time.Second {
+	if !m.draining && now.Sub(m.progressAt) >= 3*time.Second {
 		m.draining = true
 		m.recoverySamples = 0
 		m.recoveryGain = .1
