@@ -23,14 +23,19 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	grant := a.grants[identity]
-	if len(a.accounts) < 10 || a.owners[identity] == 0 || len(grant) < 2 || !mail.GrantNegotiated || mail.GrantChanging || mail.AllocatedAccounts != len(grant) {
+	if len(a.accounts) < 10 || a.owners[identity] == 0 || len(grant) < 2 || !mail.GrantNegotiated {
 		return false
 	}
-	// Refuse to act while an earlier change is awaiting peer acknowledgement.
+	// During an unfinished change only repair availability; never rotate for
+	// storage pressure. Preserve the union until the next acknowledged grant.
+	changing := mail.GrantChanging
+	if !changing && mail.AllocatedAccounts != len(grant) {
+		return false
+	}
 	inventory := make(map[string]mailstream.MailAccountSnapshot, len(mail.Lines))
 	for _, line := range mail.Lines {
 		inventory[line.Account] = line
-		if line.Allocated != slices.Contains(grant, line.Account) {
+		if !changing && line.Allocated != slices.Contains(grant, line.Account) {
 			return false
 		}
 	}
@@ -94,6 +99,9 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 		next[i], occupied[spare], replaced = spare, true, true
 	}
 	if !replaced {
+		if changing {
+			return false
+		}
 		if !w.last.IsZero() && now.Sub(w.last) < storageGrantCooldown {
 			return false
 		}

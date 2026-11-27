@@ -234,10 +234,22 @@ func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
 			}
 		}
 	}
+	// Publish the intended active paths even during failed preparation.
+	// This allows the server to replace a dead candidate in an unfinished grant.
+	healthTarget := make(map[string]bool, len(target))
+	for _, name := range target {
+		healthTarget[name] = true
+	}
+	l.mu.Lock()
+	l.healthTarget = healthTarget
+	l.mu.Unlock()
 	if err = s.setActiveAccountsLocked(ctx, l, target); err != nil {
 		return err
 	}
 	l.commitGrant(s.cipher.id, desired)
+	l.mu.Lock()
+	l.healthTarget = nil
+	l.mu.Unlock()
 	for _, a := range l.accounts {
 		if !desired[a.config.ID] {
 			a.unallocated.Store(true)

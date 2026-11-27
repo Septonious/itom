@@ -39,7 +39,18 @@ func (a *mailAccountState) startReader(p *mailPipe, data bool) chan struct{} {
 					stage = "data_receive"
 				}
 				a.failedStage(stage, err)
-				a.fail()
+				if !data && errors.Is(err, ErrClosed) && !p.invalid.Load() && p.validity != 0 {
+					// EOF is not a permanent account death. Cursor is owned by
+					// this goroutine until it exits, then the writer actor resumes it.
+					p.controlEOF.Store(true)
+					a.mu.Lock()
+					a.ready = false
+					a.mu.Unlock()
+					p.close()
+					a.link.notify()
+				} else {
+					a.fail()
+				}
 			}
 		}
 	}()
@@ -95,6 +106,8 @@ func (a *mailAccountState) reopenReader(ctx context.Context, c *readerCheckpoint
 	} else {
 		p.onPacket = old.onPacket
 		p.onControlConsumed = old.onControlConsumed
+		p.controlPollDelay = old.controlPollDelay
+		p.emptyControlFetches.Store(old.emptyControlFetches.Load())
 	}
 	return p, nil
 }

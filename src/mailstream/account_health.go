@@ -20,16 +20,19 @@ func (s *Session) reportAccountHealth(l *IMAPLink) {
 		case now := <-tick.C:
 			l.mu.Lock()
 			grant := l.stableGrant
-			changing := l.grantChanging
+			proposed := l.healthTarget != nil
+			if proposed {
+				grant = l.healthTarget
+			}
 			negotiated := l.grantSession == s.cipher.id
 			l.mu.Unlock()
-			if !negotiated || changing {
+			if !negotiated {
 				continue
 			}
 			var unavailable []string
 			for _, a := range l.accounts {
 				name := a.config.ID
-				if !grant[name] || a.scaleBlocked.Load() {
+				if !grant[name] || (!proposed && a.scaleBlocked.Load()) {
 					delete(missingSince, name)
 					continue
 				}

@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc6-dev"
+const TransportRevision = "itom-1-5-1-rc7-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -149,7 +149,7 @@ func profileAccounts(p servercfg.Profile, d Dial, roots *tls.Config) ([]mailstre
 			clear(key)
 			return nil, nil, errors.New("MAILSTREAM_TLS_REQUIRED")
 		}
-		account := mailstream.MailAccount{ID: a.ID, Host: a.Mail.Host, DialIP: a.Mail.DialIP, Port: a.Mail.Port, Username: a.Mail.Username, Password: a.Mail.Password, Dialer: d}
+		account := mailstream.MailAccount{ServerCreatesControls: true, ID: a.ID, Host: a.Mail.Host, DialIP: a.Mail.DialIP, Port: a.Mail.Port, Username: a.Mail.Username, Password: a.Mail.Password, Dialer: d}
 		if roots != nil {
 			account.Roots = roots.RootCAs
 		}

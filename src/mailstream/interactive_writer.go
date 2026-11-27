@@ -97,6 +97,7 @@ func (a *mailAccountState) writeInteractive(work mailWork) error {
 			return
 		}
 		a.interactiveAppendUS.Store(time.Since(started).Microseconds())
+		a.observeControlPublication(time.Since(started))
 		a.controlAppended(result, len(encoded))
 		a.appendCompleted(true, len(encoded), started)
 		a.upBytes.Add(uint64(len(work.body)))

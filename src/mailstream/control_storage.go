@@ -379,6 +379,12 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 			// The empty FETCH is itself a direct IMAP command sample.
 			// A separate periodic NOOP delays the receive critical path.
 			p.observeEmptyControlFetch(fetchStarted)
+			p.emptyControlFetches.Add(1)
+			delay := time.Millisecond
+			if p.controlPollDelay != nil {
+				delay = p.controlPollDelay()
+			}
+			p.controlPollMS.Store(delay.Milliseconds())
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
@@ -388,7 +394,9 @@ func (p *mailPipe) receiveControl(ctx context.Context, out chan<- []byte) error 
 				if err := p.runCommand(cmd); err != nil {
 					return err
 				}
-			case <-time.After(time.Millisecond):
+			case <-p.wake:
+				// An unsolicited EXISTS update can interrupt standby polling.
+			case <-time.After(delay):
 			}
 		}
 	}

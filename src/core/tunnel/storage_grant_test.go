@@ -143,3 +143,29 @@ func TestRC7InitialGrantPrefersReadyAccounts(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestRC7RepairUnacknowledgedGrant(t *testing.T) {
+	a, m := storageFixture(t)
+	old := a.grant("one")
+	m.Lines[0].Ready = false
+	for i := 0; i < 3; i++ {
+		a.observeStorage("one", m, time.Unix(1000+int64(i)*2, 0))
+	}
+	candidate := a.grant("one")
+	if slices.Equal(old, candidate) {
+		t.Fatal("no initial replacement")
+	}
+	m.GrantChanging = true
+	for i := range m.Lines {
+		if m.Lines[i].Account == candidate[0] {
+			m.Lines[i].PeerUnavailable = true
+		}
+	}
+	for i := 0; i < 3; i++ {
+		a.observeStorage("one", m, time.Unix(1010+int64(i)*2, 0))
+	}
+	got := a.grant("one")
+	if len(got) != 8 || slices.Contains(got, candidate[0]) || slices.Contains(got, old[0]) {
+		t.Fatal(got)
+	}
+}

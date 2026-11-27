@@ -27,6 +27,7 @@ func missingMailbox(err error) bool {
 // replay state and established readers are never replaced by this loop.
 // Each failed attempt closes its sockets before releasing the login gate.
 var errAccountDormant = errors.New("MAILSTREAM_ACCOUNT_DORMANT")
+var errControlAwaitingServer = errors.New("MAILSTREAM_CONTROL_AWAITING_SERVER")
 
 func (a *mailAccountState) startControls() (*mailPipe, *mailPipe, error) {
 	for attempt := uint32(0); ; attempt++ {
@@ -54,6 +55,9 @@ func (a *mailAccountState) startControls() (*mailPipe, *mailPipe, error) {
 			return control, writer, err
 		}
 		delay := time.Second * time.Duration(1<<min(attempt, 4))
+		if errors.Is(err, errControlAwaitingServer) {
+			delay = 2 * time.Second
+		}
 		// Account-specific staggering keeps retries from becoming a new
 		// simultaneous provider connection burst after a shared outage.
 		for _, b := range a.config.ID {
@@ -113,6 +117,7 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 		control.onControlConsumed = a.controlConsumed
 	}
 	control.uidControl.Store(true)
+	control.controlPollDelay = a.controlReadDelay
 	// A missing-folder SELECT/STATUS can stall instead of returning NONEXISTENT.
 	// Inventory the two owned control names with LIST first; do not CREATE
 	// existing folders, since some providers stall that redundant mutation too.
@@ -125,9 +130,34 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 		err = listErr
 		return
 	}
+	control.knownFolders = map[string]bool{}
 	for n, folder := range []string{a.link.controlFolder(false), a.link.controlFolder(true)} {
 		if listedControlFolder(folders, folder) {
+			control.knownFolders[folder] = true
 			continue
+		}
+		// Some providers return incomplete wildcard listings. Verify the exact
+		// name before mutating metadata, even when the wildcard was empty.
+		stage = "control_verify_presence"
+		a.phase(stage)
+		stop = control.limit(15 * time.Second)
+		exact, exactErr := control.client.List("", folder, nil).Collect()
+		stop()
+		if exactErr != nil {
+			err = exactErr
+			return
+		}
+		if listedControlFolder(exact, folder) {
+			control.knownFolders[folder] = true
+			continue
+		}
+		if a.link.client && a.config.ServerCreatesControls {
+			// The server alone creates both shared folders. A simultaneous
+			// CREATE from the phone can deadlock provider metadata handling.
+			stage = "control_wait_server"
+			a.phase(stage)
+			err = errControlAwaitingServer
+			return
 		}
 		stage = []string{"control_create_incoming", "control_create_outgoing"}[n]
 		a.phase(stage)
@@ -135,6 +165,7 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 		err = control.client.Create(folder, nil).Wait()
 		stop()
 		if err == nil {
+			control.knownFolders[folder] = true
 			continue
 		}
 		if !taggedNo(err) {
@@ -157,6 +188,7 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 			return
 		}
 		err = nil
+		control.knownFolders[folder] = true
 	}
 	stage = "control_select"
 	a.phase(stage)
