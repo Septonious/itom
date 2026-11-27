@@ -1,0 +1,126 @@
+name: ITOM 1.5.1 RC15 unqualified field test
+on:
+  push:
+    branches: [field/itom-v151-rc15]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itom-rc15-field-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GOMAXPROCS: '2'
+      GOFLAGS: '-p=1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - name: Verify field-test source tree
+        run: test "$(git rev-parse HEAD:src)" = "398f880589713da4a9d9a9e6f322990f1b5f8949"
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          persist-credentials: false
+      - name: Verify and bundle routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-read-only: false
+      - uses: actions/cache@v4
+        id: aar
+        with:
+          path: src/android/app/libs/itom.aar
+          key: itom-aar-linux-arm64-go1.27.1-ndk28.2.13676358-api29-${{ hashFiles('src/native/**', 'src/core/**', 'src/mailstream/**', '!**/*_test.go') }}
+      - name: Install only missing pinned SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$manager"
+          missing=()
+          for item in 'platforms;android-29' 'platforms;android-37.0' 'build-tools;36.0.0'; do
+            dir="${item/;/\/}"
+            test -f "$sdk/$dir/source.properties" || missing+=("$item")
+          done
+          if [ '${{ steps.aar.outputs.cache-hit }}' != true ]; then
+            test -f "$sdk/ndk/28.2.13676358/source.properties" || missing+=('ndk;28.2.13676358')
+          fi
+          if ((${#missing[@]})); then "$manager" --sdk_root="$sdk" --channel=3 "${missing[@]}"; fi
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$sdk/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - uses: actions/setup-go@v5
+        if: steps.aar.outputs.cache-hit != 'true'
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: src/native/go.sum
+      - name: Compile native AAR on cache miss
+        if: steps.aar.outputs.cache-hit != 'true'
+        working-directory: src/native
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
+          gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
+      - name: Test Android and build installable field APK
+        working-directory: src/android
+        run: gradle --no-daemon --build-cache :domain:test :app:testDebugUnitTest :app:assembleDebug
+      - name: Verify and stage field APK
+        run: |
+          mkdir -p dist
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc15-dev-testing.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify dist/itom-1.5.1-rc15-dev-testing.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc15-field-apk
+          path: dist/itom-1.5.1-rc15-dev-testing.apk
+          if-no-files-found: error
+          retention-days: 7
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GOMAXPROCS: '2'
+      GOFLAGS: '-p=1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: src/core/go.sum
+      - name: Verify field-test source tree
+        run: test "$(git rev-parse HEAD:src)" = "398f880589713da4a9d9a9e6f322990f1b5f8949"
+      - name: Relay regression tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=1 -timeout=5m ./relay
+      - name: Build and verify Linux server
+        working-directory: src/core
+        run: |
+          mkdir -p ../../dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64.bin ./cmd/itom
+          ../../dist/itom-linux-amd64.bin version | grep 'itom-1-5-1-rc15-dev'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc15-field-bin
+          path: dist/itom-linux-amd64.bin
+          if-no-files-found: error
+          retention-days: 7
