@@ -479,7 +479,7 @@ func main() {
 func run() error {
 	mobileTails := flag.Bool("mobile-latency-tails", false, "field-observed effective client IMAP latency tails180/250ms among usual30-100ms")
 	mobileLatency := flag.Bool("mobile-latency", false, "independent variable 30-100 ms client IMAP path RTT")
-	clientLatencyProfile := flag.String("client-latency-profile", "historical", "home, mobile, or rambler-cellular (field-calibrated variable RTT)")
+	clientLatencyProfile := flag.String("client-latency-profile", "historical", "home, mobile, rambler-home, or rambler-cellular (field-calibrated variable RTT)")
 	cellularCycle := flag.Bool("rambler-cellular-cycle", false, "30/30 → 49.1/4.52 → 2.5/1.5 → outage → recovered link, activated by worker")
 	rateDip := flag.Bool("client-rate-dip", false, "100 to 1 to 100 Mbps shared link: dip from second 10 through 25")
 	historyVector := flag.String("history-bytes", "", "generated fixture only: per-account debt used for physically seeded old DATA")
@@ -605,6 +605,12 @@ func run() error {
 	if *clientLatencyProfile == "rambler-cellular" {
 		clientNet.rtts = []time.Duration{30 * time.Millisecond, 45 * time.Millisecond, 80 * time.Millisecond, 150 * time.Millisecond, 40 * time.Millisecond, 95 * time.Millisecond}
 		serverNet.rtts = []time.Duration{2 * time.Millisecond, 3 * time.Millisecond, 5 * time.Millisecond, 10 * time.Millisecond}
+	} else if *clientLatencyProfile == "rambler-home" {
+		// RC7 and RC14 field traces both report 7 ms median client IMAP
+		// command RTT and roughly 2–3 ms at the Russian server. This is a
+		// propagation model, not the full APPEND or end-to-end delivery delay.
+		clientNet.rtts = []time.Duration{5 * time.Millisecond, 7 * time.Millisecond, 10 * time.Millisecond, 7 * time.Millisecond}
+		serverNet.rtts = []time.Duration{2 * time.Millisecond, 3 * time.Millisecond, 5 * time.Millisecond, 3 * time.Millisecond}
 	} else if *clientLatencyProfile == "home" {
 		// Conservative effective IMAP latency model. Separate from ICMP
 		// to the provider host; TCP/TLS/IMAP work can exceed the wire RTT.

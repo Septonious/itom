@@ -39,10 +39,8 @@ import java.io.ByteArrayOutputStream
         }
     }
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Server profiles", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            TextButton(onClick = onImport, enabled = !busy) { Text("Import from clipboard", color = Blue) }
-        }
+        Text("Server profiles", style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth())
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
             if (config.profiles.isEmpty()) item {
                 InfoCard(Modifier.fillMaxWidth()) {
@@ -88,6 +86,9 @@ import java.io.ByteArrayOutputStream
                         }
                     }
                 }
+            }
+            item(key = "import-from-clipboard") {
+                GradientButton("Import from clipboard", onImport, Modifier.fillMaxWidth(), !busy, Glyph.PLUS)
             }
         }
     }

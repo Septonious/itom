@@ -137,6 +137,7 @@ type mailAccountState struct {
 
 type IMAPLink struct {
 	lastBulk            atomic.Int64
+	lastInboundBulk     atomic.Int64
 	mobileRecovery      atomic.Bool
 	recoveryMu          sync.Mutex
 	lastInteractive     atomic.Int64
@@ -352,7 +353,10 @@ func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
 // command budget on tiny APPENDs. The 16-packet cap, the 2ms idle window,
 // and immediate interactive DATA are unchanged.
 func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
-	last := l.lastBulk.Load()
+	// The receiver of a one-way transfer is busy even when it never
+	// publishes a bulk DATA message. Its receipts and WINDOW updates
+	// otherwise run through the tiny idle coalescing window.
+	last := max(l.lastBulk.Load(), l.lastInboundBulk.Load())
 	if last == 0 || time.Since(time.Unix(0, last)) >= 300*time.Millisecond {
 		return 2 * time.Millisecond
 	}

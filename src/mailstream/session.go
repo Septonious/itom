@@ -566,7 +566,26 @@ func (s *Session) dispatchLoop() {
 	}
 }
 
+// Receive-owner-only measurement. Avoid marking isolated interactive or
+// light DATA as a sustained transfer, and never count replayed ciphertext.
+type inboundBulkMeter struct {
+	start time.Time
+	bytes int
+}
+
+func (m *inboundBulkMeter) observe(n int, now time.Time) bool {
+	if n <= 4096 {
+		return false
+	}
+	if m.start.IsZero() || now.Sub(m.start) >= 100*time.Millisecond {
+		m.start, m.bytes = now, 0
+	}
+	m.bytes = min(128<<10, m.bytes+n)
+	return m.bytes >= 128<<10
+}
+
 func (s *Session) receiveLoop() {
+	var inboundBulk inboundBulkMeter
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -673,6 +692,10 @@ func (s *Session) receiveLoop() {
 					return
 				}
 				if f.kind == frameData {
+					now := time.Now()
+					if link, ok := s.link.(*IMAPLink); ok && inboundBulk.observe(len(f.data), now) {
+						link.lastInboundBulk.Store(now.UnixNano())
+					}
 					s.mu.Lock()
 					s.appPayloadBytes += uint64(len(f.data))
 					s.lastAppPayload = time.Now()
