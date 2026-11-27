@@ -230,6 +230,10 @@ func (a *mailAccountState) ensureActive(ctx context.Context, id SessionID) error
 	}
 }
 
+// ActiveAccountLimit returns the requested physical account limit for telemetry.
+// Zero means all allocated accounts.
+func (s *Session) ActiveAccountLimit() int { return int(s.activeLimit.Load()) }
+
 // SetActiveLimit chooses healthy already-active paths first, without changing
 // the authenticated allocation. A zero limit means all assigned accounts.
 func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {

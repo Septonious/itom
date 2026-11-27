@@ -22,7 +22,7 @@ import org.itom.domain.*
 import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable fun ProfilesScreen(config: PublicConfig, busy: Boolean, onSelect: (String) -> Unit, onEdit: (String) -> Unit,
+@Composable fun ProfilesScreen(config: PublicConfig, session: SessionSnapshot, busy: Boolean, onSelect: (String) -> Unit, onEdit: (String) -> Unit,
     onDelete: (String) -> Unit, onImport: () -> Unit, onMessage: (String) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
     var removing by remember { mutableStateOf<ServerProfile?>(null) }
@@ -38,50 +38,45 @@ import java.io.ByteArrayOutputStream
             } catch (e: CancellationException) { throw e } catch (_: Exception) { onMessage("Could not export the profile.") }
         }
     }
-    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Server profiles", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            GlyphButton(Glyph.PLUS, "Add server", onImport, Blue, !busy)
-        }
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Server profiles", style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth())
+        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
             if (config.profiles.isEmpty()) item {
                 InfoCard(Modifier.fillMaxWidth()) {
                     IconBadge(Glyph.SERVERS)
-                    Text("Add your first server", style = MaterialTheme.typography.titleLarge)
-                    SmallNote("Import an invitation containing the profile, accounts and your User ID.")
-                    GradientButton("Add profile", onImport, Modifier.fillMaxWidth(), !busy, Glyph.PLUS)
+                    Text("No server profiles", style = MaterialTheme.typography.titleLarge)
+                    SmallNote("Copy your invitation, then tap Import from clipboard.")
                 }
             }
             items(config.profiles, key = { it.profileId }) { profile ->
                 val active = profile.profileId == config.selectedProfileId
-                InfoCard(Modifier.fillMaxWidth(), accent = if (active) Blue else null) {
+                InfoCard(Modifier.fillMaxWidth(), accent = if (active) Blue else null, contentPadding = 12.dp,
+                    onClick = if (!busy && !active) ({ onSelect(profile.profileId) }) else null) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         IconBadge(Glyph.SERVERS, color = if (active) Blue else Muted)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(profile.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            SmallNote("${profile.providerId} · ${profile.accounts.count { it.enabled }}/${profile.accounts.size} accounts enabled")
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                            ExitIdentityTitle(session.exitIdentities[profile.profileId])
+                            SmallNote("${profile.accounts.count { it.enabled }} accounts")
                         }
                         if (active) StatusLabel("Selected", Blue)
                     }
                     if (profile.profileId in config.incompleteProfileIds) Text("Setup required", style = MaterialTheme.typography.labelSmall, color = Yellow)
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                        Column(Modifier.weight(1f)) { SmallNote("User ID"); Text(profile.userId) }
-                        Column(Modifier.weight(1f)) { SmallNote("Max IMAP sockets"); Text(profile.totalLines.toString()) }
-                    }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(enabled = !busy && !active, onClick = { onSelect(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
-                            if (active) { AppIcon(Glyph.CHECK, Modifier.size(16.dp), Blue); Spacer(Modifier.width(6.dp)) }
-                            Text(if (active) "Selected" else "Select")
-                        }
                         OutlinedButton(enabled = !busy, onClick = { onEdit(profile.profileId) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) { Text("Edit") }
+                        TextButton(modifier = Modifier.weight(1f), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) {
+                            Text(if (expanded == profile.profileId) "Hide details" else "Profile details")
+                        }
                     }
-                    TextButton(modifier = Modifier.fillMaxWidth(), onClick = { expanded = if (expanded == profile.profileId) null else profile.profileId }) { Text(if (expanded == profile.profileId) "Hide details" else "Profile details") }
                     if (expanded == profile.profileId) {
                         HorizontalDivider(color = Outline)
                         SmallNote("Server ID: ${profile.serverId}")
+                        SmallNote("User ID: ${profile.userId}")
+                        SmallNote("Provider: ${profile.providerId}")
+                        SmallNote("Max IMAP sockets: ${profile.totalLines}")
                         SmallNote("Folders: ${profile.mailboxNamespace}")
                         SmallNote(if (profile.profileId in config.incompleteProfileIds) "Enter the key and account credentials in the editor." else "The key is protected by Android Keystore.")
-                        profile.accounts.forEach { SmallNote("${it.name} · ${it.host}:${it.port} · ${if (it.enabled) "enabled" else "disabled"}") }
+                        profile.accounts.forEachIndexed { index, account -> SmallNote("Account ${index + 1} · ${account.host}:${account.port} · ${if (account.enabled) "enabled" else "disabled"}") }
                         SmallNote("Export metadata: servers, folders and IDs, without passwords or keys.")
                         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             OutlinedButton(enabled = !busy, onClick = { exportId = profile.profileId; exportFile.launch("ITOM_profile_${profile.profileId}.json") }) {
@@ -92,9 +87,12 @@ import java.io.ByteArrayOutputStream
                     }
                 }
             }
+            item(key = "import-from-clipboard") {
+                GradientButton("Import from clipboard", onImport, Modifier.fillMaxWidth(), !busy, Glyph.PLUS)
+            }
         }
     }
-    removing?.let { p -> AlertDialog(onDismissRequest = { removing = null }, title = { Text("Remove profile?") }, text = { Text("${p.name}: local settings and secrets will be removed. The server registration will remain.") },
+    removing?.let { p -> AlertDialog(onDismissRequest = { removing = null }, title = { Text("Remove profile?") }, text = { Text("Local settings and secrets for this profile will be removed. The server registration will remain.") },
         confirmButton = { TextButton(enabled = !busy, onClick = { onDelete(p.profileId); removing = null }) { Text("Remove", color = Red) } }, dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } }) }
 }
 
@@ -104,35 +102,4 @@ internal suspend fun readBounded(context: Context, uri: Uri, limit: Int): ByteAr
         while (true) { currentCoroutineContext().ensureActive(); val n = input.read(buffer); if (n < 0) break; demand(out.size() + n <= limit, "DOCUMENT_TOO_LARGE"); out.write(buffer, 0, n) }
         out.toByteArray()
     } ?: throw DomainError("FILE_UNAVAILABLE")
-}
-@Composable fun ImportScreen(busy: Boolean, onMessage: (String) -> Unit, onImport: (Invitation) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var reading by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        GradientButton("Import from clipboard", {
-            // Read only after an explicit tap while this screen is in the foreground.
-            // Never retain the raw invitation in Compose state or display its secrets.
-            reading = true
-            scope.launch {
-                try {
-                    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
-                    val clip = clipboard?.primaryClip
-                    val raw = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
-                    if (raw.isNullOrBlank()) {
-                        onMessage("Clipboard does not contain an ITOM invitation.")
-                    } else if (raw.length > Codec.INVITATION_LIMIT * 4 / 3 + 32) {
-                        onMessage("The invitation is too large.")
-                    } else {
-                        val invitation = withContext(Dispatchers.Default) { Codec.invitation(raw.trim(), System.currentTimeMillis() / 1000) }
-                        onImport(invitation)
-                    }
-                } catch (e: CancellationException) { throw e }
-                catch (e: DomainError) { onMessage(errorText(e.code)) }
-                catch (_: Exception) { onMessage("Could not import the invitation.") }
-                finally { reading = false }
-            }
-        }, Modifier.fillMaxWidth(), enabled = !busy && !reading, glyph = Glyph.PLUS)
-        if (reading) LinearProgressIndicator(Modifier.fillMaxWidth())
-    }
 }

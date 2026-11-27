@@ -8,6 +8,16 @@ import java.util.Base64
 import kotlin.test.*
 
 class DomainTest {
+    @Test fun transientOverlappingSocketMetricsDoNotDisconnect() {
+        val m = SessionMachine(); val g = m.begin("local", 1, 32)
+        assertTrue(m.connected(g, 1, interfaceUp = true))
+        assertTrue(m.sample(g, Metrics(activeLines = 32, totalLines = 32), "valid", 2))
+        assertFalse(m.sample(g, Metrics(activeLines = 34, totalLines = 32), "overlap", 3))
+        assertEquals(Phase.CONNECTED, m.state.value.phase)
+        assertTrue(m.state.value.vpnInterfaceUp)
+        assertEquals(32, m.state.value.metrics.activeLines)
+        assertTrue(m.sample(g, Metrics(activeLines = 16, totalLines = 32), "recovered", 4))
+    }
     private fun profile() = ServerProfile(profileId = "local", name = "Server", serverId = "1234567890abcdef1234567890abcdef", userId = "12345678", providerId = "test",
         encryptionKeyRef = "keystore:pair", mailboxNamespace = "ITOM/12345678/unique",
         accounts = listOf(MailAccount("mail", "Mail", "imap.example.invalid", credentialRef = "keystore:mail", providerId = "test")))

@@ -27,7 +27,7 @@ jobs:
           go-version: '1.27.1'
           cache: false
       - name: Verify exact field source
-        run: test "$(git rev-parse HEAD:src)" = "3c32a0df641110f95d254c875e2d4b0e062c19a8"
+        run: test "$(git rev-parse HEAD:src)" = "33acc8ba1a08b388a39be8a6886603d66120e92f"
       - name: RC16 targeted mailstream regressions
         working-directory: src/mailstream
         run: go test -race -mod=readonly -count=1 -timeout=5m -run 'TestMobile|TestBatchedReceipt|TestSerialRecovery|TestSparseMobile|TestIndependentFeedback' .
@@ -133,6 +133,6 @@ jobs:
           sha256sum itom-linux-amd64 *.apk > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ITOM-1.5.1-RC16-field-UNQUALIFIED
+          name: ITOM-1.5.1-RC16-field-UI-restored-UNQUALIFIED
           path: dist/
           if-no-files-found: error

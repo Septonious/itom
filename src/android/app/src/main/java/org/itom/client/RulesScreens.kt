@@ -54,26 +54,30 @@ import org.itom.domain.*
             catch (_: Exception) { onMessage("Could not export rules.") }
         }
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SmallNote("Applies to all profiles. Changes apply on the next connection.")
-        InfoCard(Modifier.fillMaxWidth()) {
+        InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
             Text("Direct", style = MaterialTheme.typography.titleMedium)
-            RoutingToggle("Russian sites", policy.ruSitesDirect, !busy) { updateOptions(policy.copy(ruSitesDirect = it)) }
-            SmallNote("GeoSite and .ru or .рф domains")
-            RoutingToggle("Russian IP addresses", policy.ruIpsDirect, !busy) { updateOptions(policy.copy(ruIpsDirect = it)) }
-            SmallNote("IPv4 and IPv6 ranges in GeoIP")
-            RoutingToggle("Russian applications", appPolicy.autoRussian, !busy) { updateApps(it) }
-            SmallNote("Automatically bypass the VPN for recognized apps")
+            RoutingToggle("Russian sites", "GeoSite and .ru or .рф domains", policy.ruSitesDirect, !busy) { updateOptions(policy.copy(ruSitesDirect = it)) }
+            RoutingToggle("Russian IP addresses", "IPv4 and IPv6 ranges in GeoIP", policy.ruIpsDirect, !busy) { updateOptions(policy.copy(ruIpsDirect = it)) }
+            RoutingToggle("Russian applications", "Automatically bypass the VPN for recognized apps", appPolicy.autoRussian, !busy) { updateApps(it) }
         }
-        NavigationRow(Glyph.APPS, "Applications", "${appPolicy.directPackages.size} direct · ${appPolicy.vpnPackages.size} VPN", apps)
-        InfoCard(Modifier.fillMaxWidth()) {
+        InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp, onClick = apps) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                IconBadge(Glyph.APPS)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Applications", style = MaterialTheme.typography.titleMedium)
+                    SmallNote("${appPolicy.directPackages.size} direct · ${appPolicy.vpnPackages.size} VPN")
+                }
+                AppIcon(Glyph.NEXT, Modifier.size(18.dp))
+            }
+        }
+        InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
             Text("Blocking", style = MaterialTheme.typography.titleMedium)
-            RoutingToggle("Ads and trackers", policy.blockAdsTrackers, !busy) { updateOptions(policy.copy(blockAdsTrackers = it)) }
-            SmallNote("GeoSite and HaGeZi blocklists")
-            RoutingToggle("Malicious sites", policy.blockMalware, !busy) { updateOptions(policy.copy(blockMalware = it)) }
-            SmallNote("HaGeZi threat intelligence list")
+            RoutingToggle("Ads and trackers", "GeoSite and HaGeZi blocklists", policy.blockAdsTrackers, !busy) { updateOptions(policy.copy(blockAdsTrackers = it)) }
+            RoutingToggle("Malicious sites", "HaGeZi threat intelligence list", policy.blockMalware, !busy) { updateOptions(policy.copy(blockMalware = it)) }
         }
-        InfoCard(Modifier.fillMaxWidth()) {
+        InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
             Text("Custom rules", style = MaterialTheme.typography.titleMedium)
             SmallNote("Block takes priority, then VPN, then Direct. Unmatched traffic uses VPN.")
             listOf(RouteAction.BLOCK, RouteAction.VPN, RouteAction.DIRECT).forEach { action ->
@@ -85,7 +89,7 @@ import org.itom.domain.*
             }
             TextButton(onClick = { destination = true }, enabled = !updating) { Text("Check a destination", color = Blue) }
         }
-        InfoCard(Modifier.fillMaxWidth()) {
+        InfoCard(Modifier.fillMaxWidth(), contentPadding = 12.dp) {
             Text("GeoSite and GeoIP", style = MaterialTheme.typography.titleMedium)
             SmallNote(updated.ifBlank { "Reading dataset information…" })
             OutlinedButton(enabled = !busy && !updating, onClick = {
@@ -138,9 +142,12 @@ import org.itom.domain.*
 
 }
 
-@Composable private fun RoutingToggle(name: String, checked: Boolean, enabled: Boolean, change: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+@Composable private fun RoutingToggle(name: String, description: String, checked: Boolean, enabled: Boolean, change: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(name, style = MaterialTheme.typography.bodyMedium)
+            SmallNote(description)
+        }
         ItomSwitch(checked = checked, enabled = enabled, onCheckedChange = change)
     }
 }

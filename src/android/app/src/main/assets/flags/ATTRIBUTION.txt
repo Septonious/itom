@@ -1,0 +1,1 @@
+Country flag graphics rendered from the installed TeX worldflags package (Wilhelm Haager, 2021–2022). See https://ctan.org/pkg/worldflags for source and licensing. Images are national flag depictions, not emoji. Unknown or unavailable country codes show no flag.

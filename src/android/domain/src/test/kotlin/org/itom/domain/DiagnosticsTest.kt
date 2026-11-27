@@ -74,6 +74,17 @@ class DiagnosticsTest {
         assertEquals(DiagnosticLevel.ERROR, diagnosticLevel("NEW_UNRECOGNIZED_CODE"))
     }
 
+    @Test fun socketTargetAndAllocationRemainDistinct() {
+        val d = TransportDiagnostics.parse("""{"GrantNegotiated":true,"AllocatedAccounts":10,"TargetSocketCapacity":20}""")
+        assertEquals(SocketCounts(20,20,40), d.socketCounts(Phase.CONNECTED,20,30))
+        assertEquals(1,d.socketCounts(Phase.CONNECTED,20,30).band)
+        assertEquals(2,d.socketCounts(Phase.CONNECTED,10,30).band)
+        assertEquals(3,d.socketCounts(Phase.CONNECTED,9,30).band)
+        assertEquals(2,d.socketCounts(Phase.CONNECTED,24,30).band)
+        assertEquals(SocketCounts(0,null,null),d.socketCounts(Phase.OFF,20,30))
+        assertEquals(SocketCounts(2,null,null),TransportDiagnostics.parse("{}").socketCounts(Phase.CONNECTING,2,30))
+    }
+
     @Test fun socketCapacityUsesTheSameTopologyBeforeAndAfterAdmission() {
         assertEquals(60, TransportDiagnostics.parse("{}").assignedSocketCapacity(15, 60))
         assertEquals(60, TransportDiagnostics.parse("""{"StartupStage":"NOISE","TotalLines":31}""").assignedSocketCapacity(15, 60))

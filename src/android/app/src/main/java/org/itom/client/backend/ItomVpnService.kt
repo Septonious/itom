@@ -83,6 +83,8 @@ class ItomVpnService : VpnService() {
         var networkCallback: ConnectivityManager.NetworkCallback? = null
         var defaultNetworkCallback: ConnectivityManager.NetworkCallback? = null
         var policyWatcher: Job? = null
+        var exitLookup: Job? = null
+        var exitRequested = false
         val stoppedByNetworkPolicy = AtomicBoolean(false)
         val restartForNetwork = AtomicBoolean(false)
         val lastSoftRebindAt = AtomicLong(0L)
@@ -307,13 +309,29 @@ class ItomVpnService : VpnService() {
                     networkEvent("transport_last_resort_restart", selectedUnderlying.get())
                     if (restartForNetwork.compareAndSet(false, true)) sessionJob.cancel()
                 }
+                // One lookup per connected bearer. Never read the phone's direct IP.
+                if (rebinding || !underlyingAvailable) {
+                    exitLookup?.cancel(); exitLookup = null; exitRequested = false
+                    backend.machine.exitIdentity(g, profileId, null)
+                } else if (active > 0 && backend.snapshot.value.phase == Phase.CONNECTED && !exitRequested && stats.optLong("RTTMillis", 0) in 1L..700L) {
+                    exitRequested = true
+                    exitLookup = scope.launch {
+                        val identity = try {
+                            val data = JSONObject(core.exitIdentity())
+                            ExitIdentity(data.getString("ip"), data.optString("country"))
+                        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                        currentCoroutineContext().ensureActive()
+                        backend.machine.exitIdentity(g, profileId, identity)
+                    }
+                }
                 val down = stats.getLong("Download"); val up = stats.getLong("Upload")
                 if (down > previousDown || up > previousUp) lastDemandAt = now
                 val elapsed = (now - previous).coerceAtLeast(1)
-                backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
+                val acceptedMetrics = backend.machine.sample(g, Metrics((down - previousDown).coerceAtLeast(0) * 8000 / elapsed,
                     (up - previousUp).coerceAtLeast(0) * 8000 / elapsed,
                     stats.optInt("RTTMillis").takeIf { active > 0 && it > 0 },
                     stats.getInt("TCP"), active, stats.getInt("TotalLines")), stats.toString(), now)
+                if (!acceptedMetrics && backend.snapshot.value.generation == g) networkEvent("invalid_metrics_sample", selectedUnderlying.get())
                 previous = now; previousDown = down; previousUp = up
                 if (!rebinding && now - lastTransportHealthCheck >= 5000 && !restartForNetwork.get()) {
                     lastTransportHealthCheck = now
@@ -370,6 +388,7 @@ class ItomVpnService : VpnService() {
         catch (e: Exception) { failure = nativeFailureCode(e.message) }
         finally {
             withContext(NonCancellable) {
+                exitLookup?.cancel()
                 callbacks.close()
                 failure = failure ?: callbacks.failure
                 policyWatcher?.cancelAndJoin()
@@ -388,6 +407,7 @@ class ItomVpnService : VpnService() {
                 traceClient.set(null)
                 if (backend.snapshot.value.generation == g) { backend.adminClient = null; backend.adminState.value = "{}" }
                 try { native?.close() } catch (_: Exception) { failure = failure ?: "NATIVE_CLOSE_FAILED" }
+                exitLookup?.join()
                 if (backend.snapshot.value.generation == g) {
                     // Never restart a user-stopped generation. A handover must
                     // first fully close its sockets and TUN, then reopen cleanly.

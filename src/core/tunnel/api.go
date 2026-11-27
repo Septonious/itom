@@ -61,6 +61,7 @@ type ClientSnapshot struct {
 	ConfiguredAccounts     int
 	AllocatedAccounts      int
 	AssignedSocketCapacity int
+	TargetSocketCapacity   int
 	GrantNegotiated        bool
 }
 type LineDiagnostic struct {
@@ -392,6 +393,13 @@ func (c *Client) Snapshot() ClientSnapshot {
 	streams := c.session.ActiveStreams()
 	capacity := mailstream.ConnectionsPerAccount * mail.AllocatedAccounts
 	s := ClientSnapshot{Stats: Stats{TotalLines: capacity, TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli(), ConfiguredAccounts: len(c.profile.Accounts), AllocatedAccounts: mail.AllocatedAccounts, AssignedSocketCapacity: capacity, GrantNegotiated: mail.GrantNegotiated}
+	if mail.GrantNegotiated {
+		target := c.session.ActiveAccountLimit()
+		if target <= 0 || target > mail.AllocatedAccounts {
+			target = mail.AllocatedAccounts
+		}
+		s.TargetSocketCapacity = target * mailstream.ConnectionsPerAccount
+	}
 	for _, line := range mail.Lines {
 		account := line.Account
 		for _, a := range c.profile.Accounts {
