@@ -1,0 +1,284 @@
+name: ITOM 1.5.1 RC12 build and qualification
+on:
+  push:
+    branches: [codex/itom-v151-rc12]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: itom-rc12-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            src
+            release/rc12
+      - name: Verify and commit the exact RC12 source checkpoint
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/codex/itom-v151-rc12
+          expected=6f26c4cb2f6187542278797237f49beea063d5b9
+          current=$(git rev-parse HEAD:src)
+          if [ "$current" != "$expected" ]; then
+            test "$current" = 6233fc2b2c82abd624f9a42ce993391bbe0864db
+            cat release/rc12/part-*.patch > "$RUNNER_TEMP/rc12.patch"
+            echo "5ac371ce2f918753a26a9a33f31f9c23faabd86c117cd930e932d19b852b4620  $RUNNER_TEMP/rc12.patch" | sha256sum -c -
+            git apply --check --index "$RUNNER_TEMP/rc12.patch"
+            git apply --index --whitespace=nowarn "$RUNNER_TEMP/rc12.patch"
+            test "$(git rev-parse "$(git write-tree):src")" = "$expected"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "RC12: materialize verified UI, four-account floor and cellular recovery source"
+            git push origin HEAD:refs/heads/codex/itom-v151-rc12
+          fi
+          test "$(git rev-parse HEAD:src)" = "$expected"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git archive --format=tar.gz --output=itom-rc12-exact-source.tar.gz HEAD src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-RC12-exact-source
+          path: itom-rc12-exact-source.tar.gz
+          if-no-files-found: error
+  native-validation:
+    needs: materialize
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.materialize.outputs.sha }}
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Live four-socket allocation and suspend-resume integration
+        working-directory: src/mailstream
+        run: |
+          go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
+      - name: Server allocation and cellular controller tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+      - name: RC4 bounded collection and field allocation regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC4|TestCollectionRetriesBoundTinyMessagesAfterFailure|TestHistoricalDataUsesBoundedHealthyPagesAndConservativeRetries|TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit' .
+      - name: RC5 encrypted exit and storage grant regression tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 ./relay ./tunnel -run 'Test(RC5|Relay|WrongKey|DirectFallback|ConcurrentRelay|Cancellation|ShutdownWith|RC4FieldGrant|SessionAdmission)'
+      - name: Preserve healthy control writer on cleanup failure
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
+      - name: RC7 repeated reconnect with unavailable unallocated account
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
+      - name: RC11 mobile controller, bearer and 30-account regression
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=20 -run '^TestRC11(Mobile|Bearer|Account)' .
+      - name: RC12 operational account minimum and stall recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=20 -run 'Test(RC12|Cellular)' ./tunnel
+      - name: RC12 stalled mobile flow recovery
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=20 -run '^TestRC12' .
+      - name: RC10 retained system folders, protected legacy purge, EOF recovery and RTT controller
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=20 -run 'Test(Cellular|Purge|ProtectedLegacy|FailedPurge|LifecycleCapacity)' ./mailbox ./manager ./tunnel
+      - name: RC7 account availability, control reader recovery and latency regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC[78]' .
+      - name: RC7 account allocation recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
+      - name: Full core race-detector suite including native process integration
+        working-directory: src/core
+        run: go test -race -mod=readonly -timeout=10m ./...
+      - name: Extract verified routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
+      - name: Full native tests including real routing datasets
+        working-directory: src/native
+        run: ITOM_RC20_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly ./...
+  build:
+    needs: [materialize, native-validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.materialize.outputs.sha }}
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify and bundle actual RC20 routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - name: Ensure pinned Android SDK and NDK
+        run: |
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$manager"
+          export ANDROID_HOME="$sdk" ANDROID_SDK_ROOT="$sdk"
+          "$manager" --sdk_root="$sdk" --channel=3 'platforms;android-29' 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$sdk/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - name: Compile matching ARM64 native AAR
+        working-directory: src/native
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
+          gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
+      - name: Build development APK and release variant
+        working-directory: src/android
+        run: gradle --no-daemon :domain:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:assembleDebug :app:assembleRelease
+      - name: Build matching Linux AMD64 server
+        working-directory: src/core
+        run: |
+          mkdir -p ../../dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
+      - name: Stage artifacts
+        run: |
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc12-dev-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc12-dev-release-UNSIGNED.apk
+          git rev-parse HEAD > dist/BUILD-SOURCE.txt
+          dist/itom-linux-amd64 version | grep 'itom-1-5-1-rc12-dev'
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify dist/itom-1.5.1-rc12-dev-testing.apk
+          cd dist
+          sha256sum itom-linux-amd64 *.apk BUILD-SOURCE.txt > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.5.1-RC12-development
+          path: dist/
+          if-no-files-found: error
+  screen:
+    needs: materialize
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.materialize.outputs.sha }}
+          sparse-checkout: src
+          fetch-depth: 1
+      - name: Export exact Go source
+        run: git archive --format=tar.gz --output=itom-v151-source.tar.gz HEAD src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itom-v151-exact-source
+          path: itom-v151-source.tar.gz
+          if-no-files-found: error
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Focused dispatcher regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=10 -run '^(TestInteractiveIdlePublisherPreference|TestInteractiveBurstAvoidsFullPoolDuplicationButIsolatedRequestHedges|TestDispatchIndependentInteractiveAdmission|TestMeasuredBulkBurstLeavesInteractivePublicationImmediate|TestAccountProbeRequiresReturnOnOriginalMailbox|TestAccountProbeCancellationReleasesSlot)$' .
+      - name: RC4 pacing, maintenance and allocation planner regression tests
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC3|TestRC4|TestBulkControlUrgency|TestPacingOnly|TestMeasuredBulkBurst|TestInteractiveReceiptsBound' .
+      - name: Live four-socket allocation and suspend-resume integration
+        working-directory: src/mailstream
+        run: |
+          go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
+      - name: Server allocation and cellular controller tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+      - name: RC5 encrypted exit and storage grant regression tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 ./relay ./tunnel -run 'Test(RC5|Relay|WrongKey|DirectFallback|ConcurrentRelay|Cancellation|ShutdownWith|RC4FieldGrant|SessionAdmission)'
+      - name: Preserve healthy control writer on cleanup failure
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
+      - name: RC7 repeated reconnect with unavailable unallocated account
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
+      - name: RC11 mobile controller, bearer and 30-account regression
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=20 -run '^TestRC11(Mobile|Bearer|Account)' .
+      - name: RC12 operational account minimum and stall recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=20 -run 'Test(RC12|Cellular)' ./tunnel
+      - name: RC12 stalled mobile flow recovery
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=20 -run '^TestRC12' .
+      - name: RC10 retained system folders, protected legacy purge, EOF recovery and RTT controller
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=20 -run 'Test(Cellular|Purge|ProtectedLegacy|FailedPurge|LifecycleCapacity)' ./mailbox ./manager ./tunnel
+      - name: RC7 account availability, control reader recovery and latency regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC[78]' .
+      - name: RC7 account allocation recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
+      - name: Verify qualification module dependency closure
+        working-directory: src/qualification
+        run: go list -mod=readonly -deps ./provider ./worker > /dev/null
+      - name: Native qualification gate unit tests
+        working-directory: src/qualification
+        run: python3 -m unittest test_home_gate
+      - name: Eight-account native screen
+        id: native_screen
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-screen" --screen
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-native-screen
+          path: ${{ runner.temp }}/itom-screen/
+          if-no-files-found: ignore
+      - name: Encrypted exit native screen
+        if: ${{ !cancelled() && steps.native_screen.outcome != 'skipped' }}
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-exit-screen" --screen --encrypted-exit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-encrypted-exit-screen
+          path: ${{ runner.temp }}/itom-exit-screen/
+          if-no-files-found: ignore
+      - name: Full native qualification matrix
+        run: python3 src/qualification/run_home.py "$RUNNER_TEMP/itom-matrix"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itom-v151-native-matrix
+          path: ${{ runner.temp }}/itom-matrix/
+          if-no-files-found: ignore

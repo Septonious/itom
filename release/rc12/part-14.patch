@@ -1,0 +1,500 @@
+@@ -338,26 +339,26 @@ class DomainTest {
+         val v = twoProfileVault(); val edit = ProfileEditing.open(v, "local"); val before = Codec.encode(v)
+         error("DUPLICATE_SERVER") { ProfileEditing.apply(v, "local", v.revision, edit.initial.copy(serverId = secondProfile().serverId)) }
+         error("VAULT_CREDENTIALS") { ProfileEditing.apply(v, "local", v.revision,
+-            edit.initial.copy(accounts = listOf(edit.initial.accounts.single().copy(localRef = "keystore:second_mail")))) }
++            edit.initial.copy(accounts = listOf(edit.initial.accounts.first().copy(localRef = secondProfile().accounts.first().credentialRef)) + edit.initial.accounts.drop(1))) }
+         assertEquals(before, Codec.encode(v))
+     }
+ 
+     @Test fun emptySecretFieldsCannotEraseRealConnectionSecrets() {
+         val v = editorVault(); val d = ProfileEditing.open(v, "local").initial
+-        error("CREDENTIAL_FORMAT") { ProfileEditing.apply(v, "local", v.revision, d.copy(accounts = listOf(d.accounts.single().copy(password = "")))) }
++        error("CREDENTIAL_FORMAT") { ProfileEditing.apply(v, "local", v.revision, d.copy(accounts = listOf(d.accounts.first().copy(password = "")) + d.accounts.drop(1))) }
+         error("PAIR_ID") { ProfileEditing.apply(v, "local", v.revision, d.copy(pairId = "", pskBase64 = "")) }
+-        assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.single().password)
++        assertEquals("TEST_ONLY_PASSWORD", v.credentials.values.first().password)
+     }
+ 
+     @Test fun incompleteProfileRequiresAllSecretsAndThenBecomesReady() {
+         val v = VaultDocument(profiles = listOf(profile()), selectedProfileId = "local", incompleteProfileIds = setOf("local"))
+         val old = Codec.vault(Codec.encode(v)); val d = ProfileEditing.open(old, "local").initial
+-        assertEquals("", d.pskBase64); assertEquals("", d.accounts.single().password)
++        assertEquals("", d.pskBase64); assertEquals("", d.accounts.first().password)
+         error("CREDENTIAL_FORMAT") { ProfileEditing.apply(old, "local", 0, d.copy(name = "Renamed")) }
+         val supplied = d.copy(pairId = invitation().pairId, pskBase64 = invitation().pskBase64,
+-            accounts = listOf(d.accounts.single().copy(username = "user@example.invalid", password = "SUPPLIED_PASSWORD")))
++            accounts = d.accounts.map { it.copy(username = "user-${it.id}@example.invalid", password = "SUPPLIED_PASSWORD") })
+         val saved = Codec.vault(Codec.encode(ProfileEditing.apply(old, "local", 0, supplied)))
+-        assertTrue(saved.incompleteProfileIds.isEmpty()); assertEquals("SUPPLIED_PASSWORD", saved.credentials.values.single().password)
++        assertTrue(saved.incompleteProfileIds.isEmpty()); assertEquals("SUPPLIED_PASSWORD", saved.credentials.values.first().password)
+         assertEquals(supplied, ProfileEditing.open(saved, "local").initial)
+         assertEquals(setOf("local"), old.incompleteProfileIds); assertTrue(old.credentials.isEmpty())
+     }
+@@ -375,15 +376,15 @@ class DomainTest {
+     @Test fun addingAccountDoesNotCopyAnotherAccountsCredentials() {
+         val d = ProfileEditing.open(editorVault(), "local").initial
+         val added = ProfileEditing.newAccount(d.accounts)
+-        assertEquals(d.accounts.single().host, added.host); assertEquals("993", added.port)
++        assertEquals(d.accounts.first().host, added.host); assertEquals("993", added.port)
+         assertTrue(added.username.isEmpty()); assertTrue(added.password.isEmpty())
+-        assertNotEquals(d.accounts.single().localRef, added.localRef); assertNotEquals(added.localRef, ProfileEditing.newAccount(d.accounts).localRef)
+-        assertEquals("TEST_ONLY_PASSWORD", d.accounts.single().password)
++        assertNotEquals(d.accounts.first().localRef, added.localRef); assertNotEquals(added.localRef, ProfileEditing.newAccount(d.accounts).localRef)
++        assertEquals("TEST_ONLY_PASSWORD", d.accounts.first().password)
+     }
+ 
+     @Test fun editorDraftDiagnosticsNeverPrintSecretMaterial() {
+         val edit = ProfileEditing.open(editorVault(), "local")
+-        listOf(edit.toString(), edit.initial.toString(), edit.initial.accounts.single().toString()).forEach {
++        listOf(edit.toString(), edit.initial.toString(), edit.initial.accounts.first().toString()).forEach {
+             assertFalse(it.contains("TEST_ONLY_PASSWORD")); assertFalse(it.contains(invitation().pskBase64)); assertFalse(it.contains("test@example.invalid"))
+         }
+     }
+@@ -429,4 +430,20 @@ class DomainTest {
+         assertNull(machine.state.value.sampledAt)
+         assertFalse(machine.sample(current, Metrics(activeLines=20,totalLines=20), "late-ready", 3))
+     }
++    @Test fun exitIdentityIsBoundToProfileAndGeneration() {
++        val m = SessionMachine()
++        val g = m.begin("local", 1, 16)
++        assertFalse(m.exitIdentity(g, "local", ExitIdentity("8.8.8.8", "US")))
++        assertTrue(m.connected(g, 1))
++        assertFalse(m.exitIdentity(g, "other", ExitIdentity("8.8.8.8", "US")))
++        assertTrue(m.exitIdentity(g, "local", ExitIdentity("8.8.8.8", "US")))
++        assertEquals("8.8.8.8", m.state.value.exitIdentities["local"]?.ip)
++        m.stop(g)
++        val next = m.begin("local", 2, 16)
++        assertFalse(m.exitIdentity(g, "local", ExitIdentity("1.1.1.1", "AU")))
++        assertNull(m.state.value.exitIdentities["local"])
++        assertTrue(m.connected(next, 2))
++        assertTrue(m.exitIdentity(next, "local", ExitIdentity("2606:4700::1111", "")))
++    }
++
+ }
+diff --git a/src/core/servercfg/android.go b/src/core/servercfg/android.go
+index 713247f..443988b 100644
+--- a/src/core/servercfg/android.go
++++ b/src/core/servercfg/android.go
+@@ -16,8 +16,8 @@ func (c Config) androidInvitation(uid string) ([]byte, error) {
+ 	if e := c.Validate(); e != nil {
+ 		return nil, e
+ 	}
+-	if len(c.Accounts) == 0 {
+-		return nil, ErrConfig
++	if len(c.Accounts) < MinOperationalAccounts {
++		return nil, ErrMinimumAccounts
+ 	}
+ 	var u User
+ 	for _, x := range c.Users {
+diff --git a/src/core/servercfg/config.go b/src/core/servercfg/config.go
+index 04387fd..6d968d0 100644
+--- a/src/core/servercfg/config.go
++++ b/src/core/servercfg/config.go
+@@ -21,6 +21,10 @@ import (
+ 
+ var ErrConfig = errors.New("SERVER_CONFIG")
+ var ErrConfigSize = errors.New("SERVER_CONFIG_TOO_LARGE")
++var ErrMinimumAccounts = errors.New("ACCOUNT_COUNT_MINIMUM_4")
++
++// Administrative setup may contain fewer accounts; operational profiles may not.
++const MinOperationalAccounts = 4
+ 
+ // Limit decoded configuration bytes, not the number of carrier accounts.
+ // All writers and readers share this bound so a valid update remains readable.
+@@ -343,8 +347,8 @@ func (c Config) Export(uid, path string) error {
+ 	if err := c.Validate(); err != nil {
+ 		return err
+ 	}
+-	if len(c.Accounts) == 0 {
+-		return ErrConfig
++	if len(c.Accounts) < MinOperationalAccounts {
++		return ErrMinimumAccounts
+ 	}
+ 	var u User
+ 	for _, x := range c.Users {
+@@ -404,8 +408,8 @@ func ReadProfile(path string) (Profile, error) {
+ 		return p, ErrConfig
+ 	}
+ 	c := Config{Schema: 1, Server: p.Server, Provider: p.Provider, Users: []User{p.User}, Accounts: p.Accounts, Transport: p.Transport}
+-	if len(p.Accounts) == 0 {
+-		return p, ErrConfig
++	if len(p.Accounts) < MinOperationalAccounts {
++		return p, ErrMinimumAccounts
+ 	}
+ 	return p, c.Validate()
+ }
+diff --git a/src/core/tunnel/api.go b/src/core/tunnel/api.go
+index ec0a271..4928224 100644
+--- a/src/core/tunnel/api.go
++++ b/src/core/tunnel/api.go
+@@ -27,7 +27,7 @@ import (
+ 	mailstream "itom.local/mailstream"
+ )
+ 
+-const TransportRevision = "itom-1-5-1-rc11-dev"
++const TransportRevision = "itom-1-5-1-rc12-dev"
+ const pathHost = "path.mailstream.itom.invalid"
+ 
+ type Dial = mailstream.NetworkDialer
+@@ -137,7 +137,10 @@ func profileConfigHash(p servercfg.Profile) string {
+ 	return hex.EncodeToString(digest[:])
+ }
+ func profileAccounts(p servercfg.Profile, d Dial, roots *tls.Config) ([]mailstream.MailAccount, []byte, error) {
+-	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled || len(p.Accounts) == 0 {
++	if len(p.Accounts) < servercfg.MinOperationalAccounts {
++		return nil, nil, servercfg.ErrMinimumAccounts
++	}
++	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled {
+ 		return nil, nil, servercfg.ErrConfig
+ 	}
+ 	if err := (servercfg.Config{Schema: 1, Server: p.Server, Provider: p.Provider, Users: []servercfg.User{p.User}, Accounts: p.Accounts, Transport: p.Transport}).Validate(); err != nil {
+@@ -264,6 +267,11 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
+ 		}
+ 		return nil, err
+ 	}
++	if link.Snapshot().AllocatedAccounts < servercfg.MinOperationalAccounts {
++		session.Close()
++		return nil, servercfg.ErrMinimumAccounts
++	}
++	session.SetMinimumActiveAccounts(servercfg.MinOperationalAccounts)
+ 	client = &Client{session: session, link: link, profile: p, cancel: cancel, trace: trace}
+ 	progressMu.Lock()
+ 	observedSession = session
+diff --git a/src/core/tunnel/application_integration_test.go b/src/core/tunnel/application_integration_test.go
+index f69b5ed..b168d4b 100644
+--- a/src/core/tunnel/application_integration_test.go
++++ b/src/core/tunnel/application_integration_test.go
+@@ -82,16 +82,18 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	backend := imapmemserver.New()
+-	backend.AddUser(imapmemserver.NewUser("native-fixture", "fixture-password"))
++	for i := 1; i <= 4; i++ {
++		backend.AddUser(imapmemserver.NewUser("native-fixture"+strconv.Itoa(i), "fixture-password"))
++	}
+ 	var connections, peak, providerLimit atomic.Int64
+-	providerLimit.Store(10)
++	providerLimit.Store(40)
+ 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
+ 		n := connections.Add(1)
+ 		for old := peak.Load(); n > old && !peak.CompareAndSwap(old, n); old = peak.Load() {
+ 		}
+ 		if n > providerLimit.Load() {
+ 			connections.Add(-1)
+-			return nil, nil, errors.New("fixture provider ten-connection limit")
++			return nil, nil, errors.New("fixture provider aggregate connection limit")
+ 		}
+ 		return &countedProviderSession{Session: backend.NewSession(), count: &connections}, nil, nil
+ 	}})
+@@ -125,8 +127,11 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	other.Key = hex.EncodeToString(key)
+-	account := servercfg.Account{ID: "a01", Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture", Password: "fixture-password"}}
+-	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: []servercfg.Account{account}, Users: []servercfg.User{u, other}}
++	var accounts []servercfg.Account
++	for i := 1; i <= 4; i++ {
++		accounts = append(accounts, servercfg.Account{ID: "a0" + strconv.Itoa(i), Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture" + strconv.Itoa(i), Password: "fixture-password"}})
++	}
++	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: accounts, Users: []servercfg.User{u, other}}
+ 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+ 	defer cancel()
+ 	serverDone := make(chan error, 1)
+@@ -277,12 +282,12 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
+ 	if err != nil || traffic.Running || len(traffic.Users) != 2 || traffic.Users[0].Upload < 128<<10 || traffic.Users[0].Download < 128<<10 {
+ 		t.Fatalf("actual exit counters missing or stale: %+v error=%v", traffic, err)
+ 	}
+-	if peak.Load() > 10 {
++	if peak.Load() > 40 {
+ 		t.Fatal("exceeded provider connection limit", peak.Load())
+ 	}
+-	t.Logf("two configured identities, provider peak=%d/10; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
++	t.Logf("two configured identities, provider peak=%d/40; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
+ 	t.Log("new runtime reached native protected sockets, authenticated DATA readiness, SOCKS HTTPS and IPv4 TUN HTTPS")
+-	providerLimit.Store(16)
++	providerLimit.Store(64)
+ 	peak.Store(0)
+ 	testConcurrentUsers(t, cfg, origin.Listener.Addr().String(), mailPEM, httpsPEM, &peak)
+ 
+diff --git a/src/core/tunnel/cellular.go b/src/core/tunnel/cellular.go
+index bc681c0..fcf4964 100644
+--- a/src/core/tunnel/cellular.go
++++ b/src/core/tunnel/cellular.go
+@@ -5,6 +5,8 @@ import (
+ 	"sort"
+ 	"strings"
+ 	"time"
++
++	"itom.local/core/servercfg"
+ )
+ 
+ // Network changes invalidate samples from the old bearer, including probes
+@@ -26,7 +28,7 @@ func (c *Client) SetNetworkType(kind string) {
+ 
+ const cellularRTTWindow = 10 * time.Second
+ 
+-type mailRate struct{ up, down uint64 }
++type mailRate struct{ up, down, control uint64 }
+ 
+ type rttSample struct {
+ 	at    time.Time
+@@ -66,22 +68,24 @@ func (c *Client) cellularRTTLocked(now time.Time) (time.Duration, int) {
+ }
+ 
+ type cellularPolicy struct {
+-	healthy    int
+-	limit      int
+-	lastChange time.Time
++	healthy            int
++	limit              int
++	lastChange         time.Time
++	beforeReduction    int
++	rttBeforeReduction time.Duration
+ }
+ 
+ // Only decrease on a ten-second rolling application RTT average, never
+ // because of provider IMAP service latency or idle traffic. Apply at most
+ // one reduction per window so overlapping measurements cannot cause collapse.
+ func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int, demand bool, now time.Time) int {
+-	if capacity < 1 {
+-		return 0
++	if capacity < servercfg.MinOperationalAccounts {
++		return 0 // invalid allocation, not permission to use a smaller operating limit
+ 	}
+ 	if p.limit == 0 {
+ 		p.limit = capacity
+ 	}
+-	p.limit = min(p.limit, capacity)
++	p.limit = min(capacity, max(servercfg.MinOperationalAccounts, p.limit))
+ 	if samples < 2 {
+ 		p.healthy = 0
+ 		return p.limit
+@@ -108,17 +112,89 @@ func (p *cellularPolicy) decide(capacity int, average time.Duration, samples int
+ 	p.healthy = 0
+ 	switch {
+ 	case average >= 700*time.Millisecond:
+-		p.limit = max(1, p.limit-accountStep(capacity, 35))
++		p.limit = max(servercfg.MinOperationalAccounts, p.limit-accountStep(capacity, 35))
+ 	case average > 600*time.Millisecond:
+-		p.limit = max(1, p.limit-accountStep(capacity, 20))
++		p.limit = max(servercfg.MinOperationalAccounts, p.limit-accountStep(capacity, 20))
+ 	default:
+-		p.limit = max(1, p.limit-accountStep(capacity, 10))
++		p.limit = max(servercfg.MinOperationalAccounts, p.limit-accountStep(capacity, 10))
+ 	}
+ 	if previous != p.limit {
+ 		p.lastChange = now
+ 	}
+ 	return p.limit
+ }
++
++// Account-count decisions must distinguish shared bearer delay from mailbox
++// pressure. Measured APPEND service is advisory, not independent radio capacity.
++type cellularEvidence struct {
++	active, streams, queued, slots, busy  int
++	serviceCapacity, publications         float64
++	bulkPressure, retries, timeout, fresh bool
++}
++
++func (e cellularEvidence) overloaded() bool {
++	return e.retries || e.queued > max(2, e.active) || (e.slots > 0 && e.busy*4 >= e.slots*3 && e.queued > 0) || (e.serviceCapacity > 0 && e.publications >= .8*e.serviceCapacity)
++}
++func (e cellularEvidence) minimum(capacity int) int {
++	// At least four, plus enough service headroom for observed completions.
++	// Completion rate is a lower bound on demand when queues are growing.
++	n := servercfg.MinOperationalAccounts
++	if e.serviceCapacity > 0 && e.active > 0 {
++		for n < capacity && e.publications > .7*e.serviceCapacity*float64(n)/float64(e.active) {
++			n++
++		}
++	}
++	return min(capacity, n)
++}
++func (p *cellularPolicy) decideObserved(capacity int, average time.Duration, samples int, demand bool, now time.Time, e cellularEvidence) int {
++	if capacity < servercfg.MinOperationalAccounts {
++		return 0
++	}
++	if p.limit == 0 {
++		p.limit = capacity
++	}
++	p.limit = min(capacity, max(servercfg.MinOperationalAccounts, p.limit))
++	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < cellularRTTWindow {
++		return p.limit
++	}
++	previous := p.limit
++	// Restore the last operating point if a reduction made no material
++	// improvement. Timeout/command pressure can expand even at >700ms.
++	if p.beforeReduction > p.limit && samples >= 2 && average >= 400*time.Millisecond && average >= p.rttBeforeReduction*9/10 {
++		p.limit = min(capacity, p.beforeReduction)
++		p.beforeReduction = 0
++	} else if (e.timeout || e.overloaded()) && (e.streams > 0 || e.queued > 0) {
++		p.limit = min(capacity, p.limit+accountStep(capacity, 20))
++		p.beforeReduction = 0
++	} else if e.active < servercfg.MinOperationalAccounts {
++		p.limit = min(capacity, max(p.limit, servercfg.MinOperationalAccounts))
++	} else if average > 400*time.Millisecond {
++		// High RTT alone, especially while idle/stalled, is not evidence
++		// that reducing physical accounts will improve radio service.
++		if samples < 2 || !e.fresh || !e.bulkPressure || e.overloaded() {
++			p.healthy = 0
++			return p.limit
++		}
++		p.decide(capacity, average, samples, demand, now)
++		p.limit = max(p.limit, e.minimum(capacity))
++		if p.limit < previous {
++			p.beforeReduction, p.rttBeforeReduction = previous, average
++		}
++	} else {
++		p.decide(capacity, average, samples, demand, now)
++		if p.limit > previous || (samples >= 2 && average <= 300*time.Millisecond) {
++			p.beforeReduction = 0
++		}
++	}
++	if p.limit != previous {
++		p.lastChange = now
++		p.healthy = 0
++	}
++	return p.limit
++}
++func canLearnCellularBaseline(e cellularEvidence, rtt int64, demand bool, settled bool) bool {
++	return settled && e.fresh && !e.timeout && !e.retries && !e.overloaded() && !demand && e.streams == 0 && e.queued == 0 && rtt > 0 && rtt <= 400
++}
+ func accountStep(capacity, percent int) int { return max(1, (capacity*percent+50)/100) }
+ 
+ // Robust idle baseline indexed by the actual live count. It is advisory;
+@@ -161,6 +237,8 @@ func (c *Client) accountController(ctx context.Context) {
+ 	var sampled time.Time
+ 	var lastActive int
+ 	var lastProbe int64
++	var previousRetries, previousBackpressure uint64
++	var lastPressure time.Time
+ 	var wasMobile bool
+ 	var epoch uint64
+ 	var bearerSince time.Time
+@@ -172,7 +250,7 @@ func (c *Client) accountController(ctx context.Context) {
+ 		case <-tick.C:
+ 		}
+ 		mail := c.link.Snapshot()
+-		if !mail.GrantNegotiated || mail.GrantChanging || mail.AllocatedAccounts == 0 {
++		if !mail.GrantNegotiated || mail.GrantChanging || mail.AllocatedAccounts < servercfg.MinOperationalAccounts {
+ 			continue
+ 		}
+ 		now := time.Now()
+@@ -189,18 +267,28 @@ func (c *Client) accountController(ctx context.Context) {
+ 			lastActive = 0
+ 		}
+ 		active := 0
++		evidence := cellularEvidence{}
+ 		var up, down uint64
+ 		elapsed := now.Sub(sampled).Seconds()
+ 		for _, line := range mail.Lines {
+ 			old, ok := previous[line.Account]
+ 			if line.Ready && line.Data && line.Writer && line.ControlWriter {
+ 				active++
++				evidence.queued += line.ControlQueued
++				evidence.slots += line.InteractiveSlots
++				evidence.busy += line.InteractiveBusy
++				if line.ControlPublicationMeanUS > 0 && line.ControlServiceAgeMS >= 0 && line.ControlServiceAgeMS <= 10000 {
++					evidence.serviceCapacity += float64(line.InteractiveSlots) * 1e6 / float64(line.ControlPublicationMeanUS+max(0, line.ControlPublicationJitterUS))
++				}
++				if ok && !sampled.IsZero() && elapsed > 0 && line.ControlAppended >= old.control {
++					evidence.publications += float64(line.ControlAppended-old.control) / elapsed
++				}
+ 				if ok && !sampled.IsZero() && elapsed > 0 && line.UploadBytes >= old.up && line.DownloadBytes >= old.down {
+ 					up += uint64(float64(line.UploadBytes-old.up) * 8 / elapsed)
+ 					down += uint64(float64(line.DownloadBytes-old.down) * 8 / elapsed)
+ 				}
+ 			}
+-			previous[line.Account] = mailRate{line.UploadBytes, line.DownloadBytes}
++			previous[line.Account] = mailRate{line.UploadBytes, line.DownloadBytes, line.ControlAppended}
+ 		}
+ 		sampled = now
+ 		if active != lastActive {
+@@ -219,12 +307,22 @@ func (c *Client) accountController(ctx context.Context) {
+ 		snapshot := c.session.Snapshot()
+ 		demand := snapshot.PendingBytes >= 128<<10 || snapshot.DeliveryFlight >= 128<<10 || max(up, down) >= 1_000_000
+ 		probe := c.Probe()
++		evidence.active, evidence.streams = active, snapshot.Streams
++		evidence.fresh = probe.Failure == "" && probe.SampledAtMS > 0 && now.UnixMilli()-probe.SampledAtMS < 3000
++		evidence.timeout = probe.Failure != "" || (probe.SampledAtMS > 0 && now.UnixMilli()-probe.SampledAtMS > 6000)
++		if snapshot.Retransmissions > previousRetries || snapshot.ReceiptBackpressure > previousBackpressure {
++			lastPressure = now
++		}
++		previousRetries, previousBackpressure = snapshot.Retransmissions, snapshot.ReceiptBackpressure
++		evidence.retries = !lastPressure.IsZero() && now.Sub(lastPressure) < cellularRTTWindow
++		evidence.bulkPressure = snapshot.BulkDeliveryFlight >= 128<<10 && snapshot.MobileGuarded && snapshot.BulkWindowLimited
++		settled := now.Sub(bearerSince) >= cellularRTTWindow
+ 		base := baselines[active]
+ 		if base == nil {
+ 			base = &cellularBaseline{}
+ 			baselines[active] = base
+ 		}
+-		if !demand && active > 0 && probe.SampledAtMS != lastProbe && probe.Failure == "" {
++		if active >= servercfg.MinOperationalAccounts && probe.SampledAtMS != lastProbe && canLearnCellularBaseline(evidence, probe.RTTMillis, demand, settled) {
+ 			base.add(time.Duration(probe.RTTMillis) * time.Millisecond)
+ 		}
+ 		lastProbe = probe.SampledAtMS
+@@ -248,7 +346,7 @@ func (c *Client) accountController(ctx context.Context) {
+ 			if now.Sub(bearerSince) < cellularRTTWindow {
+ 				samples = 0
+ 			}
+-			desired = policy.decide(target, average, samples, demand, now)
++			desired = policy.decideObserved(target, average, samples, demand, now, evidence)
+ 			target = desired
+ 		}
+ 		c.mu.Lock()
+diff --git a/src/core/tunnel/cellular_test.go b/src/core/tunnel/cellular_test.go
+index a5f9e31..6db6347 100644
+--- a/src/core/tunnel/cellular_test.go
++++ b/src/core/tunnel/cellular_test.go
+@@ -17,7 +17,7 @@ func TestCellularPolicy(t *testing.T) {
+ 	for _, v := range []struct {
+ 		ms   int
+ 		want int
+-	}{{401, 27}, {650, 21}, {700, 10}, {850, 1}, {250, 1}, {250, 7}, {250, 7}, {250, 13}} {
++	}{{401, 27}, {650, 21}, {700, 10}, {850, 4}, {250, 4}, {250, 10}, {250, 10}, {250, 16}} {
+ 		if got := p.decide(30, time.Duration(v.ms)*time.Millisecond, 5, true, now); got != v.want {
+ 			t.Fatalf("%dms: got %d want %d", v.ms, got, v.want)
+ 		}
+@@ -63,3 +63,55 @@ func TestCellularRTTWindowAndBearerReset(t *testing.T) {
+ 		t.Fatal("one spike cut accounts", n)
+ 	}
+ }
++
++func TestCellularFourAccountMinimum(t *testing.T) {
++	now := time.Now()
++	for _, capacity := range []int{4, 5, 8, 20, 25, 30} {
++		p := cellularPolicy{}
++		for i := 0; i < 20; i++ {
++			got := p.decide(capacity, 5*time.Second, 5, true, now.Add(time.Duration(i)*cellularRTTWindow))
++			if got < 4 || got > capacity {
++				t.Fatalf("capacity=%d got=%d", capacity, got)
++			}
++		}
++		if p.limit != 4 {
++			t.Fatalf("capacity=%d floor=%d", capacity, p.limit)
++		}
++	}
++	for n := 0; n < 4; n++ {
++		if got := (&cellularPolicy{}).decide(n, time.Second, 5, true, now); got != 0 {
++			t.Fatalf("invalid allocation %d: %d", n, got)
++		}
++	}
++}
++
++func TestRC12CellularStallCannotReduce(t *testing.T) {
++	now := time.Now()
++	p := cellularPolicy{}
++	for i := 0; i < 8; i++ {
++		e := cellularEvidence{active: 8, streams: 16, fresh: true, serviceCapacity: 12, publications: 2}
++		if got := p.decideObserved(8, 2*time.Second, 5, true, now.Add(time.Duration(i)*10*time.Second), e); got != 8 {
++			t.Fatal("idle/stall reduction", got)
++		}
++	}
++	p = cellularPolicy{limit: 4}
++	if got := p.decideObserved(8, 5*time.Second, 5, false, now, cellularEvidence{active: 4, streams: 16, timeout: true, queued: 6}); got != 6 {
++		t.Fatal("recovery requires expansion", got)
++	}
++	p = cellularPolicy{limit: 8}
++	e := cellularEvidence{active: 8, streams: 16, fresh: true, bulkPressure: true, serviceCapacity: 20, publications: 5}

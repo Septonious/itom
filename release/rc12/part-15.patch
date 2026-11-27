@@ -1,0 +1,500 @@
++	if got := p.decideObserved(8, 800*time.Millisecond, 5, true, now, e); got != 5 {
++		t.Fatal("bulk reduction", got)
++	}
++	e.active = 5
++	if got := p.decideObserved(8, 900*time.Millisecond, 5, true, now.Add(10*time.Second), e); got != 8 {
++		t.Fatal("failed reduction rollback", got)
++	}
++	e = cellularEvidence{active: 4, streams: 15, fresh: true}
++	if canLearnCellularBaseline(e, 200, false, true) || canLearnCellularBaseline(cellularEvidence{fresh: true}, 1519, false, true) {
++		t.Fatal("stalled sample learned")
++	}
++	if !canLearnCellularBaseline(cellularEvidence{active: 8, fresh: true}, 228, false, true) {
++		t.Fatal("healthy idle not learned")
++	}
++}
+diff --git a/src/core/tunnel/concurrent_users_test.go b/src/core/tunnel/concurrent_users_test.go
+index 8ed117d..d65c7ce 100644
+--- a/src/core/tunnel/concurrent_users_test.go
++++ b/src/core/tunnel/concurrent_users_test.go
+@@ -82,8 +82,8 @@ func testConcurrentUsers(t *testing.T, cfg servercfg.Config, origin string, mail
+ 			t.Fatal("concurrent authenticated startup", j.err)
+ 		}
+ 		clients[j.i] = j.c
+-		if s := j.c.Snapshot(); s.ActiveLines != 4 || s.TotalLines != 4 {
+-			t.Fatalf("four real lines were not ready: %+v", s.Stats)
++		if s := j.c.Snapshot(); s.ActiveLines != 16 || s.TotalLines != 16 {
++			t.Fatalf("sixteen real lines were not ready: %+v", s.Stats)
+ 		}
+ 	}
+ 	transfer := func(i int) error {
+@@ -131,8 +131,8 @@ func testConcurrentUsers(t *testing.T, cfg servercfg.Config, origin string, mail
+ 	if err := transfer(1); err != nil {
+ 		t.Fatal("one user's disconnect interrupted the other", err)
+ 	}
+-	if peak.Load() > 16 {
++	if peak.Load() > 64 {
+ 		t.Fatal("provider connection budget exceeded", peak.Load())
+ 	}
+-	t.Logf("two simultaneous users: 4/4 lines each, HTTPS integrity, exit isolation, independent disconnect; peak %d/16", peak.Load())
++	t.Logf("two simultaneous users: 16/16 lines each, HTTPS integrity, exit isolation, independent disconnect; peak %d/64", peak.Load())
+ }
+diff --git a/src/core/tunnel/minimum_accounts_test.go b/src/core/tunnel/minimum_accounts_test.go
+new file mode 100644
+index 0000000..109092d
+--- /dev/null
++++ b/src/core/tunnel/minimum_accounts_test.go
+@@ -0,0 +1,26 @@
++package tunnel
++
++import (
++	"errors"
++	"itom.local/core/mailbox"
++	"itom.local/core/servercfg"
++	"itom.local/core/wire"
++	"testing"
++)
++
++func TestRC12OperationalProfileMinimum(t *testing.T) {
++	p := servercfg.Profile{Schema: 1, Kind: "itom-imap-probe", Server: wire.ID{1}, Provider: "fixture", User: servercfg.User{ID: "12345678", Name: "fixture", Key: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", Up: "itom-fixture-up", Down: "itom-fixture-down", Enabled: true}}
++	for i := 1; i <= 4; i++ {
++		p.Accounts = append(p.Accounts, servercfg.Account{ID: string(rune('a' + i)), Mail: mailbox.Config{Host: "localhost", Port: 993, TLS: "tls", Username: string(rune('a' + i)), Password: "test"}})
++	}
++	for n := 0; n < 4; n++ {
++		q := p
++		q.Accounts = p.Accounts[:n]
++		if _, _, err := profileAccounts(q, nil, nil); !errors.Is(err, servercfg.ErrMinimumAccounts) {
++			t.Fatal(n, err)
++		}
++	}
++	if a, _, err := profileAccounts(p, nil, nil); err != nil || len(a) != 4 {
++		t.Fatal(len(a), err)
++	}
++}
+diff --git a/src/core/tunnel/server.go b/src/core/tunnel/server.go
+index c14110e..5f6c182 100644
+--- a/src/core/tunnel/server.go
++++ b/src/core/tunnel/server.go
+@@ -41,8 +41,8 @@ func ServeManagedWithExit(ctx context.Context, c servercfg.Config, dir string, l
+ 	if err = c.Validate(); err != nil {
+ 		return err
+ 	}
+-	if len(c.Accounts) == 0 {
+-		return servercfg.ErrConfig
++	if len(c.Accounts) < servercfg.MinOperationalAccounts {
++		return servercfg.ErrMinimumAccounts
+ 	}
+ 	ctx, cancel := context.WithCancel(ctx)
+ 	defer cancel()
+@@ -182,6 +182,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter,
+ 	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) {
+ 		return admission.acquirePreferred(p.User.ID, preferredGrantAccounts(link.Snapshot().Lines))
+ 	}, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
++		s.SetMinimumActiveAccounts(servercfg.MinOperationalAccounts)
+ 		current.Store(s)
+ 		_ = trace.record(map[string]any{"Event": "session_ready", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
+ 		if log != nil {
+diff --git a/src/core/tunnel/trace.go b/src/core/tunnel/trace.go
+index 94a1a93..01c2111 100644
+--- a/src/core/tunnel/trace.go
++++ b/src/core/tunnel/trace.go
+@@ -8,6 +8,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"itom.local/core/servercfg"
+ 	mailstream "itom.local/mailstream"
+ )
+ 
+@@ -60,6 +61,8 @@ func failureCode(err error) string {
+ 		return "TIMEOUT"
+ 	case errors.Is(err, mailstream.ErrAuth):
+ 		return "AUTHENTICATION"
++	case errors.Is(err, servercfg.ErrMinimumAccounts):
++		return "ACCOUNT_COUNT_MINIMUM_4"
+ 	case errors.Is(err, mailstream.ErrCapacity):
+ 		return "CAPACITY"
+ 	case errors.Is(err, mailstream.ErrBusy):
+diff --git a/src/mailstream/account_set.go b/src/mailstream/account_set.go
+index 31b7337..f6d46cc 100644
+--- a/src/mailstream/account_set.go
++++ b/src/mailstream/account_set.go
+@@ -37,6 +37,9 @@ func (s *Session) applyAccountSet(f frame) error {
+ 			return s.trySend(frame{kind: frameAccountSetAck, offset: f.offset}, true)
+ 		}
+ 		ids := strings.Split(string(f.data), ",")
++		if len(ids) < int(s.minimumActive.Load()) {
++			return ErrCapacity
++		}
+ 		allowed, err := l.validateActiveSet(s.cipher.id, ids)
+ 		if err != nil {
+ 			return err
+@@ -84,6 +87,9 @@ func (s *Session) SetActiveAccounts(ctx context.Context, ids []string) error {
+ 	return s.setActiveAccountsLocked(ctx, l, ids)
+ }
+ func (s *Session) setActiveAccountsLocked(ctx context.Context, l *IMAPLink, ids []string) error {
++	if len(ids) < int(s.minimumActive.Load()) {
++		return ErrCapacity // never park more accounts to satisfy a sub-floor proposal
++	}
+ 	allowed, err := l.validateActiveSet(s.cipher.id, ids)
+ 	if err != nil {
+ 		return err
+@@ -230,6 +236,14 @@ func (a *mailAccountState) ensureActive(ctx context.Context, id SessionID) error
+ 	}
+ }
+ 
++// SetMinimumActiveAccounts is configured by the production client after authentication.
++// Low-level protocol tests may still exercise smaller synthetic account sets.
++func (s *Session) SetMinimumActiveAccounts(minimum int) {
++	s.accountSetMu.Lock()
++	defer s.accountSetMu.Unlock()
++	s.minimumActive.Store(int32(max(0, minimum)))
++}
++
+ // SetActiveLimit chooses healthy already-active paths first, without changing
+ // the authenticated allocation. A zero limit means all assigned accounts.
+ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
+@@ -246,7 +260,11 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
+ 	}
+ 	grant := l.stableGrant
+ 	l.mu.Unlock()
+-	s.activeLimit.Store(int32(limit))
++	minimum := max(1, int(s.minimumActive.Load()))
++	if len(grant) < minimum || (limit != 0 && limit < minimum) {
++		return ErrCapacity
++	}
++	requested := limit
+ 	if limit == 0 || limit > len(grant) {
+ 		limit = len(grant)
+ 	}
+@@ -265,9 +283,10 @@ func (s *Session) SetActiveLimit(ctx context.Context, limit int) error {
+ 			}
+ 		}
+ 	}
+-	if len(ids) == 0 {
+-		return ErrCapacity
++	if len(ids) < minimum {
++		return ErrCapacity // keep surviving paths; do not commit a smaller active set
+ 	}
++	s.activeLimit.Store(int32(requested))
+ 	target := map[string]bool{}
+ 	for _, id := range ids {
+ 		target[id] = true
+diff --git a/src/mailstream/grant_update.go b/src/mailstream/grant_update.go
+index eab4df0..e0da359 100644
+--- a/src/mailstream/grant_update.go
++++ b/src/mailstream/grant_update.go
+@@ -228,6 +228,9 @@ func (s *Session) applyLiveGrant(ctx context.Context, req grantRequest) error {
+ 	}
+ 	s.accountSetMu.Lock()
+ 	defer s.accountSetMu.Unlock()
++	if len(req.ids) < int(s.minimumActive.Load()) {
++		return ErrCapacity
++	}
+ 	desired, err := l.knownGrant(req.ids)
+ 	if err != nil {
+ 		return err
+diff --git a/src/mailstream/imap.go b/src/mailstream/imap.go
+index f219f0d..9dd4b49 100644
+--- a/src/mailstream/imap.go
++++ b/src/mailstream/imap.go
+@@ -1488,71 +1488,74 @@ type MailSnapshot struct {
+ 	Lines             []MailAccountSnapshot `json:"lines"`
+ }
+ type MailAccountSnapshot struct {
+-	ControlMessageReservations uint64 `json:"control_message_reservations"`
+-	ControlMessageLimit        int    `json:"control_message_limit"`
+-	ControlRecoveryReserve     int    `json:"control_recovery_reserve"`
+-	ControlBackpressure        bool   `json:"control_backpressure"`
+-	ControlOutgoingBytes       int    `json:"control_outgoing_retained_bytes"`
+-	ControlIncomingBytes       int    `json:"control_incoming_retained_bytes"`
+-	ControlOutstanding         int    `json:"control_outstanding"`
+-	ControlCollected           uint64 `json:"control_messages_collected"`
+-	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
+-	StorageRecoveryDeferred    bool   `json:"storage_recovery_deferred"`
+-	StoragePressure            bool   `json:"storage_pressure"`
+-	PeerStoragePressure        bool   `json:"peer_storage_pressure"`
+-	StorageRecoveryReady       bool   `json:"storage_recovery_ready"`
+-	MaintenanceFailure         string `json:"maintenance_failure,omitempty"`
+-	Housekeeping               bool   `json:"housekeeping"`
+-	RecoveryFailure            string `json:"recovery_failure,omitempty"`
+-	ControlPhase               int32  `json:"control_phase"`
+-	ControlCursor              uint32 `json:"control_cursor"`
+-	ControlCount               uint32 `json:"control_count"`
+-	DataAppended               uint64 `json:"data_appended_messages"`
+-	ControlAppended            uint64 `json:"control_appended_messages"`
+-	DataMIMEBytes              uint64 `json:"data_mime_bytes"`
+-	ControlMIMEBytes           uint64 `json:"control_mime_bytes"`
+-	AppendCompletionMS         int64  `json:"append_completion_ms"`
+-	InteractiveQueueUS         int64  `json:"interactive_queue_last_us"`
+-	InteractiveTagUS           int64  `json:"interactive_tag_wait_last_us"`
+-	InteractiveAppendUS        int64  `json:"interactive_append_last_us"`
+-	ControlReconnects          uint64 `json:"control_reconnects"`
+-	ControlPublicationMeanUS   int64  `json:"control_publication_mean_us"`
+-	ControlPublicationJitterUS int64  `json:"control_publication_jitter_us"`
+-	ControlPollMS              int64  `json:"control_poll_ms"`
+-	EmptyControlFetches        uint64 `json:"empty_control_fetches"`
+-	QueuedMIMEBytes            int    `json:"queued_mime_bytes"`
+-	StartupAttempts            uint32 `json:"startup_attempts"`
+-	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
+-	PeerVerified               bool   `json:"peer_verified"`
+-	PeerUnavailable            bool   `json:"peer_unavailable"`
+-	Account                    string `json:"account"`
+-	Allocated                  bool   `json:"allocated"`
+-	Stage                      string `json:"stage"`
+-	Failure                    string `json:"failure,omitempty"`
+-	Ready                      bool   `json:"ready"`
+-	Writer                     bool   `json:"writer"`
+-	ControlWriter              bool   `json:"control_writer"`
+-	WriterRecovering           bool   `json:"writer_recovering"`
+-	WriterReconnects           uint64 `json:"writer_reconnects"`
+-	WriterRecoveryReason       string `json:"writer_recovery_reason,omitempty"`
+-	Data                       bool   `json:"data"`
+-	PhysicalSockets            int    `json:"physical_sockets"`
+-	RetainedBytes              int    `json:"retained_bytes"`
+-	BulkHeadroomBytes          int    `json:"bulk_headroom_bytes"`
+-	BulkBlocked                bool   `json:"bulk_blocked"`
+-	CollectionPageLimit        uint64 `json:"collection_page_limit"`
+-	ReservedBytes              int    `json:"reserved_retention_bytes"`
+-	RecoveredBytes             int    `json:"recovered_retention_bytes"`
+-	DataPhase                  int32  `json:"data_phase"`
+-	DataCursor                 uint32 `json:"data_cursor"`
+-	DataCount                  uint32 `json:"data_count"`
+-	DataGeneration             uint32 `json:"data_generation"`
+-	RTTMillis                  int64  `json:"rtt_ms"`
+-	RTTFresh                   bool   `json:"rtt_fresh"`
+-	RTTAgeMillis               int64  `json:"rtt_age_ms"`
+-	IMAPLatencyFresh           bool   `json:"imap_latency_fresh"`
+-	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
+-	UploadBytes, DownloadBytes uint64
++	ControlMessageReservations        uint64 `json:"control_message_reservations"`
++	ControlMessageLimit               int    `json:"control_message_limit"`
++	ControlRecoveryReserve            int    `json:"control_recovery_reserve"`
++	ControlBackpressure               bool   `json:"control_backpressure"`
++	ControlOutgoingBytes              int    `json:"control_outgoing_retained_bytes"`
++	ControlIncomingBytes              int    `json:"control_incoming_retained_bytes"`
++	ControlOutstanding                int    `json:"control_outstanding"`
++	ControlCollected                  uint64 `json:"control_messages_collected"`
++	AbandonedEmptied                  uint64 `json:"abandoned_folders_emptied"`
++	StorageRecoveryDeferred           bool   `json:"storage_recovery_deferred"`
++	StoragePressure                   bool   `json:"storage_pressure"`
++	PeerStoragePressure               bool   `json:"peer_storage_pressure"`
++	StorageRecoveryReady              bool   `json:"storage_recovery_ready"`
++	MaintenanceFailure                string `json:"maintenance_failure,omitempty"`
++	Housekeeping                      bool   `json:"housekeeping"`
++	RecoveryFailure                   string `json:"recovery_failure,omitempty"`
++	ControlPhase                      int32  `json:"control_phase"`
++	ControlCursor                     uint32 `json:"control_cursor"`
++	ControlCount                      uint32 `json:"control_count"`
++	DataAppended                      uint64 `json:"data_appended_messages"`
++	ControlAppended                   uint64 `json:"control_appended_messages"`
++	DataMIMEBytes                     uint64 `json:"data_mime_bytes"`
++	ControlMIMEBytes                  uint64 `json:"control_mime_bytes"`
++	AppendCompletionMS                int64  `json:"append_completion_ms"`
++	InteractiveQueueUS                int64  `json:"interactive_queue_last_us"`
++	InteractiveTagUS                  int64  `json:"interactive_tag_wait_last_us"`
++	InteractiveAppendUS               int64  `json:"interactive_append_last_us"`
++	ControlReconnects                 uint64 `json:"control_reconnects"`
++	ControlPublicationMeanUS          int64  `json:"control_publication_mean_us"`
++	ControlPublicationJitterUS        int64  `json:"control_publication_jitter_us"`
++	ControlPollMS                     int64  `json:"control_poll_ms"`
++	EmptyControlFetches               uint64 `json:"empty_control_fetches"`
++	QueuedMIMEBytes                   int    `json:"queued_mime_bytes"`
++	ControlQueued                     int    `json:"control_queued"`
++	InteractiveSlots, InteractiveBusy int
++	ControlServiceAgeMS               int64  `json:"control_service_age_ms"`
++	StartupAttempts                   uint32 `json:"startup_attempts"`
++	StartupRetryAtMS                  int64  `json:"startup_retry_at_ms,omitempty"`
++	PeerVerified                      bool   `json:"peer_verified"`
++	PeerUnavailable                   bool   `json:"peer_unavailable"`
++	Account                           string `json:"account"`
++	Allocated                         bool   `json:"allocated"`
++	Stage                             string `json:"stage"`
++	Failure                           string `json:"failure,omitempty"`
++	Ready                             bool   `json:"ready"`
++	Writer                            bool   `json:"writer"`
++	ControlWriter                     bool   `json:"control_writer"`
++	WriterRecovering                  bool   `json:"writer_recovering"`
++	WriterReconnects                  uint64 `json:"writer_reconnects"`
++	WriterRecoveryReason              string `json:"writer_recovery_reason,omitempty"`
++	Data                              bool   `json:"data"`
++	PhysicalSockets                   int    `json:"physical_sockets"`
++	RetainedBytes                     int    `json:"retained_bytes"`
++	BulkHeadroomBytes                 int    `json:"bulk_headroom_bytes"`
++	BulkBlocked                       bool   `json:"bulk_blocked"`
++	CollectionPageLimit               uint64 `json:"collection_page_limit"`
++	ReservedBytes                     int    `json:"reserved_retention_bytes"`
++	RecoveredBytes                    int    `json:"recovered_retention_bytes"`
++	DataPhase                         int32  `json:"data_phase"`
++	DataCursor                        uint32 `json:"data_cursor"`
++	DataCount                         uint32 `json:"data_count"`
++	DataGeneration                    uint32 `json:"data_generation"`
++	RTTMillis                         int64  `json:"rtt_ms"`
++	RTTFresh                          bool   `json:"rtt_fresh"`
++	RTTAgeMillis                      int64  `json:"rtt_age_ms"`
++	IMAPLatencyFresh                  bool   `json:"imap_latency_fresh"`
++	IMAPLatencyMillis                 int64  `json:"imap_latency_ms"`
++	UploadBytes, DownloadBytes        uint64
+ }
+ 
+ func (l *IMAPLink) Snapshot() MailSnapshot {
+@@ -1618,6 +1621,14 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
+ 		line.InteractiveTagUS = a.interactiveTagUS.Load()
+ 		line.InteractiveAppendUS = a.interactiveAppendUS.Load()
+ 		line.QueuedMIMEBytes = a.queuedBytes
++		line.ControlQueued = a.controlQueued
++		if p := a.controlWriter; p != nil {
++			line.InteractiveSlots, line.InteractiveBusy = cap(p.interactiveTags), len(p.interactiveTags)
++		}
++		line.ControlServiceAgeMS = -1
++		if at := a.controlServiceAt.Load(); at > 0 {
++			line.ControlServiceAgeMS = max(0, time.Since(time.Unix(0, at)).Milliseconds())
++		}
+ 		line.StartupAttempts = a.startupAttempts
+ 		if !a.startupRetryAt.IsZero() {
+ 			line.StartupRetryAtMS = a.startupRetryAt.UnixMilli()
+diff --git a/src/mailstream/mobile_flow.go b/src/mailstream/mobile_flow.go
+index ed5cb92..7b94fa1 100644
+--- a/src/mailstream/mobile_flow.go
++++ b/src/mailstream/mobile_flow.go
+@@ -92,6 +92,9 @@ func (m *mobileFlow) window(base, saturated time.Duration, now time.Time) int {
+ 	// 75ms queue allowance, with conservative bootstrap and bounded baseline.
+ 	baseline := max(base, saturated)
+ 	if baseline <= 0 {
++		if now.Before(m.guardUntil) && m.gain <= .5 {
++			return maxWire * 2
++		}
+ 		return 256 << 10
+ 	}
+ 	horizon := m.horizon(base, saturated)
+@@ -168,7 +171,17 @@ func (s *Session) ObserveApplicationRTT(sample time.Duration) {
+ 	if m.idleBase > 0 {
+ 		baseline = m.idleBase + min(150*time.Millisecond, 3*m.idleSigma)
+ 	}
+-	m.observeDelay(sample, baseline, time.Now(), s.delivery.bulkFlight > 0)
++	now := time.Now()
++	m.observeDelay(sample, baseline, now, s.delivery.bulkFlight > 0)
++	// Severe application delay with little/no bulk flight is not a capacity
++	// measurement. It does justify a conservative next-burst probe; keep
++	// the learned rate untouched and avoid admitting a full startup burst.
++	if sample >= 700*time.Millisecond && s.delivery.bulkFlight == 0 {
++		m.gain = .5
++		if until := now.Add(6 * time.Second); until.After(m.guardUntil) {
++			m.guardUntil = until
++		}
++	}
+ }
+ 
+ func (s *Session) SetMobileBaseline(base, variation time.Duration) {
+diff --git a/src/mailstream/mobile_flow_test.go b/src/mailstream/mobile_flow_test.go
+index 91332b0..4224c0a 100644
+--- a/src/mailstream/mobile_flow_test.go
++++ b/src/mailstream/mobile_flow_test.go
+@@ -127,3 +127,20 @@ func TestRC11MobileVariableRateModel(t *testing.T) {
+ 		}
+ 	}
+ }
++
++func TestRC12MobileStallGuardsNextBurstWithoutInventingCapacity(t *testing.T) {
++	s := &Session{}
++	s.delivery.mobile.reset(true)
++	initial := s.delivery.mobile.capacity
++	s.ObserveApplicationRTT(2 * time.Second)
++	m := &s.delivery.mobile
++	if m.capacity != initial || m.gain != .5 || !time.Now().Before(m.guardUntil) {
++		t.Fatal("missing conservative guard", m.capacity, m.gain)
++	}
++	if got := s.delivery.allowance(); got != 2*maxWire {
++		t.Fatal("initial burst not bounded", got)
++	}
++	if got := m.pacing(m.guardUntil.Add(time.Second)); got != initial*1.05 {
++		t.Fatal("guard did not expire", got)
++	}
++}
+diff --git a/src/mailstream/session.go b/src/mailstream/session.go
+index 93fa83f..4ce20ab 100644
+--- a/src/mailstream/session.go
++++ b/src/mailstream/session.go
+@@ -54,6 +54,7 @@ type Session struct {
+ 	grantRequests       chan grantRequest
+ 	grantRequestVersion uint64 // receive owner only
+ 	activeLimit         atomic.Int32
++	minimumActive       atomic.Int32
+ 	accountSetMu        sync.Mutex
+ 	accountSetVersion   uint64
+ 	accountSetAck       atomic.Uint64
+@@ -920,6 +921,7 @@ type Snapshot struct {
+ 	BulkOutstanding            uint64 `json:"bulk_outstanding_bytes"`
+ 	ReceiveBuffered            int64  `json:"receive_buffered_bytes"`
+ 	DeliveryFlight             int    `json:"delivery_flight_bytes"`
++	BulkDeliveryFlight         int    `json:"bulk_delivery_flight_bytes"`
+ 	DeliveryWindow             int    `json:"delivery_window_bytes"`
+ }
+ 
+@@ -929,7 +931,7 @@ func (s *Session) Snapshot() Snapshot {
+ 	snapshot := Snapshot{BulkPacingRateBPS: int64(s.delivery.pacingRate(time.Now())), BulkPacingDeferrals: s.delivery.pacer.deferrals, InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+ 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
+ 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
+-		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
++		DeliveryFlight: s.delivery.flight, BulkDeliveryFlight: s.delivery.bulkFlight, DeliveryWindow: s.delivery.allowance()}
+ 	snapshot.MobilePacing = s.delivery.mobile.enabled
+ 	if snapshot.MobilePacing {
+ 		snapshot.MobileCapacityBPS = int64(s.delivery.mobile.capacity)
+diff --git a/src/native/copy_test.go b/src/native/copy_test.go
+index fe5fc96..45c0183 100644
+--- a/src/native/copy_test.go
++++ b/src/native/copy_test.go
+@@ -67,7 +67,7 @@ func TestCandidateTransportVersion(t *testing.T) {
+ 	// The prior assertion required the stable "-final" suffix even in a
+ 	// development RC. Guard the complete candidate revision instead, so a
+ 	// mislabeled stable or older binary cannot pass qualification.
+-	if got := Version(); got != "itom-1-5-1-rc11-dev" || strings.HasSuffix(got, "-final") {
++	if got := Version(); got != "itom-1-5-1-rc12-dev" || strings.HasSuffix(got, "-final") {
+ 		t.Fatalf("expected exact 1.5.1 RC1 development identity; got %q", got)
+ 	}
+ }
+diff --git a/src/native/exit_identity.go b/src/native/exit_identity.go
+new file mode 100644
+index 0000000..038f3ed
+--- /dev/null
++++ b/src/native/exit_identity.go
+@@ -0,0 +1,70 @@
++package mobile
++
++import (
++	"context"
++	"crypto/tls"
++	"encoding/json"
++	"errors"
++	"io"
++	"net"
++	"net/http"
++	"time"
++
++	"itom.local/core/wire"
++)
++
++// ExitIdentity is one bounded HTTPS request over the authenticated transport,
++// not Android's network resolver, a routing-rule verdict, or a direct socket.
++// It follows the configured server-side exit and cannot fall back to direct.
++func (c *Client) ExitIdentity() (string, error) {
++	const host = "www.cloudflare.com"
++	pool := c.currentPool()
++	if pool == nil || c.rebinding.Load() {
++		return "", errors.New("EXIT_NOT_CONNECTED")
++	}
++	ctx, cancel := context.WithTimeout(c.ctx, 15*time.Second)
++	defer cancel()
++	transport := &http.Transport{DisableKeepAlives: true, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host}, DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
++		if address != host+":443" {
++			return nil, errors.New("EXIT_TARGET_INVALID")
++		}
++		stream, _, err := pool.Open(ctx, wire.Connect{Host: host, Port: 443})
++		if err != nil {
++			return nil, err
++		}
++		conn, ok := stream.(net.Conn)
++		if !ok {
++			stream.Close()
++			return nil, errors.New("EXIT_STREAM_INVALID")
++		}

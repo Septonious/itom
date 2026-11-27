@@ -1,0 +1,111 @@
++		return conn, nil
++	}}
++	defer transport.CloseIdleConnections()
++	client := &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
++	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://"+host+"/cdn-cgi/trace", nil)
++	if err != nil {
++		return "", err
++	}
++	req.Header.Set("User-Agent", "ITOM exit identity")
++	resp, err := client.Do(req)
++	if err != nil {
++		return "", err
++	}
++	defer resp.Body.Close()
++	if resp.StatusCode != http.StatusOK {
++		return "", errors.New("EXIT_HTTP_STATUS")
++	}
++	raw, err := io.ReadAll(io.LimitReader(resp.Body, 8193))
++	if err != nil || len(raw) > 8192 {
++		return "", errors.New("EXIT_RESPONSE_INVALID")
++	}
++	result, err := parseExitTrace(string(raw))
++	if err != nil {
++		return "", err
++	}
++	if c.currentPool() != pool || c.rebinding.Load() || ctx.Err() != nil {
++		return "", errors.New("EXIT_GENERATION_CHANGED")
++	}
++	data, err := json.Marshal(result)
++	return string(data), err
++}
+diff --git a/src/native/exit_identity_parser.go b/src/native/exit_identity_parser.go
+new file mode 100644
+index 0000000..a888372
+--- /dev/null
++++ b/src/native/exit_identity_parser.go
+@@ -0,0 +1,38 @@
++package mobile
++
++import (
++	"errors"
++	"net/netip"
++	"strings"
++)
++
++type exitIdentity struct {
++	IP      string `json:"ip"`
++	Country string `json:"country"`
++}
++
++func parseExitTrace(raw string) (exitIdentity, error) {
++	var result exitIdentity
++	for _, line := range strings.Split(raw, "\n") {
++		key, value, ok := strings.Cut(strings.TrimSpace(line), "=")
++		if !ok {
++			continue
++		}
++		switch key {
++		case "ip":
++			ip, err := netip.ParseAddr(value)
++			if err != nil || ip.Zone() != "" || !ip.IsGlobalUnicast() || ip.IsPrivate() {
++				return exitIdentity{}, errors.New("EXIT_IP_INVALID")
++			}
++			result.IP = ip.String()
++		case "loc":
++			if len(value) == 2 && value[0] >= 'A' && value[0] <= 'Z' && value[1] >= 'A' && value[1] <= 'Z' && value != "XX" {
++				result.Country = value
++			}
++		}
++	}
++	if result.IP == "" {
++		return exitIdentity{}, errors.New("EXIT_IP_MISSING")
++	}
++	return result, nil
++}
+diff --git a/src/native/exit_identity_test.go b/src/native/exit_identity_test.go
+new file mode 100644
+index 0000000..66f0ad8
+--- /dev/null
++++ b/src/native/exit_identity_test.go
+@@ -0,0 +1,17 @@
++package mobile
++
++import "testing"
++
++func TestRC12ExitTraceParser(t *testing.T) {
++	for _, v := range []struct{ raw, ip, country string }{{"ip=8.8.8.8\nloc=US\n", "8.8.8.8", "US"}, {"ip=2606:4700::1111\nloc=SE", "2606:4700::1111", "SE"}, {"ip=8.8.8.8\nloc=XX", "8.8.8.8", ""}} {
++		got, err := parseExitTrace(v.raw)
++		if err != nil || got.IP != v.ip || got.Country != v.country {
++			t.Fatal(got, err)
++		}
++	}
++	for _, raw := range []string{"loc=US", "ip=127.0.0.1", "ip=192.168.0.1", "ip=not-an-ip", "ip=fe80::1%eth0"} {
++		if _, err := parseExitTrace(raw); err == nil {
++			t.Fatal("accepted", raw)
++		}
++	}
++}
+diff --git a/src/qualification/home_gate.py b/src/qualification/home_gate.py
+index 0e2f33a..fb5b76a 100644
+--- a/src/qualification/home_gate.py
++++ b/src/qualification/home_gate.py
+@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
+ IDS = [f"a{i:02}" for i in range(1, 9)]
+ ALL_IDS = [f"a{i:02}" for i in range(1, 16)]
+ BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
+-REVISION = "itom-1-5-1-rc11-dev"
++REVISION = "itom-1-5-1-rc12-dev"
+ 
+ 
+ def ramp_summary(rates, seconds):
