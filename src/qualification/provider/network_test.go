@@ -27,4 +27,15 @@ func TestPhaseRTTResetDoesNotRestartBandwidthDip(t *testing.T) {
 	if got := n.serializationEnd(begin, 100_000_000, 100_000_000); !got.Equal(begin.Add(time.Second)) {
 		t.Fatal("an RTT phase reset restarted the bandwidth collapse", got.Sub(begin))
 	}
+	// The new scenario charges upload and download independently and pauses
+	// serialization across the explicit outage without resetting on /phase.
+	n.scenarioStart = start
+	n.scenario = []rateStage{{time.Second, 1_000_000, 10_000_000}, {time.Second, 0, 0}}
+	if got := n.serializationEndDirection(start, 5_000_000, 10_000_000, true); !got.Equal(start.Add(500 * time.Millisecond)) {
+		t.Fatal("downlink", got)
+	}
+	if got := n.serializationEndDirection(start, 2_000_000, 2_000_000, false); !got.Equal(start.Add(2500 * time.Millisecond)) {
+		t.Fatal("uplink outage", got)
+	}
+
 }

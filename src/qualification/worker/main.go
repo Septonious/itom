@@ -48,6 +48,7 @@ type providerConfig struct {
 	ServerPort         int `json:"server_port"`
 	Root, Key, Metrics string
 	Accounts           int
+	CellularCycle      bool `json:"cellular_cycle"`
 }
 type clock struct {
 	mu              sync.Mutex
@@ -56,12 +57,16 @@ type clock struct {
 	total           uint64
 	last, sendUntil time.Time
 	maxGap          time.Duration
+	firstByStream   map[string]float64
 }
 
-func (c *clock) add(n int) {
+func (c *clock) add(n int, stream string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	now := time.Now()
+	if _, ok := c.firstByStream[stream]; !ok {
+		c.firstByStream[stream] = float64(now.Sub(c.start).Microseconds()) / 1000
+	}
 	c.noteGap(now)
 	c.last = now
 	c.total += uint64(n)
@@ -89,7 +94,11 @@ func (c *clock) result() map[string]any {
 	for i, b := range c.buckets {
 		rates[i] = float64(b) * 8 / 0.5 / 1e6
 	}
-	return map[string]any{"verified_bytes": c.total, "half_second_mbps": rates, "max_receiver_gap_after_ramp_ms": float64(c.maxGap.Microseconds()) / 1000}
+	first := make(map[string]float64, len(c.firstByStream))
+	for stream, ms := range c.firstByStream {
+		first[stream] = ms
+	}
+	return map[string]any{"first_verified_ms_by_stream": first, "verified_bytes": c.total, "half_second_mbps": rates, "max_receiver_gap_after_ramp_ms": float64(c.maxGap.Microseconds()) / 1000}
 }
 
 // Caller holds mu. Count any 500 ms gap during the active sending interval,
@@ -176,9 +185,14 @@ func run() (err error) {
 	lightCycles := flag.Int("light-cycles", 0, "cycles of simultaneous TCP opens, bidirectional bursts and true application idle")
 	activeGrant := flag.Int("active-grant", 0, "number of provisioned accounts in the fixed qualification grant; zero uses all")
 	productionGrant := flag.Bool("production-grant", false, "exercise production grant negotiation with the complete profile")
+	cellular := flag.Bool("cellular", false, "enable production cellular controller and directional pacing")
+	exitRTT := flag.Duration("exit-rtt", 0, "additional inter-VPS round trip in encrypted-exit fixture")
 	encryptedExit := flag.Bool("encrypted-exit", false, "use authenticated TLS foreign-exit fixture")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
+	if *exitRTT < 0 || *exitRTT > 500*time.Millisecond || *exitRTT > 0 && !*encryptedExit {
+		return errors.New("invalid exit RTT")
+	}
 	if *lightCycles < 0 || *lightCycles > 5 {
 		return errors.New("invalid light workload cycle count")
 	}
@@ -270,7 +284,7 @@ func run() (err error) {
 					return
 				}
 				offset += uint64(n)
-				up.add(n)
+				up.add(n, q.Header.Get("X-ITOM-Fixture-Stream"))
 			}
 			if e == io.EOF {
 				break
@@ -349,7 +363,7 @@ func run() (err error) {
 	}
 	serverDone := make(chan error, 1)
 	go func() {
-		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String(), *encryptedExit)
+		serverDone <- serveFixture(ctx, cfg, filepath.Join(*state, "server"), listener.Addr().String(), echo.Addr().String(), *encryptedExit, *exitRTT)
 	}()
 	defer func() {
 		cancel()
@@ -397,7 +411,7 @@ func run() (err error) {
 	}
 	r.Stage = "startup"
 	started := time.Now()
-	client, err := startPerformanceClient(ctx, profile, filepath.Join(*state, "client"), *frontend)
+	client, err := startPerformanceClient(ctx, profile, filepath.Join(*state, "client"), *frontend, *cellular)
 	if err != nil {
 		return err
 	}
@@ -590,6 +604,7 @@ func run() (err error) {
 		up.start = begin
 		up.buckets = nil
 		up.total = 0
+		up.firstByStream = make(map[string]float64)
 		up.last, up.sendUntil, up.maxGap = time.Time{}, time.Time{}, 0
 		if upload {
 			up.sendUntil = begin.Add(*duration)
@@ -599,6 +614,7 @@ func run() (err error) {
 		down.start = begin
 		down.buckets = nil
 		down.total = 0
+		down.firstByStream = make(map[string]float64)
 		down.last, down.sendUntil, down.maxGap = time.Time{}, time.Time{}, 0
 		if download {
 			down.sendUntil = begin.Add(*duration)
@@ -633,7 +649,14 @@ func run() (err error) {
 						}
 						writer.Close()
 					}()
-					response, e := httpClient.Post("https://fixture.example/upload", "application/octet-stream", reader)
+					request, e := http.NewRequestWithContext(ctx, http.MethodPost, "https://fixture.example/upload", reader)
+					if e != nil {
+						errs <- e
+						return
+					}
+					request.Header.Set("Content-Type", "application/octet-stream")
+					request.Header.Set("X-ITOM-Fixture-Stream", strconv.Itoa(i))
+					response, e := httpClient.Do(request)
 					if e != nil {
 						reader.CloseWithError(e)
 						errs <- e
@@ -694,7 +717,7 @@ func run() (err error) {
 								return
 							}
 							offset += uint64(n)
-							down.add(n)
+							down.add(n, strconv.Itoa(i))
 						}
 						if e == io.EOF {
 							completedDownloads.Add(1)
@@ -742,10 +765,22 @@ func run() (err error) {
 						_ = pprof.Lookup("goroutine").WriteTo(file, 2)
 						file.Close()
 					}
+					// Record receiver progress even when an interactive timeout aborts the phase.
+					r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "elapsed_seconds": time.Since(begin).Seconds(), "send_seconds": duration.Seconds(), "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "upload": up.result(), "download": down.result(), "success": false, "error": e.Error()})
 					return fmt.Errorf("loaded ping: %w", e)
 				}
 				r.LoadedMS = append(r.LoadedMS, ms)
 			}
+		}
+	}
+	if p.CellularCycle {
+		response, e := (&http.Client{Timeout: 2 * time.Second}).Post(strings.TrimSuffix(p.Metrics, "/metrics")+"/scenario-start", "", nil)
+		if e != nil {
+			return e
+		}
+		response.Body.Close()
+		if response.StatusCode != http.StatusNoContent {
+			return errors.New("cellular scenario did not start")
 		}
 	}
 	for cycle := 0; cycle < *cycles; cycle++ {

@@ -414,10 +414,7 @@ func (c *Client) open(ctx context.Context, target wire.Connect) (socks.Stream, n
 	stream, addr, err := c.openRoute(ctx, target)
 	c.traffic.opening.Add(-1)
 	if err != nil {
-		c.traffic.openFailures.Add(1)
-		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrDeadlineExceeded) {
-			c.traffic.openTimeouts.Add(1)
-		}
+		c.traffic.recordOpenFailure(err)
 		return nil, addr, err
 	}
 	c.traffic.openEstablished.Add(1)

@@ -2,9 +2,18 @@ package mailstream
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/netip"
 	"strconv"
+)
+
+// Fixed reasons retain the original errors.Is contract. Do not include
+// destination addresses, DNS answers or provider error text in diagnostics.
+var (
+	ErrExitDNS     = fmt.Errorf("MAILSTREAM_EXIT_DNS: %w", ErrClosed)
+	ErrExitPolicy  = fmt.Errorf("MAILSTREAM_EXIT_POLICY: %w", ErrAuth)
+	ErrExitConnect = fmt.Errorf("MAILSTREAM_EXIT_CONNECT: %w", ErrClosed)
 )
 
 // Numeric dialing uses the addresses actually checked here, so a second DNS
@@ -23,7 +32,10 @@ func publicDial(ctx context.Context, network, target string) (net.Conn, error) {
 	}
 	addresses, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
 	if err != nil {
-		return nil, ErrClosed
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, ErrExitDNS
 	}
 	allowed := false
 	for _, address := range addresses {
@@ -38,9 +50,12 @@ func publicDial(ctx context.Context, network, target string) (net.Conn, error) {
 		}
 	}
 	if !allowed {
-		return nil, ErrAuth
+		return nil, ErrExitPolicy
 	}
-	return nil, ErrClosed
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return nil, ErrExitConnect
 }
 func PublicDial(ctx context.Context, network, target string) (net.Conn, error) {
 	return publicDial(ctx, network, target)
