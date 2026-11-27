@@ -33,6 +33,20 @@ func TestRC11MobileBudgetAndGuard(t *testing.T) {
 	if got := w.allowanceAt(now); got > 810_000 {
 		t.Fatal(got)
 	}
+	// A recovered asymmetric bearer still has a 750ms bulk receipt round.
+	// The 115ms small-packet minimum must not starve the measured pacer.
+	w.mobile.reset(true)
+	w.mobile.probeRate = 500_000
+	w.mobile.lastBulk = 750 * time.Millisecond
+	w.base = 115 * time.Millisecond
+	w.saturatedBase = 0
+	if got := w.allowanceAt(now); got < 375_000 || got > 750_000 {
+		t.Fatal("stable long DATA round cannot sustain paced budget", got)
+	}
+	w.mobile.badSamples = 1
+	if got := w.allowanceAt(now); got > 225_000 {
+		t.Fatal("congested round expanded flight budget", got)
+	}
 	var p bulkPacer
 	if !p.readyQuantum(maxWire, 1_000_000, now, true) {
 		t.Fatal("one packet must fit")

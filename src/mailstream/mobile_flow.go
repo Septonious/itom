@@ -187,7 +187,18 @@ func (m *mobileFlow) window(base, saturated time.Duration, now time.Time) int {
 	// turning into an unlimited backlog. Drain never admits new bulk.
 	horizon := m.horizon(base, saturated)
 	if m.lastBulk > 0 {
-		horizon = max(horizon, min(1500*time.Millisecond, min(baseline+250*time.Millisecond, m.lastBulk)+75*time.Millisecond))
+		// A stable full-size DATA receipt round may be much longer than the
+		// fastest setup packet, especially after a cellular handover. A
+		// window shorter than that round starves its own paced rate sample,
+		// causing the sender to ratchet down even after the bearer recovers.
+		// Use the observed smoothed round for the flight budget only, not as
+		// evidence of more bandwidth. The independent pacer still limits
+		// injection, and congestion/guarded rounds retain the tighter cap.
+		round := m.lastBulk
+		if m.badSamples > 0 || now.Before(m.guardUntil) && m.probeRate == 0 {
+			round = min(round, baseline+250*time.Millisecond)
+		}
+		horizon = max(horizon, min(1500*time.Millisecond, round+75*time.Millisecond))
 	}
 	limit := int(m.pacing(now) * horizon.Seconds())
 	return min(8<<20, max(2*maxWire, limit))

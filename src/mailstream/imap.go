@@ -379,6 +379,13 @@ func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 			continue
 		}
 		if sample := p.latency.Load(); sample > 0 {
+			// NOOP/empty FETCH can remain fast even when publication is
+			// expensive (Rambler field traces: 7ms vs 103ms APPEND).
+			// Use fresh APPEND service to amortize feedback command cost,
+			// while retaining the same bounded 24ms loaded delay.
+			if at := a.controlServiceAt.Load(); at > 0 && now-at <= int64(15*time.Second) {
+				sample = max(sample, a.controlServiceMean.Load())
+			}
 			total += sample
 			samples++
 		}

@@ -28,6 +28,17 @@ func TestRC116FeedbackCoalescingAdaptsToIMAPLatency(t *testing.T) {
 			t.Fatalf("observed IMAP RTT %v: feedback delay=%v want=%v", pair.rtt, d, pair.want)
 		}
 	}
+	// Provider publication can be slow even with very fast empty FETCH.
+	p.latency.Store(int64(7 * time.Millisecond))
+	a.controlServiceMean.Store(int64(103 * time.Millisecond))
+	a.controlServiceAt.Store(time.Now().UnixNano())
+	if d := link.feedbackCoalesceDelay(); d != 24*time.Millisecond {
+		t.Fatalf("expensive APPEND on fast IMAP link: delay=%v", d)
+	}
+	a.controlServiceAt.Store(time.Now().Add(-time.Minute).UnixNano())
+	if d := link.feedbackCoalesceDelay(); d != 12*time.Millisecond {
+		t.Fatalf("stale APPEND sample influenced feedback: delay=%v", d)
+	}
 	p.latencyAt.Store(time.Now().Add(-time.Minute).UnixNano())
 	if d := link.feedbackCoalesceDelay(); d != 16*time.Millisecond {
 		t.Fatalf("stale sample should use conservative 16ms, got %v", d)
