@@ -50,17 +50,17 @@ func (a *mailAccountState) observeControlPublication(d time.Duration) {
 			break
 		}
 	}
+	a.controlServiceLast.Store(sample)
 	a.controlServiceAt.Store(time.Now().UnixNano())
 }
 
 func (l *IMAPLink) idleInteractiveOrder(start int, allowed [20]bool, excluded *mailAccountState) []int {
 	now := time.Now()
 	bulk := l.lastBulk.Load()
-	if bulk != 0 && now.Sub(time.Unix(0, bulk)) < time.Second {
-		return nil
-	}
-	// Keep one full-pool round-robin exploration position for stale estimates.
-	if start == 0 {
+	loaded := bulk != 0 && now.Sub(time.Unix(0, bulk)) < time.Second
+	// Preserve exploration at idle. During load, prefer near-equal candidates
+	// in round-robin order, but do not deliberately explore a known slow path.
+	if start == 0 && !loaded {
 		return nil
 	}
 	candidates := make([]interactiveRoute, 0, len(l.accounts))
@@ -76,6 +76,12 @@ func (l *IMAPLink) idleInteractiveOrder(start int, allowed [20]bool, excluded *m
 				mean := a.controlServiceMean.Load()
 				if at > 0 && mean > 0 && now.Sub(time.Unix(0, at)) <= 15*time.Second {
 					cost = time.Duration(mean + a.controlServiceJitter.Load())
+					// The EWMA alone reacts too slowly to a single stalled APPEND.
+					// A short-lived last-sample penalty is not a grant exclusion.
+					if now.Sub(time.Unix(0, at)) < 2*time.Second {
+						last := time.Duration(a.controlServiceLast.Load())
+						cost += min(150*time.Millisecond, max(0, last-cost)/2)
+					}
 					measured++
 				}
 				// Queued literals and occupied tagged-result slots are real service debt.
@@ -88,8 +94,19 @@ func (l *IMAPLink) idleInteractiveOrder(start int, allowed [20]bool, excluded *m
 	if measured < 2 {
 		return nil
 	}
+	// Under load, retain round-robin across paths with materially similar
+	// expected service. Only a meaningful disadvantage changes the order.
+	// Bucket relative to the best cost, not pairwise (which is non-transitive).
+	best := 24 * time.Hour
+	for _, c := range candidates {
+		best = min(best, c.cost)
+	}
+	bucket := 5 * time.Millisecond
+	if loaded {
+		bucket = 25 * time.Millisecond
+	}
 	sort.SliceStable(candidates, func(i, j int) bool {
-		return candidates[i].cost/(5*time.Millisecond) < candidates[j].cost/(5*time.Millisecond)
+		return (candidates[i].cost-best)/bucket < (candidates[j].cost-best)/bucket
 	})
 	order := make([]int, len(candidates))
 	for i, c := range candidates {

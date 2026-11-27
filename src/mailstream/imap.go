@@ -113,6 +113,7 @@ type mailAccountState struct {
 	appendLatency                                              atomic.Int64
 	interactiveQueueUS, interactiveTagUS, interactiveAppendUS  atomic.Int64
 	controlServiceMean, controlServiceJitter, controlServiceAt atomic.Int64
+	controlServiceLast                                         atomic.Int64
 	controlReconnects                                          atomic.Uint64
 	retired                                                    atomic.Uint64
 	segments                                                   map[segmentKey]*segmentRecord
@@ -435,10 +436,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		}
 	}
 	l.mu.Unlock()
-	// Rank only small interactive traffic outside bulk bursts. The score is
-	// based on independent control APPEND service, not mixed DATA completion.
-	// Continue periodic round-robin exploration and keep the independent
-	// idle-writer pass. Bulk and feedback admission are unchanged.
+	// Rank small interactive traffic using independent control APPEND service,
+	// including under bulk load. Similar paths retain round-robin ordering.
+	// Bulk and feedback admission and the independent idle pass are unchanged.
 	var order []int
 	if preferTarget {
 		order = make([]int, 0, len(l.accounts))
@@ -1547,6 +1547,7 @@ type MailAccountSnapshot struct {
 	DataGeneration             uint32 `json:"data_generation"`
 	RTTMillis                  int64  `json:"rtt_ms"`
 	RTTFresh                   bool   `json:"rtt_fresh"`
+	RTTAgeMillis               int64  `json:"rtt_age_ms"`
 	IMAPLatencyFresh           bool   `json:"imap_latency_fresh"`
 	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
 	UploadBytes, DownloadBytes uint64
@@ -1644,7 +1645,12 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 			}
 		}
 		line.RTTMillis = measuredMillis(a.rtt)
-		line.RTTFresh = a.rttAt != 0 && time.Duration(time.Now().UnixNano())-a.rttAt < 30*time.Second
+		line.RTTAgeMillis = -1
+		if a.rttAt != 0 {
+			age := max(0, time.Duration(time.Now().UnixNano())-a.rttAt)
+			line.RTTAgeMillis = age.Milliseconds()
+			line.RTTFresh = age < 10*time.Second
+		}
 		line.UploadBytes, line.DownloadBytes = a.upBytes.Load(), a.downBytes.Load()
 		if a.control != nil {
 			line.IMAPLatencyMillis = measuredMillis(time.Duration(a.control.latency.Load()))

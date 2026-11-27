@@ -27,7 +27,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc7-dev"
+const TransportRevision = "itom-1-5-1-rc8-dev"
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -70,6 +70,7 @@ type LineDiagnostic struct {
 	ActiveLines, TotalLines         int
 	RTTMillis, IMAPLatencyMillis    int64
 	RTTFresh                        bool
+	RTTAgeMillis                    int64
 	UploadBytes, DownloadBytes      uint64
 	TCPStreams                      int
 	UpBps, DownBps                  uint64
@@ -416,7 +417,7 @@ func (c *Client) Snapshot() ClientSnapshot {
 			lineCapacity = mailstream.ConnectionsPerAccount
 		}
 		s.Lines = append(s.Lines, LineDiagnostic{Account: account, AccountID: line.Account, Stage: line.Stage, ReadinessReason: line.Failure, Ready: active == mailstream.ConnectionsPerAccount, ActiveLines: active, TotalLines: lineCapacity,
-			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, IMAPLatencyMillis: line.IMAPLatencyMillis,
+			RTTMillis: line.RTTMillis, RTTFresh: line.RTTFresh, RTTAgeMillis: line.RTTAgeMillis, IMAPLatencyMillis: line.IMAPLatencyMillis,
 			UploadBytes: line.UploadBytes, DownloadBytes: line.DownloadBytes, TCPStreams: c.link.AccountStreams(line.Account, streams), ControlMessageReservations: line.ControlMessageReservations, ControlMessageLimit: line.ControlMessageLimit, ControlBackpressure: line.ControlBackpressure})
 	}
 	c.mu.Lock()

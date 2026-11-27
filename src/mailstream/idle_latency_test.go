@@ -32,8 +32,8 @@ func TestRC7IdleSelectionUsesIndependentPublicationTail(t *testing.T) {
 		t.Fatal("round robin exploration disabled")
 	}
 	l.lastBulk.Store(time.Now().UnixNano())
-	if l.idleInteractiveOrder(1, allowed, nil) != nil {
-		t.Fatal("ranking under bulk")
+	if order := l.idleInteractiveOrder(1, allowed, nil); len(order) != 4 || order[0] != 2 {
+		t.Fatalf("loaded ranking %v", order)
 	}
 }
 func TestRC7StandbyControlPollingRetainsFastGrantedPaths(t *testing.T) {
@@ -119,5 +119,67 @@ func TestRC7ControlEOFResumesSameAccountAndStream(t *testing.T) {
 	}
 	if _, e = s.Ping(ctx); e != nil {
 		t.Fatal(e)
+	}
+}
+
+func TestRC8LoadedTailRankingRetainsHealthyRotation(t *testing.T) {
+	l := &IMAPLink{ctx: context.Background(), attached: SessionID{1}}
+	l.lastBulk.Store(time.Now().UnixNano())
+	var allowed [20]bool
+	for i, ms := range []int{45, 50, 53, 48} {
+		a := &mailAccountState{ready: true, controlWriter: &mailPipe{interactiveTags: make(chan struct{}, 2)}, interactive: make(chan mailWork, 16)}
+		a.observeControlPublication(time.Duration(ms) * time.Millisecond)
+		l.accounts = append(l.accounts, a)
+		allowed[i] = true
+	}
+	for start := range l.accounts {
+		if order := l.idleInteractiveOrder(start, allowed, nil); len(order) != 4 || order[0] != start {
+			t.Fatalf("healthy rotation %d: %v", start, order)
+		}
+	}
+	l.accounts[0].observeControlPublication(400 * time.Millisecond)
+	if order := l.idleInteractiveOrder(0, allowed, nil); len(order) != 4 || order[0] == 0 || order[3] != 0 {
+		t.Fatalf("stalled writer not deprioritized: %v", order)
+	}
+	// A loaded writer with tagged commands must lose to an idle peer.
+	l.accounts[1].controlWriter.interactiveTags <- struct{}{}
+	l.accounts[1].controlWriter.interactiveTags <- struct{}{}
+	if order := l.idleInteractiveOrder(1, allowed, nil); len(order) != 4 || order[0] == 1 || order[0] == 0 {
+		t.Fatalf("tag debt ignored: %v", order)
+	}
+	// A stale spike is not a permanent exclusion, and an explicit hedge
+	// exclusion never becomes the preferred candidate.
+	l.accounts[0].controlServiceAt.Store(time.Now().Add(-16 * time.Second).UnixNano())
+	if order := l.idleInteractiveOrder(0, allowed, l.accounts[2]); len(order) != 4 || order[0] == 2 || order[3] != 2 {
+		t.Fatalf("excluded writer preferred: %v", order)
+	}
+}
+
+func TestRC8LoadedAdmissionSkipsRecentSlowPublisher(t *testing.T) {
+	ctx := context.Background()
+	id := SessionID{1}
+	l := &IMAPLink{ctx: ctx, attached: id}
+	l.lastBulk.Store(time.Now().UnixNano())
+	for i, name := range []string{"first", "second", "third"} {
+		a := &mailAccountState{link: l, config: MailAccount{ID: name}, id: id, ready: true, fast: make(chan mailWork, 8), interactive: make(chan mailWork, 8), controlWriter: &mailPipe{interactiveTags: make(chan struct{}, 2)}}
+		a.observeControlPublication(45 * time.Millisecond)
+		if i == 0 {
+			a.observeControlPublication(400 * time.Millisecond)
+		}
+		l.accounts = append(l.accounts, a)
+	}
+	a, err := l.send(ctx, header(sealed, id, 1), true, nil)
+	if err != nil || a != l.accounts[1] {
+		t.Fatalf("loaded admission %v %v", a, err)
+	}
+	// No account is removed; even the slow one remains eligible for an
+	// explicitly pinned same-account probe.
+	if err := l.sendOnAccount(ctx, id, "first", header(sealed, id, 2), controlMessageLimit); err != nil {
+		t.Fatal(err)
+	}
+	// Feedback stays on its selected account, independently of ranking.
+	l.roundRobin = 0
+	if err := l.SendFeedback(ctx, header(sealed, id, 3)); err != nil || len(l.accounts[0].fast) != 1 {
+		t.Fatalf("feedback route changed: %v", err)
 	}
 }
