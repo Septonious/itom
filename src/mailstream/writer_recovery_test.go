@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/tls"
 	imap "github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapserver"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -22,7 +24,11 @@ import (
 func TestIdleWriterEOFDoesNotPermanentlyRetireAccount(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	accounts, _ := applicationMailServerAccounts(t, false, false, nil, nil, 1)
+	var dropSeq atomic.Uint64
+	var dropped atomic.Bool
+	accounts, _ := applicationMailServerAccounts(t, false, false, nil, nil, 1, func(s imapserver.Session, c *imapserver.Conn) imapserver.Session {
+		return &controlAppendEOF{Session: s, conn: c, seq: &dropSeq, dropped: &dropped}
+	})
 	server, err := NewStoredIMAPLink(ctx, "writer-recovery", accounts, false, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -100,6 +106,86 @@ func TestIdleWriterEOFDoesNotPermanentlyRetireAccount(t *testing.T) {
 		}
 		transfer(256 << 10)
 	}
+	// Exercise the actual late-control-APPEND failure separately from idle
+	// EOF. The provider stores the exact authenticated feedback packet, then
+	// drops its connection before replying with the APPEND UID. No timing
+	// assumption or test-only production hook decides which command fails.
+	a := client.accounts[0]
+	a.mu.Lock()
+	old, oldControl, control, data := a.writer, a.controlWriter, a.control, a.data
+	spent, reserved, recovered := a.spent, a.reserved, a.recovered
+	a.mu.Unlock()
+	plain, err := (frame{kind: frameReceipt, data: bytes.Repeat([]byte{255}, 8)}).encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	wire, seq, err := session.cipher.seal(plain)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dropSeq.Store(seq + 1)
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		err = client.SendFeedback(ctx, wire)
+		if err == nil {
+			break
+		}
+		if err != ErrCapacity || time.Now().After(deadline) {
+			t.Fatal("feedback admission", err)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	restored := false
+	for time.Now().Before(deadline) {
+		a.mu.Lock()
+		restored = dropped.Load() && !a.failed && a.writer != nil && a.controlWriter != nil && a.writer != old && a.controlWriter != oldControl && a.control == control && a.data == data && a.writerRecoveryReason == "CONTROL_APPEND_EOF" && a.spent >= spent && a.reserved >= reserved && a.recovered == recovered
+		a.mu.Unlock()
+		if restored {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if !restored {
+		t.Fatalf("uncertain control APPEND did not recover: dropped=%v snapshot=%+v", dropped.Load(), client.Snapshot())
+	}
+	transfer(256 << 10)
+}
+
+// Loss of the tagged reply to one exact, already-stored feedback APPEND.
+type controlAppendEOF struct {
+	imapserver.Session
+	conn    *imapserver.Conn
+	seq     *atomic.Uint64
+	dropped *atomic.Bool
+}
+type recoveryLiteral struct{ *bytes.Reader }
+
+func (r recoveryLiteral) Size() int64 { return r.Reader.Size() }
+func (s *controlAppendEOF) Append(name string, r imap.LiteralReader, options *imap.AppendOptions) (*imap.AppendData, error) {
+	wanted := s.seq.Load()
+	if wanted == 0 || !strings.HasSuffix(name, "-c-u") {
+		return s.Session.Append(name, r, options)
+	}
+	raw, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	packets, _ := decodeMail(raw)
+	match := false
+	for _, packet := range packets {
+		_, _, seq, err := parseHeader(packet)
+		match = match || err == nil && seq+1 == wanted
+	}
+	result, err := s.Session.Append(name, recoveryLiteral{bytes.NewReader(raw)}, options)
+	if err == nil && match && s.seq.CompareAndSwap(wanted, 0) {
+		s.dropped.Store(true)
+		conn := s.conn.NetConn()
+		if tlsConn, ok := conn.(*tls.Conn); ok {
+			conn = tlsConn.NetConn()
+		}
+		conn.Close()
+	}
+	return result, err
 }
 
 // Blackhole the tagged response to the first actual idle-writer NOOP. This
