@@ -3,6 +3,7 @@ package mobile
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -12,11 +13,11 @@ import (
 	"itom.local/core/tunnel"
 )
 
-type startupHost struct{ lookups int }
+type startupHost struct{ lookups atomic.Int32 }
 
 func (*startupHost) Protect(int) bool       { return false }
 func (*startupHost) DNS() string            { return `["192.0.2.53"]` }
-func (h *startupHost) Lookup(string) string { h.lookups++; return `[]` }
+func (h *startupHost) Lookup(string) string { h.lookups.Add(1); return `[]` }
 func (*startupHost) Route(string) string    { return "PROXY" }
 func (*startupHost) Startup(string) bool    { return true }
 
@@ -54,7 +55,15 @@ func TestImmediateFailureFlushesFinalStartupPhaseBeforeFirstHeartbeat(t *testing
 // profile discriminator. The public API fixture previously constructed a CLI
 // profile directly and therefore missed this boundary entirely.
 func androidRuntimeFixture() string {
-	return `{"Profile":{"schema":1,"kind":"itom-android","server":[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"provider":"rambler","user":{"uid":"12345678","name":"field","enabled":true,"key":"` + strings.Repeat("17", 32) + `","up":"itom-field-up","down":"itom-field-down"},"accounts":[{"id":"account1","imap":{"host":"fixture.invalid","dial_ip":"","port":993,"tls":"tls","username":"fixture","password":"fixture-only"}}],"transport":{"layout":"auto","data_shards":1,"account_sessions":10,"endpoint_connections":128,"login_parallelism":4,"participants":1}},"DNS":["192.0.2.53"],"Socks":{"Port":1080,"Authentication":false},"Diagnostics":true}`
+	return androidRuntimeFixtureWithAccounts(4)
+}
+
+func androidRuntimeFixtureWithAccounts(count int) string {
+	accounts := make([]string, count)
+	for i := range accounts {
+		accounts[i] = fmt.Sprintf(`{"id":"account%d","imap":{"host":"fixture.invalid","dial_ip":"","port":993,"tls":"tls","username":"fixture%d","password":"fixture-only"}}`, i+1, i+1)
+	}
+	return `{"Profile":{"schema":1,"kind":"itom-android","server":[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"provider":"rambler","user":{"uid":"12345678","name":"field","enabled":true,"key":"` + strings.Repeat("17", 32) + `","up":"itom-field-up","down":"itom-field-down"},"accounts":[` + strings.Join(accounts, ",") + `],"transport":{"layout":"auto","data_shards":1,"account_sessions":10,"endpoint_connections":128,"login_parallelism":4,"participants":1}},"DNS":["192.0.2.53"],"Socks":{"Port":1080,"Authentication":false},"Diagnostics":true}`
 }
 
 func TestAndroidRuntimeProfileReachesProtectedNetworkStartup(t *testing.T) {
@@ -77,13 +86,13 @@ func TestAndroidRuntimeProfileReachesProtectedNetworkStartup(t *testing.T) {
 				t.Fatal("empty platform lookup must fail")
 			}
 			if kind == "unrecognized-profile" {
-				if host.lookups != 0 {
+				if host.lookups.Load() != 0 {
 					t.Fatal("unknown profile reached the network")
 				}
 				if err.Error() != "MAILSTREAM_STARTUP_PROFILE" {
 					t.Fatalf("missing safe profile failure phase: %v", err)
 				}
-			} else if host.lookups == 0 {
+			} else if host.lookups.Load() == 0 {
 				t.Fatalf("valid Android runtime was rejected before protected network startup: %v", err)
 			} else if err.Error() != "MAILSTREAM_STARTUP_IMAP" {
 				t.Fatalf("missing safe network startup phase: %v", err)
@@ -96,11 +105,12 @@ type cancelStartupHost struct {
 	startupHost
 	entered, release chan struct{}
 	once             sync.Once
+	lookupOnce       sync.Once
 	reports          atomic.Int32
 }
 
 func (h *cancelStartupHost) Lookup(string) string {
-	close(h.entered)
+	h.lookupOnce.Do(func() { close(h.entered) })
 	<-h.release
 	return `[]`
 }
@@ -138,5 +148,22 @@ func TestUserCanCancelWhileNativeStartupWaitsForPlatformDNS(t *testing.T) {
 		}
 	case <-timer.C:
 		t.Fatal("user cancellation could not interrupt connecting")
+	}
+}
+
+// Invalid operational profiles must fail before DNS or protected socket startup.
+func TestAndroidRuntimeRejectsFewerThanFourAccounts(t *testing.T) {
+	for count := 0; count < 4; count++ {
+		t.Run(fmt.Sprint(count), func(t *testing.T) {
+			host := &startupHost{}
+			client, err := New(androidRuntimeFixtureWithAccounts(count), t.TempDir(), host)
+			if client != nil {
+				client.Close()
+				t.Fatal("undersized profile started")
+			}
+			if err == nil || err.Error() != "MAILSTREAM_STARTUP_PROFILE" || host.lookups.Load() != 0 {
+				t.Fatalf("undersized profile reached startup: %v, lookups=%d", err, host.lookups.Load())
+			}
+		})
 	}
 }

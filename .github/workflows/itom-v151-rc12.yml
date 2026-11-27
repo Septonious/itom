@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = refs/heads/codex/itom-v151-rc12
-          expected=1e082b3d54f8f1971eea8dabdaef72896431e4ed
+          expected=2dcba13c9fc00d322feec67dc90cb07f4140fb13
           test "$(git rev-parse HEAD:src)" = "$expected"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git archive --format=tar.gz --output=itom-rc12-exact-source.tar.gz HEAD src
