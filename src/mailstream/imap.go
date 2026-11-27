@@ -954,6 +954,43 @@ func (a *mailAccountState) run() {
 	var operation *writerOperation
 	keepalives := false
 	keepaliveDue := false
+	// A queued control APPEND can race an otherwise idle writer EOF. Its
+	// outcome is unknown, but the existing reservation remains charged and
+	// authenticated pending frames can be retried. Never retire the account
+	// solely for that transport error. DATA APPEND failures still require
+	// the original fail-closed handling (a missing generation UID is unsafe).
+	recoverControlAppend := func(err error) bool {
+		if !isControlWriterTransportFailure(err) || a.ctx.Err() != nil || a.parking.Load() {
+			a.failedStage("writer_append", err)
+			return false
+		}
+		// Complete every already-started tag before replacing either writer.
+		// A concurrent DATA error must not be hidden by control recovery.
+		// Bound this fence: a stalled DATA tag cannot indefinitely block the
+		// account actor while the independent control carrier is unavailable.
+		deadline := time.NewTimer(5 * time.Second)
+		defer deadline.Stop()
+		for inFlight > 0 {
+			select {
+			case e := <-completed:
+				inFlight--
+				if e != nil && !isControlWriterTransportFailure(e) {
+					a.failedStage("writer_append", e)
+					return false
+				}
+			case <-a.ctx.Done():
+				return false
+			case <-deadline.C:
+				a.failedStage("writer_append_fence", context.DeadlineExceeded)
+				return false
+			}
+		}
+		if !a.recoverIdleAppendWriters(&writer, completed, &inFlight, &appendWait, "CONTROL_APPEND_EOF") {
+			return false
+		}
+		lastWrite, lastControlWrite = time.Now(), time.Now()
+		return true
+	}
 	for {
 		// The reader owns its cursor until readDone closes. Recover a transient
 		// control EOF at that exact cursor, never tail-select a live session.
@@ -1168,7 +1205,10 @@ func (a *mailAccountState) run() {
 			case err := <-completed:
 				inFlight--
 				if err != nil && !a.parking.Load() {
-					return
+					if !recoverControlAppend(err) {
+						return
+					}
+					continue
 				}
 			}
 		}
@@ -1182,7 +1222,10 @@ func (a *mailAccountState) run() {
 			case err := <-completed:
 				inFlight--
 				if err != nil && !a.parking.Load() {
-					return
+					if !recoverControlAppend(err) {
+						return
+					}
+					continue
 				}
 				continue
 			case work = <-a.fast:
@@ -1209,7 +1252,10 @@ func (a *mailAccountState) run() {
 					case err := <-completed:
 						inFlight--
 						if err != nil && !a.parking.Load() {
-							return
+							if !recoverControlAppend(err) {
+								return
+							}
+							continue
 						}
 						continue
 					case work = <-a.fast:
@@ -1432,6 +1478,10 @@ func (a *mailAccountState) run() {
 			if a.parking.Load() {
 				continue
 			}
+			if work.control && recoverControlAppend(controlWriterAppendError{startErr}) {
+				continue
+			}
+			a.failedStage("writer_append_start", startErr)
 			return
 		}
 		inFlight++
@@ -1459,12 +1509,29 @@ func (a *mailAccountState) run() {
 					a.upBytes.Add(uint64(len(packet)))
 				}
 			}
+			if err != nil && segment == nil {
+				err = controlWriterAppendError{err}
+			}
 			select {
 			case completed <- err:
 			case <-a.ctx.Done():
 			}
 		}()
 	}
+}
+
+// Only a control publication's transport failure is recoverable here; tagged
+// provider refusals, protocol errors and every DATA failure remain terminal.
+type controlWriterAppendError struct{ error }
+
+func (e controlWriterAppendError) Unwrap() error { return e.error }
+func isControlWriterTransportFailure(err error) bool {
+	var control controlWriterAppendError
+	if !errors.As(err, &control) {
+		return false
+	}
+	var netErr net.Error
+	return errors.Is(err, ErrClosed) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, net.ErrClosed) || errors.As(err, &netErr)
 }
 
 type MailSnapshot struct {
