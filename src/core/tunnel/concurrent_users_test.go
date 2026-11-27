@@ -82,8 +82,28 @@ func testConcurrentUsers(t *testing.T, cfg servercfg.Config, origin string, mail
 			t.Fatal("concurrent authenticated startup", j.err)
 		}
 		clients[j.i] = j.c
-		if s := j.c.Snapshot(); s.ActiveLines != 16 || s.TotalLines != 16 {
-			t.Fatalf("sixteen real lines were not ready: %+v", s.Stats)
+	}
+	// A successful authenticated startup verifies a usable DATA path, not
+	// simultaneous completion of every physical socket. Count actual sockets
+	// (including a reader that may still be reconnecting), and require both
+	// clients to converge to full readiness before testing their traffic.
+	// Do not relax the 16-socket requirement or pass a persistent shortfall.
+	readyDeadline := time.Now().Add(10 * time.Second)
+	for {
+		first, second := clients[0].Snapshot(), clients[1].Snapshot()
+		if first.TotalLines != 16 || second.TotalLines != 16 {
+			t.Fatalf("incorrect negotiated socket allocation: first=%+v second=%+v", first.Stats, second.Stats)
+		}
+		if first.ActiveLines == 16 && second.ActiveLines == 16 {
+			break
+		}
+		if !time.Now().Before(readyDeadline) {
+			t.Fatalf("sixteen real lines did not converge: first=%+v lines=%+v second=%+v lines=%+v", first.Stats, first.Lines, second.Stats, second.Lines)
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		case <-time.After(100 * time.Millisecond):
 		}
 	}
 	transfer := func(i int) error {
