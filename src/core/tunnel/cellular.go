@@ -12,6 +12,9 @@ import (
 func (c *Client) SetNetworkType(kind string) {
 	c.mu.Lock()
 	c.networkType = strings.ToLower(kind)
+	if c.session != nil {
+		c.session.SetCellular(c.networkType == "cellular" || c.networkType == "mobile")
+	}
 	c.mu.Unlock()
 }
 
@@ -19,6 +22,8 @@ type cellularPolicy struct {
 	base                  float64
 	severe, healthy, idle int
 	limit                 int
+	lastChange            time.Time
+	quietTicks            int
 }
 
 func (p *cellularPolicy) decide(capacity int, latency float64, demand bool) int {
@@ -66,6 +71,74 @@ func (p *cellularPolicy) decide(capacity int, latency float64, demand bool) int 
 	}
 	return p.limit
 }
+
+// Preserve four useful paths while a loaded bearer is still delivering.
+// Step down serially; permit one path during sustained severe IMAP delay
+// without progress, or when idle. Never exceed the negotiated grant.
+func (p *cellularPolicy) decideRecovery(capacity int, latency float64, demand bool, rate uint64, now time.Time) int {
+	if capacity < 1 {
+		return 0
+	}
+	floor := min(4, capacity)
+	if p.limit == 0 {
+		p.limit = floor
+	}
+	p.limit = min(p.limit, capacity)
+	if latency <= 0 {
+		p.healthy = 0
+		return p.limit
+	}
+	if p.base == 0 || latency < p.base {
+		p.base = latency
+	}
+	if demand && rate > 0 {
+		p.quietTicks = 0
+	} else {
+		p.quietTicks++
+	}
+	bad := latency >= 250 || latency > max(100, 3*p.base)
+	good := latency <= max(120, 1.5*p.base)
+	if bad {
+		p.severe++
+		p.healthy = 0
+	} else {
+		p.severe = 0
+		if good || (demand && rate > 0 && latency < 400) {
+			p.healthy++
+		} else {
+			p.healthy = 0
+		}
+	}
+	if demand {
+		p.idle = 0
+	} else {
+		p.idle++
+	}
+	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < 5*time.Second {
+		return p.limit
+	}
+	old := p.limit
+	switch {
+	case p.severe >= 3 && latency >= 700 && p.quietTicks >= 3:
+		p.limit = max(1, p.limit-1)
+	case demand && rate > 0 && p.limit < floor && latency < 700 && p.healthy >= 2:
+		p.limit++
+	case p.severe >= 2 && p.limit > floor:
+		p.limit = max(floor, p.limit-1)
+	case demand && p.healthy >= 2:
+		p.limit = min(capacity, p.limit+1)
+	case p.idle >= 12:
+		p.limit = max(1, p.limit-1)
+		p.idle = 0
+	}
+	if old != p.limit {
+		p.lastChange = now
+		p.healthy = 0
+		p.severe = 0
+	}
+	return p.limit
+}
+
 func (c *Client) accountController(ctx context.Context) {
 	defer c.workers.Done()
 	tick := time.NewTicker(time.Second)
@@ -117,8 +190,9 @@ func (c *Client) accountController(ctx context.Context) {
 			if len(latency) > 0 {
 				sample = latency[len(latency)/2]
 			}
-			demand := c.session.Snapshot().PendingBytes >= 256<<10 || rate >= uint64(max(active, 1))*250000
-			desired = policy.decide(target, sample, demand)
+			snap := c.session.Snapshot()
+			demand := snap.PendingBytes >= min(256<<10, max(1, snap.DeliveryWindow)) || (snap.BulkWindowLimited && snap.PendingBytes > 0) || rate >= uint64(max(active, 1))*250000 || (snap.PeerDemandFresh && snap.PeerBulkPending >= 128<<10 && !snap.PeerDraining)
+			desired = policy.decideRecovery(target, sample, demand, rate, time.Now())
 			target = desired
 		}
 		if target == active && last == desired {

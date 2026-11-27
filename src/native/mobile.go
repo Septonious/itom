@@ -250,7 +250,7 @@ func (c *Client) Attach(fd int) error {
 		closeTUNFD(fd)
 		return e
 	}
-	s, e := tun.CreateStack(&tun.Config{LinkEndpoint: d, TransportHandler: nativeHandler{c}})
+	s, e := tun.CreateStack(&tun.Config{LinkEndpoint: d, TransportHandler: nativeHandler{c}, Options: c.tunOptions()})
 	if e != nil {
 		d.Close()
 		return e
@@ -273,7 +273,7 @@ func (c *Client) ReplaceTun(fd int) error {
  }
  d,e:=fdbased.Open(strconv.Itoa(fd),1500,0)
  if e!=nil { c.mu.Unlock();closeTUNFD(fd);return e }
- s,e:=tun.CreateStack(&tun.Config{LinkEndpoint:d,TransportHandler:nativeHandler{c}})
+ s,e:=tun.CreateStack(&tun.Config{LinkEndpoint:d,TransportHandler:nativeHandler{c},Options:c.tunOptions()})
  if e!=nil {c.mu.Unlock();d.Close();return e}
  oldStack,oldDevice:=c.stack,c.device
  c.stack,c.device=s,d

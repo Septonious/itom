@@ -58,6 +58,7 @@ type clock struct {
 	last, sendUntil time.Time
 	maxGap          time.Duration
 	firstByStream   map[string]float64
+	streamProgress  map[string]flowProgress
 }
 
 func (c *clock) add(n int, stream string) {
@@ -68,6 +69,7 @@ func (c *clock) add(n int, stream string) {
 		c.firstByStream[stream] = float64(now.Sub(c.start).Microseconds()) / 1000
 	}
 	c.noteGap(now)
+	c.noteStreamBytesLocked(stream, n, now)
 	c.last = now
 	c.total += uint64(n)
 	i := int(now.Sub(c.start) / (500 * time.Millisecond))
@@ -98,7 +100,7 @@ func (c *clock) result() map[string]any {
 	for stream, ms := range c.firstByStream {
 		first[stream] = ms
 	}
-	return map[string]any{"first_verified_ms_by_stream": first, "verified_bytes": c.total, "half_second_mbps": rates, "max_receiver_gap_after_ramp_ms": float64(c.maxGap.Microseconds()) / 1000}
+	return map[string]any{"first_verified_ms_by_stream": first, "stream_progress": c.copyStreamProgressLocked(), "verified_bytes": c.total, "half_second_mbps": rates, "max_receiver_gap_after_ramp_ms": float64(c.maxGap.Microseconds()) / 1000}
 }
 
 // Caller holds mu. Count any 500 ms gap during the active sending interval,
@@ -287,6 +289,7 @@ func run() (err error) {
 				up.add(n, q.Header.Get("X-ITOM-Fixture-Stream"))
 			}
 			if e == io.EOF {
+				up.noteStreamStage(q.Header.Get("X-ITOM-Fixture-Stream"), "origin_eof", offset)
 				break
 			}
 			if e != nil {
@@ -605,6 +608,7 @@ func run() (err error) {
 		up.buckets = nil
 		up.total = 0
 		up.firstByStream = make(map[string]float64)
+		up.streamProgress = nil
 		up.last, up.sendUntil, up.maxGap = time.Time{}, time.Time{}, 0
 		if upload {
 			up.sendUntil = begin.Add(*duration)
@@ -615,6 +619,7 @@ func run() (err error) {
 		down.buckets = nil
 		down.total = 0
 		down.firstByStream = make(map[string]float64)
+		down.streamProgress = nil
 		down.last, down.sendUntil, down.maxGap = time.Time{}, time.Time{}, 0
 		if download {
 			down.sendUntil = begin.Add(*duration)
@@ -624,7 +629,7 @@ func run() (err error) {
 		if upload && !download && *uploadStreams > 0 {
 			streamCount = *uploadStreams
 		}
-		var abortedDownloads, completedDownloads atomic.Int64
+		var abortedDownloads, completedDownloads, completedUploads atomic.Int64
 		errs := make(chan error, 2*streamCount)
 		var wg sync.WaitGroup
 		for i := 0; i < streamCount; i++ {
@@ -638,7 +643,7 @@ func run() (err error) {
 					go func() {
 						buffer := make([]byte, 64<<10)
 						offset := uint64(0)
-						defer func() { sent <- offset }()
+						defer func() { up.noteStreamStage(strconv.Itoa(i), "writer_done", offset); sent <- offset }()
 						for time.Since(begin) < *duration {
 							fill(buffer, offset)
 							n, e := writer.Write(buffer)
@@ -679,7 +684,10 @@ func run() (err error) {
 					}
 					if count := <-sent; received != count {
 						errs <- fmt.Errorf("upload truncation: received %d sent %d", received, count)
+						return
 					}
+					up.noteStreamStage(strconv.Itoa(i), "response_verified", received)
+					completedUploads.Add(1)
 				}()
 			}
 			if download {
@@ -756,7 +764,7 @@ func run() (err error) {
 				elapsed := completed.Sub(begin).Seconds()
 				ur["full_phase_mbps"] = float64(ur["verified_bytes"].(uint64)) * 8 / elapsed / 1e6
 				dr["full_phase_mbps"] = float64(dr["verified_bytes"].(uint64)) * 8 / elapsed / 1e6
-				r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "deadline_aborted_downloads": abortedDownloads.Load(), "completed_downloads": completedDownloads.Load(), "elapsed_seconds": elapsed, "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "send_seconds": duration.Seconds(), "upload": ur, "download": dr, "success": joined == nil})
+				r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "deadline_aborted_downloads": abortedDownloads.Load(), "completed_downloads": completedDownloads.Load(), "completed_uploads": completedUploads.Load(), "elapsed_seconds": elapsed, "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "send_seconds": duration.Seconds(), "upload": ur, "download": dr, "success": joined == nil})
 				return joined
 			case <-tick.C:
 				ms, e := ping()
@@ -766,7 +774,7 @@ func run() (err error) {
 						file.Close()
 					}
 					// Record receiver progress even when an interactive timeout aborts the phase.
-					r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "elapsed_seconds": time.Since(begin).Seconds(), "send_seconds": duration.Seconds(), "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "upload": up.result(), "download": down.result(), "success": false, "error": e.Error()})
+					r.Phases = append(r.Phases, map[string]any{"name": name, "streams": streamCount, "completed_downloads": completedDownloads.Load(), "completed_uploads": completedUploads.Load(), "elapsed_seconds": time.Since(begin).Seconds(), "send_seconds": duration.Seconds(), "loaded_ms": append([]float64(nil), r.LoadedMS[loadedStart:]...), "upload": up.result(), "download": down.result(), "success": false, "error": e.Error()})
 					return fmt.Errorf("loaded ping: %w", e)
 				}
 				r.LoadedMS = append(r.LoadedMS, ms)

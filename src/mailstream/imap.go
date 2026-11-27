@@ -134,6 +134,7 @@ type mailAccountState struct {
 }
 
 type IMAPLink struct {
+	mobileFeedback      atomic.Bool
 	lastBulk            atomic.Int64
 	lastInteractive     atomic.Int64
 	reclaimer           *ReclamationCoordinator
@@ -491,7 +492,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if !priority {
 			budget -= reservationQuantum
 		} // preserve control and retirement capacity
-		independent := matched && priority && !feedback && !recovery && a.controlWriter != nil && !a.parking.Load() && a.interactive != nil
+		independent := matched && priority && (!feedback || l.mobileFeedback.Load()) && !recovery && a.controlWriter != nil && !a.parking.Load() && a.interactive != nil
 		available := a.ready && !a.failed && !a.writerRecovering && (!a.reclaiming.Load() || independent) && (priority || a.id != (SessionID{}) && a.writer != nil && !a.parking.Load() && !a.bulkBlocked) && a.spent+a.queuedBytes+work.charge <= budget
 		messageBudget := uint64(controlMessageLimit)
 		if recovery {

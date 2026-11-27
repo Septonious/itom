@@ -62,7 +62,37 @@ func (l *IMAPLink) segmentFolder(id SessionID, out bool, slot uint32) string {
 }
 func (l *IMAPLink) Retirements() <-chan Retirement { return l.retirements }
 func (l *IMAPLink) Acknowledge(id SessionID, sequence uint64) error {
-	return l.releaseDelivery(id, sequence, true)
+	return l.AcknowledgeBatch(id, []uint64{sequence})
+}
+
+// Retire a receipt batch with one lock acquisition per account, rather
+// than repeatedly contending with the publication/read owners.
+func (l *IMAPLink) AcknowledgeBatch(id SessionID, sequences []uint64) error {
+	if len(sequences) == 0 {
+		return nil
+	}
+	now := time.Now()
+	for _, a := range l.accounts {
+		a.mu.Lock()
+		for _, seq := range sequences {
+			sample := &a.delivery[seq%replaySlots]
+			if sample.id == id && sample.sequence == seq && !sample.started.IsZero() {
+				if !sample.retried {
+					a.rtt, a.rttAt = now.Sub(sample.started), time.Duration(now.UnixNano())
+				}
+				*sample = deliverySample{}
+			}
+		}
+		for key, rec := range a.segments {
+			if key.session == id {
+				for _, seq := range sequences {
+					delete(rec.awaiting, seq)
+				}
+			}
+		}
+		a.mu.Unlock()
+	}
+	return nil
 }
 func (l *IMAPLink) Abandon(id SessionID, sequence uint64) {
 	if l.releaseDelivery(id, sequence, false) != nil {

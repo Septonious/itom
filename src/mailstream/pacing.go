@@ -14,6 +14,9 @@ type bulkPacer struct {
 }
 
 func (w *deliveryWindow) pacingRate(now time.Time) float64 {
+	if w.mobile.enabled {
+		return w.mobile.pacing(now)
+	}
 	// Keep the qualified startup and slow-provider behavior. Smooth publication
 	// only after independent control receipts expose shared-link queueing. Keep
 	// that burst smooth until idle; cycling it off mid-transfer refills the queue.
@@ -37,6 +40,9 @@ func (w *deliveryWindow) pacingRate(now time.Time) float64 {
 }
 
 func (p *bulkPacer) ready(n int, rate float64, now time.Time) bool {
+	return p.readyQuantum(n, rate, now, false)
+}
+func (p *bulkPacer) readyQuantum(n int, rate float64, now time.Time, mobile bool) bool {
 	if rate <= 0 {
 		p.started, p.bytes = time.Time{}, 0
 		return true
@@ -55,6 +61,9 @@ func (p *bulkPacer) ready(n int, rate float64, now time.Time) bool {
 		p.started, p.bytes = deadline, 0
 	}
 	quantum := max(maxMailPlain, min(4*maxMailPlain, int(rate*0.008)))
+	if mobile {
+		quantum = max(n, min(maxMailPlain, int(rate*0.025)))
+	}
 	if p.bytes+n <= quantum {
 		return true
 	}

@@ -360,6 +360,9 @@ func (c *Client) Close() error {
 }
 func (c *Client) samplePing(ctx context.Context) (time.Duration, error) {
 	d, err := c.session.Ping(ctx)
+	if err == nil {
+		c.session.ObserveApplicationRTT(d)
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.probe.SampledAtMS = time.Now().UnixMilli()

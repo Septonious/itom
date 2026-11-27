@@ -238,7 +238,14 @@ func (s *Stream) Read(p []byte) (int, error) {
 			// established, amortize credit announcements across 512 KiB.
 			// Even 64 active streams leave at most 32 MiB unannounced,
 			// below the shared 60 MiB bulk allowance. Close reports the tail.
-			sendWindow := grew || consumed-s.advertised >= 2*initialStreamWindow
+			// A bearer transition may race with a WINDOW threshold choice. Both
+			// thresholds are legal; no session mutex is needed for this hint.
+			mobile := s.session.mobileBearer.Load()
+			threshold := uint64(2 * initialStreamWindow)
+			if mobile {
+				threshold = initialStreamWindow
+			}
+			sendWindow := grew || consumed-s.advertised >= threshold
 			if sendWindow {
 				s.advertised = consumed
 			}
@@ -280,8 +287,8 @@ func (s *Stream) Write(p []byte) (int, error) {
 			s.mu.Unlock()
 			return written, os.ErrDeadlineExceeded
 		}
-		room := uint64(s.peerWindow) - (s.sendOffset - s.peerConsumed)
 		s.session.mu.Lock()
+		room := streamSendRoom(s.peerWindow, s.sendOffset-s.peerConsumed, s.session.delivery.mobile.enabled)
 		credit := s.session.changed
 		if s.sendOffset >= streamPrefix {
 			room = min(room, bulkBudget-s.session.bulkOutstanding)
@@ -297,7 +304,11 @@ func (s *Stream) Write(p []byte) (int, error) {
 			}
 			continue
 		}
-		n := min(len(p), maxPayload-13, int(room))
+		payloadLimit := maxPayload - 13
+		if s.session.delivery.mobile.enabled {
+			payloadLimit = mobilePayloadLimit(s.session.delivery.mobile.pacing(time.Now()))
+		}
+		n := min(len(p), payloadLimit, int(room))
 		offset := s.sendOffset
 		deadline := s.writeDeadline
 		if offset > ^uint64(0)-uint64(n) {
@@ -465,3 +476,15 @@ func bridge(a, b net.Conn) {
 	go copyOne(b, a)
 	wg.Wait()
 }
+
+// Never revoke outstanding credit on a bearer handover; block new writes until consumption catches up.
+func streamSendRoom(peerWindow int, outstanding uint64, mobile bool) uint64 {
+	if mobile {
+		peerWindow = min(peerWindow, 1<<20)
+	}
+	if outstanding >= uint64(peerWindow) {
+		return 0
+	}
+	return uint64(peerWindow) - outstanding
+}
+func mobilePayloadLimit(rate float64) int { return min(maxPayload-13, max(16<<10, int(rate*.075))) }

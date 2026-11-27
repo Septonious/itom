@@ -48,49 +48,56 @@ type pendingPacket struct {
 }
 
 type Session struct {
-	grantUpdateMu       sync.Mutex
-	grantVersion        uint64
-	grantAck            atomic.Uint64
-	grantRequests       chan grantRequest
-	grantRequestVersion uint64 // receive owner only
-	activeLimit         atomic.Int32
-	accountSetMu        sync.Mutex
-	accountSetVersion   uint64
-	accountSetAck       atomic.Uint64
-	ctx                 context.Context
-	cancel              context.CancelFunc
-	link                Link
-	cipher              *cipherPair
-	server              bool
-	dial                func(context.Context, string, string) (net.Conn, error)
-	mu                  sync.Mutex
-	streams             map[uint32]*Stream
-	closedStreams       map[uint32]*terminalStream
-	bulkOutstanding     uint64
-	receiveBuffered     atomic.Int64
-	lastInbound         atomic.Int64
-	nextStream          uint32
-	pending             map[uint64]*pendingPacket
-	pendingBytes        int
-	delivery            deliveryWindow
-	changed             chan struct{}
-	wake                chan struct{}
-	input               chan []byte
-	receipts            chan receiptRequest
-	receiptRetries      atomic.Uint64
-	openRefusals        atomic.Uint64
-	openWaits           atomic.Uint64
-	exitOpens           exitOpenCounters
-	retransmissions     uint64
-	seen                [replaySlots]uint64
-	seenValid           [replaySlots]bool
-	highest             uint64
-	rtt, variation      time.Duration
-	pings               map[uint64]chan struct{}
-	nextPing            uint64
-	accountPings        map[uint64]accountProbe
-	err                 error
-	wg                  sync.WaitGroup
+	grantUpdateMu                      sync.Mutex
+	grantVersion                       uint64
+	grantAck                           atomic.Uint64
+	grantRequests                      chan grantRequest
+	grantRequestVersion                uint64 // receive owner only
+	activeLimit                        atomic.Int32
+	accountSetMu                       sync.Mutex
+	accountSetVersion                  uint64
+	accountSetAck                      atomic.Uint64
+	ctx                                context.Context
+	cancel                             context.CancelFunc
+	link                               Link
+	cipher                             *cipherPair
+	server                             bool
+	dial                               func(context.Context, string, string) (net.Conn, error)
+	mu                                 sync.Mutex
+	streams                            map[uint32]*Stream
+	closedStreams                      map[uint32]*terminalStream
+	bulkOutstanding                    uint64
+	receiveBuffered                    atomic.Int64
+	lastInbound                        atomic.Int64
+	nextStream                         uint32
+	pending                            map[uint64]*pendingPacket
+	pendingBytes                       int
+	delivery                           deliveryWindow
+	changed                            chan struct{}
+	wake                               chan struct{}
+	input                              chan []byte
+	receipts                           chan receiptRequest
+	receiptRetries                     atomic.Uint64
+	openRefusals                       atomic.Uint64
+	openWaits                          atomic.Uint64
+	exitOpens                          exitOpenCounters
+	retransmissions                    uint64
+	seen                               [replaySlots]uint64
+	seenValid                          [replaySlots]bool
+	highest                            uint64
+	rtt, variation                     time.Duration
+	pings                              map[uint64]chan struct{}
+	nextPing                           uint64
+	peerBearerSequence                 uint64
+	bearerAdvertised                   bool
+	mobileBearer                       atomic.Bool // published by setCellularLocked; read-only fast-path snapshot
+	peerDemandSequence                 uint64
+	peerBulkPending, peerBulkDelivered uint64
+	peerDemandAt                       time.Time
+	peerDraining                       bool
+	accountPings                       map[uint64]accountProbe
+	err                                error
+	wg                                 sync.WaitGroup
 }
 
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
@@ -198,6 +205,17 @@ func (s *Session) send(ctx context.Context, f frame, priority bool) error {
 	return s.enqueue(ctx, f, priority, true)
 }
 func (s *Session) trySend(f frame, priority bool) error { return s.enqueue(s.ctx, f, priority, false) }
+
+// Keep the client cellular queue close to its measured publication window.
+// A single maximum wire frame of lookahead allows the pacer to stay busy
+// without buffering an additional full flight above a changing window.
+func pendingByteLimit(allowance int, mobileUpload bool) int {
+	if mobileUpload {
+		return min(maxPendingBytes, allowance+maxWire)
+	}
+	return min(maxPendingBytes, 2*allowance)
+}
+
 func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) error {
 	plain, err := f.encode()
 	if err != nil {
@@ -221,7 +239,7 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 			return ErrClosed
 		}
 		limit := maxPendingPackets
-		byteLimit := min(maxPendingBytes, 2*s.delivery.allowance())
+		byteLimit := pendingByteLimit(s.delivery.allowance(), s.delivery.mobile.enabled && !s.server)
 		if priority {
 			limit += controlReserve
 			byteLimit = maxPendingBytes + interactiveReserveBytes
@@ -403,9 +421,19 @@ func (s *Session) dispatchLoop() {
 		clear(batch)
 		batch = batch[:0]
 		s.mu.Lock()
+		s.delivery.mobile.reverseDemand = !s.server && s.delivery.mobile.enabled && !s.peerDemandAt.IsZero() && now.Sub(s.peerDemandAt) < 6*time.Second && s.peerBulkPending >= 128<<10
+		if !s.delivery.mobile.reverseDemand {
+			s.delivery.mobile.reverseHoldUntil = time.Time{}
+			s.delivery.mobile.reverseCap = 0
+		}
+		s.delivery.mobile.progress(now, s.delivery.totalDelivered, s.delivery.bulkFlight)
 		rto := min(8*time.Second, max(750*time.Millisecond, 2*s.rtt+4*s.variation))
 		for seq, p := range s.pending {
-			if p.sent.IsZero() || now.Sub(p.sent) >= retryAfter(p, rto) {
+			retry := retryAfter(p, rto)
+			if s.delivery.mobile.enabled && s.delivery.mobile.draining && p.attempts > 0 && negotiationControl(p.kind) {
+				retry = max(retry, 3*time.Second)
+			}
+			if p.sent.IsZero() || now.Sub(p.sent) >= retry {
 				batch = append(batch, candidate{seq, p})
 			}
 		}
@@ -465,14 +493,18 @@ func (s *Session) dispatchLoop() {
 				}
 				continue
 			}
-			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && s.delivery.flight+len(selected.wire) > s.delivery.allowance() {
+			if selected.kind == frameData && !selected.priority && selected.attempts == 0 && (s.delivery.mobile.enabled && s.delivery.mobile.draining || s.delivery.flight+len(selected.wire) > s.delivery.allowance()) {
 				s.delivery.limited = true
 				s.mu.Unlock()
 				continue
 			}
 			if selected.kind == frameData && !selected.priority {
 				at := time.Now()
-				if !s.delivery.pacer.ready(len(selected.wire), s.delivery.pacingRate(at), at) {
+				if selected.attempts > 0 && s.delivery.mobile.enabled && !s.delivery.mobile.permitBulkRetry(at) {
+					s.mu.Unlock()
+					continue
+				}
+				if !s.delivery.pacer.readyQuantum(len(selected.wire), s.delivery.pacingRate(at), at, s.delivery.mobile.enabled) {
 					// Priority traffic was sorted first and remains immediate.
 					s.mu.Unlock()
 					break
@@ -524,6 +556,9 @@ func (s *Session) dispatchLoop() {
 			s.mu.Lock()
 			if selected.kind == frameData && !selected.priority {
 				s.delivery.pacer.admitted(len(wire))
+				if selected.attempts > 0 && s.delivery.mobile.enabled {
+					s.delivery.mobile.noteBulkRetry(time.Now())
+				}
 			}
 			if p := s.pending[next.sequence]; p == selected {
 				if p.attempts == 0 && p.kind == frameData {
@@ -619,7 +654,14 @@ func (s *Session) receiveLoop() {
 					s.fail(creditErr)
 					return
 				}
-				if storage, ok := s.link.(StorageLink); ok {
+				if batchStorage, ok := s.link.(interface {
+					AcknowledgeBatch(SessionID, []uint64) error
+				}); ok {
+					if err := batchStorage.AcknowledgeBatch(s.cipher.id, acknowledged); err != nil {
+						s.fail(err)
+						return
+					}
+				} else if storage, ok := s.link.(StorageLink); ok {
 					for _, id := range acknowledged {
 						if err := storage.Acknowledge(s.cipher.id, id); err != nil {
 							s.fail(err)
@@ -703,14 +745,33 @@ func (s *Session) apply(f frame) error {
 		}
 	}
 	if f.kind == framePing || f.kind == framePong {
-		if f.stream != 0 || len(f.data) != 0 {
+		if f.stream != 0 || (len(f.data) != 0 && (f.kind != framePong || s.server || f.offset&bearerDemand == 0 || len(f.data) != 17)) {
 			return ErrProtocol
 		}
 		if f.kind == framePing {
-			return s.trySend(frame{kind: framePong, offset: f.offset}, true)
+			s.observePeerBearer(f.offset)
+			var data []byte
+			if s.server && f.offset&bearerMarker != 0 && f.offset&bearerDemand != 0 {
+				s.mu.Lock()
+				data = make([]byte, 17)
+				binary.BigEndian.PutUint64(data, min(s.bulkOutstanding, uint64(max(0, s.pendingBytes))))
+				binary.BigEndian.PutUint64(data[8:], s.delivery.totalDelivered)
+				if s.delivery.mobile.draining {
+					data[16] = 1
+				}
+				s.mu.Unlock()
+			}
+			return s.trySend(frame{kind: framePong, offset: f.offset, data: data}, true)
 		}
 		s.mu.Lock()
 		if pong := s.pings[f.offset]; pong != nil {
+			if len(f.data) == 17 && f.offset&bearerSeqMask > s.peerDemandSequence {
+				s.peerDemandSequence = f.offset & bearerSeqMask
+				s.peerBulkPending = binary.BigEndian.Uint64(f.data)
+				s.peerBulkDelivered = binary.BigEndian.Uint64(f.data[8:])
+				s.peerDemandAt = time.Now()
+				s.peerDraining = f.data[16] != 0
+			}
 			close(pong)
 			delete(s.pings, f.offset)
 		}
@@ -873,6 +934,12 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 	}
 	s.nextPing++
 	id := s.nextPing
+	if !s.server && s.bearerAdvertised {
+		id = bearerPingToken(id, s.delivery.mobile.enabled)
+		if s.delivery.mobile.enabled {
+			id |= bearerDemand
+		}
+	}
 	done := make(chan struct{})
 	s.pings[id] = done
 	s.mu.Unlock()
@@ -891,6 +958,12 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 }
 
 type Snapshot struct {
+	PeerBulkPending            uint64           `json:"peer_bulk_pending_bytes"`
+	PeerBulkDelivered          uint64           `json:"peer_bulk_delivered_bytes"`
+	PeerDemandFresh            bool             `json:"peer_demand_fresh"`
+	PeerDraining               bool             `json:"peer_draining"`
+	MobilePacing               bool             `json:"mobile_pacing"`
+	MobileDraining             bool             `json:"mobile_draining"`
 	ExitOpens                  ExitOpenSnapshot `json:"exit_opens"`
 	BulkPacingRateBPS          int64            `json:"bulk_pacing_bytes_per_second"`
 	BulkPacingDeferrals        uint64           `json:"bulk_pacing_deferrals"`
@@ -926,6 +999,14 @@ func (s *Session) Snapshot() Snapshot {
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
+	snapshot.PeerDemandFresh = !s.peerDemandAt.IsZero() && time.Since(s.peerDemandAt) < 6*time.Second
+	if snapshot.PeerDemandFresh {
+		snapshot.PeerBulkPending = s.peerBulkPending
+		snapshot.PeerBulkDelivered = s.peerBulkDelivered
+		snapshot.PeerDraining = s.peerDraining
+	}
+	snapshot.MobilePacing = s.delivery.mobile.enabled
+	snapshot.MobileDraining = s.delivery.mobile.draining
 	if s.err != nil {
 		snapshot.Failure = s.err.Error()
 	}

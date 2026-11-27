@@ -20,6 +20,7 @@ func (c *Client) SetNetworkType(kind string) {
 		pool.SetNetworkType(kind)
 	}
 	if previous == nil || *previous != kind {
+		c.refreshTUNReceiveBuffer()
 		c.RecordNetworkEvent("NETWORK_"+strings.ToUpper(kind), 0)
 	}
 }
