@@ -375,6 +375,14 @@ func storageControl(kind byte) bool {
 	return false
 }
 
+func negotiationControl(kind byte) bool {
+	switch kind {
+	case frameAccountSet, frameAccountSetAck, frameGrantUpdate, frameGrantAck, frameAccountHealth:
+		return true
+	}
+	return false
+}
+
 func (s *Session) dispatchLoop() {
 	type candidate struct {
 		sequence uint64
@@ -413,6 +421,13 @@ func (s *Session) dispatchLoop() {
 				}
 				return 1
 			}
+			an, bn := negotiationControl(a.packet.kind), negotiationControl(b.packet.kind)
+			if an != bn {
+				if an {
+					return -1
+				}
+				return 1
+			}
 			if a.packet.priority != b.packet.priority {
 				if a.packet.priority {
 					return -1
@@ -441,7 +456,8 @@ func (s *Session) dispatchLoop() {
 			}
 			interactive := selected.priority && selected.attempts == 0 &&
 				(selected.kind == frameData || selected.kind == frameOpen || selected.kind == frameOpenOK || selected.kind == framePing || selected.kind == framePong)
-			if controlBlocked && !interactive {
+			negotiation := negotiationControl(selected.kind)
+			if controlBlocked && !interactive && !negotiation {
 				s.mu.Unlock()
 				if !selected.priority {
 					break
@@ -475,6 +491,10 @@ func (s *Session) dispatchLoop() {
 			})
 			if storage && (storageControl(selected.kind)) {
 				err = maintenance.SendHousekeeping(s.ctx, wire)
+			} else if path, ok := s.link.(interface {
+				SendNegotiation(context.Context, []byte) error
+			}); ok && negotiation {
+				err = path.SendNegotiation(s.ctx, wire)
 			} else if feedback, ok := s.link.(interface {
 				SendFeedback(context.Context, []byte) error
 			}); ok && selected.kind == frameWindow {

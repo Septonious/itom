@@ -28,6 +28,14 @@ func (s *Session) applyAccountSet(f frame) error {
 		if !s.server || len(f.data) == 0 {
 			return ErrProtocol
 		}
+		// Older authenticated proposals can arrive after the newer grant has
+		// committed and removed obsolete paths from the union.
+		l.mu.Lock()
+		stale := f.offset <= l.remoteActiveVersion
+		l.mu.Unlock()
+		if stale {
+			return s.trySend(frame{kind: frameAccountSetAck, offset: f.offset}, true)
+		}
 		ids := strings.Split(string(f.data), ",")
 		allowed, err := l.validateActiveSet(s.cipher.id, ids)
 		if err != nil {

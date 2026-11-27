@@ -2,6 +2,7 @@ package mailstream
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 )
@@ -164,9 +165,31 @@ func (s *Session) startGrantUpdates(get func() []string) {
 			case <-s.ctx.Done():
 				return
 			case <-tick.C:
+				ids := slices.Clone(get())
 				ctx, cancel := context.WithTimeout(s.ctx, 20*time.Second)
-				_ = s.updateGrant(ctx, get())
+				// A superseded proposal must not monopolize the negotiation
+				// for its entire acknowledgement timeout. Preserve the union
+				// and start the newest version after the current owner exits.
+				joined := make(chan struct{})
+				go func() {
+					defer close(joined)
+					watch := time.NewTicker(250 * time.Millisecond)
+					defer watch.Stop()
+					for {
+						select {
+						case <-ctx.Done():
+							return
+						case <-watch.C:
+							if !slices.Equal(ids, get()) {
+								cancel()
+								return
+							}
+						}
+					}
+				}()
+				_ = s.updateGrant(ctx, ids)
 				cancel()
+				<-joined
 			}
 		}
 	}()

@@ -215,6 +215,11 @@ func (w *deliveryWindow) delivered(n int, sample time.Duration, now time.Time, b
 }
 
 func retryAfter(p *pendingPacket, rto time.Duration) time.Duration {
+	// Rare negotiation messages must not accumulate exponential backoff
+	// across obsolete paths during a live grant repair.
+	if negotiationControl(p.kind) {
+		return min(rto, time.Second)
+	}
 	// IMAP/TCP queueing is not datagram loss. Repeating an entire large
 	// MIME body every RTO amplified the backlog that delayed its receipt.
 	if !p.priority {

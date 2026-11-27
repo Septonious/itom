@@ -313,6 +313,17 @@ func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
 	return nil
 }
 
+// Rare authenticated negotiation packets use two distinct control writers.
+// Prefer the proposed active set so obsolete paths cannot stall repair.
+func (l *IMAPLink) SendNegotiation(ctx context.Context, body []byte) error {
+	first, err := l.sendClassMode(ctx, body, true, nil, false, false, true)
+	if err != nil {
+		return err
+	}
+	_, _ = l.sendClassMode(ctx, body, true, first, false, false, true)
+	return nil
+}
+
 func (l *IMAPLink) send(ctx context.Context, body []byte, priority bool, exclude *mailAccountState) (*mailAccountState, error) {
 	kind, _, seq, err := parseHeader(body)
 	recovery := err == nil && len(body) <= 1024 && (kind == hello || kind == accept || kind == sealed && seq == 0)
@@ -327,7 +338,7 @@ func (l *IMAPLink) SendHousekeeping(ctx context.Context, body []byte) error {
 // same writer so receipt and WINDOW packets share bounded MIME publications.
 // Interactive application/control requests retain their immediate path.
 func (l *IMAPLink) SendFeedback(ctx context.Context, body []byte) error {
-	_, err := l.sendClassMode(ctx, body, true, nil, false, true)
+	_, err := l.sendClassMode(ctx, body, true, nil, false, true, false)
 	return err
 }
 
@@ -381,9 +392,9 @@ func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 }
 
 func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery bool) (*mailAccountState, error) {
-	return l.sendClassMode(ctx, body, priority, exclude, recovery, false)
+	return l.sendClassMode(ctx, body, priority, exclude, recovery, false, false)
 }
-func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery, feedback bool) (*mailAccountState, error) {
+func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery, feedback, negotiation bool) (*mailAccountState, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -396,8 +407,10 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	}
 	l.mu.Lock()
 	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
-	var peerAllowed [20]bool
+	var peerAllowed, preferred [20]bool
+	preferTarget := negotiation && matched && l.client && l.healthTarget != nil
 	for i, a := range l.accounts {
+		preferred[i] = preferTarget && l.healthTarget[a.config.ID]
 		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID]) && (!matched || l.remoteActive == nil || l.remoteActive[a.config.ID]) && (!matched || !l.remoteUnavailable[a.config.ID])
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
@@ -427,7 +440,17 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	// Continue periodic round-robin exploration and keep the independent
 	// idle-writer pass. Bulk and feedback admission are unchanged.
 	var order []int
-	if matched && priority && !feedback && !recovery && len(body) <= 4096+13+headerSize+16 {
+	if preferTarget {
+		order = make([]int, 0, len(l.accounts))
+		for _, target := range []bool{true, false} {
+			for n := range l.accounts {
+				i := (start + n) % len(l.accounts)
+				if preferred[i] == target {
+					order = append(order, i)
+				}
+			}
+		}
+	} else if matched && priority && !feedback && !recovery && !negotiation && len(body) <= 4096+13+headerSize+16 {
 		order = l.idleInteractiveOrder(start, peerAllowed, exclude)
 	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
@@ -454,7 +477,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if a == exclude || !a.mu.TryLock() {
 			continue
 		}
-		if a.scaleBlocked.Load() {
+		if a.scaleBlocked.Load() && !negotiation {
 			a.mu.Unlock()
 			continue
 		}
@@ -477,6 +500,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		available = available && a.controlMessageReservationsLocked() < messageBudget
 		if matched {
 			available = available && a.id == packetID
+		}
+		if negotiation {
+			available = available && independent
 		}
 		if !available || idlePass && (!independent || len(a.interactive) != 0 || len(a.controlWriter.interactiveTags) >= cap(a.controlWriter.interactiveTags)) {
 			a.mu.Unlock()

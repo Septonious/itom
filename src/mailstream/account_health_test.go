@@ -109,7 +109,8 @@ func testRC7Repair(t *testing.T, failReplacement bool) {
 	replacement[4] = accounts[9].ID
 	if failReplacement {
 		cli.account(accounts[8].ID).fail()
-		desired.Store(&replacement)
+		proposed := append([]string(nil), replacement...)
+		desired.Store(&proposed)
 		await(12*time.Second, func() bool {
 			m := srv.Snapshot()
 			if !m.GrantChanging {
