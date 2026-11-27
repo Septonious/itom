@@ -398,7 +398,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 	matched := kind == sealed && l.attached != (SessionID{}) && l.attached == packetID
 	var peerAllowed [20]bool
 	for i, a := range l.accounts {
-		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID]) && (!matched || l.remoteActive == nil || l.remoteActive[a.config.ID])
+		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID]) && (!matched || l.remoteActive == nil || l.remoteActive[a.config.ID]) && (!matched || !l.remoteUnavailable[a.config.ID])
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
 	if feedback {

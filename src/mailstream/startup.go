@@ -156,6 +156,31 @@ func (a *mailAccountState) openControls(attempt context.Context) (control, write
 			// CREATE from the phone can deadlock provider metadata handling.
 			stage = "control_wait_server"
 			a.phase(stage)
+			// Keep this authenticated connection while the server creates the
+			// folder. A short bounded LIST wait avoids redundant LOGIN bursts.
+			deadline := time.Now().Add(3 * time.Second)
+			for !time.Now().After(deadline) {
+				select {
+				case <-attempt.Done():
+					err = attempt.Err()
+					return
+				case <-time.After(150 * time.Millisecond):
+				}
+				stop = control.limit(time.Second)
+				found, e := control.client.List("", folder, nil).Collect()
+				stop()
+				if e != nil {
+					err = e
+					return
+				}
+				if listedControlFolder(found, folder) {
+					control.knownFolders[folder] = true
+					break
+				}
+			}
+			if control.knownFolders[folder] {
+				continue
+			}
 			err = errControlAwaitingServer
 			return
 		}

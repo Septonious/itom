@@ -80,6 +80,18 @@ func (s *Session) setActiveAccountsLocked(ctx context.Context, l *IMAPLink, ids 
 	if err != nil {
 		return err
 	}
+	// Do not launch a new wave of logins for a proposal already known to
+	// contain a permanently failed actor. The health reporter requests a
+	// replacement via a surviving path.
+	for _, name := range ids {
+		a := l.account(name)
+		a.mu.Lock()
+		failed := a.failed
+		a.mu.Unlock()
+		if failed {
+			return ErrClosed
+		}
+	}
 	// Login concurrently, bounded by the shared provider startup semaphore.
 	results := make(chan error, len(ids))
 	for _, name := range ids {

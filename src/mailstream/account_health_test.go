@@ -55,6 +55,15 @@ func testRC7Repair(t *testing.T, failReplacement bool) {
 		d := time.Now().Add(timeout)
 		for !fn() {
 			if time.Now().After(d) {
+				for _, link := range []*IMAPLink{cli, srv} {
+					m := link.Snapshot()
+					t.Logf("client=%t grantChanging=%t data=%d ready=%d allocated=%d", link.client, m.GrantChanging, m.Data, m.Ready, m.AllocatedAccounts)
+					for _, a := range link.accounts {
+						a.mu.Lock()
+						t.Logf("account=%s failed=%t ready=%t data=%t stage=%s failure=%s parked=%t unallocated=%t scaleBlocked=%t queued=%d writer=%t cw=%t attached=%x", a.config.ID, a.failed, a.ready, a.data != nil, a.stage, a.failure, a.parking.Load(), a.unallocated.Load(), a.scaleBlocked.Load(), a.queuedBytes, a.writer != nil, a.controlWriter != nil, a.id)
+						a.mu.Unlock()
+					}
+				}
 				t.Fatalf("timeout client %d/%d, server %d/%d, session %v", cli.Snapshot().Data, cli.Snapshot().AllocatedAccounts, srv.Snapshot().Data, srv.Snapshot().AllocatedAccounts, s.Err())
 			}
 			select {

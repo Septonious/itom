@@ -32,14 +32,22 @@ func (s *Session) reportAccountHealth(l *IMAPLink) {
 			var unavailable []string
 			for _, a := range l.accounts {
 				name := a.config.ID
-				if !grant[name] || (!proposed && a.scaleBlocked.Load()) {
-					delete(missingSince, name)
-					continue
-				}
 				a.mu.Lock()
 				ready := a.ready && !a.failed && a.id == s.cipher.id && a.writer != nil && a.controlWriter != nil
 				failed := a.failed
 				a.mu.Unlock()
+				// A permanently failed actor cannot be resumed in this session,
+				// even after it leaves the current or proposed grant. Keep that
+				// exclusion until a new session establishes a fresh inventory.
+				if failed {
+					unavailable = append(unavailable, name)
+					delete(missingSince, name)
+					continue
+				}
+				if !grant[name] || (!proposed && a.scaleBlocked.Load()) {
+					delete(missingSince, name)
+					continue
+				}
 				if ready {
 					delete(missingSince, name)
 					continue
@@ -49,7 +57,7 @@ func (s *Session) reportAccountHealth(l *IMAPLink) {
 					missingSince[name] = now
 					since = now
 				}
-				if failed || now.Sub(since) >= 12*time.Second {
+				if now.Sub(since) >= 12*time.Second {
 					unavailable = append(unavailable, name)
 				}
 			}

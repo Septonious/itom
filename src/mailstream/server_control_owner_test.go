@@ -64,6 +64,11 @@ func TestRC7ManagedClientNeverCreatesSharedControlFolders(t *testing.T) {
 	}
 	defer s.Close()
 	waitRetention(t, ctx, func() bool { return cli.Snapshot().Data == 3 && srv.Snapshot().Data == 3 }, "all accounts attached")
+	for _, a := range cli.Snapshot().Lines {
+		if a.StartupAttempts != 1 {
+			t.Fatalf("redundant startup login: %s attempts=%d", a.Account, a.StartupAttempts)
+		}
+	}
 	if creates.Load() != 6 {
 		t.Fatalf("wanted exactly 6 control creates, got %d", creates.Load())
 	}
