@@ -42,3 +42,17 @@ func TestReverseReservationBounded(t *testing.T) {
 		t.Fatal(m.probeRate)
 	}
 }
+
+func TestRC23MobileStreamReadAhead(t *testing.T) {
+	for _, tc := range []struct {
+		outstanding uint64
+		rate        float64
+		want        uint64
+	}{
+		{0, 16000, 256 << 10}, {256 << 10, 16000, 0}, {512 << 10, 16000, 0}, {128 << 10, 16000, 128 << 10}, {0, 4e6, 512 << 10}, {256 << 10, 4e6, 256 << 10},
+	} {
+		if got := mobileStreamRoom(tc.outstanding, tc.rate); got != tc.want {
+			t.Fatalf("%+v: %d", tc, got)
+		}
+	}
+}

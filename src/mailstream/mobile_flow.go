@@ -1,6 +1,9 @@
 package mailstream
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // One budget, owned by Session.mu. The original desktop controller remains
 // unchanged. Mobile capacity uses compression-safe receipt rate samples.
@@ -177,7 +180,14 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 		m.badSamples = 0
 		return
 	}
-	if rising || now.Before(m.reverseHoldUntil) || !m.probeAt.IsZero() && now.Sub(m.probeAt) < time.Second {
+	// Clean receipt and control evidence permits faster recovery below 16 Mbps.
+	// This is a bounded trial, not restoration of an old capacity estimate.
+	quickRecovery := healthyControl && !m.reverseDemand && !rising && m.badSamples == 0 && budget < 2_000_000 && rate >= budget*.85 && bulk <= max(700*time.Millisecond, base+350*time.Millisecond)
+	probeInterval := time.Second
+	if quickRecovery {
+		probeInterval = 500 * time.Millisecond
+	}
+	if rising || now.Before(m.reverseHoldUntil) || !m.probeAt.IsZero() && now.Sub(m.probeAt) < probeInterval {
 		return
 	}
 	// If the sender is constrained by the window/pacer, try a modest extra
@@ -189,6 +199,9 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 	gain := 1.35
 	if budget < 500_000 && rate >= budget*.85 && base > 0 && bulk <= base+150*time.Millisecond && !rising && !m.reverseDemand && m.badSamples == 0 {
 		gain = 1.8
+	}
+	if quickRecovery {
+		gain = max(gain, 1.6)
 	}
 	candidate := min(budget*gain, max(budget*1.05, rate*gain))
 	if rate < budget*.55 {
@@ -280,6 +293,9 @@ func (s *Session) setCellularLocked(enabled bool) {
 		return
 	}
 	s.delivery.mobile.reset(enabled)
+	if !s.server {
+		s.bearerEpoch++
+	}
 	s.mobileBearer.Store(enabled)
 	s.delivery.limit = initialDeliveryWindow
 	s.delivery.pacer = bulkPacer{}
@@ -427,5 +443,45 @@ func (m *mobileFlow) permitBulkRetry(now time.Time) bool {
 func (m *mobileFlow) noteBulkRetry(now time.Time) {
 	if m.draining {
 		m.retryAt = now.Add(2 * time.Second)
+	}
+}
+
+// A mobile-only exit negotiation must see the authenticated bearer before
+// opening the stream. A periodic probe may not have run after initial attach
+// or rebind. Share one bounded ping across simultaneous new application opens.
+// Legacy peers echo the opaque token unchanged, so the confirmation remains
+// backwards compatible. Existing streams and ordinary desktop startup are
+// untouched; mode changes are confirmed before subsequent opens.
+func (s *Session) ensurePeerBearer(ctx context.Context) error {
+	for {
+		s.mu.Lock()
+		if !s.bearerAdvertised || s.bearerAckEpoch == s.bearerEpoch {
+			s.mu.Unlock()
+			return nil
+		}
+		if inFlight := s.bearerConfirm; inFlight != nil {
+			s.mu.Unlock()
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-s.ctx.Done():
+				return ErrClosed
+			case <-inFlight:
+				continue
+			}
+		}
+		done := make(chan struct{})
+		s.bearerConfirm = done
+		s.mu.Unlock()
+		probe, cancel := context.WithTimeout(ctx, 5*time.Second)
+		_, err := s.Ping(probe)
+		cancel()
+		s.mu.Lock()
+		s.bearerConfirm = nil
+		close(done)
+		s.mu.Unlock()
+		if err != nil {
+			return err
+		}
 	}
 }

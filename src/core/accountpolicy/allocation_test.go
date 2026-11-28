@@ -20,8 +20,8 @@ func TestBalancedCeilingAllocation(t *testing.T) {
 		n, u int
 		want []int
 	}{
-		{0, 2, []int{0, 0}}, {8, 3, []int{8, 8, 8}}, {10, 1, []int{5}}, {15, 1, []int{8}},
-		{15, 2, []int{8, 7}}, {15, 3, []int{5, 5, 5}}, {15, 4, []int{5, 5, 5, 5}},
+		{0, 2, []int{0, 0}}, {8, 3, []int{8, 8, 8}}, {10, 1, []int{10}}, {15, 1, []int{8}},
+		{15, 2, []int{8, 7}}, {15, 3, []int{5, 5, 5}}, {15, 4, []int{4, 4, 4, 3}},
 		{16, 3, []int{6, 5, 5}}, {20, 3, []int{7, 7, 6}},
 	} {
 		accounts, users := ids("a", tt.n), ids("u", tt.u)
@@ -67,10 +67,10 @@ func TestAllocationCoverageForEverySupportedProfile(t *testing.T) {
 				count := len(grant)
 				minCount = min(minCount, count)
 				maxCount = max(maxCount, count)
-				if count > n || n >= 10 && count < 5 {
+				if count > n || n > 10 && count < 3 {
 					t.Fatal("invalid account count")
 				}
-				if n < 10 && count != n {
+				if n <= 10 && count != n {
 					t.Fatal("small-profile allocation must be disabled")
 				}
 				seen := map[string]bool{}
@@ -85,7 +85,7 @@ func TestAllocationCoverageForEverySupportedProfile(t *testing.T) {
 			if u > 1 && (len(covered) != n || maxCount-minCount > 1) {
 				t.Fatalf("unfair plan %d/%d: %v", n, u, plan)
 			}
-			if u > 1 && n >= 10 && n/u >= 5 {
+			if u > 1 && n > 10 && n/u >= 3 {
 				total := 0
 				for _, grant := range plan {
 					total += len(grant)

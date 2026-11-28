@@ -68,6 +68,7 @@ type Session struct {
 	closedStreams                      map[uint32]*terminalStream
 	bulkOutstanding                    uint64
 	receiveBuffered                    atomic.Int64
+	receivedPayload                    atomic.Uint64 // unique DATA bytes accepted, not control or retransmissions
 	lastInbound                        atomic.Int64
 	nextStream                         uint32
 	pending                            map[uint64]*pendingPacket
@@ -90,7 +91,9 @@ type Session struct {
 	nextPing                           uint64
 	peerBearerSequence                 uint64
 	bearerAdvertised                   bool
-	mobileBearer                       atomic.Bool // published by setCellularLocked; read-only fast-path snapshot
+	bearerEpoch, bearerAckEpoch        uint64        // guarded by mu
+	bearerConfirm                      chan struct{} // one in-flight confirmation
+	mobileBearer                       atomic.Bool   // published by setCellularLocked; read-only fast-path snapshot
 	peerDemandSequence                 uint64
 	peerBulkPending, peerBulkDelivered uint64
 	peerDemandAt                       time.Time
@@ -834,7 +837,7 @@ func (s *Session) serveStream(stream *Stream, target string) {
 	defer cancel()
 	dialTimeout := time.AfterFunc(10*time.Second, cancel)
 	s.exitOpens.attempts.Add(1)
-	conn, err := s.dial(ctx, "tcp", target)
+	conn, err := s.dial(WithCellularExit(ctx, s.mobileBearer.Load()), "tcp", target)
 	dialCompleted := dialTimeout.Stop()
 	s.exitOpens.record(err, !dialCompleted, ctx.Err())
 	if err != nil || !dialCompleted {
@@ -867,7 +870,14 @@ func (s *Session) OpenTCP(ctx context.Context, target string) (net.Conn, error) 
 	}
 	waited := false
 	for {
+		if err := s.ensurePeerBearer(ctx); err != nil {
+			return nil, err
+		}
 		s.mu.Lock()
+		if s.bearerAdvertised && s.bearerAckEpoch != s.bearerEpoch {
+			s.mu.Unlock()
+			continue
+		}
 		if err := ctx.Err(); err != nil {
 			s.mu.Unlock()
 			return nil, err
@@ -934,6 +944,7 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 	}
 	s.nextPing++
 	id := s.nextPing
+	epoch := s.bearerEpoch
 	if !s.server && s.bearerAdvertised {
 		id = bearerPingToken(id, s.delivery.mobile.enabled)
 		if s.delivery.mobile.enabled {
@@ -953,11 +964,20 @@ func (s *Session) Ping(ctx context.Context) (time.Duration, error) {
 	case <-s.ctx.Done():
 		return 0, ErrClosed
 	case <-done:
+		if id&bearerMarker != 0 {
+			s.mu.Lock()
+			if s.bearerEpoch == epoch {
+				s.bearerAckEpoch = epoch
+			}
+			s.mu.Unlock()
+		}
 		return time.Since(start), nil
 	}
 }
 
 type Snapshot struct {
+	BulkDelivered              uint64           `json:"bulk_delivered_bytes"`
+	ReceivedPayload            uint64           `json:"received_payload_bytes"`
 	PeerBulkPending            uint64           `json:"peer_bulk_pending_bytes"`
 	PeerBulkDelivered          uint64           `json:"peer_bulk_delivered_bytes"`
 	PeerDemandFresh            bool             `json:"peer_demand_fresh"`
@@ -995,7 +1015,7 @@ type Snapshot struct {
 func (s *Session) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	snapshot := Snapshot{ExitOpens: s.exitOpens.snapshot(), BulkPacingRateBPS: int64(s.delivery.pacingRate(time.Now())), BulkPacingDeferrals: s.delivery.pacer.deferrals, InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
+	snapshot := Snapshot{BulkDelivered: s.delivery.totalDelivered, ReceivedPayload: s.receivedPayload.Load(), ExitOpens: s.exitOpens.snapshot(), BulkPacingRateBPS: int64(s.delivery.pacingRate(time.Now())), BulkPacingDeferrals: s.delivery.pacer.deferrals, InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
 		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}

@@ -134,6 +134,7 @@ func (s *Stream) accept(f frame) error {
 		}
 		s.chunks[f.offset] = bytes.Clone(f.data)
 		s.buffered += len(f.data)
+		s.session.receivedPayload.Add(uint64(len(f.data)))
 	case frameWindow:
 		if len(f.data) != 4 || f.offset > s.sendOffset {
 			return ErrProtocol
@@ -243,7 +244,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 			mobile := s.session.mobileBearer.Load()
 			threshold := uint64(2 * initialStreamWindow)
 			if mobile {
-				threshold = initialStreamWindow
+				threshold = initialStreamWindow / 2
 			}
 			sendWindow := grew || consumed-s.advertised >= threshold
 			if sendWindow {
@@ -289,6 +290,9 @@ func (s *Stream) Write(p []byte) (int, error) {
 		}
 		s.session.mu.Lock()
 		room := streamSendRoom(s.peerWindow, s.sendOffset-s.peerConsumed, s.session.delivery.mobile.enabled)
+		if s.session.delivery.mobile.enabled {
+			room = min(room, mobileStreamRoom(s.sendOffset-s.peerConsumed, s.session.delivery.mobile.pacing(time.Now())))
+		}
 		credit := s.session.changed
 		if s.sendOffset >= streamPrefix {
 			room = min(room, bulkBudget-s.session.bulkOutstanding)
@@ -488,3 +492,13 @@ func streamSendRoom(peerWindow int, outstanding uint64, mobile bool) uint64 {
 	return uint64(peerWindow) - outstanding
 }
 func mobilePayloadLimit(rate float64) int { return min(maxPayload-13, max(16<<10, int(rate*.075))) }
+
+// Limit cellular application read-ahead even when the peer advertised a large
+// window. A cap reduction never revokes accepted data, only blocks new writes.
+func mobileStreamRoom(outstanding uint64, rate float64) uint64 {
+	limit := uint64(min(512<<10, max(256<<10, int(rate*.25))))
+	if outstanding >= limit {
+		return 0
+	}
+	return limit - outstanding
+}

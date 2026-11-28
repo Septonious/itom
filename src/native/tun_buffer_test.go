@@ -17,7 +17,11 @@ func TestTUNReceiveBufferFollowsBearer(t *testing.T) {
 	}{{"wifi", tcp.DefaultReceiveBufferSize}, {"cellular", 128 << 10}, {"wifi", tcp.DefaultReceiveBufferSize}, {"unknown", tcp.DefaultReceiveBufferSize}} {
 		c.SetNetworkType(tc.kind)
 		var opt tcpip.TCPReceiveBufferSizeRangeOption
-		if e := s.TransportProtocolOption(tcp.ProtocolNumber, &opt); e != nil || opt.Default != tc.size {
+		wantMax := tcp.MaxBufferSize
+		if tc.kind == "cellular" {
+			wantMax = 128 << 10
+		}
+		if e := s.TransportProtocolOption(tcp.ProtocolNumber, &opt); e != nil || opt.Default != tc.size || opt.Max != wantMax {
 			t.Fatalf("%s: %+v %v", tc.kind, opt, e)
 		}
 	}

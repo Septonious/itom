@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"itom.local/core/accountpolicy"
 	"itom.local/core/mailbox"
 	"itom.local/core/servercfg"
 	"itom.local/core/socks"
@@ -27,7 +28,10 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc21-dev"
+const TransportRevision = "itom-1-5-1-rc23-dev"
+
+var ErrInsufficientAccounts = errors.New("MAILSTREAM_MINIMUM_THREE_ACCOUNTS")
+
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -52,17 +56,19 @@ type StartupProgress struct {
 }
 type ClientSnapshot struct {
 	Stats
-	ServerMessage          string
-	ServerMessageRevision  uint64
-	SampledAtMS            int64
-	Lines                  []LineDiagnostic
-	Events                 []string
-	TransportStreams       int
-	ConfiguredAccounts     int
-	AllocatedAccounts      int
-	AssignedSocketCapacity int
-	TargetSocketCapacity   int
-	GrantNegotiated        bool
+	ServerMessage           string
+	ServerMessageRevision   uint64
+	SampledAtMS             int64
+	Lines                   []LineDiagnostic
+	Events                  []string
+	TransportStreams        int
+	ConfiguredAccounts      int
+	AllocatedAccounts       int
+	UsableAccounts          int
+	MinimumAccountsDegraded bool
+	AssignedSocketCapacity  int
+	TargetSocketCapacity    int
+	GrantNegotiated         bool
 }
 type LineDiagnostic struct {
 	Account, Stage, ReadinessReason string
@@ -125,8 +131,11 @@ func profileConfigHash(p servercfg.Profile) string {
 	return hex.EncodeToString(digest[:])
 }
 func profileAccounts(p servercfg.Profile, d Dial, roots *tls.Config) ([]mailstream.MailAccount, []byte, error) {
-	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled || len(p.Accounts) == 0 {
+	if p.Schema != 1 || p.Kind != "itom-imap-probe" || !p.User.Enabled {
 		return nil, nil, servercfg.ErrConfig
+	}
+	if len(p.Accounts) < accountpolicy.MinimumAccounts {
+		return nil, nil, ErrInsufficientAccounts
 	}
 	if err := (servercfg.Config{Schema: 1, Server: p.Server, Provider: p.Provider, Users: []servercfg.User{p.User}, Accounts: p.Accounts, Transport: p.Transport}).Validate(); err != nil {
 		return nil, nil, err
@@ -263,6 +272,18 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 		}
 	}()
 	report("", link)
+	// Do not report a healthy VPN on one or two complete data paths.
+	for usableAccounts(link.Snapshot()) < accountpolicy.MinimumAccounts {
+		select {
+		case <-startup.Done():
+			session.Close()
+			return nil, ErrInsufficientAccounts
+		case <-session.Done():
+			session.Close()
+			return nil, ErrInsufficientAccounts
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
 	if err = verifyDataPath(startup, session); err != nil {
 		session.Close()
 		return nil, err
@@ -346,6 +367,9 @@ type startupError struct {
 }
 
 func (e *startupError) Error() string {
+	if errors.Is(e.cause, ErrInsufficientAccounts) {
+		return ErrInsufficientAccounts.Error()
+	}
 	if errors.Is(e.cause, mailstream.ErrBusy) {
 		return "MAILSTREAM_SERVER_BUSY"
 	}
@@ -392,7 +416,7 @@ func (c *Client) Snapshot() ClientSnapshot {
 	mail := c.link.Snapshot()
 	streams := c.session.ActiveStreams()
 	capacity := mailstream.ConnectionsPerAccount * mail.AllocatedAccounts
-	s := ClientSnapshot{Stats: Stats{TotalLines: capacity, TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli(), ConfiguredAccounts: len(c.profile.Accounts), AllocatedAccounts: mail.AllocatedAccounts, AssignedSocketCapacity: capacity, GrantNegotiated: mail.GrantNegotiated}
+	s := ClientSnapshot{UsableAccounts: usableAccounts(mail), MinimumAccountsDegraded: usableAccounts(mail) < accountpolicy.MinimumAccounts, Stats: Stats{TotalLines: capacity, TCP: len(streams)}, TransportStreams: len(streams), SampledAtMS: time.Now().UnixMilli(), ConfiguredAccounts: len(c.profile.Accounts), AllocatedAccounts: mail.AllocatedAccounts, AssignedSocketCapacity: capacity, GrantNegotiated: mail.GrantNegotiated}
 	if mail.GrantNegotiated {
 		target := c.session.ActiveAccountLimit()
 		if target <= 0 || target > mail.AllocatedAccounts {

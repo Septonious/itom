@@ -7,10 +7,11 @@ import "time"
 // Initial/unmeasured flights and the independent control carrier are unchanged.
 // All state belongs to Session.mu; no additional queue or storage is allocated.
 type bulkPacer struct {
-	started   time.Time
-	bytes     int
-	deferrals uint64
-	guarded   bool
+	started     time.Time
+	bytes       int
+	quantumRate float64 // cellular rate at admission, not a retroactive rate
+	deferrals   uint64
+	guarded     bool
 }
 
 func (w *deliveryWindow) pacingRate(now time.Time) float64 {
@@ -47,7 +48,11 @@ func (p *bulkPacer) readyQuantum(n int, rate float64, now time.Time, mobile bool
 		p.started, p.bytes = time.Time{}, 0
 		return true
 	}
-	interval := time.Duration(float64(p.bytes) / rate * float64(time.Second))
+	accountedRate := rate
+	if mobile && p.quantumRate > 0 && p.bytes > 0 {
+		accountedRate = p.quantumRate
+	}
+	interval := time.Duration(float64(p.bytes) / accountedRate * float64(time.Second))
 	if p.started.IsZero() {
 		p.started, p.bytes = now, 0
 	} else if deadline := p.started.Add(interval); !now.Before(deadline) {
@@ -59,6 +64,16 @@ func (p *bulkPacer) readyQuantum(n int, rate float64, now time.Time, mobile bool
 			deadline = floor
 		}
 		p.started, p.bytes = deadline, 0
+	} else if mobile && p.bytes > 0 && p.quantumRate > 0 && rate != p.quantumRate {
+		// A burst already admitted at a fast rate must not become seconds
+		// of artificial debt when a subsequent receipt lowers the rate.
+		// Conversely, do not append a new-rate burst before the old budget
+		// has expired. Flight and drain gates still bound real backlog.
+		p.deferrals++
+		return false
+	}
+	if mobile && p.bytes == 0 {
+		p.quantumRate = rate
 	}
 	quantum := max(maxMailPlain, min(4*maxMailPlain, int(rate*0.008)))
 	if mobile {

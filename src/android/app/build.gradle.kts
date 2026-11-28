@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId = "org.itom.client"
         minSdk = 29; targetSdk = 37
-        versionCode = 10541; versionName = "1.5.1-rc21-dev"
+        versionCode = 10543; versionName = "1.5.1-rc23-dev"
         ndk { abiFilters.addAll(if (itomAbi == "arm64") listOf("arm64-v8a") else listOf("arm64-v8a", "armeabi-v7a")) }
         buildConfigField("String", "UI_BASELINE", "\"ui-rev15-admin-grid\"")
         buildConfigField("int", "CONFIG_SCHEMA", "5")

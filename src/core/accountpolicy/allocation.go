@@ -5,9 +5,28 @@ package accountpolicy
 
 import "slices"
 
+const MinimumAccounts = 3
+const SharedProfileMaximum = 10
+
+// BaselineCount distributes the remainder in admission order. A lone user
+// gets the rounded-up first half; each additional user gets its fair share.
+func BaselineCount(n, users, index int) int {
+	if n <= SharedProfileMaximum {
+		return n
+	}
+	if users <= 1 {
+		return (n + 1) / 2
+	}
+	k := n / users
+	if index < n%users {
+		k++
+	}
+	return max(MinimumAccounts, k)
+}
+
 // Plan returns deterministic account assignments for distinct online users.
 // A single user receives ceil(N/2); multiple users split the remainder fairly.
-// Below ten accounts the controller is disabled, and when the five-account
+// At ten or fewer accounts the controller is disabled, and when the three-account
 // minimum exceeds capacity users share physical accounts on distinct lanes.
 // Inputs are not mutated. Empty and duplicate identities are ignored.
 func Plan(accounts, online []string) map[string][]string {
@@ -19,18 +38,7 @@ func Plan(accounts, online []string) map[string][]string {
 	}
 	offset := 0
 	for i, id := range online {
-		count := n
-		if n >= 10 {
-			if u == 1 {
-				count = (n + 1) / 2
-			} else {
-				count = n / u
-				if i < n%u {
-					count++
-				}
-				count = max(5, count)
-			}
-		}
+		count := BaselineCount(n, u, i)
 		grant := make([]string, 0, count)
 		for j := 0; j < count; j++ {
 			grant = append(grant, accounts[(offset+j)%n])
@@ -59,10 +67,10 @@ func unique(values []string) []string {
 func InitialGrant(accounts []string, existing map[string][]string) []string {
 	accounts = unique(accounts)
 	n, u := len(accounts), len(existing)+1
-	if n < 10 {
+	if n <= SharedProfileMaximum {
 		return accounts
 	}
-	count := max(5, n/u)
+	count := max(MinimumAccounts, n/u)
 	if u == 1 {
 		count = (n + 1) / 2
 	}
@@ -85,9 +93,9 @@ func InitialGrant(accounts []string, existing map[string][]string) []string {
 
 // Rebalance preserves as many existing exclusive assignments as possible,
 // allocating the remainder in stable admission order. Shared mailboxes are
-// used only when the five-account minimum requires them.
+// used only when the three-account minimum requires them.
 func Rebalance(accounts, online []string, previous map[string][]string) map[string][]string {
-	accounts = unique(accounts)
+	accounts = orderedUnique(accounts)
 	n := len(accounts)
 	seen := map[string]bool{}
 	users := []string{}
@@ -101,7 +109,7 @@ func Rebalance(accounts, online []string, previous map[string][]string) map[stri
 	if len(users) == 0 {
 		return out
 	}
-	if n < 10 {
+	if n <= SharedProfileMaximum {
 		for _, u := range users {
 			out[u] = slices.Clone(accounts)
 		}
@@ -114,14 +122,7 @@ func Rebalance(accounts, online []string, previous map[string][]string) map[stri
 		valid[a] = true
 	}
 	for i, u := range users {
-		k := n / len(users)
-		if i < n%len(users) {
-			k++
-		}
-		if len(users) == 1 {
-			k = (n + 1) / 2
-		}
-		counts[u] = max(5, k)
+		counts[u] = BaselineCount(n, len(users), i)
 		out[u] = []string{}
 		for _, a := range previous[u] {
 			if valid[a] && !used[a] && len(out[u]) < counts[u] {
@@ -146,4 +147,16 @@ func Rebalance(accounts, online []string, previous map[string][]string) map[stri
 		}
 	}
 	return out
+}
+
+func orderedUnique(values []string) []string {
+	seen := map[string]bool{}
+	result := make([]string, 0, len(values))
+	for _, v := range values {
+		if v != "" && !seen[v] {
+			result = append(result, v)
+			seen[v] = true
+		}
+	}
+	return result
 }

@@ -307,6 +307,7 @@ func run() (err error) {
 		buffer := make([]byte, 64<<10)
 		offset := uint64(0)
 		stop := down.stop(*duration)
+		defer func() { down.noteStreamStage(q.Header.Get("X-ITOM-Fixture-Stream"), "writer_done", offset) }()
 		for time.Now().Before(stop) {
 			fill(buffer, offset)
 			n, e := w.Write(buffer)
@@ -792,6 +793,7 @@ func run() (err error) {
 						errs <- e
 						return
 					}
+					request.Header.Set("X-ITOM-Fixture-Stream", strconv.Itoa(i))
 					response, e := httpClient.Do(request)
 					if e != nil {
 						if *timedSpeedtest && errors.Is(requestCtx.Err(), context.DeadlineExceeded) {

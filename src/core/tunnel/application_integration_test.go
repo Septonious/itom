@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"net"
@@ -26,6 +27,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"testing"
@@ -82,9 +84,12 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 		t.Fatal(err)
 	}
 	backend := imapmemserver.New()
-	backend.AddUser(imapmemserver.NewUser("native-fixture", "fixture-password"))
+	for i := 1; i <= 3; i++ {
+		backend.AddUser(imapmemserver.NewUser(fmt.Sprintf("native-fixture-%d", i), "fixture-password"))
+	}
 	var connections, peak, providerLimit atomic.Int64
-	providerLimit.Store(10)
+	var mailboxCounts sync.Map
+	providerLimit.Store(30)
 	provider := imapserver.New(&imapserver.Options{Caps: imap.CapSet{imap.CapIMAP4rev1: {}, imap.CapIdle: {}}, NewSession: func(*imapserver.Conn) (imapserver.Session, *imapserver.GreetingData, error) {
 		n := connections.Add(1)
 		for old := peak.Load(); n > old && !peak.CompareAndSwap(old, n); old = peak.Load() {
@@ -93,7 +98,7 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 			connections.Add(-1)
 			return nil, nil, errors.New("fixture provider ten-connection limit")
 		}
-		return &countedProviderSession{Session: backend.NewSession(), count: &connections}, nil, nil
+		return &countedProviderSession{Session: backend.NewSession(), count: &connections, mailboxCounts: &mailboxCounts, providerLimit: &providerLimit}, nil, nil
 	}})
 	providerDone := make(chan error, 1)
 	go func() { providerDone <- provider.Serve(listener) }()
@@ -125,8 +130,10 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 		t.Fatal(err)
 	}
 	other.Key = hex.EncodeToString(key)
-	account := servercfg.Account{ID: "a01", Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: "native-fixture", Password: "fixture-password"}}
-	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Accounts: []servercfg.Account{account}, Users: []servercfg.User{u, other}}
+	cfg := servercfg.Config{Schema: 1, Server: wire.ID{1}, Provider: "fixture", Users: []servercfg.User{u, other}}
+	for i := 1; i <= 3; i++ {
+		cfg.Accounts = append(cfg.Accounts, servercfg.Account{ID: fmt.Sprintf("a%02d", i), Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: fmt.Sprintf("native-fixture-%d", i), Password: "fixture-password"}})
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	serverDone := make(chan error, 1)
@@ -277,20 +284,33 @@ func TestNativeVPNProcessUsesReplacement(t *testing.T) {
 	if err != nil || traffic.Running || len(traffic.Users) != 2 || traffic.Users[0].Upload < 128<<10 || traffic.Users[0].Download < 128<<10 {
 		t.Fatalf("actual exit counters missing or stale: %+v error=%v", traffic, err)
 	}
-	if peak.Load() > 10 {
+	if peak.Load() > 30 {
 		t.Fatal("exceeded provider connection limit", peak.Load())
 	}
-	t.Logf("two configured identities, provider peak=%d/10; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
+	t.Logf("two configured identities, provider peak=%d/30; second user BUSY; same-user restart and actual traffic accounting passed", peak.Load())
 	t.Log("new runtime reached native protected sockets, authenticated DATA readiness, SOCKS HTTPS and IPv4 TUN HTTPS")
-	providerLimit.Store(16)
+	providerLimit.Store(48)
 	peak.Store(0)
 	testConcurrentUsers(t, cfg, origin.Listener.Addr().String(), mailPEM, httpsPEM, &peak)
+	// The same live TLS provider now exercises the >10-account adaptive
+	// allocation path. Preserve the trust root already loaded in this process.
+	for i := 4; i <= 15; i++ {
+		name := fmt.Sprintf("native-fixture-%d", i)
+		backend.AddUser(imapmemserver.NewUser(name, "fixture-password"))
+		cfg.Accounts = append(cfg.Accounts, servercfg.Account{ID: fmt.Sprintf("a%02d", i), Mail: mailbox.Config{Host: "127.0.0.1", Port: listener.Addr().(*net.TCPAddr).Port, TLS: "tls", Username: name, Password: "fixture-password"}})
+	}
+	providerLimit.Store(240)
+	peak.Store(0)
+	testSequentialUsers(t, cfg, origin.Listener.Addr().String(), mailPEM, httpsPEM, &peak)
 
 }
 
 type countedProviderSession struct {
 	imapserver.Session
-	count *atomic.Int64
+	count         *atomic.Int64
+	mailboxCounts *sync.Map
+	providerLimit *atomic.Int64
+	mailboxCount  *atomic.Int64
 }
 
 type denyFixtureDialer struct{ calls atomic.Int64 }
@@ -300,7 +320,24 @@ func (d *denyFixtureDialer) DialContext(context.Context, string, string) (net.Co
 	return nil, errors.New("FIXTURE_NETWORK_FORBIDDEN")
 }
 
+func (s *countedProviderSession) Login(username, password string) error {
+	v, _ := s.mailboxCounts.LoadOrStore(username, &atomic.Int64{})
+	counter := v.(*atomic.Int64)
+	if counter.Add(1) > s.providerLimit.Load()/3 {
+		counter.Add(-1)
+		return imapserver.ErrAuthFailed
+	}
+	if err := s.Session.Login(username, password); err != nil {
+		counter.Add(-1)
+		return err
+	}
+	s.mailboxCount = counter
+	return nil
+}
 func (s *countedProviderSession) Close() error {
+	if s.mailboxCount != nil {
+		s.mailboxCount.Add(-1)
+	}
 	s.count.Add(-1)
 	return s.Session.Close()
 }

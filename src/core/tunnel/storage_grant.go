@@ -23,7 +23,7 @@ func (a *sessionAdmission) observeStorage(identity string, mail mailstream.MailS
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	grant := a.grants[identity]
-	if len(a.accounts) < 10 || a.owners[identity] == 0 || len(grant) < 2 || !mail.GrantNegotiated {
+	if len(a.accounts) <= 10 || a.owners[identity] == 0 || len(grant) < 3 || !mail.GrantNegotiated {
 		return false
 	}
 	// During an unfinished change only repair availability; never rotate for

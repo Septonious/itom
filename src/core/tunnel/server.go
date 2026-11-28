@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -41,8 +42,8 @@ func ServeManagedWithExit(ctx context.Context, c servercfg.Config, dir string, l
 	if err = c.Validate(); err != nil {
 		return err
 	}
-	if len(c.Accounts) == 0 {
-		return servercfg.ErrConfig
+	if len(c.Accounts) < accountpolicy.MinimumAccounts {
+		return ErrInsufficientAccounts
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -161,16 +162,28 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 				return
 			case <-ticker.C:
 				var session any
+				var snap mailstream.Snapshot
 				if s := current.Load(); s != nil {
-					session = s.Snapshot()
+					snap = s.Snapshot()
+					session = snap
 				}
 				mail := link.Snapshot()
-				if current.Load() != nil {
-					if admission.observeStorage(p.User.ID, mail, time.Now()) && log != nil {
-						log("event=storage_grant_replacement user=" + p.User.ID)
+				if current.Load() != nil && !snap.Closed {
+					now := time.Now()
+					if admission.observeStorage(p.User.ID, mail, now) {
+						if log != nil {
+							log("event=storage_grant_replacement user=" + p.User.ID)
+						}
+					} else if admission.observeDemand(p.User.ID, mail, snap, now) {
+						if log != nil {
+							log("event=adaptive_grant_changed user=" + p.User.ID)
+						}
 					}
 				}
 				snapshot := map[string]any{"Event": "runtime", "Revision": TransportRevision, "User": p.User.ID, "Mail": mail, "Session": session, "EncryptedExit": upstream != nil, "ExitUploadBytes": traffic.upload.Load(), "ExitDownloadBytes": traffic.download.Load(), "SampledAtMS": time.Now().UnixMilli()}
+				if upstream != nil {
+					snapshot["RelayNegotiation"] = upstream.NegotiationCounts()
+				}
 				_ = trace.record(snapshot)
 				if !trace.disabled {
 					_ = writePrivate(filepath.Join(filepath.Dir(trace.path), "mailstream-"+p.User.ID+".json"), snapshot)
@@ -180,7 +193,7 @@ func serveProfile(ctx context.Context, p servercfg.Profile, trace *traceWriter, 
 	}()
 	defer func() { stop(); <-joined }()
 	return mailstream.ServeWithOptions(ctx, link, identity, key, dial, mailstream.ServerOptions{Admit: func() (func(), error) {
-		return admission.acquirePreferred(p.User.ID, preferredGrantAccounts(link.Snapshot().Lines))
+		return admission.acquirePreferred(p.User.ID, sequentialGrantPreferences(admission.accounts, link.Snapshot().Lines))
 	}, InitialAccountGrant: func() []string { return admission.grant(p.User.ID) }, LiveAccountGrant: func() []string { return admission.grant(p.User.ID) }, IdleTimeout: 30 * time.Second, Connected: func(s *mailstream.Session) {
 		current.Store(s)
 		_ = trace.record(map[string]any{"Event": "session_ready", "Revision": TransportRevision, "User": p.User.ID, "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()})
@@ -202,6 +215,7 @@ type sessionAdmission struct {
 	grants   map[string][]string
 	order    []string
 	storage  map[string]*storageGrantWatch
+	adaptive map[string]*grantDemandWatch
 }
 
 // Prefer usable storage headroom, not raw account IDs or lowest instantaneous
@@ -259,6 +273,7 @@ func (a *sessionAdmission) acquirePreferred(identity string, preferred []string)
 		// each against the configured pool. Existing users are processed first.
 		a.grants[identity] = append([]string(nil), preferred...)
 		a.grants = accountpolicy.Rebalance(a.accounts, a.order, a.grants)
+		clear(a.adaptive)
 	}
 	a.owners[identity]++
 	var once sync.Once
@@ -270,6 +285,7 @@ func (a *sessionAdmission) acquirePreferred(identity string, preferred []string)
 			if a.owners[identity] == 0 {
 				delete(a.owners, identity)
 				delete(a.storage, identity)
+				delete(a.adaptive, identity)
 				for i, u := range a.order {
 					if u == identity {
 						a.order = append(a.order[:i], a.order[i+1:]...)
@@ -277,6 +293,7 @@ func (a *sessionAdmission) acquirePreferred(identity string, preferred []string)
 					}
 				}
 				a.grants = accountpolicy.Rebalance(a.accounts, a.order, a.grants)
+				clear(a.adaptive)
 			}
 		})
 	}, nil
@@ -401,4 +418,26 @@ func writePrivate(path string, value any) error {
 		return err
 	}
 	return os.Rename(file.Name(), path)
+}
+
+// Healthy accounts follow configured order. The storage-aware fallback remains
+// available for a profile with blocked/unready accounts at admission.
+func sequentialGrantPreferences(accounts []string, lines []mailstream.MailAccountSnapshot) []string {
+	byID := map[string]mailstream.MailAccountSnapshot{}
+	for _, l := range lines {
+		byID[l.Account] = l
+	}
+	healthy := []string{}
+	for _, id := range accounts {
+		l := byID[id]
+		if l.Ready && l.Failure == "" && !l.BulkBlocked && !l.StoragePressure && l.BulkHeadroomBytes >= storageGrantMinimumHeadroom {
+			healthy = append(healthy, id)
+		}
+	}
+	for _, id := range preferredGrantAccounts(lines) {
+		if !slices.Contains(healthy, id) {
+			healthy = append(healthy, id)
+		}
+	}
+	return healthy
 }

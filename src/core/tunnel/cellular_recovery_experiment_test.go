@@ -8,7 +8,7 @@ import (
 func TestSerialRecoveryFloor(t *testing.T) {
 	var p cellularPolicy
 	at := time.Unix(100, 0)
-	if got := p.decideRecovery(8, 80, true, 100000, at); got != 4 {
+	if got := p.decideRecovery(8, 80, true, 100000, at); got != 8 {
 		t.Fatal(got)
 	}
 	for i := 1; i <= 20; i++ {
@@ -20,7 +20,7 @@ func TestSerialRecoveryFloor(t *testing.T) {
 	for i := 21; i <= 50; i++ {
 		p.decideRecovery(8, 1200, true, 0, at.Add(time.Duration(i)*time.Second))
 	}
-	if p.limit != 1 {
+	if p.limit != 3 {
 		t.Fatal(p.limit)
 	}
 	for i := 51; i <= 90; i++ {

@@ -58,6 +58,8 @@ func failureCode(err error) string {
 		return "CANCELED"
 	case errors.Is(err, context.DeadlineExceeded), errors.Is(err, os.ErrDeadlineExceeded):
 		return "TIMEOUT"
+	case errors.Is(err, ErrInsufficientAccounts):
+		return "MINIMUM_THREE_ACCOUNTS"
 	case errors.Is(err, mailstream.ErrAuth):
 		return "AUTHENTICATION"
 	case errors.Is(err, mailstream.ErrCapacity):

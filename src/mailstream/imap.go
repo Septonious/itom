@@ -1594,6 +1594,7 @@ type MailAccountSnapshot struct {
 	PeerUnavailable            bool   `json:"peer_unavailable"`
 	Account                    string `json:"account"`
 	Allocated                  bool   `json:"allocated"`
+	PeerActive                 bool   `json:"peer_active"`
 	Stage                      string `json:"stage"`
 	Failure                    string `json:"failure,omitempty"`
 	Ready                      bool   `json:"ready"`
@@ -1631,12 +1632,13 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 	}
 	l.reclaimer.mu.Unlock()
 	l.mu.Lock()
-	var verified, allocated, unavailable [20]bool
+	var verified, allocated, unavailable, active [20]bool
 	s.GrantNegotiated = l.grantSession != (SessionID{})
 	s.GrantChanging = l.grantChanging
 	for i, a := range l.accounts {
 		verified[i] = l.peers[a.config.ID]
 		unavailable[i] = l.remoteUnavailable[a.config.ID]
+		active[i] = l.remoteActive[a.config.ID]
 		allocated[i] = !s.GrantNegotiated || l.stableGrant[a.config.ID]
 		if allocated[i] {
 			s.AllocatedAccounts++
@@ -1697,6 +1699,7 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.StorageRecoveryReady = a.maintenance.recoveryReady || a.maintenance.recovered
 		line.MaintenanceFailure = a.maintenance.failure
 		line.PeerVerified = verified[i]
+		line.PeerActive = active[i]
 		line.PeerUnavailable = unavailable[i]
 		line.ControlReconnects = a.controlReconnects.Load()
 		line.ControlPublicationMeanUS = a.controlServiceMean.Load() / 1000
