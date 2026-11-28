@@ -1,0 +1,138 @@
+name: ITOM 1.5.1 RC18 Writer Separation field build (unqualified)
+on:
+  push:
+    branches: [field/itom-v151-rc18]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Verify exact field source
+        run: test "$(git rev-parse HEAD:src)" = "495bef8681b66cd162d468d22549467f085e34dd"
+      - name: RC16 targeted mailstream regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=1 -timeout=5m -run 'TestMobile|TestBatchedReceipt|TestSerialRecovery|TestSparseMobile|TestIndependentFeedback' .
+      - name: RC16 qualification diagnostics and gate logic
+        working-directory: src/qualification
+        run: |
+          go test -race -mod=readonly ./worker ./provider ./fieldgate
+          python3 -m unittest test_home_gate
+      - name: Live four-socket allocation and suspend-resume integration
+        working-directory: src/mailstream
+        run: |
+          go test -race -mod=readonly -count=4 -timeout=5m -run '^(TestAuthenticatedInitialGrant|TestLiveAccountScalingPreservesStream|TestLiveGrantRebalancesDormantAccounts)$' .
+      - name: Server allocation and cellular controller tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'Test(RC4|SessionAdmission|BalancedCeiling|AllocationCoverage|Cellular)' ./accountpolicy ./tunnel
+      - name: RC4 bounded collection and field allocation regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC4|TestCollectionRetriesBoundTinyMessagesAfterFailure|TestHistoricalDataUsesBoundedHealthyPagesAndConservativeRetries|TestByteBoundedDataCollectionRetainsDebtUntilFinalAudit' .
+      - name: RC5 encrypted exit and storage grant regression tests
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 ./relay ./tunnel -run 'Test(RC5|Relay|WrongKey|DirectFallback|ConcurrentRelay|Cancellation|ShutdownWith|RC4FieldGrant|SessionAdmission)'
+      - name: Preserve healthy control writer on cleanup failure
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -run 'TestRC5CollectionFailure|TestRC4Collection|TestRC4SmallProvider' .
+      - name: RC7 repeated reconnect with unavailable unallocated account
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=90s -run '^TestReconnectWithUnallocatedStartupRetry$' .
+      - name: RC7 offline purge recovery and retention safety
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'TestPurgeRetryFreshConnection|TestFailedPurgePreservesLocalCapacity' ./manager
+      - name: RC7 account availability, control reader recovery and latency regressions
+        working-directory: src/mailstream
+        run: go test -race -mod=readonly -count=3 -timeout=5m -run '^TestRC7' .
+      - name: RC7 account allocation recovery
+        working-directory: src/core
+        run: go test -race -mod=readonly -count=3 -run 'TestRC7' ./tunnel
+      - name: Extract verified routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS "$RUNNER_TEMP/rc20-data"
+      - name: Full native tests including real routing datasets
+        working-directory: src/native
+        run: ITOM_RC20_DATA_DIR="$RUNNER_TEMP/rc20-data" go test -race -mod=readonly ./...
+  build:
+    needs: native-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: src
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v1.5.0-rc20
+          path: rc20-reference
+          sparse-checkout: testing/rc20/downloads
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify and bundle actual RC20 routing data
+        run: python3 src/qualification/rc20_routing_data.py rc20-reference/testing/rc20/downloads/itom-1.5.0-rc20.apk rc20-reference/testing/rc20/downloads/SHA256SUMS src/android/app/src/main/assets/routing-data
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - name: Ensure pinned Android SDK and NDK
+        run: |
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$manager"
+          export ANDROID_HOME="$sdk" ANDROID_SDK_ROOT="$sdk"
+          "$manager" --sdk_root="$sdk" --channel=3 'platforms;android-29' 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$sdk/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - name: Compile matching ARM64 native AAR
+        working-directory: src/native
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260908204917-8b95e45f8d3e
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20260908204917-8b95e45f8d3e
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          mkdir -p "$(go env GOPATH)/pkg/gomobile" ../android/app/libs
+          gomobile bind -trimpath -target=android/arm64 -androidapi=29 -javapkg=org.itom.nativecore -o ../android/app/libs/itom.aar .
+      - name: Build development APK and release variant
+        working-directory: src/android
+        run: gradle --no-daemon :domain:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:assembleDebug :app:assembleRelease
+      - name: Build matching Linux AMD64 server
+        working-directory: src/core
+        run: |
+          mkdir -p ../../dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o ../../dist/itom-linux-amd64 ./cmd/itom
+      - name: Stage artifacts
+        run: |
+          cp src/android/app/build/outputs/apk/debug/app-debug.apk dist/itom-1.5.1-rc18-writer-separation-testing.apk
+          cp src/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/itom-1.5.1-rc18-writer-separation-release-UNSIGNED.apk
+          cd dist
+          sha256sum itom-linux-amd64 *.apk > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITOM-1.5.1-RC18-writer-separation-UNQUALIFIED
+          path: dist/
+          if-no-files-found: error
