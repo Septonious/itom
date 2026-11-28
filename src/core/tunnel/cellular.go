@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"itom.local/mailstream"
 )
 
 // Bearer is merely a policy selector. Only fresh provider IMAP latency
@@ -114,6 +116,15 @@ func (p *cellularPolicy) decideRecovery(capacity int, latency float64, demand bo
 	} else {
 		p.idle++
 	}
+	// Recovery below the normal four-path floor should not be gated by
+	// the slower downscale interval. Only genuine demand and healthy IMAP
+	// allow an additional path; congestion downscale still waits 5 seconds.
+	if demand && p.limit < floor && good && p.healthy >= 2 && (p.lastChange.IsZero() || now.Sub(p.lastChange) >= 2*time.Second) {
+		p.limit++
+		p.lastChange = now
+		p.healthy, p.severe = 0, 0
+		return p.limit
+	}
 	if !p.lastChange.IsZero() && now.Sub(p.lastChange) < 5*time.Second {
 		return p.limit
 	}
@@ -128,7 +139,12 @@ func (p *cellularPolicy) decideRecovery(capacity int, latency float64, demand bo
 	case demand && p.healthy >= 2:
 		p.limit = min(capacity, p.limit+1)
 	case p.idle >= 12:
-		p.limit = max(1, p.limit-1)
+		// One path is reserved for genuinely poor bearer conditions, not
+		// an ordinary idle period on a healthy radio. Never increase a
+		// severely reduced grant merely because the application is idle.
+		if p.limit > min(2, capacity) {
+			p.limit--
+		}
 		p.idle = 0
 	}
 	if old != p.limit {
@@ -146,6 +162,7 @@ func (c *Client) accountController(ctx context.Context) {
 	var policy cellularPolicy
 	var previous uint64
 	var wasMobile bool
+	var demandUntil time.Time
 	last := 0
 	for {
 		select {
@@ -162,6 +179,7 @@ func (c *Client) accountController(ctx context.Context) {
 		}
 		if mobile != wasMobile {
 			policy = cellularPolicy{}
+			demandUntil = time.Time{}
 			last = -1
 			wasMobile = mobile
 		}
@@ -191,8 +209,15 @@ func (c *Client) accountController(ctx context.Context) {
 				sample = latency[len(latency)/2]
 			}
 			snap := c.session.Snapshot()
-			demand := snap.PendingBytes >= min(256<<10, max(1, snap.DeliveryWindow)) || (snap.BulkWindowLimited && snap.PendingBytes > 0) || rate >= uint64(max(active, 1))*250000 || (snap.PeerDemandFresh && snap.PeerBulkPending >= 128<<10 && !snap.PeerDraining)
-			desired = policy.decideRecovery(target, sample, demand, rate, time.Now())
+			now := time.Now()
+			// At a collapsed rate, a demand threshold proportional to the
+			// healthy flight/window is unreachable. Preserve active transfers
+			// across sparse receipt rounds, without treating idle TCP sockets
+			// alone as demand.
+			if cellularTrafficDemand(snap, rate) {
+				demandUntil = now.Add(8 * time.Second)
+			}
+			desired = policy.decideRecovery(target, sample, now.Before(demandUntil), rate, now)
 			target = desired
 		}
 		if target == active && last == desired {
@@ -208,4 +233,10 @@ func (c *Client) accountController(ctx context.Context) {
 			c.RecordNetworkEvent("ACCOUNT_LIMIT_CHANGED", int64(target))
 		}
 	}
+}
+
+// Demand is deliberately independent of the current learned rate. A
+// 50 kbps transfer must not be treated as an idle bearer forever.
+func cellularTrafficDemand(snap mailstream.Snapshot, rate uint64) bool {
+	return snap.BulkOutstanding >= 16<<10 || (snap.PeerDemandFresh && snap.PeerBulkPending >= 16<<10) || (snap.Streams > 0 && rate >= 8<<10) || (snap.BulkWindowLimited && snap.PendingBytes > 0)
 }

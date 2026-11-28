@@ -12,6 +12,7 @@ import tempfile
 import time
 
 from run_home import build, output
+from mobile_gate import assess_mobile_cycle
 
 
 def run(provider, worker, destination, encrypted, exit_rtt):
@@ -45,36 +46,10 @@ def run(provider, worker, destination, encrypted, exit_rtt):
             except subprocess.TimeoutExpired:
                 proc.kill()
                 proc.wait()
-    problems = []
-    if result.returncode:
-        problems.append(f"worker exit {result.returncode}")
     data = json.loads((destination / "result.json").read_text())
-    if not data.get("success") or data.get("stage") != "complete":
-        problems.append("incomplete native session or application recovery")
-    phases = data.get("Phases") or []
-    if not phases or phases[0].get("name") != "duplex":
-        problems.append("missing asymmetric duplex transfer")
-    metrics = {}
-    if phases:
-        for direction in ("download", "upload"):
-            rates = phases[0].get(direction, {}).get("half_second_mbps", [])
-            # Provider scenario begins immediately before the loaded phase.
-            # The 2 s serialization outage ends at 30 s; give recovery 10 s.
-            recovery = rates[80:110]
-            degraded = rates[40:56]
-            if len(recovery) != 30 or len(degraded) != 16:
-                problems.append(f"{direction}: incomplete rate-cycle samples")
-                continue
-            recovered_mbps = sum(recovery) / len(recovery)
-            degraded_mbps = sum(degraded) / len(degraded)
-            metrics[direction] = {"degraded_mbps": degraded_mbps, "recovery_mbps": recovered_mbps}
-            if recovered_mbps <= 0 or recovered_mbps <= degraded_mbps:
-                problems.append(f"{direction}: delivery did not improve after bearer recovery")
-    if not data.get("AfterMS"):
-        problems.append("missing post-load echo evidence")
-    output(destination / "assessment.json", {"problems": problems, "directional": metrics,
-           "qualification": "synthetic survival and recovery; no live-provider throughput guarantee"})
-    return problems
+    assessment = assess_mobile_cycle(data, result.returncode)
+    output(destination / "assessment.json", assessment)
+    return assessment["problems"]
 
 
 def main():

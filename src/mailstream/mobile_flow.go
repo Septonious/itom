@@ -33,6 +33,8 @@ type mobileFlow struct {
 	reverseDemand       bool
 	reverseHoldUntil    time.Time
 	reverseCap          float64 // temporary reservation, independent of learned rate
+	quietSince          time.Time
+	lastHealthyControl  time.Time
 }
 
 const mobileStartRate = 1_000_000
@@ -47,6 +49,13 @@ func (m *mobileFlow) reset(enabled bool) {
 func (m *mobileFlow) observeDelay(rtt, base time.Duration, now time.Time, busy bool) {
 	if rtt <= 0 {
 		return
+	}
+	// A fresh successful control round on an empty bulk flight is evidence
+	// that the previous congestion episode is over, not a bandwidth sample.
+	if rtt <= max(450*time.Millisecond, base+100*time.Millisecond) && rtt < 700*time.Millisecond {
+		m.lastHealthyControl = now
+	} else {
+		m.lastHealthyControl = time.Time{}
 	}
 	if m.draining && !busy && rtt < 2*time.Second {
 		m.recoverySamples++
@@ -74,8 +83,12 @@ func (m *mobileFlow) observeDelay(rtt, base time.Duration, now time.Time, busy b
 			previous = base
 		}
 		stale := !m.progressAt.IsZero() && now.Sub(m.progressAt) >= time.Second
-		underDelivery := m.lastRate > 0 && m.lastRate < m.probeRate*.75
-		if previous > 0 && rtt > previous+max(250*time.Millisecond, previous/2) && now.Sub(m.controlAt) >= time.Second && (stale || underDelivery || rtt >= 1500*time.Millisecond) {
+		underDelivery := m.lastRate > 0 && m.lastRate < m.probeRate*.75 && (m.probeRate >= 125_000 || !m.updated.IsZero() && now.Sub(m.updated) < time.Second)
+		// At the collapsed floor, an absolute control tail can come from
+		// APPEND/FETCH service rather than radio saturation. Require actual
+		// delivery evidence before cutting the already tiny budget again.
+		severe := rtt >= 1500*time.Millisecond && m.probeRate >= 125_000
+		if previous > 0 && rtt > previous+max(250*time.Millisecond, previous/2) && now.Sub(m.controlAt) >= time.Second && (stale || underDelivery || severe) {
 			m.probeRate = max(16000, m.probeRate*.65)
 			m.probeAt, m.controlAt = now, now
 		}
@@ -144,6 +157,26 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 		m.badSamples = 0
 		return
 	}
+	// When delivery is genuinely pacer-limited at the floor, the old
+	// bulk EWMA may still describe the previous outage. Fresh healthy control
+	// and receipt progress at the current rate justify a bounded upward trial
+	// rather than remaining stuck until all TCP streams close.
+	healthyControl := !m.lastHealthyControl.IsZero() && now.Sub(m.lastHealthyControl) <= time.Second
+	// Stable receipts at the current budget also prove that a small probe
+	// can be attempted, even if an unrelated control APPEND is slow. Keep
+	// the increase smaller without fresh control, and never probe a rising
+	// bulk round or an inactive/reverse-reserved sender on that evidence.
+	stableReceipt := !rising && !m.reverseDemand && previous > 0 && rate >= budget*.90 && bulk <= min(2*time.Second, max(1500*time.Millisecond, base+time.Second))
+	if budget < 125_000 && rate >= budget*.75 && (healthyControl || stableReceipt) && !now.Before(m.reverseHoldUntil) && (m.probeAt.IsZero() || now.Sub(m.probeAt) >= time.Second) && bulk <= max(1500*time.Millisecond, base+500*time.Millisecond) {
+		gain := 1.5
+		if !healthyControl {
+			gain = 1.25
+		}
+		m.probeRate = min(125_000, max(budget*gain, budget+8_000))
+		m.probeAt = now
+		m.badSamples = 0
+		return
+	}
 	if rising || now.Before(m.reverseHoldUntil) || !m.probeAt.IsZero() && now.Sub(m.probeAt) < time.Second {
 		return
 	}
@@ -168,6 +201,11 @@ func (m *mobileFlow) observeRate(rate float64, now time.Time, limited bool, bulk
 		m.controlDelay > 0 && m.controlDelay <= max(250*time.Millisecond, base+100*time.Millisecond) &&
 		previous > 0 && bulk <= previous+75*time.Millisecond && rate >= budget*.70 {
 		candidate = max(candidate, min(250_000, min(budget*1.5, budget+32_000)))
+	}
+	// A low-rate rescue has a hard ceiling until fresh control indicates
+	// the latency tail has cleared. Do not escape it through normal gain.
+	if budget <= 125_000 && !healthyControl && m.controlDelay >= 700*time.Millisecond {
+		candidate = min(candidate, 125_000)
 	}
 	m.probeRate = min(12_500_000, candidate)
 	m.capacity = max(m.capacity, m.goodRate)
@@ -351,6 +389,19 @@ func (m *mobileFlow) progress(now time.Time, delivered uint64, flight int) {
 	}
 	if flight == 0 {
 		m.progressAt = now
+		if m.quietSince.IsZero() {
+			m.quietSince = now
+		}
+		// A collapsed rate is not a permanent capacity estimate. After a
+		// genuinely quiet interval and fresh healthy control, permit a small
+		// new trial (1 Mbps); never restore the full historical peak blindly.
+		if !m.draining && now.Sub(m.quietSince) >= 2*time.Second && !m.lastHealthyControl.IsZero() && now.Sub(m.lastHealthyControl) <= 2*time.Second && m.probeRate > 0 && m.probeRate < 125_000 {
+			m.probeRate = 125_000
+			m.probeAt = now
+			m.lastBulk, m.controlDelay = 0, 0
+			m.badSamples = 0
+			m.recoveryGain = 0
+		}
 		if !m.draining && !m.lastBusy.IsZero() && now.Sub(m.lastBusy) > 5*time.Second && m.probeRate > mobileStartRate {
 			// Keep learned goodput, but re-probe after idle: the same cellular
 			// bearer may now have very different service capacity.
@@ -361,6 +412,7 @@ func (m *mobileFlow) progress(now time.Time, delivered uint64, flight int) {
 		}
 		return
 	}
+	m.quietSince = time.Time{}
 	m.lastBusy = now
 	if !m.draining && now.Sub(m.progressAt) >= 3*time.Second {
 		m.draining = true

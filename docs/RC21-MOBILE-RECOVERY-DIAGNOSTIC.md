@@ -1,0 +1,7 @@
+# ITOM 1.5.1 RC21 — mobile anti-collapse diagnostic, NOT QUALIFIED
+
+Exact source tree: dbacca3adcca8fba5363ee060443192ca856949c. Parent RC20 a295db6d7254d47347dcd460c26e53f3c663d9f1. Retain RC20 as rollback/reference; no release or promotion. Mobile-only demand, healthy-idle two-account floor, faster recovery below four paths, bounded receipt-backed low-rate probing; true no-progress drain retained. No Wi-Fi pacing changes. RC20 handover state machine unchanged. Polling/batching and selective ramp variants rejected from this source.
+
+Local 95/41 Mbps synthetic encrypted fixture: RC20 36.97/17.09 and 30.20/15.47 Mbps; selected candidate 45.91/14.41 Mbps, 390.7 ms loaded P95, 8/8 verified in each direction. No consistent two-direction improvement. Synthetic asymmetric duplex cycle with 2s serialization outage and 80ms extra exit RTT FAILED: 2.936/1.852 Mbps post-restoration vs 10/1 minimum; downloads 0/8, uploads 8/8, missing post-load echoes. This is not a mobile fix certified against a real carrier. New gate rejects this capture. A diagnostic APK may be built after ordinary regression gates; the strict cellular job is independent and its failure is visible as a failed workflow, never a qualified artifact.
+
+Local targeted Go race tests (mailstream/core 3 repeats, native rebind 1), qualifier worker/provider/fieldgate, 13 Python gate tests and Linux AMD64 build passed. Full sustained home gate and actual-device validation not performed. No gates relaxed; strict home target retained.
