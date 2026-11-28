@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net"
 	"net/netip"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -24,9 +25,12 @@ import (
 	mobile "itom.local/mobile"
 )
 
-type nativeHost struct{ ctx context.Context }
+type nativeHost struct {
+	ctx     context.Context
+	blocked *atomic.Bool
+}
 
-func (nativeHost) Protect(int) bool      { return true }
+func (h nativeHost) Protect(int) bool    { return h.blocked == nil || !h.blocked.Load() }
 func (nativeHost) DNS() string           { return `["127.0.0.1"]` }
 func (nativeHost) Lookup(string) string  { return `["127.0.0.1"]` }
 func (nativeHost) Route(string) string   { return "VPN" }
@@ -37,6 +41,7 @@ type nativePerformanceClient struct {
 	app        *stack.Stack
 	fd         int
 	tunBuffers [2][2]int
+	blocked    *atomic.Bool
 }
 
 func (c *nativePerformanceClient) Close() error {
@@ -98,7 +103,8 @@ func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, front
 	if e != nil {
 		return nil, e
 	}
-	client, e := mobile.New(string(raw), dir, nativeHost{ctx})
+	blocked := &atomic.Bool{}
+	client, e := mobile.New(string(raw), dir, nativeHost{ctx, blocked})
 	if e != nil {
 		return nil, e
 	}
@@ -158,5 +164,5 @@ func startPerformanceClient(ctx context.Context, p servercfg.Profile, dir, front
 		return fail(e2)
 	}
 	app.SetRouteTable([]tcpip.Route{{Destination: subnet, NIC: 1}})
-	return &nativePerformanceClient{client, app, pair[1], buffers}, nil
+	return &nativePerformanceClient{client, app, pair[1], buffers, blocked}, nil
 }

@@ -137,16 +137,17 @@ type accountSample struct {
 }
 
 type result struct {
-	RecoveryCompletedBeforePhase int      `json:"recovery_completed_before_phase,omitempty"`
-	InitialRecoveredClientBytes  int64    `json:"initial_recovered_client_bytes,omitempty"`
-	Inventory                    int      `json:"configured_accounts"`
-	EncryptedExit                bool     `json:"encrypted_exit"`
-	Granted                      []string `json:"granted_accounts"`
-	Version                      string   `json:"version"`
-	Success                      bool     `json:"success"`
-	Stage                        string   `json:"stage"`
-	Error                        string   `json:"error,omitempty"`
-	StartupMS                    int64    `json:"startup_ms"`
+	Handover                     map[string]any `json:"handover,omitempty"`
+	RecoveryCompletedBeforePhase int            `json:"recovery_completed_before_phase,omitempty"`
+	InitialRecoveredClientBytes  int64          `json:"initial_recovered_client_bytes,omitempty"`
+	Inventory                    int            `json:"configured_accounts"`
+	EncryptedExit                bool           `json:"encrypted_exit"`
+	Granted                      []string       `json:"granted_accounts"`
+	Version                      string         `json:"version"`
+	Success                      bool           `json:"success"`
+	Stage                        string         `json:"stage"`
+	Error                        string         `json:"error,omitempty"`
+	StartupMS                    int64          `json:"startup_ms"`
 	IdleMS, LoadedMS, AfterMS    []float64
 	Phases                       []map[string]any
 	Provider                     any
@@ -190,8 +191,12 @@ func run() (err error) {
 	cellular := flag.Bool("cellular", false, "enable production cellular controller and directional pacing")
 	exitRTT := flag.Duration("exit-rtt", 0, "additional inter-VPS round trip in encrypted-exit fixture")
 	encryptedExit := flag.Bool("encrypted-exit", false, "use authenticated TLS foreign-exit fixture")
+	handoverOutage := flag.Duration("handover-outage", 0, "simulate protected socket outage and bearer replacement; verify fresh native TLS after recovery")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
+	if *handoverOutage < 0 || *handoverOutage > 30*time.Second || (*handoverOutage > 0 && *frontend != "native-tun") {
+		return errors.New("invalid handover fixture")
+	}
 	if *exitRTT < 0 || *exitRTT > 500*time.Millisecond || *exitRTT > 0 && !*encryptedExit {
 		return errors.New("invalid exit RTT")
 	}
@@ -565,6 +570,88 @@ func run() (err error) {
 		}
 		r.IdleMS = append(r.IdleMS, ms)
 		time.Sleep(40 * time.Millisecond)
+	}
+	if *handoverOutage > 0 {
+		r.Stage = "handover"
+		native, ok := client.(*nativePerformanceClient)
+		if !ok {
+			return errors.New("handover requires native frontend")
+		}
+		r.Handover = map[string]any{"outage_ms": handoverOutage.Milliseconds()}
+		// Existing application TCP streams are not expected to migrate to a new
+		// Noise generation. Keep the app stack alive; verify fresh TLS and bytes.
+		native.blocked.Store(true)
+		native.client.SetNetworkType("cellular")
+		begin := time.Now()
+		native.client.RebindNetwork()
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(*handoverOutage):
+		}
+		response, e := (&http.Client{Timeout: 2 * time.Second}).Post(strings.TrimSuffix(p.Metrics, "/metrics")+"/handover", "", nil)
+		if e != nil {
+			return e
+		}
+		response.Body.Close()
+		if response.StatusCode != http.StatusNoContent {
+			return errors.New("provider handover failed")
+		}
+		native.blocked.Store(false)
+		restored := time.Now()
+		native.client.RebindNetwork() // Android reports the newly usable bearer.
+		// No fallback to direct and no healthy claim based solely on open sockets.
+		for {
+			var state struct {
+				NetworkRebinding bool
+				Error            string
+				ActiveLines      int
+			}
+			if e := json.Unmarshal([]byte(native.client.Snapshot()), &state); e != nil {
+				return e
+			}
+			if !state.NetworkRebinding && state.Error == "" && state.ActiveLines > 0 {
+				break
+			}
+			if time.Since(restored) > 25*time.Second {
+				return errors.New("native handover recovery deadline")
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+		r.Handover["ready_after_restore_ms"] = time.Since(restored).Milliseconds()
+		_ = chatRaw.Close()
+		call, cancel := context.WithTimeout(ctx, 15*time.Second)
+		raw, e := open(call, uint16(echo.Addr().(*net.TCPAddr).Port))
+		if e != nil {
+			cancel()
+			return e
+		}
+		next := tls.Client(raw, &tls.Config{ServerName: "fixture.example", RootCAs: roots, MinVersion: tls.VersionTLS12})
+		defer next.Close()
+		if e = next.HandshakeContext(call); e != nil {
+			cancel()
+			return e
+		}
+		cancel()
+		chat = next
+		for i := 0; i < 6; i++ {
+			ms, e := ping()
+			if e != nil {
+				return e
+			}
+			r.AfterMS = append(r.AfterMS, ms)
+		}
+		r.Handover["verified_echoes"] = len(r.AfterMS)
+		r.Handover["verified_after_restore_ms"] = time.Since(restored).Milliseconds()
+		r.Handover["total_ms"] = time.Since(begin).Milliseconds()
+		r.Stage = "complete"
+		r.Success = true
+		r.Targets = targets(r)
+		return nil
 	}
 	if *lightCycles > 0 {
 		dial := func(ctx context.Context) (net.Conn, error) {

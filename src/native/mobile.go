@@ -56,6 +56,8 @@ type Client struct {
 	pool     transportPool
 	poolMu sync.RWMutex
 	rebindRequests chan struct{}
+	rebindEpoch uint64 // guarded by mu
+	rebindCancel context.CancelFunc // current attempt or active replacement, guarded by mu
 	startTransport func(context.Context) (transportPool, error)
 	rebinding atomic.Bool
 	rebindFailure atomic.Pointer[string]

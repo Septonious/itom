@@ -8,13 +8,13 @@ def control():
     phases = []
     for direction in ("download", "upload"):
         phases.append({"name": direction, "streams": 8, "success": True, "elapsed_seconds": 15,
-                       "send_seconds": 15, "loaded_ms": [200],
-                       direction: {"verified_bytes": 400_000_000, "half_second_mbps": [215]*30}})
+                       "send_seconds": 15, "loaded_ms": [80], "completed_downloads": 8, "completed_uploads": 8,
+                       direction: {"verified_bytes": 400_000_000, "half_second_mbps": [215]*30, "max_receiver_gap_after_ramp_ms": 80}})
     light = []
     for rate, streams in BURSTS.items():
         for name, bps, n in [(f"burst_{rate}k", rate*1000, streams), (f"idle_after_{rate}k", 0, 0)]:
             light.append(dict(name=name, streams=n, offered_bps=bps, elapsed_s=3,
-                              verified_echo_bytes=bps*3//8, application_ms=[111]))
+                              verified_echo_bytes=bps*3//8, application_ms=[80]))
     stages = ["idle", "download", "upload", "post_load", *(p["name"] for p in light)]
     return {
         "success": True, "stage": "complete", "configured_accounts": 15, "granted_accounts": IDS,
@@ -25,8 +25,8 @@ def control():
                         "Mail": {"accounts": 15, "allocated_accounts": 8, "grant_negotiated": True,
                                  "lines": [dict(account=i, allocated=i in IDS, ready=i in IDS, data=i in IDS, peer_verified=i in IDS,
                                                 UploadBytes=90000, DownloadBytes=90000) for i in ALL_IDS]}},
-        "IdleMS": [100], "AfterMS": [100], "Phases": phases, "light": light,
-        "account_samples": [dict(phase=s, account=i, rtt_ms=110) for s in stages for i in IDS],
+        "IdleMS": [80], "AfterMS": [80], "Phases": phases, "light": light,
+        "account_samples": [dict(phase=s, account=i, rtt_ms=80) for s in stages for i in IDS],
     }
 
 
@@ -35,6 +35,14 @@ class HomeGateTests(unittest.TestCase):
         self.assertEqual(check(control(), 15, 1), [])
         r = control()
         r["Phases"][1]["loaded_ms"].append(200.001)
+        self.assertTrue(check(r, 15, 1))
+
+    def test_50kbps_burst_and_upload_completion(self):
+        r = control()
+        next(p for p in r["light"] if p["name"] == "burst_50k")["application_ms"] = [70]*100 + [201]
+        self.assertTrue(any("burst_50k" in e for e in check(r, 15, 1)))
+        r = control()
+        r["Phases"][1]["completed_uploads"] = 7
         self.assertTrue(check(r, 15, 1))
 
     def test_pinned_and_censored_tail(self):
@@ -48,7 +56,7 @@ class HomeGateTests(unittest.TestCase):
 
     def test_throughput_window_and_grant(self):
         r = control()
-        r["Phases"][0]["download"]["half_second_mbps"][10:] = [200]*20
+        r["Phases"][0]["download"]["half_second_mbps"][10:] = [199]*20
         self.assertTrue(check(r, 15, 1))
         r = control()
         r["Provider"]["peak"]["a09"] = 3

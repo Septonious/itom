@@ -55,6 +55,11 @@ func (c *Client) RebindNetwork() {
 	}
 	c.rebinding.Store(true)
 	c.rebindFailure.Store(nil)
+	c.rebindEpoch++
+	if c.rebindCancel != nil {
+		c.rebindCancel()
+		c.rebindCancel = nil
+	}
 	select {
 	case c.rebindRequests <- struct{}{}:
 	default: // already queued
@@ -77,18 +82,21 @@ func (c *Client) startNetworkRebind() {
 			if !waitRebind(c.ctx, 250*time.Millisecond) {
 				return
 			}
+			c.mu.Lock()
 			select {
 			case <-c.rebindRequests:
 			default:
 			}
+			epoch := c.rebindEpoch
+			c.mu.Unlock()
 			if c.ctx.Err() != nil {
 				return
 			}
-			err := c.reconnectTransport()
+			err := c.reconnectTransport(epoch)
 			c.mu.Lock()
 			// Another network change received during login must be serviced rather
 			// than incorrectly marking the new network as ready.
-			if len(c.rebindRequests) == 0 {
+			if c.rebindEpoch == epoch {
 				c.rebinding.Store(false)
 				if err != nil && c.ctx.Err() == nil {
 					reason := "NETWORK_REBIND_FAILED"
@@ -111,9 +119,14 @@ func waitRebind(ctx context.Context, delay time.Duration) bool {
 	}
 }
 
-func (c *Client) reconnectTransport() error {
-	// The old transport must fully close before reopening its on-disk retention
-	// store or reusing provider capacity. Each pool is closed by exactly one owner.
+// Backoff is bounded, but retry count is not: an outage may outlast three
+// 45-second startup attempts. The foreground VPN is kept fail-closed until
+// a generation succeeds, the network changes again, or the user stops it.
+func rebindBackoff(attempt int) time.Duration {
+	return time.Duration(min(attempt, 5)) * time.Second
+}
+
+func (c *Client) reconnectTransport(epoch uint64) error {
 	old := c.swapPool(nil)
 	if old != nil {
 		old.RecordNetworkEvent("NETWORK_REBIND_BEGIN", 0)
@@ -122,40 +135,53 @@ func (c *Client) reconnectTransport() error {
 	if c.startTransport == nil {
 		return errors.New("NETWORK_REBIND_UNAVAILABLE")
 	}
-	var last error
-	for attempt := 0; attempt < 3; attempt++ {
-		if c.ctx.Err() != nil {
-			return c.ctx.Err()
+	// This context belongs to the bearer generation, not a single attempt.
+	// A newer callback cancels both login and retry backoff immediately.
+	c.mu.Lock()
+	if c.closed || c.ctx.Err() != nil || c.rebindEpoch != epoch {
+		c.mu.Unlock()
+		return context.Canceled
+	}
+	life, cancel := context.WithCancel(c.ctx)
+	c.rebindCancel = cancel
+	c.mu.Unlock()
+	keep := false
+	defer func() {
+		if !keep {
+			cancel()
 		}
-		if attempt > 0 && !waitRebind(c.ctx, time.Second*time.Duration(attempt)) {
-			return c.ctx.Err()
+	}()
+	for attempt := 0; ; attempt = min(attempt+1, 5) {
+		if !waitRebind(life, rebindBackoff(attempt)) || life.Err() != nil {
+			return context.Canceled
 		}
-		fresh, err := c.startTransport(c.ctx)
-		if err != nil {
-			last = err
-			continue
-		}
-		if fresh == nil {
-			last = errors.New("NETWORK_REBIND_EMPTY")
+		fresh, err := c.startTransport(life)
+		if err != nil || fresh == nil {
+			if fresh != nil {
+				_ = fresh.Close()
+			}
 			continue
 		}
 		c.mu.Lock()
-		if c.closed || c.ctx.Err() != nil {
+		if c.closed || life.Err() != nil || c.rebindEpoch != epoch {
 			c.mu.Unlock()
 			_ = fresh.Close()
 			return context.Canceled
 		}
-		c.swapPool(fresh)
-		c.rebindFailure.Store(nil)
-		c.mu.Unlock()
-		fresh.RecordNetworkEvent("NETWORK_REBIND_READY", 0)
+		// Set policy before making this generation visible to application opens.
 		if kind := c.networkType.Load(); kind != nil {
 			if pool, ok := fresh.(interface{ SetNetworkType(string) }); ok {
 				pool.SetNetworkType(*kind)
 			}
-			c.RecordNetworkEvent("NETWORK_BEARER_RESTORED", 0)
+		}
+		c.swapPool(fresh)
+		c.rebindFailure.Store(nil)
+		keep = true
+		c.mu.Unlock()
+		fresh.RecordNetworkEvent("NETWORK_REBIND_READY", 0)
+		if c.networkType.Load() != nil {
+			fresh.RecordNetworkEvent("NETWORK_BEARER_RESTORED", 0)
 		}
 		return nil
 	}
-	return last
 }

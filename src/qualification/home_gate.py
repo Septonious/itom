@@ -4,8 +4,8 @@ from collections import Counter, defaultdict
 
 IDS = [f"a{i:02}" for i in range(1, 9)]
 ALL_IDS = [f"a{i:02}" for i in range(1, 16)]
-BURSTS = {100: 1, 500: 4, 2000: 8, 5000: 4}
-REVISION = "itom-1-5-1-rc16-dev"
+BURSTS = {50: 1, 100: 1, 500: 4, 2000: 8, 5000: 4}
+REVISION = "itom-1-5-1-rc20-dev"
 
 
 def ramp_summary(rates, seconds):
@@ -35,8 +35,7 @@ def check(result, seconds, light_cycles):
         values = sorted(values)
         require(values[-1] <= 200, f"{where} max {values[-1]:.3f} ms > 200")
         p95 = values[math.ceil(.95 * len(values)) - 1]
-        if quiet:
-            require(p95 <= 150, f"{where} p95 {p95:.3f} ms > 150")
+        require(p95 < 100, f"{where} p95 {p95:.3f} ms is not below 100")
 
     require(result.get("success") is True and result.get("stage") == "complete",
             "worker failed: " + str(result.get("error", result.get("stage"))))
@@ -93,14 +92,19 @@ def check(result, seconds, light_cycles):
         elapsed, size = p["elapsed_seconds"], samples["verified_bytes"]
         require(math.isfinite(elapsed) and elapsed >= seconds, f"{direction} invalid phase duration")
         rate = 8 * size / (max(elapsed, .000001) * 1e6)
-        require(math.isfinite(rate) and rate > 200, f"{direction} verified goodput {rate:.2f} Mbps")
+        require(math.isfinite(rate) and rate >= 200, f"{direction} verified goodput {rate:.2f} Mbps")
+        require(p.get("completed_" + direction + "s") == 8, f"{direction} not all eight streams verified")
+        gap = samples.get("max_receiver_gap_after_ramp_ms")
+        require(isinstance(gap, (float, int)) and math.isfinite(gap) and 0 <= gap < 500, f"{direction} invalid or stalled receiver gap {gap}")
         rates = samples["half_second_mbps"]
         n = seconds * 2
         if len(rates) < n or any(not math.isfinite(x) or x < 0 for x in rates):
             problems.append(f"{direction} incomplete or invalid receiver buckets")
         else:
-            floor = min(sum(rates[i:i+20])/20 for i in range(10, n - 19))
-            require(floor > 200, f"{direction} weakest post-ramp 10s {floor:.2f} Mbps")
+            require(n >= 30, f"{direction} too short for sustained 10s gate")
+            if n >= 30:
+                floor = min(sum(rates[i:i+20])/20 for i in range(10, n - 19))
+                require(floor >= 200, f"{direction} weakest post-ramp 10s {floor:.2f} Mbps")
             ramp = ramp_summary(rates, seconds)["ramp_to_200_seconds"]
             require(ramp is not None and ramp <= 5,
                     f"{direction} failed sustained 200 Mbps ramp within 5s (observed {ramp})")

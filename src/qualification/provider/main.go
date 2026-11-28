@@ -661,6 +661,24 @@ func run() error {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
+	// Local qualification only: emulate an abrupt replacement of the client
+	// bearer with an asymmetric cellular link. The server link remains intact.
+	mux.HandleFunc("/handover", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		clientNet.mu.Lock()
+		defer clientNet.mu.Unlock()
+		now := time.Now()
+		clientNet.start = now
+		clientNet.readNext = now
+		clientNet.writeNext = now
+		clientNet.readBitsPerSecond = 4_520_000
+		clientNet.writeBitsPerSecond = 49_100_000
+		clientNet.rtts = []time.Duration{30 * time.Millisecond, 45 * time.Millisecond, 80 * time.Millisecond, 150 * time.Millisecond, 40 * time.Millisecond, 95 * time.Millisecond}
+		w.WriteHeader(http.StatusNoContent)
+	})
 	mux.HandleFunc("/phase", func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		clientNet.mu.Lock()

@@ -54,6 +54,8 @@ type Phase struct {
 	Streams            int       `json:"streams"`
 	Success            bool      `json:"success"`
 	CompletedDownloads int       `json:"completed_downloads"`
+	CompletedUploads   int       `json:"completed_uploads"`
+	Elapsed            float64   `json:"elapsed_seconds"`
 	SendSeconds        float64   `json:"send_seconds"`
 	Loaded             []float64 `json:"loaded_ms"`
 	Download           Transfer  `json:"download"`
@@ -68,12 +70,15 @@ type NativeCounters struct {
 	DNSFailures     int `json:"DNSFailures"`
 }
 type Result struct {
-	Success     bool      `json:"success"`
-	Stage       string    `json:"stage"`
-	Error       string    `json:"error"`
-	Idle        []float64 `json:"IdleMS"`
-	After       []float64 `json:"AfterMS"`
-	Phases      []Phase   `json:"Phases"`
+	Light       []LightPhase    `json:"light"`
+	Granted     []string        `json:"granted_accounts"`
+	Accounts    []AccountSample `json:"account_samples"`
+	Success     bool            `json:"success"`
+	Stage       string          `json:"stage"`
+	Error       string          `json:"error"`
+	Idle        []float64       `json:"IdleMS"`
+	After       []float64       `json:"AfterMS"`
+	Phases      []Phase         `json:"Phases"`
 	Diagnostics struct {
 		Revision string
 		Native   *NativeCounters
@@ -177,6 +182,9 @@ func Assess(r Result, transport []float64, cellular, normal bool) Report {
 			fail("%s: insufficient/invalid RTT evidence (%d, %v)", name, len(v), e)
 			return d
 		}
+		if strict && d.Max > 200 {
+			fail("%s: maximum %.2f ms exceeds 200 ms", name, d.Max)
+		}
 		if strict && d.P95 >= 100 {
 			fail("%s: p95 %.2f ms is not below 100 ms", name, d.P95)
 		}
@@ -210,17 +218,32 @@ func Assess(r Result, transport []float64, cellular, normal bool) Report {
 		if !p.Success || p.Streams != 8 {
 			fail("%s: incomplete phase or wrong stream count", p.Name)
 		}
+		if normal {
+			checkRTT(p.Name+" loaded app", p.Loaded, 3, true)
+		}
 		if p.Name == "download" || p.Name == "duplex" {
 			if p.CompletedDownloads != 8 {
 				fail("%s: %d/8 completed downloads", p.Name, p.CompletedDownloads)
 			}
 			out.Directions[p.Name+" download"] = directionMetrics(p.Download)
 			checkTransfer(p.Name+" download", p.Download, p.SendSeconds, cellular, fail)
+			if normal {
+				checkHomeGoodput(p.Name+" download", p.Download, p.SendSeconds, p.Elapsed, fail)
+			}
 		}
 		if p.Name == "upload" || p.Name == "duplex" {
+			if p.CompletedUploads != 8 {
+				fail("%s: %d/8 completed uploads", p.Name, p.CompletedUploads)
+			}
 			out.Directions[p.Name+" upload"] = directionMetrics(p.Upload)
 			checkTransfer(p.Name+" upload", p.Upload, p.SendSeconds, cellular, fail)
+			if normal {
+				checkHomeGoodput(p.Name+" upload", p.Upload, p.SendSeconds, p.Elapsed, fail)
+			}
 		}
+	}
+	if normal {
+		checkHomeLight(r, fail, checkRTT)
 	}
 	return out
 }

@@ -22,7 +22,7 @@ type lightPhase struct {
 // together. During the quiet interval every workload stream has been closed.
 func lightWorkload(ctx context.Context, cycles int, dial func(context.Context) (net.Conn, error), ping func() (float64, error), stage func(string), results *[]lightPhase) error {
 	for range cycles {
-		for _, step := range []struct{ bps, streams int }{{100000, 1}, {500000, 4}, {2000000, 8}, {5000000, 4}} {
+		for _, step := range []struct{ bps, streams int }{{50000, 1}, {100000, 1}, {500000, 4}, {2000000, 8}, {5000000, 4}} {
 			for _, active := range []bool{true, false} {
 				name := fmt.Sprintf("idle_after_%dk", step.bps/1000)
 				phase := lightPhase{Name: name}
