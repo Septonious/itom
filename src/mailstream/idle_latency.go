@@ -79,7 +79,11 @@ func (l *IMAPLink) idleInteractiveOrder(start int, allowed [20]bool, excluded *m
 					measured++
 				}
 				// Queued literals and occupied tagged-result slots are real service debt.
-				cost += time.Duration(len(a.interactive)+len(a.controlWriter.interactiveTags)) * max(20*time.Millisecond, cost/2)
+				debt := len(a.interactive) + len(a.controlWriter.interactiveTags)
+				if !l.mobileFeedback.Load() {
+					debt += int(a.controlWriter.ordinaryControlTags.Load()) + (len(a.fast)+15)/16
+				}
+				cost += time.Duration(debt) * max(20*time.Millisecond, cost/2)
 			}
 			a.mu.Unlock()
 		}
@@ -126,4 +130,18 @@ func (a *mailAccountState) recoverControlReader(old *mailPipe) (*mailPipe, error
 	a.controlReconnects.Add(1)
 	a.link.notify()
 	return fresh, nil
+}
+
+// Called with a.mu held and a verified companion. A partially occupied
+// publisher is a fallback, not an idle path. Both actors publish to the same
+// physical socket, so count ordinary control tags and queued feedback too.
+func (a *mailAccountState) idleInteractivePublisher(mobile bool) bool {
+	p := a.controlWriter
+	if len(a.interactive) != 0 {
+		return false
+	}
+	if mobile {
+		return len(p.interactiveTags) < cap(p.interactiveTags)
+	}
+	return len(p.interactiveTags) == 0 && p.ordinaryControlTags.Load() == 0 && len(a.fast) == 0
 }

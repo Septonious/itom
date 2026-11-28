@@ -18,21 +18,38 @@ func healthy() Result {
 	r.Idle = []float64{61, 65, 70, 75, 72, 67}
 	r.After = r.Idle
 	for _, name := range []string{"download", "upload"} {
-		d := Transfer{Bytes: 100_000_000, First: map[string]float64{}, Rates: make([]float64, 30), MaxGap: 75, Goodput: 250}
+		d := Transfer{Bytes: 468_750_000, First: map[string]float64{}, Rates: make([]float64, 30), MaxGap: 75, Goodput: 250}
 		for i := 0; i < 8; i++ {
 			d.First[strconv.Itoa(i)] = 400
 		}
 		for i := range d.Rates {
 			d.Rates[i] = 250
 		}
-		p := Phase{Name: name, Streams: 8, Success: true, SendSeconds: 15}
+		p := Phase{Name: name, Streams: 8, Success: true, SendSeconds: 15, Elapsed: 15, Loaded: []float64{70, 75, 80}}
 		if name == "download" {
 			p.Download = d
 			p.CompletedDownloads = 8
 		} else {
 			p.Upload = d
+			p.CompletedUploads = 8
 		}
 		r.Phases = append(r.Phases, p)
+	}
+	stages := []string{"idle", "download", "upload", "post_load"}
+	for _, step := range []struct{ rate, streams int }{{50, 1}, {100, 1}, {500, 4}, {2000, 8}, {5000, 4}} {
+		name := "burst_" + strconv.Itoa(step.rate) + "k"
+		idle := "idle_after_" + strconv.Itoa(step.rate) + "k"
+		stages = append(stages, name, idle)
+		for range 2 {
+			r.Light = append(r.Light, LightPhase{Name: name, Streams: step.streams, Rate: step.rate * 1000, Bytes: step.rate * 3000 / 8, Elapsed: 3, App: []float64{70, 75, 80}}, LightPhase{Name: idle, Elapsed: 3, App: []float64{70, 75, 80}})
+		}
+	}
+	for i := range 8 {
+		a := "a" + strconv.Itoa(i)
+		r.Granted = append(r.Granted, a)
+		for _, stage := range stages {
+			r.Accounts = append(r.Accounts, AccountSample{Phase: stage, Account: a, RTT: 80})
+		}
 	}
 	return r
 }
@@ -135,6 +152,7 @@ func TestCellularOutageDoesNotExcuseInitialOrPersistentStall(t *testing.T) {
 	p := r.Phases[0]
 	p.Name = "duplex"
 	p.Upload = r.Phases[1].Upload
+	p.CompletedUploads = 8
 	p.SendSeconds = 55
 	for _, d := range []*Transfer{&p.Download, &p.Upload} {
 		d.Rates = make([]float64, 110)
@@ -215,5 +233,50 @@ func TestRecordedRC7Comparison(t *testing.T) {
 	p := Compare(Assess(b, bv, cell, normal), Assess(c, cv, cell, normal))
 	if len(p) > 0 {
 		t.Fatal(strings.Join(p, "\n"))
+	}
+}
+
+func TestHome50KRejectsEvenOneSpikeAndMissingEvidence(t *testing.T) {
+	r := healthy()
+	for i := range r.Light {
+		if r.Light[i].Name == "burst_50k" {
+			r.Light[i].App = append(ready(75), 201)
+			break
+		}
+	}
+	if p := Assess(r, ready(72), false, true).Problems; !has(p, "burst_50k app: maximum") {
+		t.Fatal(p)
+	}
+	r = healthy()
+	r.Light = nil
+	if p := Assess(r, ready(72), false, true).Problems; !has(p, "burst_50k: missing") {
+		t.Fatal(p)
+	}
+	r = healthy()
+	for i := range r.Accounts {
+		if r.Accounts[i].Phase == "burst_50k" {
+			r.Accounts[i].RTT = 442
+			break
+		}
+	}
+	if p := Assess(r, ready(72), false, true).Problems; !has(p, "burst_50k account") {
+		t.Fatal(p)
+	}
+}
+func TestHomeMinimumGoodputAndUploadCompletion(t *testing.T) {
+	r := healthy()
+	r.Phases[0].Download.Bytes = 370_000_000
+	r.Phases[0].Download.Goodput = 197.333333333
+	r.Phases[1].CompletedUploads = 7
+	if p := Assess(r, ready(72), false, true).Problems; !has(p, "verified goodput") || !has(p, "7/8 completed uploads") {
+		t.Fatal(p)
+	}
+	r = healthy()
+	r.Phases[0].Download.Rates[10] = 10
+	for i := 11; i < 30; i++ {
+		r.Phases[0].Download.Rates[i] = 200
+	}
+	if p := Assess(r, ready(72), false, true).Problems; !has(p, "post-ramp 10s") {
+		t.Fatal(p)
 	}
 }

@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import time
 
-from home_gate import check, ramp_summary
+from home_gate import check, ramp_summary, REVISION
 
 HERE = Path(__file__).resolve().parent
 
@@ -23,7 +23,7 @@ def build(package, dest):
     return hashlib.sha256(dest.read_bytes()).hexdigest()
 
 
-def run(provider, worker, dest, seconds, mode, cycles, service, encrypted=False):
+def run(provider, worker, dest, seconds, mode, cycles, service, encrypted=False, fieldgate=None):
     dest.mkdir()
     with tempfile.TemporaryDirectory() as name, (dest / "log.txt").open("w") as log:
         state = Path(name)
@@ -72,6 +72,16 @@ def run(provider, worker, dest, seconds, mode, cycles, service, encrypted=False)
     output(dest / "ramp.json", ramp)
     if result.returncode:
         problems.append(f"worker exit {result.returncode}")
+    if fieldgate is not None:
+        # Apply Go's strict trace-aware gate, not just the worker's legacy
+        # survival targets or the Python result-only checks.
+        env = dict(os.environ, ITOM_FIELD_RESULT=str(dest), ITOM_FIELD_REVISION=REVISION,
+                   ITOM_FIELD_NORMAL="1", ITOM_FIELD_CELLULAR="0")
+        gate = subprocess.run([str(fieldgate), "-test.run=^TestRecordedFieldQualification$", "-test.v"],
+                              env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30)
+        (dest / "strict-fieldgate.log").write_text(gate.stdout)
+        if gate.returncode:
+            problems.append("strict Go fieldgate failed; see strict-fieldgate.log")
     return problems
 
 
@@ -84,8 +94,10 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     with tempfile.TemporaryDirectory() as name:
-        provider, worker = (Path(name) / n for n in ("provider", "worker"))
+        provider, worker, fieldgate = (Path(name) / n for n in ("provider", "worker", "fieldgate.test"))
+        subprocess.run(["go", "test", "-c", "-mod=readonly", "-o", str(fieldgate), "./fieldgate"], cwd=HERE, check=True)
         manifest = {"provider_sha256": build("provider", provider), "worker_sha256": build("worker", worker),
+                    "fieldgate_sha256": hashlib.sha256(fieldgate.read_bytes()).hexdigest(),
                     "client_full_duplex_mbps": 500, "modes": ["minus", "plus"],
                     "repeats": 1 if args.screen else 5, "screen": args.screen, "runs": []}
         output(out / "gate.json", manifest)
@@ -93,7 +105,7 @@ def main():
             matrix = [(15, "minus")] if args.screen else [(d, m) for m in ("minus", "plus") for d in (15, 60)]
             for seconds, mode in matrix:
                 label = f"run-{repeat+1}-{mode}-{seconds}s"
-                problems = run(provider, worker, out / label, seconds, mode, 2, False, args.encrypted_exit)
+                problems = run(provider, worker, out / label, seconds, mode, 2, False, args.encrypted_exit, fieldgate)
                 manifest["runs"].append({"name": label, "errors": problems})
                 output(out / "gate.json", manifest)
                 if problems:
@@ -101,7 +113,7 @@ def main():
                     return 1
                 print(label, "passed", flush=True)
         if not args.screen:
-            problems = run(provider, worker, out / "provider-delay-holdout", 15, "minus", 2, True, args.encrypted_exit)
+            problems = run(provider, worker, out / "provider-delay-holdout", 15, "minus", 2, True, args.encrypted_exit, fieldgate)
             manifest["runs"].append({"name": "provider-delay-holdout", "errors": problems})
             output(out / "gate.json", manifest)
             if problems:

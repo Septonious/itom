@@ -505,7 +505,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if negotiation {
 			available = available && independent
 		}
-		if !available || idlePass && (!independent || len(a.interactive) != 0 || len(a.controlWriter.interactiveTags) >= cap(a.controlWriter.interactiveTags)) {
+		if !available || idlePass && (!independent || !a.idleInteractivePublisher(l.mobileFeedback.Load())) {
 			a.mu.Unlock()
 			continue
 		}
@@ -1378,6 +1378,9 @@ func (a *mailAccountState) run() {
 		if work.control {
 			a.mu.Lock()
 			target = a.controlWriter
+			if a.quietFeedbackOnData(work, writer, inFlight) {
+				target = writer
+			}
 			a.mu.Unlock()
 		}
 		if target == nil {
@@ -1468,14 +1471,24 @@ func (a *mailAccountState) run() {
 			a.link.note("append", a.config.ID, packet, generation, work.control)
 		}
 		appendStarted := time.Now()
+		if work.control {
+			target.ordinaryControlTags.Add(1)
+		}
 		cmd, startErr := target.startAppend(folder, encoded)
 		if work.control {
-			lastControlWrite = time.Now()
+			if target == writer {
+				lastWrite = time.Now()
+			} else {
+				lastControlWrite = time.Now()
+			}
 		} else {
 			lastWrite = time.Now()
 			lastBulkWrite = lastWrite
 		}
 		if startErr != nil {
+			if work.control {
+				target.ordinaryControlTags.Add(-1)
+			}
 			if a.parking.Load() {
 				continue
 			}
@@ -1489,6 +1502,9 @@ func (a *mailAccountState) run() {
 		appendWait.Add(1)
 		go func() {
 			defer appendWait.Done()
+			if work.control {
+				defer target.ordinaryControlTags.Add(-1)
+			}
 			result, err := cmd.Wait()
 			if err == nil {
 				if segment == nil {
@@ -1742,6 +1758,7 @@ type mailPipe struct {
 	slot                uint32
 	interactiveMu       sync.Mutex
 	interactiveTags     chan struct{}
+	ordinaryControlTags atomic.Int32 // ordinary actor publications on the same physical control writer
 	interactiveWait     sync.WaitGroup
 	fetchBatch          uint32 // immutable after attachment; zero preserves the eight-container default
 	client              *imapclient.Client
