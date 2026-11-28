@@ -28,7 +28,7 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-5-1-rc23-dev"
+const TransportRevision = "itom-1-6-0-rc1-dev"
 
 var ErrInsufficientAccounts = errors.New("MAILSTREAM_MINIMUM_THREE_ACCOUNTS")
 

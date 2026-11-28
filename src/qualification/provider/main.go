@@ -692,7 +692,7 @@ func run() error {
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		stats.Lock()
 		defer stats.Unlock()
-		_ = json.NewEncoder(w).Encode(map[string]any{"live": stats.live, "peak": stats.peak, "commands": stats.commands, "successful_logins": stats.logins, "appended_body_bytes": stats.appendBytes, "append_sizes": stats.appendSizes, "connection_rejections": stats.failures, "client_wire_bytes": clientNet.bytes.Load(), "server_wire_bytes": serverNet.bytes.Load(), "client_peak_queued_bytes": clientNet.peak.Load(), "server_peak_queued_bytes": serverNet.peak.Load()})
+		_ = json.NewEncoder(w).Encode(map[string]any{"live": stats.live, "peak": stats.peak, "commands": stats.commands, "successful_logins": stats.logins, "appended_body_bytes": stats.appendBytes, "append_sizes": stats.appendSizes, "connection_rejections": stats.failures, "client_wire_bytes": clientNet.bytes.Load(), "server_wire_bytes": serverNet.bytes.Load(), "client_current_queued_bytes": clientNet.queued.Load(), "server_current_queued_bytes": serverNet.queued.Load(), "client_abandoned_bytes": clientNet.abandoned.Load(), "server_abandoned_bytes": serverNet.abandoned.Load(), "client_peak_queued_bytes": clientNet.peak.Load(), "server_peak_queued_bytes": serverNet.peak.Load()})
 	})
 	web := &http.Server{Handler: mux, ReadHeaderTimeout: time.Second}
 	defer web.Close()

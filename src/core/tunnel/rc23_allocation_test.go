@@ -50,13 +50,16 @@ func adaptiveSnapshot(a *sessionAdmission, id string, bytes uint64) mailstream.M
 		l.IMAPLatencyFresh = true
 		l.IMAPLatencyMillis = 40
 		l.UploadBytes = bytes
+		if l.Allocated && bytes >= 200000 {
+			l.QueuedMIMEBytes = 128 << 10
+		}
 	}
 	return m
 }
 func TestRC23AdaptiveGrantUsesSpareAndDrains(t *testing.T) {
 	a, _ := storageFixture(t)
 	at := time.Unix(100, 0)
-	healthy := mailstream.Snapshot{BulkOutstanding: 256 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
+	healthy := mailstream.Snapshot{BulkOutstanding: 256 << 10, UnsentBulkBytes: 128 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
 	for i := 0; i < 4; i++ {
 		healthy.BulkDelivered = uint64(i) * 200000
 		a.observeDemand("one", adaptiveSnapshot(a, "one", uint64(i)*200000), healthy, at.Add(time.Duration(2*i)*time.Second))
@@ -85,7 +88,7 @@ func TestRC23AdaptiveGrantSharesOnlyIdlePeer(t *testing.T) {
 	}
 	defer r()
 	at := time.Unix(100, 0)
-	healthy := mailstream.Snapshot{BulkOutstanding: 256 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
+	healthy := mailstream.Snapshot{BulkOutstanding: 256 << 10, UnsentBulkBytes: 128 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
 	for i := 0; i < 7; i++ {
 		now := at.Add(time.Duration(2*i) * time.Second)
 		a.observeDemand("two", adaptiveSnapshot(a, "two", uint64(i)*1024), mailstream.Snapshot{}, now)
@@ -111,7 +114,7 @@ func TestRC23AdaptiveGrantSharesOnlyIdlePeer(t *testing.T) {
 func TestRC23AdaptiveGrantDoesNotReactToStaleOrSingleSpike(t *testing.T) {
 	a, _ := storageFixture(t)
 	at := time.Unix(100, 0)
-	s := mailstream.Snapshot{BulkOutstanding: 256 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
+	s := mailstream.Snapshot{BulkOutstanding: 256 << 10, UnsentBulkBytes: 128 << 10, InteractiveReceiptRTTMS: 180, InteractiveReceiptMinRTTMS: 160}
 	for i := 0; i < 5; i++ {
 		m := adaptiveSnapshot(a, "one", uint64(i)*200000)
 		for j := range m.Lines {

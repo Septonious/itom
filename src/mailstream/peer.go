@@ -123,8 +123,8 @@ func (l *IMAPLink) sendOnAccount(ctx context.Context, id SessionID, account stri
 		case queue <- work:
 			a.queuedBytes += work.charge
 			a.controlQueued++
+			a.sentPacketLocked(wire, false)
 			a.mu.Unlock()
-			a.sentPacket(wire)
 			return nil
 		default:
 			a.mu.Unlock()

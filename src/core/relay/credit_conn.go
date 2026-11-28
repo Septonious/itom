@@ -12,11 +12,10 @@ import (
 )
 
 // The TLS connection's TCP buffers alone cannot carry application backpressure
-// through a buffering intermediary. The optional ALPN v2 protocol grants
+// through a buffering intermediary. The required ALPN v2 protocol grants
 // bounded, per-direction, consumed-byte credit. FIN is independent of WINDOW,
 // so a half-closed sender can still return credit for its incoming stream.
 const (
-	relayProtocolV1           = "olcrtc-relay/1"
 	relayProtocolV2           = "olcrtc-relay/2"
 	relayCreditWindow         = 512 << 10
 	relayFrameBytes           = 32 << 10
@@ -33,7 +32,8 @@ type creditConn struct {
 	mu                          sync.Mutex
 	changed                     chan struct{}
 	sendCredit, recvCredit      int
-	unannounced                 int
+	unannounced, pendingCredit  int
+	workers                     sync.WaitGroup
 	buffer                      bytes.Buffer
 	peerFIN, localFIN           bool
 	terminal                    error
@@ -43,7 +43,9 @@ type creditConn struct {
 
 func newCreditConn(conn net.Conn) *creditConn {
 	c := &creditConn{Conn: conn, changed: make(chan struct{}), sendCredit: relayCreditWindow, recvCredit: relayCreditWindow}
-	go c.receive()
+	c.workers.Add(2)
+	go func() { defer c.workers.Done(); c.receive() }()
+	go func() { defer c.workers.Done(); c.publishCredit() }()
 	return c
 }
 func (c *creditConn) notifyLocked() { close(c.changed); c.changed = make(chan struct{}) }
@@ -56,7 +58,7 @@ func (c *creditConn) fail(err error) {
 	c.mu.Unlock()
 	_ = c.Conn.Close()
 }
-func (c *creditConn) Close() error { c.fail(net.ErrClosed); return nil }
+func (c *creditConn) Close() error { c.fail(net.ErrClosed); c.workers.Wait(); return nil }
 func (c *creditConn) receive() {
 	var h [5]byte
 	var payload [relayFrameBytes]byte
@@ -173,19 +175,12 @@ func (c *creditConn) Read(p []byte) (int, error) {
 		if c.buffer.Len() > 0 {
 			n, _ := c.buffer.Read(p)
 			c.unannounced += n
-			grant := 0
-			if c.unannounced >= relayWindowThreshold || c.buffer.Len() == 0 {
-				grant = c.unannounced
+			if (c.unannounced >= relayWindowThreshold || c.buffer.Len() == 0) && c.terminal == nil && !c.peerFIN {
+				c.pendingCredit += c.unannounced
 				c.unannounced = 0
-				c.recvCredit += grant
+				c.notifyLocked()
 			}
-			terminal, finished := c.terminal, c.peerFIN
 			c.mu.Unlock()
-			if grant > 0 && terminal == nil && !finished {
-				if err := c.sendFrame(relayWindow, grant, nil); err != nil {
-					return n, err
-				}
-			}
 			return n, nil
 		}
 		if c.peerFIN {
@@ -276,4 +271,50 @@ func (c *creditConn) SetWriteDeadline(t time.Time) error {
 func (c *creditConn) SetDeadline(t time.Time) error {
 	_ = c.SetReadDeadline(t)
 	return c.SetWriteDeadline(t)
+}
+
+// Credit is replaceably coalesced and emitted by a single worker. An app
+// Read never waits for reverse-direction transmission or the DATA mutex.
+// recvCredit advances only when the WINDOW is assigned to the writer, so
+// queued grants cannot authorize unadvertised bytes before publication.
+func (c *creditConn) publishCredit() {
+	for {
+		c.mu.Lock()
+		if c.terminal != nil || c.peerFIN {
+			c.mu.Unlock()
+			return
+		}
+		if c.pendingCredit == 0 {
+			ch := c.changed
+			c.mu.Unlock()
+			<-ch
+			continue
+		}
+		c.mu.Unlock()
+		// Serialize with DATA/FIN, then take the latest coalesced grant. This
+		// avoids holding the credit mutex while the socket is blocked.
+		c.txMu.Lock()
+		c.mu.Lock()
+		if c.terminal != nil || c.peerFIN {
+			c.mu.Unlock()
+			c.txMu.Unlock()
+			return
+		}
+		n := c.pendingCredit
+		c.pendingCredit = 0
+		c.recvCredit += n
+		c.mu.Unlock()
+		var h [5]byte
+		h[0] = relayWindow
+		binary.BigEndian.PutUint32(h[1:], uint32(n))
+		written, err := c.Conn.Write(h[:])
+		c.txMu.Unlock()
+		if err == nil && written != len(h) {
+			err = io.ErrShortWrite
+		}
+		if err != nil {
+			c.fail(err)
+			return
+		}
+	}
 }

@@ -291,7 +291,7 @@ func TestQuietLowByteControlBacklogIsCollectedWhileConnected(t *testing.T) {
 func TestInitialMessageCountUsesConservativeAuditedUIDSpan(t *testing.T) {
 	a := &mailAccountState{link: &IMAPLink{}}
 	a.maintenance.initialOut = uidWatermark{77, 1_000_000}
-	a.maintenance.initialMessages = 1000
+	a.maintenance.initialMessages = controlCollectionMessages - 1
 	if e := a.refundControlLocked(uidWatermark{77, 256}); e != nil {
 		t.Fatal(e)
 	}
@@ -510,7 +510,7 @@ func TestBulkControlUrgencyLeavesDataCollectionTime(t *testing.T) {
 	l.lastBulk.Store(time.Now().UnixNano())
 	a := &mailAccountState{link: l, spent: 2 << 20, reserved: 2 << 20}
 	a.maintenance.controlBytes = reservationQuantum / 2
-	a.maintenance.initialMessages = 1000
+	a.maintenance.initialMessages = controlCollectionMessages - 1
 	if !a.needsMaintenanceLocked() || !a.deferMaintenanceLocked() {
 		t.Fatal("small eligible tail preempted bulk DATA")
 	}
@@ -518,7 +518,7 @@ func TestBulkControlUrgencyLeavesDataCollectionTime(t *testing.T) {
 	if a.deferMaintenanceLocked() {
 		t.Fatal("message-count urgency was deferred")
 	}
-	a.maintenance.initialMessages = 1000
+	a.maintenance.initialMessages = controlCollectionMessages - 1
 	a.maintenance.controlBytes = controlCollectionBytes
 	if a.deferMaintenanceLocked() {
 		t.Fatal("byte urgency was deferred")
@@ -558,5 +558,14 @@ func TestControlShutdownCancellationDiagnostic(t *testing.T) {
 				t.Fatal(a.failure, tc.want)
 			}
 		})
+	}
+}
+
+func TestRC1AbsoluteControlReservationCeiling(t *testing.T) {
+	if controlMessageLimit != 384 || controlRecoveryMessages != 128 || controlMessageLimit+controlRecoveryMessages != 512 {
+		t.Fatal("CONTROL reserve no longer fits the agreed ceiling")
+	}
+	if segmentAppends > 256 {
+		t.Fatal("DATA message ceiling exceeded")
 	}
 }

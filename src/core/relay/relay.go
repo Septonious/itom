@@ -128,10 +128,10 @@ func policy(c Config, server bool) (*tls.Config, error) {
 	if e != nil {
 		return nil, e
 	}
-	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{relayProtocolV2, relayProtocolV1}, SessionTicketsDisabled: true}
+	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{relayProtocolV2}, SessionTicketsDisabled: true}
 	p.InsecureSkipVerify = true //nolint:gosec // mandatory VerifyConnection pins the PSK-derived identity, no public CA or hostname.
 	p.VerifyConnection = func(cs tls.ConnectionState) error {
-		if (cs.NegotiatedProtocol != relayProtocolV1 && cs.NegotiatedProtocol != relayProtocolV2) || len(cs.PeerCertificates) != 1 {
+		if cs.NegotiatedProtocol != relayProtocolV2 || len(cs.PeerCertificates) != 1 {
 			return errors.New("relay authentication failed")
 		}
 		pub, ok := cs.PeerCertificates[0].PublicKey.(ed25519.PublicKey)
@@ -148,12 +148,12 @@ func policy(c Config, server bool) (*tls.Config, error) {
 
 // Dialer shares only TLS settings and cooldown state, never destination TCP streams.
 type Dialer struct {
-	cfg                                  Config
-	tls                                  *tls.Config
-	mu                                   sync.Mutex
-	retry                                time.Time
-	creditConnections, legacyConnections atomic.Uint64
-	Log                                  func(string)
+	cfg               Config
+	tls               *tls.Config
+	mu                sync.Mutex
+	retry             time.Time
+	creditConnections atomic.Uint64
+	Log               func(string)
 }
 
 // ai-generated: prepare a reusable authenticated dialer.
@@ -221,14 +221,8 @@ func (d *Dialer) Connect(ctx context.Context, target string) (net.Conn, error) {
 	if e != nil {
 		return nil, fmt.Errorf("exit dial: %w", e)
 	}
-	// Preserve legacy desktop behavior. Consumed-byte relay credit is only
-	// selected for a session whose authenticated bearer is cellular.
-	policy := d.tls
-	if !mailstream.CellularExit(ctx) {
-		policy = policy.Clone()
-		policy.NextProtos = []string{relayProtocolV1}
-	}
-	conn := tls.Client(raw, policy)
+	// Credit framing is mandatory on every bearer; reject legacy peers.
+	conn := tls.Client(raw, d.tls)
 	ok := false
 	defer func() {
 		if !ok {
@@ -255,12 +249,8 @@ func (d *Dialer) Connect(ctx context.Context, target string) (net.Conn, error) {
 	}
 	_ = conn.SetDeadline(time.Time{})
 	ok = true
-	if conn.ConnectionState().NegotiatedProtocol == relayProtocolV2 {
-		d.creditConnections.Add(1)
-		return newCreditConn(conn), nil
-	}
-	d.legacyConnections.Add(1)
-	return conn, nil
+	d.creditConnections.Add(1)
+	return newCreditConn(conn), nil
 }
 
 // ai-generated: reject invalid ports and oversized destination frames.
@@ -395,13 +385,11 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 		return
 	}
 	defer out.Close()
-	// Only credit-negotiated cellular streams need bounded origin-side
+	// All credit-negotiated streams need bounded origin-side
 	// read-ahead. Cap the socket before acknowledging the destination so
 	// a fast origin cannot accumulate a multi-megabyte receive queue.
-	if c.ConnectionState().NegotiatedProtocol == relayProtocolV2 {
-		if tcp, ok := out.(*net.TCPConn); ok {
-			_ = tcp.SetReadBuffer(128 << 10)
-		}
+	if tcp, ok := out.(*net.TCPConn); ok {
+		_ = tcp.SetReadBuffer(128 << 10)
 	}
 	var upload io.Writer = out
 	var download io.Reader = out
@@ -417,11 +405,8 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 		return
 	}
 	_ = c.SetDeadline(time.Time{})
-	var link net.Conn = c
-	if c.ConnectionState().NegotiatedProtocol == relayProtocolV2 {
-		link = newCreditConn(c)
-		defer link.Close()
-	}
+	var link net.Conn = newCreditConn(c)
+	defer link.Close()
 	done := make(chan struct{})
 	go func() {
 		_, e := io.Copy(upload, link)
@@ -440,5 +425,5 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 
 // Negotiated connection counts are diagnostic only, not a scheduling signal.
 func (d *Dialer) NegotiationCounts() map[string]uint64 {
-	return map[string]uint64{"credit": d.creditConnections.Load(), "legacy": d.legacyConnections.Load()}
+	return map[string]uint64{"credit": d.creditConnections.Load(), "legacy": 0}
 }

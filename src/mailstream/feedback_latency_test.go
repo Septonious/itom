@@ -20,9 +20,10 @@ func TestRC116FeedbackCoalescingAdaptsToIMAPLatency(t *testing.T) {
 	link.accounts = []*mailAccountState{a}
 	for _, pair := range []struct {
 		rtt, want time.Duration
-	}{{20*time.Millisecond, 12*time.Millisecond},
-		{50*time.Millisecond, 16*time.Millisecond},
-		{90*time.Millisecond, 24*time.Millisecond}} {
+	}{{5 * time.Millisecond, 6 * time.Millisecond},
+		{20 * time.Millisecond, 12 * time.Millisecond},
+		{50 * time.Millisecond, 16 * time.Millisecond},
+		{90 * time.Millisecond, 24 * time.Millisecond}} {
 		p.latency.Store(int64(pair.rtt))
 		if d := link.feedbackCoalesceDelay(); d != pair.want {
 			t.Fatalf("observed IMAP RTT %v: feedback delay=%v want=%v", pair.rtt, d, pair.want)

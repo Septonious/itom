@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	imap "github.com/emersion/go-imap/v2"
@@ -68,6 +69,15 @@ func (l *IMAPLink) Acknowledge(id SessionID, sequence uint64) error {
 // Retire a receipt batch with one lock acquisition per account, rather
 // than repeatedly contending with the publication/read owners.
 func (l *IMAPLink) AcknowledgeBatch(id SessionID, sequences []uint64) error {
+	return l.acknowledgeBatch(id, sequences, sequences)
+}
+
+// Only first-attempt receipts are timing evidence. All receipts still retire
+// storage, including duplicates and retransmissions.
+func (l *IMAPLink) AcknowledgeBatchEvidence(id SessionID, sequences, firstAttempts []uint64) error {
+	return l.acknowledgeBatch(id, sequences, firstAttempts)
+}
+func (l *IMAPLink) acknowledgeBatch(id SessionID, sequences, firstAttempts []uint64) error {
 	if len(sequences) == 0 {
 		return nil
 	}
@@ -77,8 +87,11 @@ func (l *IMAPLink) AcknowledgeBatch(id SessionID, sequences []uint64) error {
 		for _, seq := range sequences {
 			sample := &a.delivery[seq%replaySlots]
 			if sample.id == id && sample.sequence == seq && !sample.started.IsZero() {
-				if !sample.retried {
+				if !sample.retried && slices.Contains(firstAttempts, seq) {
 					a.rtt, a.rttAt = now.Sub(sample.started), time.Duration(now.UnixNano())
+					if sample.bulk && a.id == id {
+						a.bulkReceipt.observe(a.rtt, now)
+					}
 				}
 				*sample = deliverySample{}
 			}

@@ -13,10 +13,10 @@ import (
 const elasticGrantCooldown = 10 * time.Second
 
 type grantDemandWatch struct {
-	at, lastChange      time.Time
-	healthy, quiet, bad int
-	demand              bool
-	bytes, retries      uint64
+	at, lastChange          time.Time
+	healthy, quiet, bad     int
+	demand                  bool
+	sent, received, retries uint64
 }
 
 func (a *sessionAdmission) observeDemand(id string, mail mailstream.MailSnapshot, s mailstream.Snapshot, now time.Time) bool {
@@ -40,8 +40,7 @@ func (a *sessionAdmission) observeDemand(id string, mail mailstream.MailSnapshot
 		w = &grantDemandWatch{}
 		a.adaptive[id] = w
 	}
-	total := s.BulkDelivered + s.ReceivedPayload
-	active, fresh := 0, 0
+	active, fresh, queued := 0, 0, 0
 	badPath := false
 	byID := map[string]mailstream.MailAccountSnapshot{}
 	for _, l := range mail.Lines {
@@ -51,6 +50,7 @@ func (a *sessionAdmission) observeDemand(id string, mail mailstream.MailSnapshot
 		}
 		if l.Allocated && l.PeerActive && l.Ready && l.Data && l.Writer && l.ControlWriter && l.Failure == "" && !l.PeerUnavailable {
 			active++
+			queued += l.QueuedMIMEBytes
 			if l.IMAPLatencyFresh && l.IMAPLatencyMillis > 0 {
 				fresh++
 				if l.IMAPLatencyMillis >= 250 {
@@ -62,17 +62,30 @@ func (a *sessionAdmission) observeDemand(id string, mail mailstream.MailSnapshot
 			}
 		}
 	}
-	contiguous := !w.at.IsZero() && now.Sub(w.at) > 0 && now.Sub(w.at) <= 5*time.Second && total >= w.bytes && s.Retransmissions >= w.retries
-	progressing := contiguous && total > w.bytes
+	elapsed := now.Sub(w.at)
+	contiguous := !w.at.IsZero() && elapsed > 0 && elapsed <= 5*time.Second && s.BulkDelivered >= w.sent && s.ReceivedPayload >= w.received && s.Retransmissions >= w.retries
+	// Only same-direction delivery and unsent DATA with actual writer pressure
+	// are evidence that widening this grant would serve productive demand.
+	// A quiet writer with a large stale outstanding window is not saturated.
+	minimumProgress := uint64(32<<10) * uint64(max(0, min(elapsed, 5*time.Second)).Nanoseconds()) / uint64(time.Second)
+	minimumProgress = max(minimumProgress, 1)
+	outgoingProgress := contiguous && s.BulkDelivered-w.sent >= minimumProgress
+	incomingProgress := contiguous && s.ReceivedPayload-w.received >= minimumProgress
 	retries := contiguous && s.Retransmissions > w.retries
-	w.at, w.bytes, w.retries = now, total, s.Retransmissions
-	pending := s.BulkOutstanding >= 128<<10 || s.PeerDemandFresh && s.PeerBulkPending >= 128<<10
+	localPending := s.BulkOutstanding >= 128<<10
+	peerPending := s.PeerDemandFresh && s.PeerBulkPending >= 128<<10
+	// Peer-reported pending is retained as activity protection, not as proof
+	// of unsent demand or writer pressure until the directional report is wired.
+	expanding := localPending && s.UnsentBulkBytes >= 64<<10 && queued >= 64<<10 && outgoingProgress
+	pending := localPending || peerPending
+	progressing := outgoingProgress || incomingProgress
 	w.demand = pending || progressing
+	w.at, w.sent, w.received, w.retries = now, s.BulkDelivered, s.ReceivedPayload, s.Retransmissions
 	// The peer's receipt RTT reflects the end-to-end mail path; a fast server
 	// IMAP command by itself is not proof of healthy cellular bandwidth.
 	controlHealthy := s.InteractiveReceiptRTTMS > 0 && s.InteractiveReceiptRTTMS <= max(450, 2*s.InteractiveReceiptMinRTTMS) && s.InteractiveReceiptRTTMS < 700
 	pressure := s.MobileDraining || s.PeerDemandFresh && s.PeerDraining || s.InteractiveQueueLimited || badPath || retries
-	healthy := contiguous && pending && progressing && fresh >= min(3, active) && active == len(grant) && controlHealthy && !pressure
+	healthy := contiguous && expanding && fresh >= min(3, active) && active == len(grant) && controlHealthy && !pressure
 	if healthy {
 		w.healthy++
 	} else {

@@ -3,7 +3,6 @@ package relay
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"io"
 	"itom.local/mailstream"
@@ -50,28 +49,14 @@ func TestRelayConsumedCreditBoundsUnreadData(t *testing.T) {
 		t.Fatal("reverse direction", err)
 	}
 }
-func TestRelayLegacyALPNStillWorks(t *testing.T) {
+func TestRelayRejectLegacyALPN(t *testing.T) {
 	d, _ := testExit(t)
 	d.tls = d.tls.Clone()
-	d.tls.NextProtos = []string{relayProtocolV1}
+	d.tls.NextProtos = []string{"olcrtc-relay/1"}
 	c, err := d.Connect(context.Background(), testTarget(t))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer c.Close()
-	if raw, ok := c.(*tls.Conn); !ok || raw.ConnectionState().NegotiatedProtocol != relayProtocolV1 {
-		t.Fatal("legacy connection changed framing")
-	}
-	_ = c.SetDeadline(time.Now().Add(2 * time.Second))
-	if _, err = c.Write([]byte("legacy")); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.(interface{ CloseWrite() error }).CloseWrite(); err != nil {
-		t.Fatal(err)
-	}
-	reply, err := io.ReadAll(c)
-	if err != nil || len(reply) != 64 {
-		t.Fatal("legacy transfer", err)
+	if err == nil {
+		c.Close()
+		t.Fatal("legacy ALPN negotiated")
 	}
 }
 func TestRelayTruncatedFIN(t *testing.T) {
@@ -84,7 +69,7 @@ func TestRelayTruncatedFIN(t *testing.T) {
 	}
 }
 
-func TestRC22RelayCreditOnlyForCellularExit(t *testing.T) {
+func TestV160RelayCreditOnEveryBearer(t *testing.T) {
 	d, _ := testExit(t)
 	for _, mobile := range []bool{false, true, false} {
 		ctx := mailstream.WithCellularExit(context.Background(), mobile)
@@ -93,7 +78,7 @@ func TestRC22RelayCreditOnlyForCellularExit(t *testing.T) {
 			t.Fatal(err)
 		}
 		_, credit := c.(*creditConn)
-		if credit != mobile {
+		if !credit {
 			c.Close()
 			t.Fatalf("mobile=%t credit=%t", mobile, credit)
 		}

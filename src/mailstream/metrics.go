@@ -14,23 +14,29 @@ type deliverySample struct {
 	sequence uint64
 	started  time.Time
 	retried  bool
+	bulk     bool
 }
 
 // The route belongs to the actual account chosen by Send, not an estimate
 // copied from the global session ping. Receipts authenticate delivery; NOOP
 // timings independently measure the direct client-to-provider command path.
 func (a *mailAccountState) sentPacket(packet []byte) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.sentPacketLocked(packet, false)
+}
+
+// Reserve delivery attribution under the same lock as queue admission.
+func (a *mailAccountState) sentPacketLocked(packet []byte, bulk bool) {
 	kind, id, seq, err := parseHeader(packet)
 	if err != nil || kind != sealed {
 		return
 	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
 	prior := &a.delivery[seq%replaySlots]
 	if prior.id == id && prior.sequence == seq && !prior.started.IsZero() {
 		prior.retried = true
 	} else {
-		*prior = deliverySample{id: id, sequence: seq, started: time.Now()}
+		*prior = deliverySample{id: id, sequence: seq, started: time.Now(), bulk: bulk}
 	}
 }
 

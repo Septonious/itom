@@ -1,7 +1,6 @@
 package mailstream
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
@@ -10,31 +9,34 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"itom.local/mailstream/v160"
 )
 
 // Each stream has independent receive storage and absolute consumed-byte
 // credit. The mail receive owner never waits for an application Read or dial.
 type Stream struct {
-	ctx                                              context.Context
-	cancel                                           context.CancelFunc
-	session                                          *Session
-	id                                               uint32
-	readMu, writeMu                                  sync.Mutex
-	mu                                               sync.Mutex
-	changed                                          chan struct{}
-	opened                                           chan struct{}
-	isOpen                                           bool
-	chunks                                           map[uint64][]byte
-	readOffset, sendOffset, peerConsumed, advertised uint64
-	buffered                                         int
-	final                                            uint64
-	hasFinal, writeClosed                            bool
-	err                                              error
-	readDeadline, writeDeadline                      time.Time
-	bulkWriteCompleted, writeBurstAt                 time.Time // owned by writeMu
-	writeBurstBytes                                  int       // owned by writeMu
-	receiveLimit, peerWindow                         int
-	closeOnce                                        sync.Once
+	ctx                                  context.Context
+	cancel                               context.CancelFunc
+	session                              *Session
+	id                                   uint32
+	readMu, writeMu                      sync.Mutex
+	mu                                   sync.Mutex
+	changed                              chan struct{}
+	opened                               chan struct{}
+	isOpen                               bool
+	receive                              v160.Reassembler
+	sendOffset, peerConsumed, advertised uint64
+	writeClosed                          bool
+	err                                  error
+	readDeadline, writeDeadline          time.Time
+	bulkWriteCompleted, writeBurstAt     time.Time // owned by writeMu
+	writeBurstBytes                      int       // owned by writeMu
+	receiveLimit, peerWindow             int
+	gapReportedOffset                    uint64
+	gapReportedAt                        time.Time
+	gapReports                           int
+	closeOnce                            sync.Once
 }
 type closeState uint8
 
@@ -47,7 +49,7 @@ func (s *Stream) StreamID() uint64 { return uint64(s.id) }
 
 func newStream(session *Session, id uint32) *Stream {
 	ctx, cancel := context.WithCancel(session.ctx)
-	return &Stream{ctx: ctx, cancel: cancel, session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), chunks: map[uint64][]byte{}, receiveLimit: initialStreamWindow, peerWindow: initialStreamWindow}
+	return &Stream{ctx: ctx, cancel: cancel, session: session, id: id, changed: make(chan struct{}), opened: make(chan struct{}), receiveLimit: initialStreamWindow, peerWindow: initialStreamWindow}
 }
 func (s *Stream) notifyLocked() { close(s.changed); s.changed = make(chan struct{}) }
 func (s *Stream) markOpen() {
@@ -65,9 +67,7 @@ func (s *Stream) abort(err error) {
 	defer s.mu.Unlock()
 	if s.err == nil {
 		s.err = err
-		s.session.receiveBuffered.Add(-int64(s.buffered))
-		s.chunks = nil
-		s.buffered = 0
+		s.discardReceiveLocked()
 		if !s.isOpen {
 			s.isOpen = true
 			close(s.opened)
@@ -101,40 +101,14 @@ func (s *Stream) accept(f frame) error {
 			close(s.opened)
 		}
 	case frameData:
-		if len(f.data) == 0 || f.offset > ^uint64(0)-uint64(len(f.data)) {
-			return ErrProtocol
+		before := s.receive.Stats()
+		now := time.Now()
+		n, err := s.receive.Add(f.offset, f.data, s.receiveLimit, now, s.session.reserveReceive)
+		if err != nil {
+			return reassemblyError(err)
 		}
-		end := f.offset + uint64(len(f.data))
-		if end <= s.readOffset {
-			return nil
-		}
-		if end-s.readOffset > uint64(s.receiveLimit) || s.hasFinal && end > s.final {
-			return ErrProtocol
-		}
-		if f.offset < s.readOffset {
-			f.data = f.data[s.readOffset-f.offset:]
-			f.offset = s.readOffset
-		}
-		if prior := s.chunks[f.offset]; prior != nil {
-			if !bytes.Equal(prior, f.data) {
-				return ErrProtocol
-			}
-			return nil
-		}
-		for at, b := range s.chunks {
-			if f.offset < at+uint64(len(b)) && end > at {
-				return ErrProtocol
-			}
-		}
-		if s.buffered+len(f.data) > s.receiveLimit {
-			return ErrCapacity
-		}
-		if !s.session.reserveReceive(len(f.data)) {
-			return ErrCapacity
-		}
-		s.chunks[f.offset] = bytes.Clone(f.data)
-		s.buffered += len(f.data)
-		s.session.receivedPayload.Add(uint64(len(f.data)))
+		s.updateReassemblyLocked(before, now, false)
+		s.session.receivedPayload.Add(uint64(n))
 	case frameWindow:
 		if len(f.data) != 4 || f.offset > s.sendOffset {
 			return ErrProtocol
@@ -148,15 +122,14 @@ func (s *Stream) accept(f frame) error {
 			return err
 		}
 	case frameFIN:
-		if len(f.data) != 0 || f.offset < s.readOffset || f.offset-s.readOffset > uint64(s.receiveLimit) || s.hasFinal && s.final != f.offset {
+		if len(f.data) != 0 {
 			return ErrProtocol
 		}
-		for at, b := range s.chunks {
-			if at+uint64(len(b)) > f.offset {
-				return ErrProtocol
-			}
+		before, now := s.receive.Stats(), time.Now()
+		if err := s.receive.SetFinal(f.offset, s.receiveLimit, now); err != nil {
+			return reassemblyError(err)
 		}
-		s.final, s.hasFinal = f.offset, true
+		s.updateReassemblyLocked(before, now, false)
 	case frameReset:
 		if f.offset != 0 || len(f.data) != 0 {
 			return ErrProtocol
@@ -167,9 +140,7 @@ func (s *Stream) accept(f frame) error {
 		if err := s.consumedLocked(s.sendOffset); err != nil {
 			return err
 		}
-		s.session.receiveBuffered.Add(-int64(s.buffered))
-		s.chunks = nil
-		s.buffered = 0
+		s.discardReceiveLocked()
 		if !s.isOpen {
 			s.isOpen = true
 			close(s.opened)
@@ -220,16 +191,17 @@ func (s *Stream) Read(p []byte) (int, error) {
 			s.mu.Unlock()
 			return 0, os.ErrDeadlineExceeded
 		}
-		if b := s.chunks[s.readOffset]; len(b) > 0 {
-			n := copy(p, b)
-			delete(s.chunks, s.readOffset)
-			s.readOffset += uint64(n)
-			s.buffered -= n
+		before := s.receive.Stats()
+		n, err := s.receive.Read(p)
+		if err != nil {
+			s.mu.Unlock()
+			return n, err
+		}
+		if n > 0 {
 			s.session.receiveBuffered.Add(-int64(n))
-			if n < len(b) {
-				s.chunks[s.readOffset] = b[n:]
-			}
-			consumed := s.readOffset
+			s.session.consumedPayload.Add(uint64(n))
+			s.updateReassemblyLocked(before, time.Now(), false)
+			consumed := before.Consumed + uint64(n)
 			grew := false
 			if consumed >= 64<<10 && s.receiveLimit == initialStreamWindow {
 				s.receiveLimit = streamWindow
@@ -253,15 +225,12 @@ func (s *Stream) Read(p []byte) (int, error) {
 			window := s.receiveLimit
 			s.mu.Unlock()
 			if sendWindow {
-				if err := s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed, data: binary.BigEndian.AppendUint32(nil, uint32(window))}, true); err != nil {
+				if err := s.session.publishWindow(s.id, consumed, window); err != nil {
+					s.session.fail(err)
 					return n, err
 				}
 			}
 			return n, nil
-		}
-		if s.hasFinal && s.readOffset == s.final {
-			s.mu.Unlock()
-			return 0, io.EOF
 		}
 		change, deadline := s.changed, s.readDeadline
 		s.mu.Unlock()
@@ -394,18 +363,16 @@ func (s *Stream) Close() error {
 	s.closeOnce.Do(func() {
 		s.cancel()
 		s.mu.Lock()
-		graceful := s.err == nil && s.writeClosed && s.hasFinal && s.readOffset == s.final
+		graceful := s.err == nil && s.writeClosed && s.receive.Finished()
 		peerReset := errors.Is(s.err, ErrClosed)
-		consumed, window := s.readOffset, s.receiveLimit
+		consumed, window := s.receive.Stats().Consumed, s.receiveLimit
 		terminal := &terminalStream{state: closedAbort, sent: s.sendOffset, consumed: s.peerConsumed}
 		if graceful {
 			terminal.state = closedGraceful
 		}
 		if s.err == nil {
 			s.err = ErrClosed
-			s.session.receiveBuffered.Add(-int64(s.buffered))
-			s.buffered = 0
-			s.chunks = nil
+			s.discardReceiveLocked()
 			if !s.isOpen {
 				s.isOpen = true
 				close(s.opened)
@@ -419,9 +386,14 @@ func (s *Stream) Close() error {
 		s.session.mu.Unlock()
 		s.mu.Unlock()
 		if graceful {
-			_ = s.session.send(s.session.ctx, frame{kind: frameWindow, stream: s.id, offset: consumed, data: binary.BigEndian.AppendUint32(nil, uint32(window))}, true)
+			if err := s.session.publishWindow(s.id, consumed, window); err != nil {
+				s.session.fail(err)
+			}
 		}
 		if !graceful {
+			if s.session.windows != nil {
+				s.session.windows.discard(s.id)
+			}
 			s.session.abandonStream(s.id)
 		}
 		if !graceful && !peerReset {
@@ -501,4 +473,38 @@ func mobileStreamRoom(outstanding uint64, rate float64) uint64 {
 		return 0
 	}
 	return limit - outstanding
+}
+
+func reassemblyError(err error) error {
+	if errors.Is(err, v160.ErrCapacity) {
+		return ErrCapacity
+	}
+	return ErrProtocol
+}
+
+// Stream.mu protects the reassembly state. Aggregated counters are atomic so
+// session snapshots do not reverse the Stream.mu -> Session.mu lock order.
+func (s *Stream) updateReassemblyLocked(before v160.ReassemblyStats, now time.Time, discard bool) {
+	after := s.receive.Stats()
+	sess := s.session
+	sess.readyBuffered.Add(int64(after.Ready - before.Ready))
+	sess.gapBuffered.Add(int64(after.Blocked - before.Blocked))
+	sess.duplicatePayload.Add(after.DuplicateBytes - before.DuplicateBytes)
+	if !before.GapSince.IsZero() && (after.GapSince.IsZero() || after.GapOffset != before.GapOffset) {
+		if discard {
+			sess.gapAborted.Add(1)
+		} else {
+			sess.gapResolved.Add(1)
+			sess.gapWaitNS.Add(uint64(max(0, now.Sub(before.GapSince))))
+		}
+	}
+	if !after.GapSince.IsZero() && (before.GapSince.IsZero() || after.GapOffset != before.GapOffset) {
+		sess.gapOpened.Add(1)
+	}
+}
+func (s *Stream) discardReceiveLocked() {
+	before := s.receive.Stats()
+	n := s.receive.Discard()
+	s.session.receiveBuffered.Add(-int64(n))
+	s.updateReassemblyLocked(before, time.Now(), true)
 }

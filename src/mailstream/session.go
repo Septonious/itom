@@ -38,69 +38,79 @@ const (
 )
 
 type pendingPacket struct {
-	deliveryMark deliveryMark
-	wire         []byte
-	priority     bool
-	sent         time.Time
-	attempts     int
-	kind         byte
-	stream       uint32
+	deliveryMark                   deliveryMark
+	wire                           []byte
+	priority                       bool
+	sent                           time.Time
+	attempts                       int
+	kind                           byte
+	stream                         uint32
+	offset                         uint64
+	payloadBytes                   int
+	repairRequested, earlyRepaired bool
 }
 
 type Session struct {
-	grantUpdateMu                      sync.Mutex
-	grantVersion                       uint64
-	grantAck                           atomic.Uint64
-	grantRequests                      chan grantRequest
-	grantRequestVersion                uint64 // receive owner only
-	activeLimit                        atomic.Int32
-	accountSetMu                       sync.Mutex
-	accountSetVersion                  uint64
-	accountSetAck                      atomic.Uint64
-	ctx                                context.Context
-	cancel                             context.CancelFunc
-	link                               Link
-	cipher                             *cipherPair
-	server                             bool
-	dial                               func(context.Context, string, string) (net.Conn, error)
-	mu                                 sync.Mutex
-	streams                            map[uint32]*Stream
-	closedStreams                      map[uint32]*terminalStream
-	bulkOutstanding                    uint64
-	receiveBuffered                    atomic.Int64
-	receivedPayload                    atomic.Uint64 // unique DATA bytes accepted, not control or retransmissions
-	lastInbound                        atomic.Int64
-	nextStream                         uint32
-	pending                            map[uint64]*pendingPacket
-	pendingBytes                       int
-	delivery                           deliveryWindow
-	changed                            chan struct{}
-	wake                               chan struct{}
-	input                              chan []byte
-	receipts                           chan receiptRequest
-	receiptRetries                     atomic.Uint64
-	openRefusals                       atomic.Uint64
-	openWaits                          atomic.Uint64
-	exitOpens                          exitOpenCounters
-	retransmissions                    uint64
-	seen                               [replaySlots]uint64
-	seenValid                          [replaySlots]bool
-	highest                            uint64
-	rtt, variation                     time.Duration
-	pings                              map[uint64]chan struct{}
-	nextPing                           uint64
-	peerBearerSequence                 uint64
-	bearerAdvertised                   bool
-	bearerEpoch, bearerAckEpoch        uint64        // guarded by mu
-	bearerConfirm                      chan struct{} // one in-flight confirmation
-	mobileBearer                       atomic.Bool   // published by setCellularLocked; read-only fast-path snapshot
-	peerDemandSequence                 uint64
-	peerBulkPending, peerBulkDelivered uint64
-	peerDemandAt                       time.Time
-	peerDraining                       bool
-	accountPings                       map[uint64]accountProbe
-	err                                error
-	wg                                 sync.WaitGroup
+	grantUpdateMu                                                                    sync.Mutex
+	grantVersion                                                                     uint64
+	grantAck                                                                         atomic.Uint64
+	grantRequests                                                                    chan grantRequest
+	grantRequestVersion                                                              uint64 // receive owner only
+	activeLimit                                                                      atomic.Int32
+	accountSetMu                                                                     sync.Mutex
+	accountSetVersion                                                                uint64
+	accountSetAck                                                                    atomic.Uint64
+	ctx                                                                              context.Context
+	cancel                                                                           context.CancelFunc
+	link                                                                             Link
+	cipher                                                                           *cipherPair
+	server                                                                           bool
+	dial                                                                             func(context.Context, string, string) (net.Conn, error)
+	mu                                                                               sync.Mutex
+	streams                                                                          map[uint32]*Stream
+	closedStreams                                                                    map[uint32]*terminalStream
+	bulkOutstanding                                                                  uint64
+	receiveBuffered                                                                  atomic.Int64
+	readyBuffered, gapBuffered                                                       atomic.Int64
+	consumedPayload, duplicatePayload, gapOpened, gapResolved, gapAborted, gapWaitNS atomic.Uint64
+	receivedPayload                                                                  atomic.Uint64 // unique DATA bytes accepted, not control or retransmissions
+	lastInbound                                                                      atomic.Int64
+	nextStream                                                                       uint32
+	pending                                                                          map[uint64]*pendingPacket
+	pendingBytes                                                                     int
+	delivery                                                                         deliveryWindow
+	changed                                                                          chan struct{}
+	wake                                                                             chan struct{}
+	input                                                                            chan []byte
+	receipts                                                                         *receiptQueue
+	windows                                                                          *windowQueue
+	receiptRetries                                                                   atomic.Uint64
+	receiptRefusals                                                                  atomic.Uint64
+	openRefusals                                                                     atomic.Uint64
+	openWaits                                                                        atomic.Uint64
+	exitOpens                                                                        exitOpenCounters
+	retransmissions                                                                  uint64
+	repairCredit                                                                     int
+	repairRequests, repairAdmitted, repairBytes, repairCancelled, repairAckAfter     uint64
+	gapReportsSent                                                                   atomic.Uint64
+	seen                                                                             [replaySlots]uint64
+	seenValid                                                                        [replaySlots]bool
+	highest                                                                          uint64
+	rtt, variation                                                                   time.Duration
+	pings                                                                            map[uint64]chan struct{}
+	nextPing                                                                         uint64
+	peerBearerSequence                                                               uint64
+	bearerAdvertised                                                                 bool
+	bearerEpoch, bearerAckEpoch                                                      uint64        // guarded by mu
+	bearerConfirm                                                                    chan struct{} // one in-flight confirmation
+	mobileBearer                                                                     atomic.Bool   // published by setCellularLocked; read-only fast-path snapshot
+	peerDemandSequence                                                               uint64
+	peerBulkPending, peerBulkDelivered                                               uint64
+	peerDemandAt                                                                     time.Time
+	peerDraining                                                                     bool
+	accountPings                                                                     map[uint64]accountProbe
+	err                                                                              error
+	wg                                                                               sync.WaitGroup
 }
 
 func newSession(parent context.Context, link Link, cipher *cipherPair, server bool, dial func(context.Context, string, string) (net.Conn, error)) *Session {
@@ -108,7 +118,8 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 	if dial == nil {
 		dial = publicDial
 	}
-	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: make(chan receiptRequest, 1024), pings: map[uint64]chan struct{}{}}
+	s := &Session{ctx: ctx, cancel: cancel, link: link, cipher: cipher, server: server, dial: dial, streams: map[uint32]*Stream{}, nextStream: 1, pending: map[uint64]*pendingPacket{}, changed: make(chan struct{}), wake: make(chan struct{}, 1), input: make(chan []byte, 512), receipts: newReceiptQueue(4096, 256), windows: newWindowQueue(), pings: map[uint64]chan struct{}{}}
+	s.repairCredit = maxWire
 	s.delivery.adaptive = true // Both directions use compression-safe bulk feedback.
 	s.closedStreams = map[uint32]*terminalStream{}
 	s.lastInbound.Store(time.Now().UnixNano())
@@ -124,11 +135,13 @@ func newSession(parent context.Context, link Link, cipher *cipherPair, server bo
 			go func() { defer s.wg.Done(); s.reportAccountHealth(carrier) }()
 		}
 	}
-	s.wg.Add(4)
+	s.wg.Add(6)
 	go func() { defer s.wg.Done(); <-ctx.Done(); s.fail(ErrClosed) }()
 	go func() { defer s.wg.Done(); s.receiveLoop() }()
 	go func() { defer s.wg.Done(); s.dispatchLoop() }()
 	go func() { defer s.wg.Done(); s.receiptLoop() }()
+	go func() { defer s.wg.Done(); s.windowLoop() }()
+	go func() { defer s.wg.Done(); s.gapLoop() }()
 	if routes, ok := link.(accountAnnouncer); ok {
 		s.wg.Add(1)
 		go func() { defer s.wg.Done(); s.announceRoutes(routes) }()
@@ -266,7 +279,7 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 		if room {
 			wire, seq, err := s.cipher.seal(plain)
 			if err == nil {
-				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream}
+				s.pending[seq] = &pendingPacket{wire: wire, priority: priority, kind: f.kind, stream: f.stream, offset: f.offset, payloadBytes: len(f.data)}
 				s.pendingBytes += len(wire)
 				s.notifyLocked()
 			}
@@ -284,104 +297,6 @@ func (s *Session) enqueue(ctx context.Context, f frame, priority, wait bool) err
 		case <-s.ctx.Done():
 			return ErrClosed
 		case <-change:
-		}
-	}
-}
-
-type receiptRequest struct {
-	sequence uint64
-	bulk     bool
-}
-
-func (s *Session) receiptLoop() {
-	timer := time.NewTimer(time.Hour)
-	if !timer.Stop() {
-		<-timer.C
-	}
-	defer timer.Stop()
-	batch := make([]uint64, 0, 32)
-	var deadline time.Time
-	var wire []byte
-	flush := func() error {
-		if len(batch) == 0 {
-			return nil
-		}
-		if wire == nil {
-			body := make([]byte, 8*len(batch))
-			for n, seq := range batch {
-				binary.BigEndian.PutUint64(body[n*8:], seq)
-			}
-			plain, _ := (frame{kind: frameReceipt, data: body}).encode()
-			var err error
-			wire, _, err = s.cipher.seal(plain)
-			if err != nil {
-				return err
-			}
-		}
-		// Local queue pressure is not packet loss. Keep this bounded,
-		// immutable receipt until a writer accepts it instead of forcing
-		// the peer to retransmit already delivered application data.
-		var err error
-		if feedback, ok := s.link.(interface {
-			SendFeedback(context.Context, []byte) error
-		}); ok {
-			err = feedback.SendFeedback(s.ctx, wire)
-		} else {
-			err = s.link.Send(s.ctx, wire, true)
-		}
-		if errors.Is(err, ErrCapacity) {
-			s.receiptRetries.Add(1)
-			timer.Reset(2 * time.Millisecond)
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		wire = nil
-		batch = batch[:0]
-		return nil
-	}
-	for {
-		input := s.receipts
-		if wire != nil {
-			input = nil
-		} // freeze the encrypted batch during retry
-		select {
-		case <-s.ctx.Done():
-			return
-		case request := <-input:
-			now := time.Now()
-			if len(batch) == 0 {
-				delay := 2 * time.Millisecond
-				if request.bulk {
-					delay = 8 * time.Millisecond
-				}
-				deadline = now.Add(delay)
-				timer.Reset(delay)
-			} else if !request.bulk {
-				// Interactive/control receipts preempt a bulk-only batch.
-				// Bulk still fits the unchanged32-sequence wire format.
-				deadline = minTime(deadline, now.Add(2*time.Millisecond))
-				timer.Reset(max(0, time.Until(deadline)))
-			}
-			batch = append(batch, request.sequence)
-			if len(batch) == 32 {
-				if !timer.Stop() {
-					select {
-					case <-timer.C:
-					default:
-					}
-				}
-				if err := flush(); err != nil {
-					s.fail(err)
-					return
-				}
-			}
-		case <-timer.C:
-			if err := flush(); err != nil {
-				s.fail(err)
-				return
-			}
 		}
 	}
 }
@@ -406,11 +321,10 @@ func negotiationControl(kind byte) bool {
 }
 
 func (s *Session) dispatchLoop() {
-	type candidate struct {
-		sequence uint64
-		packet   *pendingPacket
-	}
-	batch := make([]candidate, 0, maxPendingPackets+controlReserve)
+	batch := make([]dispatchCandidate, 0, maxPendingPackets+controlReserve)
+	var lastBulkStream uint32
+	ranks := make(map[uint64]dispatchRank, maxPendingPackets)
+	used := make(map[uint32]int, maxStreams)
 	ticker := time.NewTicker(5 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -436,15 +350,15 @@ func (s *Session) dispatchLoop() {
 			if s.delivery.mobile.enabled && s.delivery.mobile.draining && p.attempts > 0 && negotiationControl(p.kind) {
 				retry = max(retry, 3*time.Second)
 			}
-			if p.sent.IsZero() || now.Sub(p.sent) >= retry {
-				batch = append(batch, candidate{seq, p})
+			if p.sent.IsZero() || now.Sub(p.sent) >= retry || s.canRepairLocked(p) {
+				batch = append(batch, dispatchCandidate{seq, p})
 			}
 		}
 		s.mu.Unlock()
 		// Scan once per wake, then order outside the session lock. Scanning
 		// the entire map for every packet made a larger packet allowance
 		// consume CPU and delay incoming credit/control under bulk load.
-		slices.SortFunc(batch, func(a, b candidate) int {
+		slices.SortFunc(batch, func(a, b dispatchCandidate) int {
 			ah := storageControl(a.packet.kind)
 			bh := storageControl(b.packet.kind)
 			if ah != bh {
@@ -468,6 +382,7 @@ func (s *Session) dispatchLoop() {
 			}
 			return cmp.Compare(a.sequence, b.sequence)
 		})
+		fairBulkOrder(batch, lastBulkStream, ranks, used)
 		sent := 0
 		// An unavailable ordinary control carrier must not hold up a fresh
 		// interactive publication on its independent writer. Preserve bulk
@@ -519,13 +434,27 @@ func (s *Session) dispatchLoop() {
 				return
 			}
 			wire, priority := selected.wire, selected.priority
+			early := s.canRepairLocked(selected) && time.Since(selected.sent) < retryAfter(selected, rto)
+			// Another repair in this batch may have consumed the credit.
+			if selected.attempts > 0 && !early && time.Since(selected.sent) < retryAfter(selected, rto) {
+				s.mu.Unlock()
+				continue
+			}
 			s.mu.Unlock()
 			var err error
 			started := time.Now()
 			maintenance, storage := s.link.(interface {
 				SendHousekeeping(context.Context, []byte) error
 			})
-			if storage && (storageControl(selected.kind)) {
+			if early {
+				if repair, ok := s.link.(interface {
+					SendRepair(context.Context, []byte) error
+				}); ok {
+					err = repair.SendRepair(s.ctx, wire)
+				} else {
+					err = ErrCapacity
+				}
+			} else if storage && (storageControl(selected.kind)) {
 				err = maintenance.SendHousekeeping(s.ctx, wire)
 			} else if path, ok := s.link.(interface {
 				SendNegotiation(context.Context, []byte) error
@@ -541,6 +470,9 @@ func (s *Session) dispatchLoop() {
 				err = s.link.Send(s.ctx, wire, priority)
 			}
 			if errors.Is(err, ErrCapacity) {
+				if early {
+					continue
+				}
 				if hasFast && priority && !interactive {
 					controlBlocked = true
 					continue
@@ -558,12 +490,22 @@ func (s *Session) dispatchLoop() {
 			}
 			s.mu.Lock()
 			if selected.kind == frameData && !selected.priority {
+				lastBulkStream = selected.stream
 				s.delivery.pacer.admitted(len(wire))
 				if selected.attempts > 0 && s.delivery.mobile.enabled {
 					s.delivery.mobile.noteBulkRetry(time.Now())
 				}
 			}
+			if early {
+				s.repairCredit -= len(wire)
+				s.repairAdmitted++
+				s.repairBytes += uint64(len(wire))
+			}
 			if p := s.pending[next.sequence]; p == selected {
+				if p.attempts > 0 {
+					p.repairRequested = false
+					p.earlyRepaired = p.earlyRepaired || early
+				}
 				if p.attempts == 0 && p.kind == frameData {
 					p.deliveryMark = s.delivery.sent(len(p.wire), started, !p.priority)
 				}
@@ -612,7 +554,7 @@ func (s *Session) receiveLoop() {
 					s.fail(ErrProtocol)
 					return
 				}
-				var acknowledged []uint64
+				var acknowledged, firstAttempts []uint64
 				var creditErr error
 				s.mu.Lock()
 				for at := 0; at < len(f.data); at += 8 {
@@ -623,6 +565,15 @@ func (s *Session) receiveLoop() {
 						continue
 					}
 					if p.kind == frameData && p.attempts > 0 {
+						if !p.priority {
+							s.repairCredit = min(4*maxWire, s.repairCredit+len(p.wire)/16)
+						}
+						if p.repairRequested {
+							s.repairCancelled++
+						}
+						if p.earlyRepaired {
+							s.repairAckAfter++
+						}
 						sample := time.Duration(0)
 						if p.attempts == 1 {
 							sample = time.Since(p.sent)
@@ -630,6 +581,9 @@ func (s *Session) receiveLoop() {
 						s.delivery.delivered(len(p.wire), sample, time.Now(), !p.priority, p.deliveryMark)
 					}
 					if p.attempts == 1 && !p.sent.IsZero() {
+						if !negotiationControl(p.kind) {
+							firstAttempts = append(firstAttempts, id)
+						}
 						sample := time.Since(p.sent)
 						if p.kind == framePing || p.kind == framePong {
 							s.delivery.observeInteractive(sample, time.Now())
@@ -657,7 +611,14 @@ func (s *Session) receiveLoop() {
 					s.fail(creditErr)
 					return
 				}
-				if batchStorage, ok := s.link.(interface {
+				if evidence, ok := s.link.(interface {
+					AcknowledgeBatchEvidence(SessionID, []uint64, []uint64) error
+				}); ok {
+					if err := evidence.AcknowledgeBatchEvidence(s.cipher.id, acknowledged, firstAttempts); err != nil {
+						s.fail(err)
+						return
+					}
+				} else if batchStorage, ok := s.link.(interface {
 					AcknowledgeBatch(SessionID, []uint64) error
 				}); ok {
 					if err := batchStorage.AcknowledgeBatch(s.cipher.id, acknowledged); err != nil {
@@ -678,6 +639,11 @@ func (s *Session) receiveLoop() {
 			// packet by more than a cache's width. Eviction must not discard
 			// legitimate outstanding DATA. Stream operations are idempotent
 			// after this bounded duplicate cache rolls.
+			bulk := f.kind == frameData && len(f.data) > 4096
+			if !s.receipts.canAccept(seq, bulk) {
+				s.receiptRefusals.Add(1)
+				continue
+			}
 			duplicate := s.seenValid[seq%replaySlots] && s.seen[seq%replaySlots] == seq
 			if !duplicate {
 				if err = s.apply(f); errors.Is(err, ErrCapacity) {
@@ -689,9 +655,10 @@ func (s *Session) receiveLoop() {
 				s.seen[seq%replaySlots], s.seenValid[seq%replaySlots] = seq, true
 				s.highest = max(s.highest, seq)
 			}
-			select {
-			case s.receipts <- receiptRequest{sequence: seq, bulk: f.kind == frameData && len(f.data) > 4096}:
-			case <-s.ctx.Done():
+			if !s.receipts.offer(receiptRequest{sequence: seq, bulk: bulk}) {
+				// Only this owner adds entries; a consumer cannot exhaust
+				// capacity after canAccept. Treat divergence as an invariant failure.
+				s.fail(ErrProtocol)
 				return
 			}
 		}
@@ -699,6 +666,9 @@ func (s *Session) receiveLoop() {
 }
 
 func (s *Session) apply(f frame) error {
+	if f.kind == frameGap {
+		return s.acceptGap(f)
+	}
 	if f.kind == frameAccountHealth {
 		return s.applyAccountHealth(f)
 	}
@@ -1001,13 +971,30 @@ type Snapshot struct {
 	Streams                    int              `json:"streams"`
 	PendingPackets             int              `json:"pending_packets"`
 	PendingBytes               int              `json:"pending_bytes"`
+	UnsentBulkBytes            int              `json:"unsent_bulk_wire_bytes"`
 	DeliveryRTTMS              int64            `json:"delivery_rtt_ms"`
 	Closed                     bool             `json:"closed"`
 	Failure                    string           `json:"failure,omitempty"`
 	ReceiptBackpressure        uint64           `json:"receipt_backpressure"`
+	ReceiptQueueRefusals       uint64           `json:"receipt_queue_refusals"`
+	ReceiptQueueDepth          int              `json:"receipt_queue_depth"`
 	Retransmissions            uint64           `json:"retransmissions"`
 	BulkOutstanding            uint64           `json:"bulk_outstanding_bytes"`
 	ReceiveBuffered            int64            `json:"receive_buffered_bytes"`
+	ReadyBuffered              int64            `json:"reassembly_ready_bytes"`
+	GapBuffered                int64            `json:"reassembly_gap_blocked_bytes"`
+	ConsumedPayload            uint64           `json:"consumed_payload_bytes"`
+	DuplicatePayload           uint64           `json:"duplicate_payload_bytes"`
+	GapOpened                  uint64           `json:"reassembly_gaps_opened"`
+	GapResolved                uint64           `json:"reassembly_gaps_resolved"`
+	GapAborted                 uint64           `json:"reassembly_gaps_aborted"`
+	GapWaitNS                  uint64           `json:"reassembly_resolved_gap_wait_ns"`
+	GapReportsSent             uint64           `json:"gap_reports_sent"`
+	RepairRequests             uint64           `json:"repair_records_requested"`
+	RepairAdmitted             uint64           `json:"repair_records_admitted"`
+	RepairWireBytes            uint64           `json:"repair_wire_bytes"`
+	RepairCancelled            uint64           `json:"repair_cancelled_by_receipt"`
+	RepairAckAfter             uint64           `json:"repair_acknowledged_after_admission"`
 	DeliveryFlight             int              `json:"delivery_flight_bytes"`
 	DeliveryWindow             int              `json:"delivery_window_bytes"`
 }
@@ -1017,8 +1004,19 @@ func (s *Session) Snapshot() Snapshot {
 	defer s.mu.Unlock()
 	snapshot := Snapshot{BulkDelivered: s.delivery.totalDelivered, ReceivedPayload: s.receivedPayload.Load(), ExitOpens: s.exitOpens.snapshot(), BulkPacingRateBPS: int64(s.delivery.pacingRate(time.Now())), BulkPacingDeferrals: s.delivery.pacer.deferrals, InteractiveReceiptRTTMS: s.delivery.controlRTT.Milliseconds(), InteractiveReceiptMinRTTMS: s.delivery.controlBase.Milliseconds(), InteractiveQueueLimited: time.Now().Before(s.delivery.controlSlowUntil), BulkSaturatedMinRTTMS: s.delivery.saturatedBase.Milliseconds(), BulkDeliveryHorizonMS: s.delivery.horizon.Milliseconds(), BulkSmoothedRTTMS: s.delivery.bulkRTT.Milliseconds(), BulkReceiptRTTMS: s.delivery.base.Milliseconds(), BulkDeliveryRateBPS: int64(s.delivery.rate), BulkWindowLimited: s.delivery.limited && s.delivery.flight+maxPayload > s.delivery.allowance(), OpenRefusals: s.openRefusals.Load(), OpenWaits: s.openWaits.Load(), Streams: len(s.streams), PendingPackets: len(s.pending), PendingBytes: s.pendingBytes,
 		DeliveryRTTMS: s.rtt.Milliseconds(), Closed: s.err != nil, BulkOutstanding: s.bulkOutstanding,
-		ReceiveBuffered: s.receiveBuffered.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
+		ReceiveBuffered: s.receiveBuffered.Load(), ReadyBuffered: s.readyBuffered.Load(), GapBuffered: s.gapBuffered.Load(), ConsumedPayload: s.consumedPayload.Load(), DuplicatePayload: s.duplicatePayload.Load(), GapOpened: s.gapOpened.Load(), GapResolved: s.gapResolved.Load(), GapAborted: s.gapAborted.Load(), GapWaitNS: s.gapWaitNS.Load(), ReceiptBackpressure: s.receiptRetries.Load(), Retransmissions: s.retransmissions,
 		DeliveryFlight: s.delivery.flight, DeliveryWindow: s.delivery.allowance()}
+	for _, p := range s.pending {
+		if p.kind == frameData && !p.priority && p.attempts == 0 {
+			snapshot.UnsentBulkBytes += len(p.wire)
+		}
+	}
+	if s.receipts != nil {
+		snapshot.ReceiptQueueDepth = s.receipts.size()
+	}
+	snapshot.ReceiptQueueRefusals = s.receiptRefusals.Load()
+	snapshot.GapReportsSent = s.gapReportsSent.Load()
+	snapshot.RepairRequests, snapshot.RepairAdmitted, snapshot.RepairWireBytes, snapshot.RepairCancelled, snapshot.RepairAckAfter = s.repairRequests, s.repairAdmitted, s.repairBytes, s.repairCancelled, s.repairAckAfter
 	snapshot.PeerDemandFresh = !s.peerDemandAt.IsZero() && time.Since(s.peerDemandAt) < 6*time.Second
 	if snapshot.PeerDemandFresh {
 		snapshot.PeerBulkPending = s.peerBulkPending

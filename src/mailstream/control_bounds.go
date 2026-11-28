@@ -2,7 +2,9 @@ package mailstream
 
 // Message count is independent of the byte ledger: tiny control messages must
 // not accumulate indefinitely. All fields below are owned by Account.mu.
-const controlMessageLimit = 2048
+// Ordinary publications stop at 384, leaving a bounded 128-message
+// recovery reserve. Never increase the provider message ceiling for retries.
+const controlMessageLimit = 384
 const controlRecoveryMessages = 128
 const controlCollectionMessages = controlMessageLimit * 3 / 4
 const controlCollectionBytes = 1 << 20

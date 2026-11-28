@@ -111,6 +111,9 @@ type mailAccountState struct {
 	dataAppendCount, controlAppendCount                        atomic.Uint64
 	dataMIMEBytes, controlMIMEBytes                            atomic.Uint64
 	appendLatency                                              atomic.Int64
+	bulkService                                                bulkService    // Account.mu
+	bulkReceipt                                                receiptService // Account.mu
+	bulkInFlight                                               atomic.Int64
 	interactiveQueueUS, interactiveTagUS, interactiveAppendUS  atomic.Int64
 	controlServiceMean, controlServiceJitter, controlServiceAt atomic.Int64
 	controlReconnects                                          atomic.Uint64
@@ -159,6 +162,8 @@ type IMAPLink struct {
 	bulkBytes           int
 	bulkPackets         int
 	bulkStartupBytes    int
+	bulkEpoch           uint64
+	bulkExploreCursor   uint64
 	feedbackAccount     uint64
 	feedbackPackets     int
 	feedbackAt          time.Time
@@ -389,6 +394,11 @@ func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 	if service >= 40*time.Millisecond {
 		return 16 * time.Millisecond
 	}
+	if service <= 10*time.Millisecond {
+		// The receipt owner already coalesces a bounded batch. On a fast
+		// provider, avoid adding a second long wait to every ACK/WINDOW.
+		return 6 * time.Millisecond
+	}
 	return 12 * time.Millisecond
 }
 
@@ -415,6 +425,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		peerAllowed[i] = ((!l.client && priority) || !matched || l.peerSession != packetID || len(l.peers) == 0 || l.peers[a.config.ID]) && (!matched || l.grantSession != packetID || l.grant[a.config.ID]) && (!matched || l.remoteActive == nil || l.remoteActive[a.config.ID]) && (!matched || !l.remoteUnavailable[a.config.ID])
 	}
 	start := int(l.roundRobin % uint64(len(l.accounts)))
+	rankBulk := false
 	if feedback {
 		if l.feedbackAt.IsZero() || time.Since(l.feedbackAt) >= l.feedbackCoalesceDelay() || l.feedbackPackets >= 16 {
 			l.feedbackAccount = l.roundRobin % uint64(len(l.accounts))
@@ -433,6 +444,17 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if last == 0 || now.Sub(time.Unix(0, last)) > time.Second {
 			l.bulkStartupBytes = initialDeliveryWindow
 			l.bulkBytes, l.bulkPackets = 0, 0
+		}
+		if l.bulkPackets == 0 && l.bulkStartupBytes <= 0 {
+			l.bulkEpoch++
+			if l.bulkEpoch%8 == 0 {
+				// Exploration has its own cursor; an idle or newly available
+				// path is never permanently excluded by a stale estimate.
+				start = int(l.bulkExploreCursor % uint64(len(l.accounts)))
+				l.bulkExploreCursor++
+			} else {
+				rankBulk = true
+			}
 		}
 	}
 	l.mu.Unlock()
@@ -455,6 +477,9 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		order = l.idleInteractiveOrder(start, peerAllowed, exclude)
 	}
 	work := mailWork{body: bytes.Clone(body), control: priority, feedback: feedback, recovery: recovery, charge: len(body)*3/2 + 512}
+	if rankBulk {
+		order = l.bulkPublicationOrder(start, peerAllowed, exclude, work.charge, time.Now())
+	}
 	failed := 0
 	// Preserve round-robin ties. Give fresh control traffic one bounded
 	// scan for an idle independent publisher before falling back to ordinary
@@ -524,8 +549,8 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 			if priority {
 				a.controlQueued++
 			}
+			a.sentPacketLocked(body, !priority)
 			a.mu.Unlock()
-			a.sentPacket(body)
 			if feedback {
 				l.mu.Lock()
 				l.feedbackAccount = uint64(index)
@@ -740,6 +765,7 @@ func (a *mailAccountState) closeData() {
 	a.data = nil
 	a.dataDone = nil
 	a.id = SessionID{}
+	a.bulkReceipt = receiptService{}
 	a.mu.Unlock()
 	if stop != nil {
 		stop()
@@ -1468,6 +1494,9 @@ func (a *mailAccountState) run() {
 			a.link.note("append", a.config.ID, packet, generation, work.control)
 		}
 		appendStarted := time.Now()
+		if segment != nil {
+			a.bulkInFlight.Add(int64(len(encoded)))
+		}
 		cmd, startErr := target.startAppend(folder, encoded)
 		if work.control {
 			lastControlWrite = time.Now()
@@ -1476,6 +1505,9 @@ func (a *mailAccountState) run() {
 			lastBulkWrite = lastWrite
 		}
 		if startErr != nil {
+			if segment != nil {
+				a.bulkInFlight.Add(-int64(len(encoded)))
+			}
 			if a.parking.Load() {
 				continue
 			}
@@ -1490,6 +1522,9 @@ func (a *mailAccountState) run() {
 		go func() {
 			defer appendWait.Done()
 			result, err := cmd.Wait()
+			if segment != nil {
+				a.bulkInFlight.Add(-int64(len(encoded)))
+			}
 			if err == nil {
 				if segment == nil {
 					a.controlAppended(result, len(encoded))
@@ -1555,69 +1590,78 @@ type MailSnapshot struct {
 	Lines             []MailAccountSnapshot `json:"lines"`
 }
 type MailAccountSnapshot struct {
-	ControlMessageReservations uint64 `json:"control_message_reservations"`
-	ControlMessageLimit        int    `json:"control_message_limit"`
-	ControlRecoveryReserve     int    `json:"control_recovery_reserve"`
-	ControlBackpressure        bool   `json:"control_backpressure"`
-	ControlOutgoingBytes       int    `json:"control_outgoing_retained_bytes"`
-	ControlIncomingBytes       int    `json:"control_incoming_retained_bytes"`
-	ControlOutstanding         int    `json:"control_outstanding"`
-	ControlCollected           uint64 `json:"control_messages_collected"`
-	AbandonedEmptied           uint64 `json:"abandoned_folders_emptied"`
-	StorageRecoveryDeferred    bool   `json:"storage_recovery_deferred"`
-	StoragePressure            bool   `json:"storage_pressure"`
-	PeerStoragePressure        bool   `json:"peer_storage_pressure"`
-	StorageRecoveryReady       bool   `json:"storage_recovery_ready"`
-	MaintenanceFailure         string `json:"maintenance_failure,omitempty"`
-	Housekeeping               bool   `json:"housekeeping"`
-	RecoveryFailure            string `json:"recovery_failure,omitempty"`
-	ControlPhase               int32  `json:"control_phase"`
-	ControlCursor              uint32 `json:"control_cursor"`
-	ControlCount               uint32 `json:"control_count"`
-	DataAppended               uint64 `json:"data_appended_messages"`
-	ControlAppended            uint64 `json:"control_appended_messages"`
-	DataMIMEBytes              uint64 `json:"data_mime_bytes"`
-	ControlMIMEBytes           uint64 `json:"control_mime_bytes"`
-	AppendCompletionMS         int64  `json:"append_completion_ms"`
-	InteractiveQueueUS         int64  `json:"interactive_queue_last_us"`
-	InteractiveTagUS           int64  `json:"interactive_tag_wait_last_us"`
-	InteractiveAppendUS        int64  `json:"interactive_append_last_us"`
-	ControlReconnects          uint64 `json:"control_reconnects"`
-	ControlPublicationMeanUS   int64  `json:"control_publication_mean_us"`
-	ControlPublicationJitterUS int64  `json:"control_publication_jitter_us"`
-	ControlPollMS              int64  `json:"control_poll_ms"`
-	EmptyControlFetches        uint64 `json:"empty_control_fetches"`
-	QueuedMIMEBytes            int    `json:"queued_mime_bytes"`
-	StartupAttempts            uint32 `json:"startup_attempts"`
-	StartupRetryAtMS           int64  `json:"startup_retry_at_ms,omitempty"`
-	PeerVerified               bool   `json:"peer_verified"`
-	PeerUnavailable            bool   `json:"peer_unavailable"`
-	Account                    string `json:"account"`
-	Allocated                  bool   `json:"allocated"`
-	PeerActive                 bool   `json:"peer_active"`
-	Stage                      string `json:"stage"`
-	Failure                    string `json:"failure,omitempty"`
-	Ready                      bool   `json:"ready"`
-	Writer                     bool   `json:"writer"`
-	ControlWriter              bool   `json:"control_writer"`
-	WriterRecovering           bool   `json:"writer_recovering"`
-	WriterReconnects           uint64 `json:"writer_reconnects"`
-	WriterRecoveryReason       string `json:"writer_recovery_reason,omitempty"`
-	Data                       bool   `json:"data"`
-	RetainedBytes              int    `json:"retained_bytes"`
-	BulkHeadroomBytes          int    `json:"bulk_headroom_bytes"`
-	BulkBlocked                bool   `json:"bulk_blocked"`
-	CollectionPageLimit        uint64 `json:"collection_page_limit"`
-	ReservedBytes              int    `json:"reserved_retention_bytes"`
-	RecoveredBytes             int    `json:"recovered_retention_bytes"`
-	DataPhase                  int32  `json:"data_phase"`
-	DataCursor                 uint32 `json:"data_cursor"`
-	DataCount                  uint32 `json:"data_count"`
-	DataGeneration             uint32 `json:"data_generation"`
-	RTTMillis                  int64  `json:"rtt_ms"`
-	RTTFresh                   bool   `json:"rtt_fresh"`
-	IMAPLatencyFresh           bool   `json:"imap_latency_fresh"`
-	IMAPLatencyMillis          int64  `json:"imap_latency_ms"`
+	ControlMessageReservations uint64  `json:"control_message_reservations"`
+	ControlMessageLimit        int     `json:"control_message_limit"`
+	ControlRecoveryReserve     int     `json:"control_recovery_reserve"`
+	ControlBackpressure        bool    `json:"control_backpressure"`
+	ControlOutgoingBytes       int     `json:"control_outgoing_retained_bytes"`
+	ControlIncomingBytes       int     `json:"control_incoming_retained_bytes"`
+	ControlOutstanding         int     `json:"control_outstanding"`
+	ControlCollected           uint64  `json:"control_messages_collected"`
+	AbandonedEmptied           uint64  `json:"abandoned_folders_emptied"`
+	StorageRecoveryDeferred    bool    `json:"storage_recovery_deferred"`
+	StoragePressure            bool    `json:"storage_pressure"`
+	PeerStoragePressure        bool    `json:"peer_storage_pressure"`
+	StorageRecoveryReady       bool    `json:"storage_recovery_ready"`
+	MaintenanceFailure         string  `json:"maintenance_failure,omitempty"`
+	Housekeeping               bool    `json:"housekeeping"`
+	RecoveryFailure            string  `json:"recovery_failure,omitempty"`
+	ControlPhase               int32   `json:"control_phase"`
+	ControlCursor              uint32  `json:"control_cursor"`
+	ControlCount               uint32  `json:"control_count"`
+	DataAppended               uint64  `json:"data_appended_messages"`
+	ControlAppended            uint64  `json:"control_appended_messages"`
+	DataMIMEBytes              uint64  `json:"data_mime_bytes"`
+	ControlMIMEBytes           uint64  `json:"control_mime_bytes"`
+	AppendCompletionMS         int64   `json:"append_completion_ms"`
+	BulkPublicationMeanUS      int64   `json:"bulk_publication_mean_us"`
+	BulkPublicationJitterUS    int64   `json:"bulk_publication_jitter_us"`
+	BulkPublicationBytesPerSec float64 `json:"bulk_publication_mime_bytes_per_second"`
+	BulkPublicationFresh       bool    `json:"bulk_publication_fresh"`
+	BulkReceiptMeanUS          int64   `json:"bulk_receipt_mean_us"`
+	BulkReceiptJitterUS        int64   `json:"bulk_receipt_jitter_us"`
+	BulkReceiptSamples         uint64  `json:"bulk_receipt_samples"`
+	BulkReceiptFresh           bool    `json:"bulk_receipt_fresh"`
+	BulkInFlightMIMEBytes      int64   `json:"bulk_inflight_mime_bytes"`
+	InteractiveQueueUS         int64   `json:"interactive_queue_last_us"`
+	InteractiveTagUS           int64   `json:"interactive_tag_wait_last_us"`
+	InteractiveAppendUS        int64   `json:"interactive_append_last_us"`
+	ControlReconnects          uint64  `json:"control_reconnects"`
+	ControlPublicationMeanUS   int64   `json:"control_publication_mean_us"`
+	ControlPublicationJitterUS int64   `json:"control_publication_jitter_us"`
+	ControlPollMS              int64   `json:"control_poll_ms"`
+	EmptyControlFetches        uint64  `json:"empty_control_fetches"`
+	QueuedMIMEBytes            int     `json:"queued_mime_bytes"`
+	StartupAttempts            uint32  `json:"startup_attempts"`
+	StartupRetryAtMS           int64   `json:"startup_retry_at_ms,omitempty"`
+	PeerVerified               bool    `json:"peer_verified"`
+	PeerUnavailable            bool    `json:"peer_unavailable"`
+	Account                    string  `json:"account"`
+	Allocated                  bool    `json:"allocated"`
+	PeerActive                 bool    `json:"peer_active"`
+	Stage                      string  `json:"stage"`
+	Failure                    string  `json:"failure,omitempty"`
+	Ready                      bool    `json:"ready"`
+	Writer                     bool    `json:"writer"`
+	ControlWriter              bool    `json:"control_writer"`
+	WriterRecovering           bool    `json:"writer_recovering"`
+	WriterReconnects           uint64  `json:"writer_reconnects"`
+	WriterRecoveryReason       string  `json:"writer_recovery_reason,omitempty"`
+	Data                       bool    `json:"data"`
+	RetainedBytes              int     `json:"retained_bytes"`
+	BulkHeadroomBytes          int     `json:"bulk_headroom_bytes"`
+	BulkBlocked                bool    `json:"bulk_blocked"`
+	CollectionPageLimit        uint64  `json:"collection_page_limit"`
+	ReservedBytes              int     `json:"reserved_retention_bytes"`
+	RecoveredBytes             int     `json:"recovered_retention_bytes"`
+	DataPhase                  int32   `json:"data_phase"`
+	DataCursor                 uint32  `json:"data_cursor"`
+	DataCount                  uint32  `json:"data_count"`
+	DataGeneration             uint32  `json:"data_generation"`
+	RTTMillis                  int64   `json:"rtt_ms"`
+	RTTFresh                   bool    `json:"rtt_fresh"`
+	IMAPLatencyFresh           bool    `json:"imap_latency_fresh"`
+	IMAPLatencyMillis          int64   `json:"imap_latency_ms"`
 	UploadBytes, DownloadBytes uint64
 }
 
@@ -1672,6 +1716,15 @@ func (l *IMAPLink) Snapshot() MailSnapshot {
 		line.DataAppended, line.ControlAppended = a.dataAppendCount.Load(), a.controlAppendCount.Load()
 		line.DataMIMEBytes, line.ControlMIMEBytes = a.dataMIMEBytes.Load(), a.controlMIMEBytes.Load()
 		line.AppendCompletionMS = time.Duration(a.appendLatency.Load()).Milliseconds()
+		line.BulkPublicationMeanUS = a.bulkService.mean.Microseconds()
+		line.BulkPublicationJitterUS = a.bulkService.jitter.Microseconds()
+		line.BulkPublicationBytesPerSec = a.bulkService.bytesPerSecond
+		line.BulkPublicationFresh = a.bulkService.fresh(time.Now())
+		line.BulkReceiptMeanUS = a.bulkReceipt.mean.Microseconds()
+		line.BulkReceiptJitterUS = a.bulkReceipt.jitter.Microseconds()
+		line.BulkReceiptSamples = a.bulkReceipt.samples
+		line.BulkReceiptFresh = a.bulkReceipt.fresh(time.Now())
+		line.BulkInFlightMIMEBytes = a.bulkInFlight.Load()
 		line.InteractiveQueueUS = a.interactiveQueueUS.Load()
 		line.InteractiveTagUS = a.interactiveTagUS.Load()
 		line.InteractiveAppendUS = a.interactiveAppendUS.Load()
@@ -2288,6 +2341,10 @@ func (a *mailAccountState) appendCompleted(control bool, n int, started time.Tim
 	} else {
 		a.dataAppendCount.Add(1)
 		a.dataMIMEBytes.Add(uint64(n))
+		now := time.Now()
+		a.mu.Lock()
+		a.bulkService.observe(n, now.Sub(started), now)
+		a.mu.Unlock()
 	}
 	sample := int64(time.Since(started))
 	for old := a.appendLatency.Load(); ; old = a.appendLatency.Load() {
