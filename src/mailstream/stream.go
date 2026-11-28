@@ -131,11 +131,14 @@ func (s *Stream) accept(f frame) error {
 		}
 		s.updateReassemblyLocked(before, now, false)
 	case frameReset:
-		if f.offset != 0 || len(f.data) != 0 {
+		if len(f.data) != 0 || f.offset != 0 && (s.session.server || !validOpenFailure(f.offset)) {
 			return ErrProtocol
 		}
 		s.cancel()
 		s.err = ErrClosed
+		if f.offset != 0 && !s.isOpen {
+			s.err = RemoteOpenError{Reason: OpenFailureReason(f.offset)}
+		}
 		s.session.abandonStream(s.id)
 		if err := s.consumedLocked(s.sendOffset); err != nil {
 			return err
@@ -359,7 +362,9 @@ func (s *Stream) CloseWrite() error {
 	s.mu.Unlock()
 	return s.session.send(s.session.ctx, frame{kind: frameFIN, stream: s.id, offset: offset}, true)
 }
-func (s *Stream) Close() error {
+func (s *Stream) Close() error { return s.closeWithReason(0) }
+
+func (s *Stream) closeWithReason(reason OpenFailureReason) error {
 	s.closeOnce.Do(func() {
 		s.cancel()
 		s.mu.Lock()
@@ -399,7 +404,7 @@ func (s *Stream) Close() error {
 		if !graceful && !peerReset {
 			ctx, cancel := context.WithTimeout(s.session.ctx, time.Second)
 			defer cancel()
-			_ = s.session.send(ctx, frame{kind: frameReset, stream: s.id}, true)
+			_ = s.session.send(ctx, frame{kind: frameReset, stream: s.id, offset: uint64(reason)}, true)
 		}
 	})
 	return nil

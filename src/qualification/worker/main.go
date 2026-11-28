@@ -149,6 +149,8 @@ type result struct {
 	Error                        string         `json:"error,omitempty"`
 	StartupMS                    int64          `json:"startup_ms"`
 	IdleMS, LoadedMS, AfterMS    []float64
+	TransportIdleMS              []float64 `json:"transport_idle_ms,omitempty"`
+	TransportIdleFailures        uint64    `json:"transport_idle_failures,omitempty"`
 	Phases                       []map[string]any
 	Provider                     any
 	Diagnostics                  json.RawMessage `json:"diagnostics,omitempty"`
@@ -180,6 +182,7 @@ func run() (err error) {
 	timedSpeedtest := flag.Bool("timed-speedtest", false, "record expected deadline-aborted download requests, including pending headers")
 	duplex := flag.Bool("duplex", false, "simultaneous upload and download")
 	cancelDownload := flag.Duration("cancel-download-after", 0, "simulate a timed speedtest abandoning its download, then verify a new HTTPS connection")
+	transportIdle := flag.Duration("transport-idle-only", 0, "diagnostic only: sample native transport heartbeat without opening application TCP streams")
 	idleObserve := flag.Duration("idle-observe", 0, "minimum observation time before load")
 	idleProbes := flag.Int("idle-probes", 20, "small HTTPS messages before load")
 	postProbes := flag.Int("post-probes", 12, "small HTTPS messages after load")
@@ -194,6 +197,9 @@ func run() (err error) {
 	handoverOutage := flag.Duration("handover-outage", 0, "simulate protected socket outage and bearer replacement; verify fresh native TLS after recovery")
 	accountProbes := flag.Bool("account-probes", false, "rotate real same-mailbox request/reply probes throughout the workload")
 	flag.Parse()
+	if *transportIdle < 0 || *transportIdle > 120*time.Second || *transportIdle > 0 && (*frontend != "native-tun" || *accountProbes || *lightCycles != 0 || *handoverOutage != 0) {
+		return errors.New("invalid idle-only fixture")
+	}
 	if *handoverOutage < 0 || *handoverOutage > 30*time.Second || (*handoverOutage > 0 && *frontend != "native-tun") {
 		return errors.New("invalid handover fixture")
 	}
@@ -257,7 +263,7 @@ func run() (err error) {
 			_ = json.NewDecoder(response.Body).Decode(&r.Provider)
 		}
 	}()
-	budget := time.Duration(*lightCycles)*75*time.Second + 2*(*duration)*time.Duration(*cycles) + 90*time.Second
+	budget := time.Duration(*lightCycles)*75*time.Second + 2*(*duration)*time.Duration(*cycles) + 90*time.Second + *transportIdle
 	if *recoveredMiB > 0 || *recoveredVector != "" {
 		budget += 60*time.Second + 2*(*duration)
 	}
@@ -477,6 +483,59 @@ func run() (err error) {
 		}
 	}
 	r.StartupMS = time.Since(started).Milliseconds()
+	if *transportIdle > 0 {
+		r.Stage = "transport_idle"
+		type snapshot struct {
+			Probe  tunnel.ProbeSnapshot
+			Native struct{ OpenAttempts, OpenEstablished uint64 }
+		}
+		read := func() (snapshot, error) {
+			var snap snapshot
+			e := json.Unmarshal([]byte(client.Diagnostics()), &snap)
+			return snap, e
+		}
+		first, e := read()
+		if e != nil {
+			return e
+		}
+		previous := first.Probe.SampledAtMS
+		deadline := time.NewTimer(*transportIdle)
+		defer deadline.Stop()
+		tick := time.NewTicker(100 * time.Millisecond)
+		defer tick.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-deadline.C:
+				final, e := read()
+				if e != nil {
+					return e
+				}
+				r.TransportIdleFailures = final.Probe.Failures - first.Probe.Failures
+				if final.Native.OpenAttempts != first.Native.OpenAttempts || final.Native.OpenEstablished != first.Native.OpenEstablished {
+					return errors.New("application traffic in transport-idle fixture")
+				}
+				if len(r.TransportIdleMS) < int(*transportIdle/(2*time.Second))-2 || r.TransportIdleFailures != 0 {
+					return errors.New("insufficient successful idle heartbeat evidence")
+				}
+				r.Stage = "transport_idle_complete"
+				r.Success = true
+				return nil
+			case <-tick.C:
+				snap, e := read()
+				if e != nil {
+					return e
+				}
+				if snap.Probe.SampledAtMS > previous {
+					previous = snap.Probe.SampledAtMS
+					if snap.Probe.Failure == "" && snap.Probe.RTTMillis > 0 {
+						r.TransportIdleMS = append(r.TransportIdleMS, float64(snap.Probe.RTTMillis))
+					}
+				}
+			}
+		}
+	}
 	var probePhase atomic.Value
 	probePhase.Store("idle")
 	if *accountProbes {

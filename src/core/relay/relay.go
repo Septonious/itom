@@ -30,13 +30,13 @@ import (
 
 // Config contains no externally managed certificate paths.
 type Config struct {
-	Address        string `json:"address"`
-	Listen         string `json:"listen,omitempty"`
-	Key            string `json:"key"`
-	TimeoutMS      int    `json:"connect_timeout_ms,omitempty"`
-	DirectFallback *bool  `json:"direct_fallback,omitempty"`
-	RetrySeconds   int    `json:"retry_seconds,omitempty"`
-	MaxConnections int    `json:"max_connections,omitempty"`
+	Address   string `json:"address"`
+	Listen    string `json:"listen,omitempty"`
+	Key       string `json:"key"`
+	TimeoutMS int    `json:"connect_timeout_ms,omitempty"`
+
+	RetrySeconds   int `json:"retry_seconds,omitempty"`
+	MaxConnections int `json:"max_connections,omitempty"`
 }
 
 // ErrTarget describes a destination failure, not an unavailable exit.
@@ -103,7 +103,7 @@ func keyBytes(raw string) ([]byte, error) {
 // ai-generated: domain-separated identities authenticate both roles using the shared secret.
 func identity(key []byte, role string) ed25519.PrivateKey {
 	h := hmac.New(sha256.New, key)
-	_, _ = h.Write([]byte("olcrtc-relay-v1/" + role))
+	_, _ = h.Write([]byte("ITOM encrypted exit v1\x00" + role))
 	return ed25519.NewKeyFromSeed(h.Sum(nil))
 }
 
@@ -123,15 +123,15 @@ func policy(c Config, server bool) (*tls.Config, error) {
 	if e != nil {
 		return nil, e
 	}
-	template := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "olcrtc-relay-v1-" + role}, NotBefore: time.Unix(0, 0), NotAfter: time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}}
+	template := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "itom-exit-v1-" + role}, NotBefore: time.Unix(0, 0), NotAfter: time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}}
 	der, e := x509.CreateCertificate(rand.Reader, template, template, private.Public(), private)
 	if e != nil {
 		return nil, e
 	}
-	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{relayProtocolV2}, SessionTicketsDisabled: true}
+	p := &tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: private}}, NextProtos: []string{Protocol}, SessionTicketsDisabled: true}
 	p.InsecureSkipVerify = true //nolint:gosec // mandatory VerifyConnection pins the PSK-derived identity, no public CA or hostname.
 	p.VerifyConnection = func(cs tls.ConnectionState) error {
-		if cs.NegotiatedProtocol != relayProtocolV2 || len(cs.PeerCertificates) != 1 {
+		if cs.NegotiatedProtocol != Protocol || len(cs.PeerCertificates) != 1 {
 			return errors.New("relay authentication failed")
 		}
 		pub, ok := cs.PeerCertificates[0].PublicKey.(ed25519.PublicKey)
@@ -148,12 +148,15 @@ func policy(c Config, server bool) (*tls.Config, error) {
 
 // Dialer shares only TLS settings and cooldown state, never destination TCP streams.
 type Dialer struct {
-	cfg               Config
-	tls               *tls.Config
-	mu                sync.Mutex
-	retry             time.Time
-	creditConnections atomic.Uint64
-	Log               func(string)
+	cfg                                                    Config
+	tls                                                    *tls.Config
+	mu                                                     sync.Mutex
+	retry                                                  time.Time
+	probing                                                bool
+	generation                                             uint64
+	fallbackAttempts, fallbackEstablished, exitUnavailable atomic.Uint64
+	creditConnections                                      atomic.Uint64
+	Log                                                    func(string)
 }
 
 // ai-generated: prepare a reusable authenticated dialer.
@@ -174,40 +177,74 @@ func New(c Config) (*Dialer, error) {
 	return &Dialer{cfg: c, tls: p}, nil
 }
 
-// Direct fallback must be explicitly enabled. No user payload is replayed.
+// Dial automatically uses ingress-side direct egress when the encrypted
+// exit is unavailable. Only setup failures qualify: a confirmed destination
+// denial is not an exit outage, and no application bytes have been sent yet.
+// A single recovery attempt after cooldown prevents a reconnect storm.
 func (d *Dialer) Dial(ctx context.Context, target string, direct func(context.Context, string) (net.Conn, error)) (net.Conn, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if err := validTarget(target); err != nil {
+		return nil, err
+	}
 	d.mu.Lock()
-	try := !time.Now().Before(d.retry)
+	retrying := !d.retry.IsZero()
+	try := !retrying || (!d.probing && !time.Now().Before(d.retry))
+	generation := d.generation
+	if try && retrying {
+		d.probing = true
+	}
 	d.mu.Unlock()
 	if try {
-		conn, e := d.Connect(ctx, target)
-		if e == nil {
-			d.mu.Lock()
-			recovered := !d.retry.IsZero()
-			d.retry = time.Time{}
-			d.mu.Unlock()
-			if recovered && d.Log != nil {
-				d.Log("exit recovered; new connections use exit")
+		conn, err := d.Connect(ctx, target)
+		available := err == nil || errors.Is(err, ErrTarget)
+		canceled := ctx.Err() != nil
+		d.mu.Lock()
+		changed := d.generation == generation
+		recovered, failed := false, false
+		if changed {
+			if retrying {
+				d.probing = false
 			}
+			if available {
+				recovered = retrying
+				if recovered {
+					d.generation++
+					d.retry = time.Time{}
+				}
+			} else if !canceled {
+				d.retry = time.Now().Add(time.Duration(d.cfg.RetrySeconds) * time.Second)
+				d.generation++
+				failed = true
+			}
+		}
+		d.mu.Unlock()
+		if recovered && d.Log != nil {
+			d.Log("event=exit_recovered route=encrypted protocol=" + Protocol)
+		}
+		if failed {
+			d.exitUnavailable.Add(1)
+			if d.Log != nil {
+				d.Log("event=exit_unavailable route=direct protocol=" + Protocol)
+			}
+		}
+		if err == nil {
 			return conn, nil
 		}
-		if !errors.Is(e, ErrTarget) {
-			d.mu.Lock()
-			first := !time.Now().Before(d.retry)
-			d.retry = time.Now().Add(time.Duration(d.cfg.RetrySeconds) * time.Second)
-			d.mu.Unlock()
-			if first && d.Log != nil {
-				d.Log("event=exit_unavailable retry_cooldown=true")
-			}
-		}
-		if d.cfg.DirectFallback == nil || !*d.cfg.DirectFallback {
-			return nil, e
+		if available || canceled {
+			return nil, err
 		}
 	}
-	if d.cfg.DirectFallback == nil || !*d.cfg.DirectFallback {
-		return nil, errors.New("exit unavailable; direct fallback disabled")
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return direct(ctx, target)
+	d.fallbackAttempts.Add(1)
+	conn, err := direct(ctx, target)
+	if err == nil && conn != nil {
+		d.fallbackEstablished.Add(1)
+	}
+	return conn, err
 }
 
 // ai-generated: authenticate one TLS connection and wait for a bounded destination acknowledgement.
@@ -219,10 +256,12 @@ func (d *Dialer) Connect(ctx context.Context, target string) (net.Conn, error) {
 	defer cancel()
 	raw, e := (&net.Dialer{KeepAlive: 30 * time.Second}).DialContext(setup, "tcp", d.cfg.Address)
 	if e != nil {
-		return nil, fmt.Errorf("exit dial: %w", e)
+		return nil, fmt.Errorf("%w: %w", mailstream.ErrExitRelayDial, e)
 	}
 	// Credit framing is mandatory on every bearer; reject legacy peers.
 	conn := tls.Client(raw, d.tls)
+	stop := context.AfterFunc(setup, func() { _ = raw.Close() })
+	defer stop()
 	ok := false
 	defer func() {
 		if !ok {
@@ -232,20 +271,36 @@ func (d *Dialer) Connect(ctx context.Context, target string) (net.Conn, error) {
 	deadline, _ := setup.Deadline()
 	_ = conn.SetDeadline(deadline)
 	if e = conn.HandshakeContext(setup); e != nil {
-		return nil, fmt.Errorf("exit TLS: %w", e)
+		return nil, fmt.Errorf("%w: %w", mailstream.ErrExitRelayTLS, e)
 	}
-	frame := make([]byte, 2+len(target))
-	binary.BigEndian.PutUint16(frame, uint16(len(target)))
-	copy(frame[2:], target)
+	frame := make([]byte, 3+len(target))
+	frame[0] = exitConnect
+	binary.BigEndian.PutUint16(frame[1:], uint16(len(target)))
+	copy(frame[3:], target)
 	if _, e = io.Copy(conn, bytes.NewReader(frame)); e != nil {
-		return nil, e
+		return nil, fmt.Errorf("%w: %w", mailstream.ErrExitRelaySetup, e)
 	}
 	var ack [1]byte
 	if _, e = io.ReadFull(conn, ack[:]); e != nil {
-		return nil, fmt.Errorf("exit acknowledgement: %w", e)
+		return nil, fmt.Errorf("%w: %w", mailstream.ErrExitRelaySetup, e)
 	}
 	if ack[0] != 0 {
-		return nil, ErrTarget
+		reason := mailstream.ErrExitConnect
+		// Fixed authenticated target result; unknown codes remain generic.
+		switch mailstream.OpenFailureReason(ack[0] ^ 0x80) {
+		case mailstream.OpenFailurePolicy:
+			reason = mailstream.ErrExitPolicy
+		case mailstream.OpenFailureDNS:
+			reason = mailstream.ErrExitDNS
+		case mailstream.OpenFailureTimeout:
+			reason = context.DeadlineExceeded
+		case mailstream.OpenFailureCanceled:
+			reason = context.Canceled
+		}
+		return nil, fmt.Errorf("%w: %w", ErrTarget, reason)
+	}
+	if !stop() || setup.Err() != nil {
+		return nil, fmt.Errorf("%w: %w", mailstream.ErrExitRelaySetup, setup.Err())
 	}
 	_ = conn.SetDeadline(time.Time{})
 	ok = true
@@ -362,6 +417,10 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 	if c.HandshakeContext(ctx) != nil {
 		return
 	}
+	var op [1]byte
+	if _, e := io.ReadFull(c, op[:]); e != nil || op[0] != exitConnect {
+		return
+	}
 	var h [2]byte
 	if _, e := io.ReadFull(c, h[:]); e != nil {
 		return
@@ -379,9 +438,16 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 	}
 	setup, cancel := context.WithTimeout(ctx, 5*time.Second)
 	out, e := dial(setup, "tcp", string(b))
+	setupErr := setup.Err()
 	cancel()
+	if e == nil && (out == nil || setupErr != nil) {
+		e = mailstream.ErrExitConnect
+	}
 	if e != nil {
-		_, _ = c.Write([]byte{1})
+		if out != nil {
+			_ = out.Close()
+		}
+		_, _ = c.Write([]byte{0x80 | byte(mailstream.ClassifyOpenFailure(e, false, setupErr))})
 		return
 	}
 	defer out.Close()
@@ -425,5 +491,5 @@ func serveConn(ctx context.Context, c *tls.Conn, dial targetDial, m *Metrics) {
 
 // Negotiated connection counts are diagnostic only, not a scheduling signal.
 func (d *Dialer) NegotiationCounts() map[string]uint64 {
-	return map[string]uint64{"credit": d.creditConnections.Load(), "legacy": 0}
+	return map[string]uint64{"credit": d.creditConnections.Load(), "legacy": 0, "direct_fallback_attempts": d.fallbackAttempts.Load(), "direct_fallback_established": d.fallbackEstablished.Load(), "exit_unavailable_transitions": d.exitUnavailable.Load()}
 }

@@ -79,7 +79,7 @@ func run(args []string) error {
 		if e != nil {
 			return e
 		}
-		log.Print("event=encrypted_exit_listening address=" + ln.Addr().String())
+		log.Print("event=encrypted_exit_listening protocol=" + relay.Protocol + " address=" + ln.Addr().String())
 		metrics := &relay.Metrics{}
 		done := make(chan struct{})
 		go func() {
@@ -120,7 +120,7 @@ func run(args []string) error {
 			return e
 		}
 		defer conn.Close()
-		fmt.Println("Authenticated encrypted exit TCP connection succeeded (no direct fallback).")
+		fmt.Println("Authenticated encrypted exit TCP connection succeeded (no direct fallback). Protocol: " + relay.Protocol)
 		return nil
 	case "admin-guard":
 		return adminserver.RunGuard(*state, *transaction)
@@ -205,7 +205,7 @@ func run(args []string) error {
 		}
 		if upstream != nil {
 			upstream.Log = logger
-			log.Print("event=encrypted_egress_enabled")
+			log.Print("event=encrypted_egress_enabled protocol=" + relay.Protocol + " fallback=automatic_direct")
 		}
 		e = tunnel.ServeManagedWithExit(ctx, cfg, filepath.Join(*state, "tunnel-server"), logger, admin.Dial, upstream)
 		if ctx.Err() != nil {

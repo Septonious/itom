@@ -3,6 +3,8 @@ package mobile
 import "sync/atomic"
 
 type trafficDiagnostics struct {
+	remoteOpenReasons                                                                   [11]atomic.Uint64
+	openVPN, openDirect, openBlocked                                                    atomic.Uint64
 	dnsWorkerRefusals, tcpWorkerRefusals                                                atomic.Uint64
 	openAttempts, openEstablished, openFailures, openTimeouts                           atomic.Uint64
 	workerRefusals, ipv6Blocked, udpBlocked, dnsFailures                                atomic.Uint64
@@ -11,6 +13,8 @@ type trafficDiagnostics struct {
 }
 
 type trafficSnapshot struct {
+	RemoteOpenReasons                                                                   map[string]uint64
+	OpenVPN, OpenDirect, OpenBlocked                                                    uint64
 	OpenPolicy, OpenCapacity, OpenClosed, OpenCanceled, OpenDNS, OpenRefused, OpenOther uint64
 	DNSWorkerRefusals, TCPWorkerRefusals                                                uint64
 	DNSWorkers, TCPWorkers                                                              int
@@ -29,6 +33,13 @@ type trafficSnapshot struct {
 func (c *Client) trafficSnapshot() trafficSnapshot {
 	d := &c.traffic
 	s := trafficSnapshot{OpenPolicy: d.openPolicy.Load(), OpenCapacity: d.openCapacity.Load(), OpenClosed: d.openClosed.Load(), OpenCanceled: d.openCanceled.Load(), OpenDNS: d.openDNS.Load(), OpenRefused: d.openRefused.Load(), OpenOther: d.openOther.Load(), DNSWorkerRefusals: d.dnsWorkerRefusals.Load(), TCPWorkerRefusals: d.tcpWorkerRefusals.Load(), DNSWorkers: len(c.dnsSlots), TCPWorkers: len(c.slots), OpenAttempts: d.openAttempts.Load(), OpenEstablished: d.openEstablished.Load(), OpenFailures: d.openFailures.Load(), OpenTimeouts: d.openTimeouts.Load(), WorkerRefusals: d.workerRefusals.Load(), IPv6Blocked: d.ipv6Blocked.Load(), UDPBlocked: d.udpBlocked.Load(), DNSFailures: d.dnsFailures.Load(), Opening: d.opening.Load(), ActiveTCP: c.tcp.Load(), Upload: c.up.Load(), Download: c.down.Load()}
+	s.RemoteOpenReasons = make(map[string]uint64)
+	for i, name := range []string{"", "policy", "dns", "connect", "timeout", "canceled", "other", "relay_dial", "relay_tls", "relay_setup", "relay_cooldown"} {
+		if i > 0 {
+			s.RemoteOpenReasons[name] = d.remoteOpenReasons[i].Load()
+		}
+	}
+	s.OpenVPN, s.OpenDirect, s.OpenBlocked = d.openVPN.Load(), d.openDirect.Load(), d.openBlocked.Load()
 	// Read existing atomic TUN-stack counters only when a snapshot is requested.
 	// No packet tracing, profiling worker or sampling timer runs on the phone.
 	c.mu.Lock()

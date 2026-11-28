@@ -107,10 +107,8 @@ func TestWrongKeyRejected(t *testing.T) {
 	}
 }
 
-// ai-generated: unavailable exit defaults to direct fallback and honors explicit opt-out.
-func TestDirectFallbackAndDisable(t *testing.T) {
-	on := true
-	d, e := New(Config{Address: "127.0.0.1:1", Key: strings.Repeat("ab", 32), TimeoutMS: 100, DirectFallback: &on})
+func TestAutomaticDirectFallback(t *testing.T) {
+	d, e := New(Config{Address: "127.0.0.1:1", Key: strings.Repeat("ab", 32), TimeoutMS: 100})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -123,13 +121,8 @@ func TestDirectFallbackAndDisable(t *testing.T) {
 		}
 		c.Close()
 	}
-	if calls != 2 || d.retry.IsZero() {
+	if calls != 2 || d.retry.IsZero() || d.NegotiationCounts()["direct_fallback_established"] != 2 {
 		t.Fatal("fallback/cooldown missing")
-	}
-	off := false
-	d.cfg.DirectFallback = &off
-	if _, e = d.Dial(context.Background(), "example.com:443", direct); e == nil || calls != 2 {
-		t.Fatal("fallback opt-out ignored")
 	}
 }
 

@@ -751,6 +751,9 @@ func (s *Session) apply(f frame) error {
 		s.mu.Unlock()
 		return nil
 	}
+	if f.kind == frameReset && f.offset != 0 && (s.server || !validOpenFailure(f.offset) || len(f.data) != 0) {
+		return ErrProtocol
+	}
 	if f.stream == 0 || f.stream%2 == 0 {
 		return ErrProtocol
 	}
@@ -809,12 +812,19 @@ func (s *Session) serveStream(stream *Stream, target string) {
 	s.exitOpens.attempts.Add(1)
 	conn, err := s.dial(WithCellularExit(ctx, s.mobileBearer.Load()), "tcp", target)
 	dialCompleted := dialTimeout.Stop()
+	if err == nil {
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		} else if conn == nil {
+			err = ErrExitConnect
+		}
+	}
 	s.exitOpens.record(err, !dialCompleted, ctx.Err())
 	if err != nil || !dialCompleted {
 		if conn != nil {
 			conn.Close()
 		}
-		stream.Close()
+		stream.closeWithReason(ClassifyOpenFailure(err, !dialCompleted, ctx.Err()))
 		return
 	}
 	defer conn.Close()

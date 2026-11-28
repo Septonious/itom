@@ -12,11 +12,12 @@ import (
 )
 
 // The TLS connection's TCP buffers alone cannot carry application backpressure
-// through a buffering intermediary. The required ALPN v2 protocol grants
+// through a buffering intermediary. The ITOM exit protocol grants
 // bounded, per-direction, consumed-byte credit. FIN is independent of WINDOW,
 // so a half-closed sender can still return credit for its incoming stream.
 const (
-	relayProtocolV2           = "olcrtc-relay/2"
+	Protocol                  = "itom-exit/1"
+	exitConnect          byte = 1
 	relayCreditWindow         = 512 << 10
 	relayFrameBytes           = 32 << 10
 	relayWindowThreshold      = 32 << 10

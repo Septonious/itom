@@ -28,10 +28,11 @@ import (
 	mailstream "itom.local/mailstream"
 )
 
-const TransportRevision = "itom-1-6-0-rc1-dev"
+const TransportRevision = "itom-1-6-0-rc2-dev"
 
 var ErrInsufficientAccounts = errors.New("MAILSTREAM_MINIMUM_THREE_ACCOUNTS")
 
+// Startup checks the authenticated local ingress echo, not the foreign exit.
 const pathHost = "path.mailstream.itom.invalid"
 
 type Dial = mailstream.NetworkDialer
@@ -297,7 +298,7 @@ func StartClientWithOptions(ctx context.Context, p servercfg.Profile, dir string
 	progressMu.Unlock()
 	report("", link)
 	recordRuntime := func() {
-		event := map[string]any{"Event": "client_runtime", "Revision": TransportRevision, "Client": client.Snapshot(), "Session": session.Snapshot(), "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()}
+		event := map[string]any{"Event": "client_runtime", "Revision": TransportRevision, "ProbeScope": "ingress_session_echo", "StartupPathScope": "ingress_local_echo", "Client": client.Snapshot(), "Session": session.Snapshot(), "Mail": link.Snapshot(), "SampledAtMS": time.Now().UnixMilli()}
 		if o.FrontendDiagnostics != nil {
 			event["Native"] = o.FrontendDiagnostics()
 		}
@@ -462,7 +463,7 @@ func (c *Client) Snapshot() ClientSnapshot {
 	return s
 }
 func (c *Client) Diagnostics() string {
-	raw, _ := json.Marshal(map[string]any{"Revision": TransportRevision, "Client": c.Snapshot(), "Session": c.session.Snapshot(), "Mail": c.link.Snapshot(), "Events": c.link.Events(), "Probe": c.Probe()})
+	raw, _ := json.Marshal(map[string]any{"Revision": TransportRevision, "ProbeScope": "ingress_session_echo", "StartupPathScope": "ingress_local_echo", "Client": c.Snapshot(), "Session": c.session.Snapshot(), "Mail": c.link.Snapshot(), "Events": c.link.Events(), "Probe": c.Probe()})
 	return string(raw)
 }
 func (c *Client) RecordNetworkEvent(code string, _ int64) {

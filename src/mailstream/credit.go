@@ -75,7 +75,7 @@ func (s *Session) closedFrameLocked(t *terminalStream, f frame) error {
 		}
 		t.consumed = consumed
 	case frameReset:
-		if len(f.data) != 0 || f.offset != 0 {
+		if len(f.data) != 0 || f.offset != 0 && (s.server || !validOpenFailure(f.offset)) {
 			return ErrProtocol
 		}
 		if err := s.refundBulkLocked(t.consumed, t.sent); err != nil {

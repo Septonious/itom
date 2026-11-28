@@ -23,3 +23,14 @@ func TestRC16NativeOpenReasons(t *testing.T) {
 		t.Fatalf("unexpected native counts: %+v", s)
 	}
 }
+
+func TestRC2RemoteOpenDiagnosticsPreserveRelayReason(t *testing.T) {
+	c := new(Client)
+	for _, reason := range []mailstream.OpenFailureReason{mailstream.OpenFailureRelayTLS, mailstream.OpenFailureRelayCooldown, mailstream.OpenFailureDNS, mailstream.OpenFailureConnect} {
+		c.traffic.recordOpenFailure(mailstream.RemoteOpenError{Reason: reason})
+	}
+	s := c.trafficSnapshot()
+	if s.OpenFailures != 4 || s.OpenClosed != 0 || s.OpenDNS != 1 || s.OpenOther != 3 || s.RemoteOpenReasons["relay_tls"] != 1 || s.RemoteOpenReasons["relay_cooldown"] != 1 || s.RemoteOpenReasons["connect"] != 1 {
+		t.Fatalf("unexpected %+v", s)
+	}
+}

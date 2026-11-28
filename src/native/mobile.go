@@ -427,6 +427,7 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 	if ip, e := netip.ParseAddr(target.Host); e == nil {
 		if !ip.Is4() {
 			c.traffic.ipv6Blocked.Add(1)
+			c.traffic.openBlocked.Add(1)
 			return nil, netip.AddrPort{}, errors.New("IPV6_BLOCKED")
 		}
 		if fakePrefix.Contains(ip) {
@@ -441,6 +442,7 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 	ip, _ := netip.ParseAddr(originalHost)
 	route := c.route(originalHost, ip)
 	if route != "VPN" && route != "DIRECT" {
+		c.traffic.openBlocked.Add(1)
 		return nil, netip.AddrPort{}, socks.OpenError{Code: wire.ReasonPolicy}
 	}
 	// Apply domain rules BEFORE substituting the resolver's address. Synthetic
@@ -459,10 +461,12 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 	if c.routing != nil && c.resolver == nil && !ip.IsValid() { return nil, netip.AddrPort{}, errors.New("ROUTING_RESOLVER_MISSING") }
 	switch route {
 	case "VPN":
+		c.traffic.openVPN.Add(1)
 		pool := c.currentPool()
 		if pool == nil { return nil, netip.AddrPort{}, errors.New("NETWORK_TRANSPORT_UNAVAILABLE") }
 		return pool.Open(ctx, target)
 	case "DIRECT":
+		c.traffic.openDirect.Add(1)
 		conn, e := c.dialer.DialContext(ctx, "tcp4", net.JoinHostPort(target.Host, strconv.Itoa(int(target.Port))))
 		if e != nil {
 			return nil, netip.AddrPort{}, e
@@ -474,6 +478,7 @@ func (c *Client) openRoute(ctx context.Context, target wire.Connect) (socks.Stre
 		}
 		return tcp, netip.AddrPort{}, nil
 	default:
+		c.traffic.openBlocked.Add(1)
 		return nil, netip.AddrPort{}, socks.OpenError{Code: wire.ReasonPolicy}
 	}
 }

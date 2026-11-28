@@ -17,6 +17,23 @@ import (
 // Closed/unknown rather than being misreported as a proven policy failure.
 func (d *trafficDiagnostics) recordOpenFailure(err error) {
 	d.openFailures.Add(1)
+	var reason mailstream.RemoteOpenError
+	if errors.As(err, &reason) && reason.Reason >= mailstream.OpenFailurePolicy && reason.Reason <= mailstream.OpenFailureRelayCooldown {
+		d.remoteOpenReasons[reason.Reason].Add(1)
+		switch reason.Reason {
+		case mailstream.OpenFailurePolicy:
+			d.openPolicy.Add(1)
+		case mailstream.OpenFailureDNS:
+			d.openDNS.Add(1)
+		case mailstream.OpenFailureTimeout:
+			d.openTimeouts.Add(1)
+		case mailstream.OpenFailureCanceled:
+			d.openCanceled.Add(1)
+		default:
+			d.openOther.Add(1)
+		}
+		return
+	}
 	var remote socks.OpenError
 	var netErr net.Error
 	var dns *net.DNSError

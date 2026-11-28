@@ -89,7 +89,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--screen", action="store_true", help="one short measurement; never qualifies an RC")
-    parser.add_argument("--encrypted-exit", action="store_true", help="test the same native path via the OLCRTC-compatible TLS exit")
+    parser.add_argument("--encrypted-exit", action="store_true", help="test the same native path via the ITOM encrypted TLS exit")
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)

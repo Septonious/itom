@@ -11,6 +11,7 @@ import (
 	"io"
 	"net"
 	"net/mail"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -297,7 +298,8 @@ func (l *IMAPLink) Send(ctx context.Context, body []byte, priority bool) error {
 }
 
 // SendInteractive hedges an isolated small packet over two distinct ready
-// accounts. Both copies have identical authenticated ciphertext and nonce;
+// accounts, with a bounded third copy after a quiet interval. All copies
+// have identical authenticated ciphertext and nonce;
 // receiver replay handling applies it once. Bulk and credit/receipt traffic
 // never use this path. An unavailable second account never delays the first.
 func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
@@ -314,7 +316,13 @@ func (l *IMAPLink) SendInteractive(ctx context.Context, body []byte) error {
 	// burst already uses the whole pool; duplicating every tiny packet
 	// doubles provider command pressure during MULTI startup.
 	if len(l.accounts) > 1 && (last == 0 || now-last >= int64(20*time.Millisecond)) {
-		_, _ = l.send(ctx, body, true, first)
+		second, err := l.send(ctx, body, true, first)
+		// Only an isolated request on an otherwise idle carrier may spend a
+		// third publication. Never hedge a sustained interactive/bulk train.
+		bulk := l.lastBulk.Load()
+		if err == nil && len(l.accounts) >= 3 && (last == 0 || now-last >= int64(100*time.Millisecond)) && (bulk == 0 || now-bulk >= int64(time.Second)) {
+			_, _ = l.sendClassMode(ctx, body, true, first, false, false, false, second)
+		}
 	}
 	return nil
 }
@@ -405,7 +413,7 @@ func (l *IMAPLink) feedbackCoalesceDelay() time.Duration {
 func (l *IMAPLink) sendClass(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery bool) (*mailAccountState, error) {
 	return l.sendClassMode(ctx, body, priority, exclude, recovery, false, false)
 }
-func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery, feedback, negotiation bool) (*mailAccountState, error) {
+func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool, exclude *mailAccountState, recovery, feedback, negotiation bool, additionalExcludes ...*mailAccountState) (*mailAccountState, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -500,7 +508,7 @@ func (l *IMAPLink) sendClassMode(ctx context.Context, body []byte, priority bool
 		if !peerAllowed[index] {
 			continue
 		}
-		if a == exclude || !a.mu.TryLock() {
+		if a == exclude || slices.Contains(additionalExcludes, a) || !a.mu.TryLock() {
 			continue
 		}
 		if a.scaleBlocked.Load() && !negotiation {

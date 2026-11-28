@@ -10,26 +10,60 @@ import (
 	"time"
 )
 
-func TestRC5RelayDefaultFailClosed(t *testing.T) {
+// RC2 deliberately changes the ingress policy: direct egress during an exit
+// outage is mandatory, not an optional Android routing fallback.
+func TestRC2DirectFallbackThenEncryptedRecovery(t *testing.T) {
 	ln, e := net.Listen("tcp", "127.0.0.1:0")
 	if e != nil {
 		t.Fatal(e)
 	}
 	addr := ln.Addr().String()
 	ln.Close()
-	d, e := New(Config{Address: addr, Key: strings.Repeat("ab", 32), TimeoutMS: 100})
+	cfg := Config{Address: addr, Key: strings.Repeat("ab", 32), TimeoutMS: 500, RetrySeconds: 1}
+	d, e := New(cfg)
 	if e != nil {
 		t.Fatal(e)
 	}
-	direct := func(context.Context, string) (net.Conn, error) {
-		t.Fatal("silent direct fallback")
-		return nil, errors.New("unexpected")
+	target := testTarget(t)
+	calls := 0
+	direct := func(ctx context.Context, dst string) (net.Conn, error) {
+		calls++
+		return (&net.Dialer{}).DialContext(ctx, "tcp", dst)
 	}
 	for range 2 {
-		if conn, e := d.Dial(context.Background(), "example.com:443", direct); e == nil {
-			conn.Close()
-			t.Fatal("unavailable exit succeeded")
+		conn, e := d.Dial(context.Background(), target, direct)
+		if e != nil {
+			t.Fatal(e)
 		}
+		conn.Close()
+	}
+	if calls != 2 || d.NegotiationCounts()["exit_unavailable_transitions"] != 1 {
+		t.Fatal("outage not accounted")
+	}
+	ln, e = net.Listen("tcp", addr)
+	if e != nil {
+		t.Fatal(e)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- ServeWithDial(ctx, cfg, ln, (&net.Dialer{}).DialContext) }()
+	defer func() {
+		cancel()
+		if e := <-done; e != nil {
+			t.Error(e)
+		}
+	}()
+	// Deterministically expire the outage cooldown without sleeping.
+	d.mu.Lock()
+	d.retry = time.Now().Add(-time.Second)
+	d.mu.Unlock()
+	conn, e := d.Dial(ctx, target, direct)
+	if e != nil {
+		t.Fatal(e)
+	}
+	conn.Close()
+	if calls != 2 || d.NegotiationCounts()["credit"] != 1 || !d.retry.IsZero() {
+		t.Fatal("encrypted recovery not selected")
 	}
 }
 func TestRC5RelayPublicPolicy(t *testing.T) {

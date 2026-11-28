@@ -26,11 +26,22 @@ func TestRC16ExitOpenDiagnostics(t *testing.T) {
 		c.record(item.err, item.expired, item.ctx)
 	}
 	s := c.snapshot()
-	if s != (ExitOpenSnapshot{7, 1, 1, 1, 1, 1, 1, 1}) {
+	if s != (ExitOpenSnapshot{Attempts: 7, Established: 1, Policy: 1, DNS: 1, Connect: 1, Timeout: 1, Canceled: 1, Other: 1}) {
 		t.Fatalf("unexpected exit reason counts: %+v", s)
 	}
 	b, _ := json.Marshal(s)
 	if strings.Contains(string(b), "secret.example") || strings.Contains(string(b), "127.0.0.1") {
 		t.Fatal("destination leaked")
+	}
+}
+
+func TestRC2RelayStageServerCounters(t *testing.T) {
+	var c exitOpenCounters
+	for _, err := range []error{ErrExitRelayDial, ErrExitRelayTLS, ErrExitRelaySetup, ErrExitRelayCooldown} {
+		c.attempts.Add(1)
+		c.record(err, false, nil)
+	}
+	if got := c.snapshot(); got != (ExitOpenSnapshot{Attempts: 4, RelayDial: 1, RelayTLS: 1, RelaySetup: 1, RelayCooldown: 1}) {
+		t.Fatalf("incorrect relay counters: %+v", got)
 	}
 }
